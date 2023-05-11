@@ -13,7 +13,7 @@ export interface DbxInjectionComponentConfig<T = unknown> {
    */
   providers?: StaticProvider[];
   /**
-   * (Optional) Custom Injector to use when creating the component. If provided, providers is ignored.
+   * (Optional) Custom parent injector to use when creating the component.
    */
   injector?: Injector;
   /**
@@ -29,6 +29,11 @@ export interface DbxInjectionComponentConfig<T = unknown> {
    */
   data?: unknown;
 }
+
+/**
+ * The injector may be important to where the dbxInjection is getting injected at. Some types may disallow setting a custom parent injector.
+ */
+export type DbxInjectionComponentConfigWithoutInjector<T = unknown> = Omit<DbxInjectionComponentConfig<T>, 'injector'>;
 
 export type DbxInjectionComponentConfigFactory<I, T = unknown> = FactoryWithRequiredInput<DbxInjectionComponentConfig<T>, I>;
 

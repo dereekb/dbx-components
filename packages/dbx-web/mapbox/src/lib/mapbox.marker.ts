@@ -14,41 +14,42 @@ export type DbxMapboxMarkerSize = 'small' | 'medium' | 'large' | 'tall' | Pixels
  */
 export type DbxMapboxMarkerPresentation = 'normal' | 'chip' | 'chip-small';
 
-export type DbxMapboxMarker = UniqueModel &
-  LatLngInputRef & {
-    /**
-     * Presentation style. Defaults to "normal"
-     */
-    presentation?: DbxMapboxMarkerPresentation;
-    /**
-     * Additional classes to add to the marker.
-     */
-    markerClasses?: string;
-    /**
-     * icon
-     */
-    icon?: string;
-    /**
-     * label
-     */
-    label?: string;
-    /**
-     * Image URL
-     */
-    image?: string | FactoryWithRequiredInput<string, Pixels>;
-    /**
-     * Size of the marker.
-     */
-    size?: DbxMapboxMarkerSize;
-    /**
-     * Anchor
-     */
-    anchor?: ClickableAnchor;
-    /**
-     * Additional content styling
-     */
-    style?: object;
-  };
+export interface DbxMapboxMarkerDisplayConfig {
+  /**
+   * Presentation style. Defaults to "normal"
+   */
+  presentation?: DbxMapboxMarkerPresentation;
+  /**
+   * Additional classes to add to the marker.
+   */
+  markerClasses?: string;
+  /**
+   * icon
+   */
+  icon?: string;
+  /**
+   * label
+   */
+  label?: string;
+  /**
+   * Image URL
+   */
+  image?: string | FactoryWithRequiredInput<string, Pixels>;
+  /**
+   * Size of the marker.
+   */
+  size?: DbxMapboxMarkerSize;
+  /**
+   * Anchor
+   */
+  anchor?: ClickableAnchor;
+  /**
+   * Additional content styling
+   */
+  style?: object;
+}
+
+export type DbxMapboxMarker = UniqueModel & LatLngInputRef & DbxMapboxMarkerDisplayConfig;
 
 /**
  * MapFunction that converts the input data to a DbxMapboxMarker.

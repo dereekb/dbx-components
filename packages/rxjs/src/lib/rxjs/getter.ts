@@ -1,4 +1,4 @@
-import { GetterOrValue, Maybe, getValueFromGetter } from '@dereekb/util';
+import { GetterOrValue, GetterOrValueWithInput, FactoryWithRequiredInput, Maybe, getValueFromGetter, GetterDistinctValue } from '@dereekb/util';
 import { Observable, OperatorFunction, switchMap, of, isObservable, Subscription, Observer } from 'rxjs';
 
 /**
@@ -32,10 +32,16 @@ export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrVa
  * A GetterOrValue of a ObservableOrValue.
  */
 export type ObservableOrValueGetter<T> = GetterOrValue<ObservableOrValue<T>>;
+export type ObservableOrValueFactoryWithInput<T extends GetterDistinctValue, A> = GetterOrValueWithInput<ObservableOrValue<T>, A>;
+export type ObservableFactoryWithRequiredInput<T extends GetterDistinctValue, A> = FactoryWithRequiredInput<ObservableOrValue<T>, A>;
 export type MaybeObservableOrValueGetter<T> = Maybe<ObservableOrValueGetter<Maybe<T>>>;
 
-export function asObservableFromGetter<T>(input: ObservableOrValueGetter<T>): Observable<T> {
-  const obs = getValueFromGetter(input);
+export function asObservableFromGetter<T>(input: ObservableOrValueGetter<T>): Observable<T>;
+export function asObservableFromGetter<T>(this: unknown, input: ObservableOrValueGetter<T>): Observable<T>;
+export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableFactoryWithRequiredInput<T, A>, args: A): Observable<T>;
+export function asObservableFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: ObservableOrValueFactoryWithInput<T, A>, args?: A): Observable<T>;
+export function asObservableFromGetter<T, A>(this: unknown, input: ObservableOrValueGetter<T>, args?: A): Observable<T> {
+  const obs = getValueFromGetter<any, any>(input, args);
   return asObservable(obs);
 }
 

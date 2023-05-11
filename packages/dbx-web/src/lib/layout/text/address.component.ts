@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { Maybe, UnitedStatesAddressWithContact } from '@dereekb/util';
 
+// prettier-ignore
 @Component({
   selector: 'dbx-us-address',
   template: `
@@ -11,8 +12,8 @@ import { Maybe, UnitedStatesAddressWithContact } from '@dereekb/util';
       <div *ngIf="address.line2" class="addr-line2">{{ address.line2 }}</div>
       <div class="city-state-zip">
         <span class="addr-city">{{ address.city }}</span>
-        <span *ngIf="address.state || address.zip">,</span>
-        <span class="addr-state">{{ address.state }}</span>
+        <span *ngIf="address.state || address.zip">, </span>
+        <span class="addr-state">{{ address.state }} </span>
         <span class="addr-zip">{{ address.zip }}</span>
       </div>
     </ng-container>

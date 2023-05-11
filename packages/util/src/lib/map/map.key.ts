@@ -2,6 +2,7 @@ import { PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '../key'
 import { IterableOrValue, useIterableOrValue } from '../iterable';
 import { Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
+import { hasDifferentValues } from '../set';
 
 /**
  * Creates a map by reading keys from the input values. Values without a key are ignored.
@@ -115,4 +116,24 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
   };
 
   return builder;
+}
+/**
+ * Determines if two maps have the same keys.
+ *
+ * @param a - The first map
+ * @param b - The second map
+ * @returns true if the maps have the same keys, false otherwise
+ */
+export function mapsHaveSameKeys<K extends PrimativeKey>(a: Map<K, any>, b: Map<K, any>): boolean {
+  if (a.size !== b.size) {
+    return false; // must be same size to have same keys
+  }
+
+  for (const key of a.keys()) {
+    if (!b.has(key)) {
+      return false; // b does not have the same key as a
+    }
+  }
+
+  return true;
 }

@@ -143,3 +143,43 @@ export const MINUTES_IN_HOUR = 60;
 export const MS_IN_MINUTE = 1000 * 60;
 export const MS_IN_HOUR = MS_IN_MINUTE * 60;
 export const MS_IN_DAY = MS_IN_HOUR * 24;
+
+/**
+ * Day of the month, 1-31
+ */
+export type DayOfMonth = number;
+
+/**
+ * Month of the year, 1-12.
+ *
+ * NOTE: The month from Date.getMonth() is from 0-11. Use monthOfYearFromDate() to get the MonthOfYear value.
+ */
+export type MonthOfYear = number;
+
+/**
+ * Javascript Date month number. 0-11.
+ */
+export type DateMonth = number;
+
+/**
+ * Retrieves the MonthOfYear value from the input Date.
+ *
+ * @param date
+ * @returns
+ */
+export function monthOfYearFromDate(date: Date): MonthOfYear {
+  return monthOfYearFromDateMonth(date.getMonth());
+}
+
+export function monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear {
+  return dateMonth + 1;
+}
+
+export function makeDateMonthForMonthOfYear(monthOfYear: MonthOfYear): DateMonth {
+  return monthOfYear - 1;
+}
+
+/**
+ * Year number. I.E. 2022
+ */
+export type YearNumber = number;

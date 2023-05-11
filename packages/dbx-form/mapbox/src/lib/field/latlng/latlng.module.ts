@@ -9,6 +9,7 @@ import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import { DbxFormMapboxLatLngFieldMarkerComponent } from './latlng.field.marker.component';
 
 @NgModule({
   imports: [
@@ -25,6 +26,7 @@ import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
     }),
     NgxMapboxGLModule
   ],
-  declarations: [DbxFormMapboxLatLngFieldComponent]
+  declarations: [DbxFormMapboxLatLngFieldComponent, DbxFormMapboxLatLngFieldMarkerComponent],
+  exports: [DbxFormMapboxLatLngFieldMarkerComponent]
 })
 export class DbxFormMapboxLatLngModule {}

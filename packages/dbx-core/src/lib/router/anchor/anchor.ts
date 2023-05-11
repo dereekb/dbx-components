@@ -1,3 +1,4 @@
+import { MousableFunction } from './mousable';
 import { ClickableFunction, ClickableUrl } from './clickable';
 import { SegueRef } from '../segue';
 import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, FlattenTreeFunction, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
@@ -5,7 +6,7 @@ import { Type, Provider, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DbxInjectionComponentConfig } from '../../injection/injection';
 
-export interface ClickableAnchor extends ClickableFunction, ClickableUrl, Partial<SegueRef> {
+export interface ClickableAnchor extends ClickableFunction, MousableFunction, ClickableUrl, Partial<SegueRef> {
   disabled?: boolean;
   selected?: boolean;
 }

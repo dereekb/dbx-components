@@ -3,7 +3,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, MapboxFitPositions } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, MapboxFitPositions, DbxMapboxInjectionStore } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
@@ -12,7 +12,7 @@ import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY } from '../component/mapbox.marker
 
 @Component({
   templateUrl: './mapbox.component.html',
-  providers: [DbxMapboxMapStore, DbxMapboxChangeService]
+  providers: [DbxMapboxMapStore, DbxMapboxInjectionStore, DbxMapboxChangeService]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
@@ -113,10 +113,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly mapboxLatLngAndZoomField: FormlyFieldConfig[] = [
     mapboxLatLngField({
       key: 'latLng',
-      description: 'This is a coordinate picker synchronized with the big map.',
+      description: 'This is a coordinate picker synchronized with the big map. Click on the map to set a location.',
       latLngConfig: {
         precision: 3
       },
+      selectLocationOnMapDrag: false,
       selectLocationOnMapClick: true,
       showMap: false
     }),
