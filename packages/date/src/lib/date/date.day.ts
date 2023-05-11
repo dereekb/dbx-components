@@ -1,5 +1,6 @@
-import { Building, DayOfMonth, makeValuesGroupMap, MapFunction, Maybe, MonthOfYear, range, YearNumber } from '@dereekb/util';
+import { Building, DayOfMonth, makeDateMonthForMonthOfYear, makeValuesGroupMap, MapFunction, Maybe, MonthOfYear, monthOfYearFromDate, range, YearNumber } from '@dereekb/util';
 import { isDate, startOfMonth, endOfMonth } from 'date-fns';
+import { DateOrDateRange, dateOrDateRangeToDateRange, forEachDayInDateRange } from './date.range';
 import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceInput, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 
 /**
@@ -77,7 +78,7 @@ export function yearMonthDayCodePair(yearMonthDayCode: YearMonthDayCode): YearMo
  */
 export function yearMonthDayCodePairFromDate(date: Date): YearMonthDayCodePair {
   const day = date.getDate();
-  const month = date.getMonth();
+  const month = monthOfYearFromDate(date);
   const year = date.getFullYear();
 
   return {
@@ -179,7 +180,7 @@ export function yearMonthDayCodeFactory(config?: YearMonthDayCodeConfig): YearMo
 /**
  * Used for returning an array of YearMonthDayCode values for a pre-configured date range.
  */
-export type YearMonthDayCodeForCalendarMonthFactory = (date: Date) => YearMonthDayCode[];
+export type YearMonthDayCodesForDateRangeFactory = (dateOrDateRange: DateOrDateRange) => YearMonthDayCode[];
 
 /**
  * Returns the yearMonthDayCodes for the input Date's calendar month.
@@ -188,33 +189,28 @@ export type YearMonthDayCodeForCalendarMonthFactory = (date: Date) => YearMonthD
  *
  * @param date
  */
-export function yearMonthDayCodeForCalendarMonth(date: Date): YearMonthDayCode[] {
-  return yearMonthDayCodeForCalendarMonthFactory(yearMonthDayCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(date);
+export function yearMonthDayCodesForDateRange(dateOrDateRange: DateOrDateRange): YearMonthDayCode[] {
+  return yearMonthDayCodesForDateRangeFactory(yearMonthDayCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(dateOrDateRange);
 }
 
 /**
- * Create a YearMonthDayCodeForMonthFactory.
+ * Create a YearMonthDayCodesForDateRangeFactory.
  *
  * @param factory
  * @returns
  */
-export function yearMonthDayCodeForCalendarMonthFactory(factory: YearMonthDayCodeFactory = yearMonthDayCodeFactory()): YearMonthDayCodeForCalendarMonthFactory {
+export function yearMonthDayCodesForDateRangeFactory(factory: YearMonthDayCodeFactory = yearMonthDayCodeFactory()): YearMonthDayCodesForDateRangeFactory {
   const { _normal } = factory;
 
-  return (date: Date) => {
-    const normalDate = _normal.systemDateToTargetDate(date as Date);
-    const start = startOfMonth(normalDate);
-    const end = endOfMonth(start);
+  return (dateOrDateRange: DateOrDateRange) => {
+    const dateRange = dateOrDateRangeToDateRange(dateOrDateRange);
+    const start = _normal.systemDateToTargetDate(dateRange.start);
+    const end = _normal.systemDateToTargetDate(dateRange.end);
 
-    const { year, month } = yearMonthDayCodePairFromDate(start);
-    const lastDayOfMonthDay = end.getDay();
+    const codes: YearMonthDayCode[] = [];
 
-    const codes: YearMonthDayCode[] = range(1, lastDayOfMonthDay + 1).map((day) => {
-      return yearMonthDayCodeFromPair({
-        year,
-        month,
-        day
-      });
+    forEachDayInDateRange({ start, end }, (date) => {
+      codes.push(yearMonthDayCodeFromDate(date));
     });
 
     return codes;
@@ -238,8 +234,8 @@ export function yearMonthDayCodeDateFactory(config?: YearMonthDayCodeDateConfig)
   const normal = yearMonthDayCodeDateTimezoneInstance(config?.timezone);
   return (yearMonthDayCode: YearMonthDayCode) => {
     const pair = yearMonthDayCodePair(yearMonthDayCode);
-    const date = new Date(Date.UTC(pair.year, 0, 1, 0, 0, 0, 0));
-    const fixed = normal.targetDateToSystemDate(date);
+    const date = new Date(Date.UTC(pair.year, makeDateMonthForMonthOfYear(pair.month), pair.day, 0, 0, 0, 0));
+    const fixed = normal.targetDateToBaseDate(date);
     return fixed;
   };
 }
@@ -249,7 +245,7 @@ export function yearMonthDayCodeDateFactory(config?: YearMonthDayCodeDateConfig)
  */
 export interface YearMonthDayCodeGroup<B> {
   readonly items: B[];
-  readonly yearMonthDayCode: YearMonthDayCode;
+  readonly dayCode: YearMonthDayCode;
 }
 
 /**
@@ -279,19 +275,19 @@ export function yearMonthDayCodeGroupFactory<B>(config: YearMonthDayCodeGroupFac
 
   return (items: B[]) => {
     const map = makeValuesGroupMap(items, (item: B) => {
-      let yearMonthDayCode: Maybe<YearMonthDayCode>;
+      let dayCode: Maybe<YearMonthDayCode>;
       const date = dateReader(item);
 
       if (date != null) {
-        yearMonthDayCode = readYearMonthDayCode(date);
+        dayCode = readYearMonthDayCode(date);
       }
 
-      return yearMonthDayCode;
+      return dayCode;
     });
 
-    const groups: YearMonthDayCodeGroup<B>[] = Array.from(map.entries()).map(([yearMonthDayCode, items]) => {
+    const groups: YearMonthDayCodeGroup<B>[] = Array.from(map.entries()).map(([dayCode, items]) => {
       return {
-        yearMonthDayCode: yearMonthDayCode || 0,
+        dayCode: dayCode || 0,
         items
       };
     });
