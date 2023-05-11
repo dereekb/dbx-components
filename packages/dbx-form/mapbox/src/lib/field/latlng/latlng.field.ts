@@ -3,10 +3,10 @@ import { LAT_LNG_PATTERN } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
 
-export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime' | 'showCenterButton' | 'selectLocationOnMapDrag' | 'selectLocationOnMapClick'> {}
+export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime' | 'setCenterOnLocationSet' | 'showCenterButton' | 'selectLocationOnMapDrag' | 'selectLocationOnMapClick'> {}
 
 export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyFieldConfig {
-  const { key = 'latLng', latLngConfig, showMap, zoom, recenterTime, showCenterButton, selectLocationOnMapDrag, selectLocationOnMapClick } = config;
+  const { key = 'latLng', latLngConfig, showMap, zoom, recenterTime, showCenterButton, setCenterOnLocationSet, selectLocationOnMapDrag, selectLocationOnMapClick } = config;
   const fieldConfig: FormlyFieldConfig = {
     ...formlyField({
       key,
@@ -22,7 +22,8 @@ export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyF
         recenterTime,
         selectLocationOnMapDrag,
         selectLocationOnMapClick,
-        showCenterButton
+        showCenterButton,
+        setCenterOnLocationSet
       })
     }),
     ...validatorsForFieldConfig({

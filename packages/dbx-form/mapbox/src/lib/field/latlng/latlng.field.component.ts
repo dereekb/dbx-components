@@ -31,6 +31,10 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
    */
   showCenterButton?: boolean;
   /**
+   * Whether or not to set the center of the map on the location when set. Defaults to true.
+   */
+  setCenterOnLocationSet?: boolean;
+  /**
    * Whether or not to enable dragging the map to select the location. Defaults to true.
    *
    * Only applicable when showMap is false.
@@ -109,6 +113,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   private _sub = new SubscriptionObject();
   private _geoSub = new SubscriptionObject();
   private _centerSub = new SubscriptionObject();
+  private _flyToCenterSub = new SubscriptionObject();
   private _clickSub = new SubscriptionObject();
   private _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
   private _markerConfig = new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_MARKER_CONFIG));
@@ -192,6 +197,10 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     return this.field.props.selectLocationOnMapClick ?? false;
   }
 
+  get setCenterOnLocationSet() {
+    return this.field.props.setCenterOnLocationSet ?? true;
+  }
+
   get showCenterButton() {
     return !this.selectLocationOnMapDrag && this.props.showCenterButton !== false;
   }
@@ -220,7 +229,9 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     this._formControlObs.next(this.formControl);
     this._zoom.next(this.zoom);
 
-    this.dbxMapboxMapStore.setCenter(this.nonZeroLatLng$);
+    if (this.setCenterOnLocationSet) {
+      this._centerSub.subscription = this.dbxMapboxMapStore.setCenter(this.nonZeroLatLng$);
+    }
 
     if (this.showMap) {
       // Set zoom only if showMap is true
@@ -228,7 +239,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
       // recenter periodically
       if (this.recenterTime > 0) {
-        this._centerSub.subscription = this.dbxMapboxMapStore.center$.pipe(skip(1), throttleTime(this.recenterTime, undefined, { leading: false, trailing: true })).subscribe(() => {
+        this._flyToCenterSub.subscription = this.dbxMapboxMapStore.center$.pipe(skip(1), throttleTime(this.recenterTime, undefined, { leading: false, trailing: true })).subscribe(() => {
           this.flyToMarker();
         });
       }
@@ -278,12 +289,13 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._sub.destroy();
-    this._geoSub.destroy();
     this._zoom.complete();
     this._markerConfig.complete();
     this._formControlObs.complete();
+    this._sub.destroy();
+    this._geoSub.destroy();
     this._centerSub.destroy();
+    this._flyToCenterSub.destroy();
     this._clickSub.destroy();
   }
 
