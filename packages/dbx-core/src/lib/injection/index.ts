@@ -1,3 +1,5 @@
+export * from './injection.array.component';
+export * from './injection.array';
 export * from './injection.component.module';
 export * from './injection.component';
 export * from './injection.context.directive';
