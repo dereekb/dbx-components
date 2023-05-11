@@ -1,5 +1,5 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
-import { Input, Component, TemplateRef, ViewChild, OnDestroy } from '@angular/core';
+import { Input, Component, TemplateRef, ViewChild, OnDestroy, HostListener } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { map, distinctUntilChanged, shareReplay, BehaviorSubject } from 'rxjs';
@@ -64,5 +64,15 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
 
   clickAnchor(event?: Maybe<MouseEvent>): void {
     this.anchor?.onClick?.(event);
+  }
+
+  @HostListener('mouseenter')
+  onMouseEnter(event?: Maybe<MouseEvent>) {
+    this.anchor?.onMouse?.('enter', event);
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave(event?: Maybe<MouseEvent>) {
+    this.anchor?.onMouse?.('leave', event);
   }
 }

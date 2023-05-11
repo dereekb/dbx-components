@@ -7,6 +7,7 @@ import { LOREM } from '../../shared';
 })
 export class DocRouterAnchorComponent {
   lorem = LOREM;
+  mouse = '';
 
   link: ClickableAnchorLink = {
     icon: 'home',
@@ -37,6 +38,15 @@ export class DocRouterAnchorComponent {
       } else {
         this.lorem = LOREM;
       }
+    }
+  };
+
+  mouseOverWithClick: ClickableAnchor = {
+    onClick: () => {
+      this.mouse = 'Clicked mouse button.';
+    },
+    onMouse: (type) => {
+      this.mouse = `Mouse over ${type}`;
     }
   };
 }
