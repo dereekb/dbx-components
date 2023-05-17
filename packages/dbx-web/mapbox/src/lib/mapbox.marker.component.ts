@@ -132,7 +132,7 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     }
 
     if (markerClasses) {
-      cssClasses += ` markerClasses`;
+      cssClasses += ` ${markerClasses}`;
     }
 
     return cssClasses;
