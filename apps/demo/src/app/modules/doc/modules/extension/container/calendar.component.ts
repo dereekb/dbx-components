@@ -7,6 +7,7 @@ import { CalendarEvent } from 'angular-calendar';
 import { dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import { of } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
+import { addHours, endOfDay } from 'date-fns';
 
 export interface TestCalendarEventData extends DateBlock {
   value: string;
@@ -60,6 +61,21 @@ export class DocExtensionCalendarComponent implements OnInit {
       filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
       computeSelectionResultRelativeToFilter: true,
       exclusions: [0, 2, 4],
+      initialSelectionState: 'all'
+    }),
+    dateScheduleRangeField({
+      key: 'dateScheduleWithMinDateRange',
+      required: true,
+      description: 'Date schedule with a filter applied to it and additional exclusions.',
+      filter: {
+        //
+        start: addHours(startOfDay(addDays(new Date(), 1)), 6), // tomorrow at 6AM
+        end: addHours(startOfDay(addDays(new Date(), 1)), 18), // tomorrow at 6PM
+        w: '89',
+        ex: []
+      },
+      minMaxDateRange: { start: new Date() },
+      computeSelectionResultRelativeToFilter: true,
       initialSelectionState: 'all'
     })
   ];

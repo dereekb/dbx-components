@@ -153,15 +153,15 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
   };
 }
 
-export function calendarScheduleMinDate(x: CalendarScheduleSelectionState): Maybe<Date> {
+export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
   return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
 }
 
-export function calendarScheduleMaxDate(x: CalendarScheduleSelectionState): Maybe<Date> {
+export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
   return findMinDate([x.filter?.end, x.minMaxDateRange?.end]);
 }
 
-export function calendarScheduleMinAndMaxDateRange(x: CalendarScheduleSelectionState): Partial<DateRange> {
+export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Partial<DateRange> {
   return {
     start: calendarScheduleMinDate(x) || undefined,
     end: calendarScheduleMaxDate(x) || undefined
@@ -426,7 +426,7 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 
     if (minMaxDateRange) {
       enabledFilter.minMaxDateRange = minMaxDateRange;
-      enabledFilter.setStartAsMinDate = false;
+      enabledFilter.setStartAsMinDate = Boolean(filter?.start) ? true : false; // If a start date is set, then it becomes the floor.
     }
 
     /**

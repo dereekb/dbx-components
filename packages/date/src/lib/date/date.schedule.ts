@@ -384,13 +384,19 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
   const { w, start: firstDate = new Date(), setStartAsMinDate = true, end, minMaxDateRange } = config;
   const allowedDays: Set<DayOfWeek> = expandDateScheduleDayCodesToDayOfWeekSet(w);
 
+  // Start date is either now or the filter's start date. It is never the minMax's start date, since that is irrelevant to the filter's range.
+
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
   const dateIndexForDate = dateTimingRelativeIndexFactory({ start: firstDate });
-  const minIndex = minMaxDateRange?.start != null ? dateIndexForDate(minMaxDateRange.start) : setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
-  const maxIndex = end != null ? dateIndexForDate(end) : minMaxDateRange?.end != null ? dateIndexForDate(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
+
+  const indexFloor = setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
+  const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, dateIndexForDate(minMaxDateRange.start)) : indexFloor; // start date should be the min inde
+  const maxAllowedIndex = end != null ? dateIndexForDate(end) : minMaxDateRange?.end != null ? dateIndexForDate(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
+
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
+
 
   return (input: DateScheduleDateFilterInput) => {
     let i: DateBlockIndex;
@@ -404,7 +410,8 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       day = dayOfWeek(input);
     }
 
-    return (i >= minIndex && i <= maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+
+    return (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }
 
