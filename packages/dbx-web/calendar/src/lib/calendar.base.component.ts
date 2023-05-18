@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
-import { map, withLatestFrom } from 'rxjs';
+import { combineLatest, map, shareReplay, withLatestFrom } from 'rxjs';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { reduceBooleansWithAnd, reduceBooleansWithAndFn } from '@dereekb/util';
 
 @Component({
   selector: 'dbx-calendar-base',
@@ -16,6 +17,8 @@ export class DbxCalendarBaseComponent<T> {
 
   readonly isLookingAtMinimumDate$ = this.calendarStore.isLookingAtMinimumDate$;
   readonly isLookingAtMaximumDate$ = this.calendarStore.isLookingAtMaximumDate$;
+  readonly hasMultiplePages$ = this.calendarStore.hasMultiplePages$;
+
   readonly showPageButtons$ = this.calendarStore.canShowPageButtons$;
 
   readonly activeDayIsOpen$ = this.calendarStore.eventsForDateState$.pipe(

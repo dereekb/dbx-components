@@ -5,7 +5,7 @@
       <span class="dbx-calendar-controls-left" fxFlex="nogrow">
         <button *ngIf="showTodayButton$ | async" mat-stroked-button [disabled]="!(canJumpToToday$ | async)" (click)="todayClicked()">Today</button>
         <dbx-button-spacer></dbx-button-spacer>
-        <div class="d-iblock">
+        <div class="d-iblock" *ngIf="hasMultiplePages$ | async">
           <button *ngIf="showPageButtons$ | async" mat-icon-button [disabled]="isLookingAtMinimumDate$ | async" aria-label="first page button" (click)="firstPageButtonClicked()">
             <mat-icon>first_page</mat-icon>
           </button>
