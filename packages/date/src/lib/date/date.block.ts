@@ -172,7 +172,8 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
       const inputOffset = input.getTimezoneOffset();
       const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
 
-      const diff = differenceInHours(input, startDate) + offsetDifferenceHours;
+      const baseDiff = differenceInHours(input, startDate);
+      const diff = baseDiff + offsetDifferenceHours;
       const daysOffset = Math.floor(diff / 24);
 
       return daysOffset;
