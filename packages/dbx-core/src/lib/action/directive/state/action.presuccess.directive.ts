@@ -13,7 +13,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 @Directive({
   selector: '[dbxActionPreSuccess]'
 })
-export class DbxActionPreSuccessDirective extends AbstractIfDirective implements OnDestroy {
+export class DbxActionPreSuccessDirective extends AbstractIfDirective {
   @Input('dbxActionPreSuccess')
   hideFor?: Maybe<number> | '';
 
