@@ -1,5 +1,5 @@
 import { ValidatorFn } from '@angular/forms';
-import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction } from '@dereekb/util';
+import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
 import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser, MaterialFormFieldConfig } from '../../field';
@@ -26,7 +26,7 @@ export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef
   }
 
   if (transform) {
-    const transformParser: FormlyValueParser = transformNumberFunction(transform);
+    const transformParser: FormlyValueParser = mapMaybeFunction(transformNumberFunction(transform));
     parsers = concatArrays([transformParser], parsers);
   }
 
