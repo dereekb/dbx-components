@@ -5,13 +5,7 @@ import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, Clickab
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { distinctUntilChanged, map, shareReplay, Observable, first } from 'rxjs';
-
-export enum SideNavDisplayMode {
-  NONE = 'none',
-  MOBILE = 'mobile',
-  ICON = 'icon',
-  FULL = 'full'
-}
+import { SideNavDisplayMode } from './sidenav';
 
 export interface DbxSidenavSidebarState {
   mode: SideNavDisplayMode;

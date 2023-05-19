@@ -16,10 +16,13 @@ import { DbxBarLayoutModule } from '../../../layout/bar/bar.layout.module';
 import { DbxButtonModule } from '../../../button/button.module';
 import { DbxContentLayoutModule } from './../../../layout/content/content.layout.module';
 import { DbxSidenavButtonComponent } from './sidenav.button.component';
+import { DbxIfSidenavDisplayModeDirective } from './sidenav.ifdisplaymode.directive';
+
+const declarations = [DbxIfSidenavDisplayModeDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxSidenavPagebarComponent, DbxSidenavPageComponent];
 
 @NgModule({
   imports: [CommonModule, DbxBarLayoutModule, DbxRouterAnchorModule, DbxRouterAnchorListModule, DbxButtonModule, DbxContentLayoutModule, MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatListModule, MatDividerModule, UIRouterModule],
-  declarations: [DbxSidenavComponent, DbxSidenavButtonComponent, DbxSidenavPagebarComponent, DbxSidenavPageComponent],
-  exports: [DbxSidenavComponent, DbxSidenavButtonComponent, DbxSidenavPagebarComponent, DbxSidenavPageComponent]
+  declarations,
+  exports: declarations
 })
 export class DbxRouterSidenavModule {}

@@ -172,7 +172,8 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
       const inputOffset = input.getTimezoneOffset();
       const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
 
-      const diff = differenceInHours(input, startDate) + offsetDifferenceHours;
+      const baseDiff = differenceInHours(input, startDate);
+      const diff = baseDiff + offsetDifferenceHours;
       const daysOffset = Math.floor(diff / 24);
 
       return daysOffset;
@@ -580,14 +581,24 @@ export interface DateBlockDayTimingInfo {
    * Time the timing starts on the input day.
    */
   startsAtOnDay: Date;
+  /**
+   * Time the timing ends on the input day.
+   */
+  endsAtOnDay: Date;
+  /**
+   * "now" value used for considering current progress.
+   */
+  now: Date;
 }
 
 /**
  * Generates DateBlockDayTimingInfo about the input date relative to the input timing and range limit.
  *
  * The date may not exist within the range, but will still compute values using the input date and timing configuration.
+ *
+ * Can optionally specify a now that is used for checking the inProgress functionality.
  */
-export type DateBlockDayInfoFactory = (date: DateOrDateBlockIndex) => DateBlockDayTimingInfo;
+export type DateBlockDayInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
 
 export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayInfoFactory {
   const { timing, rangeLimit } = config;
@@ -597,21 +608,25 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
   const dayIndexFactory = dateTimingRelativeIndexFactory(timing);
   const dayFactory = dateBlockTimingDateFactory(timing);
 
-  return (input: DateOrDateBlockIndex) => {
+  return (input: DateOrDateBlockIndex, inputNow?: Date) => {
     const date = typeof input === 'number' ? copyHoursAndMinutesFromNow(dayFactory(input)) : input;
     const dayIndex = dayIndexFactory(input);
     const isInRange = checkIsInRange(dayIndex);
 
-    const startsAtOnDay = copyHoursAndMinutesFromDate(date, startsAt, false);
-    const potentiallyInProgress = !isAfter(startsAt, input);
+    const now = inputNow ?? date;
 
-    const isInProgress = potentiallyInProgress && isBefore(input, addMinutes(startsAtOnDay, duration));
+    const startsAtOnDay = copyHoursAndMinutesFromDate(date, startsAt, false);
+    const endsAtOnDay = addMinutes(startsAtOnDay, duration);
+    const potentiallyInProgress = !isAfter(startsAtOnDay, now); // is potentially in progress if the now is equal-to or after the start time.
+
+    const isInProgress = potentiallyInProgress && !isAfter(now, endsAtOnDay);
     const hasOccuredToday = potentiallyInProgress && !isInProgress;
 
     const currentIndex: DateBlockIndex = isInProgress || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
     const nextIndex: DateBlockIndex = currentIndex + 1;
 
     return {
+      now,
       date,
       dayIndex,
       currentIndex,
@@ -619,7 +634,8 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
       hasOccuredToday,
       isInProgress,
       isInRange,
-      startsAtOnDay
+      startsAtOnDay,
+      endsAtOnDay
     };
   };
 }

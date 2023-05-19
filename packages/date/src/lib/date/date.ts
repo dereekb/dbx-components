@@ -123,6 +123,19 @@ export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<b
 }
 
 /**
+ * Returns true if both a and b are the same time down to the rounded down minute.
+ *
+ * @param a
+ * @param b
+ */
+export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>): boolean;
+export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
+export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean>): Maybe<boolean>;
+export function isSameDateHoursAndMinutes(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = null): Maybe<boolean> {
+  return a != null && b != null ? isEqualDate(roundDownToMinute(a), roundDownToMinute(b)) : defaultValue != null ? defaultValue : a == b;
+}
+
+/**
  * Returns true if both a and b are defined and a is on the same day/month/year as b, otherwise returns the default value.
  *
  * The default value is true if a and b are null/undefined.

@@ -29,12 +29,13 @@ import {
   isSameDateScheduleRange,
   DateOrDateRangeOrDateBlockIndexOrDateBlockRange,
   dateTimingRelativeIndexArrayFactory,
-  isInfiniteDateRange
+  isInfiniteDateRange,
+  copyHoursAndMinutesFromDate
 } from '@dereekb/date';
 import { filterMaybe, switchMapToDefault } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, objectHasNoKeys } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { addYears, startOfDay, endOfDay, startOfYear } from 'date-fns';
+import { addYears, startOfDay, endOfDay, startOfYear, isAfter, isBefore } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, combineLatest, switchMap, of, tap, first } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
@@ -153,15 +154,15 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
   };
 }
 
-export function calendarScheduleMinDate(x: CalendarScheduleSelectionState): Maybe<Date> {
+export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
   return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
 }
 
-export function calendarScheduleMaxDate(x: CalendarScheduleSelectionState): Maybe<Date> {
+export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
   return findMinDate([x.filter?.end, x.minMaxDateRange?.end]);
 }
 
-export function calendarScheduleMinAndMaxDateRange(x: CalendarScheduleSelectionState): Partial<DateRange> {
+export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Partial<DateRange> {
   return {
     start: calendarScheduleMinDate(x) || undefined,
     end: calendarScheduleMaxDate(x) || undefined
@@ -426,7 +427,7 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 
     if (minMaxDateRange) {
       enabledFilter.minMaxDateRange = minMaxDateRange;
-      enabledFilter.setStartAsMinDate = false;
+      enabledFilter.setStartAsMinDate = Boolean(filter?.start) ? true : false; // If a start date is set, then it becomes the floor.
     }
 
     /**
@@ -630,15 +631,20 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
     return null;
   }
 
-  const { start: rangeStart, end, excluded: allExcluded, dateBlockRange } = rangeAndExclusion;
+  const { start: rangeStart, end: rangeEnd, excluded: allExcluded, dateBlockRange } = rangeAndExclusion;
   let filterOffsetExcludedRange: DateBlockIndex[] = [];
   let indexOffset = dateBlockRange.i;
 
   let start = rangeStart;
+  let end = rangeEnd;
 
   // If computeSelectionResultRelativeToFilter is true, then we need to offset the values to be relative to that start.
   if (computeSelectionResultRelativeToFilter && filter?.start) {
     start = filter.start;
+
+    if (filter?.end) {
+      end = copyHoursAndMinutesFromDate(end, filter.end);
+    }
 
     const filterStartIndexOffset = indexFactory(rangeStart) - indexFactory(start);
     filterOffsetExcludedRange = range(0, filterStartIndexOffset);
@@ -658,6 +664,11 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
 
   const w: DateScheduleEncodedWeek = dateScheduleEncodedWeek(scheduleDays);
   const d: DateBlockIndex[] = []; // "included" blocks are never used/calculated.
+
+  // Always ensure the end is after or equal to the start.
+  if (isBefore(end, start)) {
+    end = start; // end is start
+  }
 
   const dateScheduleRange: DateScheduleRange = {
     start,

@@ -1,4 +1,4 @@
-import { concatArrays, transformStringFunction, TransformStringFunctionConfig, TransformStringFunctionConfigRef } from '@dereekb/util';
+import { concatArrays, mapMaybeFunction, transformStringFunction, TransformStringFunctionConfig, TransformStringFunctionConfigRef } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, FormlyValueParser, FieldConfigParsersRef, MaterialFormFieldConfig } from '../../field';
 
@@ -27,7 +27,7 @@ export function textFieldTransformParser(config: Partial<FieldConfigParsersRef> 
   }
 
   if (transform) {
-    const transformParser: FormlyValueParser = transformStringFunction(transform);
+    const transformParser: FormlyValueParser = mapMaybeFunction(transformStringFunction(transform));
     parsers = concatArrays([transformParser], parsers);
   }
 

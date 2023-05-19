@@ -44,7 +44,7 @@ export interface DbxMapboxMarkerDisplayConfig {
    */
   anchor?: ClickableAnchor;
   /**
-   * Additional content styling
+   * Additional icon content styling. Style is not applied to the entire marker. Use markerClasses instead.
    */
   style?: object;
 }

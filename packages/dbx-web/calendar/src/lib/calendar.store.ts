@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { clampDateToDateRange, DateRange, isDateInDateRange, isFullDateRange, isSameDateDay, isSameDateRange } from '@dereekb/date';
-import { Maybe } from '@dereekb/util';
+import { invertDecision, Maybe, reduceBooleansWithAndFn } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { CalendarEvent } from 'angular-calendar';
 import { differenceInDays, addDays, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek, isBefore, isAfter } from 'date-fns';
@@ -232,6 +232,8 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  readonly hasMultiplePages$ = combineLatest([this.isLookingAtMinimumDate$, this.isLookingAtMaximumDate$]).pipe(map(invertDecision(reduceBooleansWithAndFn(true))), distinctUntilChanged(), shareReplay(1));
 
   readonly displayType$ = this.state$.pipe(
     map((x) => x.type),

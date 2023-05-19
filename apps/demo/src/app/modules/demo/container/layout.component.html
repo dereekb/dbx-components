@@ -1,4 +1,10 @@
 <dbx-sidenav [anchors]="navAnchors$ | async" dbxSetStyle="demo-app">
+  <ng-container top *dbxIfSidenavDisplayMode="['mobile', 'full']">
+    <dbx-content-border>
+      <p class="mat-h2">dbx-components</p>
+      <p class="dbx-hint">demo app</p>
+    </dbx-content-border>
+  </ng-container>
   <dbx-sidenav-page [mobileOnly]="true" color="primary">
     <ui-view></ui-view>
   </dbx-sidenav-page>

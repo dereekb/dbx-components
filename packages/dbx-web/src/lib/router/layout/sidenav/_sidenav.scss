@@ -83,12 +83,15 @@ $dbx-sidenav-nav-bottom-padding: 24px;
   $accent: map.get($color-config, 'accent');
 
   $background: map.get($color-config, 'background');
+  $text-color: theming.get-color-from-palette($primary, '800-contrast');
+  $sidenav-background-color: theming.get-color-from-palette($primary, 800);
   $inactive-text-color: theming.get-color-from-palette($primary, '800-contrast');
   $active-icon-color: theming.get-color-from-palette($accent, 400);
 
   .dbx-sidenav {
     mat-sidenav {
-      background-color: theming.get-color-from-palette($primary, 800);
+      color: $text-color;
+      background-color: $sidenav-background-color;
 
       .mat-drawer-inner-container {
         display: flex;

@@ -2,12 +2,26 @@ import { asArray, ArrayOrValue } from '../array/array';
 import { filterMaybeValues } from '../array/array.value';
 import { PromiseOrValue } from '../promise/promise';
 import { build } from './build';
+import { isMaybeNot } from './maybe';
 import { Maybe, MaybeNot } from './maybe.type';
 
 /**
  * Converts one value to another.
  */
 export type MapFunction<I, O> = (input: I) => O;
+
+/**
+ * Turns a normal MapFunction into one that passes through Maybe values without attempting to map them.
+ *
+ * @param mapFunction
+ * @returns
+ */
+export function mapMaybeFunction<I, O>(mapFunction: MapFunction<I, O>): MapFunction<Maybe<I>, Maybe<O>> {
+  return (input: Maybe<I>) => {
+    const output: Maybe<O> = isMaybeNot(input) ? input : mapFunction(input);
+    return output;
+  };
+}
 
 /**
  * MapFunction with the same input as output.

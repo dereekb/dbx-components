@@ -1,8 +1,9 @@
 import { BehaviorSubject, switchMap, shareReplay, map, of } from 'rxjs';
 import { Component, Input, OnDestroy } from '@angular/core';
-import { DbxSidenavComponent, SideNavDisplayMode } from './sidenav.component';
+import { DbxSidenavComponent } from './sidenav.component';
 import { Maybe } from '@dereekb/util';
 import { DbxBarColor } from '../../../layout/bar/bar';
+import { SideNavDisplayMode } from './sidenav';
 
 /**
  * Pre-configured page used with DbxSidenavComponent.

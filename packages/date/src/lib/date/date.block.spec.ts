@@ -1,6 +1,6 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { dateRange, DateRange, DateRangeInput } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore } from 'date-fns';
 import {
   DateBlock,
   dateBlockDayOfWeekFactory,
@@ -38,7 +38,7 @@ import {
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { systemNormalDateToBaseDate } from './date.timezone';
+import { systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
   const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
@@ -117,8 +117,8 @@ describe('getCurrentDateBlockTimingStartDate()', () => {
 describe('dateTimingRelativeIndexFactory()', () => {
   describe('scenarios', () => {
     describe('timezone change', () => {
-      const start = new Date('2023-03-12T06:00:00.000Z');
-      const dstDay = addDays(start, 1);
+      const start = new Date('2023-03-12T06:00:00.000Z'); // timezone offset changes going into the next day.
+      const dstDay = new Date('2023-03-13T06:00:00.000Z'); // next day at 6AM UTC, Daylight Savings has occured for some timezones
 
       it('should handle daylight savings time changes.', () => {
         const factory = dateTimingRelativeIndexFactory({ start });
@@ -717,13 +717,18 @@ describe('dateBlocksDayInfoFactory()', () => {
 
   it('should calculate the day info when provided a day index.', () => {
     const result = factory(0);
+
     expect(result.date).toBeSameMinuteAs(copyHoursAndMinutesFromDate(start, new Date()));
     expect(result.dayIndex).toBe(0);
     expect(result.isInProgress).toBe(false);
-    expect(result.hasOccuredToday).toBe(false);
+
+    // has already occured in some timezones (e.g. Asia/Tokyo)
+    const expectedHasOccuredToday = !isBefore(result.now, result.endsAtOnDay);
+    expect(result.hasOccuredToday).toBe(expectedHasOccuredToday);
+
     expect(result.isInRange).toBe(true);
-    expect(result.currentIndex).toBe(-1);
-    expect(result.nextIndex).toBe(0);
+    expect(result.currentIndex).toBe(expectedHasOccuredToday ? 0 : -1);
+    expect(result.nextIndex).toBe(expectedHasOccuredToday ? 1 : 0);
   });
 
   it('should calculate the day info for before occurrence for today', () => {

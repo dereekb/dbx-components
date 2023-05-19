@@ -1,7 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
-import { DbxSidenavComponent, SideNavDisplayMode } from './sidenav.component';
+import { DbxSidenavComponent } from './sidenav.component';
+import { SideNavDisplayMode } from './sidenav';
 
 export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
 

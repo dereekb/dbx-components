@@ -1,20 +1,26 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, Inject, Input, OnDestroy } from '@angular/core';
+import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { Component, Inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { FormGroup, FormControl } from '@angular/forms';
+import { FormGroup, FormControl, Validators, AbstractControl } from '@angular/forms';
 import { Maybe, randomNumberFactory } from '@dereekb/util';
-import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of } from 'rxjs';
+import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, combineLatest, map, distinct, shareReplay } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { ErrorStateMatcher } from '@angular/material/core';
+
+interface RangeValue {
+  start?: Maybe<Date>;
+  end?: Maybe<Date>;
+}
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',
   templateUrl: './calendar.schedule.selection.range.component.html'
 })
-export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy {
-  @Input()
-  required?: boolean;
+export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
+  private _required = new BehaviorSubject<boolean>(false);
+  readonly required$ = this._required.asObservable();
 
   @Input()
   label?: Maybe<string> = 'Enter a date range';
@@ -34,10 +40,9 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
   @Input()
   showCustomize = false;
 
-  readonly random = randomNumberFactory(10000)();
-
   private _pickerOpened = new BehaviorSubject<boolean>(false);
 
+  private _requiredSub = new SubscriptionObject();
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
@@ -45,6 +50,16 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
     start: new FormControl<Maybe<Date>>(null),
     end: new FormControl<Maybe<Date>>(null)
   });
+
+  readonly errorStateMatcher: ErrorStateMatcher = {
+    isErrorState: (control: AbstractControl | null, form) => {
+      if (control) {
+        return (control.invalid && (control.dirty || control.touched)) || (control.touched && this.range.invalid);
+      } else {
+        return false;
+      }
+    }
+  };
 
   readonly minDate$ = this.dbxCalendarScheduleSelectionStore.minDate$;
   readonly maxDate$ = this.dbxCalendarScheduleSelectionStore.maxDate$;
@@ -55,10 +70,10 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, @Inject(MAT_FORM_FIELD_DEFAULT_OPTIONS) readonly matFormFieldDefaultOptions: MatFormFieldDefaultOptions) {}
 
   ngOnInit(): void {
-    this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.inputRange$.subscribe((x) => {
+    this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.currentInputRange$.subscribe((x) => {
       this.range.setValue({
-        start: x.inputStart ?? null,
-        end: x.inputEnd ?? null
+        start: x?.inputStart ?? null,
+        end: x?.inputEnd ?? null
       });
     });
 
@@ -66,7 +81,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
       .pipe(
         distinctUntilChanged(),
         switchMap((opened) => {
-          let obs: Observable<{ start?: Maybe<Date>; end?: Maybe<Date> }>;
+          let obs: Observable<RangeValue>;
 
           if (opened) {
             obs = of({});
@@ -85,12 +100,41 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
           this.dbxCalendarScheduleSelectionStore.setInputRange({ inputStart: x.start, inputEnd: x.end });
         }
       });
+
+    // add a required validator when needed
+    this._requiredSub.subscription = this._required.subscribe((x) => {
+      const validators = x
+        ? [
+            (control: AbstractControl) => {
+              const range = control.value;
+
+              if (!range || !range.start || !range.end) {
+                return { required: true };
+              }
+
+              return null;
+            }
+          ]
+        : [];
+      this.range.setValidators(validators);
+    });
   }
 
   ngOnDestroy(): void {
+    this._required.complete();
     this._pickerOpened.complete();
+    this._requiredSub.destroy();
     this._syncSub.destroy();
     this._valueSub.destroy();
+  }
+
+  @Input()
+  get required() {
+    return this._required.value;
+  }
+
+  set required(required: boolean) {
+    this._required.next(required);
   }
 
   pickerOpened() {

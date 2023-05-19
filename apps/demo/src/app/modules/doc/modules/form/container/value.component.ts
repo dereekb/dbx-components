@@ -1,21 +1,21 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration } from '@dereekb/dbx-form';
-import { addDays, startOfDay } from 'date-fns';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration, dateTimeRangeField } from '@dereekb/dbx-form';
+import { addDays, addHours, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
-import { of } from 'rxjs';
+import { delay, of } from 'rxjs';
 import { DateScheduleDayCode } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
 })
 export class DocFormValueComponent {
-  readonly dateValues = {
+  readonly dateValues$ = of({
     date: addDays(new Date(), -12),
     dateAsString: addDays(new Date(), -6),
     dayOnly: addDays(new Date(), 6),
     dayOnlyAsString: addDays(new Date(), 12)
-  };
+  });
 
   readonly textFields: FormlyFieldConfig[] = [
     //
@@ -69,6 +69,52 @@ export class DocFormValueComponent {
       }
     })
   ];
+
+  readonly dateTimeRangeValues$ = of({
+    sat: addHours(startOfDay(new Date()), 6),
+    eat: addHours(startOfDay(new Date()), 16)
+  }).pipe(delay(20)); // simulate a slight loading delay
+
+  readonly dateTimeRangeFields: FormlyFieldConfig[] = [
+    dateTimeRangeField({
+      start: {
+        key: 'sat'
+      },
+      end: {
+        key: 'eat'
+      }
+    })
+  ];
+
+  /*
+
+
+export function schoolInfoJobSettingsTimeFields() {
+  return flexLayoutWrapper([schoolInfoJobSettingsStartTimeField(), schoolInfoJobSettingsEndTimeField()], {
+    relative: true
+  });
+}
+
+export function schoolInfoJobSettingsStartTimeField() {
+  return dateTimeField({
+    key: 'sat',
+    label: 'Default Start Time',
+    required: false,
+    timeOnly: true,
+    hideDateHint: true
+  });
+}
+
+export function schoolInfoJobSettingsEndTimeField() {
+  return dateTimeField({
+    key: 'eat',
+    label: 'Default End Time',
+    required: false,
+    timeOnly: true,
+    hideDateHint: true
+  });
+}
+  */
 
   readonly dateRangeFields: FormlyFieldConfig[] = [
     dateRangeField({}),
