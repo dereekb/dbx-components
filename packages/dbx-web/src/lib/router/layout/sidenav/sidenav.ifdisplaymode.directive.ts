@@ -17,12 +17,7 @@ export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective implem
 
   readonly show$ = this._sidenavModes.pipe(
     switchMap((modes) => {
-      return this.dbxSidenavComponent.mode$.pipe(
-        map((mode) => {
-          console.log({ mode, modes });
-          return modes.has(mode);
-        })
-      );
+      return this.dbxSidenavComponent.mode$.pipe(map((mode) => modes.has(mode)));
     }),
     distinctUntilChanged(),
     shareReplay(1)

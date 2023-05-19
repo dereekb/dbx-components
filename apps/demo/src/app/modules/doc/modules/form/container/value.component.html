@@ -16,10 +16,13 @@
     </doc-feature-example>
     <doc-feature-example header="dateTimeField()" hint="Used to configure a date input field.">
       <p>The date input is used to select a single day, or a single date/time.</p>
-      <doc-form-example-form [dbxFormlyFields]="dateTimeFields" [dbxFormSource]="dateValues"></doc-form-example-form>
+      <doc-form-example-form [dbxFormlyFields]="dateTimeFields" [dbxFormSource]="dateValues$"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="dateRangeField()" hint="Combines two dateTimeFields().">
       <doc-form-example-form [dbxFormlyFields]="dateRangeFields"></doc-form-example-form>
+    </doc-feature-example>
+    <doc-feature-example header="dateTimeRangeField()" hint="Combines two dateTimeFields() configured for picking a time range.">
+      <doc-form-example-form [dbxFormlyFields]="dateTimeRangeFields" [dbxFormSource]="dateTimeRangeValues$"></doc-form-example-form>
     </doc-feature-example>
 
     <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">

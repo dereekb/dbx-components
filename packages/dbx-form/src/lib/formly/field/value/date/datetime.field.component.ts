@@ -1,6 +1,6 @@
-import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction } from '@dereekb/util';
-import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of } from 'rxjs';
+import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction, Milliseconds } from '@dereekb/util';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDate, isSameDateHoursAndMinutes } from '@dereekb/date';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, delay } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
@@ -197,6 +197,8 @@ export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldS
     shareReplay(1)
   );
 }
+
+const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10; // 10 ms
 
 @Component({
   templateUrl: 'datetime.field.component.html'
@@ -445,7 +447,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
 
   readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.config$]).pipe(
-    throttleTime(40, undefined, { leading: false, trailing: true }),
+    throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
     distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
     map(([date, stepsOffset, config]) => {
@@ -463,7 +465,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
       return date;
     }),
-    distinctUntilChanged((a, b) => a != null && b != null && isSameMinute(a, b)),
+    distinctUntilChanged(isSameDateHoursAndMinutes),
     shareReplay(1)
   );
 
@@ -478,13 +480,20 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
     const valueFactory = dbxDateTimeOutputValueFactory(this.valueMode);
 
-    this._sub.subscription = this.timeOutput$.pipe(skipFirstMaybe()).subscribe((dateValue) => {
-      const value = valueFactory(dateValue);
+    this._sub.subscription = this.value$
+      .pipe(
+        switchMap(() => {
+          return this.timeOutput$.pipe(throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }), skipFirstMaybe());
+        }),
+        distinctUntilChanged(isSameDateHoursAndMinutes)
+      )
+      .subscribe((dateValue) => {
+        const value = valueFactory(dateValue);
 
-      this.formControl.setValue(value);
-      this.formControl.markAsDirty();
-      this.formControl.markAsTouched();
-    });
+        this.formControl.setValue(value);
+        this.formControl.markAsDirty();
+        this.formControl.markAsTouched();
+      });
 
     this._valueSub.subscription = this.timeString$.subscribe((x) => {
       // Skip events where the timeInput value is cleared.
