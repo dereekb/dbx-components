@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.20](https://github.com/dereekb/dbx-components/compare/v9.23.19-dev...v9.23.20) (2023-05-19)
+
+
+### Bug Fixes
+
+* fixed markerClasses usage in DbxMapboxMarkerComponent ([d0a0b18](https://github.com/dereekb/dbx-components/commit/d0a0b1832cfc621627f0ca60f91251fea6f0aa92))
+
+
+
 ## [9.23.19](https://github.com/dereekb/dbx-components/compare/v9.23.18-dev...v9.23.19) (2023-05-11)
 
 
