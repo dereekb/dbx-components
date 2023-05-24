@@ -115,7 +115,6 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
             return of(state);
           }
         })
-        // tapLog('Change: ')
       )
     ),
     shareReplay(1)

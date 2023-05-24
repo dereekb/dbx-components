@@ -66,6 +66,7 @@
 
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
+
   $primary: map.get($color-config, 'primary');
   $accent: map.get($color-config, 'accent');
   $warn: map.get($color-config, 'warn');
@@ -80,6 +81,12 @@
 
   $warn-color: theming.get-color-from-palette($warn, 500);
   $warn-color-contrast: theming.get-color-from-palette($warn, '500-contrast');
+
+  $grey-color: theming.get-color-from-palette($foreground, 'text');
+  $grey-color-bg: theming.get-color-from-palette($background, 'disabled-button');
+
+  $disabled-color: theming.get-color-from-palette($foreground, 'disabled-text');
+  $disabled-color-bg: theming.get-color-from-palette($background, 'disabled-button');
 
   $background-text-color: theming.get-color-from-palette($foreground, 'text');
   $background-color: theming.get-color-from-palette($background, 'background');
@@ -109,6 +116,24 @@
   .dbx-warn-bg {
     background: $warn-color;
     color: $warn-color-contrast;
+  }
+
+  .dbx-grey {
+    color: $grey-color;
+  }
+
+  .dbx-grey-bg {
+    color: $grey-color;
+    background: $grey-color-bg;
+  }
+
+  .dbx-disabled {
+    color: $disabled-color;
+  }
+
+  .dbx-disabled-bg {
+    color: $disabled-color;
+    background: $disabled-color-bg;
   }
 
   .dbx-bg,
