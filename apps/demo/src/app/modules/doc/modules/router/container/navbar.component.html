@@ -36,6 +36,11 @@
       <div>
         <span>Mode set to button. The button will get it's icon from the current anchor, or default to the input anchor. Default text is used for states that do not have an anchor.</span>
         <dbx-navbar defaultIcon="add" defaultText="Default Text" [anchors]="iconButtonAnchors" mode="button"></dbx-navbar>
+
+        <h5>Rotate Button Mode</h5>
+        <p>The above uses the "menu" button mode, which is the default.</p>
+        <p>There is an additional "rotate" button mode which shows the next anchor and when clicked will segue to that anchor instead.</p>
+        <dbx-navbar defaultIcon="add" defaultText="Default Text" [anchors]="anchors" mode="button" buttonMode="rotate"></dbx-navbar>
       </div>
 
       <h4>Icon Button</h4>

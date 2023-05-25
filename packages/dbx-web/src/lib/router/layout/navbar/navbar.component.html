@@ -1,15 +1,24 @@
 <ng-container [ngSwitch]="mode$ | async">
   <!-- Button -->
   <ng-container *ngSwitchDefault>
-    <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchors$ | async"></dbx-icon-button>
-    <mat-menu #menu>
-      <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
-        <button mat-menu-item [ngClass]="x.selected ? 'active' : ''">
-          <mat-icon *ngIf="x.anchor.icon">{{ x.anchor.icon }}</mat-icon>
-          {{ x.anchor.title }}
-        </button>
-      </dbx-anchor>
-    </mat-menu>
+    <ng-container [ngSwitch]="buttonMode$ | async">
+      <ng-container *ngSwitchCase="'menu'">
+        <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchors$ | async"></dbx-icon-button>
+        <mat-menu #menu>
+          <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
+            <button mat-menu-item [ngClass]="x.selected ? 'active' : ''">
+              <mat-icon *ngIf="x.anchor.icon">{{ x.anchor.icon }}</mat-icon>
+              {{ x.anchor.title }}
+            </button>
+          </dbx-anchor>
+        </mat-menu>
+      </ng-container>
+      <ng-container *ngSwitchCase="'rotate'">
+        <dbx-anchor [anchor]="(nextRotateAnchor$ | async)?.anchor">
+          <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [disabled]="hasNoAnchors$ | async"></dbx-icon-button>
+        </dbx-anchor>
+      </ng-container>
+    </ng-container>
   </ng-container>
   <!-- Bar -->
   <nav *ngSwitchCase="'bar'" mat-tab-nav-bar [attr.mat-align-tabs]="navAlign">

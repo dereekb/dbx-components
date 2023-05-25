@@ -11,4 +11,12 @@ describe('range()', () => {
     expect(result[3]).toBe(-3);
     expect(result[4]).toBe(-4);
   });
+
+  it('should create a range with an IndexedRange', () => {
+    const result = range({ minIndex: 2, maxIndex: 4 });
+    expect(result.length).toBe(2);
+
+    expect(result[0]).toBe(2);
+    expect(result[1]).toBe(3);
+  });
 });

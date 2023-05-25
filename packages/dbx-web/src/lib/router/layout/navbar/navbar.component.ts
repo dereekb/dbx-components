@@ -1,10 +1,11 @@
-import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { ScreenMediaWidthType } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
-import { applyBestFit, Maybe } from '@dereekb/util';
+import { applyBestFit, findNext, Maybe } from '@dereekb/util';
 import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ClickableAnchorLinkSegueRef, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
+import { tapLog } from '@dereekb/rxjs';
 
 interface NavAnchorLink {
   selected: boolean;
@@ -13,6 +14,7 @@ interface NavAnchorLink {
 
 export type NavBarContentAlign = 'center' | 'left' | 'right';
 export type NavbarMode = 'bar' | 'button' | 'icon';
+export type NavbarButtonMode = 'menu' | 'rotate';
 
 /**
  * Component that displays a navbar.
@@ -34,6 +36,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   private _defaultText = new BehaviorSubject<Maybe<string>>(undefined);
 
   private _inputMode = new BehaviorSubject<Maybe<NavbarMode>>(undefined);
+  private _buttonMode = new BehaviorSubject<NavbarButtonMode>('menu');
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('large');
   private _anchors = new BehaviorSubject<ClickableAnchorLinkSegueRef[]>([]);
 
@@ -70,7 +73,10 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     shareReplay(1)
   );
 
+  readonly buttonMode$ = this._buttonMode.pipe(distinctUntilChanged(), shareReplay(1));
+
   readonly selectedAnchor$: Observable<Maybe<NavAnchorLink>> = this.anchors$.pipe(map((x) => x.find((y) => y.selected)));
+  readonly nextRotateAnchor$: Observable<Maybe<NavAnchorLink>> = this.anchors$.pipe(map((x) => findNext(x, (y) => y.selected) || x[0]));
 
   readonly hasNoAnchors$ = this.anchors$.pipe(
     map((x) => x.length === 0),
@@ -78,7 +84,13 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     shareReplay(1)
   );
 
-  readonly buttonDisplay$: Observable<DbxButtonDisplayContent> = combineLatest([this._defaultIcon, this._icon, this._defaultText, this.selectedAnchor$, this.mode$]).pipe(
+  readonly buttonNavAnchor$ = this.buttonMode$.pipe(
+    switchMap((x) => (x === 'menu' ? this.selectedAnchor$ : this.nextRotateAnchor$)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly buttonDisplay$: Observable<DbxButtonDisplayContent> = combineLatest([this._defaultIcon, this._icon, this._defaultText, this.buttonNavAnchor$, this.mode$]).pipe(
     map(([defaultIcon, icon, defaultText, selectedAnchor, mode]) => {
       let content: DbxButtonDisplayContent;
 
@@ -108,6 +120,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     this._defaultIcon.complete();
     this._defaultText.complete();
     this._inputMode.complete();
+    this._buttonMode.complete();
     this._breakpoint.complete();
     this._anchors.complete();
   }
@@ -131,6 +144,11 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   @Input()
   public set anchors(anchors: Maybe<ClickableAnchorLinkSegueRef[]>) {
     this._anchors.next(anchors ?? []);
+  }
+
+  @Input()
+  public set buttonMode(mode: Maybe<NavbarButtonMode>) {
+    this._buttonMode.next(mode ?? 'menu');
   }
 
   @Input()

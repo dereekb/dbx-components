@@ -1,3 +1,5 @@
+import { IndexRange } from '../value/indexed';
+
 export function reduceNumbersWithMax(array: number[], emptyArrayValue?: number): number | undefined {
   return reduceNumbersWithMaxFn(emptyArrayValue)(array);
 }
@@ -40,7 +42,8 @@ export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: numbe
 /**
  * Input for range()
  */
-export type RangeInput = number | { start?: number; end: number };
+export type RangeInputObject = { start?: number; end: number };
+export type RangeInput = number | RangeInputObject | IndexRange;
 
 /**
  * Generates an array containing the range of numbers specified.
@@ -65,8 +68,8 @@ export function range(input: RangeInput, inputEnd?: number): number[] {
       end = input;
     }
   } else {
-    start = input.start ?? 0;
-    end = input.end;
+    start = (input as RangeInputObject).start ?? (input as IndexRange).minIndex ?? 0;
+    end = (input as RangeInputObject).end ?? (input as IndexRange).maxIndex;
   }
 
   if (end >= start) {
