@@ -5,7 +5,6 @@ import { applyBestFit, findNext, Maybe } from '@dereekb/util';
 import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ClickableAnchorLinkSegueRef, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
-import { tapLog } from '@dereekb/rxjs';
 
 interface NavAnchorLink {
   selected: boolean;

@@ -1,20 +1,22 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration, dateTimeRangeField } from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration, dateTimeRangeField, timezoneStringField } from '@dereekb/dbx-form';
 import { addDays, addHours, startOfDay } from 'date-fns';
-import { addSuffixFunction, randomBoolean } from '@dereekb/util';
-import { delay, of } from 'rxjs';
-import { DateScheduleDayCode } from '@dereekb/date';
+import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
+import { BehaviorSubject, delay, of } from 'rxjs';
+import { DateScheduleDayCode, dateTimezoneUtcNormal } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
 })
 export class DocFormValueComponent {
   readonly dateValues$ = of({
-    date: addDays(new Date(), -12),
+    date: startOfDay(new Date()),
     dateAsString: addDays(new Date(), -6),
     dayOnly: addDays(new Date(), 6),
-    dayOnlyAsString: addDays(new Date(), 12)
+    dayOnlyAsString: addDays(new Date(), 12),
+    dateOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'Asia/Tokyo' }).systemDateToTargetDate(startOfDay(new Date())),
+    timeOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'America/New_York' }).systemDateToTargetDate(startOfDay(new Date()))
   });
 
   readonly textFields: FormlyFieldConfig[] = [
@@ -42,14 +44,27 @@ export class DocFormValueComponent {
 
   readonly latLngTextField: FormlyFieldConfig[] = [latLngTextField()];
 
+  private _timezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
+
+  readonly timezone$ = this._timezone.asObservable();
+
+  readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
+
+  readonly onTimezoneChange = (value: { timezone: Maybe<TimezoneString> }) => {
+    this._timezone.next(value?.timezone);
+  };
+
   readonly dateTimeFields: FormlyFieldConfig[] = [
-    dateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
-    dateTimeField({ key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
-    dateTimeField({ key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
-    dateTimeField({ key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
-    dateTimeField({ key: 'dayOnlyAsString', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }),
-    dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date hint is also hidden.', hideDateHint: true }),
+    dateTimeField({ timezone: this.timezone$, label: 'Day Only W/ String Value', key: 'dayOnlyAsString', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }),
+    dateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
+    dateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
+    dateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
+    dateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
+    dateTimeField({ timezone: this.timezone$, label: 'Time Only', key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date and timezone hint is also hidden.', hideDateHint: true, showTimezone: false }),
+    dateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }),
+    dateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }),
     dateTimeField({
+      timezone: this.timezone$,
       key: 'dateWithASchedule',
       required: true,
       description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today. A minimum of today and a maximum of 14 days from now.',

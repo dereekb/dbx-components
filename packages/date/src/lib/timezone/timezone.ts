@@ -1,4 +1,4 @@
-import { cachedGetter, replaceStringsFunction, TimezoneString, TimezoneStringRef, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { cachedGetter, Maybe, replaceStringsFunction, TimezoneAbbreviation, TimezoneString, TimezoneStringRef, UTC_TIMEZONE_STRING, UTCTimezoneAbbreviation } from '@dereekb/util';
 import { formatInTimeZone } from 'date-fns-tz';
 import { timeZonesNames } from '@vvo/tzdb';
 import { guessCurrentTimezone } from '../date';
@@ -17,18 +17,28 @@ export interface TimezoneInfo extends TimezoneStringRef {
 }
 
 export function timezoneInfoForSystem(): TimezoneInfo {
-  return timezoneStringToTimezoneInfo(guessCurrentTimezone());
+  return timezoneStringToTimezoneInfo(guessCurrentTimezone() ?? UTC_TIMEZONE_STRING);
+}
+
+export function getTimezoneAbbreviation(timezone: Maybe<TimezoneString | UTCTimezoneAbbreviation>): TimezoneAbbreviation {
+  return timezone === UTC_TIMEZONE_STRING ? UTC_TIMEZONE_STRING : timezone ? formatInTimeZone(new Date(), timezone, 'zzz') : 'UKNOWN';
+}
+
+export function getTimezoneLongName(timezone: Maybe<TimezoneString>): string {
+  return timezone ? formatInTimeZone(new Date(), timezone, 'zzzz') : 'Unknown Timezone';
 }
 
 export function timezoneStringToTimezoneInfo(timezone: TimezoneString): TimezoneInfo {
-  const abbreviation = formatInTimeZone(new Date(), timezone, 'zzz');
-  return {
+  const abbreviation = getTimezoneAbbreviation(timezone);
+  const result = {
     timezone,
     search: timezoneStringToSearchableString(timezone),
     lowercase: timezone.toLowerCase(),
     abbreviation,
     lowercaseAbbreviation: abbreviation.toLowerCase()
   };
+
+  return result;
 }
 
 export function searchTimezoneInfos(search: string, infos: TimezoneInfo[]): TimezoneInfo[] {

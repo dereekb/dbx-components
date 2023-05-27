@@ -16,13 +16,10 @@
     </doc-feature-example>
     <doc-feature-example header="dateTimeField()" hint="Used to configure a date input field.">
       <p>The date input is used to select a single day, or a single date/time.</p>
+      <p>Values that are input/set are considered in the input, and also exported in the same timezone.</p>
       <doc-form-example-form [dbxFormlyFields]="dateTimeFields" [dbxFormSource]="dateValues$"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="dateRangeField()" hint="Combines two dateTimeFields().">
-      <doc-form-example-form [dbxFormlyFields]="dateRangeFields"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="dateTimeRangeField()" hint="Combines two dateTimeFields() configured for picking a time range.">
-      <doc-form-example-form [dbxFormlyFields]="dateTimeRangeFields" [dbxFormSource]="dateTimeRangeValues$"></doc-form-example-form>
+      <p>Timezone Change Tester</p>
+      <doc-form-example-form (dbxFormValueChange)="onTimezoneChange($event)" [dbxFormSource]="{ timezone: 'UTC' }" [config]="timezoneSelectionField"></doc-form-example-form>
     </doc-feature-example>
 
     <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">

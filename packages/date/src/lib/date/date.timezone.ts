@@ -17,16 +17,18 @@ export type BaseDateAsUTC = Date;
 
 export interface DateTimezoneConversionConfig {
   /**
-   * Timezone to be relative to. If not defined, values are returned in UTC.
-   */
-  timezone?: TimezoneString;
-
-  /**
    * Whether or not to use the system timezone/offset.
    *
    * This will convert between UTC and the current system's timezone.
+   *
+   * Ignored if system timezone is provided.
    */
   useSystemTimezone?: boolean;
+
+  /**
+   * Timezone to be relative to. If not defined, values are returned in UTC.
+   */
+  timezone?: Maybe<TimezoneString>;
 
   /**
    * Custom timezone offset (in ms) between the "normal" and the base date.

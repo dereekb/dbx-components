@@ -24,7 +24,13 @@ export function timezoneStringSearchFunction(): SearchableValueFieldStringSearch
 }
 
 export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<string, TimezoneInfo> = (values: SearchableValueFieldValue<string, TimezoneInfo>[]) => {
-  const displayValues: SearchableValueFieldDisplayValue<string, TimezoneInfo>[] = values.map((x) => ({ ...x, label: x.value, sublabel: x.meta?.abbreviation ?? 'Unknown' }));
+  const timezoneInfos = allTimezoneInfos();
+
+  const displayValues: SearchableValueFieldDisplayValue<string, TimezoneInfo>[] = values.map((x) => {
+    const meta = x.meta ?? timezoneInfos.find((y) => x.value === y.timezone); // attempt to find the metadata in the timeInfos if it isn't provided.
+    return { ...x, label: x.value, sublabel: meta?.abbreviation ?? 'Unknown' };
+  });
+
   const obs: Observable<SearchableValueFieldDisplayValue<string, TimezoneInfo>[]> = of(displayValues);
   return obs;
 };
@@ -47,6 +53,8 @@ export function timezoneStringField(config: TimezoneStringFieldConfig = {}): For
     asArrayValue: false,
     ...config,
     searchOnEmptyText: true,
+    allowStringValues: false,
+    showClearValue: true,
     search: timezoneStringSearchFunction(),
     displayForValue: DISPLAY_FOR_TIMEZONE_STRING_VALUE
   });
