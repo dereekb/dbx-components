@@ -96,5 +96,5 @@
 
 <!-- Timezone Suffix -->
 <ng-template #timezoneSuffixTemplate>
-  <span class="dbx-datetime-timezone dbx-faint">{{ timezoneAbbreviation$ | async }}</span>
+  <span *ngIf="showTimezone" class="dbx-datetime-timezone dbx-faint">{{ timezoneAbbreviation$ | async }}</span>
 </ng-template>

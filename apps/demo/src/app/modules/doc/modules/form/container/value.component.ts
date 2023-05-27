@@ -92,6 +92,7 @@ export class DocFormValueComponent {
 
   readonly dateTimeRangeFields: FormlyFieldConfig[] = [
     dateTimeRangeField({
+      timezone: this.timezone$,
       start: {
         key: 'sat'
       },

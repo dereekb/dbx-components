@@ -235,7 +235,7 @@ export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldS
   );
 }
 
-const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10; // 10 ms
+const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
 @Component({
   templateUrl: 'datetime.field.component.html'
@@ -248,11 +248,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _customTimezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
 
   private _fullDayInputCtrl?: FormControl;
-  private _fullDayControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private _fullDayControlObs = new BehaviorSubject<Maybe<AbstractControl<boolean>>>(undefined);
   readonly fullDayControl$ = this._fullDayControlObs.pipe(filterMaybe());
 
   private _offset = new BehaviorSubject<number>(0);
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<Date>>>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   private _updateTime = new Subject<void>();
@@ -271,7 +271,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly value$ = this.formControl$.pipe(
-    map((control) => control.valueChanges.pipe(startWith(control.value))),
+    map((control) => control.valueChanges.pipe(startWith<Maybe<Date>>(control.value))),
     combineLatestWith(this.timezoneInstance$),
     switchMap(([x, timezoneInstance]) => x.pipe(map(dbxDateTimeInputValueParseFactory(this.valueMode, timezoneInstance)))),
     distinctUntilChanged(isSameDateHoursAndMinutes),
@@ -372,7 +372,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   }
 
   get showTimezone() {
-    return this.field.props.showTimezone;
+    return this.field.props.showTimezone ?? true;
   }
 
   get allowChangeTimezone() {
@@ -447,6 +447,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$]).pipe(
     map(([date, timeString, fullDay]) => {
       let result: Maybe<Date>;
+
+      if (!date && this.timeOnly) {
+        date = new Date();
+      }
 
       if (date) {
         if (fullDay) {
@@ -551,7 +555,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         }),
         distinctUntilChanged(isSameDateHoursAndMinutes),
         combineLatestWith(this.timezoneInstance$.pipe(map((timezoneInstance) => dbxDateTimeOutputValueFactory(this.valueMode, timezoneInstance)))),
-        map(([dateValue, valueFactory]) => valueFactory(dateValue))
+        map(([dateValue, valueFactory]) => valueFactory(dateValue)),
+        distinctUntilChanged((a, b) => {
+          return a && b ? (typeof a === 'string' ? a === b : isSameDateHoursAndMinutes(a, b as Date)) : a == b;
+        })
       )
       .subscribe((value) => {
         this.formControl.setValue(value);
