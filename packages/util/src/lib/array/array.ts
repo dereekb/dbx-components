@@ -1,7 +1,13 @@
 import { Maybe } from '../value/maybe.type';
+import { getArrayNextIndex } from './array.indexed';
 
 // MARK: Types
 export type ArrayOrValue<T> = T | T[];
+
+/**
+ * A decision function used by the array find function.
+ */
+export type ArrayFindDecisionFunction<T> = (value: T, index: number, obj: T[]) => boolean;
 
 // MARK: Functions
 /**

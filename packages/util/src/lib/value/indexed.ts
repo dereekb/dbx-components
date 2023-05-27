@@ -9,6 +9,8 @@ import { separateValues } from '../grouping';
 import { readKeysToMap } from '../map/map.key';
 import { isSelectedDecisionFunctionFactory } from '../set/set.selection';
 import { iterableToArray } from '../iterable/iterable';
+import { Building } from './build';
+import { wrapNumberFunction, boundNumberFunction, WrapNumberFunction } from '../number';
 
 /**
  * A number that denotes which index an item is at.
@@ -272,6 +274,29 @@ export function indexRange(input: IndexRangeInput): IndexRange {
   }
 }
 
+export type FitToIndexRangeFunction = (input: IndexNumber) => IndexNumber;
+
+export function fitToIndexRangeFunction(input: IndexRange): FitToIndexRangeFunction {
+  const { minIndex: min, maxIndex } = input;
+  const max = maxIndex - 1;
+  return boundNumberFunction<IndexNumber>({ min, max, wrap: false });
+}
+
+export type WrapIndexNumberFunction = WrapNumberFunction;
+
+/**
+ * Creates a WrapNumberFunction.
+ *
+ * @param input
+ * @param fencePosts
+ * @returns
+ */
+export function wrapIndexRangeFunction(input: IndexRange, fencePosts: boolean = true): WrapIndexNumberFunction {
+  const { minIndex: min, maxIndex } = input;
+  const max = maxIndex - 1;
+  return wrapNumberFunction<IndexNumber>({ min, max, fencePosts });
+}
+
 /**
  * Checks whether or not the input number is in the range.
  */
@@ -396,6 +421,75 @@ export function indexRangeOverlapsIndexRangeFunction(input: IndexRangeFunctionIn
   return (input: IndexRange) => {
     return input.minIndex <= maxIndex && input.maxIndex >= minIndex;
   };
+}
+
+export interface StepsFromIndexFunctionConfig {
+  readonly range: IndexRange;
+  /**
+   * Whether or not to fit start indexes that are outside of the range. If false, then returns undefined.
+   */
+  readonly fitToRange?: boolean;
+  /**
+   * Whether or not to wrap the index to the other side of the range when stepping outside the bounds of the range.
+   */
+  readonly wrapAround?: boolean;
+  /**
+   * Whether or not to use fencePosts. Defaults to true.
+   */
+  readonly fencePosts?: boolean;
+  readonly steps?: number;
+}
+
+export type StepsFromIndexFunction = ((startIndex: number, wrapAround?: boolean, steps?: number) => Maybe<number>) & {
+  readonly _config: StepsFromIndexFunctionConfig;
+};
+
+export function stepsFromIndexFunction(config: StepsFromIndexFunctionConfig): StepsFromIndexFunction {
+  const { range, fitToRange = false, fencePosts = true, wrapAround: defaultWrapAround = false, steps: defaultStep = 1 } = config;
+  const wrapNumber = wrapIndexRangeFunction(range, fencePosts);
+  const fitNumberFunction = fitToRange ? fitToIndexRangeFunction(range) : (x: number) => x; // unused if fitToRange is not true
+
+  const fn = ((startIndex: number, wrapAround = defaultWrapAround, steps = defaultStep) => {
+    let nextIndex: Maybe<number>;
+
+    if (!fitToRange && (startIndex < range.minIndex || startIndex >= range.maxIndex)) {
+      nextIndex = undefined; // start indexes outside the range are considered invalid, unless fitToRange is true.
+    } else {
+      const stepIndex = startIndex + steps;
+
+      // Perform directional wrapping
+      if (fitToRange || wrapAround) {
+        if (wrapAround) {
+          // wrap around
+          nextIndex = wrapNumber(stepIndex);
+        } else {
+          // fit to range
+          nextIndex = fitNumberFunction(stepIndex);
+        }
+      } else if (stepIndex < range.minIndex || stepIndex >= range.maxIndex) {
+        nextIndex = undefined; // out of bounds
+      } else {
+        nextIndex = stepIndex;
+      }
+    }
+
+    return nextIndex;
+  }) as Building<StepsFromIndexFunction>;
+  fn._config = { range, fitToRange, wrapAround: defaultWrapAround, steps: defaultStep };
+  return fn as StepsFromIndexFunction;
+}
+
+/**
+ * Steps to the next index in the given direction based on the number of steps to take.
+ *
+ * Starting indexes less than the minIndex are considered to not exist and will return undefined.
+ *
+ * When wrapAround is true, indexes that are larger than the max index will be used to find an index that is that many steps into the index range.
+ *
+ * For instance, an index of 5 on a range of 0 to 3 will return the index 1.
+ */
+export function stepsFromIndex(range: IndexRange, startIndex: number, step = 1, wrapAround = false): Maybe<number> {
+  return stepsFromIndexFunction({ range })(startIndex, wrapAround, step);
 }
 
 // MARK: Selection

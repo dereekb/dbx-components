@@ -1,5 +1,6 @@
 import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay, parse } from 'date-fns';
-import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString } from '@dereekb/util';
+import { formatInTimeZone } from 'date-fns-tz';
+import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString, TimezoneAbbreviation } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
 
@@ -65,7 +66,7 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
   return date.toISOString();
 }
 
-export function guessCurrentTimezone(): TimezoneString {
+export function guessCurrentTimezone(): Maybe<TimezoneString> {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
 }
 

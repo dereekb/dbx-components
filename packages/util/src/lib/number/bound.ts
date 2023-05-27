@@ -3,13 +3,19 @@ import { MapFunction } from '../value/map';
 
 // MARK: Number
 export interface NumberBound<T extends number = number> {
-  min: T;
-  max: T;
+  /**
+   * The minimum value.
+   */
+  readonly min: T;
+  /**
+   * The maximum value, inclusive.
+   */
+  readonly max: T;
 }
 
 export function isValidNumberBound(bounds: NumberBound): boolean {
   const { min, max } = bounds;
-  return min < max;
+  return min <= max;
 }
 
 export type IsInNumberBoundFunction = (number: number) => boolean;
@@ -27,26 +33,32 @@ export function isInNumberBoundFunction(bounds: NumberBound): IsInNumberBoundFun
 }
 
 // MARK: Wrap
-export type WrapNumberFunctionConfig<T extends number = number> = NumberBound<T>;
+export interface WrapNumberFunctionConfig<T extends number = number> extends NumberBound<T> {
+  /**
+   * Whether or not to wrap to the nearest "fencepost" value instead of by direct index.
+   *
+   * False by default.
+   */
+  readonly fencePosts?: boolean;
+}
 
 export type WrapNumberFunction<T extends number = number> = MapFunction<number, T> & {
   readonly _wrap: WrapNumberFunctionConfig;
 };
 
 export function wrapNumberFunction<T extends number = number>(wrapNumberFunctionConfig: WrapNumberFunctionConfig<T>): WrapNumberFunction<T> {
-  const { min, max } = wrapNumberFunctionConfig;
+  const { min, max, fencePosts = false } = wrapNumberFunctionConfig;
   const distance = max - min;
-  const offset = 0 - min;
-
   const isInBound = isInNumberBoundFunction(wrapNumberFunctionConfig);
 
   const fn: Writable<WrapNumberFunction<T>> = ((input: T) => {
     if (isInBound(input)) {
       return input;
     } else {
-      const relativeOffset = input < min ? -offset : offset;
-      const normal = (input + relativeOffset) % distance;
-      return normal - relativeOffset;
+      // when fencePosts is true, we're wrapping to the nearest fence post, meaning wraps are one value longer increased on that side.
+      const fencePostOffset = fencePosts ? (input < min ? 1 : -1) : 0;
+      let wrappedValue = ((((input - min) % distance) + distance) % distance) + min + fencePostOffset;
+      return wrappedValue;
     }
   }) as WrapNumberFunction<T>;
   fn._wrap = wrapNumberFunctionConfig;
@@ -55,9 +67,11 @@ export function wrapNumberFunction<T extends number = number>(wrapNumberFunction
 
 export interface BoundNumberFunctionConfig<T extends number = number> extends NumberBound<T> {
   /**
-   * Whether or not to "wrap" values around. Example: Wrapping from -180 to 180
+   * Whether or not to "wrap" values around.
+   *
+   * Example: Wrapping from -180 to 180
    */
-  wrap?: boolean;
+  readonly wrap?: boolean;
 }
 
 export type BoundNumberFunction<T extends number = number> = MapFunction<number, T>;

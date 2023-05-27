@@ -8,6 +8,11 @@
   .mat-form-field-appearance-standard .mat-form-field-appearance-outline .mat-form-field-flex {
     padding-top: unset;
   }
+
+  .mat-form-field-appearance-standard .mat-form-field-appearance-outline .mat-form-field-prefix,
+  .mat-form-field-appearance-standard .mat-form-field-appearance-outline .mat-form-field-suffix {
+    top: unset;
+  }
 }
 
 @mixin color($theme-config) {

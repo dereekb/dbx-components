@@ -21,12 +21,12 @@
     <div class="dbx-hint" [ngSwitch]="fullDay$ | async">
       <small *ngSwitchCase="true">
         <b class="dbx-ok">{{ allDayLabel }}</b>
-        {{ displayValue$ | async | date: 'fullDate' }} ({{ displayValue$ | async | dateDistance }})
+        {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
       </small>
       <small *ngSwitchCase="false">
         <ng-container *ngIf="value$ | async">
           <b class="dbx-ok">{{ atTimeLabel }}</b>
-          {{ displayValue$ | async | date: 'medium' }} ({{ displayValue$ | async | timeDistance }})
+          {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
         </ng-container>
       </small>
     </div>
@@ -42,6 +42,9 @@
     <mat-label>{{ dateLabel }}</mat-label>
     <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
+    <span matSuffix *ngIf="!(showTimeInput$ | async)">
+      <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
+    </span>
   </mat-form-field>
 </ng-template>
 
@@ -85,5 +88,13 @@
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
     <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
+    <span matSuffix>
+      <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
+    </span>
   </mat-form-field>
+</ng-template>
+
+<!-- Timezone Suffix -->
+<ng-template #timezoneSuffixTemplate>
+  <span *ngIf="showTimezone" class="dbx-datetime-timezone dbx-faint">{{ timezoneAbbreviation$ | async }}</span>
 </ng-template>

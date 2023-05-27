@@ -1,6 +1,71 @@
-import { IndexNumber } from '@dereekb/util';
-import { IndexRef } from '../value';
-import { indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory } from './array.indexed';
+import { IndexNumber, IndexRef } from '../value';
+import { getArrayNextIndex, indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory } from './array.indexed';
+import { findNext } from './array.indexed';
+import { range } from './array.number';
+
+describe('findNext()', () => {
+  const array = [0, 1, 2, 3, 4, 5];
+
+  it('should return undefined for an empty array', () => {
+    const result = findNext([], () => true);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return the next value', () => {
+    range(0, array.length - 1).forEach((i) => {
+      expect(findNext(array, (x) => x === i)).toBe(i + 1);
+    });
+  });
+
+  describe('wrapAround=true', () => {
+    it('should wrap around the array for the final index.', () => {
+      const index = array.length - 1;
+      const result = findNext(array, (x) => x === index, true);
+      expect(result).toBe(0);
+    });
+  });
+});
+
+describe('getArrayNextIndex()', () => {
+  const array = [0, 1, 2, 3, 4, 5];
+
+  it('should return undefined for negative values.', () => {
+    const result = getArrayNextIndex(array, -1);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined for positive index values that are out of bounds.', () => {
+    const result = getArrayNextIndex(array, array.length);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return the next index.', () => {
+    range(0, array.length - 1).forEach((i) => {
+      expect(getArrayNextIndex(array, i)).toBe(i + 1);
+    });
+  });
+
+  it('should return undefined if the next index falls outside the array.', () => {
+    const index = 5;
+    const result = getArrayNextIndex(array, index);
+    expect(result).toBeUndefined();
+  });
+
+  describe('wrapAround=true', () => {
+    it('should wrap around the array for the final index.', () => {
+      const index = array.length - 1;
+      const result = getArrayNextIndex(array, index, true, 1);
+      expect(result).toBe(0);
+    });
+
+    it('should wrap around the array by the additional amount.', () => {
+      const expectedIndex = 0;
+      const steps = array.length;
+      const result = getArrayNextIndex(array, 0, true, steps);
+      expect(result).toBe(expectedIndex);
+    });
+  });
+});
 
 interface TestItemWithOneIndex extends IndexRef {
   value: string;

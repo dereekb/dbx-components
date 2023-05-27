@@ -1,5 +1,64 @@
-import { IndexNumber, ReadIndexRangeFunction, indexRangeReaderPairFactory, sortByIndexRangeAscendingCompareFunction } from '../value/indexed';
+import { IndexNumber, IndexRange, ReadIndexRangeFunction, indexRangeReaderPairFactory, sortByIndexRangeAscendingCompareFunction, stepsFromIndex } from '../value/indexed';
 import { Maybe } from '../value/maybe.type';
+import { ArrayFindDecisionFunction } from './array';
+
+/**
+ * Creates an IndexRange for the input array.
+ *
+ * @param array
+ * @returns
+ */
+export function indexRangeForArray<T>(array: T[]): IndexRange {
+  return { minIndex: 0, maxIndex: array.length };
+}
+
+/**
+ * Finds a value, then returns the next value, if applicable.
+ *
+ * @param array array to look in
+ * @param find find function
+ * @param wrapAround Whether or not to loop around to the front of the array if the value fonud is at the last index.
+ * @param steps
+ */
+export function findNext<T>(array: Maybe<T[]>, find: ArrayFindDecisionFunction<T>, wrapAround = false, steps?: number): Maybe<T> {
+  let result: Maybe<T>;
+
+  if (array) {
+    const index = array.findIndex(find);
+    const nextIndex = getArrayNextIndex(array, index, wrapAround, steps);
+
+    if (nextIndex != null) {
+      result = array[nextIndex];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Returns the next index of an element in the input array based in the input index.
+ *
+ * Indexes less than 0 are considered to not exist.
+ *
+ * When wrapAround is true, indexes that are larger than the entire array will be used to find an index that is that many steps into the array.
+ *
+ * For instance, an index of 5 on an array of length 3 will return the index 1.
+ *
+ * @param array
+ * @param index
+ * @param wrapAround
+ * @param steps
+ */
+export function getArrayNextIndex<T>(array: T[], index: number, wrapAround = false, steps = 1): Maybe<number> {
+  let nextIndex: Maybe<number>;
+  const arrayLength = array.length;
+
+  if (index >= 0 && index <= arrayLength - 1) {
+    nextIndex = stepsFromIndex(indexRangeForArray(array), index, steps, wrapAround);
+  }
+
+  return nextIndex;
+}
 
 /**
  * Returns a value given the input index if any value responds to the index.

@@ -1,5 +1,5 @@
 import { range } from '../array/array.number';
-import { findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
+import { findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction, stepsFromIndexFunction, wrapIndexRangeFunction } from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {
@@ -193,6 +193,115 @@ describe('indexRangeOverlapsIndexRangeFunction()', () => {
 
     it('should return true if the same indexRange is used as input.', () => {
       expect(overlapsIndexRange(indexRange)).toBe(true);
+    });
+  });
+});
+
+describe('wrapIndexRangeFunction()', () => {
+  describe('function', () => {
+    const inputRange = { minIndex: 0, maxIndex: 6 };
+
+    describe('fenceposts=true', () => {
+      const fn = wrapIndexRangeFunction(inputRange, true);
+
+      it('should retain numbers within the range.', () => {
+        range(inputRange).forEach((i) => {
+          expect(fn(i)).toBe(i);
+        });
+      });
+
+      it('should wrap the index number from the positive side.', () => {
+        expect(fn(inputRange.maxIndex)).toBe(0);
+      });
+
+      it('should wrap the index number from the negative side.', () => {
+        expect(fn(-1)).toBe(inputRange.maxIndex - 1);
+      });
+    });
+  });
+});
+
+describe('stepsFromIndexFunction()', () => {
+  describe('function', () => {
+    describe('ranges', () => {
+      describe('simple range', () => {
+        const simpleRange: IndexRange = { minIndex: 0, maxIndex: 6 };
+
+        describe('fitToRange=true', () => {
+          const fn = stepsFromIndexFunction({ range: simpleRange, fitToRange: true });
+
+          it('should return the next index from -1', () => {
+            const index = -1; // will be taking 1 step forward
+            const result = fn(index, true);
+            expect(result).toBe(0);
+          });
+
+          describe('wrapAround=true', () => {
+            it('should return the fitted and wrapped value from a negative value and negative step', () => {
+              const index = 0; // will be taking 1 step forward
+              const result = fn(index, true, -1);
+              expect(result).toBe(simpleRange.maxIndex - 1);
+            });
+
+            it('should return the fitted and wrapped value from a positive value and positive step', () => {
+              const index = simpleRange.maxIndex; // will be taking 1 step forward too
+              const result = fn(index, true, 1);
+              expect(result).toBe(simpleRange.minIndex + 1);
+            });
+          });
+        });
+
+        describe('with defaults', () => {
+          const fn = stepsFromIndexFunction({ range: simpleRange });
+
+          it('should return undefined for a value smaller than the minimum.', () => {
+            const result = fn(simpleRange.minIndex - 1);
+            expect(result).toBeUndefined();
+          });
+
+          it('should return the next index.', () => {
+            range({ ...simpleRange, maxIndex: simpleRange.maxIndex - 1 }).forEach((i) => {
+              expect(fn(i)).toBe(i + 1);
+            });
+          });
+
+          it('should return undefined if the next index falls outside the array.', () => {
+            const index = 5;
+            const result = fn(index);
+            expect(result).toBeUndefined();
+          });
+
+          describe('wrapAround=true', () => {
+            it('should return undefined for a start value outside the range.', () => {
+              const index = -1;
+              const result = fn(index, true);
+              expect(result).toBeUndefined();
+            });
+
+            it('should wrap around the array for the end index.', () => {
+              const index = simpleRange.maxIndex - 1;
+              const result = fn(index, true);
+              expect(result).toBe(0);
+            });
+
+            it('should wrap around the end of the array by the additional amount.', () => {
+              const expectedIndex = 0;
+              const extraWrapsWidth = simpleRange.maxIndex - 1;
+              const steps = extraWrapsWidth + 1;
+              const result = fn(0, true, steps); // start at index 0 and take 5 + 5 + 1 steps, should end up at 0.
+              expect(result).toBe(expectedIndex);
+            });
+
+            it('should wrap around the array multiple times by the additional amount.', () => {
+              const expectedIndex = 0;
+              const extraWrapsWidth = simpleRange.maxIndex - 1;
+              const steps = extraWrapsWidth * 2 + 1;
+              const result = fn(0, true, steps); // start at index 0 and take 5 + 5 + 1 steps, should end up at 0.
+              expect(result).toBe(expectedIndex);
+            });
+          });
+        });
+      });
     });
   });
 });

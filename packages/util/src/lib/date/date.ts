@@ -46,6 +46,11 @@ export type ISO8601DateStringUTCFull = string;
 export type TimezoneString = string;
 
 /**
+ * A timezone abbreviation (UTC, EST, etc).
+ */
+export type TimezoneAbbreviation = string;
+
+/**
  * Object that references a TimezoneString.
  */
 export interface TimezoneStringRef {
@@ -53,6 +58,11 @@ export interface TimezoneStringRef {
 }
 
 export const UTC_TIMEZONE_STRING = 'UTC';
+
+/**
+ * UTC
+ */
+export type UTCTimezoneAbbreviation = typeof UTC_TIMEZONE_STRING;
 
 /**
  * Whether or not the input timezone string is considered UTC.
