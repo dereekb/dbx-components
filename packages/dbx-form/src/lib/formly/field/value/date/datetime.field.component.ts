@@ -1,6 +1,6 @@
-import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction, Milliseconds, TimezoneString, readableError } from '@dereekb/util';
+import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction, Milliseconds, TimezoneString, readableError, ISO8601DayString } from '@dereekb/util';
 import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, delay, combineLatestWith, debounce } from 'rxjs';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, delay, combineLatestWith, debounce, filter } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
@@ -235,6 +235,10 @@ export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldS
   );
 }
 
+function isSameDateTimeFieldValue(a: Maybe<Date | ISO8601DayString>, b: Maybe<Date | ISO8601DayString>) {
+  return a && b ? (typeof a === 'string' ? a === b : isSameDateHoursAndMinutes(a, b as Date)) : a == b;
+}
+
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
 @Component({
@@ -270,10 +274,13 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly value$ = this.formControl$.pipe(
-    map((control) => control.valueChanges.pipe(startWith<Maybe<Date>>(control.value))),
+  readonly valueInSystemTimezone$ = this.formControl$.pipe(
+    map((control) => control.valueChanges.pipe(startWith<Maybe<Date>>(control.value), shareReplay(1))),
     combineLatestWith(this.timezoneInstance$),
-    switchMap(([x, timezoneInstance]) => x.pipe(map(dbxDateTimeInputValueParseFactory(this.valueMode, timezoneInstance)))),
+    switchMap(([x, timezoneInstance]) => {
+      return x.pipe(map(dbxDateTimeInputValueParseFactory(this.valueMode, timezoneInstance)));
+    }),
+    throttleTime(20, undefined, { leading: false, trailing: true }), // throttle incoming values and timezone changes
     distinctUntilChanged(isSameDateHoursAndMinutes),
     shareReplay(1)
   );
@@ -286,11 +293,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     map(() => new Date().getMinutes()),
     distinctUntilChanged(),
     tap(() => this.cdRef.markForCheck()),
-    switchMap(() => this.value$),
+    switchMap(() => this.valueInSystemTimezone$),
     shareReplay(1)
   );
 
-  readonly timeString$: Observable<ReadableTimeString | ''> = this.value$.pipe(
+  readonly timeString$: Observable<ReadableTimeString | ''> = this.valueInSystemTimezone$.pipe(
     map((x) => (x ? toLocalReadableTimeString(x) : '')),
     distinctUntilChanged(),
     shareReplay(1)
@@ -394,7 +401,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly date$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), filterMaybe(), shareReplay(1));
 
-  readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.value$.pipe(skipFirstMaybe())).pipe(
+  readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.valueInSystemTimezone$.pipe(skipFirstMaybe())).pipe(
     map((x: Maybe<Date>) => (x ? startOfDay(x) : null)),
     distinctUntilChanged<Maybe<Date>>(isSameDateDay),
     shareReplay(1)
@@ -548,16 +555,18 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._config.next(this.dateTimeField.getConfigObs?.());
     this._syncConfigObs.next(this.dateTimeField.getSyncFieldsObs?.());
 
-    this._sub.subscription = this.value$
+    this._sub.subscription = this.valueInSystemTimezone$
       .pipe(
-        switchMap(() => {
-          return this.timeOutput$.pipe(throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }), skipFirstMaybe());
-        }),
-        distinctUntilChanged(isSameDateHoursAndMinutes),
         combineLatestWith(this.timezoneInstance$.pipe(map((timezoneInstance) => dbxDateTimeOutputValueFactory(this.valueMode, timezoneInstance)))),
-        map(([dateValue, valueFactory]) => valueFactory(dateValue)),
-        distinctUntilChanged((a, b) => {
-          return a && b ? (typeof a === 'string' ? a === b : isSameDateHoursAndMinutes(a, b as Date)) : a == b;
+        throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
+        switchMap(([currentValue, valueFactory]) => {
+          return this.timeOutput$.pipe(
+            throttleTime(TIME_OUTPUT_THROTTLE_TIME * 2, undefined, { leading: false, trailing: true }),
+            skipFirstMaybe(),
+            distinctUntilChanged(isSameDateHoursAndMinutes),
+            map((x) => valueFactory(x)),
+            filter((x) => !isSameDateTimeFieldValue(x, currentValue))
+          );
         })
       )
       .subscribe((value) => {

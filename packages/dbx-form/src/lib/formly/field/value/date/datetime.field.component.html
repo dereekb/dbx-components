@@ -24,7 +24,7 @@
         {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
       </small>
       <small *ngSwitchCase="false">
-        <ng-container *ngIf="value$ | async">
+        <ng-container *ngIf="displayValue$ | async">
           <b class="dbx-ok">{{ atTimeLabel }}</b>
           {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
         </ng-container>

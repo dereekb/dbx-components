@@ -86,9 +86,9 @@ export class DocFormValueComponent {
   ];
 
   readonly dateTimeRangeValues$ = of({
-    sat: addHours(startOfDay(new Date()), 6),
+    sat: addHours(startOfDay(new Date()), 8),
     eat: addHours(startOfDay(new Date()), 16)
-  }).pipe(delay(20)); // simulate a slight loading delay
+  }).pipe(delay(200)); // simulate a slight loading delay
 
   readonly dateTimeRangeFields: FormlyFieldConfig[] = [
     dateTimeRangeField({
