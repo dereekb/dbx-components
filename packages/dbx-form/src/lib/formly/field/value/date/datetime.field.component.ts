@@ -303,8 +303,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly timezoneAbbreviation$ = this.timezone$.pipe(map(getTimezoneAbbreviation), distinctUntilChanged(), shareReplay(1));
-
   readonly dateInputCtrl = new FormControl(new Date(), {
     validators: []
   });
@@ -400,6 +398,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly date$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), filterMaybe(), shareReplay(1));
+
+  readonly timezoneAbbreviation$ = combineLatest([this.date$, this.timezone$]).pipe(
+    map(([date, timezone]) => getTimezoneAbbreviation(timezone, date)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly dateValue$: Observable<Maybe<Date>> = merge(this.date$, this.valueInSystemTimezone$.pipe(skipFirstMaybe())).pipe(
     map((x: Maybe<Date>) => (x ? startOfDay(x) : null)),

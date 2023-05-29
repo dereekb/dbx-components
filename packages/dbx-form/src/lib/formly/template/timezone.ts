@@ -41,7 +41,7 @@ export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<st
 export interface TimezoneStringFieldConfig extends Omit<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'inputType' | 'searchOnEmptyText' | 'search' | 'displayForValue' | 'key'>, Partial<Pick<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key' | 'materialFormField'>> {}
 
 /**
- * Template for login field that takes in a username and password.
+ * Template for a searchable text field for a timezone.
  *
  * @param param0
  * @returns
@@ -51,6 +51,7 @@ export function timezoneStringField(config: TimezoneStringFieldConfig = {}): For
     key: 'timezone',
     label: 'Timezone',
     asArrayValue: false,
+    required: false,
     ...config,
     searchOnEmptyText: true,
     allowStringValues: false,

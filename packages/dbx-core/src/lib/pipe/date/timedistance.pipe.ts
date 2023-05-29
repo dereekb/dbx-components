@@ -25,10 +25,10 @@ export class TimeDistanceCountdownPipe implements PipeTransform {
 
 @Pipe({ name: 'timeDistance', pure: false })
 export class TimeDistancePipe implements PipeTransform {
-  transform(input: Maybe<DateOrDateString>, to: Date = new Date(), unavailable: string = 'Not Available'): string {
+  transform(input: Maybe<DateOrDateString>, to?: Maybe<Date>, unavailable: string = 'Not Available'): string {
     if (input) {
       const from = ToJsDatePipe.toJsDate(input);
-      return formatDistance(from, to, {
+      return formatDistance(from, to ?? new Date(), {
         addSuffix: true
       });
     } else {
