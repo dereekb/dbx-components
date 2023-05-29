@@ -681,3 +681,20 @@ export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultCla
 export function clampDateRangeToDateRange(inputDateRange: Partial<DateRange>, limitToDateRange: Partial<DateRange>) {
   return clampDateRangeFunction(limitToDateRange)(inputDateRange);
 }
+
+/**
+ * Transforms both of the dates in the date range function.
+ */
+export type TransformDateRangeDatesFunction = (dateRange: DateRange) => DateRange;
+
+export function transformDateRangeDatesFunction(transform: MapFunction<Date, Date>): TransformDateRangeDatesFunction {
+  return ({ start, end }: DateRange) => ({
+    start: transform(start),
+    end: transform(end)
+  });
+}
+
+/**
+ * TransformDateRangeDatesFunction that transforms the input dates to the start of the day.
+ */
+export const transformDateRangeWithStartOfDay = transformDateRangeDatesFunction(startOfDay);

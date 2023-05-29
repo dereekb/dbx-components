@@ -4,13 +4,15 @@ import { combineLatestWith, map, Observable, OperatorFunction, switchMap, shareR
 import { MapboxZoomLevel } from './mapbox';
 import { MapboxViewportBoundFunction } from './mapbox.util';
 
+export type FilterMapboxBoundReadItemValueFunction<T> = (value: T) => MapboxViewportBoundFunctionItemValue;
+
 export interface FilterMapboxBoundConfig<T> {
   boundFunctionObs: ObservableOrValue<MapboxViewportBoundFunction>;
   boundDecisionObs: ObservableOrValue<LatLngBoundCheckFunction>;
   /**
    * Reads the value from the input item.
    */
-  readValue: (value: T) => MapboxViewportBoundFunctionItemValue;
+  readValue: FilterMapboxBoundReadItemValueFunction<T>;
   /**
    * Minimum precision to retain. Defaults to LAT_LONG_10M_PRECISION
    */

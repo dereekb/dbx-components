@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "9.23.21",
+  "version": "9.23.22",
   "type": "commonjs",
   "exports": {
     ".": {

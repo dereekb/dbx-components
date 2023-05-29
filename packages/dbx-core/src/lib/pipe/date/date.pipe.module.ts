@@ -11,11 +11,34 @@ import { DateTimeRangePipe } from './datetimerange.pipe';
 import { DateDayTimeRangePipe } from './datedaytimerange.pipe';
 import { DateTimeRangeOnlyPipe } from './datetimerangeonly.pipe';
 import { DateTimeRangeOnlyDistancePipe } from './datetimerangeonlydistance.pipe';
+import { TargetDateToSystemDatePipe } from './targetdatetosystemdate.pipe';
+import { TimezoneAbbreviationPipe } from './timezoneabbreviation.pipe';
+import { SystemDateToTargetDatePipe } from './systemdatetotargetdate.pipe';
+import { DateRangeDistancePipe } from './daterangedistance.pipe';
 
-const declarations = [DateFromToTimePipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, DateDistancePipe, ToJsDatePipe, ToMinutesPipe];
+const declarations = [
+  //
+  DateDistancePipe,
+  DateRangeDistancePipe,
+  TargetDateToSystemDatePipe,
+  SystemDateToTargetDatePipe,
+  TimezoneAbbreviationPipe,
+  DateFromToTimePipe,
+  DateDayRangePipe,
+  DateDayTimeRangePipe,
+  DateTimeRangeOnlyPipe,
+  DateTimeRangePipe,
+  DateTimeRangeOnlyDistancePipe,
+  DateFormatDistancePipe,
+  MinutesStringPipe,
+  TimeDistanceCountdownPipe,
+  TimeDistancePipe,
+  ToJsDatePipe,
+  ToMinutesPipe
+];
 
 @NgModule({
-  exports: declarations,
-  declarations
+  declarations,
+  exports: declarations
 })
 export class DbxDatePipeModule {}

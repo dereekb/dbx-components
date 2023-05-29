@@ -4,13 +4,11 @@ import { DateOrDateString, Maybe } from '@dereekb/util';
 import { ToJsDatePipe } from './tojsdate.pipe';
 import { DateRange, formatDateDistance, formatDateRangeDistanceFunction } from '@dereekb/date';
 
-@Pipe({ name: 'dateDistance', pure: false })
-export class DateDistancePipe implements PipeTransform {
-  transform(input: Maybe<DateOrDateString>, inputTo?: Maybe<Date>, unavailable: string = 'Not Available'): string {
+@Pipe({ name: 'dateRangeDistance', pure: false })
+export class DateRangeDistancePipe implements PipeTransform {
+  transform(input: Maybe<Date | DateRange>, unavailable: string = 'Not Available'): string {
     if (input != null) {
-      const to = inputTo ?? new Date();
-      const from = ToJsDatePipe.toJsDate(input);
-      return formatDateDistance(from, to);
+      return formatDateDistance(input as Date, new Date());
     } else {
       return unavailable;
     }

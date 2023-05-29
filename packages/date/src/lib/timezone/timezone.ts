@@ -7,7 +7,10 @@ export function allTimezoneStrings(): TimezoneString[] {
   return timeZonesNames.concat(UTC_TIMEZONE_STRING);
 }
 
-export const allTimezoneInfos = cachedGetter(() => allTimezoneStrings().map(timezoneStringToTimezoneInfo));
+export const allTimezoneInfos = cachedGetter(() => {
+  const now = new Date();
+  return allTimezoneStrings().map((x) => timezoneStringToTimezoneInfo(x, now));
+});
 
 export interface TimezoneInfo extends TimezoneStringRef {
   search: string;
@@ -20,16 +23,16 @@ export function timezoneInfoForSystem(): TimezoneInfo {
   return timezoneStringToTimezoneInfo(guessCurrentTimezone() ?? UTC_TIMEZONE_STRING);
 }
 
-export function getTimezoneAbbreviation(timezone: Maybe<TimezoneString | UTCTimezoneAbbreviation>): TimezoneAbbreviation {
-  return timezone === UTC_TIMEZONE_STRING ? UTC_TIMEZONE_STRING : timezone ? formatInTimeZone(new Date(), timezone, 'zzz') : 'UKNOWN';
+export function getTimezoneAbbreviation(timezone: Maybe<TimezoneString | UTCTimezoneAbbreviation>, date = new Date()): TimezoneAbbreviation {
+  return timezone === UTC_TIMEZONE_STRING ? UTC_TIMEZONE_STRING : timezone ? formatInTimeZone(date, timezone, 'zzz') : 'UKNOWN';
 }
 
-export function getTimezoneLongName(timezone: Maybe<TimezoneString>): string {
-  return timezone ? formatInTimeZone(new Date(), timezone, 'zzzz') : 'Unknown Timezone';
+export function getTimezoneLongName(timezone: Maybe<TimezoneString>, date = new Date()): string {
+  return timezone ? formatInTimeZone(date, timezone, 'zzzz') : 'Unknown Timezone';
 }
 
-export function timezoneStringToTimezoneInfo(timezone: TimezoneString): TimezoneInfo {
-  const abbreviation = getTimezoneAbbreviation(timezone);
+export function timezoneStringToTimezoneInfo(timezone: TimezoneString, date = new Date()): TimezoneInfo {
+  const abbreviation = getTimezoneAbbreviation(timezone, date);
   const result = {
     timezone,
     search: timezoneStringToSearchableString(timezone),

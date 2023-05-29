@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.22](https://github.com/dereekb/dbx-components/compare/v9.23.21-dev...v9.23.22) (2023-05-29)
+
+
+### Bug Fixes
+
+* fixed timezones changing for dateTimeField() ([b1d391d](https://github.com/dereekb/dbx-components/commit/b1d391d7f3ee3deb82fd32aa141d7ebf08349bf6))
+
+
+
 ## [9.23.21](https://github.com/dereekb/dbx-components/compare/v9.23.20-dev...v9.23.21) (2023-05-27)
 
 
