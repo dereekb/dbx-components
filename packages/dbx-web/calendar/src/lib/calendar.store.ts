@@ -82,8 +82,11 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
       break;
   }
 
-  const isMinDateVisible: boolean = navigationRangeLimit?.start != null ? isBefore(start, navigationRangeLimit.start) : false;
-  const isMaxDateVisible: boolean = navigationRangeLimit?.end != null ? isAfter(end, navigationRangeLimit.end) : false;
+  const isMinDateVisible: boolean = navigationRangeLimit?.start != null ? !isAfter(start, navigationRangeLimit.start) : false;
+  const isMaxDateVisible: boolean = navigationRangeLimit?.end != null ? !isBefore(end, navigationRangeLimit.end) : false;
+
+  // TODO: Consider changing min/max date visible logical utility to be fully within the current month or not,
+  // not just visible, since it can change to a locked out calendar and doesn't feel as UI friendly.
 
   return {
     type,
@@ -273,6 +276,14 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
 
   readonly canShowPageButtons$ = this.state$.pipe(
     map((x) => x.showPageButtons && x.navigationRangeLimit && isFullDateRange(x.navigationRangeLimit)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly showPageButtons$ = combineLatest([this.canShowPageButtons$, this.isLookingAtMinimumDate$, this.isLookingAtMaximumDate$]).pipe(
+    map(([canShowPageButtons, isLookingAtMinimumDate, isLookingAtMaximumDate]) => {
+      return canShowPageButtons && !(isLookingAtMinimumDate && isLookingAtMaximumDate);
+    }),
     distinctUntilChanged(),
     shareReplay(1)
   );

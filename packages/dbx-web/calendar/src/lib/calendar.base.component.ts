@@ -19,7 +19,7 @@ export class DbxCalendarBaseComponent<T> {
   readonly isLookingAtMaximumDate$ = this.calendarStore.isLookingAtMaximumDate$;
   readonly hasMultiplePages$ = this.calendarStore.hasMultiplePages$;
 
-  readonly showPageButtons$ = this.calendarStore.canShowPageButtons$;
+  readonly showPageButtons$ = this.calendarStore.showPageButtons$;
 
   readonly activeDayIsOpen$ = this.calendarStore.eventsForDateState$.pipe(
     withLatestFrom(this.calendarStore.date$),
