@@ -16,6 +16,7 @@ describe('computeScheduleSelectionValue()', () => {
 describe('isEnabledDayInCalendarScheduleSelectionState()', () => {
   describe('function', () => {
     describe('scenarios', () => {
+      // 2 year span of weekdays
       describe('12/5/2021-12/31/2023', () => {
         const inputStart = new Date('2021-12-06T06:00:00.000Z');
         const inputEnd = new Date('2023-12-29T06:00:00.000Z');
@@ -23,6 +24,11 @@ describe('isEnabledDayInCalendarScheduleSelectionState()', () => {
         let state = initialCalendarScheduleSelectionState();
         state = updateStateWithChangedRange(state, { inputStart, inputEnd });
         state = updateStateWithChangedScheduleDays(state, [DateScheduleDayCode.WEEKDAY]);
+
+        it('Sunday March 12 2023 should not be enabled', () => {
+          const date = new Date('2023-03-12T07:00:00.000Z');
+          expect(state.isEnabledDay(date)).toBe(false);
+        });
 
         it('Monday March 13 2023 should be enabled', () => {
           const date = addHours(new Date('2023-03-12T06:00:00.000Z'), 24);

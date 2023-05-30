@@ -33,12 +33,13 @@ import {
   modifyDateBlocksToFitRange,
   modifyDateBlocksToFitRangeFunction,
   sortDateBlockRanges,
+  timingIsInExpectedTimezoneFunction,
   UniqueDateBlockRange
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+import { dateTimezoneUtcNormal, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
   const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
@@ -114,11 +115,60 @@ describe('getCurrentDateBlockTimingStartDate()', () => {
   });
 });
 
+describe('timingIsInExpectedTimezoneFunction()', () => {
+  describe('function', () => {
+    describe('UTC', () => {
+      const fn = timingIsInExpectedTimezoneFunction('UTC');
+      const utcStart = new Date('2023-03-12T00:00:00.000Z');
+      const gmtnegative1Start = new Date('2023-03-12T01:00:00.000Z');
+
+      it('should return true if the timing starts in UTC.', () => {
+        const result = fn({ start: utcStart });
+        expect(result).toBe(true);
+      });
+
+      it('should return false if the timing starts in a timezone with a different offset.', () => {
+        const result = fn({ start: gmtnegative1Start });
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('America/Denver', () => {
+      const fn = timingIsInExpectedTimezoneFunction('America/Denver');
+      const mstStart = new Date('2023-03-11T07:00:00.000Z'); // 7 hours behind UTC
+      const mdtStart = new Date('2023-03-12T06:00:00.000Z'); // 6 hours behind UTC
+      const gmtnegative1Start = new Date('2023-03-12T01:00:00.000Z');
+
+      it('should return true if the timing starts in MST.', () => {
+        const result = fn({ start: mstStart });
+        expect(result).toBe(true);
+      });
+
+      it('should return true if the timing starts in MDT (Daylight Savings Begins).', () => {
+        const normal = dateTimezoneUtcNormal({ timezone: 'America/Denver' });
+
+        const offsetA = normal.baseDateToTargetDateOffset(mstStart);
+        const offsetB = normal.baseDateToTargetDateOffset(mdtStart);
+
+        expect(offsetA).not.toBe(offsetB);
+
+        const result = fn({ start: mdtStart });
+        expect(result).toBe(true);
+      });
+
+      it('should return false if the timing starts in a timezone with a different offset.', () => {
+        const result = fn({ start: gmtnegative1Start });
+        expect(result).toBe(false);
+      });
+    });
+  });
+});
+
 describe('dateTimingRelativeIndexFactory()', () => {
   describe('scenarios', () => {
     describe('timezone change', () => {
-      const start = new Date('2023-03-12T06:00:00.000Z'); // timezone offset changes going into the next day.
-      const dstDay = new Date('2023-03-13T06:00:00.000Z'); // next day at 6AM UTC, Daylight Savings has occured for some timezones
+      const start = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
+      const dstDay = new Date('2023-03-12T06:00:00.000Z'); // next day at 6AM UTC, Daylight Savings has occured for some timezones
 
       it('should handle daylight savings time changes.', () => {
         const factory = dateTimingRelativeIndexFactory({ start });

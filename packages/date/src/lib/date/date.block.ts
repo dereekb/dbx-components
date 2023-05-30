@@ -1,10 +1,10 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { getCurrentSystemOffsetInHours } from './date.timezone';
+import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 /**
@@ -132,6 +132,23 @@ export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): Cur
 
 export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
   return getCurrentDateBlockTimingOffsetData(timing).offset;
+}
+
+export type TimingIsExpectedTimezoneFunction = (timing: DateRangeStart) => boolean;
+
+export function timingIsInExpectedTimezoneFunction(timezone: TimezoneString) {
+  const normal = dateTimezoneUtcNormal({ timezone });
+
+  return (timing: DateRangeStart) => {
+    const { start } = timing;
+    const offset = normal.systemDateToTargetDateOffset(start);
+    const expectedTimingOffset = getCurrentDateBlockTimingOffset(timing);
+    return offset === expectedTimingOffset;
+  };
+}
+
+export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: TimezoneString) {
+  return timingIsInExpectedTimezoneFunction(timezone)(timing);
 }
 
 /**
