@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.24](https://github.com/dereekb/dbx-components/compare/v9.23.23-dev...v9.23.24) (2023-05-30)
+
+
+### Bug Fixes
+
+* fixed timezones with dateScheduleRangeField() ([421f64c](https://github.com/dereekb/dbx-components/commit/421f64c5cf0c90d3076371450bc05d292d85d7db))
+
+
+
 ## [9.23.23](https://github.com/dereekb/dbx-components/compare/v9.23.22-dev...v9.23.23) (2023-05-30)
 
 

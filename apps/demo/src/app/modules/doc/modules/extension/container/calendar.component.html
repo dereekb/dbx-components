@@ -25,9 +25,14 @@
     </doc-feature-example>
     <doc-feature-example header="dateScheduleRangeField()" hint="A field used for building a schedule.">
       <doc-form-example-form [dbxFormlyFields]="dateScheduleRangeFields" [dbxFormSource]="defaultDateScheduleRangeFieldValue$"></doc-form-example-form>
-      <h3>Timezone Usage</h3>
-      <p>The timezone changes the start and end dates of the output. It treats all input as if it is already in that timezone.</p>
-      <doc-form-example-form (dbxFormValueChange)="onTimezoneChange($event)" [config]="timezoneSelectionField"></doc-form-example-form>
+      <h3>Timezone Tester</h3>
+      <p>The dateScheduleRangeField() uses the timezone to change the start and end dates of the output. It treats all input as if it is already in that timezone. Timezone values returned will be from the start of that day's timezone.</p>
+      <p>
+        Date schedules with a filter
+        <u>do not apply the timezone offset</u>
+        , as the filter's start date already describes which timezone they are in per the DateSchedule's Timing behavior. The timezone string is passed as a visual output however.
+      </p>
+      <doc-form-example-form (dbxFormValueChange)="onTimezoneChange($event)" [config]="timezoneSelectionField" [dbxFormSource]="{ timezone: 'America/Denver' }"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
       <dbx-subsection header="With DateSchedule Filter" hint="A dbx-schedule-selection-calendar can be limited to a specific filter range. An initial selection of 'all' is also applied to this example.">
