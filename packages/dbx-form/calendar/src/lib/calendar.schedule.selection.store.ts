@@ -301,6 +301,12 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly currentTimezone$: Observable<Maybe<TimezoneString>> = this.state$.pipe(
+    map((x) => x.timezone),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly effectiveTimezone$: Observable<Maybe<TimezoneString>> = this.state$.pipe(
     map((x) => (!calendarScheduleStartBeingUsedFromFilter(x) && x.timezone ? x.timezone : undefined)),
     distinctUntilChanged(),
