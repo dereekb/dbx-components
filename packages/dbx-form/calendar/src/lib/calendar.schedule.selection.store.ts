@@ -30,13 +30,15 @@ import {
   DateOrDateRangeOrDateBlockIndexOrDateBlockRange,
   dateTimingRelativeIndexArrayFactory,
   isInfiniteDateRange,
-  copyHoursAndMinutesFromDate
+  copyHoursAndMinutesFromDate,
+  dateTimezoneUtcNormal,
+  DateTimezoneUtcNormalInstance
 } from '@dereekb/date';
 import { filterMaybe, switchMapToDefault } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, objectHasNoKeys } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { addYears, startOfDay, endOfDay, startOfYear, isAfter, isBefore } from 'date-fns';
-import { Observable, distinctUntilChanged, map, shareReplay, combineLatest, switchMap, of, tap, first } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay, combineLatest, switchMap, of, tap, first, combineLatestWith } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
 export interface CalendarScheduleSelectionInputDateRange {
@@ -55,6 +57,8 @@ export type PartialCalendarScheduleSelectionInputDateRange = Partial<MaybeMap<Ca
 export interface CalendarScheduleSelectionState extends PartialCalendarScheduleSelectionInputDateRange {
   /**
    * Filters the days of the schedule to only allow selecting days in the schedule.
+   *
+   * If filter.start is provided, then the timezone is ignored, if one is present.
    */
   filter?: Maybe<DateScheduleDateFilterConfig>;
   /**
@@ -75,6 +79,14 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    * Defaults to today and the current timezone.
    */
   start: Date;
+  /**
+   * Timezone to use. OnlyInfluences the output start date.
+   */
+  timezone?: Maybe<TimezoneString>;
+  /**
+   * Current timezone normal with the current timezone.
+   */
+  timezoneNormal?: Maybe<DateTimezoneUtcNormalInstance>;
   /**
    * DateTimingRelativeIndexFactory
    */
@@ -167,6 +179,10 @@ export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelec
     start: calendarScheduleMinDate(x) || undefined,
     end: calendarScheduleMaxDate(x) || undefined
   };
+}
+
+export function calendarScheduleStartBeingUsedFromFilter(x: Pick<CalendarScheduleSelectionState, 'filter' | 'computeSelectionResultRelativeToFilter'>) {
+  return x.computeSelectionResultRelativeToFilter && x.filter?.start != null;
 }
 
 @Injectable()
@@ -271,7 +287,9 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   );
 
   readonly startBeingUsedFromFilter$: Observable<Maybe<boolean>> = this.state$.pipe(
-    map((x) => x.computeSelectionResultRelativeToFilter && x.filter?.start != null),
+    //
+    map(calendarScheduleStartBeingUsedFromFilter),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
@@ -283,8 +301,39 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly effectiveTimezone$: Observable<Maybe<TimezoneString>> = this.state$.pipe(
+    map((x) => (!calendarScheduleStartBeingUsedFromFilter(x) && x.timezone ? x.timezone : undefined)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly effectiveTimezoneNormal$ = this.state$.pipe(
+    map((x) => (!calendarScheduleStartBeingUsedFromFilter(x) && x.timezoneNormal ? x.timezoneNormal : undefined)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly currentSelectionValue$ = this.state$.pipe(
     map((x) => x.currentSelectionValue),
+    shareReplay(1)
+  );
+
+  readonly currentSelectionValueWithTimezone$ = this.currentSelectionValue$.pipe(
+    combineLatestWith(this.effectiveTimezoneNormal$),
+    map(([x, timezoneNormal]) => {
+      if (x && timezoneNormal) {
+        x = {
+          dateScheduleRange: {
+            ...x.dateScheduleRange,
+            start: timezoneNormal.targetDateToSystemDate(x.dateScheduleRange.start),
+            end: timezoneNormal.targetDateToSystemDate(x.dateScheduleRange.end)
+          }
+        } as CalendarScheduleSelectionValue;
+      }
+
+      return x;
+    }),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
@@ -303,9 +352,9 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
-  readonly selectionValue$ = this.currentSelectionValue$.pipe(filterMaybe(), shareReplay(1));
+  readonly selectionValue$ = this.currentSelectionValueWithTimezone$.pipe(filterMaybe(), shareReplay(1));
 
-  readonly currentDateScheduleRangeValue$ = this.currentSelectionValue$.pipe(
+  readonly currentDateScheduleRangeValue$ = this.currentSelectionValueWithTimezone$.pipe(
     map((x) => x?.dateScheduleRange),
     distinctUntilChanged(isSameDateScheduleRange),
     shareReplay(1)
@@ -332,7 +381,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly setComputeSelectionResultRelativeToFilter = this.updater((state, computeSelectionResultRelativeToFilter: Maybe<boolean>) => updateStateWithComputeSelectionResultRelativeToFilter(state, computeSelectionResultRelativeToFilter));
   readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
 
-  readonly setTimezone = this.updater((state, timezone: Maybe<TimezoneString>) => ({ ...state, timezone }));
+  readonly setTimezone = this.updater((state, timezone: Maybe<TimezoneString>) => ({ ...state, timezone, timezoneNormal: timezone ? dateTimezoneUtcNormal({ timezone }) : undefined }));
   readonly setInputRange = this.updater((state, range: CalendarScheduleSelectionInputDateRange) => updateStateWithChangedRange(state, range));
 
   readonly toggleSelectedDates = this.updater((state, toggle: IterableOrValue<DateOrDateBlockIndex>) => updateStateWithChangedDates(state, { toggle }));
@@ -466,14 +515,35 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 }
 
 export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSelectionState, change: Maybe<DateScheduleRange>): CalendarScheduleSelectionState {
-  const isSameValue = isSameDateScheduleRange(state.currentSelectionValue?.dateScheduleRange, change);
+  const { timezoneNormal } = state;
+  let currentDateScheduleRange = state.currentSelectionValue?.dateScheduleRange;
+
+  if (!calendarScheduleStartBeingUsedFromFilter(state) && timezoneNormal) {
+    if (change) {
+      change = {
+        ...change,
+        start: timezoneNormal.systemDateToTargetDate(change.start),
+        end: timezoneNormal.systemDateToTargetDate(change.end)
+      };
+    }
+
+    if (currentDateScheduleRange) {
+      currentDateScheduleRange = {
+        ...currentDateScheduleRange,
+        start: timezoneNormal.targetDateToSystemDate(currentDateScheduleRange.start),
+        end: timezoneNormal.targetDateToSystemDate(currentDateScheduleRange.end)
+      };
+    }
+  }
+
+  const isSameValue = isSameDateScheduleRange(currentDateScheduleRange, change);
 
   if (isSameValue) {
     return state;
   } else {
     if (change != null) {
       const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, selectedIndexes: new Set(change.ex) };
-      return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateScheduleDayCodes(change.w));
+      return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateScheduleDayCodes(change.w || '89'));
     } else {
       return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
     }

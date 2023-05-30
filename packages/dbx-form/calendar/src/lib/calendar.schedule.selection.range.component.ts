@@ -21,6 +21,7 @@ interface RangeValue {
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
   private _required = new BehaviorSubject<boolean>(false);
   readonly required$ = this._required.asObservable();
+  readonly timezone$ = this.dbxCalendarScheduleSelectionStore.effectiveTimezone$;
 
   @Input()
   label?: Maybe<string> = 'Enter a date range';

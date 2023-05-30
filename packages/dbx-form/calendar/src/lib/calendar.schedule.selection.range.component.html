@@ -10,6 +10,7 @@
     <input [errorStateMatcher]="errorStateMatcher" matStartDate formControlName="start" placeholder="Start date" />
     <input [errorStateMatcher]="errorStateMatcher" matEndDate formControlName="end" placeholder="End date" />
   </mat-date-range-input>
+  <span *ngIf="timezone$ | async" class="dbx-flex-bar dbx-faint dbx-icon-spacer">{{ timezone$ | async | timezoneAbbreviation }}</span>
   <div *ngIf="showCustomize">
     <dbx-button-spacer></dbx-button-spacer>
     <ng-content select="[customizeButton]"></ng-content>
