@@ -54,10 +54,10 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly dateScheduleRangeFields = [
     dateScheduleRangeField({
-      timezone: this.timezone$,
       key: 'dateSchedule',
       required: true,
       label: 'Custom Label',
+      timezone: this.timezone$,
       description: 'Input field used for picking a DateScheduleRange value.'
     }),
     dateScheduleRangeField({

@@ -381,23 +381,23 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   );
 
   // MARK: State Changes
-  readonly setMinMaxDateRange = this.updater((state, filter: Maybe<Partial<DateRange>>) => updateStateWithMinMaxDateRange(state, filter));
-  readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => updateStateWithFilter(state, filter));
-  readonly setExclusions = this.updater((state, exclusions: Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>) => updateStateWithExclusions(state, exclusions));
-  readonly setComputeSelectionResultRelativeToFilter = this.updater((state, computeSelectionResultRelativeToFilter: Maybe<boolean>) => updateStateWithComputeSelectionResultRelativeToFilter(state, computeSelectionResultRelativeToFilter));
+  readonly setMinMaxDateRange = this.updater(updateStateWithMinMaxDateRange);
+  readonly setFilter = this.updater(updateStateWithFilter);
+  readonly setExclusions = this.updater(updateStateWithExclusions);
+  readonly setComputeSelectionResultRelativeToFilter = this.updater(updateStateWithComputeSelectionResultRelativeToFilter);
   readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
 
-  readonly setTimezone = this.updater((state, timezone: Maybe<TimezoneString>) => ({ ...state, timezone, timezoneNormal: timezone ? dateTimezoneUtcNormal({ timezone }) : undefined }));
-  readonly setInputRange = this.updater((state, range: CalendarScheduleSelectionInputDateRange) => updateStateWithChangedRange(state, range));
+  readonly setTimezone = this.updater(updateStateWithTimezoneValue);
+  readonly setInputRange = this.updater(updateStateWithChangedRange);
 
   readonly toggleSelectedDates = this.updater((state, toggle: IterableOrValue<DateOrDateBlockIndex>) => updateStateWithChangedDates(state, { toggle }));
   readonly addSelectedDates = this.updater((state, add: IterableOrValue<DateOrDateBlockIndex>) => updateStateWithChangedDates(state, { add }));
   readonly removeSelectedDates = this.updater((state, remove: IterableOrValue<DateOrDateBlockIndex>) => updateStateWithChangedDates(state, { remove }));
   readonly setSelectedDates = this.updater((state, set: IterableOrValue<DateOrDateBlockIndex>) => updateStateWithChangedDates(state, { set }));
   readonly selectAllDates = this.updater((state, selectAll: AllOrNoneSelection = 'all') => updateStateWithChangedDates(state, { selectAll }));
-  readonly setInitialSelectionState = this.updater((state, initialSelectionState: Maybe<AllOrNoneSelection>) => updateStateWithInitialSelectionState(state, initialSelectionState));
+  readonly setInitialSelectionState = this.updater(updateStateWithInitialSelectionState);
 
-  readonly setScheduleDays = this.updater((state, scheduleDays: Iterable<DateScheduleDayCode>) => updateStateWithChangedScheduleDays(state, scheduleDays));
+  readonly setScheduleDays = this.updater(updateStateWithChangedScheduleDays);
   readonly setAllowAllScheduleDays = this.updater((state) => updateStateWithChangedScheduleDays(state, null));
 
   readonly setDateScheduleRangeValue = this.updater((state, value: Maybe<DateScheduleRange>) => updateStateWithDateScheduleRangeValue(state, value));
@@ -520,24 +520,43 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
   return state;
 }
 
+export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionState, timezone: Maybe<TimezoneString>): CalendarScheduleSelectionState {
+  const { currentSelectionValue } = state;
+
+  const timezoneNormal = timezone ? dateTimezoneUtcNormal({ timezone }) : undefined;
+
+  if (timezoneNormal && currentSelectionValue) {
+    // update the selection value to reflect the timezone changes.
+
+    const { dateScheduleRange: currentDateScheduleRange } = currentSelectionValue;
+    const start = timezoneNormal.targetDateToSystemDate(currentDateScheduleRange.start);
+    const end = timezoneNormal.targetDateToSystemDate(currentDateScheduleRange.end);
+
+    const newRange: DateScheduleRange = {
+      ...currentSelectionValue.dateScheduleRange,
+      start,
+      end
+    };
+
+    return updateStateWithDateScheduleRangeValue({ ...state, timezone, timezoneNormal }, newRange);
+  } else {
+    return { ...state, timezone, timezoneNormal }; // no change in value
+  }
+}
+
 export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSelectionState, change: Maybe<DateScheduleRange>): CalendarScheduleSelectionState {
-  const { timezoneNormal } = state;
-  let currentDateScheduleRange = state.currentSelectionValue?.dateScheduleRange;
+  const { timezoneNormal, currentSelectionValue } = state;
+  let currentDateScheduleRange = currentSelectionValue?.dateScheduleRange; // current range is always in system time
 
   if (!calendarScheduleStartBeingUsedFromFilter(state) && timezoneNormal) {
+    // When using timezones, always return from the start of the day. Inputs are converted to the system time and used as the start of the day.
+    // Outputs remain accurate.
+
     if (change) {
       change = {
         ...change,
-        start: timezoneNormal.systemDateToTargetDate(change.start),
-        end: timezoneNormal.systemDateToTargetDate(change.end)
-      };
-    }
-
-    if (currentDateScheduleRange) {
-      currentDateScheduleRange = {
-        ...currentDateScheduleRange,
-        start: timezoneNormal.targetDateToSystemDate(currentDateScheduleRange.start),
-        end: timezoneNormal.targetDateToSystemDate(currentDateScheduleRange.end)
+        start: startOfDay(timezoneNormal.systemDateToTargetDate(change.start)),
+        end: startOfDay(timezoneNormal.systemDateToTargetDate(change.end))
       };
     }
   }

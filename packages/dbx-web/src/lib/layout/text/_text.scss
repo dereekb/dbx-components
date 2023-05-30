@@ -188,6 +188,10 @@ $dbx-detail-block-content-offset: 30px;
     color: $text-color;
     text-shadow: -1px -1px 0 $outlined-text-color, 1px -1px 0 $outlined-text-color, -1px 1px 0 $outlined-text-color, 1px 1px 0 $outlined-text-color;
   }
+
+  .dbx-nowrap {
+    white-space: nowrap;
+  }
 }
 
 @mixin typography($typography-config) {
