@@ -1,12 +1,12 @@
-import { Component, EventEmitter, Output, OnDestroy, ChangeDetectorRef, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy, Input, OnInit } from '@angular/core';
 import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
-import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, switchMap } from 'rxjs';
+import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, Maybe } from '@dereekb/util';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
-import { DbxInjectionComponentConfig, safeDetectChanges, switchMapDbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { asObservableFromGetter, ObservableOrValueGetter } from '@dereekb/rxjs';
+import { DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { ObservableOrValueGetter } from '@dereekb/rxjs';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
 
 export interface DbxScheduleSelectionCalendarComponentConfig {

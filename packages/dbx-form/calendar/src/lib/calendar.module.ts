@@ -23,7 +23,7 @@ import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './cale
 import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
 import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from './calendar.schedule.selection.dialog.button.component';
 import { DbxScheduleSelectionCalendarSelectionToggleButtonComponent } from './calendar.schedule.selection.toggle.button.component';
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
+import { DbxDatePipeModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 const declarations = [
   //
@@ -63,7 +63,8 @@ const declarations = [
     CalendarModule,
     CalendarDayModule,
     FlexLayoutModule,
-    CalendarWeekModule
+    CalendarWeekModule,
+    DbxDatePipeModule
   ],
   declarations,
   exports: declarations

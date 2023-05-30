@@ -21,6 +21,7 @@ interface RangeValue {
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
   private _required = new BehaviorSubject<boolean>(false);
   readonly required$ = this._required.asObservable();
+  readonly timezone$ = this.dbxCalendarScheduleSelectionStore.currentTimezone$;
 
   @Input()
   label?: Maybe<string> = 'Enter a date range';
@@ -63,6 +64,13 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
 
   readonly minDate$ = this.dbxCalendarScheduleSelectionStore.minDate$;
   readonly maxDate$ = this.dbxCalendarScheduleSelectionStore.maxDate$;
+  readonly timezoneReleventDate$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
+    map((currentDateRange) => {
+      return currentDateRange ? currentDateRange.start ?? currentDateRange.end : undefined ?? new Date();
+    }),
+    shareReplay(1)
+  );
+
   readonly isCustomized$ = this.dbxCalendarScheduleSelectionStore.isCustomized$;
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
