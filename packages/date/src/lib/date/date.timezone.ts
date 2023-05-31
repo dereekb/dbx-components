@@ -156,6 +156,8 @@ type GetOffsetForDateFunction = MapFunction<Date, number>;
 
 export type DateTimezoneUtcNormalInstanceInput = Maybe<TimezoneString> | DateTimezoneConversionConfig;
 
+export type DateTimezoneUtcNormalInstanceTransformType = 'targetDateToBaseDate' | 'targetDateToSystemDate' | 'baseDateToTargetDate' | 'baseDateToSystemDate' | 'systemDateToTargetDate' | 'systemDateToBaseDate';
+
 /**
  * Used for converting Dates to/from a UTC "base date" to a "normal date".
  *
@@ -261,6 +263,14 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     return this._getOffset(date, from, to);
   }
 
+  transform(date: Date, transform: DateTimezoneUtcNormalInstanceTransformType): Date {
+    return this[transform](date);
+  }
+
+  transformFunction(transform: DateTimezoneUtcNormalInstanceTransformType): MapFunction<Date, Date> {
+    return (date) => this.transform(date, transform);
+  }
+
   targetDateToBaseDate(date: Date): Date {
     return this._computeOffsetDate(date, 'target', 'base');
   }
@@ -283,6 +293,14 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
   systemDateToTargetDate(date: Date): Date {
     return this._computeOffsetDate(date, 'system', 'target');
+  }
+
+  getOffset(date: Date, transform: DateTimezoneUtcNormalInstanceTransformType): Milliseconds {
+    return this[`${transform}Offset`](date);
+  }
+
+  offsetFunction(transform: DateTimezoneUtcNormalInstanceTransformType): MapFunction<Date, Milliseconds> {
+    return (date) => this.getOffset(date, transform);
   }
 
   targetDateToBaseDateOffset(date: Date): Milliseconds {
@@ -314,8 +332,14 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   }
 }
 
-export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalInstanceInput): DateTimezoneUtcNormalInstance {
-  return new DateTimezoneUtcNormalInstance(config);
+export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceInput | DateTimezoneUtcNormalInstance;
+
+export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput): DateTimezoneUtcNormalInstance {
+  if (config instanceof DateTimezoneUtcNormalInstance) {
+    return config;
+  } else {
+    return new DateTimezoneUtcNormalInstance(config);
+  }
 }
 
 /**
