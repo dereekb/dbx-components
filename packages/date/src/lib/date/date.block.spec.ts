@@ -798,6 +798,8 @@ describe('dateBlocksDayInfoFactory()', () => {
     expect(result.isInRange).toBe(true);
     expect(result.currentIndex).toBe(expectedHasOccuredToday ? 0 : -1);
     expect(result.nextIndex).toBe(expectedHasOccuredToday ? 1 : 0);
+
+    // TODO: still fails sometimes due to the wrong day being provided.
   });
 
   it('should calculate the day info for before occurrence for today', () => {
