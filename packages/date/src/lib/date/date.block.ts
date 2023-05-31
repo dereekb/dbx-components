@@ -104,6 +104,26 @@ export interface CurrentDateBlockTimingOffsetData {
 }
 
 /**
+ * Returns the date range from the start of the first event to the end time of the last event.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingFullRange(timing: Pick<DateBlockTiming, 'start' | 'end'>): DateRange {
+  return { start: timing.start, end: timing.end };
+}
+
+/**
+ * Returns the date range from the start of the first event to the end time of the last event.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingEventRange(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): DateRange {
+  return { start: timing.startsAt, end: timing.end };
+}
+
+/**
  * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
  *
  * @param timing
