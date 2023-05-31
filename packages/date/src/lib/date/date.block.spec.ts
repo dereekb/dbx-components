@@ -28,6 +28,7 @@ import {
   groupToDateBlockRanges,
   groupUniqueDateBlocks,
   isDateBlockWithinDateBlockRangeFunction,
+  isValidDateBlockIndex,
   isValidDateBlockTiming,
   isValidDateBlockTimingStartDate,
   modifyDateBlocksToFitRange,
@@ -40,6 +41,24 @@ import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@deree
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { dateTimezoneUtcNormal, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+
+describe('isValidDateBlockIndex()', () => {
+  it('should return false for -1.', () => {
+    expect(isValidDateBlockIndex(-1)).toBe(false);
+  });
+
+  it('should return false for 0.5', () => {
+    expect(isValidDateBlockIndex(0.5)).toBe(false);
+  });
+
+  it('should return true for 0.', () => {
+    expect(isValidDateBlockIndex(0)).toBe(true);
+  });
+
+  it('should return true for 100.', () => {
+    expect(isValidDateBlockIndex(100)).toBe(true);
+  });
+});
 
 describe('getCurrentDateBlockTimingOffset()', () => {
   const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.

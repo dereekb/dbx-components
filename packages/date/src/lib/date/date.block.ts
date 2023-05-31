@@ -13,12 +13,12 @@ import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 export type DateBlockIndex = number;
 
 /**
- * Returns true if the index is positive.
+ * Returns true if the index is a non-negative integer.
  *
  * @param input
  */
 export function isValidDateBlockIndex(input: DateBlockIndex): boolean {
-  return input > 0;
+  return input >= 0 && Number.isInteger(input);
 }
 
 /**
