@@ -1,10 +1,10 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { getCurrentSystemOffsetInHours } from './date.timezone';
+import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 /**
@@ -13,12 +13,12 @@ import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 export type DateBlockIndex = number;
 
 /**
- * Returns true if the index is positive.
+ * Returns true if the index is a non-negative integer.
  *
  * @param input
  */
 export function isValidDateBlockIndex(input: DateBlockIndex): boolean {
-  return input > 0;
+  return input >= 0 && Number.isInteger(input);
 }
 
 /**
@@ -104,6 +104,26 @@ export interface CurrentDateBlockTimingOffsetData {
 }
 
 /**
+ * Returns the date range from the start of the first event to the end time of the last event.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingFullRange(timing: Pick<DateBlockTiming, 'start' | 'end'>): DateRange {
+  return { start: timing.start, end: timing.end };
+}
+
+/**
+ * Returns the date range from the start of the first event to the end time of the last event.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingEventRange(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): DateRange {
+  return { start: timing.startsAt, end: timing.end };
+}
+
+/**
  * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
  *
  * @param timing
@@ -132,6 +152,23 @@ export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): Cur
 
 export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
   return getCurrentDateBlockTimingOffsetData(timing).offset;
+}
+
+export type TimingIsExpectedTimezoneFunction = (timing: DateRangeStart) => boolean;
+
+export function timingIsInExpectedTimezoneFunction(timezone: TimezoneString) {
+  const normal = dateTimezoneUtcNormal({ timezone });
+
+  return (timing: DateRangeStart) => {
+    const { start } = timing;
+    const offset = normal.systemDateToTargetDateOffset(start);
+    const expectedTimingOffset = getCurrentDateBlockTimingOffset(timing);
+    return offset === expectedTimingOffset;
+  };
+}
+
+export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: TimezoneString) {
+  return timingIsInExpectedTimezoneFunction(timezone)(timing);
 }
 
 /**

@@ -1,9 +1,10 @@
-import { Building, FactoryWithRequiredInput, MapFunction, Maybe, MS_IN_DAY } from '@dereekb/util';
+import { Building, FactoryWithRequiredInput, MapFunction, mapIdentityFunction, Maybe, MS_IN_DAY, TimezoneString } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, millisecondsToHours, isSameDay } from 'date-fns';
+import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, millisecondsToHours, isSameDay, endOfMinute, startOfHour, endOfHour, addMinutes } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
+import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceTransformType } from './date.timezone';
 
 /**
  * Represents a start date.
@@ -55,6 +56,16 @@ export class DateRange {
       this.end = template.end;
     }
   }
+}
+
+/**
+ * Total number of days in the range. Minimum of 1 day.
+ *
+ * @param dateRange
+ * @returns
+ */
+export function dateRangeDaysCount(dateRange: DateRange): number {
+  return differenceInDays(dateRange.end, dateRange.start) + 1;
 }
 
 /**
@@ -117,6 +128,18 @@ export enum DateRangeType {
    */
   MONTH = 'month',
   /**
+   * Includes only the target minute.
+   */
+  MINUTE = 'minute',
+  /**
+   * Includes only the target hour.
+   */
+  HOUR = 'hour',
+  /**
+   * Range specified in hours with the input.
+   */
+  MINUTES_RANGE = 'minutes_range',
+  /**
    * Range specified in hours with the input.
    */
   HOURS_RANGE = 'hours_range',
@@ -128,6 +151,10 @@ export enum DateRangeType {
    * Range specified in weeks with the input.
    */
   WEEKS_RANGE = 'weeks_range',
+  /**
+   * Radius specified in minutes with the input.
+   */
+  MINUTES_RADIUS = 'minutes_radius',
   /**
    * Radius specified in hours with the input.
    */
@@ -250,6 +277,23 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
       start = startOfMonth(date);
       end = endOfMonth(date);
       break;
+    case DateRangeType.HOUR:
+      start = startOfHour(date);
+      end = endOfHour(date);
+      break;
+    case DateRangeType.MINUTE:
+      start = startOfMinute(date);
+      end = endOfMinute(date);
+      break;
+    case DateRangeType.MINUTES_RANGE:
+      if (hasNegativeDistance) {
+        start = addMinutes(date, distance);
+        end = date;
+      } else {
+        start = date;
+        end = addMinutes(date, distance);
+      }
+      break;
     case DateRangeType.HOURS_RANGE:
       if (hasNegativeDistance) {
         start = addHours(date, distance);
@@ -276,6 +320,11 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
         start = date;
         end = addDays(date, distance * 7);
       }
+      break;
+    case DateRangeType.MINUTES_RADIUS:
+      distance = Math.abs(distance);
+      start = addMinutes(date, -distance);
+      end = addMinutes(date, distance);
       break;
     case DateRangeType.HOURS_RADIUS:
       distance = Math.abs(distance);
@@ -698,3 +747,14 @@ export function transformDateRangeDatesFunction(transform: MapFunction<Date, Dat
  * TransformDateRangeDatesFunction that transforms the input dates to the start of the day.
  */
 export const transformDateRangeWithStartOfDay = transformDateRangeDatesFunction(startOfDay);
+
+export type TransformDateRangeToTimezoneFunction = TransformDateRangeDatesFunction & {
+  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
+};
+
+export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformFn: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeToTimezoneFunction {
+  const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
+  const fn = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformFn)) as Building<TransformDateRangeToTimezoneFunction>;
+  fn._timezoneInstance = timezoneInstance;
+  return fn as TransformDateRangeToTimezoneFunction;
+}
