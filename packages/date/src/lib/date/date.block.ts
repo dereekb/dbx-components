@@ -583,25 +583,37 @@ export type DateBlocksDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFacto
 
 export interface DateBlockDayTimingInfo {
   /**
-   * Input or calculated date.
+   * Input date or calculated date if provided a dayIndex.
    */
   date: Date;
   /**
-   * Index for the day
+   * Index for the day for the input date.
    */
   dayIndex: DateBlockIndex;
   /**
-   * Index for the previous/current execution.
+   * Index for the previous index/current index depending on the TimingInfo's daily execution.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex.
    */
   currentIndex: DateBlockIndex;
   /**
-   * Index for the next execution.
+   * Index for the next execution. Does not check if it is in range.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex + 1.
    */
-  nextIndex: DateBlockIndex;
+  nextIndex: Maybe<DateBlockIndex>;
+  /**
+   * Index for the next execution, if in the range, otherwise undefined.
+   *
+   * If the index is currently in progress given the timing, this will return the dayIndex + 1.
+   */
+  nextIndexInRange: Maybe<DateBlockIndex>;
+  /**
+   * Whether or not there are any inProgress or upcoming executions.
+   *
+   * True if nextIndexInRange is undefined and isInProgress is false.
+   */
+  isComplete: boolean;
   /**
    * Whether or not today's timing has already occured in it's entirety.
    */
@@ -661,6 +673,9 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
 
     const currentIndex: DateBlockIndex = isInProgress || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
     const nextIndex: DateBlockIndex = currentIndex + 1;
+    const nextIndexInRange: Maybe<DateBlockIndex> = checkIsInRange(nextIndex) ? nextIndex : undefined;
+
+    const isComplete = currentIndex >= 0 && !nextIndexInRange && (!isInRange || hasOccuredToday);
 
     return {
       now,
@@ -672,7 +687,9 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
       isInProgress,
       isInRange,
       startsAtOnDay,
-      endsAtOnDay
+      endsAtOnDay,
+      nextIndexInRange,
+      isComplete
     };
   };
 }
