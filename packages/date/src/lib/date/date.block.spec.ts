@@ -19,6 +19,7 @@ import {
   dateBlocksInDateBlockRange,
   dateBlockTiming,
   DateBlockTiming,
+  dateBlockTimingInTimezoneFunction,
   dateTimingRelativeIndexArrayFactory,
   dateTimingRelativeIndexFactory,
   expandDateBlockRange,
@@ -205,6 +206,24 @@ describe('changeTimingToTimezoneFunction()', () => {
         expect(result.end).toBeSameSecondAs(timing.end);
         expect(result.duration).toBe(timing.duration);
       });
+
+      describe('UTC via other timing', () => {
+        const startsAtInUtcDate = new Date('2022-01-02T00:00:00Z'); // 0 offset UTC date
+        const utcTiming = { start: startsAtInUtcDate, startsAt: addHours(startsAtInUtcDate, 1), duration: 60 };
+        const fn = changeTimingToTimezoneFunction(utcTiming);
+
+        it('should convert the start date to the UTC timezone.', () => {
+          const result = fn(timing);
+
+          const { start } = result;
+          const utcHours = start.getUTCHours();
+          expect(utcHours).toBe(utcTimezoneOffsetInHours);
+
+          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+          expect(result.end).toBeSameSecondAs(timing.end);
+          expect(result.duration).toBe(timing.duration);
+        });
+      });
     });
 
     describe('America/Denver', () => {
@@ -223,6 +242,50 @@ describe('changeTimingToTimezoneFunction()', () => {
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.end).toBeSameSecondAs(timing.end);
         expect(result.duration).toBe(timing.duration);
+      });
+    });
+  });
+});
+
+describe('dateBlockTimingInTimezoneFunction()', () => {
+  describe('function', () => {
+    const startOfToday = startOfDay(new Date());
+
+    describe('UTC', () => {
+      const fn = dateBlockTimingInTimezoneFunction('UTC');
+      const utcTimezoneOffsetInHours = 0; // GMT-0
+
+      it('should create a timing in the UTC timezone.', () => {
+        const duration = 60;
+        const startsAt = addHours(startOfToday, 3);
+        const result = fn({ startsAt, duration }, 2);
+
+        const { start } = result;
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(utcTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(startsAt);
+        expect(result.duration).toBe(duration);
+      });
+    });
+
+    describe('America/Denver', () => {
+      const fn = dateBlockTimingInTimezoneFunction('America/Denver');
+
+      // GMT-6 or GMT-7 depending on time of year
+      const denverTimezoneOffsetInHours = millisecondsToHours(dateTimezoneUtcNormal('America/Denver').targetDateToBaseDateOffset(startOfToday));
+
+      it('should create a timing in the America/Denver timezone.', () => {
+        const duration = 60;
+        const startsAt = addHours(startOfToday, 3);
+        const result = fn({ startsAt, duration }, 2);
+
+        const { start } = result;
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(denverTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(startsAt);
+        expect(result.duration).toBe(duration);
       });
     });
   });
