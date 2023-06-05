@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-form/calendar",
-  "version": "9.23.25",
+  "version": "9.23.26",
   "peerDependencies": {
     "@angular/common": "^14.2.0",
     "@angular/core": "^14.2.0"
