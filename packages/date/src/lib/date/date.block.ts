@@ -693,7 +693,7 @@ export interface DateBlockDayTimingInfo {
    *
    * If the index is currently in progress given the timing, this will return the dayIndex + 1.
    */
-  nextIndex: Maybe<DateBlockIndex>;
+  nextIndex: DateBlockIndex;
   /**
    * Index for the next execution, if in the range, otherwise undefined.
    *
