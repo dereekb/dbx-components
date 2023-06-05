@@ -66,7 +66,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
   /**
    * Marker configuration or factory. If false is passed, the marker will not be displayed.
    */
-  markerConfig?: ObservableFactoryWithRequiredInput<DbxMapboxMarkerDisplayConfig | false, DbxFormMapboxLatLngFieldComponent>;
+  markerConfig?: false | ObservableFactoryWithRequiredInput<DbxMapboxMarkerDisplayConfig | false, DbxFormMapboxLatLngFieldComponent>;
 }
 
 /*
@@ -273,8 +273,8 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
     // Add the marker to the injection store for display
     if (this.dbxMapboxInjectionStore) {
-      if (this.markerConfig) {
-        this._markerConfig.next(asObservableFromGetter(this.markerConfig, this));
+      if (this.markerConfig != null) {
+        this._markerConfig.next(this.markerConfig === false ? of(false) : asObservableFromGetter(this.markerConfig, this));
       }
 
       this.dbxMapboxInjectionStore.addInjectionConfig({
