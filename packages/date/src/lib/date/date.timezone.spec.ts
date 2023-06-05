@@ -1,6 +1,6 @@
 import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds } from 'date-fns';
 import { Milliseconds } from '@dereekb/util';
-import { DateTimezoneUtcNormalInstance, getCurrentSystemOffsetInMs } from './date.timezone';
+import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs } from './date.timezone';
 import MockDate from 'mockdate';
 
 beforeEach(() => {
@@ -70,6 +70,32 @@ describe('DateTimezoneUtcNormalInstance', () => {
           expect(instance.getCurrentOffset(utcBaseDate, 'system', 'target')).not.toBe(0);
         });
       }
+    });
+  });
+
+  describe('dateTimezoneUtcNormal()', () => {
+    it('should return a DateTimezoneUtcNormalInstance with the input TimezoneString', () => {
+      const timezone = 'America/Denver';
+      const result = dateTimezoneUtcNormal(timezone);
+      expect(result.config.timezone).toBe(timezone);
+    });
+
+    it('should return a DateTimezoneUtcNormalInstance with the input TimezoneOffset', () => {
+      const timezoneOffset = hoursToMilliseconds(5);
+      const result = dateTimezoneUtcNormal(timezoneOffset);
+      expect(result.config.timezoneOffset).toBe(timezoneOffset);
+    });
+
+    it('should return a DateTimezoneUtcNormalInstance with the input DateTimezoneUtcNormalInstance', () => {
+      const timezone = 'America/Denver';
+      const result = dateTimezoneUtcNormal(dateTimezoneUtcNormal(timezone));
+      expect(result.config.timezone).toBe(timezone);
+    });
+
+    it('should return a DateTimezoneUtcNormalInstance with the input DateTimezoneUtcNormalInstanceConfig', () => {
+      const timezone = 'America/Denver';
+      const result = dateTimezoneUtcNormal({ timezone });
+      expect(result.config.timezone).toBe(timezone);
     });
   });
 

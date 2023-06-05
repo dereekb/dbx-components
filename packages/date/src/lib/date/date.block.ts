@@ -4,7 +4,7 @@ import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
+import { DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceInput, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 /**
@@ -98,7 +98,12 @@ export class DateBlockTiming extends DateDurationSpan {
   }
 }
 
-export interface CurrentDateBlockTimingOffsetData {
+export interface CurrentDateBlockTimingUtcData {
+  originalUtcDate: Date;
+  originalUtcOffsetInHours: Hours;
+}
+
+export interface CurrentDateBlockTimingOffsetData extends CurrentDateBlockTimingUtcData {
   offset: Milliseconds;
   currentTimezoneOffsetInHours: Hours;
 }
@@ -123,28 +128,39 @@ export function dateBlockTimingEventRange(timing: Pick<DateBlockTiming, 'startsA
   return { start: timing.startsAt, end: timing.end };
 }
 
+export function getCurrentDateBlockTimingUtcData(timing: DateRangeStart): CurrentDateBlockTimingUtcData {
+  const start = timing.start;
+  const dateHours = start.getUTCHours();
+
+  // if it is a positive offset, then the date is in the future so we subtract the offset from 24 hours to get the proper offset.
+  const originalUtcOffsetInHours = dateHours > 12 ? 24 - dateHours : -dateHours;
+  const originalUtcDate = addHours(start, originalUtcOffsetInHours); // convert to original UTC
+
+  return {
+    originalUtcDate,
+    originalUtcOffsetInHours
+  };
+}
+
 /**
  * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
  *
  * @param timing
  */
 export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): CurrentDateBlockTimingOffsetData {
-  const start = timing.start;
-  const dateHours = start.getUTCHours();
-
-  // if it is a positive offset, then the date is in the future so we subtract the offset from 24 hours to get the proper offset.
-  const originalUtcOffset = dateHours > 12 ? 24 - dateHours : -dateHours;
-  const originalUtcDate = addHours(start, originalUtcOffset); // convert to original UTC
+  const { originalUtcOffsetInHours, originalUtcDate } = getCurrentDateBlockTimingUtcData(timing);
   const currentTimezoneOffsetInHours = getCurrentSystemOffsetInHours(originalUtcDate); // get the offset as it is on that day
 
   // calculate the true offset
-  let offset: Hours = originalUtcOffset - currentTimezoneOffsetInHours;
+  let offset: Hours = originalUtcOffsetInHours - currentTimezoneOffsetInHours;
 
   if (offset === -24) {
     offset = 0; // auckland can return -24 for itself
   }
 
   return {
+    originalUtcDate,
+    originalUtcOffsetInHours,
     offset: hoursToMilliseconds(offset),
     currentTimezoneOffsetInHours
   };
@@ -169,6 +185,35 @@ export function timingIsInExpectedTimezoneFunction(timezone: TimezoneString) {
 
 export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: TimezoneString) {
   return timingIsInExpectedTimezoneFunction(timezone)(timing);
+}
+
+export type ChangeTimingToTimezoneFunction = <T extends DateRangeStart>(timing: T) => T;
+
+/**
+ * Returns a copy of the input timing with the start time timezone in the given timezone.
+ *
+ * @param timing
+ */
+export function changeTimingToTimezoneFunction(timezone: TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance): ChangeTimingToTimezoneFunction {
+  const normal = dateTimezoneUtcNormal(timezone);
+
+  return <T extends DateRangeStart>(timing: T) => {
+    const baseTimingOffset = getCurrentDateBlockTimingUtcData(timing);
+
+    const startInUtc = baseTimingOffset.originalUtcDate;
+    const start = normal.targetDateToBaseDate(startInUtc);
+
+    const newTiming = {
+      ...timing,
+      start
+    };
+
+    return newTiming;
+  };
+}
+
+export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance): T {
+  return changeTimingToTimezoneFunction(timezone)(timing);
 }
 
 /**
@@ -583,25 +628,37 @@ export type DateBlocksDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFacto
 
 export interface DateBlockDayTimingInfo {
   /**
-   * Input or calculated date.
+   * Input date or calculated date if provided a dayIndex.
    */
   date: Date;
   /**
-   * Index for the day
+   * Index for the day for the input date.
    */
   dayIndex: DateBlockIndex;
   /**
-   * Index for the previous/current execution.
+   * Index for the previous index/current index depending on the TimingInfo's daily execution.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex.
    */
   currentIndex: DateBlockIndex;
   /**
-   * Index for the next execution.
+   * Index for the next execution. Does not check if it is in range.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex + 1.
    */
-  nextIndex: DateBlockIndex;
+  nextIndex: Maybe<DateBlockIndex>;
+  /**
+   * Index for the next execution, if in the range, otherwise undefined.
+   *
+   * If the index is currently in progress given the timing, this will return the dayIndex + 1.
+   */
+  nextIndexInRange: Maybe<DateBlockIndex>;
+  /**
+   * Whether or not there are any inProgress or upcoming executions.
+   *
+   * True if nextIndexInRange is undefined and isInProgress is false.
+   */
+  isComplete: boolean;
   /**
    * Whether or not today's timing has already occured in it's entirety.
    */
@@ -661,6 +718,9 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
 
     const currentIndex: DateBlockIndex = isInProgress || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
     const nextIndex: DateBlockIndex = currentIndex + 1;
+    const nextIndexInRange: Maybe<DateBlockIndex> = checkIsInRange(nextIndex) ? nextIndex : undefined;
+
+    const isComplete = currentIndex >= 0 && !nextIndexInRange && (!isInRange || hasOccuredToday);
 
     return {
       now,
@@ -672,7 +732,9 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
       isInProgress,
       isInRange,
       startsAtOnDay,
-      endsAtOnDay
+      endsAtOnDay,
+      nextIndexInRange,
+      isComplete
     };
   };
 }

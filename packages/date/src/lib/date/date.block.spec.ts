@@ -1,7 +1,8 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { dateRange, DateRange, DateRangeInput } from './date.range';
+import { dateRange, DateRange, DateRangeInput, isDateInDateRange } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore } from 'date-fns';
 import {
+  changeTimingToTimezoneFunction,
   DateBlock,
   dateBlockDayOfWeekFactory,
   DateBlockIndex,
@@ -23,6 +24,7 @@ import {
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
   getCurrentDateBlockTimingOffset,
+  getCurrentDateBlockTimingOffsetData,
   getCurrentDateBlockTimingStartDate,
   getRelativeIndexForDateTiming,
   groupToDateBlockRanges,
@@ -178,6 +180,49 @@ describe('timingIsInExpectedTimezoneFunction()', () => {
       it('should return false if the timing starts in a timezone with a different offset.', () => {
         const result = fn({ start: gmtnegative1Start });
         expect(result).toBe(false);
+      });
+    });
+  });
+});
+
+describe('changeTimingToTimezoneFunction()', () => {
+  describe('function', () => {
+    const startOfToday = startOfDay(new Date());
+    const timing = dateBlockTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
+
+    describe('UTC', () => {
+      const fn = changeTimingToTimezoneFunction('UTC');
+      const utcTimezoneOffsetInHours = 0; // GMT-0
+
+      it('should convert the start date to the UTC timezone.', () => {
+        const result = fn(timing);
+
+        const { start } = result;
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(utcTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.duration).toBe(timing.duration);
+      });
+    });
+
+    describe('America/Denver', () => {
+      const fn = changeTimingToTimezoneFunction('America/Denver');
+
+      // GMT-6 or GMT-7 depending on time of year
+      const denverTimezoneOffsetInHours = millisecondsToHours(dateTimezoneUtcNormal('America/Denver').targetDateToBaseDateOffset(startOfToday));
+
+      it('should convert the start date to the America/Denver timezone.', () => {
+        const result = fn(timing);
+
+        const { start } = result;
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(denverTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.duration).toBe(timing.duration);
       });
     });
   });
@@ -786,20 +831,19 @@ describe('dateBlocksDayInfoFactory()', () => {
 
   it('should calculate the day info when provided a day index.', () => {
     const result = factory(0);
+    const isInProgress = isDateInDateRange(result.now, { start: result.startsAtOnDay, end: result.endsAtOnDay });
 
     expect(result.date).toBeSameMinuteAs(copyHoursAndMinutesFromDate(start, new Date()));
     expect(result.dayIndex).toBe(0);
-    expect(result.isInProgress).toBe(false);
+    expect(result.isInProgress).toBe(isInProgress);
 
     // has already occured in some timezones (e.g. Asia/Tokyo)
     const expectedHasOccuredToday = !isBefore(result.now, result.endsAtOnDay);
     expect(result.hasOccuredToday).toBe(expectedHasOccuredToday);
 
     expect(result.isInRange).toBe(true);
-    expect(result.currentIndex).toBe(expectedHasOccuredToday ? 0 : -1);
-    expect(result.nextIndex).toBe(expectedHasOccuredToday ? 1 : 0);
-
-    // TODO: still fails sometimes due to the wrong day being provided.
+    expect(result.currentIndex).toBe(isInProgress || expectedHasOccuredToday ? 0 : -1);
+    expect(result.nextIndex).toBe(isInProgress || expectedHasOccuredToday ? 1 : 0);
   });
 
   it('should calculate the day info for before occurrence for today', () => {
@@ -850,6 +894,51 @@ describe('dateBlocksDayInfoFactory()', () => {
     expect(result.isInRange).toBe(true);
     expect(result.currentIndex).toBe(1);
     expect(result.nextIndex).toBe(2);
+  });
+
+  describe('scenarios', () => {
+    describe('only weekends', () => {
+      const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
+      const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
+      const nextDate = systemNormalDateToBaseDate(new Date('2022-01-08T00:00:00.000Z'));
+      const factory = dateBlocksDayInfoFactory({ timing: weekTiming });
+
+      it('should return the correct current index.', () => {
+        const now = startsAt;
+        const result = factory(nextDate, now);
+
+        expect(result.currentIndex).toBe(5);
+        expect(result.isInProgress).toBe(false); // passed now as startsAt, which is a few days before the passed nextDate's start time.
+        expect(result.nextIndex).toBe(6);
+        expect(result.isComplete).toBe(false);
+      });
+
+      it('should return isComplete=true after the final event has occured.', () => {
+        const now = nextDate;
+        const result = factory(nextDate, addMinutes(now, duration + 5));
+
+        expect(result.nextIndex).toBe(7); // does not exist in the timing
+        expect(result.nextIndexInRange).toBe(undefined); // not defined
+        expect(result.isInProgress).toBe(false); // finished for the day
+        expect(result.isComplete).toBe(true);
+      });
+
+      it('should return isComplete=false if before the final event has occured..', () => {
+        const now = nextDate;
+        const result = factory(nextDate, now);
+
+        expect(result.isComplete).toBe(false);
+      });
+
+      it('should return isComplete=false if before the first event has occured.', () => {
+        const now = addDays(startsAt, -1);
+        const result = factory(now, now);
+
+        expect(result.dayIndex).toBe(-1);
+        expect(result.nextIndexInRange).toBe(0);
+        expect(result.isComplete).toBe(false);
+      });
+    });
   });
 });
 
