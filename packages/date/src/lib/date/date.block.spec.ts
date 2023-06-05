@@ -2,6 +2,7 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { dateRange, DateRange, DateRangeInput, isDateInDateRange } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore } from 'date-fns';
 import {
+  changeTimingToTimezoneFunction,
   DateBlock,
   dateBlockDayOfWeekFactory,
   DateBlockIndex,
@@ -23,6 +24,7 @@ import {
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
   getCurrentDateBlockTimingOffset,
+  getCurrentDateBlockTimingOffsetData,
   getCurrentDateBlockTimingStartDate,
   getRelativeIndexForDateTiming,
   groupToDateBlockRanges,
@@ -178,6 +180,53 @@ describe('timingIsInExpectedTimezoneFunction()', () => {
       it('should return false if the timing starts in a timezone with a different offset.', () => {
         const result = fn({ start: gmtnegative1Start });
         expect(result).toBe(false);
+      });
+    });
+  });
+});
+
+describe('changeTimingToTimezoneFunction()', () => {
+  describe('function', () => {
+    const startOfToday = startOfDay(new Date());
+    const timing = dateBlockTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
+
+    describe('UTC', () => {
+      const fn = changeTimingToTimezoneFunction('UTC');
+      const utcTimezoneOffsetInHours = 0; // GMT-0
+
+      it('should convert the start date to the UTC timezone.', () => {
+        const result = fn(timing);
+
+        const { start } = result;
+        expect(start).not.toBeSameSecondAs(startOfToday);
+
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(utcTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.duration).toBe(timing.duration);
+      });
+    });
+
+    describe('America/Denver', () => {
+      const fn = changeTimingToTimezoneFunction('America/Denver');
+
+      // GMT-6 or GMT-7 depending on time of year
+      const denverTimezoneOffsetInHours = millisecondsToHours(dateTimezoneUtcNormal('America/Denver').targetDateToBaseDateOffset(startOfToday));
+
+      it('should convert the start date to the America/Denver timezone.', () => {
+        const result = fn(timing);
+
+        const { start } = result;
+        expect(start).not.toBeSameSecondAs(startOfToday);
+
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(denverTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.duration).toBe(timing.duration);
       });
     });
   });

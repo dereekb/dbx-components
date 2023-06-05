@@ -332,14 +332,32 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   }
 }
 
-export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceInput | DateTimezoneUtcNormalInstance;
+export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceInput | DateTimezoneUtcNormalInstance | TimezoneString | Milliseconds;
 
 export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput): DateTimezoneUtcNormalInstance {
+  let instance: DateTimezoneUtcNormalInstance;
+
   if (config instanceof DateTimezoneUtcNormalInstance) {
-    return config;
+    instance = config;
   } else {
-    return new DateTimezoneUtcNormalInstance(config);
+    const type = typeof config;
+
+    switch (type) {
+      case 'object':
+        instance = new DateTimezoneUtcNormalInstance(config as DateTimezoneUtcNormalInstanceInput);
+        break;
+      case 'number':
+        instance = new DateTimezoneUtcNormalInstance({ timezoneOffset: config as number });
+        break;
+      case 'string':
+        instance = new DateTimezoneUtcNormalInstance({ timezone: config as TimezoneString });
+        break;
+      default:
+        throw new Error('Invalid input passed to dateTimezoneUtcNormal()');
+    }
   }
+
+  return instance;
 }
 
 /**
