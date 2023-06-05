@@ -3,6 +3,7 @@ import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFuncti
 import { HttpException, ValidationPipe } from '@nestjs/common';
 import { https } from 'firebase-functions';
 import { mapIdentityFunction } from '@dereekb/util';
+import { badRequestError } from '../../function/error';
 
 // MARK: Action Context
 /**
@@ -56,7 +57,11 @@ export function firebaseServerActionsTransformFactory(logError: FirebaseServerAc
       const nestError = nestValidationExceptionFactory(validationError);
       const details = (nestError as HttpException).getResponse();
       logErrorFunction(details as object);
-      throw new https.HttpsError('invalid-argument', 'Parameters validation check failed.', details);
+      throw badRequestError({
+        code: 'VALIDATION_ERROR',
+        message: 'One or more data/form validation errors occurred.',
+        data: details
+      });
     }
   });
 }
