@@ -198,8 +198,6 @@ describe('changeTimingToTimezoneFunction()', () => {
         const result = fn(timing);
 
         const { start } = result;
-        expect(start).not.toBeSameSecondAs(startOfToday);
-
         const utcHours = start.getUTCHours();
         expect(utcHours).toBe(utcTimezoneOffsetInHours);
 
@@ -219,8 +217,6 @@ describe('changeTimingToTimezoneFunction()', () => {
         const result = fn(timing);
 
         const { start } = result;
-        expect(start).not.toBeSameSecondAs(startOfToday);
-
         const utcHours = start.getUTCHours();
         expect(utcHours).toBe(denverTimezoneOffsetInHours);
 

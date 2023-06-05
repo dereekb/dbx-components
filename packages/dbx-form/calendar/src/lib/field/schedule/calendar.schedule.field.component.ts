@@ -11,7 +11,7 @@ import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } fro
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 
-export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'> {
+export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
   appearance?: MatFormFieldAppearance;
   hideCustomize?: boolean;
   /**
@@ -104,6 +104,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return this.props.computeSelectionResultRelativeToFilter;
   }
 
+  get cellContentFactory() {
+    return this.props.cellContentFactory;
+  }
+
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
@@ -139,6 +143,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
     if (this.computeSelectionResultRelativeToFilter != null) {
       this.dbxCalendarScheduleSelectionStore.setComputeSelectionResultRelativeToFilter(this.computeSelectionResultRelativeToFilter);
+    }
+
+    if (this.cellContentFactory != null) {
+      this.dbxCalendarScheduleSelectionStore.setCellContentFactory(this.cellContentFactory);
     }
   }
 
