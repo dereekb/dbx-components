@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString, Building } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
@@ -187,21 +187,43 @@ export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: Tim
   return timingIsInExpectedTimezoneFunction(timezone)(timing);
 }
 
-export type ChangeTimingToTimezoneFunction = <T extends DateRangeStart>(timing: T) => T;
+export type TimingDateTimezoneUtcNormalInput = DateRangeStart | TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance;
+
+/**
+ * Creates a DateTimezoneUtcNormalInstance from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function timingDateTimezoneUtcNormal(input: TimingDateTimezoneUtcNormalInput): DateTimezoneUtcNormalInstance {
+  const timezoneNormalInput = isDateRangeStart(input) ? hoursToMilliseconds(getCurrentDateBlockTimingUtcData(input).originalUtcOffsetInHours) : input;
+  const timezoneInstance = dateTimezoneUtcNormal(timezoneNormalInput);
+  return timezoneInstance;
+}
 
 /**
  * Returns a copy of the input timing with the start time timezone in the given timezone.
  *
  * @param timing
  */
-export function changeTimingToTimezoneFunction(timezone: TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance): ChangeTimingToTimezoneFunction {
-  const normal = dateTimezoneUtcNormal(timezone);
+export type ChangeTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T) & {
+  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
+};
 
-  return <T extends DateRangeStart>(timing: T) => {
+/**
+ * Creates a ChangeTimingToTimezoneFunction from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function changeTimingToTimezoneFunction(input: TimingDateTimezoneUtcNormalInput): ChangeTimingToTimezoneFunction {
+  const timezoneInstance = timingDateTimezoneUtcNormal(input);
+
+  const fn = (<T extends DateRangeStart>(timing: T) => {
     const baseTimingOffset = getCurrentDateBlockTimingUtcData(timing);
 
     const startInUtc = baseTimingOffset.originalUtcDate;
-    const start = normal.targetDateToBaseDate(startInUtc);
+    const start = timezoneInstance.targetDateToBaseDate(startInUtc);
 
     const newTiming = {
       ...timing,
@@ -209,7 +231,9 @@ export function changeTimingToTimezoneFunction(timezone: TimezoneString | Millis
     };
 
     return newTiming;
-  };
+  }) as Building<ChangeTimingToTimezoneFunction>;
+  fn._timezoneInstance = timezoneInstance;
+  return fn as ChangeTimingToTimezoneFunction;
 }
 
 export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance): T {
@@ -430,6 +454,29 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
 }
 
 /**
+ * Creates a DateBlockTiming from the DateDurationSpan and range input with the start offset set in the pre-configured timezone.
+ */
+export type DateBlockTimingInTimezoneFunction = ((durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput) => DateBlockTiming) & {
+  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
+};
+
+export function dateBlockTimingInTimezoneFunction(input: TimingDateTimezoneUtcNormalInput): DateBlockTimingInTimezoneFunction {
+  const changeTimezoneFunction = changeTimingToTimezoneFunction(input);
+
+  const fn = ((durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput) => {
+    const timing = dateBlockTiming(durationInput, inputRange);
+    return changeTimezoneFunction(timing);
+  }) as Building<DateBlockTimingInTimezoneFunction>;
+
+  fn._timezoneInstance = changeTimezoneFunction._timezoneInstance;
+  return fn as DateBlockTimingInTimezoneFunction;
+}
+
+export function dateBlockTimingInTimezone(durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput, timezone: TimingDateTimezoneUtcNormalInput) {
+  return dateBlockTimingInTimezoneFunction(timezone)(durationInput, inputRange);
+}
+
+/**
  *
  * @param timing
  * @returns
@@ -646,7 +693,7 @@ export interface DateBlockDayTimingInfo {
    *
    * If the index is currently in progress given the timing, this will return the dayIndex + 1.
    */
-  nextIndex: Maybe<DateBlockIndex>;
+  nextIndex: DateBlockIndex;
   /**
    * Index for the next execution, if in the range, otherwise undefined.
    *
