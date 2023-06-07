@@ -1,7 +1,7 @@
 import { DateOrDateString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay, safeToJsDate } from './date';
-import { dateOrDateRangeToDateRange, DateRange, dateRangeState, DateRangeState, fitDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
+import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, fitDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
 
 export type FormatDateFunction = MapFunction<Date, string>;
 export type FormatStrictDateRangeFunction = (startOrDateRange: DateRange) => string;
@@ -248,21 +248,21 @@ export function formatToTimeAndDurationString(start: Date, end: Date): string {
 }
 
 export function formatStartedEndedDistanceString({ start, end }: DateRange): string {
-  const state = dateRangeState({ start, end });
+  const state = dateRangeRelativeState({ start, end });
   let distanceText;
 
   switch (state) {
-    case DateRangeState.PAST:
+    case 'past':
       distanceText = `ended ${formatDistanceToNow(end, {
         addSuffix: true
       })}`;
       break;
-    case DateRangeState.PRESENT:
+    case 'present':
       distanceText = `started ${formatDistanceToNow(start, {
         addSuffix: true
       })}`;
       break;
-    case DateRangeState.FUTURE:
+    case 'future':
       distanceText = `starting ${formatDistanceToNow(start, {
         addSuffix: true
       })}`;

@@ -1,4 +1,4 @@
-import { Building, FactoryWithRequiredInput, MapFunction, mapIdentityFunction, Maybe, MS_IN_DAY, TimezoneString } from '@dereekb/util';
+import { Building, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, mapIdentityFunction, Maybe, MS_IN_DAY, TimezoneString } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, millisecondsToHours, isSameDay, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore } from 'date-fns';
@@ -171,21 +171,6 @@ export enum DateRangeType {
    * All surrounding days that would appear on a calendar with this date.
    */
   CALENDAR_MONTH = 'calendar_month'
-}
-
-export enum DateRangeState {
-  /**
-   * Range has yet to start and is in the future.
-   */
-  FUTURE = 'future',
-  /**
-   * Range is in the present, but not yet ended.
-   */
-  PRESENT = 'present',
-  /**
-   * Range is in the past.
-   */
-  PAST = 'past'
 }
 
 /**
@@ -491,19 +476,29 @@ export function expandDaysForDateRange(range: DateRange): Date[] {
 }
 
 /**
- * Returns the DateRangeState from the input DateRange.
+ * Returns the DateRelativeState from the input DateRange.
  *
  * @param param0
  * @returns
  */
-export function dateRangeState({ start, end }: DateRange, now: Date = new Date()): DateRangeState {
+export function dateRangeRelativeState({ start, end }: DateRange, now: Date = new Date()): DateRelativeState {
   if (isAfter(now, end)) {
-    return DateRangeState.PAST;
+    return 'past';
   } else if (isBefore(now, start)) {
-    return DateRangeState.FUTURE;
+    return 'future';
   } else {
-    return DateRangeState.PRESENT;
+    return 'present';
   }
+}
+
+export interface GroupDateRangesByDateRelativeStatesResult<T extends DateRange> {
+  readonly past: T[];
+  readonly present: T[];
+  readonly future: T[];
+}
+
+export function groupDateRangesByDateRelativeState<T extends DateRange>(dateRanges: T[], now: Date = new Date()): GroupDateRangesByDateRelativeStatesResult<T> {
+  return groupValues(dateRanges, (x) => dateRangeRelativeState(x));
 }
 
 export type DateRangeFunctionDateRangeRef<T extends Partial<DateRange> = Partial<DateRange>> = {
@@ -758,3 +753,27 @@ export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezone
   fn._timezoneInstance = timezoneInstance;
   return fn as TransformDateRangeToTimezoneFunction;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use DateRelativeState instead.
+ */
+export enum DateRangeState {
+  /**
+   * Range has yet to start and is in the future.
+   */
+  FUTURE = 'future',
+  /**
+   * Range is in the present, but not yet ended.
+   */
+  PRESENT = 'present',
+  /**
+   * Range is in the past.
+   */
+  PAST = 'past'
+}
+
+/**
+ * @deprecated use dateRangeRelativeState() instead.
+ */
+export const dateRangeState = dateRangeRelativeState;

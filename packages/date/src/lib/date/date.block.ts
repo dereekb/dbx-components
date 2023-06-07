@@ -671,7 +671,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
   };
 }
 
-export type DateBlocksDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
+export type DateBlockDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
 
 export interface DateBlockDayTimingInfo {
   /**
@@ -741,7 +741,7 @@ export interface DateBlockDayTimingInfo {
  */
 export type DateBlockDayTimingInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
 
-export function dateBlocksDayTimingInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayTimingInfoFactory {
+export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFactoryConfig): DateBlockDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
   const { startsAt, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
@@ -1654,4 +1654,4 @@ export type DateBlockDayInfoFactory = DateBlockDayTimingInfoFactory;
 /**
  * @deprecated use dateBlocksDayTimingInfoFactory instead.
  */
-export const dateBlocksDayInfoFactory = dateBlocksDayTimingInfoFactory;
+export const dateBlocksDayInfoFactory = dateBlockDayTimingInfoFactory;
