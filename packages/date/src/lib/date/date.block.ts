@@ -739,9 +739,9 @@ export interface DateBlockDayTimingInfo {
  *
  * Can optionally specify a now that is used for checking the inProgress functionality.
  */
-export type DateBlockDayInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
+export type DateBlockDayTimingInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
 
-export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayInfoFactory {
+export function dateBlocksDayTimingInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
   const { startsAt, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
@@ -1645,3 +1645,13 @@ export const dateBlockIsWithinDateBlockRangeFunction = isDateBlockWithinDateBloc
  * @deprecated use isDateBlockWithinDateBlockRange() instead.
  */
 export const dateBlockRangeContainsDateBlock = isDateBlockWithinDateBlockRange;
+
+/**
+ * @deprecated use DateBlockDayTimingInfoFactory instead.
+ */
+export type DateBlockDayInfoFactory = DateBlockDayTimingInfoFactory;
+
+/**
+ * @deprecated use dateBlocksDayTimingInfoFactory instead.
+ */
+export const dateBlocksDayInfoFactory = dateBlocksDayTimingInfoFactory;

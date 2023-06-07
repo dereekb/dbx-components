@@ -14,7 +14,7 @@ import {
   dateBlockRangeIncludedByRangeFunction,
   dateBlockRangesFullyCoverDateBlockRangeFunction,
   DateBlockRangeWithRange,
-  dateBlocksDayInfoFactory,
+  dateBlocksDayTimingInfoFactory,
   dateBlocksExpansionFactory,
   dateBlocksInDateBlockRange,
   dateBlockTiming,
@@ -884,13 +884,13 @@ describe('dateBlocksExpansionFactory()', () => {
   });
 });
 
-describe('dateBlocksDayInfoFactory()', () => {
+describe('dateBlocksDayTimingInfoFactory()', () => {
   const start = startOfDay(new Date());
   const startsAt = addHours(start, 12); // Noon on the day
   const days = 5;
   const duration = 60;
   const timing = dateBlockTiming({ startsAt, duration }, days);
-  const factory = dateBlocksDayInfoFactory({ timing });
+  const factory = dateBlocksDayTimingInfoFactory({ timing });
 
   it('should calculate the day info when provided a day index.', () => {
     const result = factory(0);
@@ -964,7 +964,7 @@ describe('dateBlocksDayInfoFactory()', () => {
       const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
       const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
       const nextDate = systemNormalDateToBaseDate(new Date('2022-01-08T00:00:00.000Z'));
-      const factory = dateBlocksDayInfoFactory({ timing: weekTiming });
+      const factory = dateBlocksDayTimingInfoFactory({ timing: weekTiming });
 
       it('should return the correct current index.', () => {
         const now = startsAt;
