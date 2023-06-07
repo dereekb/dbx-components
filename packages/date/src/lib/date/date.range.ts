@@ -1,7 +1,7 @@
 import { Building, FactoryWithRequiredInput, MapFunction, mapIdentityFunction, Maybe, MS_IN_DAY, TimezoneString } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, millisecondsToHours, isSameDay, endOfMinute, startOfHour, endOfHour, addMinutes } from 'date-fns';
+import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, millisecondsToHours, isSameDay, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
 import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceTransformType } from './date.timezone';
@@ -496,13 +496,13 @@ export function expandDaysForDateRange(range: DateRange): Date[] {
  * @param param0
  * @returns
  */
-export function dateRangeState({ start, end }: DateRange): DateRangeState {
-  if (isPast(end)) {
+export function dateRangeState({ start, end }: DateRange, now: Date = new Date()): DateRangeState {
+  if (isAfter(now, end)) {
     return DateRangeState.PAST;
-  } else if (isPast(start)) {
-    return DateRangeState.PRESENT;
-  } else {
+  } else if (isBefore(now, start)) {
     return DateRangeState.FUTURE;
+  } else {
+    return DateRangeState.PRESENT;
   }
 }
 
