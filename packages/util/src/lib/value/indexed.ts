@@ -11,6 +11,7 @@ import { isSelectedDecisionFunctionFactory } from '../set/set.selection';
 import { iterableToArray } from '../iterable/iterable';
 import { Building } from './build';
 import { wrapNumberFunction, boundNumberFunction, WrapNumberFunction } from '../number';
+import { range } from '../array/array.number';
 
 /**
  * A number that denotes which index an item is at.
@@ -421,6 +422,18 @@ export function indexRangeOverlapsIndexRangeFunction(input: IndexRangeFunctionIn
   return (input: IndexRange) => {
     return input.minIndex <= maxIndex && input.maxIndex >= minIndex;
   };
+}
+
+/**
+ * Returns an array of all IndexNumbers within the input IndexRange.
+ *
+ * maxIndex is exclusive.
+ *
+ * @param indexRange
+ * @returns
+ */
+export function allIndexesInIndexRange(indexRange: IndexRange): IndexNumber[] {
+  return range(indexRange.minIndex, indexRange.maxIndex);
 }
 
 export interface StepsFromIndexFunctionConfig {

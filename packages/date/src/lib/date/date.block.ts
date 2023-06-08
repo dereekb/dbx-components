@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString, Building } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString, Building, addToSet } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
@@ -1109,6 +1109,34 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   results.push(current);
 
   return results;
+}
+
+/**
+ * Returns an array containing all indexes in the date block range.
+ */
+export function allIndexesInDateBlockRange(input: DateBlockRange): DateBlockIndex[] {
+  return input.to != null ? range((input as DateBlockRange).i, input.to + 1) : [input.i];
+}
+
+/**
+ * Returns the set of all indexes within the input.
+ *
+ * @param input
+ * @returns
+ */
+export function allIndexesInDateBlockRanges(input: (DateBlockIndex | DateBlockRange)[]): Set<DateBlockIndex> {
+  const set = new Set<DateBlockIndex>();
+
+  input.forEach((x) => {
+    if (typeof x === 'number') {
+      set.add(x);
+    } else {
+      const allIndexes = allIndexesInDateBlockRange(x);
+      addToSet(set, allIndexes);
+    }
+  });
+
+  return set;
 }
 
 export interface DateBlockRangeBlockCountInfo {
