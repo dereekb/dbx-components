@@ -1,8 +1,5 @@
-import { map, Observable, shareReplay } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Injector, Input, OnDestroy, Optional } from '@angular/core';
-import { getValueFromGetter, latLngPointFunction } from '@dereekb/util';
-import { DbxMapboxChangeService } from './mapbox.change.service';
-import { DbxMapboxMarker } from './mapbox.marker';
+import { Observable, shareReplay } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Injector } from '@angular/core';
 import { DbxInjectionArrayEntry } from '@dereekb/dbx-core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 

@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { DecisionFunction, Factory, Getter, GetterOrValue, getValueFromGetter, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
+import { DecisionFunction, GetterOrValue, getValueFromGetter, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 import { ObservableDecisionFunction } from './decision';
 

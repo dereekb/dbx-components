@@ -1,5 +1,5 @@
 import { ObservableOrValueGetter } from '@dereekb/rxjs';
-import { ModelKeyRef, UniqueModel } from '@dereekb/util';
+import { ModelKeyRef } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from './injection';
 
 /**

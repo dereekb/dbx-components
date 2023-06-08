@@ -4,11 +4,11 @@ import { Component, Injector, NgZone, OnDestroy, OnInit, Optional } from '@angul
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
-import { asObservableFromGetter, filterMaybe, ObservableFactoryWithRequiredInput, ObservableOrValueGetter, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction, isDefaultLatLngPointValue, FactoryWithInput, isSameLatLngPoint } from '@dereekb/util';
+import { asObservableFromGetter, filterMaybe, ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction, isSameLatLngPoint } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
-import { dbxMapboxColoredDotStyle, DbxMapboxInjectionStore, DbxMapboxMapStore, DbxMapboxMarkerDisplayConfig, DbxMapboxMarkerPresentation, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxInjectionStore, DbxMapboxMapStore, DbxMapboxMarkerDisplayConfig, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldMarkerComponent } from './latlng.field.marker.component';
 
 export const DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxFormMapboxLatLngFieldComponent';

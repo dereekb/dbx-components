@@ -1,4 +1,4 @@
-import { shareReplay, BehaviorSubject, map, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { Component, Input } from '@angular/core';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextObservable, DbxPresetFilterMenuConfig } from './filter.menu';

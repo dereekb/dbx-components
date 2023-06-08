@@ -1,5 +1,5 @@
 import { dateBlockIndexsForDateScheduleDayCodes } from './date.block.day';
-import { DateScheduleDayCode, dateScheduleDayCodes, weekdayDateScheduleDayCodes } from './date.schedule';
+import { DateScheduleDayCode, weekdayDateScheduleDayCodes } from './date.schedule';
 
 describe('dateBlockIndexsForDateScheduleDayCodes()', () => {
   describe('days array', () => {

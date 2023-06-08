@@ -1,8 +1,8 @@
-import { filterMaybe, isNot, timeoutStartWith, tapLog, switchMapMaybeDefault } from '@dereekb/rxjs';
-import { Injectable, OnDestroy, Optional } from '@angular/core';
+import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
+import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier, NoAuthUserIdentifier } from '@dereekb/dbx-core';
 import { reauthenticateWithPopup, Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, Subject, merge, EMPTY, share } from 'rxjs';
+import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY } from 'rxjs';
 import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';

@@ -34,11 +34,11 @@ import {
   dateTimezoneUtcNormal,
   DateTimezoneUtcNormalInstance
 } from '@dereekb/date';
-import { filterMaybe, switchMapToDefault } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, objectHasNoKeys } from '@dereekb/util';
+import { filterMaybe } from '@dereekb/rxjs';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { addYears, startOfDay, endOfDay, startOfYear, isAfter, isBefore } from 'date-fns';
-import { Observable, distinctUntilChanged, map, shareReplay, combineLatest, switchMap, of, tap, first, combineLatestWith } from 'rxjs';
+import { startOfDay, endOfDay, isBefore } from 'date-fns';
+import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
 export interface CalendarScheduleSelectionInputDateRange {
@@ -348,9 +348,9 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
       let obs: Observable<Maybe<AllOrNoneSelection>>;
 
       if (hasConfiguredMinMaxRange) {
-        obs = this.currentSelectionValue$.pipe(map((x) => (Boolean(x) ? 'none' : 'all')));
+        obs = this.currentSelectionValue$.pipe(map((x) => (x ? 'none' : 'all')));
       } else {
-        obs = this.currentSelectionValue$.pipe(map((x) => (Boolean(x) ? 'none' : undefined)));
+        obs = this.currentSelectionValue$.pipe(map((x) => (x ? 'none' : undefined)));
       }
 
       return obs;
@@ -482,7 +482,7 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 
     if (minMaxDateRange) {
       enabledFilter.minMaxDateRange = minMaxDateRange;
-      enabledFilter.setStartAsMinDate = Boolean(filter?.start) ? true : false; // If a start date is set, then it becomes the floor.
+      enabledFilter.setStartAsMinDate = filter?.start ? true : false; // If a start date is set, then it becomes the floor.
     }
 
     /**
@@ -546,7 +546,7 @@ export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionSta
 
 export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSelectionState, change: Maybe<DateScheduleRange>): CalendarScheduleSelectionState {
   const { timezoneNormal, currentSelectionValue } = state;
-  let currentDateScheduleRange = currentSelectionValue?.dateScheduleRange; // current range is always in system time
+  const currentDateScheduleRange = currentSelectionValue?.dateScheduleRange; // current range is always in system time
 
   if (!calendarScheduleStartBeingUsedFromFilter(state) && timezoneNormal) {
     // When using timezones, always return from the start of the day. Inputs are converted to the system time and used as the start of the day.
@@ -607,7 +607,7 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
 
   if (change.reset || change.selectAll != null || change.set) {
     let set: Maybe<IterableOrValue<DateOrDateBlockIndex>> = change.set ?? [];
-    let selectAll: Maybe<AllOrNoneSelection> = change.reset === true ? state.initialSelectionState : change.selectAll;
+    const selectAll: Maybe<AllOrNoneSelection> = change.reset === true ? state.initialSelectionState : change.selectAll;
 
     switch (selectAll) {
       case 'all':
@@ -666,8 +666,8 @@ export function updateStateWithChangedRange(state: CalendarScheduleSelectionStat
   const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory, minMaxDateRange } = state;
   const { start: minDate, end: maxDate }: Partial<DateRange> = minMaxDateRange ?? {};
 
-  let inputStart: Date = startOfDay(change.inputStart);
-  let inputEnd: Date = endOfDay(change.inputEnd);
+  const inputStart: Date = startOfDay(change.inputStart);
+  const inputEnd: Date = endOfDay(change.inputEnd);
 
   const isValidRange = minDate != null || maxDate != null ? isDateInDateRangeFunction({ start: minDate ?? undefined, end: maxDate ?? undefined }) : () => true;
 

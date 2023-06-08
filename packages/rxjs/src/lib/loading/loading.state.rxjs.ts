@@ -1,7 +1,7 @@
 import { DecisionFunction, Maybe, ReadableError } from '@dereekb/util';
-import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap } from 'rxjs';
+import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
-import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType } from './loading.state';
+import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult } from './loading.state';
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
 
@@ -33,6 +33,37 @@ export function combineLoadingStates<A extends object, B extends object, C>(obsA
     distinctUntilChanged((x, y) => x?.[0] === y?.[0] && x?.[1] === y?.[1]), // Prevent remerging the same values!
     map(([a, b]) => mergeLoadingStates(a, b, inputMergeFn as (a: A, b: B) => C)),
     shareReplay(1) // Share the result.
+  );
+}
+
+/**
+ * Combines the status of all loading states. Only emits when the LoadingStateType of the result changes.
+ *
+ * @param sources
+ * @returns
+ */
+export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[]>(sources: readonly [...ObservableInputTuple<A>]): Observable<LoadingState<boolean>> {
+  return combineLatest(sources).pipe(
+    map((allLoadingStates) => {
+      const firstErrorState = allLoadingStates.find((x) => x.error);
+      let result: LoadingState<boolean>;
+
+      if (firstErrorState) {
+        result = errorResult(firstErrorState.error);
+      } else {
+        const statesCurrentlyLoading = allLoadingStates.find(loadingStateIsLoading);
+
+        if (statesCurrentlyLoading) {
+          result = beginLoading(); // still loading
+        } else {
+          result = successResult(true);
+        }
+      }
+
+      return result;
+    }),
+    distinctUntilChanged((x, y) => loadingStateType(x) !== loadingStateType(y)),
+    shareReplay(1)
   );
 }
 

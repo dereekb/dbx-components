@@ -1,8 +1,8 @@
-import { Minutes as UtilMinutes } from '@dereekb/util';
+import { DateRelativeState, Minutes as UtilMinutes } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 import { addMinutes } from 'date-fns';
-import { DateRange, dateRangeState, DateRangeState } from './date.range';
+import { DateRange, dateRangeRelativeState } from './date.range';
 
 export type Minutes = UtilMinutes; // TEMPORARY: weird issue with importing primative types with jest.
 
@@ -46,6 +46,12 @@ export function durationSpanToDateRange(span: DateDurationSpan): DateRange {
   };
 }
 
-export function durationSpanDateRangeState(span: DateDurationSpan): DateRangeState {
-  return dateRangeState(durationSpanToDateRange(span));
+export function durationSpanDateRelativeState(span: DateDurationSpan, now?: Date): DateRelativeState {
+  return dateRangeRelativeState(durationSpanToDateRange(span), now);
 }
+
+// MARK: Compat
+/**
+ * @deprecated use durationSpanDateRelativeState instead.
+ */
+export const durationSpanDateRangeState = durationSpanDateRelativeState;

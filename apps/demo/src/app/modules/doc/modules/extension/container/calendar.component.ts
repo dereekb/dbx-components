@@ -1,13 +1,12 @@
 import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { DateBlock, DateBlockCollection, DateScheduleDateFilterConfig, dateBlockTiming, dateTimezoneUtcNormal, durationSpanToDateRange, expandDateBlockCollection, systemBaseDateToNormalDate } from '@dereekb/date';
-import { addMonths, setHours, startOfDay, addDays } from 'date-fns/esm';
+import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection, systemBaseDateToNormalDate } from '@dereekb/date';
+import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns/esm';
 import { Maybe, TimezoneString, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
 import { dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import { BehaviorSubject, of } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
-import { addHours, endOfDay } from 'date-fns';
 import { timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 

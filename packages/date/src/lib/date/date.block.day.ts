@@ -1,6 +1,5 @@
-import { ArrayOrValue, asArray } from '@dereekb/util';
 import { DateBlockIndex } from './date.block';
-import { DateScheduleDayCode, dateScheduleDayCodes, DateScheduleDayCodesInput, DateScheduleEncodedWeek, expandDateScheduleDayCodes } from './date.schedule';
+import { DateScheduleDayCodesInput, expandDateScheduleDayCodes } from './date.schedule';
 
 /**
  * Converts the input day codes into DateBlockIndex values.

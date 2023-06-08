@@ -1,5 +1,4 @@
 import { Maybe } from '../value/maybe.type';
-import { getArrayNextIndex } from './array.indexed';
 
 // MARK: Types
 export type ArrayOrValue<T> = T | T[];

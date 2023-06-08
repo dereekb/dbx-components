@@ -1,7 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { DateOrDateString, Maybe } from '@dereekb/util';
-import { DateRange, formatToDayRangeString } from '@dereekb/date';
-import { asObservable, asObservableFromGetter, ObservableOrValue, ObservableOrValueGetter } from '@dereekb/rxjs';
+import { asObservableFromGetter, ObservableOrValueGetter } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 
 /**

@@ -193,3 +193,8 @@ export function makeDateMonthForMonthOfYear(monthOfYear: MonthOfYear): DateMonth
  * Year number. I.E. 2022
  */
 export type YearNumber = number;
+
+/**
+ * Current state of the date relative to another date.
+ */
+export type DateRelativeState = 'past' | 'present' | 'future';

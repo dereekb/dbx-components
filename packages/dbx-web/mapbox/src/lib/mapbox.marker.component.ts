@@ -113,7 +113,7 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     const presentation = this.presentation;
     const markerClasses = this._marker?.markerClasses;
 
-    let cssClasses: string = '';
+    let cssClasses = '';
 
     switch (presentation) {
       case 'chip':

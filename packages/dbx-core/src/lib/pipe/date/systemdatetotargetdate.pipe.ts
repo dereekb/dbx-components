@@ -1,7 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Maybe, DateOrDateString } from '@dereekb/util';
-import { formatDistance } from 'date-fns';
-import { ToJsDatePipe } from './tojsdate.pipe';
+import { Maybe } from '@dereekb/util';
 import { TimezoneString, dateTimezoneUtcNormal } from '@dereekb/date';
 
 /**

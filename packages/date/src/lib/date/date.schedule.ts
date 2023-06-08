@@ -1,4 +1,4 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
@@ -397,7 +397,6 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
 
-
   return (input: DateScheduleDateFilterInput) => {
     let i: DateBlockIndex;
     let day: DayOfWeek;
@@ -409,7 +408,6 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       i = dateIndexForDate(input);
       day = dayOfWeek(input);
     }
-
 
     return (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };

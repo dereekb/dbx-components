@@ -1,10 +1,10 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString, Building } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceInput, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
+import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 /**
@@ -671,7 +671,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
   };
 }
 
-export type DateBlocksDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
+export type DateBlockDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
 
 export interface DateBlockDayTimingInfo {
   /**
@@ -739,9 +739,9 @@ export interface DateBlockDayTimingInfo {
  *
  * Can optionally specify a now that is used for checking the inProgress functionality.
  */
-export type DateBlockDayInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
+export type DateBlockDayTimingInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
 
-export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayInfoFactory {
+export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFactoryConfig): DateBlockDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
   const { startsAt, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
@@ -1645,3 +1645,13 @@ export const dateBlockIsWithinDateBlockRangeFunction = isDateBlockWithinDateBloc
  * @deprecated use isDateBlockWithinDateBlockRange() instead.
  */
 export const dateBlockRangeContainsDateBlock = isDateBlockWithinDateBlockRange;
+
+/**
+ * @deprecated use DateBlockDayTimingInfoFactory instead.
+ */
+export type DateBlockDayInfoFactory = DateBlockDayTimingInfoFactory;
+
+/**
+ * @deprecated use dateBlocksDayTimingInfoFactory instead.
+ */
+export const dateBlocksDayInfoFactory = dateBlockDayTimingInfoFactory;

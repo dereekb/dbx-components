@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from '@dereekb/dbx-firebase';
-import { loadingStateFromObs } from '@dereekb/rxjs';
 
 @Component({
   templateUrl: './history.component.html'

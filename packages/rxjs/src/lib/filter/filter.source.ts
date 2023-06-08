@@ -1,9 +1,9 @@
-import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
-import { switchMap, distinctUntilChanged, first, shareReplay, map, Observable, BehaviorSubject, of, combineLatest, EMPTY, filter, skip } from 'rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { switchMap, distinctUntilChanged, shareReplay, map, Observable, BehaviorSubject, of, combineLatest, EMPTY, filter, skip } from 'rxjs';
 import { FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
 import { asObservable, ObservableOrValue } from '../rxjs/getter';
-import { switchMapMaybeObs, filterMaybe, switchMapToDefault } from '../rxjs/value';
+import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
 import { Destroyable, Maybe } from '@dereekb/util';
 
 /**

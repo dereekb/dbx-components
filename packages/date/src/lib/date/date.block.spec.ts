@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { dateRange, DateRange, DateRangeInput, isDateInDateRange } from './date.range';
+import { DateRange, DateRangeInput, isDateInDateRange } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore } from 'date-fns';
 import {
   changeTimingToTimezoneFunction,
@@ -14,7 +14,7 @@ import {
   dateBlockRangeIncludedByRangeFunction,
   dateBlockRangesFullyCoverDateBlockRangeFunction,
   DateBlockRangeWithRange,
-  dateBlocksDayInfoFactory,
+  dateBlockDayTimingInfoFactory,
   dateBlocksExpansionFactory,
   dateBlocksInDateBlockRange,
   dateBlockTiming,
@@ -25,7 +25,6 @@ import {
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
   getCurrentDateBlockTimingOffset,
-  getCurrentDateBlockTimingOffsetData,
   getCurrentDateBlockTimingStartDate,
   getRelativeIndexForDateTiming,
   groupToDateBlockRanges,
@@ -43,7 +42,7 @@ import {
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { dateTimezoneUtcNormal, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('isValidDateBlockIndex()', () => {
   it('should return false for -1.', () => {
@@ -884,13 +883,13 @@ describe('dateBlocksExpansionFactory()', () => {
   });
 });
 
-describe('dateBlocksDayInfoFactory()', () => {
+describe('dateBlocksDayTimingInfoFactory()', () => {
   const start = startOfDay(new Date());
   const startsAt = addHours(start, 12); // Noon on the day
   const days = 5;
   const duration = 60;
   const timing = dateBlockTiming({ startsAt, duration }, days);
-  const factory = dateBlocksDayInfoFactory({ timing });
+  const factory = dateBlockDayTimingInfoFactory({ timing });
 
   it('should calculate the day info when provided a day index.', () => {
     const result = factory(0);
@@ -964,7 +963,7 @@ describe('dateBlocksDayInfoFactory()', () => {
       const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
       const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
       const nextDate = systemNormalDateToBaseDate(new Date('2022-01-08T00:00:00.000Z'));
-      const factory = dateBlocksDayInfoFactory({ timing: weekTiming });
+      const factory = dateBlockDayTimingInfoFactory({ timing: weekTiming });
 
       it('should return the correct current index.', () => {
         const now = startsAt;
