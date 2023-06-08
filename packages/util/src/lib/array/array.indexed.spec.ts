@@ -1,6 +1,5 @@
 import { IndexNumber, IndexRef } from '../value';
-import { getArrayNextIndex, indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory } from './array.indexed';
-import { findNext } from './array.indexed';
+import { getArrayNextIndex, indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory, findNext } from './array.indexed';
 import { range } from './array.number';
 
 describe('findNext()', () => {

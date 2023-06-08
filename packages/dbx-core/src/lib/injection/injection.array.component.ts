@@ -1,4 +1,4 @@
-import { BehaviorSubject, map } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, TrackByFunction } from '@angular/core';
 import { DbxInjectionArrayEntry } from './injection.array';
 import { Maybe } from '@dereekb/util';

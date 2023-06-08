@@ -1,4 +1,4 @@
-import { MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
+import { Maybe } from '@dereekb/util';
 
 export type MouseEventType = 'enter' | 'leave';
 

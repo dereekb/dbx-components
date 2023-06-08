@@ -2,7 +2,6 @@ import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctU
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { filterUndefinedValues, firstValue, getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { FilterWithPreset, timeoutStartWith } from '@dereekb/rxjs';
 
 /**
  * Displays a button and menu for filtering partialPresets.
@@ -60,7 +59,7 @@ export abstract class AbstractDbxPartialPresetFilterMenuDirective<F> implements 
       this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
       this.filterSourceDirective.resetFilter();
     } else {
-      let filter = getValueFromGetter(preset.partialPresetValue) as Partial<F>;
+      const filter = getValueFromGetter(preset.partialPresetValue) as Partial<F>;
 
       this.filter$.pipe(first()).subscribe((currentFilter) => {
         const nextFilter = { ...currentFilter, ...filterUndefinedValues({ ...currentFilter, ...filter }, true) } as F;

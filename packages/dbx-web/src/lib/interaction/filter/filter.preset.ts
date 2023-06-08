@@ -2,7 +2,7 @@ import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctU
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective } from '@dereekb/dbx-core';
 import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { FilterWithPreset, tapLog } from '@dereekb/rxjs';
+import { FilterWithPreset } from '@dereekb/rxjs';
 
 /**
  * Displays a button and menu for filtering presets.

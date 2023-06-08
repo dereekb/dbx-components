@@ -1,7 +1,6 @@
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
 import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { AbstractFilterPopoverButtonDirective } from './filter.popover.button.directive';
-import { DbxButtonDisplayContent, dbxButtonDisplayContentType, DbxButtonDisplayContentType, DbxButtonDisplayDelegate } from '@dereekb/dbx-core';
+import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplayContent = {

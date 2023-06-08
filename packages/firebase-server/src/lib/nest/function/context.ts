@@ -1,7 +1,6 @@
 import { ValidationError } from 'class-validator';
 import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from '@dereekb/model';
 import { HttpException, ValidationPipe } from '@nestjs/common';
-import { https } from 'firebase-functions';
 import { mapIdentityFunction } from '@dereekb/util';
 import { badRequestError } from '../../function/error';
 

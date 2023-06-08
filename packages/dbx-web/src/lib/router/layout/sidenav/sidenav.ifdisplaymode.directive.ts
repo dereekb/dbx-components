@@ -1,8 +1,7 @@
 import { OnDestroy, Input, TemplateRef, ViewContainerRef, Directive } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
-import { emitDelayObs } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe, asArray, filterMaybeValues } from '@dereekb/util';
-import { of, exhaustMap, shareReplay, BehaviorSubject, combineLatest, switchMap, distinctUntilChanged, map } from 'rxjs';
+import { shareReplay, BehaviorSubject, switchMap, distinctUntilChanged, map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
 import { SideNavDisplayMode } from './sidenav';
 

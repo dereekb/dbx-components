@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
-import { combineLatest, map, shareReplay, withLatestFrom } from 'rxjs';
+import { map, withLatestFrom } from 'rxjs';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
-import { reduceBooleansWithAnd, reduceBooleansWithAndFn } from '@dereekb/util';
 
 @Component({
   selector: 'dbx-calendar-base',

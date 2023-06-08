@@ -4,7 +4,6 @@ import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, Descript
 import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DateTimePickerConfiguration } from './datetime.field.component';
 import { flexLayoutWrapper, styleWrapper } from '../../wrapper/wrapper';
 import { Maybe } from '@dereekb/util';
-import { ObservableOrValueGetter } from '@dereekb/rxjs';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldProps, MaterialFormFieldConfig {}
 export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate'>;

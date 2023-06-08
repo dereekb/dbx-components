@@ -1,4 +1,4 @@
-import { map, OperatorFunction, switchMap, shareReplay, Observable, distinctUntilChanged } from 'rxjs';
+import { map, OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys, PrimativeKey } from '@dereekb/util';
 import { asObservable, ObservableOrValue } from './getter';
 

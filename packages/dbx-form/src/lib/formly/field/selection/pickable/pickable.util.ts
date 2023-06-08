@@ -27,7 +27,7 @@ export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): 
 }
 
 // MARK: PickableValueFieldValuesConfigForStaticLabeledValues
-export interface PickableValueFieldValuesConfigForStaticLabeledValues<T, M extends LabeledValue<T>> extends Pick<PickableValueFieldsFieldProps<T, M>, 'loadValues' | 'displayForValue' | 'filterValues'> {}
+export type PickableValueFieldValuesConfigForStaticLabeledValues<T, M extends LabeledValue<T>> = Pick<PickableValueFieldsFieldProps<T, M>, 'loadValues' | 'displayForValue' | 'filterValues'>;
 
 export interface PickableValueFieldValuesConfigForStaticLabeledValuesConfig<T, M extends LabeledValue<T>> {
   readonly allOptions: M[];

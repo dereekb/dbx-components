@@ -1,7 +1,6 @@
 import { Directive, ElementRef, Input } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxPopoverService } from '../popover/popover.service';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFilterPopoverComponent, DbxFilterComponentParams } from './filter.popover.component';
 import { AbstractPopoverRefDirective } from '../popover/abstract.popover.ref.directive';
 

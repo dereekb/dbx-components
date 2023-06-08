@@ -1,4 +1,4 @@
-import { Component, ElementRef, Type, OnInit, OnDestroy } from '@angular/core';
+import { Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverComponent, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';

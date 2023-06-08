@@ -1,8 +1,6 @@
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './example.calendar.schedule.selection.popover.component';
 import { Component, ElementRef, Injector, ViewChild } from '@angular/core';
 import { DbxPopoverService } from '@dereekb/dbx-web';
-import { map, shareReplay } from 'rxjs';
-import { formatToMonthDayString } from '@dereekb/date';
 import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
 
 @Component({

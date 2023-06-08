@@ -1,6 +1,6 @@
 import { DateOrDateString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
-import { isDate, isSameDateDay, safeToJsDate } from './date';
+import { isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, fitDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
 
 export type FormatDateFunction = MapFunction<Date, string>;
@@ -163,7 +163,7 @@ export function formatToTimeRangeString(startOrDateRange: DateRange | Date, end?
   const dateRange = dateOrDateRangeToDateRange(startOrDateRange, end);
   const isSameDay = onlyTimeRange || isSameDateDay(dateRange.start, dateRange.end);
 
-  let format: FormatDateFunction = isSameDay ? formatToTimeString : formatToShortDateAndTimeString;
+  const format: FormatDateFunction = isSameDay ? formatToTimeString : formatToShortDateAndTimeString;
   return formatDateRange(dateRange, { format, simplifySameDate: false });
 }
 

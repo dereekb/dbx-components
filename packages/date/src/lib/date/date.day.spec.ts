@@ -1,4 +1,4 @@
-import { Day, monthOfYearFromDate, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, getDay } from 'date-fns';
 import { dateBlockTiming, DateBlockDurationSpan, dateBlocksExpansionFactory } from './date.block';
 import { yearMonthDayCodeFactory, yearMonthDayCode, yearMonthDayCodeDateFactory, yearMonthDayCodeGroupFactory, yearMonthDayCodeDay, yearMonthDayCodeMonth, yearMonthDayCodePairFromDate, yearMonthDayCodesForDateRangeFactory } from './date.day';

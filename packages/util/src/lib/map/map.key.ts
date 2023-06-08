@@ -2,7 +2,6 @@ import { PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '../key'
 import { IterableOrValue, useIterableOrValue } from '../iterable';
 import { Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
-import { hasDifferentValues } from '../set';
 
 /**
  * Creates a map by reading keys from the input values. Values without a key are ignored.

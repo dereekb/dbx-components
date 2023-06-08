@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { dateRange, DateRange, DateRangeInput, isDateInDateRange } from './date.range';
+import { DateRange, DateRangeInput, isDateInDateRange } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore } from 'date-fns';
 import {
   changeTimingToTimezoneFunction,
@@ -25,7 +25,6 @@ import {
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
   getCurrentDateBlockTimingOffset,
-  getCurrentDateBlockTimingOffsetData,
   getCurrentDateBlockTimingStartDate,
   getRelativeIndexForDateTiming,
   groupToDateBlockRanges,
@@ -43,7 +42,7 @@ import {
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { dateTimezoneUtcNormal, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('isValidDateBlockIndex()', () => {
   it('should return false for -1.', () => {
