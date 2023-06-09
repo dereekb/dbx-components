@@ -47,6 +47,16 @@ export class DateBlock {
 }
 
 /**
+ * Converts the input number or DateBlock to a DateBlock.
+ *
+ * @param dateBlockOrIndex
+ * @returns
+ */
+export function dateBlock(dateBlockOrIndex: DateBlockIndex | DateBlock): DateBlock {
+  return typeof dateBlockOrIndex === 'number' ? { i: dateBlockOrIndex } : dateBlockOrIndex;
+}
+
+/**
  * An array of DateBlock-like values.
  */
 export type DateBlockArray<B extends DateBlock = DateBlock> = B[];
@@ -1015,12 +1025,28 @@ export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange 
   return { i, to: to ?? i };
 }
 
-export function dateBlockRangeWithRange(inputDateBlockRange: DateBlockIndex | DateBlock | DateBlockRange): DateBlockRangeWithRange {
-  if (typeof inputDateBlockRange === 'number') {
-    inputDateBlockRange = { i: inputDateBlockRange };
-  }
+/**
+ * Creates a DateBlockRangeWithRange from the input DateBlockIndex.
+ *
+ * @param dateBlockIndex
+ * @returns
+ */
+export function dateBlockRangeWithRangeFromIndex(dateBlockIndex: DateBlockIndex): DateBlockRangeWithRange {
+  return dateBlockRange(dateBlockIndex, dateBlockIndex);
+}
 
-  return dateBlockRange(inputDateBlockRange.i, (inputDateBlockRange as DateBlockRange).to);
+/**
+ * Creates a DateBlockRangeWithRange from the input DateBlockIndex, DateBlock, or DateBlockRange.
+ *
+ * @param input
+ * @returns
+ */
+export function dateBlockRangeWithRange(input: DateBlockIndex | DateBlock | DateBlockRange): DateBlockRangeWithRange {
+  if (typeof input === 'number') {
+    return dateBlockRangeWithRangeFromIndex(input);
+  } else {
+    return dateBlockRange(input.i, (input as DateBlockRange).to);
+  }
 }
 
 /**
@@ -1079,8 +1105,8 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   // sort by index in ascending order
   const blocks = sortDateBlockRanges(input);
 
-  function newBlockFromBlocksIndex(blocksIndex: number): DateBlockRangeWithRange {
-    const { i, to } = blocks[blocksIndex] as DateBlockRange;
+  function newBlockFromBlocksArrayIndex(blocksArrayIndex: number): DateBlockRangeWithRange {
+    const { i, to } = blocks[blocksArrayIndex] as DateBlockRange;
     return {
       i,
       to: to ?? i
@@ -1088,7 +1114,7 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   }
 
   // start at the first block
-  let current: DateBlockRangeWithRange = newBlockFromBlocksIndex(0);
+  let current: DateBlockRangeWithRange = newBlockFromBlocksArrayIndex(0);
 
   const results: DateBlockRangeWithRange[] = [];
 
@@ -1102,7 +1128,7 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
     } else {
       // complete/create new block.
       results.push(current);
-      current = newBlockFromBlocksIndex(i);
+      current = newBlockFromBlocksArrayIndex(i);
     }
   }
 
