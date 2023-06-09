@@ -73,18 +73,33 @@ export function flattenArrayToSet<T>(array: T[][]): Set<T> {
 }
 
 export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
-  return filterValuesFromSet(values, set, false);
+  return filterValuesUsingSet(values, set, false);
 }
 
 export function excludeValues<T>(valuesToExclude: T[], iterable: Maybe<Iterable<T>>): T[] {
   return excludeValuesFromSet(valuesToExclude, new Set(iterable));
 }
 
+/**
+ * Excludes any values in the input array using the set.
+ *
+ * @param values
+ * @param set
+ * @returns
+ */
 export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
-  return filterValuesFromSet(values, set, true);
+  return filterValuesUsingSet(values, set, true);
 }
 
-export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false): T[] {
+/**
+ * Filters the values from the array using
+ *
+ * @param values
+ * @param set
+ * @param exclude
+ * @returns
+ */
+export function filterValuesUsingSet<T>(values: T[], set: Set<T>, exclude = false): T[] {
   const filterFn = setHasValueFunction(set, exclude);
   return values.filter(filterFn);
 }
@@ -307,3 +322,8 @@ export const symmetricDifferenceKeys = symmetricDifferenceArray;
  * @deprecated use symmetricDifferenceArrayBetweenSets
  */
 export const symmetricDifferenceKeysSet = symmetricDifferenceArrayBetweenSets;
+
+/**
+ * @deprecated use filterValuesUsingSet
+ */
+export const filterValuesFromSet = filterValuesUsingSet;
