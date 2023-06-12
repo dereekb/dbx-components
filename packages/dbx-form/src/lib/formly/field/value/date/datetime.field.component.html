@@ -60,30 +60,9 @@
       </button>
       <mat-divider></mat-divider>
     </ng-container>
-    <button mat-menu-item (click)="setLogicalTime('now')">
-      <span>Now</span>
-    </button>
-    <button mat-menu-item (click)="setTime('12:00AM')">
-      <span>Midnight</span>
-    </button>
-    <button mat-menu-item (click)="setTime('6:00AM')">
-      <span>6:00AM</span>
-    </button>
-    <button mat-menu-item (click)="setTime('8:00AM')">
-      <span>8:00AM</span>
-    </button>
-    <button mat-menu-item (click)="setTime('10:00AM')">
-      <span>10:00AM</span>
-    </button>
-    <button mat-menu-item (click)="setTime('12:00PM')">
-      <span>Noon</span>
-    </button>
-    <button mat-menu-item (click)="setTime('2:00PM')">
-      <span>2:00PM</span>
-    </button>
-    <button mat-menu-item (click)="setTime('5:00PM')">
-      <span>5:00PM</span>
-    </button>
+    <ng-container *ngFor="let preset of presets$ | async">
+      <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
+    </ng-container>
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>

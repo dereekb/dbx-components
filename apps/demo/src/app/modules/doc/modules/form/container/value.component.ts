@@ -60,7 +60,20 @@ export class DocFormValueComponent {
     dateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
     dateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
     dateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
-    dateTimeField({ timezone: this.timezone$, label: 'Time Only', key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date and timezone hint is also hidden.', hideDateHint: true, showTimezone: false }),
+    dateTimeField({
+      timezone: this.timezone$,
+      label: 'Time Only',
+      key: 'timeOnly',
+      timeOnly: true,
+      description: 'This date field is for picking a time only. The date and timezone hint is also hidden. It has custom time preset values.',
+      hideDateHint: true,
+      showTimezone: false,
+      presets: [
+        { label: '12:00 AM', timeString: '12:00AM' },
+        { label: '12:30 PM', timeString: '12:30PM' },
+        { label: 'Now', logicalDate: 'now' }
+      ]
+    }),
     dateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }),
     dateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }),
     dateTimeField({

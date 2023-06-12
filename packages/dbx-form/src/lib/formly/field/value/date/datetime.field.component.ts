@@ -1,4 +1,4 @@
-import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction, Milliseconds, TimezoneString, ISO8601DayString } from '@dereekb/util';
+import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction, Milliseconds, TimezoneString, ISO8601DayString, LogicalDate } from '@dereekb/util';
 import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -7,7 +7,9 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs } from '@dereekb/rxjs';
+import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
+import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -205,6 +207,11 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * Whether or not to display the timezone. True by default.
    */
   showTimezone?: boolean;
+
+  /**
+   * Custom presets to show in the dropdown.
+   */
+  presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
 }
 
 export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
@@ -249,6 +256,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   private _defaultTimezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
   private _customTimezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
+  private _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
 
   private _fullDayInputCtrl?: FormControl;
   private _fullDayControlObs = new BehaviorSubject<Maybe<AbstractControl<boolean>>>(undefined);
@@ -377,6 +385,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   get showTimezone() {
     return this.field.props.showTimezone ?? true;
+  }
+
+  get presets() {
+    return this.field.props.presets;
   }
 
   get allowChangeTimezone() {
@@ -549,7 +561,13 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  constructor(private readonly cdRef: ChangeDetectorRef) {
+  readonly presets$: Observable<DateTimePreset[]> = this._presets.pipe(
+    switchMapMaybeObs(),
+    map((x: DateTimePresetConfiguration[]) => x.map(dateTimePreset)),
+    shareReplay(1)
+  );
+
+  constructor(private readonly cdRef: ChangeDetectorRef, private readonly dbxDateTimeFieldConfigService: DbxDateTimeFieldMenuPresetsService) {
     super();
   }
 
@@ -634,12 +652,19 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         this.addTime();
         break;
     }
+
+    if (this.presets != null) {
+      this._presets.next(asObservableFromGetter(this.presets));
+    } else {
+      this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
+    }
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._defaultTimezone.complete();
     this._customTimezone.complete();
+    this._presets.complete();
     this._fullDayControlObs.complete();
     this._offset.complete();
     this._formControlObs.complete();
@@ -650,6 +675,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._valueSub.destroy();
   }
 
+  selectPreset(preset: DateTimePreset): void {
+    const value = preset.value();
+
+    if (value.logicalDate) {
+      this.setLogicalTime(value.logicalDate);
+    } else if (value.timeString) {
+      this.setTime(value.timeString);
+    }
+  }
+
   datePicked(event: MatDatepickerInputEvent<Date>): void {
     const date = event.value;
 
@@ -658,7 +693,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     }
   }
 
-  setLogicalTime(time: LogicalDateStringCode): void {
+  setLogicalTime(time: LogicalDate): void {
     const date = dateFromLogicalDate(time);
 
     if (date) {

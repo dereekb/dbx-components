@@ -8,7 +8,7 @@ import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN
 import { RootAppModule } from './app/app.module';
 import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, DbxStorageModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
-import { defaultValidationMessages } from '@dereekb/dbx-form';
+import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS, defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { RootFirebaseModule } from './root.firebase.module';
 import { DbxFirebaseAnalyticsUserEventsListener, DbxFirebaseAnalyticsUserSource, DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
@@ -152,6 +152,10 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
         floatLabel: 'always',
         appearance: 'outline'
       }
+    },
+    {
+      provide: DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN,
+      useValue: DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS
     }
   ],
   bootstrap: [UIView]
