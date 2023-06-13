@@ -1,10 +1,39 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration, dateTimeRangeField, timezoneStringField } from '@dereekb/dbx-form';
-import { addDays, addHours, startOfDay } from 'date-fns';
+import {
+  addressField,
+  addressListField,
+  cityField,
+  countryField,
+  emailField,
+  phoneField,
+  nameField,
+  phoneAndLabelSectionField,
+  wrappedPhoneAndLabelField,
+  repeatArrayField,
+  stateField,
+  textAreaField,
+  textField,
+  zipCodeField,
+  phoneListField,
+  dateTimeField,
+  DbxDateTimeFieldTimeMode,
+  toggleField,
+  checkboxField,
+  numberField,
+  latLngTextField,
+  DbxDateTimeValueMode,
+  dateRangeField,
+  dollarAmountField,
+  DbxDateTimePickerConfiguration,
+  dateTimeRangeField,
+  timezoneStringField,
+  fixedDateRangeField
+} from '@dereekb/dbx-form';
+import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { BehaviorSubject, delay, of } from 'rxjs';
-import { DateScheduleDayCode, dateTimezoneUtcNormal } from '@dereekb/date';
+import { DateRangeType, DateScheduleDayCode, dateRange, dateTimezoneUtcNormal } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
@@ -82,7 +111,7 @@ export class DocFormValueComponent {
       required: true,
       description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today. A minimum of today and a maximum of 14 days from now.',
       getConfigObs: () => {
-        const config: DateTimePickerConfiguration = {
+        const config: DbxDateTimePickerConfiguration = {
           limits: {
             min: startOfDay(new Date()),
             max: addDays(new Date(), 14)
@@ -145,6 +174,44 @@ export function schoolInfoJobSettingsEndTimeField() {
 }
   */
 
+  readonly fixedDateRangeValue$ = of({
+    tenDayFixedDateRange: dateRange({ date: addDays(new Date(), 4), type: DateRangeType.WEEK }),
+    oneMonthFixedDateRange: dateRange({ date: new Date(), type: DateRangeType.WEEK, distance: 2 })
+  });
+
+  readonly fixedDateRangeFields: FormlyFieldConfig[] = [
+    fixedDateRangeField({
+      required: true,
+      key: 'tenDayFixedDateRange',
+      label: 'Fixed Date Range',
+      description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
+      valueMode: DbxDateTimeValueMode.DATE_STRING,
+      dateRangeInput: { type: DateRangeType.WEEKS_BETWEEN, distance: 1 },
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: startOfDay(new Date()),
+          max: addMonths(endOfMonth(new Date()), 1)
+        }
+      }
+    }),
+    fixedDateRangeField({
+      key: 'oneMonthFixedDateRange',
+      label: 'One Month Arbitrary Date Range',
+      selectionMode: 'arbitrary_quick',
+      description: 'Arbitrary end date up to 3 weeks long. Limited to the first 18 days of the month. Not required. Picks all the days in the current month. Returns the date as an ISO8601DayString.',
+      valueMode: DbxDateTimeValueMode.DAY_STRING,
+      dateRangeInput: { type: DateRangeType.DAYS_BETWEEN, distance: 21 },
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: startOfMonth(new Date()),
+          max: addDays(startOfMonth(new Date()), 18)
+        }
+      }
+    })
+  ];
+
   readonly dateRangeFields: FormlyFieldConfig[] = [
     dateRangeField({}),
     dateRangeField({
@@ -152,7 +219,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         key: 'startLimited',
         description: 'Must start on a M/T and no later than 14 days ago',
         getConfigObs: () => {
-          const config: DateTimePickerConfiguration = {
+          const config: DbxDateTimePickerConfiguration = {
             limits: {
               min: addDays(startOfDay(new Date()), -14)
             },
@@ -168,7 +235,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         key: 'endLimited',
         description: 'Must end on a W/T/F',
         getConfigObs: () => {
-          const config: DateTimePickerConfiguration = {
+          const config: DbxDateTimePickerConfiguration = {
             schedule: {
               w: `${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.THURSDAY}${DateScheduleDayCode.FRIDAY}`
             }

@@ -1,6 +1,10 @@
 <dbx-content-container>
   <doc-feature-layout header="Values Fields" hint="">
     <!-- Examples -->
+    <doc-feature-example header="fixedDateRangeField()" hint="An inline calendar date range picker that makes it easy to select a custom date range.">
+      <p>Uses the DateRange and related utilities to generate a custom date range.</p>
+      <doc-form-example-form [dbxFormlyFields]="fixedDateRangeFields" [dbxFormSource]="fixedDateRangeValue$"></doc-form-example-form>
+    </doc-feature-example>
     <doc-feature-example header="textField()" hint="Used to configure a text field.">
       <p>There are also several helper builders available.</p>
       <doc-form-example-form [dbxFormlyFields]="textFields"></doc-form-example-form>
@@ -27,7 +31,6 @@
     <doc-feature-example header="dateTimeRangeField()" hint="Combines two dateTimeFields() configured for picking a time range.">
       <doc-form-example-form [dbxFormlyFields]="dateTimeRangeFields" [dbxFormSource]="dateTimeRangeValues$"></doc-form-example-form>
     </doc-feature-example>
-
     <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">
       <h4>Phone Number Only</h4>
       <doc-form-example-form [dbxFormlyFields]="phoneFields"></doc-form-example-form>

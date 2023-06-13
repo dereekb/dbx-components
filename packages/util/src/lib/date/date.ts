@@ -105,7 +105,16 @@ export function isISO8601DayString(input: string): input is ISO8601DayString {
 /**
  * Date that is represented by slashes. Is considered in the Month/Day/Year format.
  */
-export type MonthDaySlashDate = string; // 11/1/21
+export type MonthDaySlashDate = string; // 11/1/2020
+
+/**
+ * Regex for a MonthDaySlashDate.
+ */
+export const MONTH_DAY_SLASH_DATE_STRING_REGEX = /^\d{1,2}\/\d{1,2}\/\d+$/;
+
+export function isMonthDaySlashDate(input: string): input is MonthDaySlashDate {
+  return MONTH_DAY_SLASH_DATE_STRING_REGEX.test(input);
+}
 
 /**
  * Converts the input MonthDaySlashDate to an ISO8601DayString.

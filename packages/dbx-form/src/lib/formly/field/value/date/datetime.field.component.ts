@@ -10,6 +10,7 @@ import { addMinutes, startOfDay, addDays } from 'date-fns';
 import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs } from '@dereekb/rxjs';
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
+import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -26,82 +27,7 @@ export enum DbxDateTimeFieldTimeMode {
   NONE = 'none'
 }
 
-export enum DbxDateTimeValueMode {
-  /**
-   * Value is returned/parsed as a Date.
-   */
-  DATE = 0,
-  /**
-   * Value is returned/parsed as an ISO8601DateString
-   */
-  DATE_STRING = 1,
-  /**
-   * Value is returned/parsed as an ISO8601DayString, relative to the current timezone.
-   */
-  DAY_STRING = 2
-}
-
-export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date | string>) => Maybe<Date> {
-  let factory: (date: Maybe<Date | string>) => Maybe<Date>;
-  let useTimezoneInstance = true;
-
-  switch (mode) {
-    case DbxDateTimeValueMode.DAY_STRING:
-      factory = (x) => (typeof x === 'string' ? parseISO8601DayStringToDate(x) : x);
-      useTimezoneInstance = false; // day strings do not use timezones
-      break;
-    case DbxDateTimeValueMode.DATE_STRING:
-    case DbxDateTimeValueMode.DATE:
-    default:
-      factory = (x) => (x != null ? toJsDate(x) : x);
-      break;
-  }
-
-  if (timezoneInstance && useTimezoneInstance) {
-    const originalFactory = factory;
-
-    factory = (input) => {
-      const date = originalFactory(input);
-      const result = date ? timezoneInstance.systemDateToTargetDate(date) : date;
-      return result;
-    };
-  }
-
-  return factory;
-}
-
-export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date>) => Maybe<Date | string> {
-  let factory: (date: Maybe<Date>) => Maybe<Date | string>;
-  let useTimezoneInstance = true;
-
-  switch (mode) {
-    case DbxDateTimeValueMode.DAY_STRING:
-      factory = (x) => (x != null ? formatToISO8601DayString(x) : x);
-      useTimezoneInstance = false; // day strings do not use timezones
-      break;
-    case DbxDateTimeValueMode.DATE_STRING:
-      factory = (x) => (x != null ? formatToISO8601DateString(x) : x);
-      break;
-    case DbxDateTimeValueMode.DATE:
-    default:
-      factory = (x) => x;
-      break;
-  }
-
-  if (timezoneInstance && useTimezoneInstance) {
-    const originalFactory = factory;
-
-    factory = (input) => {
-      const date = input ? timezoneInstance.targetDateToSystemDate(input) : input;
-      const result = originalFactory(date);
-      return result;
-    };
-  }
-
-  return factory;
-}
-
-export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
+export type DbxDateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
 export type DbxDateTimeFieldSyncType = 'before' | 'after';
 
@@ -187,9 +113,9 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   hideDatePicker?: boolean;
 
   /**
-   * Used for returning the configuration observable.
+   * Custom picker configuration
    */
-  getConfigObs?: () => Observable<DateTimePickerConfiguration>;
+  pickerConfig?: ObservableOrValueGetter<DbxDateTimePickerConfiguration>;
 
   /**
    * Used for syncing with one or more fields with a Date value.
@@ -212,6 +138,14 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * Custom presets to show in the dropdown.
    */
   presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
+
+  // MARK: Compat
+  /**
+   * Used for returning the configuration observable.
+   *
+   * @deprecated Use pickerConfig instead.
+   */
+  getConfigObs?: ObservableOrValueGetter<DbxDateTimePickerConfiguration>;
 }
 
 export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
@@ -241,10 +175,6 @@ export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldS
   );
 }
 
-function isSameDateTimeFieldValue(a: Maybe<Date | ISO8601DayString>, b: Maybe<Date | ISO8601DayString>) {
-  return a && b ? (typeof a === 'string' ? a === b : isSameDateHoursAndMinutes(a, b as Date)) : a == b;
-}
-
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
 @Component({
@@ -254,8 +184,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
+  private _config = new BehaviorSubject<Maybe<Observable<DbxDateTimePickerConfiguration>>>(undefined);
+  private _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
+
   private _defaultTimezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
-  private _customTimezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
   private _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
 
   private _fullDayInputCtrl?: FormControl;
@@ -268,9 +200,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   private _updateTime = new Subject<void>();
 
-  readonly timezone$: Observable<Maybe<TimezoneString>> = combineLatest([this._defaultTimezone.pipe(switchMapMaybeDefault(), distinctUntilChanged()), this._customTimezone]).pipe(
-    map(([defaultTimezone, customTimezone]) => {
-      return customTimezone ?? defaultTimezone ?? guessCurrentTimezone();
+  readonly timezone$: Observable<Maybe<TimezoneString>> = this._defaultTimezone.pipe(switchMapMaybeDefault(), distinctUntilChanged()).pipe(
+    map((defaultTimezone) => {
+      return defaultTimezone ?? guessCurrentTimezone();
     }),
     distinctUntilChanged(),
     shareReplay(1)
@@ -317,9 +249,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly timeInputCtrl = new FormControl('', {
     validators: [Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)]
   });
-
-  private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
-  private _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
 
   get dateLabel(): string {
     return this.props.dateLabel ?? 'Date';
@@ -389,10 +318,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   get presets() {
     return this.field.props.presets;
-  }
-
-  get allowChangeTimezone() {
-    return false; // unused
   }
 
   readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(
@@ -498,9 +423,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly config$ = combineLatest([this._config.pipe(switchMapMaybeDefault(), shareReplay(1)), this.dateInputMin$, this.dateInputMax$]).pipe(
+  readonly config$ = combineLatest([this._config.pipe(switchMapMaybeDefault()), this.dateInputMin$, this.dateInputMax$]).pipe(
     map(([x, dateInputMin, dateInputMax]) => {
-      let result: Maybe<DateTimePickerConfiguration> = x;
+      let result: Maybe<DbxDateTimePickerConfiguration> = x;
 
       if (dateInputMin != null || dateInputMax != null) {
         const { min: limitMin, max: limitMax } = x?.limits ?? {};
@@ -573,7 +498,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
-    this._config.next(this.dateTimeField.getConfigObs?.());
+
+    const inputPickerConfig = this.dateTimeField.getConfigObs || this.dateTimeField.pickerConfig;
+    this._config.next(inputPickerConfig ? asObservableFromGetter(inputPickerConfig) : undefined);
     this._syncConfigObs.next(this.dateTimeField.getSyncFieldsObs?.());
 
     this._sub.subscription = this.valueInSystemTimezone$
@@ -586,7 +513,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
             skipFirstMaybe(),
             distinctUntilChanged(isSameDateHoursAndMinutes),
             map((x) => valueFactory(x)),
-            filter((x) => !isSameDateTimeFieldValue(x, currentValue))
+            filter((x) => !dbxDateTimeIsSameDateTimeFieldValue(x, currentValue))
           );
         })
       )
@@ -662,17 +589,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._sub.destroy();
+    this._valueSub.destroy();
+    this._config.complete();
     this._defaultTimezone.complete();
-    this._customTimezone.complete();
     this._presets.complete();
     this._fullDayControlObs.complete();
     this._offset.complete();
     this._formControlObs.complete();
-    this._config.complete();
     this._updateTime.complete();
     this._syncConfigObs.complete();
-    this._sub.destroy();
-    this._valueSub.destroy();
   }
 
   selectPreset(preset: DateTimePreset): void {
@@ -797,3 +723,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     });
   }
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use DbxDateTimePickerConfiguration instead.
+ */
+export type DateTimePickerConfiguration = DbxDateTimePickerConfiguration;

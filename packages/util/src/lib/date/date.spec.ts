@@ -1,4 +1,4 @@
-import { isISO8601DateString, isISO8601DayString, isUTCDateString } from '@dereekb/util';
+import { isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString } from '@dereekb/util';
 
 describe('isISO8601DateString()', () => {
   it('should validate date strings', () => {
@@ -21,5 +21,23 @@ describe('isISO8601DayString()', () => {
   it('should validate day strings', () => {
     expect(isISO8601DayString('1970-01-01')).toBe(true);
     expect(isISO8601DayString('1970-1-1')).toBe(false);
+  });
+});
+
+describe('isMonthDaySlashDate()', () => {
+  it('should not validate non-date strings', () => {
+    expect(isMonthDaySlashDate('11/')).toBe(false);
+    expect(isMonthDaySlashDate('01/01')).toBe(false);
+    expect(isMonthDaySlashDate('1/1')).toBe(false);
+  });
+
+  it('should validate the short year string', () => {
+    expect(isMonthDaySlashDate('1/1/22')).toBe(true);
+    expect(isMonthDaySlashDate('01/01/22')).toBe(true);
+  });
+
+  it('should validate the long year string', () => {
+    const result = isMonthDaySlashDate('01/01/1970');
+    expect(result).toBe(true);
   });
 });

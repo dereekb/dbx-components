@@ -24,6 +24,8 @@ import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.
 import { DocInteractionErrorComponent } from './container/error.component';
 import { DbxErrorWidgetService } from '@dereekb/dbx-web';
 import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/filter.partial.preset.menu.component';
+import { DocInteractionTestDateFilterPopoverButtonComponent } from './component/filter.date.popover.button.component';
+import { DocInteractionTestDateFilterPresetFilterComponent } from './component/filter.date.preset.component';
 
 @NgModule({
   imports: [
@@ -36,6 +38,8 @@ import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/
     // components
     DocInteractionTestFilterPopoverButtonComponent,
     DocInteractionTestFilterCustomFilterComponent,
+    DocInteractionTestDateFilterPopoverButtonComponent,
+    DocInteractionTestDateFilterPresetFilterComponent,
     DocInteractionTestFilterPresetFilterComponent,
     DocInteractionTestFilterPresetMenuComponent,
     DocInteractionTestFilterPartialPresetMenuComponent,

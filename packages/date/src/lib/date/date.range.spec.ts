@@ -3,9 +3,9 @@ import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfD
 import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction, transformDateRangeToTimezoneFunction } from './date.range';
 
 describe('dateRange()', () => {
-  describe('week', () => {
-    const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
+  const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
 
+  describe('week', () => {
     it('should generate a week range', () => {
       const expectedStart = startOfWeek(utc2022Week1StartDate);
       const expectedEnd = endOfWeek(utc2022Week1StartDate);
@@ -25,6 +25,40 @@ describe('dateRange()', () => {
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });
 
+    it('should generate a week range for the previous week.', () => {
+      const today = new Date();
+      const expectedStart = startOfWeek(addWeeks(today, -1));
+      const expectedEnd = endOfWeek(expectedStart);
+
+      const result = dateRange({ type: DateRangeType.WEEK, distance: -1, date: addWeeks(today, -1) });
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+  });
+
+  describe('weeks_between', () => {
+    it('should generate a week range 2 weeks long for this week and next.', () => {
+      const today = new Date();
+      const expectedStart = startOfWeek(today);
+      const expectedEnd = endOfWeek(addWeeks(today, 1));
+
+      const result = dateRange({ type: DateRangeType.WEEKS_BETWEEN, distance: 1 });
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+
+    it('should generate a week range 2 weeks long for last week and this week.', () => {
+      const today = new Date();
+      const expectedStart = startOfWeek(addWeeks(today, -1));
+      const expectedEnd = endOfWeek(today);
+
+      const result = dateRange({ type: DateRangeType.WEEKS_BETWEEN, distance: -1 });
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+  });
+
+  describe('day', () => {
     it('should generate a day range', () => {
       const expectedStart = startOfDay(utc2022Week1StartDate);
       const expectedEnd = endOfDay(utc2022Week1StartDate);

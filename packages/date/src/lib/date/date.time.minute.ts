@@ -143,19 +143,19 @@ export class DateTimeMinuteInstance {
 
     // Min/Future
     if (limits.min) {
-      isAfterMinimum = isAfter(date, limits.min);
+      isAfterMinimum = !isBefore(date, limits.min);
     }
 
     if (minimumMinutesIntoFuture) {
       const minFutureDateTime = addMinutes(now, minimumMinutesIntoFuture);
-      inFutureMinutes = isAfter(now, minFutureDateTime);
+      inFutureMinutes = !isBefore(now, minFutureDateTime);
     } else if (limits.isFuture) {
       inFuture = isAfter(date, now);
     }
 
     // Max/Past
     if (limits.max) {
-      isBeforeMaximum = isBefore(date, limits.max);
+      isBeforeMaximum = !isAfter(date, limits.max);
     }
 
     if (limits.isPast) {
