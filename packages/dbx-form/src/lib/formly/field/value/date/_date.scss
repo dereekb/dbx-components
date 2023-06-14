@@ -96,6 +96,13 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     }
   }
 
+  .dbx-fixeddaterange-field-full-width .dbx-fixeddaterange-field {
+    .mat-calendar,
+    .dbx-fixeddaterange-field-input {
+      max-width: unset;
+    }
+  }
+
   .mat-form-field.dbx-fixeddaterange-field-input {
     display: block;
   }

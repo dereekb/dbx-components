@@ -1,5 +1,5 @@
 <div class="dbx-fixeddaterange-field">
-  <mat-calendar [selected]="calendarSelection$ | async" [dateFilter]="(pickerFilter$ | async) || defaultPickerFilter" [minDate]="min$ | async" [maxDate]="max$ | async" (selectedChange)="selectedChange($event)"></mat-calendar>
+  <mat-calendar #calendarView [selected]="calendarSelection$ | async" [dateFilter]="(pickerFilter$ | async) || defaultPickerFilter" [minDate]="min$ | async" [maxDate]="max$ | async" (selectedChange)="selectedChange($event)"></mat-calendar>
   <mat-form-field class="dbx-fixeddaterange-field-input" appearance="fill">
     <mat-date-range-input *ngIf="showRangeInput" [formGroup]="inputRangeForm">
       <input #startDateInput matStartDate formControlName="start" placeholder="Start date" />

@@ -17,8 +17,8 @@ export enum TimeAM {
   PM = 'PM'
 }
 
-export type DateNow = 'now';
 export const DATE_NOW_VALUE = 'now';
+export type DateNow = typeof DATE_NOW_VALUE;
 
 export type LogicalDateStringCode = DateNow;
 
@@ -32,8 +32,8 @@ export type LogicalDate = Date | LogicalDateStringCode;
  *
  * @param logicalDate
  */
-export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date>;
 export function dateFromLogicalDate(logicalDate: LogicalDate): Date;
+export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date>;
 export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date> {
   let result;
 

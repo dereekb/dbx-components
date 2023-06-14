@@ -36,13 +36,13 @@ describe('dateRange()', () => {
     });
   });
 
-  describe('weeks_between', () => {
+  describe('weeks_range', () => {
     it('should generate a week range 2 weeks long for this week and next.', () => {
       const today = new Date();
       const expectedStart = startOfWeek(today);
       const expectedEnd = endOfWeek(addWeeks(today, 1));
 
-      const result = dateRange({ type: DateRangeType.WEEKS_BETWEEN, distance: 1 });
+      const result = dateRange({ type: DateRangeType.WEEKS_RANGE, distance: 1 });
       expect(result.start).toBeSameSecondAs(expectedStart);
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });
@@ -52,7 +52,7 @@ describe('dateRange()', () => {
       const expectedStart = startOfWeek(addWeeks(today, -1));
       const expectedEnd = endOfWeek(today);
 
-      const result = dateRange({ type: DateRangeType.WEEKS_BETWEEN, distance: -1 });
+      const result = dateRange({ type: DateRangeType.WEEKS_RANGE, distance: -1 });
       expect(result.start).toBeSameSecondAs(expectedStart);
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });

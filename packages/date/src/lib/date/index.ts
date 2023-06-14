@@ -6,6 +6,7 @@ export * from './date.duration';
 export * from './date.filter';
 export * from './date.format';
 export * from './date.hashset';
+export * from './date.logical';
 export * from './date.range';
 export * from './date.round';
 export * from './date.schedule';

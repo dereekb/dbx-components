@@ -154,15 +154,16 @@ export function dateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {
 }
 
 // MARK: FixedDateRange
-export interface FixedDateRangeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxFixedDateRangeFieldProps {}
+export interface FixedDateRangeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxFixedDateRangeFieldProps, MaterialFormFieldConfig {}
 
 export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> = {}) {
-  const { key = 'dateRange', dateRangeInput, pickerConfig, timezone, selectionMode, showTimezone, valueMode, fullDayInUTC, presets, showRangeInput } = config;
+  const { key = 'dateRange', dateRangeInput, pickerConfig, timezone, selectionMode, showTimezone, valueMode, fullDayInUTC, presets, showRangeInput, materialFormField } = config;
 
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'fixeddaterange',
     ...propsAndConfigForFieldConfig(config, {
+      ...materialFormField,
       dateRangeInput,
       pickerConfig,
       valueMode,

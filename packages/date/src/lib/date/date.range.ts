@@ -136,41 +136,25 @@ export enum DateRangeType {
    */
   HOUR = 'hour',
   /**
-   * Days between the date in the distance/direction.
-   */
-  DAYS_BETWEEN = 'days_between',
-  /**
-   * Full weeks between the date in the distance/direction.
-   */
-  WEEKS_BETWEEN = 'weeks_between',
-  /**
-   * Full months between the date in the distance/direction.
-   */
-  MONTHS_BETWEEN = 'months_between',
-  /**
-   * Full minutes between the date in the distance/direction.
-   */
-  MINUTES_BETWEEN = 'minutes_between',
-  /**
-   * Full hours between the date in the distance/direction.
-   */
-  HOURS_BETWEEN = 'hours_between',
-  /**
-   * Range specified in hours with the input.
+   * Full minutes between the date and the target date in the given distance/direction.
    */
   MINUTES_RANGE = 'minutes_range',
   /**
-   * Range specified in hours with the input.
+   * Full hours between the date and the target date in the given distance/direction.
    */
   HOURS_RANGE = 'hours_range',
   /**
-   * Range specified in days with the input.
+   * Days between the date and the target date in the given distance/direction.
    */
   DAYS_RANGE = 'days_range',
   /**
-   * Range specified in weeks with the input.
+   * Full weeks between the date and the target date in the given distance/direction.
    */
   WEEKS_RANGE = 'weeks_range',
+  /**
+   * Full months between the date and the target date in the given distance/direction.
+   */
+  MONTHS_RANGE = 'months_range',
   /**
    * Radius specified in minutes with the input.
    */
@@ -268,7 +252,6 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
   if (roundToMinute) {
     date = startOfMinute(date); // Reset to start of minute
   }
-  const hasNegativeDistance = distance < 0;
 
   function calculateStartAndEndForDate(startOfFn: (date: Date) => Date, endOfFn: (date: Date) => Date) {
     let preStart: Date = start;
@@ -288,7 +271,9 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
         preEnd = date;
         break;
       default:
-        if (distance < 0) {
+        const hasNegativeDistance = distance < 0;
+
+        if (hasNegativeDistance) {
           preStart = addFn(date, distance);
           preEnd = date;
         } else {
@@ -318,56 +303,20 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
     case DateRangeType.MINUTE:
       calculateStartAndEndForDate(startOfMinute, endOfMinute);
       break;
-    case DateRangeType.DAYS_BETWEEN:
-      calculateStartAndEndForBetween(addDays, rawDistance, startOfDay, endOfDay);
-      break;
-    case DateRangeType.WEEKS_BETWEEN:
-      calculateStartAndEndForBetween(addWeeks, rawDistance, startOfWeek, endOfWeek);
-      break;
-    case DateRangeType.MONTHS_BETWEEN:
-      calculateStartAndEndForBetween(addMonths, rawDistance, startOfMonth, endOfMonth);
-      break;
-    case DateRangeType.HOURS_BETWEEN:
-      calculateStartAndEndForBetween(addHours, rawDistance, startOfHour, endOfHour);
-      break;
-    case DateRangeType.MINUTES_BETWEEN:
+    case DateRangeType.MINUTES_RANGE:
       calculateStartAndEndForBetween(addMinutes, rawDistance, startOfMinute, endOfMinute);
       break;
-    case DateRangeType.MINUTES_RANGE:
-      if (hasNegativeDistance) {
-        start = addMinutes(date, distance);
-        end = date;
-      } else {
-        start = date;
-        end = addMinutes(date, distance);
-      }
-      break;
     case DateRangeType.HOURS_RANGE:
-      if (hasNegativeDistance) {
-        start = addHours(date, distance);
-        end = date;
-      } else {
-        start = date;
-        end = addHours(date, distance);
-      }
+      calculateStartAndEndForBetween(addHours, rawDistance, startOfHour, endOfHour);
       break;
     case DateRangeType.DAYS_RANGE:
-      if (hasNegativeDistance) {
-        start = addDays(date, distance);
-        end = date;
-      } else {
-        start = date;
-        end = addDays(date, distance);
-      }
+      calculateStartAndEndForBetween(addDays, rawDistance, startOfDay, endOfDay);
       break;
     case DateRangeType.WEEKS_RANGE:
-      if (hasNegativeDistance) {
-        start = addDays(date, distance * 7);
-        end = date;
-      } else {
-        start = date;
-        end = addDays(date, distance * 7);
-      }
+      calculateStartAndEndForBetween(addWeeks, rawDistance, startOfWeek, endOfWeek);
+      break;
+    case DateRangeType.MONTHS_RANGE:
+      calculateStartAndEndForBetween(addMonths, rawDistance, startOfMonth, endOfMonth);
       break;
     case DateRangeType.MINUTES_RADIUS:
       distance = Math.abs(distance);

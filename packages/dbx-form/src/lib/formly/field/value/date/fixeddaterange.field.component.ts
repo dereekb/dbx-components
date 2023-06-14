@@ -1,11 +1,11 @@
-import { Maybe, DecisionFunction, Milliseconds, TimezoneString, DateMonth, DayOfMonth, YearNumber, isMonthDaySlashDate, mapIdentityFunction } from '@dereekb/util';
-import { guessCurrentTimezone, isSameDateHoursAndMinutes, DateTimezoneUtcNormalInstance, dateTimeMinuteDecisionFunction, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDate, isSameDateRange, isSameDateDay, clampDateRangeFunction } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, Subject, of, combineLatestWith, filter, combineLatest, exhaustMap, scan, skip, first } from 'rxjs';
+import { Maybe, DecisionFunction, Milliseconds, TimezoneString, DateMonth, DayOfMonth, YearNumber, isMonthDaySlashDate, mapIdentityFunction, MS_IN_MINUTE } from '@dereekb/util';
+import { guessCurrentTimezone, isSameDateHoursAndMinutes, DateTimezoneUtcNormalInstance, dateTimeMinuteDecisionFunction, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDate, isSameDateRange, isSameDateDay, clampDateRangeFunction, LimitDateTimeInstance, limitDateTimeInstance } from '@dereekb/date';
+import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, Subject, of, combineLatestWith, filter, combineLatest, exhaustMap, scan, skip, first, timer } from 'rxjs';
 import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
-import { MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendarCellClassFunction, MatCalendarCellCssClasses } from '@angular/material/datepicker';
+import { MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendarCellClassFunction, MatCalendarCellCssClasses, MatCalendar } from '@angular/material/datepicker';
 import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
 import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory } from './date.value';
 import { DateTimePresetConfiguration } from './datetime';
@@ -198,13 +198,13 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   private _currentSelectionModeSub = new SubscriptionObject();
   private _latestBoundarySub = new SubscriptionObject();
   private _disableEndSub = new SubscriptionObject();
-
-  private _config = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangePickerConfiguration>>>(undefined);
+  private _activeDateSub = new SubscriptionObject();
 
   private _currentDateRangeInput: Maybe<DbxFixedDateRangeDateRangeInput> = {};
   private _currentSelectionMode: DbxFixedDateRangeSelectionMode = 'single';
   private _latestBoundary: Maybe<DateRange> = null;
 
+  private _config = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangePickerConfiguration>>>(undefined);
   private _selectionMode = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeSelectionMode>>>(undefined);
   private _dateRangeInput = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeDateRangeInput>>>(undefined);
 
@@ -215,6 +215,9 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<DateRange>>>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
+
+  @ViewChild(MatCalendar)
+  calendar!: MatCalendar<Date>;
 
   @ViewChild('startDateInput', { read: ElementRef })
   startDateInputElement!: ElementRef;
@@ -233,6 +236,15 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   get latestBoundary() {
     return this._latestBoundary;
   }
+
+  readonly config$: Observable<DbxFixedDateRangePickerConfiguration> = this._config.pipe(
+    filterMaybe(),
+    switchMap((x) => x),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly limitDateTimeInstance$ = this.config$.pipe(map(limitDateTimeInstance), shareReplay(1));
 
   readonly selectionMode$: Observable<DbxFixedDateRangeSelectionMode> = this._selectionMode.pipe(
     switchMapMaybeDefault<DbxFixedDateRangeSelectionMode>('single'),
@@ -267,18 +279,22 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     shareReplay(1)
   );
 
-  dateRangeSelectionForMode(mode: DbxFixedDateRangeSelectionMode) {
-    function minMaxClampFn(min: Date | null, max: Date | null) {
-      return min != null || max != null ? clampDateRangeFunction({ start: min ?? undefined, end: max ?? undefined }, false) : mapIdentityFunction<Partial<DateRange>>();
-    }
+  readonly startDate$: Observable<Date> = this.valueInSystemTimezone$.pipe(
+    map((x) => x?.start ?? null),
+    distinctUntilChanged(),
+    filterMaybe(),
+    shareReplay(1)
+  );
 
-    const result: Observable<Maybe<DateRange>> = combineLatest([this.dateRangeInput$, this.min$, this.max$]).pipe(
-      switchMap(([dateRangeInput, min, max]) => {
-        const minMaxClamp = minMaxClampFn(min, max);
+  dateRangeSelectionForMode(mode: DbxFixedDateRangeSelectionMode) {
+    const result: Observable<Maybe<DateRange>> = combineLatest([this.dateRangeInput$, this.limitDateTimeInstance$]).pipe(
+      switchMap(([dateRangeInput, limitInstance]) => {
+        const minMaxClamp = (dateRange: DateRange) => limitInstance.clampDateRange(dateRange);
 
         if (mode === 'single') {
           // only use the start date.
           return this._selectedDateRange.pipe(
+            distinctUntilChanged(isSameDateDayRange),
             map((inputDateRange) => {
               const date = inputDateRange?.start;
               return date ? (minMaxClamp(dateRange({ ...dateRangeInput, date } as DateRangeInput)) as DateRange) : null;
@@ -287,6 +303,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         } else {
           // take the first date, then wait unless the date is outside of the range.
           return this._selectedDateRange.pipe(
+            distinctUntilChanged(isSameDateDayRange),
             scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
               let result: FixedDateRangeScan;
 
@@ -381,7 +398,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   );
 
   readonly endDisabled$ = this.selectionMode$.pipe(
-    map((x) => x !== 'single'),
+    map((x) => x === 'single'),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -423,20 +440,22 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     return this.field.props.showRangeInput ?? true;
   }
 
-  readonly config$: Observable<DbxFixedDateRangePickerConfiguration> = this._config.pipe(
-    filterMaybe(),
-    switchMap((x) => x),
+  readonly minMaxRange$ = this.limitDateTimeInstance$.pipe(
+    combineLatestWith(timer(MS_IN_MINUTE)), // refresh every minute
+    map(([x]) => x.dateRange()),
+    distinctUntilChanged(isSameDateDayRange),
+    shareReplay(1)
+  );
+
+  readonly min$ = this.minMaxRange$.pipe(
+    map((x) => x?.start ?? null),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  readonly min$ = this.config$.pipe(
-    map((x) => x.limits?.min ?? null),
-    shareReplay(1)
-  );
-
-  readonly max$ = this.config$.pipe(
-    map((x) => x.limits?.max ?? null),
+  readonly max$ = this.minMaxRange$.pipe(
+    map((x) => x?.end ?? null),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
@@ -465,10 +484,12 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     const dateRangeSelection = this.dateRangeSelection$.pipe(shareReplay(1));
 
     const setInputFormValue = (value: Maybe<DateRange>) => {
-      this.inputRangeForm.setValue({
-        start: value?.start ?? null,
-        end: value?.end ?? null
-      });
+      if (!isSameDateDayRange(value, this.inputRangeForm.value as Partial<DateRange>)) {
+        this.inputRangeForm.setValue({
+          start: value?.start ?? null,
+          end: value?.end ?? null
+        });
+      }
     };
 
     this._sub.subscription = this.valueInSystemTimezone$
@@ -530,10 +551,10 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
           })
         )
         .subscribe((x) => {
-          if (this._currentSelectionMode !== 'single') {
-            this.setDateRange((x ?? null) as Maybe<Partial<DateRange>>);
-          } else {
+          if (this._currentSelectionMode === 'single') {
             this.setDateRange(x.start ? { start: x.start } : null);
+          } else {
+            this.setDateRange((x ?? null) as Maybe<Partial<DateRange>>);
           }
         });
     }
@@ -587,12 +608,24 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     } else {
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
     }
+
+    this._activeDateSub.subscription = this.startDate$.subscribe((x) => {
+      this.calendar.activeDate = x;
+    });
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._sub.destroy();
+    this._inputRangeFormSub.destroy();
+    this._inputRangeFormValueSub.destroy();
+    this._dateRangeInputSub.destroy();
+    this._currentSelectionModeSub.destroy();
+    this._latestBoundarySub.destroy();
+    this._disableEndSub.destroy();
+    this._activeDateSub.destroy();
     this._config.complete();
+    this._selectionMode.complete();
     this._dateRangeInput.complete();
     this._timezone.complete();
     this._presets.complete();

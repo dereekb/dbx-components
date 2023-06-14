@@ -186,11 +186,11 @@ export function schoolInfoJobSettingsEndTimeField() {
       label: 'Fixed Date Range',
       description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
       valueMode: DbxDateTimeValueMode.DATE_STRING,
-      dateRangeInput: { type: DateRangeType.WEEKS_BETWEEN, distance: 1 },
+      dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
       timezone: this.timezone$,
       pickerConfig: {
         limits: {
-          min: startOfDay(new Date()),
+          min: 'today_start',
           max: addMonths(endOfMonth(new Date()), 1)
         }
       }
@@ -199,9 +199,9 @@ export function schoolInfoJobSettingsEndTimeField() {
       key: 'oneMonthFixedDateRange',
       label: 'One Month Arbitrary Date Range',
       selectionMode: 'arbitrary_quick',
-      description: 'Arbitrary end date up to 3 weeks long. Limited to the first 18 days of the month. Not required. Picks all the days in the current month. Returns the date as an ISO8601DayString.',
+      description: 'Arbitrary end date up to 21 days. Limited to the first 18 days of the month. Not required. Picks all the days in the current month. Returns the date as an ISO8601DayString.',
       valueMode: DbxDateTimeValueMode.DAY_STRING,
-      dateRangeInput: { type: DateRangeType.DAYS_BETWEEN, distance: 21 },
+      dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
       timezone: this.timezone$,
       pickerConfig: {
         limits: {
