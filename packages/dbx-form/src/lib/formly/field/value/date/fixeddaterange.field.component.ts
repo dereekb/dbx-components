@@ -1,7 +1,7 @@
 import { Maybe, DecisionFunction, Milliseconds, TimezoneString, DateMonth, DayOfMonth, YearNumber, isMonthDaySlashDate, mapIdentityFunction, MS_IN_MINUTE } from '@dereekb/util';
 import { guessCurrentTimezone, isSameDateHoursAndMinutes, DateTimezoneUtcNormalInstance, dateTimeMinuteDecisionFunction, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDate, isSameDateRange, isSameDateDay, clampDateRangeFunction, LimitDateTimeInstance, limitDateTimeInstance } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, Subject, of, combineLatestWith, filter, combineLatest, exhaustMap, scan, skip, first, timer } from 'rxjs';
-import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild, forwardRef } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
@@ -11,64 +11,6 @@ import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTim
 import { DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DateAdapter, ErrorStateMatcher } from '@angular/material/core';
-
-@Injectable()
-export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
-  constructor(private _dateAdapter: DateAdapter<D>, readonly dbxFixedDateRangeFieldComponent: DbxFixedDateRangeFieldComponent) {}
-
-  selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
-    // unused
-    return currentRange;
-  }
-
-  createPreview(activeDate: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
-    if (activeDate != null && this.dbxFixedDateRangeFieldComponent.currentSelectionMode !== 'single') {
-      const latestBoundary = this.dbxFixedDateRangeFieldComponent.latestBoundary;
-      const date = this.dateFromAdapterDate(activeDate);
-
-      if (latestBoundary && isDateInDateRange(date, latestBoundary)) {
-        const exampleDateRange = this._createDateRange(latestBoundary);
-        return exampleDateRange;
-      }
-    }
-
-    return this._createDateRangeWithDate(activeDate);
-  }
-
-  private _createDateRangeWithDate(input: D | null): DatePickerDateRange<D> {
-    let dateRange: Maybe<DateRange>;
-
-    if (input) {
-      const date = this.dateFromAdapterDate(input);
-      dateRange = this.dbxFixedDateRangeFieldComponent._createDateRange(date);
-    }
-
-    return this._createDateRange(dateRange);
-  }
-
-  private _createDateRange(input: Maybe<DateRange>): DatePickerDateRange<D> {
-    if (input) {
-      return new DatePickerDateRange<D>(this.adapterDateFromDate(input.start), this.adapterDateFromDate(input.end));
-    } else {
-      return new DatePickerDateRange<D>(null, null);
-    }
-  }
-
-  dateFromAdapterDate(input: D) {
-    const day: DayOfMonth = this._dateAdapter.getDate(input);
-    const monthIndex: DateMonth = this._dateAdapter.getMonth(input);
-    const year: YearNumber = this._dateAdapter.getYear(input);
-    return new Date(year, monthIndex, day);
-  }
-
-  adapterDateFromDate(date: Date): D {
-    const day: DayOfMonth = date.getDate();
-    const monthIndex: DateMonth = date.getMonth();
-    const year: YearNumber = date.getFullYear();
-
-    return this._dateAdapter.createDate(year, monthIndex, day);
-  }
-}
 
 export type DbxFixedDateRangeDateRangeInput = Omit<DateRangeInput, 'date'>;
 
@@ -184,7 +126,7 @@ export interface FixedDateRangeScan {
   providers: [
     {
       provide: MAT_DATE_RANGE_SELECTION_STRATEGY,
-      useClass: DbxFixedDateRangeFieldSelectionStrategy
+      useClass: forwardRef(() => DbxFixedDateRangeFieldSelectionStrategy)
     }
   ]
 })
@@ -654,5 +596,63 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
   _createDateRange(date: Maybe<Date>): Maybe<DateRange> {
     return date ? dateRange({ ...this._currentDateRangeInput, date } as DateRangeInput) : undefined;
+  }
+}
+
+@Injectable()
+export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
+  constructor(private _dateAdapter: DateAdapter<D>, readonly dbxFixedDateRangeFieldComponent: DbxFixedDateRangeFieldComponent) {}
+
+  selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
+    // unused
+    return currentRange;
+  }
+
+  createPreview(activeDate: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
+    if (activeDate != null && this.dbxFixedDateRangeFieldComponent.currentSelectionMode !== 'single') {
+      const latestBoundary = this.dbxFixedDateRangeFieldComponent.latestBoundary;
+      const date = this.dateFromAdapterDate(activeDate);
+
+      if (latestBoundary && isDateInDateRange(date, latestBoundary)) {
+        const exampleDateRange = this._createDateRange(latestBoundary);
+        return exampleDateRange;
+      }
+    }
+
+    return this._createDateRangeWithDate(activeDate);
+  }
+
+  private _createDateRangeWithDate(input: D | null): DatePickerDateRange<D> {
+    let dateRange: Maybe<DateRange>;
+
+    if (input) {
+      const date = this.dateFromAdapterDate(input);
+      dateRange = this.dbxFixedDateRangeFieldComponent._createDateRange(date);
+    }
+
+    return this._createDateRange(dateRange);
+  }
+
+  private _createDateRange(input: Maybe<DateRange>): DatePickerDateRange<D> {
+    if (input) {
+      return new DatePickerDateRange<D>(this.adapterDateFromDate(input.start), this.adapterDateFromDate(input.end));
+    } else {
+      return new DatePickerDateRange<D>(null, null);
+    }
+  }
+
+  dateFromAdapterDate(input: D) {
+    const day: DayOfMonth = this._dateAdapter.getDate(input);
+    const monthIndex: DateMonth = this._dateAdapter.getMonth(input);
+    const year: YearNumber = this._dateAdapter.getYear(input);
+    return new Date(year, monthIndex, day);
+  }
+
+  adapterDateFromDate(date: Date): D {
+    const day: DayOfMonth = date.getDate();
+    const monthIndex: DateMonth = date.getMonth();
+    const year: YearNumber = date.getFullYear();
+
+    return this._dateAdapter.createDate(year, monthIndex, day);
   }
 }
