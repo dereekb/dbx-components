@@ -303,7 +303,6 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         } else {
           // take the first date, then wait unless the date is outside of the range.
           return this._selectedDateRange.pipe(
-            distinctUntilChanged(isSameDateDayRange),
             scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
               let result: FixedDateRangeScan;
 
@@ -316,7 +315,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                   const range = clampDateRangeToDateRange(nextDateRange, potentialBoundary) as DateRange;
                   result = {
                     lastDateRange: nextDateRange,
-                    boundary: potentialBoundary,
+                    boundary: range,
                     range
                   };
                 } else {
@@ -404,8 +403,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   );
 
   readonly inputRangeForm = new FormGroup({
-    start: new FormControl<Date | null>(null),
-    end: new FormControl<Date | null>(null)
+    start: new FormControl<Maybe<Date>>(null),
+    end: new FormControl<Maybe<Date>>(null)
   });
 
   get fixedDateRangeField(): DbxFixedDateRangeFieldProps {
@@ -546,15 +545,27 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                 }
 
                 return valid; // must be a valid text input
-              })
+              }),
+              map((x) => x as Maybe<Partial<DateRange>>)
             );
-          })
+          }),
+          distinctUntilChanged(isSameDateRange)
         )
-        .subscribe((x) => {
+        .subscribe((x: Maybe<Partial<DateRange>>) => {
           if (this._currentSelectionMode === 'single') {
-            this.setDateRange(x.start ? { start: x.start } : null);
+            this.setDateRange(x?.start ? { start: x.start } : null);
           } else {
-            this.setDateRange((x ?? null) as Maybe<Partial<DateRange>>);
+            let rangeToSet: Maybe<Partial<DateRange>> = x;
+
+            if (this._currentSelectionMode === 'arbitrary_quick' && this._latestBoundary && x?.start && x?.end) {
+              if (!isDateInDateRange(x.start, this._latestBoundary)) {
+                // if the end date it outside of the current range (i.e. a range was typed in only to the start date) then set the end to the boundary end
+                const boundary = dateRange({ ...this._currentDateRangeInput, date: x.start } as DateRangeInput);
+                rangeToSet = { start: x.start, end: boundary.end };
+              }
+            }
+
+            this.setDateRange(rangeToSet);
           }
         });
     }
