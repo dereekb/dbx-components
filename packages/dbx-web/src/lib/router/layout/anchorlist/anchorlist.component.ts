@@ -1,7 +1,11 @@
 import { OnDestroy, Input, Component } from '@angular/core';
-import { BehaviorSubject, map, shareReplay, distinctUntilChanged } from 'rxjs';
-import { ClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
+import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Observable } from 'rxjs';
+import { ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
+
+export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLinkTree {
+  classes: string;
+}
 
 /**
  * Component that displays a list of ClickableAnchorLink values within a MatNavList.
@@ -13,9 +17,14 @@ import { Maybe } from '@dereekb/util';
 export class DbxAnchorListComponent implements OnDestroy {
   private _anchors = new BehaviorSubject<ClickableAnchorLinkTree[]>([]);
 
-  readonly expandedAnchors$ = this._anchors.pipe(
+  readonly expandedAnchors$: Observable<DbxAnchorListExpandedAnchor[]> = this._anchors.pipe(
     distinctUntilChanged(),
-    map((x) => expandClickableAnchorLinkTrees(x)),
+    map((x) =>
+      expandClickableAnchorLinkTrees(x).map((y) => {
+        (y as DbxAnchorListExpandedAnchor).classes = `${y.depth > 0 ? `dbx-anchor-list-child` : 'dbx-anchor-list-root'} dbx-anchor-list-depth-${y.depth}`;
+        return y as DbxAnchorListExpandedAnchor;
+      })
+    ),
     shareReplay(1)
   );
 
