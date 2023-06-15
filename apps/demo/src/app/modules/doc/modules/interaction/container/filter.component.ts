@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { formatToISO8601DayString } from '@dereekb/date';
+import { formatToDayRangeString, formatToISO8601DayString } from '@dereekb/date';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
@@ -32,6 +32,35 @@ export class DocInteractionFilterComponent implements OnDestroy {
             icon: 'event',
             text: formatToISO8601DayString(filter.date)
           };
+        } else {
+          result = {
+            icon: 'event',
+            text: 'No Date'
+          };
+        }
+      }
+
+      return result;
+    })
+  );
+
+  readonly displayForDateFilter$: Observable<Maybe<DbxButtonDisplayContent>> = this.filter$.pipe(
+    map((filter) => {
+      let result: Maybe<DbxButtonDisplayContent>;
+
+      if (filter) {
+        if (filter.date) {
+          if (filter.toDate) {
+            result = {
+              icon: 'event',
+              text: formatToDayRangeString({ start: filter.date, end: filter.toDate })
+            };
+          } else {
+            result = {
+              icon: 'event',
+              text: formatToISO8601DayString(filter.date)
+            };
+          }
         } else {
           result = {
             icon: 'event',

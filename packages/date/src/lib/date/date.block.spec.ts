@@ -37,7 +37,8 @@ import {
   modifyDateBlocksToFitRangeFunction,
   sortDateBlockRanges,
   timingIsInExpectedTimezoneFunction,
-  UniqueDateBlockRange
+  UniqueDateBlockRange,
+  allIndexesInDateBlockRanges
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
@@ -1045,6 +1046,37 @@ describe('groupToDateBlockRanges()', () => {
 
     expect(result[2].i).toBe(9);
     expect(result[2].to).toBe(12);
+  });
+});
+
+describe('allIndexesInDateBlockRanges()', () => {
+  it('should return the indexes from all input DateBlockRange values', () => {
+    const a = { i: 0 };
+    const b = { i: 1, to: 2 };
+
+    const result = allIndexesInDateBlockRanges([a, b]);
+
+    expect(result).toContain(0);
+    expect(result).toContain(1);
+    expect(result).toContain(2);
+  });
+
+  it('should return the indexes from all input DateBlockIndex values', () => {
+    const result = allIndexesInDateBlockRanges([0, 1, 2]);
+
+    expect(result).toContain(0);
+    expect(result).toContain(1);
+    expect(result).toContain(2);
+  });
+
+  it('should return the indexes from a mix of DateBlockRange values and index values', () => {
+    const a = 0;
+    const b = { i: 1, to: 2 };
+    const result = allIndexesInDateBlockRanges([a, b]);
+
+    expect(result).toContain(0);
+    expect(result).toContain(1);
+    expect(result).toContain(2);
   });
 });
 

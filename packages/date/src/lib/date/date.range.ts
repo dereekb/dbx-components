@@ -1,7 +1,7 @@
-import { Building, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY } from '@dereekb/util';
+import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore } from 'date-fns';
+import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
 import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceTransformType } from './date.timezone';
@@ -116,41 +116,45 @@ export function dateOrDateRangeToDateRange(startOrDateRange: DateOrDateRange, en
 
 export enum DateRangeType {
   /**
-   * Includes only the target day.
+   * Full day of the date. Ignores distance.
    */
   DAY = 'day',
   /**
-   * Includes only the target week.
+   * Full week of the date. Ignores distance.
    */
   WEEK = 'week',
   /**
-   * Includes only the target month.
+   * Full month of the date. Ignores distance.
    */
   MONTH = 'month',
   /**
-   * Includes only the target minute.
+   * Full minute of the date. Ignores distance.
    */
   MINUTE = 'minute',
   /**
-   * Includes only the target hour.
+   * Full hour of the date. Ignores distance.
    */
   HOUR = 'hour',
   /**
-   * Range specified in hours with the input.
+   * Full minutes between the date and the target date in the given distance/direction.
    */
   MINUTES_RANGE = 'minutes_range',
   /**
-   * Range specified in hours with the input.
+   * Full hours between the date and the target date in the given distance/direction.
    */
   HOURS_RANGE = 'hours_range',
   /**
-   * Range specified in days with the input.
+   * Days between the date and the target date in the given distance/direction.
    */
   DAYS_RANGE = 'days_range',
   /**
-   * Range specified in weeks with the input.
+   * Full weeks between the date and the target date in the given distance/direction.
    */
   WEEKS_RANGE = 'weeks_range',
+  /**
+   * Full months between the date and the target date in the given distance/direction.
+   */
+  MONTHS_RANGE = 'months_range',
   /**
    * Radius specified in minutes with the input.
    */
@@ -206,15 +210,15 @@ export class DateRangeParams {
 
 export interface DateRangeTypedInput {
   type: DateRangeType;
-  date?: Date;
-  distance?: number;
+  date?: Maybe<Date>;
+  distance?: Maybe<number>;
 }
 
 /**
  * dateRange() input that infers duration to be a number of days, starting from the input date if applicable.
  */
 export interface DateRangeDayDistanceInput {
-  date?: Date;
+  date?: Maybe<Date>;
   distance: number;
 }
 
@@ -235,76 +239,84 @@ export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
  */
 export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMinute?: boolean): DateRange {
   const config: DateRangeInput = typeof input === 'string' ? { type: input } : (input as DateRangeInput);
-  let { type = DateRangeType.DAYS_RANGE, date = new Date(), distance = undefined, roundToMinute: inputConfigRoundToMinute = false } = config;
+  const { type = DateRangeType.DAYS_RANGE, date: inputDate, distance: inputDistance, roundToMinute: inputConfigRoundToMinute = false } = config;
+  const rawDistance = inputDistance ?? undefined;
   const roundToMinute = inputRoundToMinute ?? inputConfigRoundToMinute;
 
-  let start: Date;
-  let end: Date;
+  let date = inputDate ?? new Date();
+  let distance = inputDistance ?? 1;
+
+  let start: Date = date;
+  let end: Date = date;
 
   if (roundToMinute) {
     date = startOfMinute(date); // Reset to start of minute
   }
 
-  distance = distance ?? 1;
+  function calculateStartAndEndForDate(startOfFn: (date: Date) => Date, endOfFn: (date: Date) => Date) {
+    let preStart: Date = start;
+    let preEnd: Date = end;
 
-  const hasNegativeDistance = distance < 0;
+    start = startOfFn(preStart);
+    end = endOfFn(preEnd);
+  }
+
+  function calculateStartAndEndForBetween(addFn: (date: Date, number: number) => Date, distance: number = 0, startOfFn: (date: Date) => Date, endOfFn: (date: Date) => Date) {
+    let preStart: Date;
+    let preEnd: Date;
+
+    switch (distance) {
+      case 0:
+        preStart = date;
+        preEnd = date;
+        break;
+      default:
+        const hasNegativeDistance = distance < 0;
+
+        if (hasNegativeDistance) {
+          preStart = addFn(date, distance);
+          preEnd = date;
+        } else {
+          preStart = date;
+          preEnd = addFn(date, distance);
+        }
+        break;
+    }
+
+    start = startOfFn(preStart);
+    end = endOfFn(preEnd);
+  }
 
   switch (type) {
     case DateRangeType.DAY:
-      start = startOfDay(date);
-      end = endOfDay(date);
+      calculateStartAndEndForDate(startOfDay, endOfDay);
       break;
     case DateRangeType.WEEK:
-      start = startOfWeek(date);
-      end = endOfWeek(date);
+      calculateStartAndEndForDate(startOfWeek, endOfWeek);
       break;
     case DateRangeType.MONTH:
-      start = startOfMonth(date);
-      end = endOfMonth(date);
+      calculateStartAndEndForDate(startOfMonth, endOfMonth);
       break;
     case DateRangeType.HOUR:
-      start = startOfHour(date);
-      end = endOfHour(date);
+      calculateStartAndEndForDate(startOfHour, endOfHour);
       break;
     case DateRangeType.MINUTE:
-      start = startOfMinute(date);
-      end = endOfMinute(date);
+      calculateStartAndEndForDate(startOfMinute, endOfMinute);
       break;
     case DateRangeType.MINUTES_RANGE:
-      if (hasNegativeDistance) {
-        start = addMinutes(date, distance);
-        end = date;
-      } else {
-        start = date;
-        end = addMinutes(date, distance);
-      }
+      calculateStartAndEndForBetween(addMinutes, rawDistance, startOfMinute, endOfMinute);
       break;
     case DateRangeType.HOURS_RANGE:
-      if (hasNegativeDistance) {
-        start = addHours(date, distance);
-        end = date;
-      } else {
-        start = date;
-        end = addHours(date, distance);
-      }
+      calculateStartAndEndForBetween(addHours, rawDistance, startOfHour, endOfHour);
       break;
     case DateRangeType.DAYS_RANGE:
-      if (hasNegativeDistance) {
-        start = addDays(date, distance);
-        end = date;
-      } else {
-        start = date;
-        end = addDays(date, distance);
-      }
+      calculateStartAndEndForBetween(addDays, rawDistance, startOfDay, endOfDay);
       break;
     case DateRangeType.WEEKS_RANGE:
-      if (hasNegativeDistance) {
-        start = addDays(date, distance * 7);
-        end = date;
-      } else {
-        start = date;
-        end = addDays(date, distance * 7);
-      }
+      calculateStartAndEndForBetween(addWeeks, rawDistance, startOfWeek, endOfWeek);
+      break;
+    case DateRangeType.MONTHS_RANGE:
+      calculateStartAndEndForBetween(addMonths, rawDistance, startOfMonth, endOfMonth);
       break;
     case DateRangeType.MINUTES_RADIUS:
       distance = Math.abs(distance);
@@ -327,8 +339,9 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
       end = addDays(date, distance * 7);
       break;
     case DateRangeType.CALENDAR_MONTH:
-      start = startOfMonth(endOfWeek(date));
-      end = endOfWeek(endOfMonth(start));
+      const monthStart = startOfMonth(endOfWeek(date));
+      start = startOfWeek(monthStart);
+      end = endOfWeek(endOfMonth(monthStart));
       break;
     default:
       throw new Error(`Unknown date range type: ${type}`);
@@ -752,6 +765,14 @@ export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezone
   const fn = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformFn)) as Building<TransformDateRangeToTimezoneFunction>;
   fn._timezoneInstance = timezoneInstance;
   return fn as TransformDateRangeToTimezoneFunction;
+}
+
+/**
+ * DateRange that has values comprised of either a Date, ISO8601DateString, or ISO8601DayString
+ */
+export interface DateRangeWithDateOrStringValue {
+  start: DateOrDateString | ISO8601DayString;
+  end: DateOrDateString | ISO8601DayString;
 }
 
 // MARK: Compat

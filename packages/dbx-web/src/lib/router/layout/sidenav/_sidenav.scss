@@ -10,6 +10,7 @@ $icon-only-width: 65px;
 $mat-list-item-height: 48px;
 $active-border-left-width: 2px;
 $dbx-sidenav-nav-bottom-padding: 24px;
+$active-background-transparent-color: 0.93;
 
 // MARK: Mixin
 @mixin core() {
@@ -109,7 +110,22 @@ $dbx-sidenav-nav-bottom-padding: 24px;
           height: $mat-list-item-height;
         }
 
-        .dbx-anchor-active-eq {
+        .dbx-anchor-active {
+          .mat-list-item {
+            .mat-list-icon {
+              color: $active-icon-color;
+            }
+          }
+        }
+
+        .dbx-anchor-list-root .dbx-anchor-active .mat-list-item {
+          // root list items glow when active
+          background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
+        }
+
+        // directly active links have a side-
+        .dbx-anchor-active-eq,
+        .dbx-anchor-list-child .dbx-anchor-active {
           .mat-list-item {
             border-left: $active-border-left-width solid $active-icon-color;
 
@@ -120,10 +136,12 @@ $dbx-sidenav-nav-bottom-padding: 24px;
               padding-left: anchorlist.$active-root-item-left-padding - $active-border-left-width;
             }
           }
+        }
 
-          .dbx-anchor-list-child {
-            padding-left: anchorlist.$active-child-item-left-padding - $active-border-left-width;
-          }
+        .dbx-anchor-list-child .dbx-anchor-active .mat-list-item,
+        .dbx-anchor-list-child .dbx-anchor-active-eq .mat-list-item {
+          padding-left: anchorlist.$active-child-item-left-padding - $active-border-left-width;
+          background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
         }
       }
     }

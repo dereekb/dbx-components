@@ -1,9 +1,10 @@
-import { dateFromLogicalDate, Minutes, DecisionFunction } from '@dereekb/util';
+import { Minutes, DecisionFunction } from '@dereekb/util';
 import { addMinutes, isAfter, isBefore } from 'date-fns';
 import { roundDownToMinute } from './date';
 import { roundDateTimeDownToSteps, StepRoundDateTimeDown } from './date.round';
 import { dateScheduleDateFilter, DateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
+import { dateFromLogicalDate } from './date.logical';
 
 export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
   /**
@@ -143,19 +144,21 @@ export class DateTimeMinuteInstance {
 
     // Min/Future
     if (limits.min) {
-      isAfterMinimum = isAfter(date, limits.min);
+      const logicalMin = dateFromLogicalDate(limits.min);
+      isAfterMinimum = !isBefore(date, logicalMin);
     }
 
     if (minimumMinutesIntoFuture) {
       const minFutureDateTime = addMinutes(now, minimumMinutesIntoFuture);
-      inFutureMinutes = isAfter(now, minFutureDateTime);
+      inFutureMinutes = !isBefore(now, minFutureDateTime);
     } else if (limits.isFuture) {
       inFuture = isAfter(date, now);
     }
 
     // Max/Past
     if (limits.max) {
-      isBeforeMaximum = isBefore(date, limits.max);
+      const logicalMax = dateFromLogicalDate(limits.max);
+      isBeforeMaximum = !isAfter(date, logicalMax);
     }
 
     if (limits.isPast) {

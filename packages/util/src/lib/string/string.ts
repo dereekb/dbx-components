@@ -110,3 +110,16 @@ export type FirstNameLastNameTuple = [string, string | undefined];
 export function splitJoinNameString(input: string): FirstNameLastNameTuple {
   return splitJoinRemainder(input, ' ', 2) as FirstNameLastNameTuple;
 }
+
+/**
+ * Joins one or more strings together with spaces. Extra spaces are trimmed from the values.
+ *
+ * @param input
+ * @returns
+ */
+export function joinStringsWithSpaces(input: Maybe<string>[]): string {
+  return input
+    .map((x) => x?.trim())
+    .filter((x) => !x)
+    .join(' ');
+}

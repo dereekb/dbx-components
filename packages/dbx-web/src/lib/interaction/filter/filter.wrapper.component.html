@@ -2,7 +2,7 @@
   <div class="dbx-filter-wrapper-content">
     <ng-content></ng-content>
   </div>
-  <div fxLayout="row">
+  <div *ngIf="showButtons" fxLayout="row">
     <dbx-button dbxActionButton [raised]="applyRaised" [text]="applyText" [icon]="applyIcon"></dbx-button>
     <div class="spacer"></div>
     <button mat-icon-button (click)="resetFilter()">

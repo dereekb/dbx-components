@@ -86,6 +86,35 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
   .dbx-datetime-hint-row {
     // margin-left: 12px;
   }
+
+  .dbx-fixeddaterange-field {
+    .mat-calendar,
+    .dbx-fixeddaterange-field-input {
+      margin: auto;
+      min-width: 240px;
+      max-width: 320px;
+    }
+  }
+
+  .dbx-fixeddaterange-field-full-width .dbx-fixeddaterange-field {
+    .mat-calendar,
+    .dbx-fixeddaterange-field-input {
+      max-width: unset;
+    }
+  }
+
+  .mat-form-field.dbx-fixeddaterange-field-input {
+    display: block;
+  }
+
+  .dbx-fixeddaterange-field-input-end {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .dbx-form-fixed-date-range-field-wrapper .mat-form-field-appearance-outline .mat-form-field-infix {
+    padding: 0;
+  }
 }
 
 @mixin color($theme-config) {

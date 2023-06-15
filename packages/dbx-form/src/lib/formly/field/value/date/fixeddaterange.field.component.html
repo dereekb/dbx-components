@@ -1,0 +1,10 @@
+<div class="dbx-fixeddaterange-field">
+  <mat-calendar #calendarView [selected]="calendarSelection$ | async" [dateFilter]="(pickerFilter$ | async) || defaultPickerFilter" [minDate]="min$ | async" [maxDate]="max$ | async" (selectedChange)="selectedChange($event)"></mat-calendar>
+  <mat-form-field class="dbx-fixeddaterange-field-input" appearance="fill">
+    <mat-date-range-input *ngIf="showRangeInput" [formGroup]="inputRangeForm">
+      <input #startDateInput matStartDate formControlName="start" placeholder="Start date" />
+      <input #endDateInput [ngClass]="(endDisabled$ | async) ? 'dbx-fixeddaterange-field-input-end' : ''" [attr.tabindex]="(endDisabled$ | async) ? -1 : 0" matEndDate formControlName="end" placeholder="End date" />
+    </mat-date-range-input>
+  </mat-form-field>
+  <mat-error *ngIf="formControl.hasError('required')">Date range is required</mat-error>
+</div>

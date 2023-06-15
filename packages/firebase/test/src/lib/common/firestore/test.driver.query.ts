@@ -710,12 +710,12 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               describe('whereDateIsInRange()', () => {
                 it('should return the date values within the given range.', async () => {
                   const startHoursLater = 1;
-                  const hoursRange = 2;
+                  const totalHoursInRange = 2;
 
                   const start = addHours(startDate, startHoursLater);
-                  const result = await query(whereDateIsInRange<MockItem>('date', { date: start, distance: hoursRange, type: DateRangeType.HOURS_RANGE })).getDocs();
+                  const result = await query(whereDateIsInRange<MockItem>('date', { date: start, distance: totalHoursInRange - 1, type: DateRangeType.HOURS_RANGE })).getDocs();
 
-                  expect(result.docs.length).toBe(hoursRange);
+                  expect(result.docs.length).toBe(totalHoursInRange);
                   expect(result.docs[0].data().date?.toISOString()).toBe(start.toISOString());
                   expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
                 });

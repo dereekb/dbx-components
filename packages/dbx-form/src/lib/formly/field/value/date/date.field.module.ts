@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxDateTimeFieldComponent } from './datetime.field.component';
-import { DbxDatePipeModule } from '@dereekb/dbx-core';
+import { DbxDatePipeModule, DbxValuePipeModule } from '@dereekb/dbx-core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -16,6 +16,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
 import { DbxButtonModule } from '@dereekb/dbx-web';
+import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.component';
 
 @NgModule({
   imports: [
@@ -31,14 +32,19 @@ import { DbxButtonModule } from '@dereekb/dbx-web';
     MatMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,
+    DbxValuePipeModule,
     MatChipsModule,
     MatIconModule,
     FlexLayoutModule,
     FormlyModule.forChild({
-      types: [{ name: 'datetime', component: DbxDateTimeFieldComponent, wrappers: ['style', 'form-field'] }]
+      types: [
+        //
+        { name: 'datetime', component: DbxDateTimeFieldComponent, wrappers: ['style', 'form-field'] },
+        { name: 'fixeddaterange', component: DbxFixedDateRangeFieldComponent, wrappers: ['style', 'form-field'] }
+      ]
     })
   ],
-  declarations: [DbxDateTimeFieldComponent],
+  declarations: [DbxDateTimeFieldComponent, DbxFixedDateRangeFieldComponent],
   exports: [DbxFormFormlyWrapperModule]
 })
 export class DbxFormFormlyDateFieldModule {}

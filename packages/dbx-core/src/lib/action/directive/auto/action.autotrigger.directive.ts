@@ -14,6 +14,8 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
 
 /**
  * Directive that automatically triggers the action periodically when it is in a modified state.
+ *
+ * When using auto triggers be sure to make sure that the action is not triggering too often due to misconfiguration.
  */
 @Directive({
   selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]'

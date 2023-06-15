@@ -2,13 +2,14 @@ import { isSameDateDay } from '@dereekb/date';
 import { ClickableFilterPreset, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { FilterWithPreset } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
-import { startOfDay, addDays } from 'date-fns';
+import { startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
 
-export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'noicon' | 'delete';
+export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'week' | 'noicon' | 'delete';
 
 export interface DocInteractionTestFilter extends FilterWithPreset<DocInteractionTestFilterPresets> {
   name?: Maybe<string>;
   date?: Maybe<Date>;
+  toDate?: Maybe<Date>;
 }
 
 export const DOC_INTERACTION_TEST_PRESETS: ClickableFilterPreset<DocInteractionTestFilter, DocInteractionTestFilterPresets>[] = [
@@ -52,6 +53,26 @@ export const DOC_INTERACTION_TEST_PRESETS: ClickableFilterPreset<DocInteractionT
     title: 'Reset With Null',
     preset: 'delete',
     presetValue: null
+  }
+];
+
+export const DOC_INTERACTION_DATE_TEST_PRESETS: ClickableFilterPreset<DocInteractionTestFilter, DocInteractionTestFilterPresets>[] = [
+  {
+    icon: 'calendar_today',
+    title: 'Today',
+    preset: 'today',
+    presetValue: () => ({
+      date: startOfDay(new Date())
+    })
+  },
+  {
+    icon: 'event',
+    title: 'This Week',
+    preset: 'week',
+    presetValue: () => ({
+      date: startOfWeek(new Date()),
+      toDate: endOfWeek(new Date())
+    })
   }
 ];
 

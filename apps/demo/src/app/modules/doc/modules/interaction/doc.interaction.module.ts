@@ -15,7 +15,7 @@ import { DocInteractionDialogComponent } from './container/dialog.component';
 import { STATES } from './doc.interaction.router';
 import { DocInteractionFilterComponent } from './container/filter.component';
 import { DocInteractionTestFilterPopoverButtonComponent } from './component/filter.popover.button.component';
-import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
+import { DocInteractionTestDateFilterFormComponent } from './component/filter.date.form.component';
 import { DocInteractionExampleDialogComponent } from './component/interaction.dialog.component';
 import { DocInteractionExamplePopoverComponent } from './component/interaction.popover.component';
 import { DocInteractionExamplePopoverContentComponent } from './component/interaction.popover.content.component';
@@ -24,6 +24,9 @@ import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.
 import { DocInteractionErrorComponent } from './container/error.component';
 import { DbxErrorWidgetService } from '@dereekb/dbx-web';
 import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/filter.partial.preset.menu.component';
+import { DocInteractionTestDateFilterPopoverButtonComponent } from './component/filter.date.popover.button.component';
+import { DocInteractionTestDateFilterPresetFilterComponent } from './component/filter.date.preset.component';
+import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
 
 @NgModule({
   imports: [
@@ -36,6 +39,9 @@ import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/
     // components
     DocInteractionTestFilterPopoverButtonComponent,
     DocInteractionTestFilterCustomFilterComponent,
+    DocInteractionTestDateFilterFormComponent,
+    DocInteractionTestDateFilterPopoverButtonComponent,
+    DocInteractionTestDateFilterPresetFilterComponent,
     DocInteractionTestFilterPresetFilterComponent,
     DocInteractionTestFilterPresetMenuComponent,
     DocInteractionTestFilterPartialPresetMenuComponent,

@@ -14,6 +14,9 @@ import { of } from 'rxjs';
 })
 export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHandlerDirective<F> {
   @Input()
+  showButtons = true;
+
+  @Input()
   applyRaised = true;
 
   @Input()

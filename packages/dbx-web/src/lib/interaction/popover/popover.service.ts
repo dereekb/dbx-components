@@ -2,12 +2,13 @@ import { DbxPopoverComponent, DbxPopoverComponentConfig, FullDbxPopoverComponent
 import { Injectable, Injector } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
+import { joinStringsWithSpaces } from '@dereekb/util';
 
-export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T> {
+export interface DbxPopoverConfigSizing extends Pick<NgOverlayContainerConfiguration, 'originX' | 'originY' | 'height' | 'width' | 'minHeight' | 'minWidth' | 'isResizable'> {}
+
+export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T>, DbxPopoverConfigSizing {
+  panelClass?: string;
   injector?: Injector;
-  height?: string;
-  width?: string;
-  isResizable?: boolean;
 }
 
 /**
@@ -27,12 +28,14 @@ export class DbxPopoverService {
     const service = config.injector ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
 
     const configuration: NgOverlayContainerConfiguration = {
-      panelClass: 'dbx-popover-container',
-      originX: 'start',
-      originY: 'top',
+      panelClass: joinStringsWithSpaces(['dbx-popover-container', config.panelClass]),
+      originX: config.originX ?? 'start',
+      originY: config.originY ?? 'top',
       // TODO: Resize height/width.
+      minHeight: config.minHeight,
+      minWidth: config.minWidth,
       height: config.height ?? '500px',
-      width: config.height ?? '400px',
+      width: config.width ?? '400px',
       hasBackdrop: true,
       isDraggable: false,
       isResizable: config.isResizable ?? false,

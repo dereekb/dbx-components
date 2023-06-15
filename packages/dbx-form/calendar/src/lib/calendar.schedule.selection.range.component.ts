@@ -20,6 +20,7 @@ interface RangeValue {
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
   private _required = new BehaviorSubject<boolean>(false);
+
   readonly required$ = this._required.asObservable();
   readonly timezone$ = this.dbxCalendarScheduleSelectionStore.currentTimezone$;
 
@@ -124,6 +125,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
             }
           ]
         : [];
+
       this.range.setValidators(validators);
     });
   }

@@ -2,10 +2,13 @@ import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, DbxActionValueOnTriggerResult } from '@dereekb/dbx-core';
-import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
+import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservableFromGetter, asObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
+import { MapFunction } from '@dereekb/util';
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
+
+export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrValue<DbxActionValueOnTriggerResult<O>>>;
 
 /**
  * Used with an action to bind a form to an action as it's value source.
@@ -17,7 +20,7 @@ export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 @Directive({
   selector: '[dbxActionForm]'
 })
-export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
+export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDestroy {
   readonly lockSet = new LockSet();
 
   /**
@@ -33,13 +36,19 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
   @Input()
   dbxActionFormModified?: IsModifiedFunction<T>;
 
+  /**
+   * Optional function that maps the form's value to the source's value.
+   */
+  @Input()
+  dbxActionFormMapValue?: DbxActionFormMapValueFunction<T, O>;
+
   private _formDisabledWhileWorking = new BehaviorSubject<boolean>(true);
 
   private _triggeredSub = new SubscriptionObject();
   private _isCompleteSub = new SubscriptionObject();
   private _isWorkingSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbxMutableForm<T>, public readonly source: DbxActionContextStoreSourceInstance<T, unknown>) {
+  constructor(@Host() public readonly form: DbxMutableForm<T>, public readonly source: DbxActionContextStoreSourceInstance<O, unknown>) {
     if (form.lockSet) {
       this.lockSet.addChildLockSet(form.lockSet, 'form');
     }
@@ -67,7 +76,7 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
               const { isComplete } = stream;
               const doNothing = {}; // nothing, form not complete
 
-              let obs: Observable<DbxActionValueOnTriggerResult<T>>;
+              let obs: Observable<DbxActionValueOnTriggerResult<O>>;
 
               if (isComplete) {
                 obs = this.form.getValue().pipe(
@@ -95,7 +104,7 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
           )
         )
       )
-      .subscribe((result: DbxActionValueOnTriggerResult<T>) => {
+      .subscribe((result: DbxActionValueOnTriggerResult<O>) => {
         if (result.reject) {
           this.source.reject(result.reject);
         } else if (result.value != null) {
@@ -188,7 +197,11 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
     );
   }
 
-  protected readyValue(value: T): Observable<DbxActionValueOnTriggerResult> {
-    return of({ value });
+  protected readyValue(value: T): Observable<DbxActionValueOnTriggerResult<O>> {
+    if (this.dbxActionFormMapValue) {
+      return asObservable(this.dbxActionFormMapValue(value));
+    } else {
+      return of({ value: value as unknown as O });
+    }
   }
 }

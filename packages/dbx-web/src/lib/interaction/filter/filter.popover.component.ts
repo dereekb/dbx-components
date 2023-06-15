@@ -1,14 +1,14 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, ElementRef, Type, OnInit, OnDestroy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { Observable, BehaviorSubject, map, skip, first } from 'rxjs';
+import { Observable, BehaviorSubject, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
 import { DbxPopoverComponent } from '../popover/popover.component';
-import { DbxPopoverService } from '../popover/popover.service';
-import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { DbxPopoverConfigSizing, DbxPopoverService } from '../popover/popover.service';
+import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject, tapLog } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
 
-export interface DbxFilterComponentParams<F extends object = object, P extends string = string> {
+export interface DbxFilterComponentParams<F extends object = object, P extends string = string> extends DbxPopoverConfigSizing {
   /**
    * Custom icon
    *
@@ -88,8 +88,9 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
             filterSource.initWithFilter(initialFilterObs);
           }
 
-          if (closeOnFilterChange) {
-            this._closeOnChangeSub.subscription = filterSource.filter$.pipe(skip(1), filterMaybe(), first()).subscribe(() => {
+          if (closeOnFilterChange !== false) {
+            this._closeOnChangeSub.subscription = filterSource.filter$.pipe(skip(1), filterMaybe(), first(), defaultIfEmpty(undefined)).subscribe(() => {
+              console.log();
               this.close();
             });
           }
@@ -100,18 +101,22 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
     })
   );
 
-  static openPopover<F extends object>(popupService: DbxPopoverService, { origin, header, icon, initialFilterObs: inputSource, connector, customFilterComponentClass, presetFilterComponentClass }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
+  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, connector, initialFilterObs, closeOnFilterChange }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,
       componentClass: DbxFilterPopoverComponent,
+      width,
+      height,
+      isResizable,
       data: {
         header,
         icon,
-        initialFilterObs: inputSource,
-        connector,
         customFilterComponentClass,
-        presetFilterComponentClass
+        presetFilterComponentClass,
+        connector,
+        initialFilterObs,
+        closeOnFilterChange
       } as DbxFilterComponentParams<F>
     });
   }

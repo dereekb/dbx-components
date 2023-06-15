@@ -1,6 +1,8 @@
-import { Minutes, Hours, Days, LogicalDate, DATE_NOW_VALUE, Maybe } from '@dereekb/util';
+import { Minutes, Hours, Days, Maybe, DATE_NOW_VALUE } from '@dereekb/util';
 import { addMinutes, isBefore, min as minDate, max as maxDate } from 'date-fns';
 import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from './date';
+import { DateRange, clampDateRangeToDateRange, clampDateToDateRange } from './date.range';
+import { LogicalDate, dateFromLogicalDate } from './date.logical';
 
 export interface LimitDateTimeConfig {
   /**
@@ -25,12 +27,12 @@ export interface LimitDateTimeConfig {
     /**
      * The minimum date allowed.
      */
-    min?: Maybe<Date>;
+    min?: Maybe<LogicalDate>;
 
     /**
      * The maximum date allowed.
      */
-    max?: Maybe<Date>;
+    max?: Maybe<LogicalDate>;
 
     /**
      * The date must be in the future.
@@ -89,7 +91,7 @@ export class LimitDateTimeInstance {
 
     let limit: Maybe<LogicalDate> = min;
 
-    if (future || isFuture) {
+    if (typeof min !== 'string' && (!future || isFuture)) {
       if (!min || isAfter(min, instant)) {
         limit = DATE_NOW_VALUE;
       } else if (future) {
@@ -107,7 +109,7 @@ export class LimitDateTimeInstance {
 
     let limit: Maybe<LogicalDate> = max;
 
-    if (isPast) {
+    if (typeof max !== 'string' && isPast) {
       if (!max || isBefore(max, instant)) {
         limit = DATE_NOW_VALUE;
       }
@@ -117,29 +119,38 @@ export class LimitDateTimeInstance {
   }
 
   /**
-   * Limits the input date to the current time.
+   * Creates a date range for now.
+   *
+   * @returns
+   */
+  dateRange(): Partial<DateRange> {
+    const { instant = new Date() } = this.config;
+    const { min, max } = this;
+    return {
+      start: min ? dateFromLogicalDate(min, instant) : undefined,
+      end: max ? dateFromLogicalDate(max, instant) : undefined
+    };
+  }
+
+  /**
+   *
+   * @deprecated use clamp() instead. Describes the intended function better.
+   *
+   * @param date
+   * @returns
    */
   limit(date: Date): Date {
-    const { min, max } = this;
-    const now = new Date();
+    return this.clamp(date);
+  }
 
+  /**
+   * Clamps the input date to the current range.
+   */
+  clamp(date: Date): Date {
     let result: Date = date;
 
-    if (min) {
-      if (min === DATE_NOW_VALUE) {
-        result = isAfter(date, now) ? now : date;
-      } else {
-        result = maxDate([date, min]);
-      }
-    }
-
-    if (max) {
-      if (max === DATE_NOW_VALUE) {
-        result = isBefore(date, now) ? now : date;
-      } else {
-        result = minDate([date, max]);
-      }
-    }
+    const dateRange = this.dateRange();
+    result = clampDateToDateRange(date, dateRange);
 
     if (this.config.takeNextUpcomingTime) {
       result = takeNextUpcomingTime(result, this.config.roundDownToMinute ?? false);
@@ -149,4 +160,12 @@ export class LimitDateTimeInstance {
 
     return result;
   }
+
+  clampDateRange(dateRange: DateRange): DateRange {
+    return clampDateRangeToDateRange(dateRange, this.dateRange()) as DateRange;
+  }
+}
+
+export function limitDateTimeInstance(config: LimitDateTimeConfig): LimitDateTimeInstance {
+  return new LimitDateTimeInstance(config);
 }
