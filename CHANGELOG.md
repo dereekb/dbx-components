@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.24.0](https://github.com/dereekb/dbx-components/compare/v9.23.28-dev...v9.24.0) (2023-06-15)
+
+
+### Features
+
+* added fixedDateRangeField() ([ff214ee](https://github.com/dereekb/dbx-components/commit/ff214ee066c524fb0a6f5b1638ecbffdee53e985))
+
+
+
 ## [9.23.28](https://github.com/dereekb/dbx-components/compare/v9.23.27-dev...v9.23.28) (2023-06-08)
 
 
