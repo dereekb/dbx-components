@@ -91,7 +91,7 @@ export class LimitDateTimeInstance {
 
     let limit: Maybe<LogicalDate> = min;
 
-    if (typeof min !== 'string' && (!future || isFuture)) {
+    if (typeof min !== 'string' && (future || isFuture)) {
       if (!min || isAfter(min, instant)) {
         limit = DATE_NOW_VALUE;
       } else if (future) {
