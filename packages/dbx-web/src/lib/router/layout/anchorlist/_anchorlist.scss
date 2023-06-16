@@ -64,7 +64,7 @@ $active-child-item-left-padding: 5px;
     }
     */
 
-    .dbx-anchor-list-child {
+    .dbx-anchor-list-child .mat-list-item {
       background: color.scale($background-hover-color, $alpha: 10%);
     }
   }
@@ -80,7 +80,7 @@ $active-child-item-left-padding: 5px;
     }
 
     // MARK: Anchor Tree
-    .dbx-anchor-list-child {
+    .dbx-anchor-list-child .mat-list-item {
       font-size: 0.875em;
 
       .mat-list-icon {
