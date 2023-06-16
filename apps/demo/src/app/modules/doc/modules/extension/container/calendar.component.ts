@@ -63,10 +63,14 @@ export class DocExtensionCalendarComponent implements OnInit {
       timezone: this.timezone$,
       key: 'dateScheduleWithFilter',
       required: true,
-      description: 'Date schedule with a filter applied to it, and an initial selection of everything.',
+      description: 'Date schedule with a filter applied to it, and an initial selection of everything. Contains custom close config.',
       filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
       computeSelectionResultRelativeToFilter: true,
-      initialSelectionState: 'all'
+      initialSelectionState: 'all',
+      closeDialogConfig: {
+        closeText: 'Save Changes',
+        buttonColor: 'primary'
+      }
     }),
     dateScheduleRangeField({
       timezone: this.timezone$,
