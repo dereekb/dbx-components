@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.24.1](https://github.com/dereekb/dbx-components/compare/v9.24.0-dev...v9.24.1) (2023-06-16)
+
+
+### Bug Fixes
+
+* fixed LimitDateTimeInstance min value ([dc0c1b7](https://github.com/dereekb/dbx-components/commit/dc0c1b7ce7977803d327ae9edbe76e3a7701ba36))
+
+
+
 # [9.24.0](https://github.com/dereekb/dbx-components/compare/v9.23.28-dev...v9.24.0) (2023-06-15)
 
 
