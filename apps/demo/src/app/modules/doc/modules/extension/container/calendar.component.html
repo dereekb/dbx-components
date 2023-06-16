@@ -33,6 +33,12 @@
         , as the filter's start date already describes which timezone they are in per the DateSchedule's Timing behavior. The timezone string is passed as a visual output however.
       </p>
       <doc-form-example-form (dbxFormValueChange)="onTimezoneChange($event)" [config]="timezoneSelectionField" [dbxFormSource]="{ timezone: 'America/Denver' }"></doc-form-example-form>
+      <h4>Customizing Dialog Footer</h4>
+      <p>
+        The footer can be customized globally using the
+        <i>DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CLOSE_CONFIG_TOKEN</i>
+        to provide a custom close config.
+      </p>
     </doc-feature-example>
     <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
       <dbx-subsection header="With DateSchedule Filter" hint="A dbx-schedule-selection-calendar can be limited to a specific filter range. An initial selection of 'all' is also applied to this example.">

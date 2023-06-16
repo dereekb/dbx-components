@@ -5,19 +5,22 @@ import { DbxFormCalendarDateScheduleRangeFieldProps } from './calendar.schedule.
 export interface DateScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateScheduleRangeFieldProps {}
 
 export function dateScheduleRangeField(config: DateScheduleRangeFieldConfig = {}): FormlyFieldConfig {
-  const { key = 'schedule', filter, timezone, initialSelectionState, computeSelectionResultRelativeToFilter, exclusions, minMaxDateRange, cellContentFactory } = config;
+  const { key = 'schedule', appearance, hideCustomize, filter, timezone, initialSelectionState, computeSelectionResultRelativeToFilter, exclusions, minMaxDateRange, cellContentFactory, closeDialogConfig } = config;
   const fieldConfig: FormlyFieldConfig = {
     ...formlyField({
       key,
       type: 'date-schedule-range',
       ...propsAndConfigForFieldConfig(config, {
         label: config.label ?? 'Schedule',
+        appearance,
+        hideCustomize,
+        timezone,
         minMaxDateRange,
         filter,
-        timezone,
+        exclusions,
+        closeDialogConfig,
         computeSelectionResultRelativeToFilter,
         initialSelectionState,
-        exclusions,
         cellContentFactory
       })
     })

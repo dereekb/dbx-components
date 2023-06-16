@@ -1,5 +1,5 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
-import { CompactContextStore } from '@dereekb/dbx-web';
+import { CompactContextStore, DbxDialogContentFooterConfig } from '@dereekb/dbx-web';
 import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
@@ -24,13 +24,17 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
   minMaxDateRange?: ObservableOrValue<Maybe<Partial<DateRange>>>;
   filter?: ObservableOrValue<Maybe<DateScheduleDateFilterConfig>>;
   exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>>;
+  /**
+   * Custom close dialog config for the popup
+   */
+  closeDialogConfig?: Maybe<DbxDialogContentFooterConfig>;
 }
 
 @Component({
   template: `
     <div class="dbx-schedule-selection-field">
       <dbx-schedule-selection-calendar-date-range [showCustomize]="showCustomize" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
-        <dbx-schedule-selection-calendar-date-dialog-button customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
+        <dbx-schedule-selection-calendar-date-dialog-button [closeConfig]="closeDialogConfig" customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
       </dbx-schedule-selection-calendar-date-range>
     </div>
   `,
@@ -102,6 +106,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
   get computeSelectionResultRelativeToFilter() {
     return this.props.computeSelectionResultRelativeToFilter;
+  }
+
+  get closeDialogConfig() {
+    return this.props.closeDialogConfig;
   }
 
   get cellContentFactory() {

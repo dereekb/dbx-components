@@ -191,8 +191,18 @@ export class DateTimeMinuteInstance {
     return date;
   }
 
+  /**
+   * @deprecated use clamp().
+   *
+   * @param date
+   * @returns
+   */
   limit(date = this.date): Date {
-    return this._limit.limit(date);
+    return this.clamp(date);
+  }
+
+  clamp(date = this.date): Date {
+    return this._limit.clamp(date);
   }
 
   protected _takeBoundedDate(date = this.date): Date {
