@@ -1,0 +1,34 @@
+@use 'sass:map';
+@use 'sass:color';
+@use '../style/theming';
+
+// MARK: Variables
+$linear-line-height: 4px;
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-loading-linear-done-padding {
+    padding-top: $linear-line-height;
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-loading') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

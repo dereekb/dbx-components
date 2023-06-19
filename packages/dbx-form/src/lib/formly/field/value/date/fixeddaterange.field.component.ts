@@ -121,6 +121,13 @@ export interface FixedDateRangeScan {
   range?: DateRange;
 }
 
+type SelectedDateEventType = 'calendar' | 'input';
+
+interface SelectedDateEvent {
+  type: SelectedDateEventType;
+  range?: Maybe<Partial<DateRange>>;
+}
+
 @Component({
   templateUrl: 'fixeddaterange.field.component.html',
   providers: [
@@ -153,7 +160,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   private _timezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
   private _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
 
-  private _selectedDateRange = new Subject<Maybe<Partial<DateRange>>>();
+  private _selectionEvent = new Subject<SelectedDateEvent>();
+  readonly selectedDateRange$: Observable<Maybe<Partial<DateRange>>> = this._selectionEvent.pipe(map((x) => x.range));
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<DateRange>>>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
@@ -221,13 +229,6 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     shareReplay(1)
   );
 
-  readonly startDate$: Observable<Date> = this.valueInSystemTimezone$.pipe(
-    map((x) => x?.start ?? null),
-    distinctUntilChanged(),
-    filterMaybe(),
-    shareReplay(1)
-  );
-
   dateRangeSelectionForMode(mode: DbxFixedDateRangeSelectionMode) {
     const result: Observable<Maybe<DateRange>> = combineLatest([this.dateRangeInput$, this.limitDateTimeInstance$]).pipe(
       switchMap(([dateRangeInput, limitInstance]) => {
@@ -235,7 +236,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
         if (mode === 'single') {
           // only use the start date.
-          return this._selectedDateRange.pipe(
+          return this.selectedDateRange$.pipe(
             distinctUntilChanged(isSameDateDayRange),
             map((inputDateRange) => {
               const date = inputDateRange?.start;
@@ -244,7 +245,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
           );
         } else {
           // take the first date, then wait unless the date is outside of the range.
-          return this._selectedDateRange.pipe(
+          return this.selectedDateRange$.pipe(
             scan((acc: FixedDateRangeScan, nextDateRange: Maybe<Partial<DateRange>>) => {
               let result: FixedDateRangeScan;
 
@@ -329,6 +330,26 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         return this.fullBoundary$;
       }
     })
+  );
+
+  /**
+   * Focuses on the date any time the selection event from the picker occured, otherwise use the system value
+   */
+  readonly calendarFocusDate$: Observable<Date> = this._selectionEvent.pipe(startWith(null)).pipe(
+    switchMap((selectionEvent) => {
+      if (selectionEvent && selectionEvent.type === 'calendar' && selectionEvent.range?.start) {
+        return of(selectionEvent.range.start);
+      } else {
+        return this.fullBoundary$.pipe(
+          first(),
+          map((fullBoundary) => {
+            return fullBoundary?.start ?? selectionEvent?.range?.start;
+          })
+        );
+      }
+    }),
+    filterMaybe(),
+    shareReplay(1)
   );
 
   readonly dateRangeSelection$: Observable<Maybe<DateRange>> = this.selectionMode$.pipe(switchMap((mode) => this.dateRangeSelectionForMode(mode)));
@@ -495,7 +516,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         )
         .subscribe((x: Maybe<Partial<DateRange>>) => {
           if (this._currentSelectionMode === 'single') {
-            this.setDateRange(x?.start ? { start: x.start } : null);
+            this.setDateRange(x?.start ? { start: x.start } : null, 'input');
           } else {
             let rangeToSet: Maybe<Partial<DateRange>> = x;
 
@@ -507,7 +528,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
               }
             }
 
-            this.setDateRange(rangeToSet);
+            this.setDateRange(rangeToSet, 'input');
           }
         });
     }
@@ -562,7 +583,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
     }
 
-    this._activeDateSub.subscription = this.startDate$.subscribe((x) => {
+    this._activeDateSub.subscription = this.calendarFocusDate$.subscribe((x) => {
       this.calendar.activeDate = x;
     });
   }
@@ -582,16 +603,16 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     this._dateRangeInput.complete();
     this._timezone.complete();
     this._presets.complete();
-    this._selectedDateRange.complete();
+    this._selectionEvent.complete();
     this._formControlObs.complete();
   }
 
   selectedChange(date: Maybe<Date>): void {
-    this.setDateRange(date ? { start: date } : null);
+    this.setDateRange(date ? { start: date } : null, 'calendar');
   }
 
-  setDateRange(dateRange: Maybe<Partial<DateRange>>) {
-    this._selectedDateRange.next(dateRange);
+  setDateRange(range: Maybe<Partial<DateRange>>, type: SelectedDateEventType) {
+    this._selectionEvent.next({ type, range });
   }
 
   _createDateRange(date: Maybe<Date>): Maybe<DateRange> {

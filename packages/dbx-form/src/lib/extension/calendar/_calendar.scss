@@ -19,6 +19,20 @@
     }
   }
 
+  .dbx-schedule-selection-calendar-compact .dbx-schedule-selection-calendar {
+    .cal-month-view .cal-day-cell {
+      min-height: 60px;
+    }
+
+    .dbx-calendar .cal-month-view .cal-cell-top {
+      min-height: 46px;
+    }
+
+    .dbx-schedule-selection-calendar-cell {
+      display: none;
+    }
+  }
+
   .dbx-schedule-selection-calendar-date-days {
     padding: 4px;
 

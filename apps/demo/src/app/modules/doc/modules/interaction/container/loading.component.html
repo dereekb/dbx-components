@@ -1,0 +1,26 @@
+<dbx-content-container>
+  <doc-feature-layout header="Error" hint="The loading module is used for displaying loading indicators.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-loading" hint="Component that displays a loading indicator.">
+      <p>dbx-loading is typically used in conjunction with a LoadingContext, which streams LoadingContextEvents signifying the current loading state.</p>
+      <p>There are two presentations:</p>
+      <h3>Default</h3>
+      <dbx-loading [loading]="true"></dbx-loading>
+      <h3>Linear</h3>
+      <dbx-loading [loading]="true" [linear]="true"></dbx-loading>
+      <p>color=accent</p>
+      <dbx-loading [loading]="true" [linear]="true" color="accent"></dbx-loading>
+      <p>color=warn</p>
+      <dbx-loading [loading]="true" [linear]="true" color="warn"></dbx-loading>
+      <h3>Padding</h3>
+      <span style="padding-bottom: 12px">The loading bar can be configured to provide padding to prevent content from jumping around when loading begins/ends. Useful in cases where the loading bar doesn't control any content but removing it would push the content upward to fill the empty space.</span>
+      <dbx-loading [loading]="loading$ | async" [linear]="true" [padding]="true"></dbx-loading>
+      <dbx-content-container>
+        <p>Custom content not pushed by the bar.</p>
+      </dbx-content-container>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-loading-progress" hint="Component that displays the mat-progress-bar or mat-progress-spinner.">
+      <dbx-loading-progress [linear]="true"></dbx-loading-progress>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>
