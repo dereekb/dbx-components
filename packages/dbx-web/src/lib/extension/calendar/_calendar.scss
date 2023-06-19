@@ -51,6 +51,13 @@ $calendar-content-border-consideration: 2px;
       }
     }
 
+    .dbx-calendar-controls-right {
+      display: inline-flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
     .dbx-calendar-content {
       height: 100%;
 
