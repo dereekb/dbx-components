@@ -18,6 +18,7 @@ export interface DbxLoadingComponentState {
   template: `
     <dbx-basic-loading [show]="show" [color]="color" [text]="text" [mode]="mode" [linear]="linear" [diameter]="diameter" [error]="error$ | async" [loading]="loading$ | async">
       <ng-content loading select="[loading]"></ng-content>
+      <div class="dbx-loading-linear-done-padding" *ngIf="linear && padding && !(loading$ | async)"></div>
       <ng-content></ng-content>
       <ng-content error select="[error]"></ng-content>
       <ng-content errorAction select="[errorAction]"></ng-content>
@@ -73,6 +74,12 @@ export class DbxLoadingComponent implements OnDestroy {
 
   @Input()
   linear?: Maybe<boolean>;
+
+  /**
+   * Whether or not to add padding to the linear presentation when linear is complete. This prevents the linear bar from pushing content around.
+   */
+  @Input()
+  padding?: Maybe<boolean>;
 
   ngOnDestroy() {
     this._context.complete();

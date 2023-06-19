@@ -4,6 +4,7 @@
 @use '../error/error';
 @use '../interaction/interaction';
 @use '../layout/layout';
+@use '../loading/loading';
 @use '../router/router';
 @use '../extension/extension';
 
@@ -14,6 +15,7 @@
   @include action.all-action-typography($typography-config);
   @include interaction.all-interaction-typography($typography-config);
   @include layout.all-layout-typography($typography-config);
+  @include loading.typography($typography-config);
   @include router.all-router-typography($typography-config);
   @include extension.all-extension-typography($typography-config, $theme-config);
 }

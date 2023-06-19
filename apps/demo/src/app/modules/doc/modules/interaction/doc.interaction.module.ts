@@ -27,6 +27,7 @@ import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/
 import { DocInteractionTestDateFilterPopoverButtonComponent } from './component/filter.date.popover.button.component';
 import { DocInteractionTestDateFilterPresetFilterComponent } from './component/filter.date.preset.component';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
+import { DocInteractionLoadingComponent } from './container/loading.component';
 
 @NgModule({
   imports: [
@@ -55,6 +56,7 @@ import { DocInteractionTestFilterCustomFilterFormComponent } from './component/f
     // container
     DocInteractionLayoutComponent,
     DocInteractionHomeComponent,
+    DocInteractionLoadingComponent,
     DocInteractionButtonComponent,
     DocInteractionErrorComponent,
     DocInteractionDialogComponent,

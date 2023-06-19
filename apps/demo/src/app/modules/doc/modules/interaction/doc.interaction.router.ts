@@ -8,6 +8,7 @@ import { DocInteractionPromptComponent } from './container/prompt.component';
 import { DocInteractionFilterComponent } from './container/filter.component';
 import { DocInteractionButtonComponent } from './container/button.component';
 import { DocInteractionErrorComponent } from './container/error.component';
+import { DocInteractionLoadingComponent } from './container/loading.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/interaction',
@@ -32,6 +33,12 @@ export const docInteractionErrorState: Ng2StateDeclaration = {
   url: '/error',
   name: 'doc.interaction.error',
   component: DocInteractionErrorComponent
+};
+
+export const docInteractionLoadingState: Ng2StateDeclaration = {
+  url: '/loading',
+  name: 'doc.interaction.loading',
+  component: DocInteractionLoadingComponent
 };
 
 export const docInteractionDialogState: Ng2StateDeclaration = {
@@ -70,6 +77,7 @@ export const STATES: Ng2StateDeclaration[] = [
   homeState,
   docInteractionButtonState,
   docInteractionErrorState,
+  docInteractionLoadingState,
   docInteractionDialogState,
   docInteractionFilterState,
   docInteractionPromptState,

@@ -12,6 +12,12 @@ export const DOC_INTERACTION_ROUTES = [
     ref: 'doc.interaction.error'
   },
   {
+    icon: 'loading',
+    title: 'Loading',
+    detail: 'dbx-loading',
+    ref: 'doc.interaction.loading'
+  },
+  {
     icon: 'call_to_action',
     title: 'Dialog',
     detail: 'dbx-dialog',

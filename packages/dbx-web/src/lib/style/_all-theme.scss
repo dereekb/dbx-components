@@ -6,6 +6,7 @@
 @use '../layout/layout';
 @use '../router/router';
 @use '../extension/extension';
+@use '../loading/loading';
 
 // Includes all theming config
 @mixin all-component-themes($theme-config) {
@@ -14,6 +15,7 @@
   @include action.all-action-theme($theme-config);
   @include interaction.all-interaction-theme($theme-config);
   @include layout.all-layout-theme($theme-config);
+  @include loading.theme($theme-config);
   @include router.all-router-theme($theme-config);
   @include extension.all-extension-theme($theme-config);
 }

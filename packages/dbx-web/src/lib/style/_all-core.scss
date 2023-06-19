@@ -3,6 +3,7 @@
 @use '../error/error';
 @use '../interaction/interaction';
 @use '../layout/layout';
+@use '../loading/loading';
 @use '../router/router';
 @use '../extension/extension';
 
@@ -13,6 +14,7 @@
   @include action.all-action-core();
   @include interaction.all-interaction-core();
   @include layout.all-layout-core();
+  @include loading.core();
   @include router.all-router-core();
   @include extension.all-extension-core($theme-config);
 }
