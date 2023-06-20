@@ -992,7 +992,7 @@ export class DateBlockRange extends DateBlock {
   @Expose()
   @IsNumber()
   @IsOptional()
-  @Min(0) // TODO: Consider valdiating against i to make sure it is not less than i
+  @Min(0)
   to?: DateBlockIndex;
 
   constructor(template?: DateBlockRange) {
@@ -1001,6 +1001,57 @@ export class DateBlockRange extends DateBlock {
       this.to = template.to;
     }
   }
+}
+
+/**
+ * Returns true if the input is a valid DateBlockRange.
+ *
+ * @param input
+ * @returns
+ */
+export function isValidDateBlockRange(input: DateBlockRange): boolean {
+  const { i, to } = input;
+
+  if (!isValidDateBlockIndex(i)) {
+    return false;
+  } else if (to != null && (!isValidDateBlockIndex(to) || to < i)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Returns true if the input is a sorted DateBlockRange array and there are no repeat indexes.
+ *
+ * @param input
+ * @returns
+ */
+export function isValidDateBlockRangeSeries(input: DateBlockRange[]): boolean {
+  if (!Array.isArray(input)) {
+    return false;
+  }
+
+  const invalidRange = input.findIndex((range) => !isValidDateBlockRange(range));
+
+  if (invalidRange !== -1) {
+    return false;
+  }
+
+  let greatestValue = -1;
+
+  for (let i = 0; i < input.length; i += 1) {
+    const range = input[i];
+
+    if (range.i <= greatestValue) {
+      return false;
+    } else {
+      const greatestRangeValue = range.to || range.i; // to is greater than or equal to i in a valid date block range.
+      greatestValue = greatestRangeValue;
+    }
+  }
+
+  return true;
 }
 
 /**

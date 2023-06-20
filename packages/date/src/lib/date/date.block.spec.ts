@@ -38,7 +38,9 @@ import {
   sortDateBlockRanges,
   timingIsInExpectedTimezoneFunction,
   UniqueDateBlockRange,
-  allIndexesInDateBlockRanges
+  allIndexesInDateBlockRanges,
+  isValidDateBlockRange,
+  isValidDateBlockRangeSeries
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
@@ -60,6 +62,60 @@ describe('isValidDateBlockIndex()', () => {
 
   it('should return true for 100.', () => {
     expect(isValidDateBlockIndex(100)).toBe(true);
+  });
+});
+
+describe('isValidDateBlockRange()', () => {
+  it('should return false if to is less than i.', () => {
+    expect(isValidDateBlockRange({ i: 1, to: 0 })).toBe(false);
+  });
+
+  it('should return false if to is a non-integer.', () => {
+    expect(isValidDateBlockRange({ i: 0, to: 1.2 })).toBe(false);
+  });
+
+  it('should return false if i is negative', () => {
+    expect(isValidDateBlockRange({ i: -1 })).toBe(false);
+  });
+
+  it('should return false if i is a non-integer value.', () => {
+    expect(isValidDateBlockRange({ i: 1.2 })).toBe(false);
+  });
+
+  it('should return true if only i is provided', () => {
+    expect(isValidDateBlockRange({ i: 1 })).toBe(true);
+  });
+
+  it('should return true for a valid range.', () => {
+    expect(isValidDateBlockRange({ i: 1, to: 5 })).toBe(true);
+  });
+});
+
+describe('isValidDateBlockRangeSeries()', () => {
+  it('should return false if one input is not a valid series.', () => {
+    expect(isValidDateBlockRangeSeries([{ i: 1, to: 0 }])).toBe(false);
+  });
+
+  it('should return false if one index is repeated.', () => {
+    expect(
+      isValidDateBlockRangeSeries([
+        { i: 0, to: 2 },
+        { i: 2, to: 3 }
+      ])
+    ).toBe(false);
+  });
+
+  it('should return true for a single item series.', () => {
+    expect(isValidDateBlockRangeSeries([{ i: 0, to: 2 }])).toBe(true);
+  });
+
+  it('should return true for a valid series.', () => {
+    expect(
+      isValidDateBlockRangeSeries([
+        { i: 0, to: 2 },
+        { i: 3, to: 5 }
+      ])
+    ).toBe(true);
   });
 });
 
