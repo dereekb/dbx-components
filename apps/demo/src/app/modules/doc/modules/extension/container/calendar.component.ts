@@ -67,9 +67,15 @@ export class DocExtensionCalendarComponent implements OnInit {
       filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
       computeSelectionResultRelativeToFilter: true,
       initialSelectionState: 'all',
-      closeDialogConfig: {
-        closeText: 'Save Changes',
-        buttonColor: 'primary'
+      dialogContentConfig: {
+        dialogConfig: {
+          panelClass: 'dbx-schedule-selection-calendar-compact',
+          maxWidth: '420px'
+        },
+        closeConfig: {
+          closeText: 'Save Changes',
+          buttonColor: 'primary'
+        }
       }
     }),
     dateScheduleRangeField({

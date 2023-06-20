@@ -10,6 +10,7 @@ import { DateOrDateRangeOrDateBlockIndexOrDateBlockRange, DateRange, DateSchedul
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
+import { DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
 
 export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
   appearance?: MatFormFieldAppearance;
@@ -26,15 +27,21 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
   exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>>;
   /**
    * Custom close dialog config for the popup
+   *
+   * @deprecated Use dialogContentConfig instead.
    */
   closeDialogConfig?: Maybe<DbxDialogContentFooterConfig>;
+  /**
+   * Custom dialog content config for the popup
+   */
+  dialogContentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
 }
 
 @Component({
   template: `
     <div class="dbx-schedule-selection-field">
       <dbx-schedule-selection-calendar-date-range [showCustomize]="showCustomize" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
-        <dbx-schedule-selection-calendar-date-dialog-button [closeConfig]="closeDialogConfig" customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
+        <dbx-schedule-selection-calendar-date-dialog-button [contentConfig]="dialogContentConfig" [closeConfig]="closeDialogConfig" customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
       </dbx-schedule-selection-calendar-date-range>
     </div>
   `,
@@ -110,6 +117,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
   get closeDialogConfig() {
     return this.props.closeDialogConfig;
+  }
+
+  get dialogContentConfig() {
+    return this.props.dialogContentConfig;
   }
 
   get cellContentFactory() {

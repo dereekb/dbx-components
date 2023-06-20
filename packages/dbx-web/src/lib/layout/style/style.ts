@@ -1,6 +1,6 @@
 import { Maybe } from '@dereekb/util';
 
-export type DbxThemeColor = 'primary' | 'accent' | 'warn' | 'background' | 'grey' | 'disabled';
+export type DbxThemeColor = 'primary' | 'accent' | 'warn' | 'ok' | 'success' | 'background' | 'grey' | 'disabled';
 
 export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): string {
   let cssClass = 'dbx-bg';
@@ -11,6 +11,12 @@ export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): string {
       break;
     case 'accent':
       cssClass = 'dbx-accent-bg';
+      break;
+    case 'ok':
+      cssClass = 'dbx-ok-bg';
+      break;
+    case 'success':
+      cssClass = 'dbx-success-bg';
       break;
     case 'warn':
       cssClass = 'dbx-warn-bg';
