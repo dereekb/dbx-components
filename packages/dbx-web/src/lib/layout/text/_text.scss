@@ -147,8 +147,6 @@ $dbx-detail-block-content-offset: 30px;
     $outlined-text-color: $border-color;
   }
 
-  $ok-color: color.scale(blue, $lightness: 30%);
-  $success-color: green;
   $notice-color: #f28600;
 
   .dbx-hint,
@@ -158,14 +156,6 @@ $dbx-detail-block-content-offset: 30px;
 
   .dbx-faint {
     opacity: $faint-opacity;
-  }
-
-  .dbx-success {
-    color: $success-color;
-  }
-
-  .dbx-ok {
-    color: $ok-color;
   }
 
   .dbx-label,

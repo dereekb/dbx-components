@@ -1,6 +1,10 @@
 @use 'sass:map';
 @use 'sass:list';
+@use 'sass:color';
 @use '../../style/theming';
+
+$dbx-ok-color-var: --dbx-ok-color;
+$dbx-success-color-var: --dbx-success-color;
 
 // Sections
 @mixin core() {
@@ -95,6 +99,10 @@
   $background-text-color: theming.get-color-from-palette($foreground, 'text');
   $background-color: theming.get-color-from-palette($background, 'background');
 
+  // todo: consider adding color customization or setting as a variable
+  $ok-color: color.scale(blue, $lightness: 30%);
+  $success-color: green;
+
   .dbx-primary {
     color: $primary-color;
   }
@@ -119,6 +127,24 @@
 
   .dbx-warn-bg {
     background: $warn-color;
+    color: $warn-color-contrast;
+  }
+
+  .dbx-success {
+    color: $success-color;
+  }
+
+  .dbx-success-bg {
+    background: $success-color;
+    color: $warn-color-contrast;
+  }
+
+  .dbx-ok {
+    color: $ok-color;
+  }
+
+  .dbx-ok-bg {
+    background: $ok-color;
     color: $warn-color-contrast;
   }
 
