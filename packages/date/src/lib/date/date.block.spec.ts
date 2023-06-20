@@ -40,7 +40,8 @@ import {
   UniqueDateBlockRange,
   allIndexesInDateBlockRanges,
   isValidDateBlockRange,
-  isValidDateBlockRangeSeries
+  isValidDateBlockRangeSeries,
+  getGreatestDateBlockIndexInDateBlockRanges
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
@@ -116,6 +117,22 @@ describe('isValidDateBlockRangeSeries()', () => {
         { i: 3, to: 5 }
       ])
     ).toBe(true);
+  });
+});
+
+describe('getGreatestDateBlockIndexInDateBlockRanges()', () => {
+  it('should return 0 for empty arrays.', () => {
+    const greatestIndex = 0;
+
+    const result = getGreatestDateBlockIndexInDateBlockRanges([]);
+    expect(result).toBe(greatestIndex);
+  });
+
+  it('should return the largest index in the input ranges.', () => {
+    const greatestIndex = 100;
+
+    const result = getGreatestDateBlockIndexInDateBlockRanges([{ i: 0 }, { i: 12, to: 23 }, { i: 40, to: greatestIndex }, { i: 50, to: 55 }]);
+    expect(result).toBe(greatestIndex);
   });
 });
 

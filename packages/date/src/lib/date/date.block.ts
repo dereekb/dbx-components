@@ -1038,20 +1038,40 @@ export function isValidDateBlockRangeSeries(input: DateBlockRange[]): boolean {
     return false;
   }
 
-  let greatestValue = -1;
+  let greatestIndex = -1;
 
   for (let i = 0; i < input.length; i += 1) {
     const range = input[i];
 
-    if (range.i <= greatestValue) {
+    if (range.i <= greatestIndex) {
       return false;
     } else {
-      const greatestRangeValue = range.to || range.i; // to is greater than or equal to i in a valid date block range.
-      greatestValue = greatestRangeValue;
+      const nextGreatestIndex = range.to || range.i; // to is greater than or equal to i in a valid date block range.
+      greatestIndex = nextGreatestIndex;
     }
   }
 
   return true;
+}
+
+/**
+ * Returns the largest index between all the input date block ranges. Returns 0 by default.
+ *
+ * The input range is not expected to be sorted.
+ */
+export function getGreatestDateBlockIndexInDateBlockRanges(input: DateBlockRange[]): DateBlockIndex {
+  let greatestIndex = 0;
+
+  for (let i = 0; i < input.length; i += 1) {
+    const range = input[i];
+    const greatestRangeIndex = range.to || range.i;
+
+    if (greatestRangeIndex > greatestIndex) {
+      greatestIndex = greatestRangeIndex;
+    }
+  }
+
+  return greatestIndex;
 }
 
 /**
