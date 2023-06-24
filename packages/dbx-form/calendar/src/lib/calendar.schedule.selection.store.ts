@@ -32,7 +32,10 @@ import {
   isInfiniteDateRange,
   copyHoursAndMinutesFromDate,
   dateTimezoneUtcNormal,
-  DateTimezoneUtcNormalInstance
+  DateTimezoneUtcNormalInstance,
+  expandDateScheduleRange,
+  DateBlock,
+  DateBlockDurationSpan
 } from '@dereekb/date';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue } from '@dereekb/util';
@@ -92,7 +95,7 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   indexFactory: DateTimingRelativeIndexFactory;
   /**
-   * Array of manually selected dates.
+   * Array of manually selected dates within the picked range. This is not the set of all enabled indexes.
    *
    * Values that exist outside of the "input" range are considered toggled on, while those
    * that are selected within the range are considered toggled off.
@@ -259,6 +262,9 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly inputRange$: Observable<CalendarScheduleSelectionInputDateRange> = this.currentInputRange$.pipe(filterMaybe(), shareReplay(1));
 
+  /**
+   * @deprecated This is not the same as the current selection value. This is the set of manually togged off dates. It will be removed in a future update.
+   */
   readonly selectedDates$: Observable<Set<DateBlockIndex>> = this.state$.pipe(
     map((x) => x.selectedIndexes),
     distinctUntilChanged(),
@@ -359,6 +365,16 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   );
 
   readonly selectionValue$ = this.currentSelectionValueWithTimezone$.pipe(filterMaybe(), shareReplay(1));
+
+  readonly selectionValueDateBlockDurationSpan$: Observable<DateBlockDurationSpan<DateBlock>[]> = this.selectionValue$.pipe(
+    map((x) => expandDateScheduleRange(x)),
+    shareReplay(1)
+  );
+
+  readonly selectionValueSelectedIndexes$: Observable<Set<DateBlockIndex>> = this.selectionValueDateBlockDurationSpan$.pipe(
+    map((x) => new Set(x.map((y) => y.i))),
+    shareReplay(1)
+  );
 
   readonly currentDateScheduleRangeValue$ = this.currentSelectionValueWithTimezone$.pipe(
     map((x) => x?.dateScheduleRange),

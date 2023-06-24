@@ -56,7 +56,14 @@ $dbx-detail-block-content-offset: 30px;
     padding-left: $dbx-detail-block-content-offset;
   }
 
+  .dbx-detail-line {
+    display: block;
+    padding-top: 3px;
+  }
+
   .dbx-detail-block {
+    display: block;
+
     .dbx-detail-block-header {
       padding-bottom: 2px;
 
