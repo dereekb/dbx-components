@@ -120,6 +120,6 @@ export function splitJoinNameString(input: string): FirstNameLastNameTuple {
 export function joinStringsWithSpaces(input: Maybe<string>[]): string {
   return input
     .map((x) => x?.trim())
-    .filter((x) => !x)
+    .filter((x) => Boolean(x))
     .join(' ');
 }

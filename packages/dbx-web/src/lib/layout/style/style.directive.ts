@@ -9,16 +9,16 @@ import { delay } from 'rxjs';
 @Directive({
   selector: 'dbx-style, [dbxStyle], .dbx-style',
   host: {
-    '[class]': 'style'
+    '[class]': 'cssClass'
   }
 })
 export class DbxStyleDirective extends AbstractSubscriptionDirective {
-  style = '';
+  cssClass = '';
 
   constructor(readonly styleService: DbxStyleService, private cdRef: ChangeDetectorRef) {
     super(
-      styleService.style$.pipe(delay(0)).subscribe((style) => {
-        this.style = style;
+      styleService.style$.pipe(delay(0)).subscribe((classes) => {
+        this.cssClass = classes;
         safeDetectChanges(this.cdRef);
       })
     );

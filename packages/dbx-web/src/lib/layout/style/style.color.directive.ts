@@ -8,14 +8,14 @@ import { Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxColor]',
   host: {
-    '[class]': 'style'
+    '[class]': 'cssClass'
   }
 })
 export class DbxColorDirective {
-  style = '';
+  cssClass = '';
 
   @Input()
   set dbxColor(dbxColor: Maybe<DbxThemeColor | ''>) {
-    this.style = dbxColorBackground(dbxColor);
+    this.cssClass = dbxColorBackground(dbxColor);
   }
 }
