@@ -2,10 +2,10 @@ import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection, systemBaseDateToNormalDate } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns/esm';
-import { Maybe, TimezoneString, range } from '@dereekb/util';
+import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
-import { dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
-import { BehaviorSubject, of } from 'rxjs';
+import { CalendarScheduleSelectionDayState, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
 import { timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
@@ -136,6 +136,31 @@ export class DocExtensionCalendarComponent implements OnInit {
   ];
 
   readonly date$ = this.calendarStore.date$;
+
+  readonly scheduleConfig$ = interval(5000).pipe(
+    startWith(0),
+    map((i) => {
+      const even = isEvenNumber(i);
+      const x: Building<DbxScheduleSelectionCalendarComponentConfig> = {};
+
+      if (even) {
+        x.customizeDay = (x, y) => {
+          if (x.meta?.state !== CalendarScheduleSelectionDayState.SELECTED) {
+            x.backgroundColor = 'red';
+          }
+        };
+      } else {
+        x.customizeDay = (x, y) => {
+          if (x.meta?.state !== CalendarScheduleSelectionDayState.SELECTED) {
+            x.backgroundColor = 'green';
+          }
+        };
+      }
+
+      return x as DbxScheduleSelectionCalendarComponentConfig;
+    }),
+    shareReplay(1)
+  );
 
   constructor(readonly calendarStore: DbxCalendarStore<TestCalendarEventData>) {}
 

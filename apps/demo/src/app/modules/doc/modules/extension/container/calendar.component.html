@@ -47,8 +47,11 @@
       <dbx-subsection header="The Default" hint="This is the base selection calendar with no configuration. Also displayed below are the individual components.">
         <doc-extension-calendar-schedule-example></doc-extension-calendar-schedule-example>
       </dbx-subsection>
-      <dbx-subsection header=".dbx-schedule-selection-calendar-compact" hint="Optional css class to apply that reduces the vertical size of all the squares in the calendar. Custom content is hidden/ignored.">
+      <dbx-subsection header=".dbx-schedule-selection-calendar-compact" hint="Optional css class to apply that reduces the vertical size of all the squares in the calendar. Custom icon content is hidden/ignored.">
         <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
+        <h3>Other Customization</h3>
+        <p>Can customize the calendar days of the month more directly.</p>
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
       </dbx-subsection>
     </doc-feature-example>
   </doc-feature-layout>

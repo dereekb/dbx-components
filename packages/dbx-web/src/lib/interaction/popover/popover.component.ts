@@ -6,7 +6,7 @@ import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
-import { asPromise, Maybe, PromiseOrValue } from '@dereekb/util';
+import { ArrayOrValue, asPromise, Maybe, PromiseOrValue, SpaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxPopoverController, DbxPopoverKey } from './popover';
 
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
@@ -39,6 +39,10 @@ export interface DbxPopoverComponentConfig<O, I, T> {
    */
   componentClass: Type<T>;
   /**
+   * Panel classes to add to the popover.
+   */
+  panelClass?: Maybe<SpaceSeparatedCssClasses>;
+  /**
    * Data available to the popover.
    */
   data?: Maybe<I>;
@@ -66,7 +70,10 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
     {
       provide: CompactContextStore
     }
-  ]
+  ],
+  host: {
+    '[class]': 'config.panelClass'
+  }
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
   readonly lockSet = new LockSet();
@@ -132,6 +139,10 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
 
   get config(): FullDbxPopoverComponentConfig<O, I, T> {
     return this.popoverRef.data;
+  }
+
+  get panelClass(): Maybe<SpaceSeparatedCssClasses> {
+    return this.config.panelClass;
   }
 
   get key(): DbxPopoverKey {

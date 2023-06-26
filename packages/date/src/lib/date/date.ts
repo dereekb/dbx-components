@@ -1,5 +1,5 @@
 import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
-import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString, ISO8601DayString } from '@dereekb/util';
+import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString, ISO8601DayString, DayOfWeek, dayOfWeek } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
 
@@ -277,6 +277,31 @@ export const findMinDate = reduceDatesFunction(minDate);
  * Finds the maximum date in the input. If no dates are input, returns undefined.
  */
 export const findMaxDate = reduceDatesFunction(maxDate);
+
+/**
+ * Reads the unique days of the week from the given dates, until all the unique dates are returned.
+ *
+ * @param values
+ * @param readDate
+ */
+export function readDaysOfWeek<T>(values: T[], readDate: ReadDateFunction<T>): Set<DayOfWeek> {
+  let result = new Set<DayOfWeek>();
+
+  for (const value of values) {
+    const date = readDate(value);
+    const day = dayOfWeek(date);
+
+    if (!result.has(day)) {
+      result.add(day);
+
+      if (result.size === 7) {
+        break; // got all the days
+      }
+    }
+  }
+
+  return result;
+}
 
 // MARK: Compat
 /**

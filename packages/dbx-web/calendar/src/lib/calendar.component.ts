@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { CalendarEvent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';
-import { map, shareReplay, withLatestFrom } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, withLatestFrom } from 'rxjs';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { DbxCalendarEvent, prepareAndSortCalendarEvents } from './calendar';
 
@@ -26,7 +26,9 @@ export class DbxCalendarComponent<T> implements OnDestroy {
       }
 
       return false;
-    })
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   readonly displayType$ = this.calendarStore.displayType$;

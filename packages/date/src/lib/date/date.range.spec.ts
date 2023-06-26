@@ -1,6 +1,6 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
-import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction, transformDateRangeToTimezoneFunction } from './date.range';
+import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction, transformDateRangeToTimezoneFunction } from './date.range';
 
 describe('dateRange()', () => {
   const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
@@ -468,5 +468,37 @@ describe('transformDateRangeToTimezone()', () => {
       expect(result.start).toBeSameSecondAs(expectedStart);
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });
+  });
+});
+
+describe('getDaysOfWeekInDateRange()', () => {
+  it('should return the days of the week in the date range.', () => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 0 });
+    const end = endOfWeek(new Date(), { weekStartsOn: 0 });
+
+    const result = getDaysOfWeekInDateRange({ start, end });
+    expect(result.length).toBe(7);
+    expect(result).toContain(0);
+    expect(result).toContain(6);
+  });
+
+  it('should return the days of the week in the 3 day date range from sunday.', () => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 0 });
+    const end = addDays(start, 2);
+
+    const result = getDaysOfWeekInDateRange({ start, end });
+    expect(result.length).toBe(3);
+    expect(result).toContain(0);
+    expect(result).toContain(1);
+    expect(result).toContain(2);
+  });
+
+  it('should return the days of the week in the 13 day date range from sunday and maintains order.', () => {
+    const start = addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), 3);
+    const end = addDays(start, 10);
+
+    const result = getDaysOfWeekInDateRange({ start, end });
+    expect(result.length).toBe(7);
+    expect(result).toEqual([3, 4, 5, 6, 0, 1, 2]);
   });
 });

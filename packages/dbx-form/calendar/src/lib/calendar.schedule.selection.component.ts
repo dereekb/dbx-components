@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Output, OnDestroy, Input, OnInit } from '@angular/core';
 import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
-import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable } from 'rxjs';
+import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, Maybe } from '@dereekb/util';
-import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
+import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
 import { DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { ObservableOrValueGetter } from '@dereekb/rxjs';
+import { ObservableOrValue, ObservableOrValueGetter, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
 
 export interface DbxScheduleSelectionCalendarComponentConfig {
@@ -18,6 +18,65 @@ export interface DbxScheduleSelectionCalendarComponentConfig {
    * Configuration for displaying a custom selection button. When null/undefined/true is passed, will show the default DbxScheduleSelectionCalendarDatePopoverButtonComponent.
    */
   readonly buttonInjectionConfig?: Maybe<ObservableOrValueGetter<Maybe<DbxInjectionComponentConfig<any> | boolean>>>;
+  /**
+   * Customize day function. When a new function is piped through the calendar is refreshed.
+   */
+  readonly customizeDay?: Maybe<ObservableOrValue<Maybe<DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction>>>;
+  /**
+   * Optional full control over the beforeMonthViewRender
+   */
+  readonly beforeMonthViewRenderFunctionFactory?: Maybe<ObservableOrValue<DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory>>;
+}
+
+export type DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction = (viewDay: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>, state: CalendarScheduleSelectionState) => void;
+
+export type DbxScheduleSelectionCalendarBeforeMonthViewRenderFunction = (renderEvent: CalendarMonthViewBeforeRenderEvent) => void;
+
+export type DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory = (state: Observable<CalendarScheduleSelectionState>) => DbxScheduleSelectionCalendarBeforeMonthViewRenderFunction;
+
+export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputModifyFn?: Maybe<DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction>): DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory {
+  const modifyFn = inputModifyFn || (() => {});
+
+  return (state$: Observable<CalendarScheduleSelectionState>) => {
+    return (renderEvent: CalendarMonthViewBeforeRenderEvent) => {
+      const { body }: { body: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>[] } = renderEvent;
+
+      // use latest/current state
+      state$.pipe(first()).subscribe((calendarScheduleState: CalendarScheduleSelectionState) => {
+        const { isEnabledDay, indexFactory, isEnabledFilterDay, allowedDaysOfWeek } = calendarScheduleState;
+        body.forEach((viewDay) => {
+          const { date } = viewDay;
+          const i = indexFactory(date);
+          const day = date.getDay();
+
+          let state: CalendarScheduleSelectionDayState;
+
+          if (!isEnabledFilterDay(i)) {
+            viewDay.cssClass = 'cal-day-not-applicable';
+            state = CalendarScheduleSelectionDayState.NOT_APPLICABLE;
+          } else if (!allowedDaysOfWeek.has(day as DayOfWeek)) {
+            viewDay.cssClass = 'cal-day-disabled';
+            state = CalendarScheduleSelectionDayState.DISABLED;
+          } else if (isEnabledDay(i)) {
+            viewDay.cssClass = 'cal-day-selected';
+            state = CalendarScheduleSelectionDayState.SELECTED;
+          } else {
+            viewDay.cssClass = 'cal-day-not-selected';
+            state = CalendarScheduleSelectionDayState.NOT_SELECTED;
+          }
+
+          const meta = {
+            state,
+            i
+          };
+
+          viewDay.meta = meta;
+
+          modifyFn(viewDay, calendarScheduleState);
+        });
+      });
+    };
+  };
 }
 
 @Component({
@@ -44,7 +103,23 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
 
   // refresh any time the selected day function updates
   readonly state$ = this.dbxCalendarScheduleSelectionStore.state$;
-  readonly refresh$ = this.state$.pipe(
+
+  readonly beforeMonthViewRender$ = this._config.pipe(
+    switchMap((x) => {
+      let factory: Observable<DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory>;
+
+      if (x.beforeMonthViewRenderFunctionFactory) {
+        factory = asObservable(x.beforeMonthViewRenderFunctionFactory);
+      } else {
+        factory = asObservable(x.customizeDay).pipe(map((x) => dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(x)));
+      }
+
+      return factory.pipe(map((x) => x(this.state$)));
+    }),
+    shareReplay(1)
+  );
+
+  readonly refresh$ = combineLatest([this.state$, this.beforeMonthViewRender$]).pipe(
     throttleTime(100),
     map(() => undefined)
   ) as Subject<undefined>;
@@ -69,8 +144,8 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     return this._config.value;
   }
 
-  set config(config: DbxScheduleSelectionCalendarComponentConfig) {
-    this._config.next(config);
+  set config(config: Maybe<DbxScheduleSelectionCalendarComponentConfig>) {
+    this._config.next(config ?? {});
   }
 
   dayClicked({ date }: { date: Date }): void {
@@ -82,34 +157,8 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   }
 
   beforeMonthViewRender(renderEvent: CalendarMonthViewBeforeRenderEvent): void {
-    const { body }: { body: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>[] } = renderEvent;
-    this.state$.pipe(first()).subscribe(({ isEnabledDay, indexFactory, isEnabledFilterDay, allowedDaysOfWeek }) => {
-      body.forEach((viewDay) => {
-        const { date } = viewDay;
-        const i = indexFactory(date);
-        const day = date.getDay();
-
-        let state: CalendarScheduleSelectionDayState;
-
-        if (!isEnabledFilterDay(i)) {
-          viewDay.cssClass = 'cal-day-not-applicable';
-          state = CalendarScheduleSelectionDayState.NOT_APPLICABLE;
-        } else if (!allowedDaysOfWeek.has(day as DayOfWeek)) {
-          viewDay.cssClass = 'cal-day-disabled';
-          state = CalendarScheduleSelectionDayState.DISABLED;
-        } else if (isEnabledDay(i)) {
-          viewDay.cssClass = 'cal-day-selected';
-          state = CalendarScheduleSelectionDayState.SELECTED;
-        } else {
-          viewDay.cssClass = 'cal-day-not-selected';
-          state = CalendarScheduleSelectionDayState.NOT_SELECTED;
-        }
-
-        viewDay.meta = {
-          state,
-          i
-        };
-      });
+    this.beforeMonthViewRender$.pipe(first()).subscribe((x) => {
+      x(renderEvent);
     });
   }
 }

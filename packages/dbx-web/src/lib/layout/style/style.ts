@@ -1,8 +1,8 @@
-import { Maybe } from '@dereekb/util';
+import { CssClass, Maybe } from '@dereekb/util';
 
 export type DbxThemeColor = 'primary' | 'accent' | 'warn' | 'ok' | 'success' | 'background' | 'grey' | 'disabled';
 
-export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): string {
+export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
   let cssClass = 'dbx-bg';
 
   switch (color) {

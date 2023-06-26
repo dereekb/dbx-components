@@ -1,4 +1,4 @@
-import { splitJoinNameString, splitJoinRemainder } from './string';
+import { joinStringsWithSpaces, splitJoinNameString, splitJoinRemainder } from './string';
 
 describe('splitJoinRemainder()', () => {
   it('should handle having a single value', () => {
@@ -59,5 +59,17 @@ describe('splitJoinNameString()', () => {
 
     expect(result[0]).toBe(first);
     expect(result[1]).toBe(last);
+  });
+});
+
+describe('joinStringsWithSpaces()', () => {
+  it('should join the input strings.', () => {
+    const result = joinStringsWithSpaces(['a', 'b', 'c']);
+    expect(result).toBe('a b c');
+  });
+
+  it('should join the input strings and ignore undefined values.', () => {
+    const result = joinStringsWithSpaces(['a', undefined, 'b', null, 'c']);
+    expect(result).toBe('a b c');
   });
 });

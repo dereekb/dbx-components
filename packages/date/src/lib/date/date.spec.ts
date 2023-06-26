@@ -1,7 +1,7 @@
-import { isSameDateDay } from '@dereekb/date';
-import { isISO8601DateString, isUTCDateString } from '@dereekb/util';
-import { parseISO, addMinutes, addDays } from 'date-fns';
-import { parseJsDateString } from './date';
+import { expandDaysForDateRange, getDaysOfWeekInDateRange, isSameDateDay, iterateDaysInDateRange } from '@dereekb/date';
+import { Day, isISO8601DateString, isUTCDateString } from '@dereekb/util';
+import { parseISO, addMinutes, addDays, endOfWeek, startOfWeek } from 'date-fns';
+import { parseJsDateString, readDaysOfWeek } from './date';
 
 describe('isSameDateDay()', () => {
   const dateAString = '2020-04-30T00:00:00.000';
@@ -52,5 +52,53 @@ describe('parseJsDateString()', () => {
 
     const result = parseJsDateString(dateString);
     expect(result).toBeSameSecondAs(new Date(dateString));
+  });
+});
+
+describe('readDaysOfWeek()', () => {
+  it('should return the days of the week given the input days.', () => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 0 });
+    const end = endOfWeek(new Date(), { weekStartsOn: 0 });
+    const allDatesInRange = expandDaysForDateRange({ start, end });
+
+    const result = readDaysOfWeek(allDatesInRange, (x) => x);
+    expect(result.size).toBe(7);
+    expect(result).toContain(0);
+    expect(result).toContain(6);
+  });
+
+  it('should return the days of the week given the input days for a month.', () => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 0 });
+    const end = addDays(start, 30);
+    const allDatesInRange = expandDaysForDateRange({ start, end });
+
+    const result = readDaysOfWeek(allDatesInRange, (x) => x);
+    expect(result.size).toBe(7);
+    expect(result).toContain(0);
+    expect(result).toContain(6);
+  });
+
+  it('should return the days of the week given the input days from sunday.', () => {
+    const start = startOfWeek(new Date(), { weekStartsOn: 0 });
+    const end = addDays(start, 2);
+    const allDatesInRange = expandDaysForDateRange({ start, end });
+
+    const result = readDaysOfWeek(allDatesInRange, (x) => x);
+    expect(result.size).toBe(3);
+    expect(result).toContain(0);
+    expect(result).toContain(1);
+    expect(result).toContain(2);
+  });
+
+  it('should return the days of the week given the input days from wednesday.', () => {
+    const start = startOfWeek(new Date(), { weekStartsOn: Day.WEDNESDAY });
+    const end = addDays(start, 2);
+    const allDatesInRange = expandDaysForDateRange({ start, end });
+
+    const result = readDaysOfWeek(allDatesInRange, (x) => x);
+    expect(result.size).toBe(3);
+    expect(result).toContain(Day.WEDNESDAY);
+    expect(result).toContain(Day.THURSDAY);
+    expect(result).toContain(Day.FRIDAY);
   });
 });
