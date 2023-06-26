@@ -1,11 +1,11 @@
 import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
-import { getDay } from 'date-fns';
+import { addDays, getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
 import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { DateRange, isSameDateRange } from './date.range';
+import { DateRange, isSameDateRange, iterateDaysInDateRangeFunction } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {

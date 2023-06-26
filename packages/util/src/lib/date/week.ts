@@ -26,6 +26,31 @@ export function dayOfWeek(date: Date) {
 }
 
 /**
+ * Returns all days of the week starting from the given day up to the specified number of days.
+ *
+ * Returns 7 days by default.
+ *
+ * @param startingOn
+ */
+export function daysOfWeekArray(startingOn: DayOfWeek = Day.SUNDAY, maxDays: number = 7): DayOfWeek[] {
+  const days: DayOfWeek[] = [];
+
+  let day: DayOfWeek = startingOn;
+
+  while (days.length < maxDays) {
+    days.push(day);
+
+    if (day === Day.SATURDAY) {
+      day = Day.SUNDAY;
+    } else {
+      day += 1;
+    }
+  }
+
+  return days;
+}
+
+/**
  * Enum for the days of the week.
  */
 export enum Day {
@@ -101,20 +126,61 @@ export function daysOfWeekFromEnabledDays(input: Maybe<EnabledDays>): Day[] {
   return daysOfWeek;
 }
 
+export interface DayOfWeekNamesTransformConfig {
+  /**
+   * Whether or not to abbreviate the day names.
+   *
+   * I.E. Mon, Tue, etc.
+   */
+  abbreviation?: boolean;
+  /**
+   * Whether or not to uppercase the days.
+   *
+   * I.E. MONDAY, TUE, etc.
+   */
+  uppercase?: boolean;
+}
+
 /**
  * Returns an array of strinsg with each day of the week named.
  *
  * @returns
  */
-export function getDaysOfWeekNames(sundayFirst = true) {
+export function getDaysOfWeekNames(sundayFirst = true, transform?: DayOfWeekNamesTransformConfig): string[] {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const sunday = 'Sunday';
 
+  let dayOfWeekNames: string[];
+
   if (sundayFirst) {
-    return [sunday, ...days];
+    dayOfWeekNames = [sunday, ...days];
   } else {
-    return [...days, sunday];
+    dayOfWeekNames = [...days, sunday];
   }
+
+  if (transform != null) {
+    if (transform.abbreviation) {
+      dayOfWeekNames = dayOfWeekNames.map((x) => x.slice(0, 3));
+    }
+
+    if (transform.uppercase) {
+      dayOfWeekNames = dayOfWeekNames.map((x) => x.toUpperCase());
+    }
+  }
+
+  return dayOfWeekNames;
+}
+
+export function daysOfWeekNameMap(transform?: DayOfWeekNamesTransformConfig): Map<DayOfWeek, string> {
+  let dayOfWeekNames = getDaysOfWeekNames(true, transform);
+  return new Map<DayOfWeek, string>(dayOfWeekNames.map((x, i) => [i as DayOfWeek, x]));
+}
+
+export type DayOfWeekNameFunction = (dayOfWeek: DayOfWeek) => string;
+
+export function daysOfWeekNameFunction(transform?: DayOfWeekNamesTransformConfig): DayOfWeekNameFunction {
+  const map = daysOfWeekNameMap(transform);
+  return (dayOfWeek: DayOfWeek) => map.get(dayOfWeek) ?? 'UNKNOWN';
 }
 
 export function getDayTomorrow(day: DayOfWeek): DayOfWeek {

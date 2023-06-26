@@ -1,4 +1,4 @@
-import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString } from '@dereekb/util';
+import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString, DayOfWeek, dayOfWeek, daysOfWeekArray } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
@@ -387,6 +387,19 @@ export const DEFAULT_ITERATE_DAYS_IN_DATE_RANGE_MAX_ITERATIONS = 4000;
 
 export type IterateDaysInDateRangeFunctionConfigInput = IterateDaysInDateRangeFunctionConfig | IterateDaysGetNextValueFunction;
 
+export class IterateDaysInDateRangeFunctionBailError extends Error {
+  constructor(message: string = 'bail out') {
+    super(message);
+  }
+}
+
+/**
+ * Call to end iterating days in a date range early.
+ */
+export function endItreateDaysInDateRangeEarly() {
+  throw new IterateDaysInDateRangeFunctionBailError();
+}
+
 /**
  * Creates an IterateDaysInDateRangeFunction
  *
@@ -402,17 +415,23 @@ export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunc
     let current = start;
     const results: T[] = [];
 
-    while (!isAfter(current, end)) {
-      const result = forEachFn(current);
-      results.push(result);
-      current = getNextDate(current);
+    try {
+      while (!isAfter(current, end)) {
+        const result = forEachFn(current);
+        results.push(result);
+        current = getNextDate(current);
 
-      if (results.length >= maxIterations) {
-        if (throwErrorOnMaxIterations) {
-          throw new Error(`iterateDaysInDateRangeFunction() reached max configured iterations of ${maxIterations}`);
-        } else {
-          break;
+        if (results.length >= maxIterations) {
+          if (throwErrorOnMaxIterations) {
+            throw new Error(`iterateDaysInDateRangeFunction() reached max configured iterations of ${maxIterations}`);
+          } else {
+            break;
+          }
         }
+      }
+    } catch (e) {
+      if (!(e instanceof IterateDaysInDateRangeFunctionBailError)) {
+        throw e;
       }
     }
 
@@ -773,6 +792,31 @@ export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezone
 export interface DateRangeWithDateOrStringValue {
   start: DateOrDateString | ISO8601DayString;
   end: DateOrDateString | ISO8601DayString;
+}
+
+/**
+ * Returns each unique day of the week in the date range in the order they appear.
+ *
+ * @param dateRange
+ */
+export function getDaysOfWeekInDateRange(dateRange: DateRange): DayOfWeek[] {
+  let days: DayOfWeek[] = [];
+
+  const daysRange = differenceInDays(dateRange.start, dateRange.end);
+
+  if (daysRange >= 7) {
+    return daysOfWeekArray(dayOfWeek(dateRange.start));
+  }
+
+  forEachDayInDateRange(dateRange, (day) => {
+    days.push(dayOfWeek(day));
+
+    if (days.length >= 7) {
+      endItreateDaysInDateRangeEarly();
+    }
+  });
+
+  return days;
 }
 
 // MARK: Compat
