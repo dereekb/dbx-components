@@ -37,7 +37,7 @@ import {
   DateBlock,
   DateBlockDurationSpan
 } from '@dereekb/date';
-import { filterMaybe } from '@dereekb/rxjs';
+import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
@@ -330,6 +330,19 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly currentSelectionValueDateBlockDurationSpan$: Observable<DateBlockDurationSpan<DateBlock>[]> = this.currentSelectionValue$.pipe(
+    map((x) => (x ? expandDateScheduleRange(x) : [])),
+    shareReplay(1)
+  );
+
+  readonly selectionValueSelectedIndexes$: Observable<Set<DateBlockIndex>> = this.currentSelectionValueDateBlockDurationSpan$.pipe(
+    map((x) => new Set(x.map((y) => y.i))),
+    distinctUntilHasDifferentValues(),
+    shareReplay(1)
+  );
+
+  readonly selectionValue$ = this.currentSelectionValue$.pipe(filterMaybe(), shareReplay(1));
+
   readonly currentSelectionValueWithTimezone$ = this.currentSelectionValue$.pipe(
     combineLatestWith(this.effectiveTimezoneNormal$),
     map(([x, timezoneNormal]) => {
@@ -349,6 +362,13 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly selectionValueWithTimezone$ = this.currentSelectionValueWithTimezone$.pipe(filterMaybe(), shareReplay(1));
+
+  readonly selectionValueWithTimezoneDateBlockDurationSpan$: Observable<DateBlockDurationSpan<DateBlock>[]> = this.selectionValueWithTimezone$.pipe(
+    map((x) => expandDateScheduleRange(x)),
+    shareReplay(1)
+  );
+
   readonly nextToggleSelection$: Observable<Maybe<AllOrNoneSelection>> = this.hasConfiguredMinMaxRange$.pipe(
     switchMap((hasConfiguredMinMaxRange) => {
       let obs: Observable<Maybe<AllOrNoneSelection>>;
@@ -361,18 +381,6 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
       return obs;
     }),
-    shareReplay(1)
-  );
-
-  readonly selectionValue$ = this.currentSelectionValueWithTimezone$.pipe(filterMaybe(), shareReplay(1));
-
-  readonly selectionValueDateBlockDurationSpan$: Observable<DateBlockDurationSpan<DateBlock>[]> = this.selectionValue$.pipe(
-    map((x) => expandDateScheduleRange(x)),
-    shareReplay(1)
-  );
-
-  readonly selectionValueSelectedIndexes$: Observable<Set<DateBlockIndex>> = this.selectionValueDateBlockDurationSpan$.pipe(
-    map((x) => new Set(x.map((y) => y.i))),
     shareReplay(1)
   );
 

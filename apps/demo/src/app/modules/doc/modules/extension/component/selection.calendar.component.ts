@@ -1,13 +1,17 @@
 import { Component, Input } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
 import { Maybe } from '@dereekb/util';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'doc-extension-calendar-schedule-example',
   template: `
     <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
     <dbx-content-border>
-      <p>Selection: {{ calendarSelectionValue$ | async | json }}</p>
+      <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
+      <p>currentSelectionValueDateBlockDurationSpan$: {{ currentSelectionValueDateBlockDurationSpan$ | async | json }}</p>
+      <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
+      <p>selectionValueWithTimezoneDateBlockDurationSpan$: {{ selectionValueWithTimezoneDateBlockDurationSpan$ | async | json }}</p>
     </dbx-content-border>
     <dbx-subsection *ngIf="!config" header="Selector Components">
       <dbx-subsection header="dbx-schedule-selection-calendar-date-range" hint="Component used to control and set the date range.">
@@ -26,7 +30,10 @@ export class DocExtensionCalendarScheduleSelectionComponent {
   @Input()
   config?: Maybe<DbxScheduleSelectionCalendarComponentConfig>;
 
-  readonly calendarSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
+  readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
+  readonly currentSelectionValueDateBlockDurationSpan$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateBlockDurationSpan$;
+  readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));
+  readonly selectionValueWithTimezoneDateBlockDurationSpan$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateBlockDurationSpan$;
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 }
