@@ -16,3 +16,5 @@ export function sortByNumberFunction<T>(readNumberFn: ReadNumberFunction<T>): So
     return as - bs;
   };
 }
+
+export const sortNumbersAscendingFunction: SortByNumberFunction<number> = sortByNumberFunction<number>((a) => a);

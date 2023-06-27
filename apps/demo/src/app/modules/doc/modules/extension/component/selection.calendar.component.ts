@@ -8,10 +8,12 @@ import { map } from 'rxjs';
   template: `
     <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
     <dbx-content-border>
-      <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
-      <p>currentSelectionValueDateBlockDurationSpan$: {{ currentSelectionValueDateBlockDurationSpan$ | async | json }}</p>
-      <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
-      <p>selectionValueWithTimezoneDateBlockDurationSpan$: {{ selectionValueWithTimezoneDateBlockDurationSpan$ | async | json }}</p>
+      <dbx-content-pit>
+        <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
+        <p>currentSelectionValueDateBlockDurationSpan$: {{ currentSelectionValueDateBlockDurationSpan$ | async | json }}</p>
+        <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
+        <p>selectionValueWithTimezoneDateBlockDurationSpan$: {{ selectionValueWithTimezoneDateBlockDurationSpan$ | async | json }}</p>
+      </dbx-content-pit>
     </dbx-content-border>
     <dbx-subsection *ngIf="!config" header="Selector Components">
       <dbx-subsection header="dbx-schedule-selection-calendar-date-range" hint="Component used to control and set the date range.">
