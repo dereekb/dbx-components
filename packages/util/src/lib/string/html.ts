@@ -22,6 +22,23 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<ArrayOrValue<ArrayOrV
   let result: SpaceSeparatedCssClasses = '';
 
   if (cssClasses) {
+    const allClasses = cssClassesSet(cssClasses);
+    result = joinStringsWithSpaces(Array.from(allClasses));
+  }
+
+  return result;
+}
+
+/**
+ * Joins together various array of classes and returns the set of unique CSS classes.
+ *
+ * @param cssClasses
+ * @returns
+ */
+export function cssClassesSet(cssClasses: Maybe<ArrayOrValue<ArrayOrValue<SpaceSeparatedCssClasses>>>): Set<CssClass> {
+  let result: Set<CssClass>;
+
+  if (cssClasses) {
     const arrayOfClasses = asArray(cssClasses);
     const arrayOfAllClassValues = arrayOfClasses
       .map((x) =>
@@ -31,8 +48,9 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<ArrayOrValue<ArrayOrV
       )
       .flat();
 
-    const allClasses = new Set(arrayOfAllClassValues);
-    result = joinStringsWithSpaces(Array.from(allClasses));
+    result = new Set(arrayOfAllClassValues);
+  } else {
+    result = new Set();
   }
 
   return result;

@@ -9,4 +9,11 @@ describe('spaceSeparatedCssClasses()', () => {
 
     expect(result).toBe(expected);
   });
+
+  it('should filter out empty spaces/content', () => {
+    const expected = 'a b c';
+    const splitClasses = expected.split(' ');
+    const result = spaceSeparatedCssClasses([splitClasses, [' ', '           ', ''], splitClasses, ' ']);
+    expect(result).toBe(expected);
+  });
 });

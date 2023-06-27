@@ -69,7 +69,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       initialSelectionState: 'all',
       dialogContentConfig: {
         dialogConfig: {
-          panelClass: 'dbx-schedule-selection-calendar-compact',
+          panelClass: 'hello-world dbx-schedule-selection-calendar-compact',
           maxWidth: '420px'
         },
         closeConfig: {

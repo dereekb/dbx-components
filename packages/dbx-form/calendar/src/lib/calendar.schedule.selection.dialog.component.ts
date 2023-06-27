@@ -1,7 +1,7 @@
 import { Component, InjectionToken, Injector } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentFooterConfig } from '@dereekb/dbx-web';
-import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
+import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentFooterConfig, sanitizeDbxDialogContentConfig } from '@dereekb/dbx-web';
+import { KeyValueTypleValueFilter, Maybe, cssClassesSet, mergeObjects, spaceSeparatedCssClasses } from '@dereekb/util';
 
 /**
  * Token used to configure the default DbxDialogContentFooterConfig for DbxScheduleSelectionCalendarDateDialogComponent.
@@ -62,7 +62,7 @@ export class DbxScheduleSelectionCalendarDateDialogComponent extends AbstractDia
       width: '80vw',
       minHeight: 400,
       minWidth: 360,
-      ...contentConfig.dialogConfig,
+      ...sanitizeDbxDialogContentConfig(contentConfig.dialogConfig),
       injector,
       data: {
         config,
