@@ -10,12 +10,15 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplayContent = {
 @Component({
   selector: 'dbx-filter-popover-button',
   template: `
-    <dbx-icon-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplay"></dbx-icon-button>
+    <dbx-icon-button #button (buttonClick)="showFilterPopover()" [buttonDisplay]="buttonDisplay" [disabled]="disabled"></dbx-icon-button>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFilterPopoverButtonComponent<F extends object = object> extends AbstractFilterPopoverButtonDirective<F> {
   private _buttonDisplay: DbxButtonDisplayContent = DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT;
+
+  @Input()
+  disabled?: Maybe<boolean>;
 
   @Input()
   get buttonDisplay(): DbxButtonDisplayContent {

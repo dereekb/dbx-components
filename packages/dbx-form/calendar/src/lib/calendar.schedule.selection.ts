@@ -30,7 +30,7 @@ export interface CalendarScheduleSelectionCellContent {
   text?: string;
 }
 
-export type CalendarScheduleSelectionCellContentFactory = FactoryWithRequiredInput<CalendarScheduleSelectionCellContent, CalendarMonthViewDay<CalendarScheduleSelectionMetadata>>;
+export type CalendarScheduleSelectionCellContentFactory<M extends CalendarScheduleSelectionMetadata = CalendarScheduleSelectionMetadata> = FactoryWithRequiredInput<CalendarScheduleSelectionCellContent, CalendarMonthViewDay<M>>;
 
 export const defaultCalendarScheduleSelectionCellContentFactory: CalendarScheduleSelectionCellContentFactory = (day: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>) => {
   let icon;

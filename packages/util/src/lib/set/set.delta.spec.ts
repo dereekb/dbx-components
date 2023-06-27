@@ -31,6 +31,21 @@ describe('setDeltaFunction()', () => {
       expect(addedPair.change).toBe(SetDeltaChange.ADDED);
       expect(addedPair.isModified).toBeUndefined();
     });
+
+    it('should calculate the delta when adding items.', () => {
+      const expectedAdded: TestValue[] = [1, 2, 3].map((x) => ({ value: String(x) }));
+
+      const past: TestValue[] = [];
+      const next: TestValue[] = [...expectedAdded];
+
+      const deltaPairs = setDeltaFn(past, next);
+      const delta = setDeltaChangeKeys(deltaPairs);
+
+      expect(delta.added.length).toBe(expectedAdded.length);
+      expectedAdded.forEach((x) => expect(delta.added).toContain(x.value));
+      expect(delta.removed.length).toBe(0);
+      expect(delta.none.length).toBe(0);
+    });
   });
 });
 
@@ -49,5 +64,22 @@ describe('primativeValuesDelta()', () => {
     expectedAdded.forEach((x) => expect(delta.added).toContain(x));
     expectedRemoved.forEach((x) => expect(delta.removed).toContain(x));
     expectedNone.forEach((x) => expect(delta.none).toContain(x));
+  });
+
+  describe('with setDeltaChangeKeys()', () => {
+    it('should calculate the expected delta when adding items.', () => {
+      const expectedAdded: number[] = [1, 2, 3];
+
+      const past: number[] = [];
+      const next: number[] = [...expectedAdded];
+
+      const deltaPairs = primativeValuesDelta(past, next);
+      const delta = setDeltaChangeKeys(deltaPairs);
+
+      expect(delta.added.length).toBe(expectedAdded.length);
+      expectedAdded.forEach((x) => expect(delta.added).toContain(x));
+      expect(delta.removed.length).toBe(0);
+      expect(delta.none.length).toBe(0);
+    });
   });
 });
