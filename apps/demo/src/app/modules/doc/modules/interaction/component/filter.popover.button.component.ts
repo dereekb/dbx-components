@@ -10,10 +10,13 @@ import { Maybe } from '@dereekb/util';
 @Component({
   selector: 'doc-interaction-test-filter-popover-button',
   template: `
-    <dbx-filter-popover-button [buttonDisplay]="buttonDisplay" [config]="config"></dbx-filter-popover-button>
+    <dbx-filter-popover-button [buttonDisplay]="buttonDisplay" [config]="config" [disabled]="disabled"></dbx-filter-popover-button>
   `
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
+  @Input()
+  disabled?: Maybe<boolean>;
+
   readonly config: DbxFilterButtonConfig<DocInteractionTestFilter> = {
     icon: 'settings',
     header: 'Custom Header',
