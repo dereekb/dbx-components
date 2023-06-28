@@ -1,5 +1,5 @@
 import { DecisionFunction, Maybe, ReadableError } from '@dereekb/util';
-import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple } from 'rxjs';
+import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
 import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult } from './loading.state';
 
@@ -190,4 +190,26 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
       })
     );
   };
+}
+
+/**
+ * Creates a promise from a Observable that pipes loading states that resolves the value when the loading state has finished loading.
+ *
+ * If the loading state returns an error, the error is thrown.
+ *
+ * @param obs
+ * @returns
+ */
+export function promiseFromLoadingState<T>(obs: Observable<LoadingState<T>>): Promise<T> {
+  return firstValueFrom(obs.pipe(filter(loadingStateHasFinishedLoading))).then((x) => {
+    let result: T;
+
+    if (x.error) {
+      throw x.error;
+    } else {
+      result = x.value as T;
+    }
+
+    return result;
+  });
 }
