@@ -3,6 +3,9 @@
 // MARK: Variables
 $dialog-width: 400px;
 $max-dialog-width: 90vw;
+$mat-dialog-container-padding: 24px;
+$dbx-dialog-content-close-edge-padding: 2px;
+$dbx-dialog-content-close-offset: $mat-dialog-container-padding - $dbx-dialog-content-close-edge-padding;
 
 // MARK: Mixin
 @mixin core() {
@@ -18,14 +21,16 @@ $max-dialog-width: 90vw;
   }
 
   .dbx-dialog-content-close {
-    display: block;
-    height: 8px;
+    display: flex;
+    height: 0px;
+    padding-right: 3px;
+    align-items: center;
+    justify-content: end;
+  }
 
-    > .mat-icon-button {
-      float: right;
-      margin-top: -15px;
-      margin-right: -15px;
-    }
+  .mat-dialog-container .dbx-dialog-content-close {
+    position: relative;
+    right: -$dbx-dialog-content-close-offset;
   }
 
   .dbx-dialog-content-footer {

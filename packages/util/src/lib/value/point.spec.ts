@@ -1,4 +1,4 @@
-import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, LatLngString } from './point';
+import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, LatLngString, randomLatLngFactory, MAX_LATITUDE_VALUE, MIN_LATITUDE_VALUE, MAX_LONGITUDE_VALUE, MIN_LONGITUDE_VALUE, randomLatLngFromCenterFactory } from './point';
 
 describe('isLatLngPoint()', () => {
   it('should return true for points.', () => {
@@ -97,6 +97,36 @@ describe('latLngPointFunction()', () => {
 
       expect(result.lat).toBe(30.599);
       expect(result.lng).toBe(-96.383);
+    });
+  });
+});
+
+describe('randomLatLngFactory()', () => {
+  describe('function', () => {
+    it('should cap and wrap the input points to valid latLng values.', () => {
+      const factory = randomLatLngFactory({ sw: latLngPoint(-200, -200), ne: latLngPoint(200, 200) });
+      const result = factory();
+
+      expect(result.lat).toBeLessThanOrEqual(MAX_LATITUDE_VALUE);
+      expect(result.lat).toBeGreaterThanOrEqual(MIN_LATITUDE_VALUE);
+
+      expect(result.lng).toBeLessThanOrEqual(MAX_LONGITUDE_VALUE);
+      expect(result.lng).toBeGreaterThanOrEqual(MIN_LONGITUDE_VALUE);
+    });
+  });
+});
+
+describe('randomLatLngFromCenterFactory()', () => {
+  describe('function', () => {
+    it('should cap and wrap the input points to valid latLng values.', () => {
+      const factory = randomLatLngFromCenterFactory({ center: latLngPoint(0, 0), latDistance: 100, lngDistance: 200 });
+      const result = factory();
+
+      expect(result.lat).toBeLessThanOrEqual(MAX_LATITUDE_VALUE);
+      expect(result.lat).toBeGreaterThanOrEqual(MIN_LATITUDE_VALUE);
+
+      expect(result.lng).toBeLessThanOrEqual(MAX_LONGITUDE_VALUE);
+      expect(result.lng).toBeGreaterThanOrEqual(MIN_LONGITUDE_VALUE);
     });
   });
 });

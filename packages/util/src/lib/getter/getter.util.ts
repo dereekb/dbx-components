@@ -13,6 +13,6 @@ export type RandomFromArrayFactory<T> = Factory<T>;
  * @returns
  */
 export function randomFromArrayFactory<T>(values: T[]): RandomFromArrayFactory<T> {
-  const random = randomNumberFactory({ min: 0, max: values.length - 1, round: 'floor' });
+  const random = randomNumberFactory({ min: 0, max: values.length, round: 'floor' });
   return () => values[random()];
 }

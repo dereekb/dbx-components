@@ -484,15 +484,49 @@ export interface RandomLatLngFactoryConfig {
   ne?: Partial<LatLngPoint>;
 }
 
-export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): () => LatLngPoint {
+export type RandomLatLngFactory = () => LatLngPoint;
+
+export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): RandomLatLngFactory {
   const { sw, ne } = { ...config, sw: { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE, ...config?.sw }, ne: { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE, ...config?.ne } };
 
-  const randomLatFactory = randomNumberFactory({ min: sw.lat, max: ne.lat });
-  const randomLngFactory = randomNumberFactory({ min: sw.lng, max: ne.lng });
+  const randomLatFactory = randomNumberFactory({ min: capLatValue(sw.lat), max: capLatValue(ne.lat) + 1 });
+  const randomLngFactory = randomNumberFactory({ min: wrapLngValue(sw.lng), max: wrapLngValue(ne.lng) + 1 });
 
   return () => {
     return { lat: randomLatFactory(), lng: randomLngFactory() };
   };
+}
+
+export interface RandomLatLngFromCenterFactoryConfig {
+  /**
+   * Center from which a rectangle is generated to pick random
+   */
+  center: LatLngPoint;
+  /**
+   * Max distance from the center.
+   */
+  latDistance: number;
+  /**
+   * Max lng distance from the center.
+   */
+  lngDistance: number;
+}
+
+/**
+ * Creates a RandomLatLngFactory that creates a random LatLngPoint value from the center in the given distances.
+ *
+ * @param config
+ * @returns
+ */
+export function randomLatLngFromCenterFactory(config: RandomLatLngFromCenterFactoryConfig): RandomLatLngFactory {
+  const { center, latDistance, lngDistance } = config;
+  const sw = { lat: center.lat - latDistance, lng: center.lng - lngDistance };
+  const ne = { lat: center.lat + latDistance, lng: center.lng + lngDistance };
+
+  return randomLatLngFactory({
+    sw,
+    ne
+  });
 }
 
 // MARK: Compat

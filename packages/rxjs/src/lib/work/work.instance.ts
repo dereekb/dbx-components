@@ -1,7 +1,7 @@
 import { Maybe, Destroyable, ReadableError, ErrorInput } from '@dereekb/util';
-import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay, from } from 'rxjs';
-import { beginLoading, errorResult, LoadingState, loadingStateHasFinishedLoading, loadingStateIsLoading, successResult } from '../loading';
-import { filterMaybe, preventComplete } from '../rxjs';
+import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay, from, firstValueFrom, tap } from 'rxjs';
+import { beginLoading, errorResult, LoadingState, loadingStateHasFinishedLoading, loadingStateIsLoading, promiseFromLoadingState, successResult } from '../loading';
+import { filterMaybe, preventComplete, tapLog } from '../rxjs';
 import { SubscriptionObject } from '../subscription';
 
 /**
@@ -103,6 +103,30 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   }
 
   /**
+   * Performs a task with the input loading state observable and passes any thrown errors.
+   *
+   * Does not set the completed state. Use startWorkingWithLoadingStateObservable() instead for single observables.
+   *
+   * It is used in conjunction with startWorking() and ideal for cases where multiple observables or promises are used.
+   *
+   * @param loadingStateObs
+   */
+  performTaskWithLoadingState<T>(loadingStateObs: Promise<LoadingState<T>> | Observable<Maybe<LoadingState<T>>>): Promise<T> {
+    return promiseFromLoadingState(
+      from(loadingStateObs).pipe(
+        filterMaybe(),
+        tap((x) => {
+          this._setWorking(true); // mark as working if not already marked.
+        })
+      )
+    ).catch((e) => {
+      // catch and throw any errors.
+      this.reject(e);
+      throw e;
+    });
+  }
+
+  /**
    * Begins working using a promise.
    */
   startWorkingWithPromise(promise: Promise<O>): void {
@@ -159,12 +183,12 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
     });
   }
 
-  private _setWorking(): void {
-    if (this.hasStarted) {
+  private _setWorking(silenceError?: boolean): void {
+    if (this.hasStarted && !silenceError) {
       throw new Error('Action already has been triggered for this context.');
+    } else {
+      this._loadingState.next(beginLoading());
     }
-
-    this._loadingState.next(beginLoading());
   }
 
   private _setComplete(loadingState: LoadingState<O>): void {
