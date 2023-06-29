@@ -65,7 +65,7 @@ export const DEFAULT_RANDOM_PHONE_NUMBER_FACTORY_CONFIG: RandomPhoneNumberFactor
   internationalAreaCodes: [1210, 1979, 1512, 1303],
   numberFactory: randomNumberFactory({
     min: 2000000, // numbers starting with 1 are invalid in the US
-    max: 9999999,
+    max: 10000000, // up to 9999999
     round: 'floor'
   })
 };

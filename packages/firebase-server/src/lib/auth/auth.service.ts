@@ -8,7 +8,7 @@ import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { AuthUserIdentifier } from '@dereekb/dbx-core';
 
-export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1, round: 'floor' }); // 6 digits
+export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' }); // 6 digits
 
 export interface FirebaseServerAuthUserIdentifierContext {
   /**

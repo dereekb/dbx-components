@@ -489,8 +489,8 @@ export type RandomLatLngFactory = () => LatLngPoint;
 export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): RandomLatLngFactory {
   const { sw, ne } = { ...config, sw: { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE, ...config?.sw }, ne: { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE, ...config?.ne } };
 
-  const randomLatFactory = randomNumberFactory({ min: capLatValue(sw.lat), max: capLatValue(ne.lat) });
-  const randomLngFactory = randomNumberFactory({ min: wrapLngValue(sw.lng), max: wrapLngValue(ne.lng) });
+  const randomLatFactory = randomNumberFactory({ min: capLatValue(sw.lat), max: capLatValue(ne.lat) + 1 });
+  const randomLngFactory = randomNumberFactory({ min: wrapLngValue(sw.lng), max: wrapLngValue(ne.lng) + 1 });
 
   return () => {
     return { lat: randomLatFactory(), lng: randomLngFactory() };

@@ -16,14 +16,20 @@ export interface RandomNumberFactoryConfig {
    * No rounding by default.
    */
   round?: RoundingInput;
+  /**
+   * Minimum number (inclusive)
+   */
   min?: number;
+  /**
+   * Max number (exclusive)
+   */
   max: number;
 }
 
 export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;
 
 /**
- * Used to generate a RandomNumberFunction that returns a number between the input and the maximum.
+ * Used to generate a RandomNumberFunction that returns a number between the input and the maximum (exclusive).
  *
  * @param maxOrArgs
  * @returns
