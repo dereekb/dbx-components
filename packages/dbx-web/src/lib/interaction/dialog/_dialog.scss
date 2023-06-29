@@ -25,7 +25,7 @@ $dbx-dialog-content-close-offset: $mat-dialog-container-padding - $dbx-dialog-co
     height: 0px;
     padding-right: 3px;
     align-items: center;
-    justify-content: end;
+    justify-content: flex-end;
   }
 
   .mat-dialog-container .dbx-dialog-content-close {
