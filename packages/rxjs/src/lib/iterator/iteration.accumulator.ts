@@ -139,8 +139,8 @@ export class ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> 
     shareReplay(1)
   );
 
-  readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = this.hasCompletedInitialLoad$.pipe(switchMapWhileTrue(this.currentAllItemPairs$));
-  readonly allItems$: Observable<O[]> = this.hasCompletedInitialLoad$.pipe(switchMapWhileTrue(this.currentAllItems$));
+  readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = this.hasCompletedInitialLoad$.pipe(switchMapWhileTrue(this.currentAllItemPairs$), shareReplay(1));
+  readonly allItems$: Observable<O[]> = this.hasCompletedInitialLoad$.pipe(switchMapWhileTrue(this.currentAllItems$), shareReplay(1));
 
   private _sub = new SubscriptionObject(this.allSuccessfulStates$.subscribe());
 

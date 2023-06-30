@@ -11,7 +11,7 @@ import { ItemAccumulator, ItemAccumulatorValuePair, PageItemAccumulator } from '
  * @returns
  */
 export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: ItemAccumulator<T[], I>): Observable<T[]> {
-  return accumulator.allItemPairs$.pipe(
+  return accumulator.currentAllItemPairs$.pipe(
     scanBuildArray<ItemAccumulatorValuePair<T[], I>[], T>((allItems: ItemAccumulatorValuePair<T[], I>[]) => {
       const pairs: ItemAccumulatorValuePair<T[], I>[] = allItems;
       const firstLatestItemPair = lastValue(allItems);
@@ -54,7 +54,7 @@ export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulat
  * A PageListLoadingState that captures all the values that have been loaded so far, and the current loading state of currentPageResult$.
  */
 export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulator: PageItemAccumulator<V, I>): Observable<PageListLoadingState<V>> {
-  return combineLatest([accumulator.itemIteration.currentState$, accumulator.allItems$]).pipe(
+  return combineLatest([accumulator.itemIteration.currentState$, accumulator.currentAllItems$]).pipe(
     map(
       ([state, values]) =>
         mapLoadingStateResults(state, {
