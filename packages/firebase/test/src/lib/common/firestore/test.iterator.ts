@@ -238,16 +238,21 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
             it('should return a loading state for the current page with all items in a single array.', (done) => {
               const obs = accumulatorFlattenPageListLoadingState(itemAccumulator);
 
-              accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
-                const value = state.value;
+              accumulatorSub.subscription = obs
+                .pipe(
+                  filter((x) => !x.loading),
+                  first()
+                )
+                .subscribe((state) => {
+                  const value = state.value;
 
-                expect(loadingStateHasFinishedLoading(state)).toBe(true);
-                expect(value).toBeDefined();
-                expect(Array.isArray(value)).toBe(true);
-                expect(Array.isArray(value![0])).toBe(false);
+                  expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                  expect(value).toBeDefined();
+                  expect(Array.isArray(value)).toBe(true);
+                  expect(Array.isArray(value![0])).toBe(false);
 
-                done();
-              });
+                  done();
+                });
             });
           });
 
@@ -255,16 +260,21 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
             it('should return a loading state for the current page.', (done) => {
               const obs = accumulatorCurrentPageListLoadingState(itemAccumulator);
 
-              accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
-                const value = state.value;
+              accumulatorSub.subscription = obs
+                .pipe(
+                  filter((x) => !x.loading),
+                  first()
+                )
+                .subscribe((state) => {
+                  const value = state.value;
 
-                expect(loadingStateHasFinishedLoading(state)).toBe(true);
-                expect(value).toBeDefined();
-                expect(Array.isArray(value)).toBe(true);
-                expect(Array.isArray(value![0])).toBe(true);
+                  expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                  expect(value).toBeDefined();
+                  expect(Array.isArray(value)).toBe(true);
+                  expect(Array.isArray(value![0])).toBe(true);
 
-                done();
-              });
+                  done();
+                });
             });
           });
         });
