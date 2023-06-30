@@ -106,6 +106,7 @@ describe('iteration.rxjs', () => {
             expect(loadingStateHasFinishedLoading(state)).toBe(true);
             expect(state.value).toBeDefined();
             expect(Array.isArray(state.value)).toBe(true);
+            expect(state.page).toBe(testPagesToLoad - 1);
             done();
           });
       });

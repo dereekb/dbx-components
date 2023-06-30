@@ -72,7 +72,7 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
     const { seed = [], accumulatorObs, flattenArray = false } = init(seedState);
 
     return accumulatorObs.pipe(
-      startWith<Maybe<ArrayOrValue<T>>>(undefined), // Start with to not wait for the accumulator to pass a value.
+      startWith<Maybe<ArrayOrValue<T>>>(undefined), // use startWith to not wait for the accumulator to pass a value.
       scan<Maybe<ArrayOrValue<T>>, T[]>((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
         if (next != null) {
           if (flattenArray && Array.isArray(next)) {
