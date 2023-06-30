@@ -6,8 +6,10 @@ import { DayOfWeek, Maybe } from '@dereekb/util';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
 import { DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { ObservableOrValue, ObservableOrValueGetter, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
+import { ObservableOrValue, ObservableOrValueGetter, SubscriptionObject, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
+import { DateRangeType, dateRange, isSameDate } from '@dereekb/date';
+import { endOfWeek } from 'date-fns';
 
 export interface DbxScheduleSelectionCalendarComponentConfig {
   /**
@@ -86,6 +88,7 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
 })
 export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestroy {
   private _config = new BehaviorSubject<DbxScheduleSelectionCalendarComponentConfig>({});
+  private _centerRangeSub = new SubscriptionObject();
 
   readonly showClearSelectionButton$ = this._config.pipe(
     map((config) => config.showClearSelectionButton ?? true),
@@ -132,11 +135,25 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   ngOnInit(): void {
     this.calendarStore.setNavigationRangeLimit(this.dbxCalendarScheduleSelectionStore.minMaxDateRange$); // set navigation limit to the min/max allowed dates.
     this.calendarStore.setShowPageButtons(true);
+
+    // when a new filter is set, if the first two pages of selectable indexes fit within the calendar month, focus on that calendar month.
+    this._centerRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.minMaxDateRange$.subscribe((x) => {
+      if (x?.start && x.end) {
+        const startMonth = dateRange({ date: x.start, type: DateRangeType.CALENDAR_MONTH });
+        const endMonth = dateRange({ date: x.end, type: DateRangeType.CALENDAR_MONTH });
+
+        if (isSameDate(startMonth.start, endMonth.start)) {
+          const monthToFocus = endOfWeek(startMonth.start);
+          this.calendarStore.tapDay(monthToFocus);
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.clickEvent.complete();
     this._config.complete();
+    this._centerRangeSub.destroy();
   }
 
   @Input()

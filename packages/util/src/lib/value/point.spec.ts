@@ -1,4 +1,5 @@
-import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, LatLngString, randomLatLngFactory, MAX_LATITUDE_VALUE, MIN_LATITUDE_VALUE, MAX_LONGITUDE_VALUE, MIN_LONGITUDE_VALUE, randomLatLngFromCenterFactory } from './point';
+import { cutToPrecision } from '../number';
+import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, LatLngString, randomLatLngFactory, MAX_LATITUDE_VALUE, MIN_LATITUDE_VALUE, MAX_LONGITUDE_VALUE, MIN_LONGITUDE_VALUE, randomLatLngFromCenterFactory, LAT_LONG_1KM_PRECISION } from './point';
 
 describe('isLatLngPoint()', () => {
   it('should return true for points.', () => {
@@ -127,6 +128,31 @@ describe('randomLatLngFromCenterFactory()', () => {
 
       expect(result.lng).toBeLessThanOrEqual(MAX_LONGITUDE_VALUE);
       expect(result.lng).toBeGreaterThanOrEqual(MIN_LONGITUDE_VALUE);
+    });
+
+    it('should not round the position', () => {
+      const radius = 0.0000001;
+      const factory = randomLatLngFromCenterFactory({ center: latLngPoint(0, 0), latDistance: radius, lngDistance: radius });
+      const result = factory();
+
+      expect(result.lat).toBeLessThanOrEqual(radius);
+      expect(result.lat).toBeGreaterThanOrEqual(-radius);
+
+      expect(result.lng).toBeLessThanOrEqual(radius);
+      expect(result.lng).toBeGreaterThanOrEqual(-radius);
+    });
+
+    it('should respect the precision', () => {
+      const precision = LAT_LONG_1KM_PRECISION;
+      const radius = 0.0000001;
+      const factory = randomLatLngFromCenterFactory({ center: latLngPoint(0, 0), latDistance: radius, lngDistance: radius, precision });
+      const { lat, lng } = factory();
+
+      const expectedLat = cutToPrecision(lat, precision);
+      expect(lat).toBe(expectedLat);
+
+      const expectedLng = cutToPrecision(lng, precision);
+      expect(lng).toBe(expectedLng);
     });
   });
 });

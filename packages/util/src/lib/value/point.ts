@@ -482,22 +482,27 @@ export function latLngDataPointFunction<T extends LatLngRef>(config?: LatLngPoin
 export interface RandomLatLngFactoryConfig {
   sw?: Partial<LatLngPoint>;
   ne?: Partial<LatLngPoint>;
+  /**
+   * Precision of the LatLng to keep.
+   */
+  precision?: LatLngPrecision;
 }
 
 export type RandomLatLngFactory = () => LatLngPoint;
 
 export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): RandomLatLngFactory {
-  const { sw, ne } = { ...config, sw: { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE, ...config?.sw }, ne: { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE, ...config?.ne } };
+  const { sw, ne, precision } = { ...config, sw: { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE, ...config?.sw }, ne: { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE, ...config?.ne } };
 
-  const randomLatFactory = randomNumberFactory({ min: capLatValue(sw.lat), max: capLatValue(ne.lat) + 1 });
-  const randomLngFactory = randomNumberFactory({ min: wrapLngValue(sw.lng), max: wrapLngValue(ne.lng) + 1 });
+  const randomLatFactory = randomNumberFactory({ min: capLatValue(sw.lat), max: capLatValue(ne.lat) }, 'none');
+  const randomLngFactory = randomNumberFactory({ min: wrapLngValue(sw.lng), max: wrapLngValue(ne.lng) }, 'none');
+  const precisionFunction = precision != null ? latLngPointPrecisionFunction(precision, 'round') : mapIdentityFunction<LatLngPoint>();
 
   return () => {
-    return { lat: randomLatFactory(), lng: randomLngFactory() };
+    return precisionFunction({ lat: randomLatFactory(), lng: randomLngFactory() });
   };
 }
 
-export interface RandomLatLngFromCenterFactoryConfig {
+export interface RandomLatLngFromCenterFactoryConfig extends Pick<RandomLatLngFactoryConfig, 'precision'> {
   /**
    * Center from which a rectangle is generated to pick random
    */
@@ -519,13 +524,14 @@ export interface RandomLatLngFromCenterFactoryConfig {
  * @returns
  */
 export function randomLatLngFromCenterFactory(config: RandomLatLngFromCenterFactoryConfig): RandomLatLngFactory {
-  const { center, latDistance, lngDistance } = config;
+  const { center, latDistance, lngDistance, precision } = config;
   const sw = { lat: center.lat - latDistance, lng: center.lng - lngDistance };
   const ne = { lat: center.lat + latDistance, lng: center.lng + lngDistance };
 
   return randomLatLngFactory({
     sw,
-    ne
+    ne,
+    precision
   });
 }
 

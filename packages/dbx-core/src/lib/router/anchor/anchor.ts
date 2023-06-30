@@ -16,7 +16,7 @@ export interface ClickableAnchor extends ClickableFunction, MousableFunction, Cl
  */
 export interface IconAndTitle {
   title: string;
-  icon?: string;
+  icon?: Maybe<string>;
 }
 
 export interface ClickableAnchorLink extends ClickableAnchor, IconAndTitle {
