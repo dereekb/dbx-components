@@ -81,6 +81,17 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
+  /**
+   * Passthrough for currentAllItems$ from the accumulator.
+   */
+  readonly currentAccumulatorItems$: Observable<DocumentDataWithIdAndKey<T>[][]> = this.accumulator$.pipe(
+    switchMap((x) => x.currentAllItems$),
+    shareReplay(1)
+  );
+
+  /**
+   * Passthrough for allItems$ from the accumulator.
+   */
   readonly accumulatorItems$: Observable<DocumentDataWithIdAndKey<T>[][]> = this.accumulator$.pipe(
     switchMap((x) => x.allItems$),
     shareReplay(1)

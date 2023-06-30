@@ -128,6 +128,8 @@ export function switchMapObject<T extends object>(config: SwitchMapObjectConfig<
  * @param defaultValue
  * @returns
  */
+export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
+export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>>;
 export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
   return switchMapOnBoolean(true, obs, otherwise);
 }
@@ -138,6 +140,8 @@ export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGette
  * @param defaultValue
  * @returns
  */
+export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
+export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>>;
 export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
   return switchMapOnBoolean(false, obs, otherwise);
 }
@@ -148,12 +152,14 @@ export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGett
  * @param defaultValue
  * @returns
  */
+export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, T>;
+export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>>;
 export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
   return switchMap((x: boolean) => {
     if (x === switchOnValue) {
       return asObservableFromGetter(obs);
     } else {
-      return asObservableFromGetter(otherwise) ?? EMPTY;
+      return otherwise != null ? asObservableFromGetter(otherwise) : EMPTY;
     }
   });
 }

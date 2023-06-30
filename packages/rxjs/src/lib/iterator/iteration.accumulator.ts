@@ -1,7 +1,7 @@
 import { SubscriptionObject } from '../subscription';
-import { startWith, map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
-import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray } from '../rxjs';
-import { MapFunctionOutputPair, lastValue, Destroyable, mapFunctionOutputPair, isMaybeSo } from '@dereekb/util';
+import { startWith, map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter, EMPTY } from 'rxjs';
+import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue, timeoutStartWith } from '../rxjs';
+import { MapFunctionOutputPair, lastValue, Destroyable, mapFunctionOutputPair, isMaybeSo, IndexRef } from '@dereekb/util';
 import { ItemIteration, PageItemIteration } from './iteration';
 import { LoadingState, loadingStateHasError, mapLoadingStateValueFunction, MapLoadingStateValueMapFunction } from '../loading';
 
@@ -19,10 +19,24 @@ export interface ItemAccumulator<O, I = unknown, N extends ItemIteration<I> = It
   /**
    * Returns all items with their input pairs.
    */
+  readonly currentAllItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]>;
+
+  /**
+   * Returns all items loaded so far in the iteration in a single array.
+   */
+  readonly currentAllItems$: Observable<O[]>;
+
+  /**
+   * Returns all items with their input pairs.
+   *
+   * The first emission occurs when/after the first value has been emitted.
+   */
   readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]>;
 
   /**
    * Returns all items loaded so far in the iteration in a single array.
+   *
+   * The first emission occurs when/after the first value has been emitted.
    */
   readonly allItems$: Observable<O[]>;
 
@@ -50,13 +64,20 @@ export type MonotypePageItemAccumulator<I, N extends PageItemIteration<I> = Page
 /**
  * Value of an item accumulator.
  */
-export type ItemAccumulatorValuePair<O, I = unknown> = MapFunctionOutputPair<O, LoadingState<I>>;
+export interface ItemAccumulatorValuePair<O, I = unknown> extends MapFunctionOutputPair<O, LoadingState<I>>, IndexRef {}
 
 /**
  * ItemAccumulator implementation.
  */
 export class ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> implements ItemAccumulator<O, I, N>, Destroyable {
   constructor(readonly itemIteration: N, readonly mapItemFunction: ItemAccumulatorMapFunction<O, I>) {}
+
+  readonly hasCompletedInitialLoad$: Observable<boolean> = this.itemIteration.firstState$.pipe(
+    map(() => true),
+    startWith(false),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly latestSuccessfulState$: Observable<LoadingState<I>> = this.itemIteration.latestState$.pipe(
     filter((x) => !loadingStateHasError(x)),
@@ -83,7 +104,7 @@ export class ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> 
   );
 
   // MARK: ItemAccumulator
-  readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = this.allSuccessfulStates$.pipe(
+  readonly currentAllItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = this.allSuccessfulStates$.pipe(
     scanBuildArray((allSuccessfulStates) => {
       const mapStateToItem = mapFunctionOutputPair(mapLoadingStateValueFunction(this.mapItemFunction));
 
@@ -113,10 +134,13 @@ export class ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> 
     shareReplay(1)
   );
 
-  readonly allItems$: Observable<O[]> = this.allItemPairs$.pipe(
+  readonly currentAllItems$: Observable<O[]> = this.currentAllItemPairs$.pipe(
     map((x) => x.map((y) => y.output)),
     shareReplay(1)
   );
+
+  readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = this.hasCompletedInitialLoad$.pipe(switchMapWhileTrue(this.currentAllItemPairs$));
+  readonly allItems$: Observable<O[]> = this.hasCompletedInitialLoad$.pipe(switchMapWhileTrue(this.currentAllItems$));
 
   private _sub = new SubscriptionObject(this.allSuccessfulStates$.subscribe());
 
