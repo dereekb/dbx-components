@@ -19,7 +19,6 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { DemoRootSharedModule } from '@dereekb/demo-components';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
-import { DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CLOSE_CONFIG_TOKEN } from '@dereekb/dbx-form/calendar';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;

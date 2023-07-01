@@ -1,10 +1,10 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
-import { DateScheduleDateFilterConfig, getDaysOfWeekInDateRange, readDaysOfWeek, readDaysOfWeekNames } from '@dereekb/date';
+import { DateScheduleDateFilterConfig, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
-import { dayOfWeek, daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortAscendingIndexNumberRefFunction, sortByNumberFunction, sortNumbersAscendingFunction, unique } from '@dereekb/util';
+import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
 
 const daysRangeInFilter = 14;
 

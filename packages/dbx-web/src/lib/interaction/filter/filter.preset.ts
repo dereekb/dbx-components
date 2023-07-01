@@ -1,6 +1,6 @@
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
-import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset, ClickableFilterPresetOrPartialPreset, isClickablePartialFilterPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
+import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset, ClickableFilterPresetOrPartialPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
 import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { FilterWithPreset } from '@dereekb/rxjs';
 

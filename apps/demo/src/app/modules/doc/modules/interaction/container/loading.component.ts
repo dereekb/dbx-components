@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { tapLog } from '@dereekb/rxjs';
-import { readableError, ReadableError, serverError } from '@dereekb/util';
-import { interval, map, shareReplay, timer } from 'rxjs';
+import { readableError, ReadableError } from '@dereekb/util';
+import { interval, map, shareReplay } from 'rxjs';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 

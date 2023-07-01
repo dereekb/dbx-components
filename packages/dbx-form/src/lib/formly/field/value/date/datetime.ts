@@ -1,4 +1,4 @@
-import { Getter, GetterOrValue, LogicalDate, Maybe, ReadableTimeString, TimezoneStringRef, asGetter, getValueFromGetter } from '@dereekb/util';
+import { Getter, GetterOrValue, LogicalDate, Maybe, ReadableTimeString, asGetter, getValueFromGetter } from '@dereekb/util';
 
 /**
  * A pair of either a logical date or a time string.

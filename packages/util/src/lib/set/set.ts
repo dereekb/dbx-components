@@ -3,7 +3,6 @@ import { flattenArray } from '../array/array';
 import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
-import { DecisionFunction, invertDecision } from '../value';
 import { SetIncludesMode } from './set.mode';
 
 export type AllOrNoneSelection = 'all' | 'none';

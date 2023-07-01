@@ -1,4 +1,3 @@
-import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from './char';
 import { spaceSeparatedCssClasses } from './html';
 
 describe('spaceSeparatedCssClasses()', () => {

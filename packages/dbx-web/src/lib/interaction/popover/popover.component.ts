@@ -6,7 +6,7 @@ import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
-import { ArrayOrValue, asPromise, Maybe, PromiseOrValue, SpaceSeparatedCssClasses } from '@dereekb/util';
+import { asPromise, Maybe, PromiseOrValue, SpaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxPopoverController, DbxPopoverKey } from './popover';
 
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {

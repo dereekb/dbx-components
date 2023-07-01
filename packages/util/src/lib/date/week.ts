@@ -172,7 +172,7 @@ export function getDaysOfWeekNames(sundayFirst = true, transform?: DayOfWeekName
 }
 
 export function daysOfWeekNameMap(transform?: DayOfWeekNamesTransformConfig): Map<DayOfWeek, string> {
-  let dayOfWeekNames = getDaysOfWeekNames(true, transform);
+  const dayOfWeekNames = getDaysOfWeekNames(true, transform);
   return new Map<DayOfWeek, string>(dayOfWeekNames.map((x, i) => [i as DayOfWeek, x]));
 }
 
