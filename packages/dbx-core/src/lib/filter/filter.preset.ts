@@ -1,5 +1,5 @@
 import { FilterPresetStringRef, FilterWithPreset, FilterWithPresetOptional } from '@dereekb/rxjs';
-import { EmptyObject, GetterOrValue, Maybe } from '@dereekb/util';
+import { EmptyObject, GetterOrValue, Maybe, objectHasKey, objectHasKeys } from '@dereekb/util';
 import { ClickableAnchorLink } from '../router/anchor/anchor';
 
 export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends string = string> extends Pick<ClickableAnchorLink, 'title' | 'icon' | 'disabled'>, FilterPresetStringRef<P> {
@@ -9,6 +9,10 @@ export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends 
    * A null value or empty object is used for reset.
    */
   readonly presetValue: GetterOrValue<FilterWithPresetOptional<F>> | EmptyObject | null;
+}
+
+export function isClickableFilterPreset<F extends FilterWithPreset<P>, P extends string = string>(preset: object): preset is ClickableFilterPreset<F, P> {
+  return objectHasKey(preset, 'presetValue');
 }
 
 export interface ClickablePartialFilterPreset<F> extends Pick<ClickableAnchorLink, 'title' | 'icon' | 'disabled'> {
@@ -23,3 +27,12 @@ export interface ClickablePartialFilterPreset<F> extends Pick<ClickableAnchorLin
    */
   readonly isActive: (currentFilter: Maybe<Partial<F>>) => boolean;
 }
+
+export function isClickablePartialFilterPreset<F>(preset: object): preset is ClickablePartialFilterPreset<F> {
+  return objectHasKeys(preset, ['partialPresetValue', 'isActive']);
+}
+
+/**
+ * Convenience type for either a ClickableFilterPreset or a ClickablePartialFilterPreset of the same type.
+ */
+export type ClickableFilterPresetOrPartialPreset<F extends FilterWithPreset<P>, P extends string = string> = ClickableFilterPreset<F, P> | ClickablePartialFilterPreset<F>;

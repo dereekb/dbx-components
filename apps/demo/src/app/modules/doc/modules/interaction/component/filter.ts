@@ -1,5 +1,5 @@
 import { isSameDateDay } from '@dereekb/date';
-import { ClickableFilterPreset, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
+import { ClickableFilterPreset, ClickableFilterPresetOrPartialPreset, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { FilterWithPreset } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
@@ -98,3 +98,5 @@ export const DOC_INTERACTION_TEST_PARTIAL_PRESETS: ClickablePartialFilterPreset<
     }
   }
 ];
+
+export const DOC_INTERACTION_TEST_FULL_AND_PARTIAL_PRESETS: ClickableFilterPresetOrPartialPreset<DocInteractionTestFilter, DocInteractionTestFilterPresets>[] = [...DOC_INTERACTION_TEST_PRESETS, ...DOC_INTERACTION_TEST_PARTIAL_PRESETS];

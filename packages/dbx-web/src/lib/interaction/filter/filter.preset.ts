@@ -1,6 +1,6 @@
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
-import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective } from '@dereekb/dbx-core';
+import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset, ClickableFilterPresetOrPartialPreset, isClickablePartialFilterPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
 import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { FilterWithPreset } from '@dereekb/rxjs';
 
@@ -11,60 +11,93 @@ import { FilterWithPreset } from '@dereekb/rxjs';
 export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithPreset> implements OnDestroy {
   //TODO: Rename to AbstractDbxPresetFilterMenuDirective with next breaking changes
 
-  private _presets = new BehaviorSubject<ClickableFilterPreset<F>[]>([]);
+  private _presets = new BehaviorSubject<ClickableFilterPresetOrPartialPreset<F>[]>([]);
 
   readonly selected$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged(), shareReplay(1));
+  readonly presetsWithPresetStringOnly$: Observable<ClickableFilterPreset<F>[]> = this._presets.pipe(map((x) => x.filter((y) => Boolean((y as ClickableFilterPreset<F>).preset)) as ClickableFilterPreset<F>[]));
 
   readonly selectedPresetString$: Observable<Maybe<string>> = this.selected$.pipe(
     map((selectedFilter) => (selectedFilter ? selectedFilter.preset : undefined)),
     distinctUntilChanged()
   );
 
-  readonly presetAnchors$: Observable<ClickableAnchorLink[]> = combineLatest([this._presets, this.selectedPresetString$]).pipe(
-    map(([presets, selectedPresetString]) => {
-      return presets.map((x) => ({
-        ...x,
-        selected: x.preset === selectedPresetString,
-        onClick: () => {
-          this.selectPreset(x);
+  readonly presetAnchorsPairs$: Observable<['preset' | 'partialPreset', ClickableFilterPresetOrPartialPreset<F>, ClickableAnchorLink][]> = combineLatest([this._presets, this.selected$, this.selectedPresetString$]).pipe(
+    map(([presets, currentFilterValue, selectedPresetString]) => {
+      return presets.map((x) => {
+        let selected: boolean;
+        let type: 'preset' | 'partialPreset';
+
+        if (isClickableFilterPreset(x)) {
+          selected = x.preset === selectedPresetString;
+          type = 'preset';
+        } else {
+          selected = x.isActive(currentFilterValue);
+          type = 'partialPreset';
         }
-      }));
+
+        return [
+          type,
+          x,
+          {
+            ...x,
+            selected,
+            onClick: () => {
+              this.selectPreset(x);
+            }
+          }
+        ] as [typeof type, ClickableFilterPresetOrPartialPreset<F>, ClickableAnchorLink];
+      });
     }),
     shareReplay(1)
   );
 
-  readonly selectedPreset$: Observable<Maybe<ClickableFilterPreset<F>>> = combineLatest([this._presets, this.selectedPresetString$]).pipe(
-    map(([presets, selectedPresetString]) => {
-      return selectedPresetString != null ? presets.find((x) => x.preset === selectedPresetString) : undefined;
+  readonly presetAnchors$: Observable<ClickableAnchorLink[]> = this.presetAnchorsPairs$.pipe(
+    map((x) => x.map((x) => x[2])),
+    shareReplay(1)
+  );
+
+  readonly firstSelectedAnchorPair$ = this.presetAnchorsPairs$.pipe(
+    map((presets) => {
+      const firstSelected = presets.find((x) => x[2].selected);
+      return firstSelected ? firstSelected : undefined;
+    }),
+    shareReplay(1)
+  );
+
+  readonly selectedPreset$: Observable<Maybe<ClickableFilterPreset<F>>> = this.presetAnchorsPairs$.pipe(
+    map((presets) => {
+      const firstSelected = presets.filter((x) => x[0] === 'preset').find((x) => x[2].selected);
+      return firstSelected ? (firstSelected[1] as ClickableFilterPreset<F>) : undefined;
     }),
     shareReplay(1)
   );
 
   @Input()
-  get presets(): ClickableFilterPreset<F>[] {
+  get presets(): ClickableFilterPresetOrPartialPreset<F>[] {
     return this._presets.value;
   }
 
-  set presets(presets: ClickableFilterPreset<F>[]) {
+  set presets(presets: ClickableFilterPresetOrPartialPreset<F>[]) {
     this._presets.next(presets);
   }
 
   constructor(readonly filterSourceDirective: FilterSourceDirective<F>) {}
 
-  selectPreset(preset: ClickableFilterPreset<F>) {
-    const presetValue = preset.presetValue;
+  selectPreset(preset: ClickableFilterPresetOrPartialPreset<F>) {
+    const presetString = (preset as ClickableFilterPreset<F>).preset;
+    const presetValue = (preset as ClickableFilterPreset<F>).presetValue || (preset as ClickablePartialFilterPreset<F>).partialPresetValue;
 
     if (presetValue == null || (typeof presetValue !== 'function' && objectHasNoKeys(presetValue))) {
       // set and then reset if the value is null or empty
       this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
       this.filterSourceDirective.resetFilter();
     } else {
-      let filter = getValueFromGetter(preset.presetValue) as F;
+      let filter = getValueFromGetter(presetValue) as F;
 
-      if (filter.preset !== preset.preset) {
+      if (filter.preset !== presetString) {
         filter = {
           ...filter,
-          preset: preset.preset
+          preset: presetString
         };
       }
 

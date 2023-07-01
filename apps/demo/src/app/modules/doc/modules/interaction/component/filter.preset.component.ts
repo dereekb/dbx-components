@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
-import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './filter';
+import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS, DOC_INTERACTION_TEST_FULL_AND_PARTIAL_PRESETS } from './filter';
 
 @Component({
   selector: 'doc-interaction-test-filter-preset-filter',
@@ -8,5 +8,5 @@ import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './filter
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPresetFilterComponent)]
 })
 export class DocInteractionTestFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {
-  readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_TEST_PRESETS;
+  readonly presets = DOC_INTERACTION_TEST_FULL_AND_PARTIAL_PRESETS;
 }
