@@ -30,13 +30,13 @@ export function isAllowed<T>(input: ArrayOrValue<T>, allowedSet: AllowedSet<T>):
   let isAllowed = false;
 
   if (allowed) {
-    isAllowed = setContainsAnyValue(allowed, values);
+    isAllowed = setContainsAnyValue(allowed, values, true);
   } else {
     isAllowed = true;
   }
 
   if (isAllowed && disallowed) {
-    isAllowed = !setContainsAnyValue(disallowed, values);
+    isAllowed = !setContainsAnyValue(disallowed, values, true);
   }
 
   return isAllowed;

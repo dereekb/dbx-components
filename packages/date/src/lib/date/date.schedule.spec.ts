@@ -1,6 +1,24 @@
 import { DateBlockIndex } from './date.block';
 import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange } from '@dereekb/date';
-import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig, weekdayDateScheduleDayCodes, rawDateScheduleDayCodes, expandDateScheduleDayCodes, DateScheduleEncodedWeek, weekendDateScheduleDayCodes, expandDateScheduleDayCodesToDayOfWeekSet, expandDateScheduleRange, expandDateScheduleRangeToDateBlockRanges } from './date.schedule';
+import {
+  expandDateScheduleFactory,
+  DateSchedule,
+  dateScheduleDateBlockTimingFilter,
+  DateScheduleDayCode,
+  dateScheduleDayCodeFactory,
+  dateScheduleEncodedWeek,
+  dateScheduleDateFilter,
+  DateScheduleDateFilterConfig,
+  weekdayDateScheduleDayCodes,
+  rawDateScheduleDayCodes,
+  expandDateScheduleDayCodes,
+  DateScheduleEncodedWeek,
+  weekendDateScheduleDayCodes,
+  expandDateScheduleDayCodesToDayOfWeekSet,
+  expandDateScheduleRange,
+  expandDateScheduleRangeToDateBlockRanges,
+  isSameDateSchedule
+} from './date.schedule';
 import { addDays } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
@@ -558,6 +576,25 @@ describe('dateScheduleDayCodeFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('isSameDateSchedule()', () => {
+  it('should return true for the same date schedule.', () => {
+    const schedule: DateSchedule = { w: '89', ex: [0, 1], d: [2] };
+    expect(isSameDateSchedule(schedule, schedule)).toBe(true);
+  });
+
+  it('should return false for a date schedule with different ex days.', () => {
+    const schedule: DateSchedule = { w: '89', ex: [0, 1], d: [2] };
+    const scheduleB: DateSchedule = { ...schedule, ex: [] };
+    expect(isSameDateSchedule(schedule, scheduleB)).toBe(false);
+  });
+
+  it('should return false for a date schedule with different d days.', () => {
+    const schedule: DateSchedule = { w: '89', ex: [0, 1], d: [2] };
+    const scheduleB: DateSchedule = { ...schedule, d: [] };
+    expect(isSameDateSchedule(schedule, scheduleB)).toBe(false);
   });
 });
 
