@@ -1,6 +1,6 @@
 import { IndexNumber, IndexRange, ReadIndexRangeFunction, indexRangeReaderPairFactory, sortByIndexRangeAscendingCompareFunction, stepsFromIndex } from '../value/indexed';
 import { Maybe } from '../value/maybe.type';
-import { ArrayFindDecisionFunction } from './array';
+import { ArrayFindDecisionFunction } from './array.find';
 
 /**
  * Creates an IndexRange for the input array.

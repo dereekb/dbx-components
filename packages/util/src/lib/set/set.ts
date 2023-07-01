@@ -3,6 +3,8 @@ import { flattenArray } from '../array/array';
 import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
+import { DecisionFunction, invertDecision } from '../value';
+import { SetIncludesMode } from './set.mode';
 
 export type AllOrNoneSelection = 'all' | 'none';
 
@@ -192,15 +194,7 @@ export function findValuesFrom<T, K extends PrimativeKey = PrimativeKey>(config:
 }
 
 /**
- * Set inclusion comparison type.
- * - all: The set must include all values from values (set is a subset of values)
- * - all_reverse: All values must be included in the set (values is a subset of set)
- * - any: Any value from values is in the set
- */
-export type SetIncludesMode = 'all' | 'any';
-
-/**
- * Contextual function that checks whether or not the input values are included.
+ * Contextual decision function that checks whether or not the input values are included.
  */
 export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boolean;
 
@@ -264,7 +258,7 @@ export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToF
 }
 
 export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
-  return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => valuesSet.has(x)) !== -1 : false;
+  return valuesSet.size ? Array.from(asIterable(valuesToFind)).findIndex((x) => valuesSet.has(x)) !== -1 : false;
 }
 
 /**
@@ -288,7 +282,7 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
  * @returns
  */
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
-  return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) == -1 : false;
+  return valuesSet.size ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) === -1 : false;
 }
 
 /**

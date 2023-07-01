@@ -1,4 +1,4 @@
-import { FilterFunction, invertFilter } from '../filter/filter';
+import { invertBooleanReturnFunction } from '../function/function.boolean';
 import { FactoryWithRequiredInput } from '../getter/getter';
 import { MapFunction, AsyncMapFunction } from './map';
 import { Maybe } from './maybe.type';
@@ -22,9 +22,7 @@ export function decisionFunction<I>(decision: boolean): DecisionFunction<I> {
  * @param invert whether or not to apply the inversion.
  * @returns
  */
-export function invertDecision<F extends DecisionFunction<any>>(decisionFn: F, invert = true): F {
-  return invertFilter(decisionFn as FilterFunction, invert) as F;
-}
+export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: boolean) => F = invertBooleanReturnFunction;
 
 /**
  * Creates a DecisionFunction from the input.

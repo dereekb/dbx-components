@@ -1,4 +1,6 @@
+import { arrayDecision } from '../array/array.find';
 import { FieldOfType } from '../key';
+import { SetIncludesMode } from '../set/set.mode';
 import { KeyAsString } from '../type';
 
 export type EmptyObject = Record<string, never>;
@@ -12,6 +14,19 @@ export function objectHasKey(obj: unknown, key: string): boolean;
 export function objectHasKey<T, K extends keyof T>(obj: T, key: K): boolean;
 export function objectHasKey<T>(obj: T, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+/**
+ * Returns true if the object has all or any of the keys, based on the input mode. Defaults to all.
+ *
+ * @param obj
+ * @param keys
+ */
+export function objectHasKeys<T>(obj: T, keys: KeyAsString<keyof T>[], mode?: SetIncludesMode): boolean;
+export function objectHasKeys(obj: unknown, keys: string[], mode?: SetIncludesMode): boolean;
+export function objectHasKeys<T, K extends keyof T>(obj: T, keys: K[], mode?: SetIncludesMode): boolean;
+export function objectHasKeys<T>(obj: T, keys: string[], mode?: SetIncludesMode): boolean {
+  return arrayDecision(keys, (key) => objectHasKey(obj, key), mode ?? 'all');
 }
 
 export function applyToMultipleFields<T extends object, X = unknown>(value: X, fields: FieldOfType<T>[]): Partial<{ [K in keyof T]: X }> {

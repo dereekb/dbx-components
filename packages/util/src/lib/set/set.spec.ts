@@ -216,9 +216,9 @@ describe('setContainsAnyValue', () => {
     expect(setContainsAnyValue(set, [value])).toBe(true);
   });
 
-  it('should return true if the set contains a value.', () => {
+  it('should return true if the set contains any of the values', () => {
     const value = 1;
-    const set = new Set([value]);
+    const set = new Set([value, 2, 3]);
 
     expect(set.has(value));
     expect(setContainsAnyValue(set, value)).toBe(true);
