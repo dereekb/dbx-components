@@ -1,8 +1,9 @@
 import { Maybe } from '../value/maybe.type';
 import { flattenArray } from '../array/array';
-import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
-import { symmetricDifference } from 'extra-set';
+import { asIterable, IterableOrValue, iterableToArray, useIterableOrValue } from '../iterable/iterable';
+import { symmetricDifference, values } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
+import { SetIncludesMode } from './set.mode';
 
 export type AllOrNoneSelection = 'all' | 'none';
 
@@ -192,15 +193,7 @@ export function findValuesFrom<T, K extends PrimativeKey = PrimativeKey>(config:
 }
 
 /**
- * Set inclusion comparison type.
- * - all: The set must include all values from values (set is a subset of values)
- * - all_reverse: All values must be included in the set (values is a subset of set)
- * - any: Any value from values is in the set
- */
-export type SetIncludesMode = 'all' | 'any';
-
-/**
- * Contextual function that checks whether or not the input values are included.
+ * Contextual decision function that checks whether or not the input values are included.
  */
 export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boolean;
 
@@ -211,8 +204,8 @@ export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boole
  * @param valuesToFind
  * @param mode
  */
-export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all'): SetIncludesFunction<T> {
-  let fn: (set: Set<T>, values: IterableOrValue<T>) => boolean;
+export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all', emptyValuesToFindArrayResult?: boolean): SetIncludesFunction<T> {
+  let fn: (set: Set<T>, values: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean) => boolean;
 
   if (mode === 'any') {
     fn = setContainsAnyValue;
@@ -220,7 +213,7 @@ export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode 
     fn = setContainsAllValues;
   }
 
-  return (valuesToFind) => fn(valuesSet, valuesToFind);
+  return (valuesToFind) => fn(valuesSet, valuesToFind, emptyValuesToFindArrayResult);
 }
 
 /**
@@ -238,57 +231,112 @@ export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<
 /**
  * Returns false if the input array contains any value from the second array.
  */
-export function containsNoneOfValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>): boolean {
+export function containsNoneOfValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean): boolean {
   const set = new Set(asIterable(valuesToFind, false));
-  return containsNoValueFromSet(values, set);
+  return containsNoValueFromSet(values, set, emptyValuesToFindArrayResult);
 }
 
-export function containsNoValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>): boolean {
-  return setContainsNoneOfValue(valuesToFind, values);
+export function containsNoValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>, emptyValuesArrayResult?: boolean): boolean {
+  return setContainsNoneOfValue(valuesToFind, values, emptyValuesArrayResult);
 }
 
-export function setContainsNoneOfValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
-  return !setContainsAnyValue(valuesSet, valuesToFind);
+export function setContainsNoneOfValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = true): boolean {
+  return !setContainsAnyValue(valuesSet, valuesToFind, emptyValuesToFindArrayResult);
 }
 
 /**
  * Returns true if the input array contains any value from the second array.
+ *
+ * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  */
-export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>): boolean {
-  const set = new Set(asIterable(valuesToFind, false));
-  return containsAnyValueFromSet(values, set);
+export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean): boolean {
+  const set = new Set(asIterable(values, false));
+  return setContainsAnyValue(set, valuesToFind, emptyValuesToFindArrayResult);
 }
 
-export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>): boolean {
-  return setContainsAnyValue(valuesToFind, values);
-}
-
-export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
-  return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => valuesSet.has(x)) !== -1 : false;
-}
+// TODO: Continue checking all values
 
 /**
- * Returns true if values contains all values in valuesToFind.
+ * Returns true if one or more of the input values are contained within the input set.
+ *
+ * If values is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
  * @param values
  * @param valuesToFind
  * @returns
  */
-export function containsAllValues<T>(values: Iterable<T>, valuesToFind: IterableOrValue<T>): boolean {
-  const set = new Set(values);
-  return setContainsAllValues(set, valuesToFind);
+export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>, emptyValuesArrayResult?: boolean): boolean {
+  return setContainsAnyValue(valuesToFind, values, emptyValuesArrayResult);
 }
 
 /**
- * Returns true if valuesSet contains all values in valuesToFind.
+ * Returns true if the input set contains any values from valuesToFind.
+ *
+ * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
  * @param valuesSet
  * @param valuesToFind
- * @param returnOnEmptyValuesSet
+ * @param emptyValuesToFindArrayResult
  * @returns
  */
-export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
-  return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) == -1 : false;
+export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = false): boolean {
+  let result: boolean;
+
+  if (valuesSet) {
+    const valuesToFindArray = iterableToArray(valuesToFind);
+
+    if (valuesToFindArray.length > 0) {
+      result = valuesToFindArray.findIndex((x) => valuesSet.has(x)) !== -1;
+    } else {
+      result = emptyValuesToFindArrayResult;
+    }
+  } else {
+    result = false;
+  }
+
+  return result;
+}
+
+/**
+ * Returns true if values contains all values in valuesToFind.
+ *
+ * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to true.
+ *
+ * @param values
+ * @param valuesToFind
+ * @returns
+ */
+export function containsAllValues<T>(values: Iterable<T>, valuesToFind: IterableOrValue<T>, emptyValuesArrayResult?: boolean): boolean {
+  const set = new Set(values);
+  return setContainsAllValues(set, valuesToFind, emptyValuesArrayResult);
+}
+
+/**
+ * Returns true if the input set contains all values from valuesToFind.
+ *
+ * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to true.
+ *
+ * @param valuesSet
+ * @param valuesToFind
+ * @param emptyValuesToFindArrayResult
+ * @returns
+ */
+export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = true): boolean {
+  let result: boolean;
+
+  if (valuesSet) {
+    const valuesToFindArray = iterableToArray(valuesToFind);
+
+    if (valuesToFindArray.length > 0) {
+      result = valuesToFindArray.findIndex((x) => !valuesSet.has(x)) == -1;
+    } else {
+      result = emptyValuesToFindArrayResult;
+    }
+  } else {
+    result = false;
+  }
+
+  return result;
 }
 
 /**
@@ -309,7 +357,7 @@ export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Ite
  * @param b
  */
 export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
-  return a && b ? a.size === b.size && setContainsAllValues(a, b) : a == b;
+  return a && b ? a.size === b.size && setContainsAllValues(a, b, true) : a == b;
 }
 
 // MARK: Compat

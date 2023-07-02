@@ -1,4 +1,5 @@
 import { filterMaybeValues } from '../array/array.value';
+import { invertBooleanReturnFunction } from '../function/function.boolean';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -47,13 +48,4 @@ export function mergeFilterFunctions<T>(...inputFilters: Maybe<FilterFunction<T>
  * @param invert whether or not to apply the inversion.
  * @returns
  */
-export function invertFilter<T = unknown, F extends FilterFunction<T> = FilterFunction<T>>(filterFn: F, invert = true): F {
-  if (invert) {
-    return ((value: T, index: number) => {
-      const result: boolean = filterFn.call(null, value, index);
-      return !result;
-    }) as F;
-  } else {
-    return filterFn;
-  }
-}
+export const invertFilter: <T = unknown, F extends FilterFunction<T> = FilterFunction<T>>(filterFn: F, invert?: boolean) => F = invertBooleanReturnFunction;

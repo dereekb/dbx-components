@@ -1,7 +1,7 @@
 import { Maybe, Destroyable, ReadableError, ErrorInput } from '@dereekb/util';
-import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay, from, firstValueFrom, tap } from 'rxjs';
+import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay, from, tap } from 'rxjs';
 import { beginLoading, errorResult, LoadingState, loadingStateHasFinishedLoading, loadingStateIsLoading, promiseFromLoadingState, successResult } from '../loading';
-import { filterMaybe, preventComplete, tapLog } from '../rxjs';
+import { filterMaybe, preventComplete } from '../rxjs';
 import { SubscriptionObject } from '../subscription';
 
 /**

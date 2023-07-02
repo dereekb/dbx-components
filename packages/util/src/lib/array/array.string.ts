@@ -47,17 +47,17 @@ export function findUniqueCaseInsensitiveStrings<T, K extends string = string>(m
   return filterUniqueValues(models, (x: T) => caseInsensitiveString(readKey(x)), toCaseInsensitiveStringArray(additionalKeys));
 }
 
-export function containsStringAnyCase(values: Iterable<string>, valueToFind: string): boolean {
-  return containsAnyStringAnyCase(values, [valueToFind]);
+export function containsStringAnyCase(values: Iterable<string>, valueToFind: string, mustContainAtleastOneItem?: boolean): boolean {
+  return containsAnyStringAnyCase(values, [valueToFind], mustContainAtleastOneItem);
 }
 
-export function containsAnyStringAnyCase(values: Iterable<string>, valuesToFind: Iterable<string>): boolean {
-  return containsAnyValue(toCaseInsensitiveStringArray(values), toCaseInsensitiveStringArray(valuesToFind));
+export function containsAnyStringAnyCase(values: Iterable<string>, valuesToFind: Iterable<string>, mustContainAtleastOneItem = false): boolean {
+  return containsAnyValue(toCaseInsensitiveStringArray(values), toCaseInsensitiveStringArray(valuesToFind), !mustContainAtleastOneItem);
 }
 
-export function containsAllStringsAnyCase(values: Iterable<string>, valuesToFind: Iterable<string>): boolean {
+export function containsAllStringsAnyCase(values: Iterable<string>, valuesToFind: Iterable<string>, mustContainAtleastOneItem = false): boolean {
   const valuesToFindArray = toCaseInsensitiveStringArray(valuesToFind);
-  return valuesToFindArray.length ? containsAllValues(toCaseInsensitiveStringArray(values), valuesToFindArray) : true;
+  return valuesToFindArray.length ? containsAllValues(toCaseInsensitiveStringArray(values), valuesToFindArray, !mustContainAtleastOneItem) : true;
 }
 
 export interface FindUniqueStringsTransformConfig extends TransformStringFunctionConfig {

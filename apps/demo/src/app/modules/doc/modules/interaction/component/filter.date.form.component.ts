@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractSyncFormlyFormDirective, DbxDateTimeValueMode, dateTimeField, fixedDateRangeField, provideFormlyContext, textField } from '@dereekb/dbx-form';
+import { AbstractSyncFormlyFormDirective, fixedDateRangeField, provideFormlyContext } from '@dereekb/dbx-form';
 import { DateRange, DateRangeType } from '@dereekb/date';
 import { DocInteractionTestFilterFormValue } from './filter.custom.form.component';
 

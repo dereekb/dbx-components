@@ -254,8 +254,8 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
   }
 
   function calculateStartAndEndForDate(startOfFn: (date: Date) => Date, endOfFn: (date: Date) => Date) {
-    let preStart: Date = start;
-    let preEnd: Date = end;
+    const preStart: Date = start;
+    const preEnd: Date = end;
 
     start = startOfFn(preStart);
     end = endOfFn(preEnd);
@@ -800,7 +800,7 @@ export interface DateRangeWithDateOrStringValue {
  * @param dateRange
  */
 export function getDaysOfWeekInDateRange(dateRange: DateRange): DayOfWeek[] {
-  let days: DayOfWeek[] = [];
+  const days: DayOfWeek[] = [];
 
   const daysRange = differenceInDays(dateRange.start, dateRange.end);
 

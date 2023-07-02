@@ -1,5 +1,6 @@
 export * from './array.boolean';
 export * from './array.filter';
+export * from './array.find';
 export * from './array.factory';
 export * from './array.index';
 export * from './array.indexed';

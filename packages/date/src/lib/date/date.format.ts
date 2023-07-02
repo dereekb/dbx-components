@@ -179,14 +179,25 @@ export function formatToDayTimeRangeString(startOrDateRange: DateRange | Date, e
 }
 
 /**
- * Formats the input dates to be date start - end using formatToShortDateString().
+ * Formats the input dates to be date start - end using formatToShortDateString(). Can alternatively specify a custom format function.
  *
  * I.E. 02/01/1992 - 03/01/1992
  */
-export function formatToDayRangeString(startOrDateRange: DateRange): string;
-export function formatToDayRangeString(start: Date, end?: Maybe<Date>): string;
-export function formatToDayRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>): string {
-  return formatDateRange(dateOrDateRangeToDateRange(startOrDateRange, end), { format: formatToShortDateString, simplifySameDate: true });
+export function formatToDayRangeString(startOrDateRange: DateRange, format?: FormatDateFunction): string;
+export function formatToDayRangeString(start: Date, end?: Maybe<Date>, format?: FormatDateFunction): string;
+export function formatToDayRangeString(startOrDateRange: DateRange | Date, endOrFormat?: Maybe<Date> | FormatDateFunction, inputFormat?: FormatDateFunction): string {
+  let end: Maybe<Date>;
+
+  if (endOrFormat != null) {
+    if (typeof endOrFormat === 'function') {
+      inputFormat = endOrFormat;
+    } else {
+      end = endOrFormat;
+    }
+  }
+
+  const format: FormatDateFunction = inputFormat ?? formatToShortDateString;
+  return formatDateRange(dateOrDateRangeToDateRange(startOrDateRange, end), { format, simplifySameDate: true });
 }
 
 /**

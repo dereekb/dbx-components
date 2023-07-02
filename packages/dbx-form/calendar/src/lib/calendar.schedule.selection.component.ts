@@ -6,7 +6,7 @@ import { DayOfWeek, Maybe } from '@dereekb/util';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
 import { DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { ObservableOrValue, ObservableOrValueGetter, SubscriptionObject, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
+import { ObservableOrValue, ObservableOrValueGetter, SubscriptionObject, asObservable } from '@dereekb/rxjs';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
 import { DateRangeType, dateRange, isSameDate } from '@dereekb/date';
 import { endOfWeek } from 'date-fns';

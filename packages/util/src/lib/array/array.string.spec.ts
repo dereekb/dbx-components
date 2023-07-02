@@ -1,7 +1,7 @@
 import { TransformStringFunction } from '../string/transform';
 import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform } from './array.string';
 
-describe('findUniqueCaseInsensitiveStrings', () => {
+describe('findUniqueCaseInsensitiveStrings()', () => {
   it('should return only the strings that are unique from the array.', () => {
     const uniqueValues = ['a', 'b'];
     const values = [...uniqueValues, ...uniqueValues.map((x) => x.toUpperCase())];
@@ -12,7 +12,15 @@ describe('findUniqueCaseInsensitiveStrings', () => {
   });
 });
 
-describe('containsStringAnyCase', () => {
+describe('containsStringAnyCase()', () => {
+  it('should return true if the array contains the string.', () => {
+    const value = 'a';
+    const values = [value];
+
+    const result = containsStringAnyCase(values, value);
+    expect(result).toBe(true);
+  });
+
   it('should return true if the array contains the string in any case.', () => {
     const value = 'a';
     const values = [value.toUpperCase()];
@@ -21,9 +29,17 @@ describe('containsStringAnyCase', () => {
     expect(result).toBe(true);
   });
 
-  it('should return false if the array does not contain the value.', () => {
+  it('should return false if the array does not contain the value because it is empty.', () => {
     const value = 'a';
     const values: string[] = [];
+
+    const result = containsStringAnyCase(values, value);
+    expect(result).toBe(false);
+  });
+
+  it('should return false if the array does not contain the value.', () => {
+    const value = 'a';
+    const values: string[] = ['b'];
 
     const result = containsStringAnyCase(values, value);
     expect(result).toBe(false);
@@ -39,16 +55,39 @@ describe('containsAnyStringAnyCase', () => {
     expect(result).toBe(true);
   });
 
+  it('should return false if the array does not contain any of the input values because it is empty.', () => {
+    const value = 'a';
+    const valuesSet: string[] = [];
+
+    const result = containsAnyStringAnyCase(valuesSet, [value]);
+    expect(result).toBe(false);
+  });
+
   it('should return false if the array does not contain any of the input values.', () => {
     const value = 'a';
-    const values: string[] = [];
+    const valuesSet: string[] = ['b'];
 
-    const result = containsAnyStringAnyCase(values, [value]);
+    const result = containsAnyStringAnyCase(valuesSet, [value]);
+    expect(result).toBe(false);
+  });
+
+  it('should return true if the comparison array is empty.', () => {
+    const values: string[] = ['b'];
+    const result = containsAnyStringAnyCase(values, []);
+    expect(result).toBe(true);
+  });
+
+  it('should return false if the comparison array is empty and mustContainAtleastOneItem is true.', () => {
+    const value = 'a';
+    const values: string[] = ['b'];
+    const mustContainAtleastOneItem = true;
+
+    const result = containsAnyStringAnyCase(values, [], mustContainAtleastOneItem);
     expect(result).toBe(false);
   });
 });
 
-describe('containsAllStringsAnyCase', () => {
+describe('containsAllStringsAnyCase()', () => {
   it('should return true if the array contains all of the input strings in any case.', () => {
     const value = 'a';
     const values = [value.toUpperCase()];
@@ -66,7 +105,7 @@ describe('containsAllStringsAnyCase', () => {
   });
 });
 
-describe('findUniqueTransform', () => {
+describe('findUniqueTransform()', () => {
   describe('caseInsensitive=true', () => {
     const transform = findUniqueTransform({
       caseInsensitive: true

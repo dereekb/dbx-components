@@ -2,7 +2,7 @@ import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, DbxActionValueOnTriggerResult } from '@dereekb/dbx-core';
-import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservableFromGetter, asObservable } from '@dereekb/rxjs';
+import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { MapFunction } from '@dereekb/util';
 

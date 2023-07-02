@@ -1,4 +1,4 @@
-import { addDays, addHours, endOfDay, startOfDay } from 'date-fns';
+import { addHours, endOfDay, startOfDay } from 'date-fns';
 import { LimitDateTimeInstance } from './date.time.limit';
 
 describe('LimitDateTimeInstance', () => {

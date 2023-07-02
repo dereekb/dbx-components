@@ -2,7 +2,7 @@ import { Maybe } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
 import { setMinutes, setHours, startOfDay, addSeconds } from 'date-fns';
-import { DateBlock, DateBlockRange, dateBlockTiming, DateBlockTiming } from './date.block';
+import { DateBlockRange, dateBlockTiming, DateBlockTiming } from './date.block';
 import { IsValidDateBlockRange, IsValidDateBlockRangeSeries, IsValidDateBlockTiming } from './date.validator';
 
 class TestDateBlockTimingModelClass {

@@ -1,7 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { asObservableFromGetter, ObservableOrValueGetter } from '@dereekb/rxjs';
-import { FactoryWithRequiredInput, GetterOrValue, getValueFromGetter } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { GetterOrValue, getValueFromGetter } from '@dereekb/util';
 
 /**
  * Retrieves the value from the getter. This is a non-pure pipe. Use the getValueOncePipe instead for a pure pipe.
