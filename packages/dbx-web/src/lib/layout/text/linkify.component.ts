@@ -2,6 +2,7 @@ import { Component, Input, OnDestroy } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Used to "linkify" the input text.
@@ -9,28 +10,33 @@ import { DomSanitizer } from '@angular/platform-browser';
 @Component({
   selector: 'dbx-linkify',
   template: `
-    <span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>
-  `
+    <span [innerHTML]="linkifiedBody$ | async"></span>
+  `,
+  host: {
+    class: 'dbx-i dbx-linkify'
+  }
 })
 export class DbxLinkifyComponent implements OnDestroy {
-  private _text = new BehaviorSubject<string>('');
+  private _text = new BehaviorSubject<Maybe<string>>(undefined);
 
   readonly linkifiedText$ = this._text.pipe(
     distinctUntilChanged(),
     map((x) =>
-      linkifyStr(x, {
-        defaultProtocol: 'https',
-        target: {
-          url: '_blank'
-        }
-      })
+      x
+        ? linkifyStr(x, {
+            defaultProtocol: 'https',
+            target: {
+              url: '_blank'
+            }
+          })
+        : undefined
     ),
     shareReplay(1)
   );
 
   readonly linkifiedBody$ = this.linkifiedText$.pipe(
     map((x) => {
-      return this.sanitizer.bypassSecurityTrustHtml(x);
+      return x ? this.sanitizer.bypassSecurityTrustHtml(x) : undefined;
     }),
     shareReplay(1)
   );
@@ -42,11 +48,11 @@ export class DbxLinkifyComponent implements OnDestroy {
   }
 
   @Input()
-  get text(): string {
+  get text(): Maybe<string> {
     return this._text.value;
   }
 
-  set text(text: string) {
+  set text(text: Maybe<string>) {
     this._text.next(text);
   }
 }
