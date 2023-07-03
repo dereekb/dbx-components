@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, map, of } from 'rxjs';
+import { BehaviorSubject, map, of, first } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
 import { combineLoadingStatesStatus, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
@@ -110,6 +110,25 @@ describe('combineLoadingStatesStatus()', () => {
       expect(x.loading).toBe(true);
       expect(loadingStateIsLoading(x)).toBe(true);
       done();
+    });
+  });
+
+  it('should return a loading state as success after all items have finished loading', (done) => {
+    const first = new BehaviorSubject<LoadingState<number>>(beginLoading());
+    const success = of(successResult(1));
+
+    const obs = combineLoadingStatesStatus([first, success]);
+
+    obs.subscribe((x) => {
+      if (x.loading) {
+        expect(loadingStateIsLoading(x)).toBe(true);
+        first.next(successResult(1)); // trigger loading completion
+      } else {
+        expect(x.loading).toBe(false);
+        expect(loadingStateIsLoading(x)).toBe(false);
+        first.complete();
+        done();
+      }
     });
   });
 
