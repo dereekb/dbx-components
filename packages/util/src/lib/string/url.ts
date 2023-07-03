@@ -10,6 +10,18 @@ import { TransformStringFunction } from './transform';
 import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from './char';
 
 /**
+ * Connection protocol
+ *
+ * I.E. http, https, etc.
+ */
+export type WebsiteProtocol = string;
+
+export type HttpWebsiteProtocol = 'http';
+export type HttpsWebsiteProtocol = 'https';
+
+export type KnownHttpWebsiteProtocol = HttpWebsiteProtocol | HttpsWebsiteProtocol;
+
+/**
  * A website domain.
  *
  * Examples:
@@ -241,9 +253,39 @@ export function websiteDomainAndPathPair(input: WebsiteDomainAndPath): WebsiteDo
 }
 
 export const HTTP_OR_HTTPS_REGEX: RegExp = /^https:\/\/|http:\/\//;
+export const WEB_PROTOCOL_PREFIX_REGEX: RegExp = /^(.)+:\/\//;
 
 /**
- * Removes both http:// and https:// from the url.
+ * Removes any existing protocol and sets the protocol to match the input.
+ *
+ * @param url
+ * @param protocol
+ */
+export function setWebProtocolPrefix(input: string, protocol: WebsiteProtocol): string {
+  return `${protocol}://${removeWebProtocolPrefix(input)}`;
+}
+
+/**
+ * Removes any existing protocol prefix from the input.
+ *
+ * @param input
+ */
+export function removeWebProtocolPrefix(input: string): string {
+  return input.replace(WEB_PROTOCOL_PREFIX_REGEX, '');
+}
+
+/**
+ * Adds both https:// to the url.
+ *
+ * @param url
+ * @returns
+ */
+export function addHttpToUrl(url: BaseWebsiteUrl | WebsiteDomainAndPath | string, prefix: KnownHttpWebsiteProtocol = 'https'): BaseWebsiteUrl {
+  return setWebProtocolPrefix(url, prefix) as BaseWebsiteUrl;
+}
+
+/**
+ * Removes the prefixes http:// and https:// from the url. If these protocols are not used, nothing is removed.
  *
  * @param url
  * @returns

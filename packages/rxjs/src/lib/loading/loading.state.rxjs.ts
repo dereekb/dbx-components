@@ -51,9 +51,9 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
       if (firstErrorState) {
         result = errorResult(firstErrorState.error);
       } else {
-        const statesCurrentlyLoading = allLoadingStates.find(loadingStateIsLoading);
+        const oneOrMoreStatesAreCurrentlyLoading = allLoadingStates.findIndex(loadingStateIsLoading) !== -1;
 
-        if (statesCurrentlyLoading) {
+        if (oneOrMoreStatesAreCurrentlyLoading) {
           result = beginLoading(); // still loading
         } else {
           result = successResult(true);
@@ -62,7 +62,7 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
 
       return result;
     }),
-    distinctUntilChanged((x, y) => loadingStateType(x) !== loadingStateType(y)),
+    distinctUntilChanged((x, y) => loadingStateType(x) === loadingStateType(y)),
     shareReplay(1)
   );
 }

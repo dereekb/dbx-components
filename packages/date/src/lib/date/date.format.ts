@@ -225,8 +225,10 @@ export function formatToShortDateString(date: Date = new Date()): ISO8601DayStri
   return format(date, dateShortDateStringFormat);
 }
 
+export const dateMonthDayStringFormat = 'MM/dd';
+
 export function formatToMonthDayString(date: Date = new Date()): ISO8601DayString {
-  return format(date, 'MM/dd');
+  return format(date, dateMonthDayStringFormat);
 }
 
 export function formatToDateString(date: Date): string {

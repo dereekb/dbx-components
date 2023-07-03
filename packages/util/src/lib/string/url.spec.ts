@@ -1,4 +1,5 @@
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters } from './url';
+import { set } from 'date-fns';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix } from './url';
 
 const domain = 'dereekb.com';
 
@@ -152,6 +153,34 @@ describe('websitePathFromWebsiteDomainAndPath()', () => {
   it('should return only a slash if the input is a domain', () => {
     const result = websitePathFromWebsiteDomainAndPath(domain);
     expect(result).toBe('/');
+  });
+});
+
+describe('setWebProtocolPrefix()', () => {
+  const domain = 'dereekb.com';
+
+  it('should replace http:// from the string with https://', () => {
+    const result = setWebProtocolPrefix(`http://${domain}`, 'https');
+    expect(result).toBe(`https://${domain}`);
+  });
+});
+
+describe('removeWebProtocolPrefix()', () => {
+  const domain = 'dereekb.com';
+
+  it('should remove http:// from the string', () => {
+    const result = removeWebProtocolPrefix(`http://${domain}`);
+    expect(result).toBe(domain);
+  });
+
+  it('should remove https:// from the string', () => {
+    const result = removeWebProtocolPrefix(`https://${domain}`);
+    expect(result).toBe(domain);
+  });
+
+  it('should remove file:// from the string', () => {
+    const result = removeWebProtocolPrefix(`file://${domain}`);
+    expect(result).toBe(domain);
   });
 });
 
