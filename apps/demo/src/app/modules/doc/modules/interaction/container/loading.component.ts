@@ -10,7 +10,6 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 })
 export class DocInteractionLoadingComponent {
   readonly loading$ = interval(1000, undefined).pipe(
-    tapLog('x'),
     map((x) => Boolean(x % 2)),
     shareReplay(1)
   );

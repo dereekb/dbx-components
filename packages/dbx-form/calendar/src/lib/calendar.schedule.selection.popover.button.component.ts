@@ -8,12 +8,14 @@ import { formatToMonthDayString } from '@dereekb/date';
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-popover-button',
   template: `
-    <dbx-button #buttonPopoverOrigin icon="date_range" [raised]="true" color="accent" [text]="buttonText$ | async" (buttonClick)="openPopover()"></dbx-button>
+    <dbx-button #buttonPopoverOrigin icon="date_range" [disabled]="disabled$ | async" [raised]="true" color="accent" [text]="buttonText$ | async" (buttonClick)="openPopover()"></dbx-button>
   `
 })
 export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   @ViewChild('buttonPopoverOrigin', { read: ElementRef })
   buttonPopoverOrigin!: ElementRef;
+
+  readonly disabled$ = this.dbxCalendarScheduleSelectionStore.isViewReadonly$;
 
   readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
     map((x) => {

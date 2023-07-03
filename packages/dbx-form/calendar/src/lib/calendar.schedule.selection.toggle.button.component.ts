@@ -1,8 +1,9 @@
-import { Component, Injector } from '@angular/core';
+import { Component, Injector, Input, OnDestroy } from '@angular/core';
 import { DbxPopoverService } from '@dereekb/dbx-web';
-import { map, shareReplay } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Toggle button for selecting and clearing the current selection.
@@ -13,8 +14,20 @@ import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
     <dbx-button [disabled]="disableButton$ | async" [buttonDisplay]="buttonDisplay$ | async" [raised]="true" (buttonClick)="toggleSelection()"></dbx-button>
   `
 })
-export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {
-  readonly disableButton$ = this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(map((x) => !x));
+export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implements OnDestroy {
+  private _disabled = new BehaviorSubject<Maybe<boolean>>(false);
+
+  readonly disableButton$ = this._disabled.pipe(
+    switchMap((disabled) => {
+      if (disabled) {
+        return of(true);
+      } else {
+        return this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(map((x) => !x));
+      }
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly buttonDisplay$ = this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(
     map((x) => {
@@ -43,7 +56,16 @@ export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {
 
   constructor(readonly popoverService: DbxPopoverService, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, readonly injector: Injector) {}
 
+  ngOnDestroy(): void {
+    this._disabled.complete();
+  }
+
   toggleSelection() {
     this.dbxCalendarScheduleSelectionStore.toggleSelection();
+  }
+
+  @Input()
+  set disabled(disabled: Maybe<boolean>) {
+    this._disabled.next(disabled);
   }
 }
