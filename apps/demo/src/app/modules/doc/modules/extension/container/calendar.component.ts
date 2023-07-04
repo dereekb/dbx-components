@@ -141,7 +141,10 @@ export class DocExtensionCalendarComponent implements OnInit {
     startWith(0),
     map((i) => {
       const even = isEvenNumber(i);
-      const x: Building<DbxScheduleSelectionCalendarComponentConfig> = {};
+      const x: Building<DbxScheduleSelectionCalendarComponentConfig> = {
+        readonly: even,
+        showButtonsOnReadonly: true
+      };
 
       if (even) {
         x.customizeDay = (x, y) => {

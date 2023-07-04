@@ -1,7 +1,7 @@
-<dbx-calendar-base class="dbx-schedule-selection-calendar">
+<dbx-calendar-base class="dbx-schedule-selection-calendar" [ngClass]="(readonly$ | async) ? 'dbx-schedule-selection-calendar-readonly' : ''">
   <ng-container controls>
     <ng-container *ngIf="showClearSelectionButton$ | async">
-      <dbx-schedule-selection-calendar-selection-toggle-button></dbx-schedule-selection-calendar-selection-toggle-button>
+      <dbx-schedule-selection-calendar-selection-toggle-button [disabled]="readonly$ | async"></dbx-schedule-selection-calendar-selection-toggle-button>
       <dbx-button-spacer></dbx-button-spacer>
     </ng-container>
     <dbx-injection [config]="datePopoverButtonInjectionConfig$ | async"></dbx-injection>

@@ -59,6 +59,12 @@ export type PartialCalendarScheduleSelectionInputDateRange = Partial<MaybeMap<Ca
 
 export interface CalendarScheduleSelectionState extends PartialCalendarScheduleSelectionInputDateRange {
   /**
+   * Readonly state of the view.
+   *
+   * Does not affect state changes directly, but instead acts as a flag for the parent view to set and the consuming views to update on.
+   */
+  isViewReadonly?: Maybe<boolean>;
+  /**
    * Filters the days of the schedule to only allow selecting days in the schedule.
    *
    * If filter.start is provided, then the timezone is ignored, if one is present.
@@ -404,6 +410,12 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly isViewReadonly$ = this.state$.pipe(
+    map((x) => x.isViewReadonly),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   readonly setMinMaxDateRange = this.updater(updateStateWithMinMaxDateRange);
   readonly setFilter = this.updater(updateStateWithFilter);
@@ -431,6 +443,13 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly setDateScheduleRangeValue = this.updater((state, value: Maybe<DateScheduleRange>) => updateStateWithDateScheduleRangeValue(state, value));
   readonly setCellContentFactory = this.updater((state, cellContentFactory: CalendarScheduleSelectionCellContentFactory) => ({ ...state, cellContentFactory }));
+
+  /**
+   * Used by the parent view to propogate a readonly state.
+   *
+   * Should typically not be used by the user directly with the intention of the parent synchronizing to this state.
+   */
+  readonly setViewReadonlyState = this.updater((state, isViewReadonly: boolean) => ({ ...state, isViewReadonly }));
 }
 
 export function updateStateWithInitialSelectionState(state: CalendarScheduleSelectionState, initialSelectionState: Maybe<AllOrNoneSelection>): CalendarScheduleSelectionState {

@@ -19,6 +19,10 @@
     }
   }
 
+  .dbx-schedule-selection-calendar.dbx-schedule-selection-calendar-readonly .dbx-calendar-content {
+    pointer-events: none;
+  }
+
   .dbx-schedule-selection-calendar-compact .dbx-schedule-selection-calendar {
     .cal-month-view .cal-day-cell {
       min-height: 60px;
