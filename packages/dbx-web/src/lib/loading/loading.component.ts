@@ -1,9 +1,10 @@
 import { BehaviorSubject, shareReplay, Observable, distinctUntilChanged, map, switchMap, combineLatest, of } from 'rxjs';
-import { OnDestroy, Component, Input } from '@angular/core';
+import { OnDestroy, Component, Input, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { LoadingContext } from '@dereekb/rxjs';
 import { ErrorInput, Maybe } from '@dereekb/util';
+import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
 
 export interface DbxLoadingComponentState {
   loading: boolean;
@@ -23,11 +24,11 @@ export interface DbxLoadingComponentState {
       <ng-content error select="[error]"></ng-content>
       <ng-content errorAction select="[errorAction]"></ng-content>
     </dbx-basic-loading>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxLoadingComponent implements OnDestroy {
   private _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
-
   private _inputLoading = new BehaviorSubject<Maybe<boolean>>(true);
   private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
 
@@ -43,6 +44,7 @@ export class DbxLoadingComponent implements OnDestroy {
       }
     }),
     distinctUntilChanged((a, b) => a.loading === b.loading && a.error === b.error),
+    tapSafeMarkForCheck(this.cdRef),
     shareReplay(1)
   );
 
@@ -51,6 +53,7 @@ export class DbxLoadingComponent implements OnDestroy {
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   readonly error$ = this.state$.pipe(
     map((x) => x.error),
     distinctUntilChanged(),
@@ -80,6 +83,8 @@ export class DbxLoadingComponent implements OnDestroy {
    */
   @Input()
   padding?: Maybe<boolean>;
+
+  constructor(readonly cdRef: ChangeDetectorRef) {}
 
   ngOnDestroy() {
     this._context.complete();

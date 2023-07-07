@@ -102,6 +102,22 @@ $scroll-content-bottom-padding: 42px;
       padding: 0 calc($content-container-padding / 3);
     }
 
+    &.container-top-padding-none {
+      padding-top: 0;
+    }
+
+    &.container-top-padding-min {
+      padding-top: 2px;
+    }
+
+    &.container-top-padding-small {
+      padding-top: 6px;
+    }
+
+    &.container-top-padding-normal {
+      padding-top: 12px;
+    }
+
     // width
     &.container-small {
       max-width: $max-small-content-container-width;
@@ -125,6 +141,10 @@ $scroll-content-bottom-padding: 42px;
       overflow-x: hidden;
       overflow-y: auto;
     }
+  }
+
+  .dbx-content-container-header-padded {
+    padding: $content-container-padding-small-screen;
   }
 
   .dbx-scroll-content {
