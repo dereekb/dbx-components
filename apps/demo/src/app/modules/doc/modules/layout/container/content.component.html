@@ -3,17 +3,36 @@
     <!-- Examples -->
     <doc-feature-example header=".dbx-content-container" hint="A content container that can be configured to restrict growth and handle padding responsively. Uses margin: auto to center content horizontally.">
       <h4>Padding can be customized.</h4>
-      <dbx-content-container padding="none">
-        <p style="background: rgba(200, 47, 142, 0.25)">This container has no padding.</p>
+
+      <dbx-content-container>
+        <dbx-content-container padding="none">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has no padding.</span>
+        </dbx-content-container>
+        <dbx-content-container padding="min">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has min padding.</span>
+        </dbx-content-container>
+        <dbx-content-container padding="small">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has small padding.</span>
+        </dbx-content-container>
+        <dbx-content-container padding="normal">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has normal padding.</span>
+        </dbx-content-container>
       </dbx-content-container>
-      <dbx-content-container padding="min">
-        <p style="background: rgba(200, 47, 142, 0.25)">This container has min padding.</p>
-      </dbx-content-container>
-      <dbx-content-container padding="small">
-        <p style="background: rgba(200, 47, 142, 0.25)">This container has small padding.</p>
-      </dbx-content-container>
-      <dbx-content-container padding="normal">
-        <p style="background: rgba(200, 47, 142, 0.25)">This container has normal padding.</p>
+
+      <h4>Top padding can be customized.</h4>
+      <dbx-content-container>
+        <dbx-content-container topPadding="none">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has no top padding.</span>
+        </dbx-content-container>
+        <dbx-content-container topPadding="min">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has min top padding.</span>
+        </dbx-content-container>
+        <dbx-content-container topPadding="small">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has small top padding.</span>
+        </dbx-content-container>
+        <dbx-content-container topPadding="normal">
+          <span style="background: rgba(200, 47, 142, 0.25)">This container has normal top padding.</span>
+        </dbx-content-container>
       </dbx-content-container>
 
       <h4>Growth can be customized.</h4>

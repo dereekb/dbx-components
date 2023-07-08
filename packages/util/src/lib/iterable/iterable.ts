@@ -1,4 +1,5 @@
 import { PrimativeKey, ReadKeyFunction } from '../key';
+import { DecisionFunction } from '../value/decision';
 import { Maybe } from '../value/maybe.type';
 
 // MARK: Types
@@ -142,7 +143,7 @@ export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (va
  * @param values
  * @param fn
  */
-export function findInIterable<T>(values: Iterable<T>, fn: (value: T) => boolean): Maybe<T> {
+export function findInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): Maybe<T> {
   for (const value of values) {
     if (fn(value)) {
       return value;
@@ -159,7 +160,7 @@ export function findInIterable<T>(values: Iterable<T>, fn: (value: T) => boolean
  * @param fn
  * @returns
  */
-export function existsInIterable<T>(values: Iterable<T>, fn: (value: T) => boolean): boolean {
+export function existsInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): boolean {
   for (const value of values) {
     if (fn(value)) {
       return true;
@@ -167,4 +168,23 @@ export function existsInIterable<T>(values: Iterable<T>, fn: (value: T) => boole
   }
 
   return false;
+}
+
+/**
+ * Filters values from the iterable using a DecisionFunction.
+ *
+ * @param values
+ * @param fn
+ * @returns
+ */
+export function filterFromIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): T[] {
+  const keep: T[] = [];
+
+  for (const value of values) {
+    if (fn(value)) {
+      keep.push(value);
+    }
+  }
+
+  return keep;
 }
