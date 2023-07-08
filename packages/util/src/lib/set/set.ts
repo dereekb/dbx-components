@@ -4,6 +4,7 @@ import { asIterable, IterableOrValue, iterableToArray, useIterableOrValue } from
 import { symmetricDifference, values } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
 import { SetIncludesMode } from './set.mode';
+import { DecisionFunction } from '../value/decision';
 
 export type AllOrNoneSelection = 'all' | 'none';
 
@@ -103,6 +104,25 @@ export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
 export function filterValuesUsingSet<T>(values: T[], set: Set<T>, exclude = false): T[] {
   const filterFn = setHasValueFunction(set, exclude);
   return values.filter(filterFn);
+}
+
+/**
+ * Filters the input iterable using a DecisionFunction and returns a Set.
+ *
+ * @param values
+ * @param fn
+ * @returns
+ */
+export function filterValuesToSet<T>(values: Iterable<T>, fn: DecisionFunction<T>): Set<T> {
+  const keep = new Set<T>();
+
+  for (const value of values) {
+    if (fn(value)) {
+      keep.add(value);
+    }
+  }
+
+  return keep;
 }
 
 /**

@@ -1,6 +1,6 @@
-import { setIncludes, ReadKeyFunction, setsAreEquivalent } from '@dereekb/util';
+import { setIncludes, ReadKeyFunction, setsAreEquivalent, isEvenNumber } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
-import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue } from './set';
+import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue } from './set';
 
 describe('asSet()', () => {
   it('should turn a single string value into a set with that string', () => {
@@ -41,6 +41,16 @@ describe('hasDifferentValues()', () => {
     const a = [1, 2];
 
     expect(hasDifferentValues(a, a)).toBe(false);
+  });
+});
+
+describe('filterValuesToSet()', () => {
+  it('should return a set containing all filtered values.', () => {
+    const values = [1, 2, 3, 4];
+    const result = filterValuesToSet(values, isEvenNumber);
+    expect(result.size).toBe(2);
+    expect(result).toContain(2);
+    expect(result).toContain(4);
   });
 });
 
