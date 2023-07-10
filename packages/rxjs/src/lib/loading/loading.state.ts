@@ -1,4 +1,4 @@
-import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError } from '@dereekb/util';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError, lastValue, mergeObjects, filterMaybeValues } from '@dereekb/util';
 
 /**
  * A value/error pair used in loading situations.
@@ -279,29 +279,49 @@ export function loadingStateHasFinishedLoadingWithError<L extends LoadingState>(
  * If one is loading, will return the loading state.
  * If one has an error and is not loading, will return the error with loading false.
  */
-export function mergeLoadingStates<A, B>(a: LoadingState<A>, b: LoadingState<B>): LoadingState<A & B>;
-export function mergeLoadingStates<A extends object, B extends object, C>(a: LoadingState<A>, b: LoadingState<B>, mergeFn: (a: A, b: B) => C): LoadingState<C>;
-export function mergeLoadingStates<A extends object, B extends object, C>(a: LoadingState<A>, b: LoadingState<B>, inputMergeFn?: (a: A, b: B) => C): LoadingState<C> {
-  const mergeFn = inputMergeFn ?? ((a: A, b: B) => ({ ...a, ...b }));
-  const error = a?.error ?? b?.error;
-  let result: LoadingState<C>;
+export function mergeLoadingStates<A extends object, B extends object>(a: LoadingState<A>, b: LoadingState<B>): LoadingState<A & B>;
+export function mergeLoadingStates<A extends object, B extends object, O>(a: LoadingState<A>, b: LoadingState<B>, mergeFn: (a: A, b: B) => O): LoadingState<O>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>): LoadingState<A & B & C>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, mergeFn: (a: A, b: B, c: C) => O): LoadingState<O>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>): LoadingState<A & B & C & D>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, mergeFn: (a: A, b: B, c: C, d: D) => O): LoadingState<O>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>): LoadingState<A & B & C & D & E>;
+export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): LoadingState<O>;
+export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
+export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
+  const validArgs = filterMaybeValues(args); // filter out any undefined values
+  const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
+  const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
+  const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs);
+
+  const error = loadingStates.find((x) => x.error)?.error; // find the first error
+  let result: LoadingState<O>;
 
   if (error) {
+    // ignore all loading states, except for any error-prone item that is still loading
+    const currentLoadings: Maybe<boolean>[] = loadingStates.map((x) => (x?.error ? x.loading : false));
+    const nonMaybeLoadings = currentLoadings.filter((x) => x != null) as boolean[];
+    const loading = nonMaybeLoadings.length > 0 ? reduceBooleansWithOr(nonMaybeLoadings) : undefined;
+
     result = {
       // Evaluate both for the loading state.
-      loading: a?.error ? a.loading : false || b?.error ? b.loading : false,
+      loading,
       error
     };
   } else {
-    const loading = !a || !b || a?.loading || b?.loading;
+    const loading = reduceBooleansWithOr(loadingStates.map(loadingStateIsLoading));
+
     if (loading) {
       result = {
         loading: true
       };
     } else {
+      const values = loadingStates.map((x) => x.value);
+      const value = mergeFn(...values) as O;
+
       result = {
         loading: false,
-        value: mergeFn(a.value as A, b.value as B) as C
+        value
       };
     }
   }

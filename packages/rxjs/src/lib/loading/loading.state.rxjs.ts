@@ -1,4 +1,4 @@
-import { DecisionFunction, Maybe, ReadableError } from '@dereekb/util';
+import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, takeFront } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
 import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult } from './loading.state';
@@ -24,14 +24,36 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
 }
 
 /**
- * Convenience function for creating a pipe that merges the two input observables.
+ * Convenience function for creating a pipe that merges the multiple loading states into one.
  */
 export function combineLoadingStates<A, B>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
-export function combineLoadingStates<A extends object, B extends object, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>>;
-export function combineLoadingStates<A extends object, B extends object, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, inputMergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>> {
-  return combineLatest([obsA, obsB]).pipe(
-    distinctUntilChanged((x, y) => x?.[0] === y?.[0] && x?.[1] === y?.[1]), // Prevent remerging the same values!
-    map(([a, b]) => mergeLoadingStates(a, b, inputMergeFn as (a: A, b: B) => C)),
+export function combineLoadingStates<A extends object, B extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn: (a: A, b: B) => O): Observable<LoadingState<O>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>): Observable<LoadingState<A & B & C>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, mergeFn: (a: A, b: B, c: C) => O): Observable<LoadingState<O>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>): Observable<LoadingState<A & B & C & D>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, mergeFn: (a: A, b: B, c: C, d: D) => O): Observable<LoadingState<O>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, obsE: Observable<LoadingState<E>>): Observable<LoadingState<A & B & C & D & E>>;
+export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, obsE: Observable<LoadingState<E>>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): Observable<LoadingState<O>>;
+export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>>;
+export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>> {
+  const validArgs = filterMaybeValues(args); // filter out any undefined values
+  const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
+  const obsArgs: Observable<LoadingState<any>>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
+  const mergeFn = lastValueIsMergeFn ? validArgs[validArgs.length - 1] : undefined;
+
+  return combineLatest(obsArgs).pipe(
+    distinctUntilChanged((x, y) => {
+      if (x && y) {
+        const hasSameValues = x.findIndex((_, i) => x[i] !== y[i]) === -1;
+        return hasSameValues;
+      } else {
+        return x === y;
+      }
+    }), // Prevent remerging the same values!
+    map((states: LoadingState<any>[]) => {
+      const result = mergeLoadingStates(...states, mergeFn) as LoadingState<O>;
+      return result;
+    }),
     shareReplay(1) // Share the result.
   );
 }

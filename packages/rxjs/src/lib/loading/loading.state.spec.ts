@@ -1,4 +1,4 @@
-import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from './loading.state';
+import { beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, mergeLoadingStates, successResult } from './loading.state';
 
 describe('beginLoading()', () => {
   it('should return a loading state that is loading.', () => {
@@ -41,6 +41,116 @@ describe('errorResult()', () => {
   it('should return a loading state that is not loading even if the error is undefined.', () => {
     const state = errorResult(undefined);
     expect(loadingStateIsLoading(state)).toBe(false);
+  });
+});
+
+describe('mergeLoadingStates()', () => {
+  describe('two loading states', () => {
+    it('should return a loading state that is loading.', () => {
+      const a = beginLoading<object>();
+      const b = beginLoading<object>();
+      const state = mergeLoadingStates(a, b);
+      expect(loadingStateIsLoading(state)).toBe(true);
+    });
+  });
+
+  describe('more loading states', () => {
+    it('should return a loading state that is loading.', () => {
+      const a = beginLoading<object>();
+      const b = beginLoading<object>();
+      const c = beginLoading<object>();
+      const d = beginLoading<object>();
+      const e = beginLoading<object>();
+      const state = mergeLoadingStates(a, b, c, d, e, () => 1);
+      expect(loadingStateIsLoading(state)).toBe(true);
+    });
+
+    describe('encounters an error', () => {
+      it('should return the first error if the error is not marked as loading.', () => {
+        const expectedError = new Error();
+
+        const a = beginLoading<object>();
+        const b = errorResult<object>(expectedError);
+        const c = beginLoading<object>();
+        const d = beginLoading<object>();
+        const e = beginLoading<object>();
+        const state = mergeLoadingStates(a, b, c, d, e, () => 1);
+        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(state.error?._error).toBe(expectedError);
+      });
+
+      it('should return loading while states that have an error are still marked as loading.', () => {
+        const expectedError = new Error();
+
+        const a = beginLoading<object>();
+        const b = { ...errorResult<object>(expectedError), loading: true };
+        const c = beginLoading<object>();
+        const d = beginLoading<object>();
+        const e = beginLoading<object>();
+        const state = mergeLoadingStates(a, b, c, d, e, () => 1);
+        expect(loadingStateIsLoading(state)).toBe(true);
+        expect(state.error?._error).toBe(expectedError);
+      });
+
+      it('should return the first error after all items are finished loading.', () => {
+        const expectedError = new Error();
+
+        const a = successResult({ a: true });
+        const b = errorResult<object>(expectedError);
+        const c = successResult({ c: true });
+        const d = successResult({ d: true });
+        const e = successResult({ e: true });
+        const state = mergeLoadingStates(a, b, c, d, e, () => 1);
+        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(loadingStateHasError(state)).toBe(true);
+        expect(state.error?._error).toBe(expectedError);
+      });
+    });
+
+    it('should merge each of the values together once finished loading using mergeObjects if a merge function is not provided.', () => {
+      const a = successResult({ a: true });
+      const b = successResult({ b: true });
+      const c = successResult({ c: true });
+      const d = successResult({ d: true });
+      const e = successResult({ e: true });
+      const state = mergeLoadingStates(a, b, c, d, e);
+      expect(loadingStateIsLoading(state)).toBe(false);
+      expect(state.loading).toBe(false);
+      expect(state.error).toBeUndefined();
+      expect(state.value?.a).toBe(true);
+      expect(state.value?.b).toBe(true);
+      expect(state.value?.c).toBe(true);
+      expect(state.value?.d).toBe(true);
+      expect(state.value?.e).toBe(true);
+    });
+
+    it('should merge each of the values together once finished loading using mergeObjects if a merge function is not provided.', () => {
+      const a = successResult({ a: true });
+      const b = successResult({ b: true });
+      const c = successResult({ c: true });
+      const d = successResult({ d: true });
+      const e = successResult({ e: true });
+
+      const expectedValue = 0;
+      const state = mergeLoadingStates(a, b, c, d, e, (a, b, c, d, e) => {
+        expect(a).toBeDefined();
+        expect(a.a).toBe(true);
+        expect(b).toBeDefined();
+        expect(b.b).toBe(true);
+        expect(c).toBeDefined();
+        expect(c.c).toBe(true);
+        expect(d).toBeDefined();
+        expect(d.d).toBe(true);
+        expect(e).toBeDefined();
+        expect(e.e).toBe(true);
+        return expectedValue;
+      });
+
+      expect(loadingStateIsLoading(state)).toBe(false);
+      expect(state.loading).toBe(false);
+      expect(state.error).toBeUndefined();
+      expect(state.value).toBe(expectedValue);
+    });
   });
 });
 
