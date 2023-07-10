@@ -2,7 +2,9 @@ import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, map, of, first } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
-import { combineLoadingStatesStatus, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
+import { combineLoadingStates, combineLoadingStatesStatus, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
+
+jest.setTimeout(1000);
 
 describe('mapLoadingStateValueWithOperator()', () => {
   it('should map successful values', (done) => {
@@ -84,67 +86,228 @@ describe('mapLoadingStateValueWithOperator()', () => {
   });
 });
 
-describe('combineLoadingStatesStatus()', () => {
-  it('should return a loading state as success with true when all loading states are success', (done) => {
-    const success = of(successResult(1));
-    const success2 = of(successResult(2));
+describe('combineLoadingStates()', () => {
+  describe('two loading states', () => {
+    it('should return a loading state that is loading.', (done) => {
+      const a = of(beginLoading<object>());
+      const b = of(beginLoading<object>());
+      const obs = combineLoadingStates(a, b);
 
-    const obs = combineLoadingStatesStatus([success, success2]);
-
-    obs.subscribe((x) => {
-      expect(x.value).toBe(true);
-      expect(loadingStateHasFinishedLoading(x)).toBe(true);
-      expect(loadingStateHasValue(x)).toBe(true);
-      done();
-    });
-  });
-
-  it('should return a loading state as loading when one or more loading states are loading', (done) => {
-    const loading = of(beginLoading());
-    const success = of(successResult(1));
-    const success2 = of(successResult(2));
-
-    const obs = combineLoadingStatesStatus([loading, success, success2]);
-
-    obs.subscribe((x) => {
-      expect(x.loading).toBe(true);
-      expect(loadingStateIsLoading(x)).toBe(true);
-      done();
-    });
-  });
-
-  it('should return a loading state as success after all items have finished loading', (done) => {
-    const first = new BehaviorSubject<LoadingState<number>>(beginLoading());
-    const success = of(successResult(1));
-
-    const obs = combineLoadingStatesStatus([first, success]);
-
-    obs.subscribe((x) => {
-      if (x.loading) {
-        expect(loadingStateIsLoading(x)).toBe(true);
-        first.next(successResult(1)); // trigger loading completion
-      } else {
-        expect(x.loading).toBe(false);
-        expect(loadingStateIsLoading(x)).toBe(false);
-        first.complete();
+      obs.pipe(first()).subscribe((state) => {
+        expect(loadingStateIsLoading(state)).toBe(true);
         done();
-      }
+      });
     });
   });
 
-  it('should return a loading state with an error when one or more loading states have an error', (done) => {
-    const errorValue = new Error();
-    const loading = of(beginLoading());
-    const error = of(errorResult(errorValue));
-    const success = of(successResult(1));
+  describe('more loading states', () => {
+    it('should return a loading state that is loading.', (done) => {
+      const a = of(beginLoading<object>());
+      const b = of(beginLoading<object>());
+      const c = of(beginLoading<object>());
+      const d = of(beginLoading<object>());
+      const e = of(beginLoading<object>());
+      const obs = combineLoadingStates(a, b, c, d, e, () => 1);
 
-    const obs = combineLoadingStatesStatus([loading, success, error]);
+      obs.pipe(first()).subscribe((state) => {
+        expect(loadingStateIsLoading(state)).toBe(true);
+        done();
+      });
+    });
 
-    obs.subscribe((x) => {
-      expect(x.error).toBeDefined();
-      expect(x.error?._error).toBe(errorValue);
-      expect(loadingStateHasError(x)).toBe(true);
-      done();
+    describe('encounters an error', () => {
+      it('should return the first error if the error is not marked as loading..', (done) => {
+        const expectedError = new Error();
+
+        const a = of(beginLoading<object>());
+        const b = of(errorResult<object>(expectedError));
+        const c = of(beginLoading<object>());
+        const d = of(beginLoading<object>());
+        const e = of(beginLoading<object>());
+        const obs = combineLoadingStates(a, b, c, d, e, () => 1);
+
+        obs.pipe(first()).subscribe((state) => {
+          expect(loadingStateIsLoading(state)).toBe(false);
+          expect(loadingStateHasError(state)).toBe(true);
+          expect(state.error?._error).toBe(expectedError);
+          done();
+        });
+      });
+
+      it('should return loading while states that have an error are still marked as loading.', (done) => {
+        const expectedError = new Error();
+
+        const a = of(beginLoading<object>());
+        const b = of({ ...errorResult<object>(expectedError), loading: true });
+        const c = of(beginLoading<object>());
+        const d = of(beginLoading<object>());
+        const e = of(beginLoading<object>());
+        const obs = combineLoadingStates(a, b, c, d, e, () => 1);
+
+        obs.pipe(first()).subscribe((state) => {
+          expect(loadingStateIsLoading(state)).toBe(true);
+          expect(loadingStateHasError(state)).toBe(true);
+          expect(state.error?._error).toBe(expectedError);
+          done();
+        });
+      });
+
+      it('should return the error state from the results.', (done) => {
+        const expectedError = new Error();
+
+        const a = of(successResult({ a: true }));
+        const b = of(errorResult<object>(expectedError));
+        const c = of(successResult({ c: true }));
+        const d = of(successResult({ d: true }));
+        const e = of(successResult({ e: true }));
+        const obs = combineLoadingStates(a, b, c, d, e, () => 1);
+
+        obs.pipe(first()).subscribe((state) => {
+          expect(loadingStateIsLoading(state)).toBe(false);
+          expect(loadingStateHasError(state)).toBe(true);
+          expect(state.error?._error).toBe(expectedError);
+          done();
+        });
+      });
+    });
+
+    it('should merge each of the values together once finished loading using mergeObjects if a merge function is not provided.', (done) => {
+      const a = of(successResult({ a: true }));
+      const b = of(successResult({ b: true }));
+      const c = of(successResult({ c: true }));
+      const d = of(successResult({ d: true }));
+      const e = of(successResult({ e: true }));
+
+      const obs = combineLoadingStates(a, b, c, d, e);
+
+      obs.pipe(first()).subscribe((state) => {
+        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(state.loading).toBe(false);
+        expect(state.error).toBeUndefined();
+        expect(state.value?.a).toBe(true);
+        expect(state.value?.b).toBe(true);
+        expect(state.value?.c).toBe(true);
+        expect(state.value?.d).toBe(true);
+        expect(state.value?.e).toBe(true);
+        done();
+      });
+    });
+
+    it('should merge each of the values together once finished loading using mergeObjects if a merge function is not provided.', (done) => {
+      const a = of(successResult({ a: true }));
+      const b = of(successResult({ b: true }));
+      const c = of(successResult({ c: true }));
+      const d = of(successResult({ d: true }));
+      const e = of(successResult({ e: true }));
+
+      const expectedValue = 0;
+      const obs = combineLoadingStates(a, b, c, d, e, (a, b, c, d, e) => {
+        expect(a).toBeDefined();
+        expect(a.a).toBe(true);
+        expect(b).toBeDefined();
+        expect(b.b).toBe(true);
+        expect(c).toBeDefined();
+        expect(c.c).toBe(true);
+        expect(d).toBeDefined();
+        expect(d.d).toBe(true);
+        expect(e).toBeDefined();
+        expect(e.e).toBe(true);
+        return expectedValue;
+      });
+
+      obs.pipe(first()).subscribe((state) => {
+        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(state.loading).toBe(false);
+        expect(state.error).toBeUndefined();
+        expect(state.value).toBe(expectedValue);
+        done();
+      });
+    });
+  });
+});
+
+describe('combineLoadingStatesStatus()', () => {
+  describe('two loading states', () => {
+    it('should return a loading state as success with true when all loading states are success', (done) => {
+      const success = of(successResult(1));
+      const success2 = of(successResult(2));
+
+      const obs = combineLoadingStatesStatus([success, success2]);
+
+      obs.pipe(first()).subscribe((x) => {
+        expect(x.value).toBe(true);
+        expect(loadingStateHasFinishedLoading(x)).toBe(true);
+        expect(loadingStateHasValue(x)).toBe(true);
+        done();
+      });
+    });
+
+    it('should return a loading state as loading when one or more loading states are loading', (done) => {
+      const loading = of(beginLoading());
+      const success = of(successResult(1));
+      const success2 = of(successResult(2));
+
+      const obs = combineLoadingStatesStatus([loading, success, success2]);
+
+      obs.pipe(first()).subscribe((x) => {
+        expect(x.loading).toBe(true);
+        expect(loadingStateIsLoading(x)).toBe(true);
+        done();
+      });
+    });
+
+    it('should return a loading state as success after all items have finished loading', (done) => {
+      const state = new BehaviorSubject<LoadingState<number>>(beginLoading());
+      const success = of(successResult(1));
+
+      const obs = combineLoadingStatesStatus([state, success]);
+
+      obs.subscribe((x) => {
+        if (x.loading) {
+          expect(loadingStateIsLoading(x)).toBe(true);
+          state.next(successResult(1)); // trigger loading completion
+        } else {
+          expect(x.loading).toBe(false);
+          expect(loadingStateIsLoading(x)).toBe(false);
+          state.complete();
+          done();
+        }
+      });
+    });
+
+    it('should return a loading state with an error when one or more loading states have an error', (done) => {
+      const errorValue = new Error();
+      const loading = of(beginLoading());
+      const error = of(errorResult(errorValue));
+      const success = of(successResult(1));
+
+      const obs = combineLoadingStatesStatus([loading, success, error]);
+
+      obs.pipe(first()).subscribe((x) => {
+        expect(x.error).toBeDefined();
+        expect(x.error?._error).toBe(errorValue);
+        expect(loadingStateHasError(x)).toBe(true);
+        done();
+      });
+    });
+  });
+
+  describe('more loading states', () => {
+    it('should return a loading state as success with true when all loading states are success', (done) => {
+      const success = of(successResult(1));
+      const success2 = of(successResult(2));
+      const success3 = of(successResult(3));
+      const success4 = of(successResult(4));
+      const success5 = of(successResult(5));
+
+      const obs = combineLoadingStatesStatus([success, success2, success3, success4, success5]);
+
+      obs.pipe(first()).subscribe((x) => {
+        expect(x.value).toBe(true);
+        expect(loadingStateHasFinishedLoading(x)).toBe(true);
+        expect(loadingStateHasValue(x)).toBe(true);
+        done();
+      });
     });
   });
 });
