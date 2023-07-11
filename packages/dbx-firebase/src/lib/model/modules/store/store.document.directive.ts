@@ -28,8 +28,8 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   // MARK: Inputs
   @Input()
-  set id(id: Maybe<FirestoreModelId>) {
-    this.store.setId(id);
+  set documentId(documentId: Maybe<FirestoreModelId>) {
+    this.store.setId(documentId);
   }
 
   @Input()
