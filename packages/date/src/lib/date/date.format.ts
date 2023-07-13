@@ -285,8 +285,8 @@ export function formatStartedEndedDistanceString({ start, end }: DateRange): str
   return distanceText;
 }
 
-export function parseISO8601DayStringToDate(dateString: ISO8601DayString): Date {
-  return startOfDay(parse(dateString, 'yyyy-MM-dd', new Date()));
+export function parseISO8601DayStringToDate(dayString: ISO8601DayString): Date {
+  return startOfDay(parse(dayString, 'yyyy-MM-dd', new Date()));
 }
 
 export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {

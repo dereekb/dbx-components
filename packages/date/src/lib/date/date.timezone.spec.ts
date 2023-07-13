@@ -1,7 +1,8 @@
-import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds } from 'date-fns';
-import { Milliseconds } from '@dereekb/util';
-import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs } from './date.timezone';
+import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay } from 'date-fns';
+import { ISO8601DayString, Milliseconds } from '@dereekb/util';
+import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory } from './date.timezone';
 import MockDate from 'mockdate';
+import { formatToISO8601DayString } from './date.format';
 
 beforeEach(() => {
   MockDate.reset();
@@ -175,5 +176,54 @@ describe('DateTimezoneUtcNormalInstance', () => {
     }
 
     // describeTestsForUtcOffset(-8);
+  });
+});
+
+describe('startOfDayInTimezoneDayStringFactory()', () => {
+  describe('function', () => {
+    describe('UTC', () => {
+      const timezone = 'UTC';
+      const fn = startOfDayInTimezoneDayStringFactory(timezone);
+      const instance = new DateTimezoneUtcNormalInstance({ timezone });
+
+      const expectedDay: ISO8601DayString = `2023-03-12`;
+      const utcDateString = `${expectedDay}T00:00:00.000Z`;
+      const utcStart = new Date(utcDateString);
+
+      it('should return the start of the day date in UTC.', () => {
+        const systemStart = instance.systemDateToBaseDate(utcStart); // convert to the system start time to make sure we format it to the proper day string
+        const inputDayString = formatToISO8601DayString(systemStart); // format to ensure that the same day is being passed
+
+        expect(expectedDay).toBe(inputDayString);
+        expect(systemStart).toBeSameSecondAs(startOfDay(systemStart));
+
+        const result = fn(inputDayString);
+        expect(result).toBeSameSecondAs(utcStart);
+        expect(result.toISOString()).toBe(utcDateString);
+      });
+    });
+
+    describe('America/Denver', () => {
+      const timezone = 'America/Denver';
+      const fn = startOfDayInTimezoneDayStringFactory(timezone);
+      const instance = new DateTimezoneUtcNormalInstance({ timezone });
+
+      const expectedDay: ISO8601DayString = `2023-03-12`;
+      const utcDateString = `${expectedDay}T00:00:00.000Z`;
+      const utcStart = new Date(utcDateString);
+
+      const systemStart = instance.systemDateToBaseDate(utcStart);
+      const expectedStart = instance.targetDateToBaseDate(utcStart);
+
+      it('should return the start of the day date in America/Denver.', () => {
+        const inputDayString = formatToISO8601DayString(systemStart); // format to ensure that the same day is being passed
+        expect(expectedDay).toBe(inputDayString);
+        expect(systemStart).toBeSameSecondAs(startOfDay(systemStart));
+
+        const result = fn(inputDayString);
+        expect(result).toBeSameSecondAs(expectedStart);
+        expect(result.toISOString()).not.toBe(utcDateString);
+      });
+    });
   });
 });
