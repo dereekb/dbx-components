@@ -154,8 +154,6 @@ $dbx-detail-block-content-offset: 30px;
     $outlined-text-color: $border-color;
   }
 
-  $notice-color: #f28600;
-
   .dbx-hint,
   .dbx-clear-hint {
     opacity: $hint-opacity;
@@ -170,11 +168,6 @@ $dbx-detail-block-content-offset: 30px;
   .dbx-chip-sublabel,
   .dbx-form-description {
     opacity: $mat-hint-opacity;
-  }
-
-  .dbx-notice {
-    font-weight: bold;
-    color: $notice-color;
   }
 
   .dbx-note {

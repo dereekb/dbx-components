@@ -110,6 +110,7 @@ $dbx-success-color-var: --dbx-success-color;
   // todo: consider adding color customization or setting as a variable
   $ok-color: color.scale(blue, $lightness: 30%);
   $success-color: green;
+  $notice-color: #f28600;
 
   .dbx-primary {
     color: $primary-color;
@@ -135,6 +136,15 @@ $dbx-success-color-var: --dbx-success-color;
 
   .dbx-warn-bg {
     background: $warn-color;
+    color: $warn-color-contrast;
+  }
+
+  .dbx-notice {
+    color: $notice-color;
+  }
+
+  .dbx-notice-bg {
+    background: $notice-color;
     color: $warn-color-contrast;
   }
 

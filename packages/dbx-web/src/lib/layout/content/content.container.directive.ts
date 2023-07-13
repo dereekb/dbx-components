@@ -3,7 +3,7 @@ import { Maybe } from '@dereekb/util';
 
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 
-export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
+export type DbxContentContainerWidth = 'small' | 'medium' | 'large' | 'wide' | 'full';
 
 /**
  * Component that limits the max-width of the content.

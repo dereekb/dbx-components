@@ -1,7 +1,7 @@
 import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, takeFront } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
-import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult } from './loading.state';
+import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult, LoadingStateWithMaybeSoValue } from './loading.state';
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
 
@@ -188,10 +188,10 @@ export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = P
 /**
  * Convenience function for mapping the loading state's value from one value to another using an arbitrary operator.
  */
-export function mapLoadingStateValueWithOperator<L extends LoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
-export function mapLoadingStateValueWithOperator<L extends PageLoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
-export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingState>, O>(operator: OperatorFunction<LoadingStateValue<L>, O>): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
-export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingState>, O>(operator: OperatorFunction<LoadingStateValue<L>, O>): OperatorFunction<L, LoadingStateWithValueType<L, O>> {
+export function mapLoadingStateValueWithOperator<L extends LoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
+export function mapLoadingStateValueWithOperator<L extends PageLoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
+export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingState>, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
+export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingState>, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined = false): OperatorFunction<L, LoadingStateWithValueType<L, O>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
       switchMap((state: L) => {
@@ -199,8 +199,8 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
 
         // TODO: if the value changes to loading but retains the same values, the loading state will simply be passed along with the mapped values.
 
-        if (loadingStateHasValue(state)) {
-          mappedObs = of(state.value).pipe(
+        if (loadingStateHasValue(state) || (mapOnUndefined && loadingStateHasFinishedLoading(state) && !loadingStateHasError(state))) {
+          mappedObs = of((state as LoadingStateWithMaybeSoValue<LoadingStateValue<L>>).value).pipe(
             operator,
             map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>))
           );
