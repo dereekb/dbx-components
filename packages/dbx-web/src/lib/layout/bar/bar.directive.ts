@@ -9,9 +9,7 @@ import { DbxBarColor } from './bar';
   selector: 'dbx-bar,[dbxBar]',
   host: {
     class: 'dbx-bar',
-    '[class.dbx-primary-bg]': 'color === "primary"',
-    '[class.dbx-accent-bg]': 'color === "accent"',
-    '[class.dbx-warn-bg]': 'color === "warn"'
+    '[class]': 'color ? ("dbx-" + color + "-bg") : "dbx-bg"'
   }
 })
 export class DbxBarDirective {
