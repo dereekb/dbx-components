@@ -11,6 +11,7 @@ $box-max-width: theming.$box-max-width;
 
 $max-small-content-container-width: calc($content-max-width / 3);
 $max-medium-content-container-width: calc($content-max-width / 2);
+$max-large-content-container-width: calc($content-max-width / 1.337);
 $max-content-container-width: $content-max-width;
 
 $pit-padding: theming.$padding-4;
@@ -125,6 +126,10 @@ $scroll-content-bottom-padding: 42px;
 
     &.container-medium {
       max-width: $max-medium-content-container-width;
+    }
+
+    &.container-large {
+      max-width: $max-large-content-container-width;
     }
 
     &.container-wide {
