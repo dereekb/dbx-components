@@ -1,6 +1,7 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
-import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction, transformDateRangeToTimezoneFunction } from './date.range';
+import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
+import { transformDateRangeToTimezoneFunction } from './date.range.timezone';
 
 describe('dateRange()', () => {
   const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
@@ -446,27 +447,6 @@ describe('clampDateRangeFunction()', () => {
       const result = fn({ start: addDays(new Date(), -1), end: addDays(new Date(), 1) });
       expect(result.start).toBeSameSecondAs(dateRange.start);
       expect(result.end).toBeSameSecondAs(dateRange.end);
-    });
-  });
-});
-
-describe('transformDateRangeToTimezone()', () => {
-  describe('function', () => {
-    const fn = transformDateRangeToTimezoneFunction('America/Denver', 'systemDateToTargetDate');
-
-    const dateRangeInUTC = {
-      start: new Date('2023-03-11T06:00:00.000Z'),
-      end: new Date('2023-03-12T06:00:00.000Z')
-    };
-
-    it('should transform the date range.', () => {
-      const expectedStart = fn._timezoneInstance.systemDateToTargetDate(dateRangeInUTC.start);
-      const expectedEnd = fn._timezoneInstance.systemDateToTargetDate(dateRangeInUTC.end);
-
-      const result = fn(dateRangeInUTC);
-
-      expect(result.start).toBeSameSecondAs(expectedStart);
-      expect(result.end).toBeSameSecondAs(expectedEnd);
     });
   });
 });

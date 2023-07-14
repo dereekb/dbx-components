@@ -38,7 +38,7 @@ import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMin
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
-import { formatToISO8601DayString, parseISO8601DayStringToDate } from './date.format';
+import { parseISO8601DayStringToDate } from './date.format';
 
 /**
  * Index from 0 of which day this block represents.
@@ -298,11 +298,16 @@ export function isValidDateBlockTimingStartDate(date: Date): boolean {
 }
 
 /**
+ * DateTimingRelativeIndexFactory input. Can be a Date, DateBlockIndex, or ISO8601DayString
+ */
+export type DateTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | ISO8601DayString;
+
+/**
  * Returns the DateBlockIndex of the input date relative to the configured Date.
  *
  * Input dates should be in system time zone and not normalized to a different timezone.
  */
-export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex | ISO8601DayString) => DateBlockIndex) & {
+export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateTimingRelativeIndexFactoryInput) => DateBlockIndex) & {
   readonly _timing: T;
 };
 
