@@ -46,7 +46,8 @@ import {
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
+import { dateTimezoneUtcNormal, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+import { formatToISO8601DayString } from './date.format';
 
 describe('isValidDateBlockIndex()', () => {
   it('should return false for -1.', () => {
@@ -365,6 +366,46 @@ describe('dateBlockTimingInTimezoneFunction()', () => {
 });
 
 describe('dateTimingRelativeIndexFactory()', () => {
+  describe('function', () => {
+    const start = startOfDay(new Date());
+    const startsAt = addHours(start, 12); // Noon on the day
+    const days = 5;
+    const duration = 60;
+    const systemTiming = dateBlockTiming({ startsAt, duration }, days);
+
+    describe('UTC', () => {
+      const timezone = 'UTC';
+      const timing = changeTimingToTimezoneFunction(timezone)(systemTiming);
+      const fn = dateTimingRelativeIndexFactory(timing);
+
+      it('should return the expected indexes.', () => {
+        const dayString = formatToISO8601DayString(start);
+
+        const result1date = fn(start); // input the system time
+        const result1day = fn(dayString);
+
+        expect(result1day).toBe(0);
+        expect(result1date).toBe(0);
+      });
+    });
+
+    describe('America/Denver', () => {
+      const timezone = 'America/Denver';
+      const timing = changeTimingToTimezoneFunction(timezone)(systemTiming);
+      const fn = dateTimingRelativeIndexFactory(timing);
+
+      it('should return the expected indexes.', () => {
+        const dayString = formatToISO8601DayString(start);
+
+        const result1date = fn(start); // input the system time
+        const result1day = fn(dayString);
+
+        expect(result1day).toBe(0);
+        expect(result1date).toBe(0);
+      });
+    });
+  });
+
   describe('scenarios', () => {
     describe('timezone change', () => {
       const start = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.

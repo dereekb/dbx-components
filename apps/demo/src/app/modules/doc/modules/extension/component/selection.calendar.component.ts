@@ -12,6 +12,7 @@ import { map } from 'rxjs';
         <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
         <p>currentSelectionValueDateBlockDurationSpan$: {{ currentSelectionValueDateBlockDurationSpan$ | async | json }}</p>
         <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
+        <p>selectionValueSelectedDates$: {{ selectionValueSelectedDates$ | async | json }}</p>
         <p>selectionValueWithTimezoneDateBlockDurationSpan$: {{ selectionValueWithTimezoneDateBlockDurationSpan$ | async | json }}</p>
       </dbx-content-pit>
     </dbx-content-border>
@@ -35,6 +36,7 @@ export class DocExtensionCalendarScheduleSelectionComponent {
   readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
   readonly currentSelectionValueDateBlockDurationSpan$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateBlockDurationSpan$;
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));
+  readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x)));
   readonly selectionValueWithTimezoneDateBlockDurationSpan$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateBlockDurationSpan$;
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}

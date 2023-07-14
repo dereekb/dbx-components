@@ -3,7 +3,7 @@ import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateTimingRelativeIndexFactory, DateTimingRelativeIndexFactoryInput, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
@@ -346,7 +346,7 @@ export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateSched
 /**
  * DateScheduleDateFilter input.
  */
-export type DateScheduleDateFilterInput = Date | DateBlockIndex;
+export type DateScheduleDateFilterInput = DateTimingRelativeIndexFactoryInput;
 
 /**
  * Returns true if the date falls within the schedule.
@@ -403,12 +403,11 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
 
     if (typeof input === 'number') {
       i = input;
-      day = dayForIndex(i);
     } else {
       i = dateIndexForDate(input);
-      day = dayOfWeek(input);
     }
 
+    day = dayForIndex(i);
     return (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }

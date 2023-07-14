@@ -1,7 +1,8 @@
 import { addMilliseconds, minutesToHours } from 'date-fns';
-import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { minutesToMs } from './date';
+import { parseISO8601DayStringToUTCDate } from './date.format';
 
 /**
  * Inherited from the RRule library where RRule only deals with UTC date/times, dates going into it must always be in UTC.
@@ -389,4 +390,20 @@ export function systemBaseDateToNormalDateOffset(date: Date): Milliseconds {
 
 export function systemNormalDateToBaseDateOffset(date: Date): Milliseconds {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDateOffset(date);
+}
+
+// MARK: StartOfDayInTimezoneDayStringFactory
+/**
+ * Parses the input day to the start of the day in the given timezone.
+ */
+export type StartOfDayInTimezoneDayStringFactory = (day: ISO8601DayString) => Date;
+
+export function startOfDayInTimezoneDayStringFactory(timezone?: DateTimezoneUtcNormalFunctionInput): StartOfDayInTimezoneDayStringFactory {
+  const timezoneInstance = dateTimezoneUtcNormal(timezone);
+
+  return (day) => {
+    const startOfDayDate = parseISO8601DayStringToUTCDate(day); // UTC date
+    const dateInTimezone = timezoneInstance.targetDateToBaseDate(startOfDayDate);
+    return dateInTimezone;
+  };
 }

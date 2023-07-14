@@ -4,7 +4,6 @@ import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
-import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceTransformType } from './date.timezone';
 
 /**
  * Represents a start date.
@@ -774,17 +773,6 @@ export function transformDateRangeDatesFunction(transform: MapFunction<Date, Dat
  * TransformDateRangeDatesFunction that transforms the input dates to the start of the day.
  */
 export const transformDateRangeWithStartOfDay = transformDateRangeDatesFunction(startOfDay);
-
-export type TransformDateRangeToTimezoneFunction = TransformDateRangeDatesFunction & {
-  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
-};
-
-export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformFn: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeToTimezoneFunction {
-  const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
-  const fn = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformFn)) as Building<TransformDateRangeToTimezoneFunction>;
-  fn._timezoneInstance = timezoneInstance;
-  return fn as TransformDateRangeToTimezoneFunction;
-}
 
 /**
  * DateRange that has values comprised of either a Date, ISO8601DateString, or ISO8601DayString

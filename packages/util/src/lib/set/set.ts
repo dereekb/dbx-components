@@ -5,6 +5,7 @@ import { symmetricDifference, values } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
 import { SetIncludesMode } from './set.mode';
 import { DecisionFunction } from '../value/decision';
+import { MapFunction } from '../value';
 
 export type AllOrNoneSelection = 'all' | 'none';
 
@@ -123,6 +124,23 @@ export function filterValuesToSet<T>(values: Iterable<T>, fn: DecisionFunction<T
   }
 
   return keep;
+}
+
+/**
+ * Maps the input iterable using a MapFunction and returns a Set of the mapped values.
+ *
+ * @param values
+ * @param fn
+ * @returns
+ */
+export function mapValuesToSet<I, O>(values: Iterable<I>, mapFn: MapFunction<I, O>): Set<O> {
+  const set = new Set<O>();
+
+  for (const value of values) {
+    set.add(mapFn(value));
+  }
+
+  return set;
 }
 
 /**

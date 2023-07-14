@@ -1,11 +1,44 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, TimezoneString, Building, addToSet } from '@dereekb/util';
+import {
+  DayOfWeek,
+  RequiredOnKeys,
+  IndexNumber,
+  IndexRange,
+  indexRangeCheckFunction,
+  IndexRef,
+  MINUTES_IN_DAY,
+  MS_IN_DAY,
+  UniqueModel,
+  lastValue,
+  FactoryWithRequiredInput,
+  FilterFunction,
+  mergeFilterFunctions,
+  range,
+  Milliseconds,
+  Hours,
+  MapFunction,
+  getNextDay,
+  SortCompareFunction,
+  sortAscendingIndexNumberRefFunction,
+  mergeArrayIntoArray,
+  Configurable,
+  ArrayOrValue,
+  asArray,
+  sumOfIntegersBetween,
+  filterMaybeValues,
+  Maybe,
+  TimezoneString,
+  Building,
+  addToSet,
+  ISO8601DayString
+} from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours } from './date.timezone';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
+import { parseISO8601DayStringToDate } from './date.format';
 
 /**
  * Index from 0 of which day this block represents.
@@ -182,8 +215,8 @@ export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Millise
 
 export type TimingIsExpectedTimezoneFunction = (timing: DateRangeStart) => boolean;
 
-export function timingIsInExpectedTimezoneFunction(timezone: TimezoneString) {
-  const normal = dateTimezoneUtcNormal({ timezone });
+export function timingIsInExpectedTimezoneFunction(timezone: DateTimezoneUtcNormalFunctionInput) {
+  const normal = dateTimezoneUtcNormal(timezone);
 
   return (timing: DateRangeStart) => {
     const { start } = timing;
@@ -193,11 +226,11 @@ export function timingIsInExpectedTimezoneFunction(timezone: TimezoneString) {
   };
 }
 
-export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: TimezoneString) {
+export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: DateTimezoneUtcNormalFunctionInput) {
   return timingIsInExpectedTimezoneFunction(timezone)(timing);
 }
 
-export type TimingDateTimezoneUtcNormalInput = DateRangeStart | TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance;
+export type TimingDateTimezoneUtcNormalInput = DateRangeStart | DateTimezoneUtcNormalFunctionInput;
 
 /**
  * Creates a DateTimezoneUtcNormalInstance from the input.
@@ -206,7 +239,7 @@ export type TimingDateTimezoneUtcNormalInput = DateRangeStart | TimezoneString |
  * @returns
  */
 export function timingDateTimezoneUtcNormal(input: TimingDateTimezoneUtcNormalInput): DateTimezoneUtcNormalInstance {
-  const timezoneNormalInput = isDateRangeStart(input) ? hoursToMilliseconds(getCurrentDateBlockTimingUtcData(input).originalUtcOffsetInHours) : input;
+  const timezoneNormalInput: DateTimezoneUtcNormalFunctionInput = isDateRangeStart(input) ? hoursToMilliseconds(getCurrentDateBlockTimingUtcData(input).originalUtcOffsetInHours) : input;
   const timezoneInstance = dateTimezoneUtcNormal(timezoneNormalInput);
   return timezoneInstance;
 }
@@ -246,12 +279,12 @@ export function changeTimingToTimezoneFunction(input: TimingDateTimezoneUtcNorma
   return fn as ChangeTimingToTimezoneFunction;
 }
 
-export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: TimezoneString | Milliseconds | DateTimezoneUtcNormalInstance): T {
+export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: TimingDateTimezoneUtcNormalInput): T {
   return changeTimingToTimezoneFunction(timezone)(timing);
 }
 
 /**
- * Returns the startsAt date in the current timezone for the given date.
+ * Returns the startsAt date in the current/system timezone for the given date.
  *
  * @param timing
  */
@@ -265,9 +298,16 @@ export function isValidDateBlockTimingStartDate(date: Date): boolean {
 }
 
 /**
- * Returns the DateBlockIndex of the input date relative to the configured Date
+ * DateTimingRelativeIndexFactory input. Can be a Date, DateBlockIndex, or ISO8601DayString
  */
-export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => DateBlockIndex) & {
+export type DateTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | ISO8601DayString;
+
+/**
+ * Returns the DateBlockIndex of the input date relative to the configured Date.
+ *
+ * Input dates should be in system time zone and not normalized to a different timezone.
+ */
+export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateTimingRelativeIndexFactoryInput) => DateBlockIndex) & {
   readonly _timing: T;
 };
 
@@ -281,19 +321,21 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
   const startDate = getCurrentDateBlockTimingStartDate(timing);
   const baseOffset = startDate.getTimezoneOffset();
 
-  const factory = ((input: DateOrDateBlockIndex) => {
-    if (typeof input === 'number') {
+  const factory = ((input: DateOrDateBlockIndex | ISO8601DayString) => {
+    const inputType = typeof input;
+    if (inputType === 'number') {
       return input;
-    } else {
-      const inputOffset = input.getTimezoneOffset();
-      const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
-
-      const baseDiff = differenceInHours(input, startDate);
-      const diff = baseDiff + offsetDifferenceHours;
-      const daysOffset = Math.floor(diff / 24);
-
-      return daysOffset;
+    } else if (inputType === 'string') {
+      input = parseISO8601DayStringToDate(input as string);
     }
+
+    const inputOffset = (input as Date).getTimezoneOffset();
+    const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
+
+    const baseDiff = differenceInHours(input as Date, startDate);
+    const diff = baseDiff + offsetDifferenceHours;
+    const daysOffset = Math.floor(diff / 24);
+    return daysOffset;
   }) as Configurable<Partial<DateTimingRelativeIndexFactory<T>>>;
   factory._timing = timing;
   return factory as DateTimingRelativeIndexFactory<T>;
@@ -544,9 +586,9 @@ export function dateBlockDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date
 /**
  * Reference to a DateBlockTiming
  */
-export type DateBlockTimingRef = {
+export interface DateBlockTimingRef {
   timing: DateBlockTiming;
-};
+}
 
 /**
  * An object that implements DateBlockTimingRef and DateBlockArrayRef
