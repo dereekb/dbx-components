@@ -17,6 +17,7 @@ export class DocInteractionTestDateFilterPopoverButtonComponent {
     icon: 'event',
     header: 'Filter Date Range',
     presetFilterComponentClass: DocInteractionTestDateFilterPresetFilterComponent,
+    showCloseButton: true,
     height: '560px',
     closeOnFilterChange: false,
     connector: this.filterSourceConnector,

@@ -7,6 +7,7 @@ import { DbxPopoverComponent } from '../popover/popover.component';
 import { DbxPopoverConfigSizing, DbxPopoverService } from '../popover/popover.service';
 import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
+import { Maybe } from '@dereekb/util';
 
 export interface DbxFilterComponentParams<F extends object = object, P extends string = string> extends DbxPopoverConfigSizing {
   /**
@@ -21,6 +22,18 @@ export interface DbxFilterComponentParams<F extends object = object, P extends s
    * Defaults to "Filter"
    */
   header?: string;
+  /**
+   * Custom customize button text. If not defined, defaults to "Customize"
+   */
+  customizeButtonText?: string;
+  /**
+   * Custom close button text. If not defined, defaults to "Close"
+   */
+  closeButtonText?: string;
+  /**
+   * Whether or not to show the close button. Defaults to the value of !closeOnFilterChange
+   */
+  showCloseButton?: Maybe<boolean>;
   /**
    * Custom filter component to initialize.
    */
@@ -60,6 +73,10 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
 export class DbxFilterPopoverComponent<F extends object> extends AbstractPopoverDirective<unknown, DbxFilterComponentParams<F>> implements OnInit, OnDestroy {
   private _closeOnChangeSub = new SubscriptionObject();
 
+  readonly showCloseButton = this.config.showCloseButton ?? !(this.config.closeOnFilterChange ?? true);
+  readonly closeButtonText = this.config.closeButtonText ?? 'Close';
+  readonly customizeButtonText = this.config.customizeButtonText ?? 'Customize';
+
   /**
    * Whether or not to display buttons to toggle between custom and preset filters.
    */
@@ -90,7 +107,6 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
           if (closeOnFilterChange !== false) {
             this._closeOnChangeSub.subscription = filterSource.filter$.pipe(skip(1), filterMaybe(), first(), defaultIfEmpty(undefined)).subscribe(() => {
-              console.log();
               this.close();
             });
           }
@@ -101,7 +117,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
     })
   );
 
-  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, connector, initialFilterObs, closeOnFilterChange }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
+  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,
@@ -112,6 +128,9 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
       data: {
         header,
         icon,
+        customizeButtonText,
+        showCloseButton,
+        closeButtonText,
         customFilterComponentClass,
         presetFilterComponentClass,
         connector,

@@ -235,10 +235,10 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               expect(data?.createdAt.getTime()).toBe(newDate.getTime());
 
               // check was not modified
-              expect(data?.settings.test.north).toBe(true);
-              expect(data?.settings.test.south).toBe(true);
-              expect(data?.settings.test.east).toBeUndefined();
-              expect(data?.settings.test.west).toBeUndefined();
+              expect(data?.settings['test'].north).toBe(true);
+              expect(data?.settings['test'].south).toBe(true);
+              expect(data?.settings['test'].east).toBeUndefined();
+              expect(data?.settings['test'].west).toBeUndefined();
             });
           });
 
