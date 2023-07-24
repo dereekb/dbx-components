@@ -28,7 +28,8 @@ import {
   DbxDateTimePickerConfiguration,
   dateTimeRangeField,
   timezoneStringField,
-  fixedDateRangeField
+  fixedDateRangeField,
+  numberSliderField
 } from '@dereekb/dbx-form';
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
@@ -67,6 +68,13 @@ export class DocFormValueComponent {
     numberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
     numberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true }),
     dollarAmountField({ key: 'dollars', label: 'dollarAmountField()', description: 'Dollar amount field.' })
+  ];
+
+  readonly numberSliderFields: FormlyFieldConfig[] = [
+    //
+    numberSliderField({ key: 'test', label: 'numberSliderField()', description: 'A number between 0 and 100 picked with a slider.', placeholder: 'Placeholder', min: 0, max: 100 }),
+    numberSliderField({ key: 'steptest', label: 'numberSliderField() with Steps', description: 'A number between 0 and 100 picked with a slider with steps of 5.', placeholder: 'Placeholder', min: 0, max: 100, step: 5, displayWith: (x) => `S${x / 5}` }),
+    numberSliderField({ key: 'steptestcustomtickinterval', label: 'numberSliderField() with Steps and Custom Tick Interval', description: 'A number between 0 and 100 picked with a slider with steps of 5 and tick interval of 5.', placeholder: 'Placeholder', min: 0, max: 100, step: 5, tickInterval: 5, invertSelectionColoring: true })
   ];
 
   readonly textAreaField: FormlyFieldConfig[] = [textAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];

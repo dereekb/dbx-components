@@ -60,6 +60,72 @@ export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
   });
 }
 
+export interface NumberSliderFieldConfig extends NumberFieldConfig {
+  /**
+   * Max value. Required for the slider.
+   */
+  max: number;
+  /**
+   * Whether or not to show the thumb label while sliding. Defaults to true.
+   */
+  thumbLabel?: boolean;
+  /**
+   * Whether or not to invert the selection line.
+   */
+  invertSelectionColoring?: boolean;
+  /**
+   * Tick interval. If not provided defaults to the step value, if provided. If false, the ticks are disabled.
+   *
+   * The tick interval is the number of "steps" to show between ticks.
+   *
+   * For example, a tick interval of 5 show a tick every 5 steps. If steps are 10, it will show a tick at every number divisible by 50 (5 * 10).
+   */
+  tickInterval?: false | number;
+  /**
+   * Custom display with function for the thumbLabel.
+   */
+  displayWith?: (value: number) => string;
+}
+
+export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldConfig {
+  const { key, min, max, step, enforceStep, inputType: type = 'number', materialFormField, thumbLabel: inputThumbLabel, tickInterval: inputTickInterval, invertSelectionColoring: invertedSelectionColoring = false, displayWith } = config;
+  const parsers = numberFieldTransformParser(config);
+
+  const validators: ValidatorFn[] = [];
+  let tickIntervalFromSteps: number | undefined;
+
+  if (step) {
+    tickIntervalFromSteps = 1;
+
+    if (enforceStep) {
+      validators.push(isDivisibleBy(step));
+    }
+  }
+
+  const tickInterval: number | undefined = inputTickInterval === false ? undefined : inputTickInterval ?? tickIntervalFromSteps ?? undefined;
+
+  return formlyField({
+    key,
+    type: 'slider',
+    ...propsAndConfigForFieldConfig(config, {
+      ...materialFormField,
+      type,
+      min,
+      max,
+      step,
+      inverted: invertedSelectionColoring,
+      thumbLabel: inputThumbLabel ?? true,
+      showTickMarks: Boolean(tickInterval),
+      tickInterval,
+      displayWith
+    }),
+    ...validatorsForFieldConfig({
+      validators
+    }),
+    parsers
+  });
+}
+
 export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
 
 export function dollarAmountField(config: DollarAmountFieldConfig) {
