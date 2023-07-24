@@ -2,6 +2,11 @@ import { Merge, NonNever, PickProperties, StrictOmit, UnionToIntersection, Writa
 import { Maybe } from './value/maybe.type';
 
 /**
+ * Boolean, string or number value.
+ */
+export type PrimativeValue = boolean | string | number;
+
+/**
  * Class typing, restricted to types that have a constructor via the new keyword.
  */
 export type ClassType<T = unknown> = {

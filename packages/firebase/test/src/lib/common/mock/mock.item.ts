@@ -1,4 +1,4 @@
-import { Maybe, modelFieldConversions } from '@dereekb/util';
+import { Maybe, bitwiseObjectDencoder, modelFieldConversions } from '@dereekb/util';
 import {
   CollectionReference,
   FirestoreCollection,
@@ -28,7 +28,8 @@ import {
   firestoreSubObject,
   SystemStateStoredData,
   SystemStateStoredDataConverterMap,
-  SystemStateStoredDataFieldConverterConfig
+  SystemStateStoredDataFieldConverterConfig,
+  firestoreBitwiseObjectMap
 } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 
@@ -122,6 +123,68 @@ export function mockItemFirestoreCollection(firestoreContext: FirestoreContext):
 // MARK: MockItemPrivate
 export const mockItemPrivateIdentity = firestoreModelIdentity(mockItemIdentity, 'mockItemPrivate', 'mip');
 
+export interface MockItemSettingsItem {
+  north?: boolean;
+  south?: boolean;
+  east?: boolean;
+  west?: boolean;
+}
+
+export enum MockItemSettingsItemEnum {
+  NORTH = 0,
+  SOUTH = 1,
+  EAST = 2,
+  WEST = 3
+}
+
+export const mockItemSettingsItemDencoder = bitwiseObjectDencoder<MockItemSettingsItem, MockItemSettingsItemEnum>({
+  maxIndex: 4,
+  toSetFunction: (x) => {
+    const set = new Set<MockItemSettingsItemEnum>();
+
+    if (x.north) {
+      set.add(MockItemSettingsItemEnum.NORTH);
+    }
+
+    if (x.south) {
+      set.add(MockItemSettingsItemEnum.SOUTH);
+    }
+
+    if (x.east) {
+      set.add(MockItemSettingsItemEnum.EAST);
+    }
+
+    if (x.west) {
+      set.add(MockItemSettingsItemEnum.WEST);
+    }
+
+    return set;
+  },
+  fromSetFunction: (x) => {
+    const object: MockItemSettingsItem = {};
+
+    if (x.has(MockItemSettingsItemEnum.NORTH)) {
+      object.north = true;
+    }
+
+    if (x.has(MockItemSettingsItemEnum.SOUTH)) {
+      object.south = true;
+    }
+
+    if (x.has(MockItemSettingsItemEnum.EAST)) {
+      object.east = true;
+    }
+
+    if (x.has(MockItemSettingsItemEnum.WEST)) {
+      object.west = true;
+    }
+
+    return object;
+  }
+});
+
+export type MockItemSettingsMap = Record<string, MockItemSettingsItem>;
+
 /**
  * Private data for each MockItem.
  *
@@ -130,6 +193,7 @@ export const mockItemPrivateIdentity = firestoreModelIdentity(mockItemIdentity, 
 export interface MockItemPrivate {
   comments?: Maybe<string>;
   values: string[];
+  settings: MockItemSettingsMap;
   createdAt: Date;
 }
 
@@ -153,6 +217,9 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
   fieldConversions: modelFieldConversions<MockItemPrivate, MockItemPrivateData>({
     comments: optionalFirestoreString(),
     values: firestoreUniqueStringArray(),
+    settings: firestoreBitwiseObjectMap({
+      dencoder: mockItemSettingsItemDencoder
+    }),
     createdAt: firestoreDate({ saveDefaultAsNow: true })
   })
 });
