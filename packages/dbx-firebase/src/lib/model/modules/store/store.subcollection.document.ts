@@ -1,7 +1,7 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, Subscription } from 'rxjs';
-import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection, DocumentReference, FirestoreModelId, FirestoreModelKey, SingleItemFirestoreCollection } from '@dereekb/firebase';
+import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection, DocumentReference, FirestoreModelId, FirestoreModelKey, SingleItemFirestoreCollection, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { AbstractDbxFirebaseDocumentStore, DbxFirebaseDocumentStore, DbxFirebaseDocumentStoreContextState } from './store.document';
 import { DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
@@ -43,13 +43,29 @@ export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends Firesto
   readonly _setParent = this.setParent;
 
   // MARK: Accessors
+  /**
+   * Returns the parent model key given the current key value.
+   */
+  readonly keyParentKey$ = this.key$.pipe(
+    map((x) => firestoreModelKeyParentKey(x, 1)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly currentParent$: Observable<Maybe<PD>> = this.state$.pipe(
     map((x) => x.parent),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
+  readonly currentParentKey$: Observable<Maybe<FirestoreModelKey>> = this.state$.pipe(
+    map((x) => x.parent?.key),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly parent$: Observable<PD> = this.currentParent$.pipe(filterMaybe());
+  readonly parentKey$: Observable<Maybe<FirestoreModelKey>> = this.currentParentKey$.pipe(filterMaybe());
 
   readonly currentCollectionFactory$: Observable<Maybe<FirestoreCollectionWithParentFactory<T, PT, D, PD>>> = this.state$.pipe(
     map((x) => x.collectionFactory),

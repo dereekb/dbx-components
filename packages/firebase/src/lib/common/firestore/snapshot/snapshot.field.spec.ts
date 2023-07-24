@@ -1,5 +1,5 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, GrantedReadRole, GrantedUpdateRole, WebsiteFileLink } from '@dereekb/model';
-import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, PrimativeKeyDencoderValueMap } from '@dereekb/util';
+import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
@@ -25,7 +25,10 @@ import {
   optionalFirestoreDate,
   firestoreDencoderStringArray,
   firestoreDencoderArray,
-  firestoreModelKeyEncodedGrantedRoleMap
+  firestoreModelKeyEncodedGrantedRoleMap,
+  firestoreDencoderMap,
+  FirestoreEncodedObjectMapFieldValueType,
+  firestoreBitwiseObjectMap
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -605,6 +608,192 @@ describe('firestoreObjectArray()', () => {
     const result = array.from.convert([{ date: new Date(), uniqueStringArray: [] }]);
     expect(result).toBeDefined();
     expect(result.length).toBe(1);
+  });
+});
+
+export interface TestFirestoreDencoderMapObject {
+  value: Record<string, TestDencoderRole[]>;
+}
+
+describe('firestoreDencoderMap()', () => {
+  const firestoreDencoderMapField = firestoreDencoderMap<TestDencoderRole, TestDencoderRoleCodes>({
+    dencoder: ROLE_DENCODER
+  });
+
+  it('should encode the values.', () => {
+    const testValues: TestDencoderRole[] = ['read', 'update'];
+    const testMap: FirestoreEncodedObjectMapFieldValueType<TestDencoderRole[], 'x'> = {
+      x: testValues
+    };
+
+    const results = firestoreDencoderMapField.to.convert(testMap);
+
+    expect(results).toBeDefined();
+    expect(results?.x).toBeDefined();
+    expect(typeof results?.x).toBe('string');
+  });
+
+  describe('converter', () => {
+    const converter = snapshotConverterFunctions<TestFirestoreDencoderMapObject>({
+      fields: {
+        value: firestoreDencoderMapField
+      }
+    });
+
+    it('should encode the values.', () => {
+      const object: TestFirestoreDencoderMapObject = {
+        value: {
+          x: ['read', 'update']
+        }
+      };
+
+      const result = converter.to(object);
+
+      expect(result.value.x).toBe('ru');
+    });
+
+    it('should decode the values.', () => {
+      const object: TestFirestoreDencoderMapObject = {
+        value: {
+          x: ['read', 'update']
+        }
+      };
+
+      const encoded = converter.to(object);
+      const decoded = converter.mapFunctions.from(encoded);
+
+      expect(decoded.value).toBeDefined();
+      expect(typeof decoded.value).toBe('object');
+      expect(decoded.value.x).toBeDefined();
+      expect(decoded.value.x).toContain('read');
+      expect(decoded.value.x).toContain('update');
+    });
+  });
+});
+
+interface TestFirestoreBitwiseObjectMapObject {
+  value: Record<string, TestFirestoreBitwiseObjectMapEmbeddedObject>;
+}
+
+enum BitwiseEnumValue {
+  ONE_ENABLED = 0,
+  TWO_ENABLED = 1,
+  THREE_ENABLED = 2
+}
+
+interface TestFirestoreBitwiseObjectMapEmbeddedObject {
+  one?: boolean;
+  two?: boolean;
+  three?: boolean;
+}
+
+describe('firestoreBitwiseObjectMap()', () => {
+  const dencoder = bitwiseObjectDencoder<TestFirestoreBitwiseObjectMapEmbeddedObject, BitwiseEnumValue>({
+    maxIndex: 3,
+    toSetFunction: (x) => {
+      const set = new Set<BitwiseEnumValue>();
+
+      if (x.one) {
+        set.add(BitwiseEnumValue.ONE_ENABLED);
+      }
+
+      if (x.two) {
+        set.add(BitwiseEnumValue.TWO_ENABLED);
+      }
+
+      if (x.three) {
+        set.add(BitwiseEnumValue.THREE_ENABLED);
+      }
+
+      return set;
+    },
+    fromSetFunction: (x) => {
+      const object: TestFirestoreBitwiseObjectMapEmbeddedObject = {};
+
+      if (x.has(BitwiseEnumValue.ONE_ENABLED)) {
+        object.one = true;
+      }
+
+      if (x.has(BitwiseEnumValue.TWO_ENABLED)) {
+        object.two = true;
+      }
+
+      if (x.has(BitwiseEnumValue.THREE_ENABLED)) {
+        object.three = true;
+      }
+
+      return object;
+    }
+  });
+
+  const firestoreBitwiseObjectMapField = firestoreBitwiseObjectMap<TestFirestoreBitwiseObjectMapEmbeddedObject>({
+    dencoder
+  });
+
+  it('should encode the values.', () => {
+    const testValues: Set<BitwiseEnumValue> = new Set<BitwiseEnumValue>([BitwiseEnumValue.ONE_ENABLED, BitwiseEnumValue.TWO_ENABLED]);
+    const testMap: FirestoreEncodedObjectMapFieldValueType<TestFirestoreBitwiseObjectMapEmbeddedObject, 'x'> = {
+      x: {
+        one: true,
+        two: true
+      }
+    };
+
+    const results = firestoreBitwiseObjectMapField.to.convert(testMap);
+
+    expect(results).toBeDefined();
+    expect(results?.x).toBeDefined();
+    expect(typeof results?.x).toBe('number'); // encoded to number
+    expect(results?.x).toBe(3); // encoded to number
+  });
+
+  describe('converter', () => {
+    const converter = snapshotConverterFunctions<TestFirestoreBitwiseObjectMapObject>({
+      fields: {
+        value: firestoreBitwiseObjectMapField
+      }
+    });
+
+    it('should encode the values.', () => {
+      const object: TestFirestoreBitwiseObjectMapObject = {
+        value: {
+          x: {
+            one: true,
+            two: true
+          }
+        }
+      };
+
+      const result = converter.to(object);
+      expect(result.value.x).toBe(encodeBitwiseSet(new Set<BitwiseEnumValue>([BitwiseEnumValue.ONE_ENABLED, BitwiseEnumValue.TWO_ENABLED])));
+    });
+
+    it('should encode and decode and then encode the values back to the original', () => {
+      const object: TestFirestoreBitwiseObjectMapObject = {
+        value: {
+          x: {
+            one: true,
+            two: true
+          },
+          y: {
+            one: true,
+            three: true
+          }
+        }
+      };
+
+      const encoded = converter.to(object);
+      const decoded = converter.mapFunctions.from(encoded);
+
+      expect(decoded.value).toBeDefined();
+      expect(typeof decoded.value).toBe('object');
+      expect(decoded.value.x).toBeDefined();
+      expect(decoded.value.y).toBeDefined();
+      expect(decoded.value.x.one).toBe(true);
+      expect(decoded.value.x.two).toBe(true);
+      expect(decoded.value.y.one).toBe(true);
+      expect(decoded.value.y.three).toBe(true);
+    });
   });
 });
 

@@ -49,7 +49,11 @@ import {
   UnitedStatesAddress,
   ZoomLevel,
   DEFAULT_LAT_LNG_STRING_VALUE,
-  FilterUniqueFunction
+  FilterUniqueFunction,
+  BitwiseEncodedSet,
+  bitwiseSetDencoder,
+  PrimativeValue,
+  BitwiseObjectDencoder
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -460,9 +464,9 @@ export const firestoreModelIdGrantedRoleMap: () => FirestoreModelFieldMapFunctio
 /**
  * Firestore/JSON maps only have string keys.
  */
-export type FirestoreEncodedMapFieldValueType<D extends PrimativeKey, S extends string = string> = Record<S, D[]>;
-export type FirestoreEncodedMapFieldConfig<D extends PrimativeKey, E extends string = string, S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<FirestoreEncodedMapFieldValueType<D, S>, FirestoreMapFieldType<E, S>> &
-  Partial<FirestoreFieldDefault<FirestoreEncodedMapFieldValueType<D, S>>> & {
+export type FirestoreEncodedObjectMapFieldValueType<T, S extends string = string> = Record<S, T>;
+export type FirestoreEncodedObjectMapFieldConfig<T, E, S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<FirestoreEncodedObjectMapFieldValueType<T, S>, FirestoreMapFieldType<E, S>> &
+  Partial<FirestoreFieldDefault<FirestoreEncodedObjectMapFieldValueType<T, S>>> & {
     /**
      * Optional filter to apply when saving to data.
      *
@@ -470,10 +474,52 @@ export type FirestoreEncodedMapFieldConfig<D extends PrimativeKey, E extends str
      */
     mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<E>>;
     /**
-     * Dencoder to use for the input values.
+     * Encoder to map a value to the encoded/stored value.
      */
-    readonly dencoder: PrimativeKeyStringDencoderFunction<D, E>;
+    readonly encoder: MapFunction<T, E>;
+    /**
+     * Encoder to map an encoded/stored value to a value.
+     */
+    readonly decoder: MapFunction<E, T>;
   };
+
+/**
+ * FirestoreField configuration for a map-type object that uses an encoder/decoder to encode/decode values.
+ *
+ * By default it will remove all null/undefined keys from objects before saving.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreEncodedObjectMap<T, E, S extends string = string>(config: FirestoreEncodedObjectMapFieldConfig<T, E, S>) {
+  const { mapFilter: filter = KeyValueTypleValueFilter.EMPTY, encoder, decoder } = config;
+  const filterFinalMapValuesFn = filterFromPOJOFunction<FirestoreMapFieldType<E, S>>({
+    copy: false, // skip copying. Handled before input
+    filter
+  });
+
+  return firestoreField<FirestoreEncodedObjectMapFieldValueType<T, S>, FirestoreMapFieldType<E, S>>({
+    default: config.default ?? ((() => ({})) as Getter<FirestoreEncodedObjectMapFieldValueType<T, S>>),
+    fromData: (input: FirestoreMapFieldType<E, S>) => {
+      const copy = copyObject(input);
+      const result = mapObjectMap<FirestoreMapFieldType<E, S>, E, T>(copy, decoder);
+      return result;
+    },
+    toData: (input: FirestoreEncodedObjectMapFieldValueType<T, S>) => {
+      const encodedMap: FirestoreMapFieldType<E, S> = mapObjectMap<FirestoreMapFieldType<T, S>, T, E>(input, encoder);
+      const result = filterFinalMapValuesFn(encodedMap);
+      return result;
+    }
+  });
+}
+
+export type FirestoreDencoderMapFieldValueType<D extends PrimativeKey, S extends string = string> = FirestoreEncodedObjectMapFieldValueType<D[], S>;
+export type FirestoreDencoderMapFieldConfig<D extends PrimativeKey, E extends PrimativeKey, S extends string = string> = Omit<FirestoreEncodedObjectMapFieldConfig<D[], E, S>, 'encoder' | 'decoder'> & {
+  /**
+   * Dencoder to use for the input values.
+   */
+  readonly dencoder: PrimativeKeyStringDencoderFunction<D, E>;
+};
 
 /**
  * FirestoreField configuration for a map-type object that uses a Dencoder to encode/decode values.
@@ -483,25 +529,12 @@ export type FirestoreEncodedMapFieldConfig<D extends PrimativeKey, E extends str
  * @param config
  * @returns
  */
-export function firestoreEncodedMap<D extends PrimativeKey, E extends string = string, S extends string = string>(config: FirestoreEncodedMapFieldConfig<D, E, S>) {
-  const { mapFilter: filter = KeyValueTypleValueFilter.EMPTY, dencoder } = config;
-  const filterFinalMapValuesFn = filterFromPOJOFunction<FirestoreMapFieldType<E, S>>({
-    copy: false, // skip copying. Handled before input
-    filter
-  });
-
-  return firestoreField<FirestoreEncodedMapFieldValueType<D, S>, FirestoreMapFieldType<E, S>>({
-    default: config.default ?? ((() => ({})) as Getter<FirestoreEncodedMapFieldValueType<D, S>>),
-    fromData: (input: FirestoreMapFieldType<E, S>) => {
-      const copy = copyObject(input);
-      const result = mapObjectMap<FirestoreMapFieldType<E, S>, E, D[]>(copy, (x) => dencoder(x as E) as D[]);
-      return result;
-    },
-    toData: (input: FirestoreEncodedMapFieldValueType<D, S>) => {
-      const encodedMap: FirestoreMapFieldType<E, S> = mapObjectMap<FirestoreMapFieldType<D[], S>, D[], E>(input, (x) => dencoder(x as D[]) as E);
-      const result = filterFinalMapValuesFn(encodedMap);
-      return result;
-    }
+export function firestoreDencoderMap<D extends PrimativeKey, E extends PrimativeKey, S extends string = string>(config: FirestoreDencoderMapFieldConfig<D, E, S>) {
+  const { dencoder } = config;
+  return firestoreEncodedObjectMap<D[], E, S>({
+    ...config,
+    encoder: dencoder as unknown as MapFunction<D[], E>,
+    decoder: dencoder as unknown as MapFunction<E, D[]>
   });
 }
 
@@ -511,7 +544,7 @@ export function firestoreEncodedMap<D extends PrimativeKey, E extends string = s
  * Filters out models with empty/no roles by default.
  */
 export function firestoreModelKeyEncodedGrantedRoleMap<D extends GrantedRole, E extends string>(dencoder: PrimativeKeyStringDencoderFunction<D, E>) {
-  return firestoreEncodedMap<D, E, FirestoreModelKey>({
+  return firestoreDencoderMap<D, E, FirestoreModelKey>({
     dencoder
   });
 }
@@ -840,3 +873,62 @@ export const MAX_FIRESTORE_MAP_ZOOM_LEVEL_VALUE: ZoomLevel = 22;
  * Convenience function for firestoreNumber() for storing an integer ZoomLevel value.
  */
 export const firestoreMapZoomLevel = firestoreNumber<ZoomLevel>({ default: 5, transform: { precision: 1, bounds: { min: MIN_FIRESTORE_MAP_ZOOM_LEVEL_VALUE, max: MAX_FIRESTORE_MAP_ZOOM_LEVEL_VALUE } } });
+
+// MARK: Bitwise
+export interface FirestoreBitwiseSetConfig<D extends number = number> extends DefaultMapConfiguredFirestoreFieldConfig<Set<D>, BitwiseEncodedSet> {
+  maxIndex?: number;
+}
+
+export function firestoreBitwiseSet<D extends number = number>(config: FirestoreBitwiseSetConfig<D>) {
+  const dencoder = bitwiseSetDencoder<D>(config.maxIndex);
+  return firestoreField<Set<D>, BitwiseEncodedSet>({
+    default: () => new Set<D>(),
+    ...config,
+    fromData: dencoder,
+    toData: dencoder
+  });
+}
+
+export interface FirestoreBitwiseSetMapConfig<D extends number = number, K extends string = string> extends Omit<FirestoreEncodedObjectMapFieldConfig<Set<D>, BitwiseEncodedSet, K>, 'encoder' | 'decoder'> {
+  maxIndex?: number;
+}
+
+export function firestoreBitwiseSetMap<D extends number = number, K extends string = string>(config: FirestoreBitwiseSetMapConfig<D, K>) {
+  const dencoder = bitwiseSetDencoder<D>(config.maxIndex);
+  return firestoreEncodedObjectMap<Set<D>, BitwiseEncodedSet, K>({
+    mapFilter: KeyValueTypleValueFilter.FALSY, // ignore empty/zero values
+    ...config,
+    encoder: dencoder,
+    decoder: dencoder
+  });
+}
+
+export interface FirestoreBitwiseObjectMapConfig<T extends object, K extends string = string> extends Omit<FirestoreEncodedObjectMapFieldConfig<T, BitwiseEncodedSet, K>, 'encoder' | 'decoder'> {
+  dencoder: BitwiseObjectDencoder<T>;
+}
+
+export function firestoreBitwiseObjectMap<T extends object, K extends string = string>(config: FirestoreBitwiseObjectMapConfig<T, K>) {
+  const { dencoder } = config;
+  return firestoreEncodedObjectMap<T, BitwiseEncodedSet, K>({
+    mapFilter: KeyValueTypleValueFilter.FALSY, // ignore empty/zero values
+    ...config,
+    encoder: dencoder,
+    decoder: dencoder
+  });
+}
+
+// MARK: Compat
+/**
+ * @deprecated use FirestoreDencoderMapFieldValueType instead.
+ */
+export type FirestoreEncodedMapFieldValueType<D extends PrimativeKey, S extends string = string> = FirestoreDencoderMapFieldValueType<D, S>;
+
+/**
+ * @deprecated use FirestoreDencoderMapFieldConfig instead.
+ */
+export type FirestoreEncodedMapFieldConfig<D extends PrimativeKey, E extends PrimativeKey, S extends string = string> = FirestoreDencoderMapFieldConfig<D, E, S>;
+
+/**
+ * @deprecated use firestoreDencoderMap() instead.
+ */
+export const firestoreEncodedMap = firestoreDencoderMap;

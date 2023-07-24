@@ -2,8 +2,12 @@
   <!-- Header -->
   <dbx-popover-header [icon]="icon" [header]="header">
     <ng-container *ngIf="showSwitchButtons" [ngSwitch]="showPreset$ | async">
-      <button *ngSwitchCase="true" mat-flat-button color="accent" (click)="showCustom()">Custom</button>
+      <button *ngSwitchCase="true" mat-flat-button color="accent" (click)="showCustom()">{{ customizeButtonText }}</button>
       <button *ngSwitchCase="false" mat-flat-button color="accent" (click)="showPresets()">Presets</button>
+    </ng-container>
+    <ng-container *ngIf="showCloseButton">
+      <dbx-button-spacer *ngIf="showSwitchButtons"></dbx-button-spacer>
+      <button mat-stroked-button color="accent" (click)="close()">{{ closeButtonText }}</button>
     </ng-container>
   </dbx-popover-header>
   <!-- Content -->

@@ -1,3 +1,4 @@
+export * from './bitwise.dencoder';
 export * from './factory';
 export * from './bound';
 export * from './dollar';

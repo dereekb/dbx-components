@@ -215,7 +215,13 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             it('should update the item if it exist', async () => {
               await itemPrivateDataDocument.create({
                 createdAt: new Date(),
-                values: []
+                values: [],
+                settings: {
+                  test: {
+                    north: true,
+                    south: true
+                  }
+                }
               });
 
               const newDate = new Date(0);
@@ -226,7 +232,13 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               await itemPrivateDataDocument.update({ createdAt: newDate });
 
               const data = await itemPrivateDataDocument.snapshotData();
-              expect(data?.createdAt.getTime()).toBe(0);
+              expect(data?.createdAt.getTime()).toBe(newDate.getTime());
+
+              // check was not modified
+              expect(data?.settings['test'].north).toBe(true);
+              expect(data?.settings['test'].south).toBe(true);
+              expect(data?.settings['test'].east).toBeUndefined();
+              expect(data?.settings['test'].west).toBeUndefined();
             });
           });
 
@@ -235,7 +247,15 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               let exists = await privateDataAccessor.exists();
               expect(exists).toBe(false);
 
-              await privateDataAccessor.set({ values: [], createdAt: new Date() });
+              await privateDataAccessor.set({
+                values: [],
+                createdAt: new Date(),
+                settings: {
+                  test: {
+                    north: true
+                  }
+                }
+              });
 
               exists = await privateDataAccessor.exists();
               expect(exists).toBe(true);
@@ -244,7 +264,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
           describe('with item', () => {
             beforeEach(async () => {
-              await privateDataAccessor.set({ values: [], createdAt: new Date() });
+              await privateDataAccessor.set({ values: [], createdAt: new Date(), settings: {} });
             });
 
             describe('accessors', () => {
