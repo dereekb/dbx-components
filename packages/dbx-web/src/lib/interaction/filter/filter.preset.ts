@@ -1,5 +1,5 @@
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
-import { Directive, Input, OnDestroy } from '@angular/core';
+import { Directive, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
 import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset, ClickableFilterPresetOrPartialPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
 import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { FilterWithPreset } from '@dereekb/rxjs';
@@ -10,6 +10,9 @@ import { FilterWithPreset } from '@dereekb/rxjs';
 @Directive()
 export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithPreset> implements OnDestroy {
   //TODO: Rename to AbstractDbxPresetFilterMenuDirective with next breaking changes
+
+  @Output()
+  presetSelected = new EventEmitter<ClickableFilterPresetOrPartialPreset<F>>();
 
   private _presets = new BehaviorSubject<ClickableFilterPresetOrPartialPreset<F>[]>([]);
 
@@ -103,9 +106,12 @@ export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithP
 
       this.filterSourceDirective.setFilter(filter);
     }
+
+    this.presetSelected.next(preset);
   }
 
   ngOnDestroy(): void {
     this._presets.complete();
+    this.presetSelected.complete();
   }
 }
