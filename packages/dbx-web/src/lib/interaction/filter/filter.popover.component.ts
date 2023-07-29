@@ -132,7 +132,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
     })
   );
 
-  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
+  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,
@@ -148,6 +148,8 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
         closeButtonText,
         customFilterComponentClass,
         presetFilterComponentClass,
+        customFilterComponentConfig,
+        presetFilterComponentConfig,
         connector,
         initialFilterObs,
         closeOnFilterChange
@@ -173,17 +175,17 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
   ngOnInit(): void {
     let showPreset = false;
-    const { customFilterComponentClass, presetFilterComponentClass } = this.config;
+    const { customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig } = this.config;
 
-    if (customFilterComponentClass) {
+    if (customFilterComponentClass || customFilterComponentConfig) {
       showPreset = false;
     }
 
-    if (presetFilterComponentClass) {
+    if (presetFilterComponentClass || presetFilterComponentConfig) {
       showPreset = true;
     }
 
-    if (!customFilterComponentClass && !presetFilterComponentClass) {
+    if (!(customFilterComponentClass || customFilterComponentConfig) && !(presetFilterComponentClass || presetFilterComponentConfig)) {
       throw new Error('Requires a preset or custom class provided for DbxFilterPopover.');
     }
 

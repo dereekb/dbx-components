@@ -12,7 +12,7 @@ export type DbxFilterButtonConfigWithPresetFilter<F extends object, PF extends P
 @Directive()
 export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractPopoverRefDirective<unknown, unknown> {
   @Input()
-  config?: DbxFilterButtonConfig<F>;
+  config?: DbxFilterComponentParams<F, any, any, any>;
 
   constructor(private readonly popupService: DbxPopoverService) {
     super();

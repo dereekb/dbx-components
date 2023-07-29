@@ -1,6 +1,7 @@
-import { ArrayOrValue, asArray } from '@dereekb/util';
+import { ArrayOrValue, asArray } from '../array/array';
+import { Maybe } from '../value/maybe.type';
 import { MapSameFunction } from '../value/map';
-import { replaceCharacterAtIndexWith } from './char';
+import { replaceCharacterAtIndexWith, splitStringAtIndex } from './char';
 
 export type ReplaceStringsFunction = MapSameFunction<string>;
 
@@ -92,10 +93,11 @@ export function escapeStringForRegex(input: string): string {
   return result;
 }
 
-export type FindAllCharacterOccurencesFunction = (input: string) => number[];
+export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<number>) => number[];
 
 export function findAllCharacterOccurencesFunction(characterSet: Set<string>): FindAllCharacterOccurencesFunction {
-  return (input: string) => {
+  return (input: string, maxToReturn?: Maybe<number>) => {
+    const max = maxToReturn ?? Number.MAX_SAFE_INTEGER;
     const occurrences: number[] = [];
 
     for (let i = 0; i < input.length; i += 1) {
@@ -103,6 +105,11 @@ export function findAllCharacterOccurencesFunction(characterSet: Set<string>): F
 
       if (characterSet.has(char)) {
         occurrences.push(i);
+
+        // return if at the max number of occurences
+        if (occurrences.length >= max) {
+          break;
+        }
       }
     }
 
@@ -110,6 +117,79 @@ export function findAllCharacterOccurencesFunction(characterSet: Set<string>): F
   };
 }
 
-export function findAllCharacterOccurences(set: Set<string>, input: string): number[] {
-  return findAllCharacterOccurencesFunction(set)(input);
+/**
+ * First all occurences of the characters from the set in the input string.
+ *
+ * @param set
+ * @param input
+ * @returns
+ */
+export function findAllCharacterOccurences(set: Set<string>, input: string, max?: number): number[] {
+  return findAllCharacterOccurencesFunction(set)(input, max);
+}
+
+/**
+ * First the first occurence of a character from the set in the input string.
+ *
+ * @param set
+ * @param input
+ * @returns
+ */
+export function findFirstCharacterOccurence(set: Set<string>, input: string): Maybe<number> {
+  return findAllCharacterOccurences(set, input, 1)[0];
+}
+
+export type SplitStringAtFirstCharacterOccurenceFunction = (input: string) => [string, string | undefined];
+
+/**
+ * Splits the string into two parts at the first occurence of a string or any string in the set.
+ *
+ * @param set
+ * @param input
+ */
+export function splitStringAtFirstCharacterOccurenceFunction(splitAt: string | Set<string>): SplitStringAtFirstCharacterOccurenceFunction {
+  return (input: string) => {
+    const splitSet = typeof splitAt === 'string' ? new Set([splitAt]) : splitAt;
+    const firstOccurence = findFirstCharacterOccurence(splitSet, input);
+    let result: [string, string | undefined];
+
+    if (firstOccurence != null) {
+      result = splitStringAtIndex(input, firstOccurence, false);
+    } else {
+      result = [input, undefined];
+    }
+
+    return result;
+  };
+}
+
+export function splitStringAtFirstCharacterOccurence(input: string, splitAt: string | Set<string>): [string, string | undefined] {
+  return splitStringAtFirstCharacterOccurenceFunction(splitAt)(input);
+}
+
+/**
+ * Removes all characters from the input string after the first character occurence pre-determined by the function.
+ */
+export type RemoveCharactersAfterFirstCharacterOccurenceFunction = (input: string) => string;
+
+/**
+ * Splits the string into two parts at the first occurence of a string or any string in the set.
+ *
+ * @param set
+ * @param input
+ */
+export function removeCharactersAfterFirstCharacterOccurenceFunction(findCharacters: string | Set<string>): RemoveCharactersAfterFirstCharacterOccurenceFunction {
+  const splitStringAtFirstCharacterOccurence = splitStringAtFirstCharacterOccurenceFunction(findCharacters);
+  return (input: string) => splitStringAtFirstCharacterOccurence(input)[0];
+}
+
+/**
+ * Removes all characters from the input string after the first character occurence from findCharacters input.
+ *
+ * @param input
+ * @param splitAt
+ * @returns
+ */
+export function removeCharactersAfterFirstCharacterOccurence(input: string, findCharacters: string | Set<string>): string {
+  return removeCharactersAfterFirstCharacterOccurenceFunction(findCharacters)(input);
 }

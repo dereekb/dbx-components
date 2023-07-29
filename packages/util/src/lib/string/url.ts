@@ -1,5 +1,5 @@
 import { EmailAddress } from '../contact/email';
-import { PhoneNumber } from '../contact/phone';
+import { E164PhoneNumber, E164PhoneNumberExtensionPair, E164PhoneNumberWithExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
@@ -316,6 +316,26 @@ export function mailToUrlString(input: MailToUrlInput): string {
 }
 
 // MARK: Tel
-export function telUrlString(phone: PhoneNumber): string {
+export function telUrlString(phone: PhoneNumber | E164PhoneNumber | E164PhoneNumberWithExtension): string {
+  if (isE164PhoneNumber(phone, true)) {
+    const pair = e164PhoneNumberExtensionPair(phone);
+    return telUrlStringForE164PhoneNumberPair(pair);
+  }
+
   return `tel:${phone}`;
+}
+
+/**
+ * Creates a tel url string for the input E164PhoneNumberExtensionPair.
+ *
+ * @param pair
+ * @returns
+ */
+export function telUrlStringForE164PhoneNumberPair(pair: E164PhoneNumberExtensionPair): string {
+  // https://stackoverflow.com/questions/9482633/how-do-i-include-extensions-in-the-tel-uri
+  if (pair.extension) {
+    return `tel:${pair.number};${pair.extension}`;
+  } else {
+    return `tel:${pair.number}`;
+  }
 }
