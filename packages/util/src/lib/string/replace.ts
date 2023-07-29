@@ -168,6 +168,35 @@ export function splitStringAtFirstCharacterOccurence(input: string, splitAt: str
 }
 
 /**
+ * Keeps all characters from the input string after the first character occurence pre-determined by the function.
+ *
+ * If no trigger characters exist, returns an empty string.
+ */
+export type KeepCharactersAfterFirstCharacterOccurenceFunction = (input: string) => string;
+
+/**
+ * Splits the string into two parts at the first occurence of a string or any string in the set.
+ *
+ * @param set
+ * @param input
+ */
+export function keepCharactersAfterFirstCharacterOccurenceFunction(findCharacters: string | Set<string>): KeepCharactersAfterFirstCharacterOccurenceFunction {
+  const splitStringAtFirstCharacterOccurence = splitStringAtFirstCharacterOccurenceFunction(findCharacters);
+  return (input: string) => splitStringAtFirstCharacterOccurence(input)[1] ?? '';
+}
+
+/**
+ * Keeps all characters from the input string after the first character occurence from findCharacters input.
+ *
+ * @param input
+ * @param splitAt
+ * @returns
+ */
+export function keepCharactersAfterFirstCharacterOccurence(input: string, findCharacters: string | Set<string>): string {
+  return keepCharactersAfterFirstCharacterOccurenceFunction(findCharacters)(input);
+}
+
+/**
  * Removes all characters from the input string after the first character occurence pre-determined by the function.
  */
 export type RemoveCharactersAfterFirstCharacterOccurenceFunction = (input: string) => string;

@@ -113,6 +113,10 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
   }
 
   .dbx-form-fixed-date-range-field-wrapper .mat-form-field-appearance-outline .mat-form-field-infix {
+    padding: 4px 0;
+  }
+
+  .dbx-form-fixed-date-range-field-wrapper .mat-form-field-appearance-outline > .mat-form-field-wrapper > .mat-form-field-flex > .mat-form-field-infix {
     padding: 0;
   }
 }

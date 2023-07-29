@@ -75,6 +75,18 @@ export function isE164PhoneNumberWithExtension(input: string): input is E164Phon
   return E164PHONE_NUMBER_WITH_EXTENSION_REGEX.test(input);
 }
 
+export const PHONE_EXTENSION_NUMBER_REGEX = /^\d{1,6}$/;
+
+/**
+ * Returns true if the input is a valid phone number extension.
+ *
+ * @param input
+ * @returns
+ */
+export function isValidPhoneExtensionNumber(input: string): input is PhoneExtensionNumber {
+  return PHONE_EXTENSION_NUMBER_REGEX.test(input);
+}
+
 /**
  * Removes the extension characters from the input phone number.
  */
@@ -94,4 +106,8 @@ export function e164PhoneNumberExtensionPair(input: PhoneNumber | E164PhoneNumbe
     number: split[0] as E164PhoneNumber,
     extension: split[1]
   };
+}
+
+export function e164PhoneNumberFromE164PhoneNumberExtensionPair(input: E164PhoneNumberExtensionPair): E164PhoneNumber | E164PhoneNumberWithExtension {
+  return input.extension ? `${input.number}#${input.extension}` : input.number;
 }

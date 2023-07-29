@@ -1,4 +1,4 @@
-import { E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX, E164PhoneNumber, E164PhoneNumberWithExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumberWithExtension, removeExtensionFromPhoneNumber } from './phone';
+import { E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX, E164PhoneNumber, E164PhoneNumberWithExtension, PhoneNumber, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, isE164PhoneNumberWithExtension, isValidPhoneExtensionNumber, removeExtensionFromPhoneNumber } from './phone';
 
 const validPhoneNumber: PhoneNumber = '234-567-8910';
 const validE164PhoneNumber: E164PhoneNumber = '+12345678910';
@@ -23,9 +23,14 @@ describe('isE164PhoneNumberWithExtension()', () => {
     expect(result).toBe(false);
   });
 
-  it('should match a valid E.164 phone number with an extension', () => {
+  it('should return true for E.164 phone number with an extension', () => {
     const result = isE164PhoneNumberWithExtension(validE164PhoneNumberWithExtension);
     expect(result).toBe(true);
+  });
+
+  it('should return false for a valid E.164 phone number with an invalid extension', () => {
+    const result = isE164PhoneNumberWithExtension(validE164PhoneNumberWithExtension + '1234234');
+    expect(result).toBe(false);
   });
 });
 
@@ -41,6 +46,23 @@ describe('removeExtensionFromPhoneNumber()', () => {
   });
 });
 
+describe('isValidPhoneExtensionNumber()', () => {
+  it('should return true for a valid extension', () => {
+    const result = isValidPhoneExtensionNumber(extensionNumber);
+    expect(result).toBe(true);
+  });
+
+  it('should return false for an invalid extension (with letters)', () => {
+    const result = isValidPhoneExtensionNumber('abc');
+    expect(result).toBe(false);
+  });
+
+  it('should return false for an invalid extension (too long)', () => {
+    const result = isValidPhoneExtensionNumber('123455324');
+    expect(result).toBe(false);
+  });
+});
+
 describe('e164PhoneNumberExtensionPair()', () => {
   it('should create a pair from validE164PhoneNumber', () => {
     const pair = e164PhoneNumberExtensionPair(validE164PhoneNumber);
@@ -52,5 +74,22 @@ describe('e164PhoneNumberExtensionPair()', () => {
     const pair = e164PhoneNumberExtensionPair(validE164PhoneNumberWithExtension);
     expect(pair.number).toBe(validE164PhoneNumber);
     expect(pair.extension).toBe(extensionNumber);
+  });
+});
+
+describe('e164PhoneNumberFromE164PhoneNumberExtensionPair()', () => {
+  it('should create a string from the input pair with an extension', () => {
+    const pair = e164PhoneNumberExtensionPair(validE164PhoneNumber);
+    expect(pair.number).toBe(validE164PhoneNumber);
+    const result = e164PhoneNumberFromE164PhoneNumberExtensionPair(pair);
+    expect(result).toBe(validE164PhoneNumber);
+  });
+
+  it('should create a string from the input pair with not extension', () => {
+    const pair = e164PhoneNumberExtensionPair(validE164PhoneNumberWithExtension);
+    expect(pair.number).toBe(validE164PhoneNumber);
+    expect(pair.extension).toBe(extensionNumber);
+    const result = e164PhoneNumberFromE164PhoneNumberExtensionPair(pair);
+    expect(result).toBe(validE164PhoneNumberWithExtension);
   });
 });

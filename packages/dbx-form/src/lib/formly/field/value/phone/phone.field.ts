@@ -2,22 +2,28 @@ import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { sectionWrapper, flexLayoutWrapper } from '../../wrapper/wrapper';
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
 import { InternationalPhoneFormlyFieldProps } from './phone.field.component';
 import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
+import { isE164PhoneNumber } from '../../../../validator/phone';
 
 export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, InternationalPhoneFormlyFieldProps {}
 
 export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig<InternationalPhoneFormlyFieldProps> {
-  const { key = 'phone', label = 'Phone Number', preferredCountries, onlyCountries } = config;
+  const { key = 'phone', label = 'Phone Number', preferredCountries, onlyCountries, allowExtension: inputAllowExtension } = config;
+  const allowExtension = inputAllowExtension ?? false;
 
   const fieldConfig = formlyField({
     key,
     type: 'intphone',
     ...propsAndConfigForFieldConfig(config, {
       label,
+      allowExtension,
       preferredCountries,
       onlyCountries
+    }),
+    ...validatorsForFieldConfig({
+      validators: [isE164PhoneNumber(allowExtension)]
     })
   });
 

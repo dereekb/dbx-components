@@ -325,6 +325,7 @@ export function schoolInfoJobSettingsEndTimeField() {
 
   readonly phoneFields: FormlyFieldConfig[] = [
     phoneField(),
+    phoneField({ key: 'phoneWithExtension', label: 'Phone Number With Optional Extension', description: 'This field supports optional extensions.', allowExtension: true }),
     wrappedPhoneAndLabelField({
       phoneField: {
         key: 'labeledPhoneKey'

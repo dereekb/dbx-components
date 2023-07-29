@@ -7,22 +7,22 @@
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-form-phone-field,
-  .mat-form-field {
+  .dbx-form-phone-field {
     width: 100%;
+    display: flex;
   }
 
-  .mat-form-field {
-    margin-top: 1px;
-
-    button.country-selector {
-      opacity: 100;
-      width: 105px;
-    }
+  .dbx-form-phone-field-phone-content button.country-selector {
+    opacity: 100;
+    width: 105px;
   }
 
   .dbx-form-phone-field .ngx-mat-tel-input-container input:not(.country-search) {
-    padding: 0 6px 0 110px;
+    padding: 2px 6px 0 110px;
+  }
+
+  .dbx-form-phone-field-extension-input {
+    border: 0;
   }
 }
 
@@ -31,10 +31,19 @@
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
   $text-color: theming.get-color-from-palette($foreground, 'text');
+  $border-color: theming.get-color-from-palette($foreground, 'divider');
 
-  .country-selector.mat-button,
-  .country-list-button.mat-menu-item {
-    color: $text-color;
+  .dbx-form-phone-field {
+    .country-selector.mat-button,
+    .country-list-button.mat-menu-item {
+      color: $text-color;
+    }
+  }
+
+  .dbx-form-phone-field-extension-input {
+    border: 0;
+    border-bottom: 1px solid $border-color;
+    background: none;
   }
 }
 
