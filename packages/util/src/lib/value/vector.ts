@@ -7,8 +7,32 @@ export interface Vector {
 
 export type VectorTuple = [number, number];
 
-export function vectorsAreEqual(a: Vector, b: Vector): boolean {
+export function isSameVector(a: Maybe<Partial<Vector>>, b: Maybe<Partial<Vector>>): boolean {
+  return a && b ? vectorsAreEqual(a, b) : a === b;
+}
+
+export function vectorsAreEqual(a: Partial<Vector>, b: Partial<Vector>): boolean {
   return a.x === b.x && a.y === b.y;
+}
+
+/**
+ * Function that resizes a vector.
+ */
+export type VectorResizeFunction = (input: Vector) => Vector;
+
+/**
+ * Creates a VectorResizeFunction that returns the larger x/y values from the input and the minimum vector.
+ *
+ * @param min
+ * @returns
+ */
+export function vectorMinimumSizeResizeFunction(minSize: Partial<Vector>): VectorResizeFunction {
+  return (input: Vector) => {
+    return {
+      x: minSize.x != null ? Math.max(input.x, minSize.x) : input.x,
+      y: minSize.y != null ? Math.max(input.y, minSize.y) : input.y
+    };
+  };
 }
 
 export type RectangleOrigin = Vector;

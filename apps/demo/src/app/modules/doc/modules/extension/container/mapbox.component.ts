@@ -220,6 +220,10 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
+    this.dbxMapboxMapStore.setMinimumVirtualViewportSize({
+      x: 320 // minimum 320px
+    });
+
     this.dbxMapboxMapStore.setContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
