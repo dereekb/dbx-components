@@ -34,7 +34,7 @@ import {
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { BehaviorSubject, delay, of } from 'rxjs';
-import { DateRangeType, DateScheduleDayCode, dateRange, dateTimezoneUtcNormal } from '@dereekb/date';
+import { DateRangeType, DateScheduleDayCode, DateScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
@@ -232,7 +232,7 @@ export function schoolInfoJobSettingsEndTimeField() {
               min: addDays(startOfDay(new Date()), -14)
             },
             schedule: {
-              w: `${DateScheduleDayCode.MONDAY}${DateScheduleDayCode.TUESDAY}`
+              w: `${DateScheduleDayCode.MONDAY}${DateScheduleDayCode.TUESDAY}` as DateScheduleEncodedWeek
             }
           };
 
@@ -245,7 +245,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         getConfigObs: () => {
           const config: DbxDateTimePickerConfiguration = {
             schedule: {
-              w: `${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.THURSDAY}${DateScheduleDayCode.FRIDAY}`
+              w: `${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.THURSDAY}${DateScheduleDayCode.FRIDAY}` as DateScheduleEncodedWeek
             }
           };
 
