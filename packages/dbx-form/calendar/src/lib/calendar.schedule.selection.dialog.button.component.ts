@@ -7,12 +7,15 @@ import { Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-dialog-button',
   template: `
-    <button mat-raised-button color="accent" (click)="clickCustomize()">{{ buttonText }}</button>
+    <dbx-button [raised]="true" color="accent" [text]="buttonText" [disabled]="disabled" (buttonClick)="clickCustomize()"></dbx-button>
   `
 })
 export class DbxScheduleSelectionCalendarDateDialogButtonComponent {
   @Input()
   buttonText = 'Customize';
+
+  @Input()
+  disabled?: Maybe<boolean>;
 
   @Input()
   contentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;

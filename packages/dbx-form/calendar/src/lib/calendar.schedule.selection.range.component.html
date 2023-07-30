@@ -1,27 +1,30 @@
 <mat-form-field class="dbx-schedule-selection-calendar-date-range-field">
   <mat-label *ngIf="label">{{ label }}</mat-label>
-  <div *ngIf="showCustomize && (isCustomized$ | async)" class="date-range-field-customized">
-    <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
+  <div class="dbx-schedule-selection-calendar-date-range-field-content">
+    <!-- Primary Content -->
+    <div class="dbx-flex">
+      <div *ngIf="showCustomize && (isCustomized$ | async)" class="date-range-field-customized">
+        <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
+      </div>
+      <dbx-button-spacer></dbx-button-spacer>
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <dbx-button-spacer></dbx-button-spacer>
+      <mat-date-range-input (click)="clickedDateRangeInput()" [required]="required$ | async" [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
+        <input [errorStateMatcher]="errorStateMatcher" matStartDate formControlName="start" placeholder="Start date" />
+        <input [errorStateMatcher]="errorStateMatcher" matEndDate formControlName="end" placeholder="End date" />
+      </mat-date-range-input>
+      <span *ngIf="timezone$ | async" class="dbx-flex-bar dbx-faint dbx-nowrap dbx-icon-spacer">{{ timezone$ | async | timezoneAbbreviation: (timezoneReleventDate$ | async) }}</span>
+      <div *ngIf="showCustomize">
+        <dbx-button-spacer></dbx-button-spacer>
+        <ng-content select="[customizeButton]"></ng-content>
+      </div>
+      <mat-date-range-picker #picker (opened)="pickerOpened()" (closed)="pickerClosed()"></mat-date-range-picker>
+    </div>
+    <!-- Custom Content -->
+    <div>
+      <ng-content></ng-content>
+    </div>
   </div>
-  <dbx-button-spacer></dbx-button-spacer>
-  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-  <dbx-button-spacer></dbx-button-spacer>
-  <mat-date-range-input [required]="required$ | async" [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
-    <input [errorStateMatcher]="errorStateMatcher" matStartDate formControlName="start" placeholder="Start date" />
-    <input [errorStateMatcher]="errorStateMatcher" matEndDate formControlName="end" placeholder="End date" />
-  </mat-date-range-input>
-  <span *ngIf="timezone$ | async" class="dbx-flex-bar dbx-faint dbx-nowrap dbx-icon-spacer">{{ timezone$ | async | timezoneAbbreviation: (timezoneReleventDate$ | async) }}</span>
-  <div *ngIf="showCustomize">
-    <dbx-button-spacer></dbx-button-spacer>
-    <ng-content select="[customizeButton]"></ng-content>
-  </div>
-  <mat-date-range-picker #picker (opened)="pickerOpened()" (closed)="pickerClosed()"></mat-date-range-picker>
-  <mat-error *ngIf="range.hasError('required')">Date range is required</mat-error>
-  <mat-error *ngIf="range.controls.start.hasError('matStartDateInvalid')">Invalid start date</mat-error>
-  <mat-error *ngIf="range.controls.end.hasError('matEndDateInvalid')">Invalid end date</mat-error>
-  <mat-error *ngIf="range.controls.start.hasError('matDatepickerMin')">Start date is too early</mat-error>
-  <mat-error *ngIf="range.controls.end.hasError('matDatepickerMin')">End date is too early.</mat-error>
-  <mat-error *ngIf="range.controls.start.hasError('matDatepickerMax')">Start date is too late.</mat-error>
-  <mat-error *ngIf="range.controls.end.hasError('matDatepickerMax')">End date is too late</mat-error>
+  <mat-error *ngIf="currentErrorMessage$ | async">{{ currentErrorMessage$ | async }}</mat-error>
   <mat-hint>{{ hint }}</mat-hint>
 </mat-form-field>
