@@ -30,6 +30,10 @@ export enum DateScheduleDayCode {
   WEEKEND = 9
 }
 
+export function fullWeekDayScheduleDayCodes() {
+  return [DateScheduleDayCode.WEEKDAY, DateScheduleDayCode.WEEKEND];
+}
+
 export function weekdayDateScheduleDayCodes() {
   return [DateScheduleDayCode.MONDAY, DateScheduleDayCode.TUESDAY, DateScheduleDayCode.WEDNESDAY, DateScheduleDayCode.THURSDAY, DateScheduleDayCode.FRIDAY];
 }
@@ -155,7 +159,7 @@ export function simplifyDateScheduleDayCodes(codes: Iterable<DateScheduleDayCode
   return result;
 }
 
-export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | ArrayOrValue<DateScheduleDayCode>;
+export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | ArrayOrValue<DateScheduleDayCode> | Set<DateScheduleDayCode>;
 
 /**
  * Expands the input DateScheduleDayCodesInput to a Set of DayOfWeek values.
@@ -172,6 +176,16 @@ export function expandDateScheduleDayCodesToDayOfWeekSet(input: DateScheduleDayC
   });
 
   return days;
+}
+
+export function dateScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfWeek>): Set<DateScheduleDayCode> {
+  const codes = new Set<DateScheduleDayCode>();
+
+  forEachInIterable(input, (code) => {
+    codes.add((code + 1) as DateScheduleDayCode);
+  });
+
+  return codes;
 }
 
 /**
@@ -223,13 +237,19 @@ export function expandDateScheduleDayCodesToDayCodesSet(input: DateScheduleDayCo
 export function rawDateScheduleDayCodes(input: DateScheduleDayCodesInput): DateScheduleDayCode[] {
   let dayCodes: DateScheduleDayCode[];
 
-  if (typeof input === 'string') {
-    dayCodes = Array.from(new Set(input)).map((x) => Number(x)) as DateScheduleDayCode[];
-  } else {
-    dayCodes = asArray(input);
+  switch (typeof input) {
+    case 'string':
+      dayCodes = Array.from(new Set(input)).map((x) => Number(x)) as DateScheduleDayCode[];
+      break;
+    case 'number':
+      dayCodes = [input];
+      break;
+    default:
+      dayCodes = Array.from(input);
+      break;
   }
 
-  return dayCodes.filter((x) => Boolean(x));
+  return dayCodes.filter((x) => Boolean(x)); // filter out "none" code
 }
 
 /**
@@ -252,6 +272,19 @@ export function dateScheduleDayCodeFactory(config?: DateScheduleDayCodeConfig): 
     const day = getDay(target);
     return day + 1;
   };
+}
+
+/**
+ * Returns true if the input codes, when expanded, are equivalent.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function dateScheduleDayCodesAreSetsEquivalent(a: DateScheduleDayCodesInput, b: DateScheduleDayCodesInput): boolean {
+  const ae = expandDateScheduleDayCodes(a);
+  const be = expandDateScheduleDayCodes(b);
+  return iterablesAreSetEquivalent(ae, be);
 }
 
 // MARK: DateSchedule

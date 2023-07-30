@@ -1,6 +1,6 @@
 import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection, systemBaseDateToNormalDate } from '@dereekb/date';
+import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection, expandDateScheduleDayCodes, systemBaseDateToNormalDate } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns/esm';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
@@ -57,6 +57,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       required: false,
       label: 'Future Dates',
       timezone: this.timezone$,
+      defaultScheduleDays: expandDateScheduleDayCodes('8'),
       minMaxDateRange: {
         start: startOfDay(new Date())
       },

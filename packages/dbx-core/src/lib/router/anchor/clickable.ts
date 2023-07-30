@@ -1,4 +1,4 @@
-import { E164PhoneNumber, E164PhoneNumberWithExtension, MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
+import { E164PhoneNumber, E164PhoneNumberWithExtension, E164PhoneNumberWithOptionalExtension, MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
 
 export interface ClickableFunction {
   onClick?: (event?: Maybe<MouseEvent>) => void;
@@ -31,7 +31,7 @@ export function clickableUrlMailTo(mailTo: MailToUrlInput): ClickableUrl {
   };
 }
 
-export function clickableUrlTel(tel: PhoneNumber | E164PhoneNumber | E164PhoneNumberWithExtension): ClickableUrl {
+export function clickableUrlTel(tel: PhoneNumber | E164PhoneNumberWithOptionalExtension): ClickableUrl {
   return {
     url: telUrlString(tel)
   };

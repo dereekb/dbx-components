@@ -22,6 +22,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Table',
     detail: 'table extension',
     ref: 'doc.extension.table'
+  },
+  {
+    icon: 'code',
+    title: 'Structure',
+    detail: 'structure',
+    ref: 'doc.extension.structure'
   }
 ];
 

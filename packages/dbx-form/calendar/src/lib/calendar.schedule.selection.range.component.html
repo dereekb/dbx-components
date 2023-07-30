@@ -7,7 +7,7 @@
         <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
       </div>
       <dbx-button-spacer></dbx-button-spacer>
-      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker-toggle class="mat-datepicker-button-highlight" matIconSuffix [for]="picker"></mat-datepicker-toggle>
       <dbx-button-spacer></dbx-button-spacer>
       <mat-date-range-input (click)="clickedDateRangeInput()" [required]="required$ | async" [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
         <input [errorStateMatcher]="errorStateMatcher" matStartDate formControlName="start" placeholder="Start date" />

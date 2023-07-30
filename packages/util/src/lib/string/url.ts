@@ -1,5 +1,5 @@
 import { EmailAddress } from '../contact/email';
-import { E164PhoneNumber, E164PhoneNumberExtensionPair, E164PhoneNumberWithExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
+import { E164PhoneNumber, E164PhoneNumberExtensionPair, E164PhoneNumberWithExtension, E164PhoneNumberWithOptionalExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
@@ -316,7 +316,7 @@ export function mailToUrlString(input: MailToUrlInput): string {
 }
 
 // MARK: Tel
-export function telUrlString(phone: PhoneNumber | E164PhoneNumber | E164PhoneNumberWithExtension): string {
+export function telUrlString(phone: PhoneNumber | E164PhoneNumberWithOptionalExtension): string {
   if (isE164PhoneNumber(phone, true)) {
     const pair = e164PhoneNumberExtensionPair(phone);
     return telUrlStringForE164PhoneNumberPair(pair);

@@ -5,6 +5,7 @@ import { DocExtensionHomeComponent } from './container/home.component';
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DocExtensionTableComponent } from './container/table.component';
+import { DocExtensionStructureComponent } from './container/structure.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -43,6 +44,12 @@ export const docExtensionTableState: Ng2StateDeclaration = {
   component: DocExtensionTableComponent
 };
 
+export const docExtensionStructureState: Ng2StateDeclaration = {
+  url: '/structure',
+  name: 'doc.extension.structure',
+  component: DocExtensionStructureComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -50,5 +57,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionCalendarState,
   docExtensionWidgetState,
   docExtensionMapboxState,
-  docExtensionTableState
+  docExtensionTableState,
+  docExtensionStructureState
 ];

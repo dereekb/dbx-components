@@ -11,7 +11,7 @@
       <ng-container *ngTemplateOutlet="timeMenuAndInputTemplate"></ng-container>
     </ng-container>
     <div *ngIf="showAddTime$ | async" class="add-time-button-wrapper">
-      <button mat-button class="dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
+      <button mat-button class="mat-datepicker-button-highlight dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
         <mat-icon>timer</mat-icon>
         Add Time
       </button>
@@ -35,7 +35,7 @@
 
 <!-- Date Input Template -->
 <ng-template #dateInputTemplate>
-  <button class="dbx-button-spacer" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
+  <button class="mat-datepicker-button-highlight dbx-button-spacer" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
     <mat-icon>calendar_today</mat-icon>
   </button>
   <mat-form-field class="dbx-datetime-row-field" [ngClass]="{ 'dbx-datetime-row-field-full-width': hideDatePicker }">
@@ -50,7 +50,7 @@
 
 <!-- Time Menu/Input Template -->
 <ng-template #timeMenuAndInputTemplate>
-  <button class="dbx-button-spacer" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
+  <button class="mat-datepicker-button-highlight dbx-button-spacer" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
     <mat-icon>timer</mat-icon>
   </button>
   <mat-menu #timemenu="matMenu">

@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
 import { environment } from './environments/environment';
-import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN, DbxModelInfoModule } from '@dereekb/dbx-web';
+import { DbxScreenModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN, DbxModelInfoModule } from '@dereekb/dbx-web';
 import { RootAppModule } from './app/app.module';
 import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, DbxStorageModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
@@ -75,7 +75,6 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     BrowserAnimationsModule,
     RootAppModule,
     DemoRootSharedModule,
-    DbxWebRootModule,
     DbxFirebaseLoginModule.forRoot({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,
       tosUrl: '/tos/terms',

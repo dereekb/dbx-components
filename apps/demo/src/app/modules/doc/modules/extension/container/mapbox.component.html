@@ -49,6 +49,8 @@
             <p>RXJS OperatorFunction that allows for filtering on objects that are in view when the map stops moving, using each item's center and zoom values to derive bounds.</p>
             <p>Markers that are considered in view is displayed below.</p>
             <p>{{ markersInView$ | async | json }}</p>
+            <h5>With Minimum Size</h5>
+            <p>This example also uses setMinimumVirtualViewportSize() in the map store to set the "minimum" width of the viewportBoundFunction$'s calculation. This is useful for mobile when the sidebar is open fully and only a small sliver of the map is visible.</p>
             <!--
             <h4>centerGivenMargin$</h4>
             <p>Used when using the "push" orientation, it approximates the visual center.</p>

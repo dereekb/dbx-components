@@ -46,7 +46,7 @@ import { MatTreeModule } from '@angular/material/tree';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 import { DbxAppContextStateModule, DbxCoreAuthModule, DbxPipesModule } from '@dereekb/dbx-core';
 import { DbxAnalyticsActionModule } from '@dereekb/dbx-analytics';
@@ -103,7 +103,7 @@ const ANGULAR_MATERIAL_MODULES = [
   FlexLayoutModule
 ];
 
-const DBX_MODULES = [DbxReadableErrorModule, DbxAnalyticsActionModule, DbxCoreAuthModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
+const DBX_MODULES = [DbxStructureModule, DbxReadableErrorModule, DbxAnalyticsActionModule, DbxCoreAuthModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
 
 @NgModule({
   exports: [
