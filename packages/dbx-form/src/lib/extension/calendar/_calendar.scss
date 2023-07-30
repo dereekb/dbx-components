@@ -52,6 +52,8 @@
   }
 
   .dbx-schedule-selection-calendar-date-range-field {
+    width: 100%;
+
     &.mat-form-field-type-mat-date-range-input .mat-form-field-infix {
       display: flex;
 
@@ -72,6 +74,10 @@
         border-radius: 25px;
       }
     }
+  }
+
+  .dbx-schedule-selection-calendar-date-range-field-content {
+    width: 100%;
   }
 
   .dbx-schedule-selection-calendar-cell {
@@ -103,6 +109,13 @@
 }
 
 @mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $background-color: theming.get-color-from-palette($background, 'hover');
+
+  .dbx-schedule-selection-calendar-date-range-field .mat-datepicker-toggle .mat-icon-button {
+    background-color: rgba($background-color, 0.08);
+  }
 }
 
 @mixin typography($typography-config) {

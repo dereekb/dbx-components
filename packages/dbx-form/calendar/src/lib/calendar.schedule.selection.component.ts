@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, OnDestroy, Input, OnInit } from '@angular/core';
 import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
-import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
+import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith, share } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, Maybe, reduceBooleansWithAnd } from '@dereekb/util';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -179,22 +179,47 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     this.calendarStore.setShowPageButtons(true);
 
     // when a new filter is set, if the first two pages of selectable indexes fit within the calendar month, focus on that calendar month.
-    this._centerRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.minMaxDateRange$.subscribe((x) => {
-      if (x?.start && x.end) {
-        const startMonth = dateRange({ date: x.start, type: DateRangeType.CALENDAR_MONTH });
-        const endMonth = dateRange({ date: x.end, type: DateRangeType.CALENDAR_MONTH });
-
-        if (isSameDate(startMonth.start, endMonth.start)) {
+    this._centerRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.currentDateRange$
+      .pipe(
+        first(),
+        switchMap((x) => {
+          let result: Observable<[typeof x, boolean]> = x
+            ? of([x, true])
+            : this.dbxCalendarScheduleSelectionStore.minMaxDateRange$.pipe(
+                first(),
+                map((y) => [y, false] as [typeof x, boolean])
+              );
+          return result;
+        })
+      )
+      .subscribe(([x, isFromSelectedDateRange]) => {
+        if (x?.start) {
+          let tapDay: Maybe<Date>;
+          const startMonth = dateRange({ date: x.start, type: DateRangeType.CALENDAR_MONTH });
           const monthToFocus = endOfWeek(startMonth.start);
-          this.calendarStore.tapDay(monthToFocus);
+
+          if (x.end != null) {
+            const endMonth = dateRange({ date: x.end, type: DateRangeType.CALENDAR_MONTH });
+
+            if (isSameDate(startMonth.start, endMonth.start)) {
+              tapDay = monthToFocus;
+            }
+          }
+
+          if (!tapDay && isFromSelectedDateRange) {
+            tapDay = monthToFocus;
+          }
+
+          if (tapDay) {
+            this.calendarStore.tapDay(tapDay);
+          }
         }
-      }
-    });
+      });
   }
 
   ngOnDestroy(): void {
-    this._inputReadonly.complete();
     this.clickEvent.complete();
+    this._inputReadonly.complete();
     this._config.complete();
     this._centerRangeSub.destroy();
   }

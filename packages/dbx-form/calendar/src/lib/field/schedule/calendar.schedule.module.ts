@@ -8,9 +8,11 @@ import { DbxTextModule } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxFormCalendarModule } from '../../calendar.module';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
   imports: [
+    DbxInjectionComponentModule,
     CommonModule,
     MatIconModule,
     DbxFormCalendarModule,

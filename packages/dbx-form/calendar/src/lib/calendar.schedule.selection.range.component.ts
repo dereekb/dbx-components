@@ -1,5 +1,5 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, Inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
@@ -8,6 +8,7 @@ import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject,
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
+import { MatDateRangePicker } from '@angular/material/datepicker';
 
 interface RangeValue {
   start?: Maybe<Date>;
@@ -23,6 +24,12 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
 
   readonly required$ = this._required.asObservable();
   readonly timezone$ = this.dbxCalendarScheduleSelectionStore.currentTimezone$;
+
+  @Input()
+  openPickerOnTextClick: boolean = true;
+
+  @ViewChild('picker')
+  picker!: MatDateRangePicker<Date>;
 
   @Input()
   label?: Maybe<string> = 'Enter a date range';
@@ -73,6 +80,35 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
   );
 
   readonly isCustomized$ = this.dbxCalendarScheduleSelectionStore.isCustomized$;
+  readonly currentErrorMessage$ = this.range.statusChanges.pipe(
+    filter((x) => x === 'INVALID' || x === 'VALID'),
+    map((x) => {
+      let currentErrorMessage: string | undefined;
+
+      if (x === 'INVALID') {
+        const { start, end } = this.range.controls;
+
+        if (this.range.hasError('required')) {
+          currentErrorMessage = 'Date range is required';
+        } else if (start.hasError('matStartDateInvalid')) {
+          currentErrorMessage = 'Invalid start date';
+        } else if (start.hasError('matDatepickerMin')) {
+          currentErrorMessage = 'Start date is too early';
+        } else if (start.hasError('matDatepickerMax')) {
+          currentErrorMessage = 'Start date is too late';
+        } else if (end.hasError('matStartDateInvalid')) {
+          currentErrorMessage = 'Invalid end date';
+        } else if (end.hasError('matDatepickerMin')) {
+          currentErrorMessage = 'End date is too early';
+        } else if (end.hasError('matDatepickerMax')) {
+          currentErrorMessage = 'End date is too late';
+        }
+      }
+
+      return currentErrorMessage;
+    }),
+    shareReplay(1)
+  );
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
 
@@ -145,6 +181,12 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
 
   set required(required: boolean) {
     this._required.next(required);
+  }
+
+  clickedDateRangeInput() {
+    if (this.openPickerOnTextClick) {
+      this.picker.open();
+    }
   }
 
   pickerOpened() {

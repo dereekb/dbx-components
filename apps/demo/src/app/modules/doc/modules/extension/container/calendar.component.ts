@@ -53,6 +53,16 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly dateScheduleRangeFields = [
     dateScheduleRangeField({
+      key: 'futureDateSchedule',
+      required: false,
+      label: 'Future Dates',
+      timezone: this.timezone$,
+      minMaxDateRange: {
+        start: startOfDay(new Date())
+      },
+      description: 'Simple date schedule that requires picking dates in the future.'
+    }),
+    dateScheduleRangeField({
       key: 'dateSchedule',
       required: true,
       label: 'Custom Label',

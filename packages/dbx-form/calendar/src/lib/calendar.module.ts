@@ -2,7 +2,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { NgModule } from '@angular/core';
 import { CalendarDayModule, CalendarModule, CalendarWeekModule } from 'angular-calendar';
 import { CommonModule } from '@angular/common';
-import { DbxActionModule, DbxButtonModule, DbxDialogInteractionModule, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxButtonModule, DbxContentLayoutModule, DbxDialogInteractionModule, DbxLabelComponent, DbxPopoverInteractionModule, DbxTextModule } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatButtonModule } from '@angular/material/button';
@@ -45,6 +45,8 @@ const declarations = [
   imports: [
     //
     DbxInjectionComponentModule,
+    DbxContentLayoutModule,
+    DbxTextModule,
     DbxActionModule,
     DbxFormModule,
     DbxFormlyModule,

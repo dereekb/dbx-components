@@ -9,7 +9,7 @@ import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, S
 import { DbxPopoverKey } from '../popover/popover';
 import { Maybe } from '@dereekb/util';
 
-export interface DbxFilterComponentParams<F extends object = object, P extends string = string> extends DbxPopoverConfigSizing {
+export interface DbxFilterComponentParams<F extends object = object, P extends string = string, CF extends FilterSource<F> = FilterSource<F>, PF extends PresetFilterSource<F, P> = PresetFilterSource<F, P>> extends DbxPopoverConfigSizing {
   /**
    * Custom icon
    *
@@ -37,11 +37,19 @@ export interface DbxFilterComponentParams<F extends object = object, P extends s
   /**
    * Custom filter component to initialize.
    */
-  customFilterComponentClass?: Type<FilterSource<F>>;
+  customFilterComponentClass?: Type<CF>;
   /**
    * Preset filter component to initialize.
    */
-  presetFilterComponentClass?: Type<PresetFilterSource<F, P>>;
+  presetFilterComponentClass?: Type<PF>;
+  /**
+   * DbxInjectionComponentConfig for the custom filter component to initialize.
+   */
+  customFilterComponentConfig?: DbxInjectionComponentConfig<CF>;
+  /**
+   * DbxInjectionComponentConfig for the preset filter component to initialize.
+   */
+  presetFilterComponentConfig?: DbxInjectionComponentConfig<PF>;
   /**
    * The connector to use.
    */
@@ -87,16 +95,20 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
   readonly config$: Observable<DbxInjectionComponentConfig<FilterSource<F>>> = this._showPreset.pipe(
     map((showPreset) => {
-      const { closeOnFilterChange = true, connector, initialFilterObs, customFilterComponentClass, presetFilterComponentClass } = this.config;
+      const { closeOnFilterChange = true, connector, initialFilterObs, customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig } = this.config;
       let componentClass: Type<FilterSource<F>>;
+      let baseConfig: Maybe<DbxInjectionComponentConfig<FilterSource<F>>>;
 
       if (showPreset) {
-        componentClass = presetFilterComponentClass as Type<FilterSource<F>>;
+        componentClass = (presetFilterComponentConfig?.componentClass ?? presetFilterComponentClass) as Type<FilterSource<F>>;
+        baseConfig = presetFilterComponentConfig;
       } else {
-        componentClass = customFilterComponentClass as Type<FilterSource<F>>;
+        componentClass = (customFilterComponentConfig?.componentClass ?? customFilterComponentClass) as Type<FilterSource<F>>;
+        baseConfig = customFilterComponentConfig;
       }
 
       const config: DbxInjectionComponentConfig<FilterSource<F>> = {
+        ...baseConfig,
         componentClass,
         init: (filterSource) => {
           connector.connectWithSource(filterSource);
@@ -110,6 +122,9 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
               this.close();
             });
           }
+
+          // run the next init if provided
+          baseConfig?.init?.(filterSource);
         }
       };
 
@@ -117,7 +132,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
     })
   );
 
-  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
+  static openPopover<F extends object>(popupService: DbxPopoverService, { width, height, isResizable, origin, header, icon, customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig, connector, initialFilterObs, closeOnFilterChange, customizeButtonText, showCloseButton, closeButtonText }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,
@@ -133,6 +148,8 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
         closeButtonText,
         customFilterComponentClass,
         presetFilterComponentClass,
+        customFilterComponentConfig,
+        presetFilterComponentConfig,
         connector,
         initialFilterObs,
         closeOnFilterChange
@@ -158,17 +175,17 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
   ngOnInit(): void {
     let showPreset = false;
-    const { customFilterComponentClass, presetFilterComponentClass } = this.config;
+    const { customFilterComponentClass, presetFilterComponentClass, customFilterComponentConfig, presetFilterComponentConfig } = this.config;
 
-    if (customFilterComponentClass) {
+    if (customFilterComponentClass || customFilterComponentConfig) {
       showPreset = false;
     }
 
-    if (presetFilterComponentClass) {
+    if (presetFilterComponentClass || presetFilterComponentConfig) {
       showPreset = true;
     }
 
-    if (!customFilterComponentClass && !presetFilterComponentClass) {
+    if (!(customFilterComponentClass || customFilterComponentConfig) && !(presetFilterComponentClass || presetFilterComponentConfig)) {
       throw new Error('Requires a preset or custom class provided for DbxFilterPopover.');
     }
 
