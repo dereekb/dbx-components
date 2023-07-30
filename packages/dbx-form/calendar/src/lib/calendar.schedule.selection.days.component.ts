@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
-import { dateScheduleDayCodesFromEnabledDays, enabledDaysFromDateScheduleDayCodes } from '@dereekb/date';
+import { dateScheduleDayCodesAreSetsEquivalent, dateScheduleDayCodesFromEnabledDays, enabledDaysFromDateScheduleDayCodes } from '@dereekb/date';
 import { HandleActionFunction } from '@dereekb/dbx-core';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { IsModifiedFunction } from '@dereekb/rxjs';
-import { setsAreEquivalent } from '@dereekb/util';
 import { map, shareReplay, Observable, of } from 'rxjs';
 import { DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -21,7 +20,12 @@ export class DbxScheduleSelectionCalendarDateDaysComponent {
 
   readonly isFormModified: IsModifiedFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value: DbxScheduleSelectionCalendarDateDaysFormValue) => {
     const newSetValue = new Set(dateScheduleDayCodesFromEnabledDays(value));
-    return this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map((currentSet) => !setsAreEquivalent(currentSet, newSetValue)));
+    return this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(
+      map((currentSet) => {
+        const result = !dateScheduleDayCodesAreSetsEquivalent(newSetValue, currentSet);
+        return result;
+      })
+    );
   };
 
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}

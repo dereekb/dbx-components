@@ -17,7 +17,8 @@ import {
   expandDateScheduleDayCodesToDayOfWeekSet,
   expandDateScheduleRange,
   expandDateScheduleRangeToDateBlockRanges,
-  isSameDateSchedule
+  isSameDateSchedule,
+  dateScheduleDayCodesAreSetsEquivalent
 } from './date.schedule';
 import { addDays } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING } from '@dereekb/util';
@@ -434,6 +435,22 @@ describe('expandDateScheduleDayCodes()', () => {
       expect(result[0]).toBe(code);
     });
   });
+
+  describe('days set', () => {
+    it('should filter none from the results.', () => {
+      const code = DateScheduleDayCode.NONE;
+      const result = expandDateScheduleDayCodes(new Set([code]));
+      expect(result.length).toBe(0);
+    });
+
+    it('should return an array containing the day', () => {
+      const code = DateScheduleDayCode.SUNDAY;
+      const result = expandDateScheduleDayCodes(new Set([code]));
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(code);
+    });
+  });
 });
 
 describe('rawDateScheduleDayCodes()', () => {
@@ -576,6 +593,18 @@ describe('dateScheduleDayCodeFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('dateScheduleDayCodesAreSetsEquivalent()', () => {
+  it('should be true when the sets are set equivalent', () => {
+    const result = dateScheduleDayCodesAreSetsEquivalent(weekendDateScheduleDayCodes(), [DateScheduleDayCode.WEEKEND]);
+    expect(result).toBe(true);
+  });
+
+  it('should be false when the sets are not set equivalent', () => {
+    const result = dateScheduleDayCodesAreSetsEquivalent(weekendDateScheduleDayCodes(), [DateScheduleDayCode.WEEKDAY]);
+    expect(result).toBe(false);
   });
 });
 

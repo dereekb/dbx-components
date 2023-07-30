@@ -45,11 +45,16 @@ export function isE164PhoneNumber(input: string, allowExtension = true): input i
 }
 
 /**
- * E.164 Standardized Phone Number. Always starts with a +
+ * E.164 Standardized Phone Number with an extension number. Always starts with a +. The extension is separated with a #.
  *
  * https://en.wikipedia.org/wiki/E.164
  */
 export type E164PhoneNumberWithExtension = `+${PhoneNumber}#${PhoneExtensionNumber}`;
+
+/**
+ * E.164 Standardized Phone Number that may have an extension with it.
+ */
+export type E164PhoneNumberWithOptionalExtension = E164PhoneNumber | E164PhoneNumberWithExtension;
 
 /**
  * E164PhoneNumber regex validator with an optional extension.
@@ -90,7 +95,7 @@ export function isValidPhoneExtensionNumber(input: string): input is PhoneExtens
 /**
  * Removes the extension characters from the input phone number.
  */
-export const removeExtensionFromPhoneNumber = removeCharactersAfterFirstCharacterOccurenceFunction('#') as (input: PhoneNumber | E164PhoneNumber | E164PhoneNumberWithExtension) => E164PhoneNumber;
+export const removeExtensionFromPhoneNumber = removeCharactersAfterFirstCharacterOccurenceFunction('#') as (input: PhoneNumber | E164PhoneNumberWithOptionalExtension) => E164PhoneNumber;
 
 export interface E164PhoneNumberExtensionPair {
   number: E164PhoneNumber;
@@ -99,7 +104,7 @@ export interface E164PhoneNumberExtensionPair {
 
 const e164PhoneNumberExtensionPairSplitterFunction = splitStringAtFirstCharacterOccurenceFunction('#');
 
-export function e164PhoneNumberExtensionPair(input: PhoneNumber | E164PhoneNumber | E164PhoneNumberWithExtension): E164PhoneNumberExtensionPair {
+export function e164PhoneNumberExtensionPair(input: PhoneNumber | E164PhoneNumberWithOptionalExtension): E164PhoneNumberExtensionPair {
   const split = e164PhoneNumberExtensionPairSplitterFunction(input);
 
   return {
@@ -108,6 +113,6 @@ export function e164PhoneNumberExtensionPair(input: PhoneNumber | E164PhoneNumbe
   };
 }
 
-export function e164PhoneNumberFromE164PhoneNumberExtensionPair(input: E164PhoneNumberExtensionPair): E164PhoneNumber | E164PhoneNumberWithExtension {
+export function e164PhoneNumberFromE164PhoneNumberExtensionPair(input: E164PhoneNumberExtensionPair): E164PhoneNumberWithOptionalExtension {
   return input.extension ? `${input.number}#${input.extension}` : input.number;
 }

@@ -6,7 +6,7 @@ import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
-import { DateOrDateRangeOrDateBlockIndexOrDateBlockRange, DateRange, DateScheduleDateFilterConfig, TimezoneString, isSameDateScheduleRange } from '@dereekb/date';
+import { DateOrDateRangeOrDateBlockIndexOrDateBlockRange, DateRange, DateScheduleDateFilterConfig, DateScheduleDayCode, DateScheduleDayCodesInput, DateScheduleEncodedWeek, TimezoneString, isSameDateScheduleRange } from '@dereekb/date';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
@@ -35,6 +35,10 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
    * (Optional) Timezone to use for the start date.
    */
   timezone?: ObservableOrValue<Maybe<TimezoneString>>;
+  /**
+   * (Optional) Default schedule days to allow.
+   */
+  defaultScheduleDays?: ObservableOrValue<Maybe<Iterable<DateScheduleDayCode>>>;
   /**
    * Optional min/max date range to filter on. Works in conjuction with the filter.
    */
@@ -73,6 +77,7 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
   private _valueSub = new SubscriptionObject();
   private _timezoneSub = new SubscriptionObject();
   private _minMaxDateRangeSub = new SubscriptionObject();
+  private _defaultWeekSub = new SubscriptionObject();
   private _filterSub = new SubscriptionObject();
   private _exclusionsSub = new SubscriptionObject();
 
@@ -126,6 +131,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return !this.props.hideCustomize;
   }
 
+  get defaultScheduleDays() {
+    return this.props.defaultScheduleDays;
+  }
+
   get minMaxDateRange() {
     return this.props.minMaxDateRange;
   }
@@ -177,10 +186,14 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
       this.formControl.setValue(x);
     });
 
-    const { timezone, minMaxDateRange, filter, exclusions } = this;
+    const { timezone, minMaxDateRange, filter, exclusions, defaultScheduleDays } = this;
 
     if (filter != null) {
       this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+    }
+
+    if (defaultScheduleDays != null) {
+      this._defaultWeekSub.subscription = this.dbxCalendarScheduleSelectionStore.setDefaultScheduleDays(asObservable(defaultScheduleDays)) as Subscription;
     }
 
     if (minMaxDateRange != null) {
