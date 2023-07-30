@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../../../style/theming';
 
 // MARK: Variables
@@ -50,6 +51,10 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
   }
 
   .dbx-datetime-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     .dbx-datetime-row-field {
       width: calc(100% - #{$dbx-datetime-button-width});
     }
@@ -122,6 +127,15 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
 }
 
 @mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $background-color: theming.get-color-from-palette($background, 'hover');
+
+  // affect both the direct button or a child button
+  .mat-datepicker-button-highlight .mat-icon-button,
+  .mat-datepicker-button-highlight.mat-icon-button {
+    background-color: rgba($background-color, 0.08);
+  }
 }
 
 @mixin typography($typography-config) {
