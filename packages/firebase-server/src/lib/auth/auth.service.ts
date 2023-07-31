@@ -200,8 +200,23 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.updateClaims(claims);
   }
 
-  async setRoles(roles: AuthRole[] | AuthRoleSet): Promise<void> {
-    const claims = this._claimsForRolesChange(Array.from(roles));
+  /**
+   * Sets the claims using the input roles and roles set.
+   *
+   * All other claims are cleared.
+   *
+   * Use the claimsToRetain input to retain other claims that are outside of the roles.
+   *
+   * @param roles
+   * @param claimsToRetain
+   * @returns
+   */
+  async setRoles<T extends AuthClaimsObject = AuthClaimsObject>(roles: AuthRole[] | AuthRoleSet, claimsToRetain?: Partial<T>): Promise<void> {
+    const claims = {
+      ...claimsToRetain,
+      ...this._claimsForRolesChange(Array.from(roles))
+    };
+
     return this.setClaims(claims);
   }
 
