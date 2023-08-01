@@ -1,4 +1,4 @@
-<mat-drawer-container class="dbx-mapbox-layout-container" [ngClass]="(drawerClasses$ | async) || ''" [hasBackdrop]="false">
+<mat-drawer-container #containerElement class="dbx-mapbox-layout-container" [ngClass]="(drawerClasses$ | async) || ''" [hasBackdrop]="false">
   <mat-drawer class="dbx-mapbox-layout-drawer" #drawer [opened]="opened$ | async" [mode]="(mode$ | async) || 'side'" [position]="(position$ | async) || 'end'">
     <div class="dbx-mapbox-layout-drawer-content" [ngClass]="(drawerButtonClasses$ | async) || ''">
       <ng-content select="[drawer]"></ng-content>

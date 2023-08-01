@@ -105,6 +105,12 @@ export interface DbxMapboxStoreState {
    * Minimum vector size to use for the viewportBoundFunction$. If not defined there is no minimum.
    */
   minimumVirtualViewportSize?: Maybe<Partial<Vector>>;
+  /**
+   * Whether or not to use the virtual bound (vs raw bound) for all bound-related observables.
+   *
+   * Defaults to true.
+   */
+  useVirtualBound: boolean;
 }
 
 /**
@@ -122,7 +128,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       moveState: 'init',
       zoomState: 'init',
       rotateState: 'init',
-      retainContent: true
+      retainContent: true,
+      useVirtualBound: true
     });
   }
 
@@ -698,6 +705,93 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     shareReplay(1)
   );
 
+  readonly minimumVirtualViewportSize$ = this.state$.pipe(
+    map((x) => x.minimumVirtualViewportSize),
+    distinctUntilChanged(isSameVector),
+    shareReplay(1)
+  );
+
+  readonly currentMapCanvasSize$ = this.state$.pipe(
+    map((x) => x.mapCanvasSize),
+    distinctUntilChanged<Maybe<Vector>>(isSameVector),
+    shareReplay(1)
+  );
+
+  /**
+   * The map canvas size with consideration to the virtual viewport size.
+   */
+  readonly mapCanvasSize$ = this.currentMapCanvasSize$.pipe(filterMaybe());
+
+  minimumMapCanvasSize(minVector: Partial<Vector>): Observable<Vector> {
+    const resizeFn = vectorMinimumSizeResizeFunction(minVector);
+    return this.mapCanvasSize$.pipe(
+      map((x) => resizeFn(x)),
+      distinctUntilChanged<Vector>(isSameVector),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * The map canvas size with consideration to the virtual viewport size.
+   */
+  readonly virtualMapCanvasSize$ = this.minimumVirtualViewportSize$.pipe(
+    switchMap((minimumVirtualViewportSize) => {
+      if (minimumVirtualViewportSize) {
+        return this.minimumMapCanvasSize(minimumVirtualViewportSize);
+      } else {
+        return this.mapCanvasSize$;
+      }
+    }),
+    distinctUntilChanged<Vector>(isSameVector),
+    shareReplay(1)
+  );
+
+  readonly rawViewportBoundFunction$: Observable<MapboxViewportBoundFunction> = this.mapCanvasSize$.pipe(
+    map((mapCanvasSize) => mapboxViewportBoundFunction({ mapCanvasSize })),
+    shareReplay(1)
+  );
+
+  /**
+   * Creates a MapboxViewportBoundFunction observable that returns the minimum viewport size.
+   *
+   * @param minVector
+   * @returns
+   */
+  viewportBoundFunctionWithMinimumSize(minVector: Partial<Vector>): Observable<MapboxViewportBoundFunction> {
+    const resizeFn = vectorMinimumSizeResizeFunction(minVector);
+    return this.mapCanvasSize$.pipe(
+      map((x) => resizeFn(x)),
+      distinctUntilChanged<Vector>(isSameVector),
+      map((mapCanvasSize) => mapboxViewportBoundFunction({ mapCanvasSize })),
+      shareReplay(1)
+    );
+  }
+
+  readonly viewportBoundFunction$: Observable<MapboxViewportBoundFunction> = this.minimumVirtualViewportSize$.pipe(
+    switchMap((minimumVirtualViewportSize) => {
+      if (minimumVirtualViewportSize) {
+        return this.viewportBoundFunctionWithMinimumSize(minimumVirtualViewportSize);
+      } else {
+        return this.rawViewportBoundFunction$;
+      }
+    }),
+    shareReplay(1)
+  );
+
+  readonly virtualBound$: Observable<LatLngBound> = this.viewportBoundFunction$.pipe(
+    switchMap((fn) => {
+      return combineLatest([this.center$, this.zoom$]).pipe(
+        map(([center, zoom]) =>
+          fn({
+            center,
+            zoom
+          })
+        )
+      );
+    }),
+    shareReplay(1)
+  );
+
   readonly margin$ = this.state$.pipe(
     map((x) => x.margin),
     distinctUntilChanged((a, b) => a != null && b != null && a.fullWidth === b.fullWidth && a.leftMargin === b.leftMargin && a.rightMargin === b.rightMargin),
@@ -732,7 +826,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     shareReplay(1)
   );
 
-  readonly boundNow$: Observable<LatLngBound> = this.whenInitialized$.pipe(
+  readonly rawBoundNow$: Observable<LatLngBound> = this.whenInitialized$.pipe(
     switchMap(() =>
       this.mapInstance$.pipe(
         switchMap((x) =>
@@ -754,16 +848,33 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     )
   );
 
-  readonly bound$: Observable<LatLngBound> = this.whenInitialized$.pipe(
+  readonly rawBound$: Observable<LatLngBound> = this.whenInitialized$.pipe(
     switchMap(() => {
       return this.isRendering$.pipe(
         onTrueToFalse(),
         startWith(undefined),
-        switchMap((x) => this.boundNow$.pipe(first())),
+        switchMap((x) => this.rawBoundNow$.pipe(first())),
         distinctUntilChanged(isSameLatLngBound),
         shareReplay(1)
       );
     })
+  );
+
+  readonly useVirtualBound$: Observable<boolean> = this.state$.pipe(
+    map((x) => x.useVirtualBound),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly bound$: Observable<LatLngBound> = this.useVirtualBound$.pipe(
+    switchMap((useVirtualBound) => {
+      if (useVirtualBound) {
+        return this.virtualBound$;
+      } else {
+        return this.bound$;
+      }
+    }),
+    shareReplay(1)
   );
 
   readonly boundSizing$: Observable<LatLngPoint> = this.bound$.pipe(
@@ -782,7 +893,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     shareReplay(1)
   );
 
-  readonly overlapsBoundFunction$: Observable<OverlapsLatLngBoundFunction> = this.bound$.pipe(
+  readonly overlapsBoundFunction$: Observable<OverlapsLatLngBoundFunction> = this.virtualBound$.pipe(
     map((x) => overlapsLatLngBoundFunction(x)),
     shareReplay(1)
   );
@@ -858,52 +969,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly hasContent$ = this.content$.pipe(map(Boolean));
 
-  readonly currentMapCanvasSize$ = this.state$.pipe(
-    map((x) => x.mapCanvasSize),
-    distinctUntilChanged((a, b) => a != null && b != null && vectorsAreEqual(a, b)),
-    shareReplay(1)
-  );
-
-  readonly mapCanvasSize$ = this.currentMapCanvasSize$.pipe(filterMaybe());
-
-  readonly minimumVirtualViewportSize$ = this.state$.pipe(
-    map((x) => x.minimumVirtualViewportSize),
-    distinctUntilChanged(isSameVector),
-    shareReplay(1)
-  );
-
-  readonly rawViewportBoundFunction$: Observable<MapboxViewportBoundFunction> = this.mapCanvasSize$.pipe(
-    map((x) => mapboxViewportBoundFunction({ mapCanvasSize: x })),
-    shareReplay(1)
-  );
-
-  /**
-   * Creates a MapboxViewportBoundFunction observable that returns the minimum viewport size.
-   *
-   * @param minVector
-   * @returns
-   */
-  viewportBoundFunctionWithMinimumSize(minVector: Partial<Vector>): Observable<MapboxViewportBoundFunction> {
-    const resizeFn = vectorMinimumSizeResizeFunction(minVector);
-    return this.mapCanvasSize$.pipe(
-      map((x) => resizeFn(x)),
-      distinctUntilChanged<Vector>(isSameVector),
-      map((mapCanvasSize) => mapboxViewportBoundFunction({ mapCanvasSize })),
-      shareReplay(1)
-    );
-  }
-
-  readonly viewportBoundFunction$: Observable<MapboxViewportBoundFunction> = this.minimumVirtualViewportSize$.pipe(
-    switchMap((minimumSize) => {
-      if (minimumSize) {
-        return this.viewportBoundFunctionWithMinimumSize(minimumSize);
-      } else {
-        return this.rawViewportBoundFunction$;
-      }
-    }),
-    shareReplay(1)
-  );
-
   readonly clickEvent$ = this.state$.pipe(
     map((x) => x.clickEvent),
     distinctUntilChanged(),
@@ -925,8 +990,9 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   // MARK: State Changes
   readonly setMargin = this.updater((state, margin: Maybe<DbxMapboxMarginCalculationSizing>) => ({ ...state, margin: margin && (margin.rightMargin !== 0 || margin.leftMargin !== 0) ? margin : undefined }));
   readonly setMinimumVirtualViewportSize = this.updater((state, minimumVirtualViewportSize: Maybe<Partial<Vector>>) => ({ ...state, minimumVirtualViewportSize }));
+  readonly setUseVirtualBound = this.updater((state, useVirtualBound: boolean) => ({ ...state, useVirtualBound }));
 
-  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined }));
+  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined, useVirtualBound: state.useVirtualBound }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));

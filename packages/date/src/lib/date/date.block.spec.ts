@@ -42,7 +42,7 @@ import {
   isValidDateBlockRange,
   isValidDateBlockRangeSeries,
   getGreatestDateBlockIndexInDateBlockRanges,
-  getDateBlockTimingHoursInEvents,
+  getDateBlockTimingHoursInEvent,
   getDateBlockTimingFirstEventDateRange
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
@@ -274,13 +274,13 @@ describe('getDateBlockTimingFirstEventDateRange()', () => {
   });
 });
 
-describe('getDateBlockTimingHoursInEvents()', () => {
+describe('getDateBlockTimingHoursInEvent()', () => {
   const hours = 4;
   const startsAt = startOfDay(new Date());
   const timing = dateBlockTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
 
   it('should return the hours in the timing.', () => {
-    const result = getDateBlockTimingHoursInEvents(timing);
+    const result = getDateBlockTimingHoursInEvent(timing);
     expect(result).toBe(hours);
   });
 });

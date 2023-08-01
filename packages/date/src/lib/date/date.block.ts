@@ -241,7 +241,7 @@ export function getDateBlockTimingFirstEventDateRange(timing: Pick<DateBlockTimi
   return fitDateRangeToDayPeriod({ start: timing.startsAt, end: timing.end });
 }
 
-export function getDateBlockTimingHoursInEvents(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): Hours {
+export function getDateBlockTimingHoursInEvent(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): Hours {
   const dateRange = getDateBlockTimingFirstEventDateRange(timing);
   return differenceInHours(dateRange.end, dateRange.start);
 }

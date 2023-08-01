@@ -43,9 +43,12 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly pitchNow$ = this.dbxMapboxMapStore.pitchNow$;
   readonly bearing$ = this.dbxMapboxMapStore.bearing$;
   readonly bearingNow$ = this.dbxMapboxMapStore.bearingNow$;
+  readonly rawBound$ = this.dbxMapboxMapStore.rawBound$;
   readonly bound$ = this.dbxMapboxMapStore.bound$;
   readonly boundSizing$ = this.dbxMapboxMapStore.boundSizing$;
   readonly mapCanvasSize$ = this.dbxMapboxMapStore.mapCanvasSize$;
+  readonly virtualMapCanvasSize$ = this.dbxMapboxMapStore.virtualMapCanvasSize$;
+  readonly virtualBound$ = this.dbxMapboxMapStore.virtualBound$;
 
   readonly boundSizingRatio$ = combineLatest([this.boundSizing$, this.mapCanvasSize$]).pipe(
     map(([point, vector]) => ({ x: point.lng / vector.x, y: point.lat / vector.y })),
@@ -60,7 +63,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     shareReplay(1)
   );
 
-  readonly boundNow$ = this.dbxMapboxMapStore.boundNow$;
+  readonly boundNow$ = this.dbxMapboxMapStore.rawBoundNow$;
   readonly click$ = this.dbxMapboxMapStore.clickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), x: x?.originalEvent?.pageX, y: x?.originalEvent?.pageY })));
@@ -220,10 +223,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.dbxMapboxMapStore.setMinimumVirtualViewportSize({
-      x: 320 // minimum 320px
-    });
-
     this.dbxMapboxMapStore.setContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
