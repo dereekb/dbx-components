@@ -6,6 +6,7 @@ export * from './mapbox.injection.store';
 export * from './mapbox.module';
 export * from './mapbox.layout.component';
 export * from './mapbox.layout.drawer.component';
+export * from './mapbox.layout.resize.sync.directive';
 export * from './mapbox.marker';
 export * from './mapbox.marker.component';
 export * from './mapbox.markers.component';

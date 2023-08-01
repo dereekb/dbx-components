@@ -8,7 +8,7 @@
           <doc-feature-example header="dbx-mapbox-layout" hint="This component provides a Google-maps like layout using a mat-sidenav.">
             <dbx-content-container style="height: 300px">
               <!-- Map View-->
-              <dbx-mapbox-layout [side]="side$ | async" [opened]="open$ | async" [drawerColor]="color$ | async">
+              <dbx-mapbox-layout dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [opened]="open$ | async" [drawerColor]="color$ | async">
                 <!-- Drawer -->
                 <mgl-map dbxMapboxMap>
                   <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
@@ -48,9 +48,20 @@
             <h4>filterByMapboxViewportBound()</h4>
             <p>RXJS OperatorFunction that allows for filtering on objects that are in view when the map stops moving, using each item's center and zoom values to derive bounds.</p>
             <p>Markers that are considered in view is displayed below.</p>
-            <p>{{ markersInView$ | async | json }}</p>
-            <h5>With Minimum Size</h5>
-            <p>This example also uses setMinimumVirtualViewportSize() in the map store to set the "minimum" width of the viewportBoundFunction$'s calculation. This is useful for mobile when the sidebar is open fully and only a small sliver of the map is visible.</p>
+            <dbx-detail-block header="Current Canvas Size">
+              <p>{{ virtualMapCanvasSize$ | async | json }}</p>
+            </dbx-detail-block>
+            <dbx-detail-block header="Current Bound (Raw)">
+              <p>{{ rawBound$ | async | json }}</p>
+            </dbx-detail-block>
+            <dbx-detail-block header="Current Bound (Virtual)">
+              <p>{{ virtualBound$ | async | json }}</p>
+            </dbx-detail-block>
+            <dbx-detail-block header="Markers In View">
+              <p>{{ markersInView$ | async | json }}</p>
+            </dbx-detail-block>
+            <h5>With dbxMapboxLayoutVirtualResizeSync</h5>
+            <p>This example also uses the dbxMapboxLayoutVirtualResizeSync directive to set the virtual viewpot size in the map store to set the "minimum" width of the viewportBoundFunction$'s calculation. This is useful for mobile when the sidebar is open fully and only a small sliver of the map is visible.</p>
             <!--
             <h4>centerGivenMargin$</h4>
             <p>Used when using the "push" orientation, it approximates the visual center.</p>

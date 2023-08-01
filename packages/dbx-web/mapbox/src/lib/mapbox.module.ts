@@ -16,9 +16,11 @@ import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
 import { DbxMapboxMarkersComponent } from './mapbox.markers.component';
 import { DbxMapboxInjectionComponent } from './mapbox.injection.component';
+import { DbxMapboxLayoutVirtualResizeSyncComponent } from './mapbox.layout.resize.sync.directive';
 
 const declarations = [
   //
+  DbxMapboxLayoutVirtualResizeSyncComponent,
   DbxMapboxMapDirective,
   DbxMapboxLayoutComponent,
   DbxMapboxLayoutDrawerComponent,

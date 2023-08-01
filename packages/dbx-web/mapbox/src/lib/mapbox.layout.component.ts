@@ -25,13 +25,16 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
   styleUrls: ['./mapbox.layout.component.scss']
 })
 export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnInit, OnDestroy {
+  @ViewChild(MatDrawerContainer, { read: ElementRef })
+  readonly containerElement!: ElementRef;
+
   @ViewChild(MatDrawerContainer)
-  readonly container!: MatDrawerContainer;
+  readonly drawerContainer!: MatDrawerContainer;
 
   @ViewChild('content', { read: ElementRef, static: true })
   readonly content!: ElementRef;
 
-  private _resized = new Subject<void>();
+  private _resized = new Subject<ResizedEvent>();
   private _updateMargins = new Subject<void>();
   private _forceHasContent = new BehaviorSubject<boolean>(false);
   private _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
@@ -40,6 +43,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
   private _toggleSub = new SubscriptionObject();
 
+  readonly resized$ = this._resized.asObservable();
   readonly side$ = this._side.pipe(distinctUntilChanged(), shareReplay(1));
   readonly mode$: Observable<DbxMapboxLayoutMode> = this._mode.pipe(distinctUntilChanged(), shareReplay(1));
 
@@ -125,15 +129,15 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
           if (mode === 'push') {
             obs = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
               tap(([opened]) => {
-                let { right } = this.container._contentMargins;
+                let { right } = this.drawerContainer._contentMargins;
 
-                this.container.updateContentMargins();
+                this.drawerContainer.updateContentMargins();
 
                 setTimeout(() => {
                   const flip = opened ? 1 : -1;
 
                   if (opened) {
-                    right = this.container._contentMargins.right;
+                    right = this.drawerContainer._contentMargins.right;
                   }
 
                   right = (right || 0) * flip;
@@ -166,7 +170,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
             obs = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
               switchMap((_) => this.dbxMapboxMapStore.mapInstance$),
               tap((x) => {
-                this.container.updateContentMargins();
+                this.drawerContainer.updateContentMargins();
                 x.triggerRepaint();
               })
             );
@@ -230,6 +234,6 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   }
 
   onResized(event: ResizedEvent): void {
-    this._resized.next();
+    this._resized.next(event);
   }
 }
