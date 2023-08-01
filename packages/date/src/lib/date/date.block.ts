@@ -29,11 +29,12 @@ import {
   TimezoneString,
   Building,
   addToSet,
-  ISO8601DayString
+  ISO8601DayString,
+  Minutes
 } from '@dereekb/util';
-import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
+import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory } from './date.timezone';
@@ -228,6 +229,21 @@ export function timingIsInExpectedTimezoneFunction(timezone: DateTimezoneUtcNorm
 
 export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: DateTimezoneUtcNormalFunctionInput) {
   return timingIsInExpectedTimezoneFunction(timezone)(timing);
+}
+
+/**
+ * Returns the total minutes between the start of the first event and the end of the last event.
+ *
+ * @param timing
+ * @returns
+ */
+export function getDateBlockTimingFirstEventDateRange(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): DateRange {
+  return fitDateRangeToDayPeriod({ start: timing.startsAt, end: timing.end });
+}
+
+export function getDateBlockTimingHoursInEvents(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): Hours {
+  const dateRange = getDateBlockTimingFirstEventDateRange(timing);
+  return differenceInHours(dateRange.end, dateRange.start);
 }
 
 export type TimingDateTimezoneUtcNormalInput = DateRangeStart | DateTimezoneUtcNormalFunctionInput;

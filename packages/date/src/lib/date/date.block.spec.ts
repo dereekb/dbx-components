@@ -41,7 +41,9 @@ import {
   allIndexesInDateBlockRanges,
   isValidDateBlockRange,
   isValidDateBlockRangeSeries,
-  getGreatestDateBlockIndexInDateBlockRanges
+  getGreatestDateBlockIndexInDateBlockRanges,
+  getDateBlockTimingHoursInEvents,
+  getDateBlockTimingFirstEventDateRange
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
@@ -257,6 +259,29 @@ describe('timingIsInExpectedTimezoneFunction()', () => {
         expect(result).toBe(false);
       });
     });
+  });
+});
+
+describe('getDateBlockTimingFirstEventDateRange()', () => {
+  const hours = 4;
+  const startsAt = startOfDay(new Date());
+  const timing = dateBlockTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
+
+  it('should return the hours in the timing.', () => {
+    const result = getDateBlockTimingFirstEventDateRange(timing);
+    expect(result.start).toBeSameSecondAs(startsAt);
+    expect(result.end).toBeSameSecondAs(addHours(startsAt, hours));
+  });
+});
+
+describe('getDateBlockTimingHoursInEvents()', () => {
+  const hours = 4;
+  const startsAt = startOfDay(new Date());
+  const timing = dateBlockTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
+
+  it('should return the hours in the timing.', () => {
+    const result = getDateBlockTimingHoursInEvents(timing);
+    expect(result).toBe(hours);
   });
 });
 
