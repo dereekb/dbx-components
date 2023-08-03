@@ -485,7 +485,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
           return of(0);
         }
       }),
-      shareReplay()
+      shareReplay(1)
     );
   }
 
@@ -498,7 +498,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
           return of(0);
         }
       }),
-      shareReplay()
+      shareReplay(1)
     );
   }
 
@@ -644,7 +644,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       this.lifecycleState$.pipe(
         map((x) => x === 'render'),
         distinctUntilChanged(),
-        shareReplay()
+        shareReplay(1)
       )
     )
   );
@@ -654,7 +654,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       this.moveState$.pipe(
         map((x) => x === 'moving'),
         distinctUntilChanged(),
-        shareReplay()
+        shareReplay(1)
       )
     )
   );
@@ -664,7 +664,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       this.zoomState$.pipe(
         map((x) => x === 'zooming'),
         distinctUntilChanged(),
-        shareReplay()
+        shareReplay(1)
       )
     )
   );
@@ -674,7 +674,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       this.rotateState$.pipe(
         map((x) => x === 'rotating'),
         distinctUntilChanged(),
-        shareReplay()
+        shareReplay(1)
       )
     )
   );

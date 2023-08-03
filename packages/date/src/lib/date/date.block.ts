@@ -37,7 +37,7 @@ import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory } from './date.timezone';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { parseISO8601DayStringToDate } from './date.format';
 
@@ -120,6 +120,16 @@ export interface DateBlockTiming extends DateRange, DateDurationSpan {}
  * DateBlockTiming with only the start time. The start time infers what timezone it is in.
  */
 export type DateBlockTimingStart = DateRangeStart;
+
+/**
+ * Only the start and end of the date block range.
+ */
+export type DateBlockTimingStartEndRange = Pick<DateBlockTiming, 'start' | 'end'>;
+
+/**
+ * A startsAt time and duration.
+ */
+export type DateBlockTimingEvent = Pick<DateBlockTiming, 'startsAt' | 'duration'>;
 
 export class DateBlockTiming extends DateDurationSpan {
   @Expose()
@@ -258,6 +268,33 @@ export function timingDateTimezoneUtcNormal(input: TimingDateTimezoneUtcNormalIn
   const timezoneNormalInput: DateTimezoneUtcNormalFunctionInput = isDateRangeStart(input) ? hoursToMilliseconds(getCurrentDateBlockTimingUtcData(input).originalUtcOffsetInHours) : input;
   const timezoneInstance = dateTimezoneUtcNormal(timezoneNormalInput);
   return timezoneInstance;
+}
+
+/**
+ * Converts a DateBlockTimingStartEndRange and DateBlockTimingEvent that originated from the same DateBlockTiming back to the original DateBlockTiming.
+ *
+ * @param dateBlockTimingStartEndRange
+ * @param event
+ * @returns
+ */
+export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent): DateBlockTiming {
+  const { start, end } = dateBlockTimingStartEndRange;
+  const { startsAt: eventStartsAt, duration } = event;
+
+  // need the timezone instance to compute against the normal and convert to the system time, before going back.
+  // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
+  const timezoneInstance = timingDateTimezoneUtcNormal(dateBlockTimingStartEndRange);
+
+  // compute startsAt, the start time for the first event
+  const startsAt = copyHoursAndMinutesFromDatesWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
+  const timing = {
+    start,
+    end,
+    startsAt,
+    duration
+  };
+
+  return timing;
 }
 
 /**
@@ -569,7 +606,7 @@ export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
   if (
     duration <= MINUTES_IN_DAY &&
     !hasSeconds && // start cannot have seconds
-    msDifference >= 0 && // startsAt is after secondsDifferencexw
+    msDifference >= 0 && // startsAt is after secondsDifference
     msDifference < MS_IN_DAY // startsAt is not more than 24 hours later
   ) {
     const endOffset = getCurrentSystemOffsetInHours(timing.end);

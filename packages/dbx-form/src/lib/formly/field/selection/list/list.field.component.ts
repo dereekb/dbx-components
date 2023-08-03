@@ -72,7 +72,7 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
     map((values) => {
       return dbxValueListItemDecisionFunction(isSelectedDecisionFunctionFactory({ readKey: this.readKey })(values));
     }),
-    shareReplay()
+    shareReplay(1)
   );
 
   get label() {

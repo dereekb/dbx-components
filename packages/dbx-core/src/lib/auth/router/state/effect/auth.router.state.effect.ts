@@ -1,4 +1,4 @@
-import { exhaustMap } from 'rxjs';
+import { exhaustMap, filter, of } from 'rxjs';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -31,6 +31,7 @@ export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects
     () =>
       this.actions$.pipe(
         ofType(onDbxAppAuth.DbxAppAuthActions.loggedOut),
+        filter(() => this.dbxAppAuthRouterService.isAuthRouterEffectsEnabled),
         exhaustMap(() => this.dbxAppAuthRouterService.goToLogin())
       ),
     { dispatch: false }
@@ -43,6 +44,7 @@ export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects
     () =>
       this.actions$.pipe(
         ofType(onDbxAppAuth.DbxAppAuthActions.loggedIn),
+        filter(() => this.dbxAppAuthRouterService.isAuthRouterEffectsEnabled),
         exhaustMap(() => this.dbxAppAuthRouterService.goToApp())
       ),
     { dispatch: false }

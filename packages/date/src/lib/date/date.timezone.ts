@@ -1,7 +1,7 @@
 import { addMilliseconds, minutesToHours } from 'date-fns';
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
-import { minutesToMs } from './date';
+import { copyHoursAndMinutesFromDate, minutesToMs } from './date';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 
 /**
@@ -406,4 +406,24 @@ export function startOfDayInTimezoneDayStringFactory(timezone?: DateTimezoneUtcN
     const dateInTimezone = timezoneInstance.targetDateToBaseDate(startOfDayDate);
     return dateInTimezone;
   };
+}
+
+// MARK: Timezone Utilities
+/**
+ * Converts the two input dates, which are dates in a different timezone/normal, using the input DateTimezoneUtcNormalFunctionInput.
+ *
+ * This converts the dates to the system timezone normal, copies the values, then back to the original timezone normal.
+ *
+ * @param input
+ * @param copyFrom
+ * @param timezone
+ */
+export function copyHoursAndMinutesFromDatesWithTimezoneNormal(input: Date, copyFrom: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
+  const timezoneInstance = dateTimezoneUtcNormal(timezone);
+
+  const inputInSystemTimezone = timezoneInstance.systemDateToTargetDate(input);
+  const copyFromInSystemTimezone = timezoneInstance.systemDateToTargetDate(copyFrom);
+
+  const copiedInSystemTimezone = copyHoursAndMinutesFromDate(inputInSystemTimezone, copyFromInSystemTimezone);
+  return timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
 }

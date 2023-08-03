@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
 import { goWithRouter } from '../../router';
 import { DbxRouterService } from '../../router/router/service/router.service';
 import { DbxAppAuthRoutes } from './auth.router';
@@ -9,11 +10,32 @@ import { DbxAppAuthRoutes } from './auth.router';
 @Injectable({
   providedIn: 'root'
 })
-export class DbxAppAuthRouterService {
+export class DbxAppAuthRouterService implements OnDestroy {
+  private _isAuthRouterEffectsEnabled = new BehaviorSubject<boolean>(true);
+
+  readonly isAuthRouterEffectsEnabled$ = this._isAuthRouterEffectsEnabled.asObservable();
+
   constructor(readonly dbxRouterService: DbxRouterService, readonly dbxAppAuthRoutes: DbxAppAuthRoutes) {}
+
+  ngOnDestroy(): void {
+    this._isAuthRouterEffectsEnabled.complete();
+  }
 
   get hasOnboardingState(): boolean {
     return Boolean(this.dbxAppAuthRoutes.onboardRef);
+  }
+
+  // MARK: Effects
+
+  /**
+   * Whether or not DbxAppAuthRouterEffects are enabled.
+   */
+  get isAuthRouterEffectsEnabled(): boolean {
+    return this._isAuthRouterEffectsEnabled.value;
+  }
+
+  set isAuthRouterEffectsEnabled(enabled: boolean) {
+    this._isAuthRouterEffectsEnabled.next(enabled);
   }
 
   // MARK: Navigate

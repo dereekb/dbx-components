@@ -16,7 +16,7 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
   `
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
-  readonly template$: Observable<DbxScheduleSelectionCalendarDateDaysFormValue> = this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map(enabledDaysFromDateScheduleDayCodes), shareReplay());
+  readonly template$: Observable<DbxScheduleSelectionCalendarDateDaysFormValue> = this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map(enabledDaysFromDateScheduleDayCodes), shareReplay(1));
 
   readonly isFormModified: IsModifiedFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value: DbxScheduleSelectionCalendarDateDaysFormValue) => {
     const newSetValue = new Set(dateScheduleDayCodesFromEnabledDays(value));

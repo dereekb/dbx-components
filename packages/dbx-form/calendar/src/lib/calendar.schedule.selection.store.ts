@@ -49,7 +49,6 @@ import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of, scheduled } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
-import exp from 'constants';
 
 export interface CalendarScheduleSelectionInputDateRange {
   /**
