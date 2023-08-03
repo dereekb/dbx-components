@@ -1,6 +1,6 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput, isDateInDateRange } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore, isAfter } from 'date-fns';
 import {
   changeTimingToTimezoneFunction,
   DateBlock,
@@ -43,12 +43,15 @@ import {
   isValidDateBlockRangeSeries,
   getGreatestDateBlockIndexInDateBlockRanges,
   getDateBlockTimingHoursInEvent,
-  getDateBlockTimingFirstEventDateRange
+  getDateBlockTimingFirstEventDateRange,
+  dateBlockTimingFromDateRangeAndEvent,
+  getCurrentDateBlockTimingUtcData,
+  getCurrentDateBlockTimingOffsetData
 } from './date.block';
-import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
+import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { dateTimezoneUtcNormal, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
 import { formatToISO8601DayString } from './date.format';
 
 describe('isValidDateBlockIndex()', () => {
@@ -136,6 +139,19 @@ describe('getGreatestDateBlockIndexInDateBlockRanges()', () => {
 
     const result = getGreatestDateBlockIndexInDateBlockRanges([{ i: 0 }, { i: 12, to: 23 }, { i: 40, to: greatestIndex }, { i: 50, to: 55 }]);
     expect(result).toBe(greatestIndex);
+  });
+});
+
+describe('getCurrentDateBlockTimingUtcData()', () => {
+  describe('Asia/Tokyo', () => {
+    it('should return the expected offset.', () => {
+      const expectedUTCDate = new Date('2023-08-03T00:00:00.000Z'); // 8/03/23 in UTC
+      const start = new Date('2023-08-02T15:00:00.000Z'); // 8/03/23 in UTC
+      const result = getCurrentDateBlockTimingUtcData({ start });
+
+      expect(result.originalUtcOffsetInHours).toBe(9);
+      expect(result.originalUtcDate).toBeSameSecondAs(expectedUTCDate);
+    });
   });
 });
 
@@ -282,6 +298,68 @@ describe('getDateBlockTimingHoursInEvent()', () => {
   it('should return the hours in the timing.', () => {
     const result = getDateBlockTimingHoursInEvent(timing);
     expect(result).toBe(hours);
+  });
+});
+
+describe('dateBlockTimingFromDateRangeAndEvent()', () => {
+  describe('function', () => {
+    const startOfToday = startOfDay(new Date());
+    const systemTiming = dateBlockTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
+
+    describe('system time', () => {
+      const timing = systemTiming;
+
+      it('should return a copy of a timing.', () => {
+        const result = dateBlockTimingFromDateRangeAndEvent(timing, timing); // use the first event again
+
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.duration).toBe(timing.duration);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+      });
+
+      it('should return the original timing using the second event', () => {
+        const result = dateBlockTimingFromDateRangeAndEvent(timing, { startsAt: addDays(timing.startsAt, 1), duration: timing.duration }); // use the first event again
+
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.duration).toBe(timing.duration);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+      });
+    });
+
+    function describeTestsForTimezone(timezone: TimezoneString) {
+      const startOfTodayInTimezone = dateTimezoneUtcNormal({ timezone }).systemDateToTargetDate(startOfDay(new Date()));
+      const timing = dateBlockTiming({ startsAt: addHours(startOfTodayInTimezone, 3), duration: 60 }, 2); // 2 days
+
+      describe(`${timezone}`, () => {
+        it('should return a copy of a timing.', () => {
+          const result = dateBlockTimingFromDateRangeAndEvent(timing, timing); // use the first event again
+
+          expect(result.start).toBeSameSecondAs(timing.start);
+          expect(result.end).toBeSameSecondAs(timing.end);
+          expect(result.duration).toBe(timing.duration);
+          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        });
+
+        it('should return the original timing using the second event', () => {
+          const result = dateBlockTimingFromDateRangeAndEvent(timing, { startsAt: addDays(timing.startsAt, 1), duration: timing.duration }); // use the first event again
+
+          expect(result.start).toBeSameSecondAs(timing.start);
+          expect(result.end).toBeSameSecondAs(timing.end);
+          expect(result.duration).toBe(timing.duration);
+          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        });
+      });
+    }
+
+    describeTestsForTimezone('UTC');
+    describeTestsForTimezone('America/Denver');
+    describeTestsForTimezone('America/Los_Angeles');
+    describeTestsForTimezone('America/New_York');
+    describeTestsForTimezone('America/Chicago');
+    describeTestsForTimezone('Pacific/Auckland');
+    describeTestsForTimezone('Pacific/Kiritimati');
   });
 });
 

@@ -83,6 +83,51 @@
         "parallel": false
       }
     },
+    "test-timezones-local": {
+      "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml", "./.reports/jest/pacific-auckland.date.junit.xml", "./.reports/jest/america-anchorage.date.junit.xml", "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml", "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/asia-singapore.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "TZ=Asia/Tokyo nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Asia/Singapore nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Europe/Dublin nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=America/New_York nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=America/Chicago nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=America/Denver nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=America/Los_Angeles nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=America/Anchorage nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Pacific/Auckland nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Pacific/Kiritimati nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Pacific/Niue nx test date --skip-nx-cache"
+          },
+          {
+            "command": "nx test date --skip-nx-cache"
+          }
+        ],
+        "parallel": false
+      }
+    },
     "publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {

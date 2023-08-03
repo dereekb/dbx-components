@@ -178,7 +178,7 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   readonly showTodayButton$ = this.state$.pipe(
     map((x) => x.showTodayButton),
     distinctUntilChanged(),
-    shareReplay()
+    shareReplay(1)
   );
 
   readonly date$ = this.state$.pipe(map((x) => x.date));

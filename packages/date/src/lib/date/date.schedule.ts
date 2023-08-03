@@ -3,9 +3,10 @@ import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateTimingRelativeIndexFactory, DateTimingRelativeIndexFactoryInput, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateBlockTimingFromDateRangeAndEvent, dateTimingRelativeIndexFactory, DateTimingRelativeIndexFactoryInput, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
+import { copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
@@ -371,8 +372,20 @@ export function isSameDateScheduleRange(a: Maybe<DateScheduleRange>, b: Maybe<Da
  */
 export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateScheduleRange, duration: number = 60, startsAtTime?: Date): DateBlockTiming {
   const { start, end } = dateScheduleRange;
-  const startsAt = startsAtTime != null ? copyHoursAndMinutesFromDate(start, startsAtTime) : start;
-  return dateBlockTiming({ startsAt, duration }, { start, end });
+  let timing: DateBlockTiming;
+
+  if (startsAtTime) {
+    timing = dateBlockTimingFromDateRangeAndEvent(dateScheduleRange, { startsAt: startsAtTime, duration });
+  } else {
+    timing = {
+      start,
+      end,
+      startsAt: start,
+      duration
+    };
+  }
+
+  return timing;
 }
 
 // MARK: DateScheduleDate
