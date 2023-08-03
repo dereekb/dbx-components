@@ -512,13 +512,13 @@ describe('dateTimingRelativeIndexFactory()', () => {
   describe('scenarios', () => {
     describe('timezone change', () => {
       const start = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
-      const dstDay = new Date('2023-03-12T06:00:00.000Z'); // next day at 6AM UTC, Daylight Savings has occured for some timezones
+      const dstDay = new Date('2023-03-13T06:00:00.000Z'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
 
       it('should handle daylight savings time changes.', () => {
         const factory = dateTimingRelativeIndexFactory({ start });
         const result = factory(dstDay);
 
-        expect(result).toBe(1);
+        expect(result).toBe(2); // 2 days later
       });
     });
   });
