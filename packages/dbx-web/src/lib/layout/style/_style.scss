@@ -30,9 +30,20 @@ $dbx-success-color-var: --dbx-success-color;
   }
 
   @each $i, $padding in theming.$padding-map {
-    .pad-#{$i},
-    .padding-#{$i} {
+    .dbx-m#{$i} {
       padding: $padding;
+    }
+
+    .dbx-p#{$i} {
+      padding: $padding;
+    }
+
+    .dbx-pt#{$i} {
+      padding-top: $padding;
+    }
+
+    .dbx-pb#{$i} {
+      padding-bottom: $padding;
     }
   }
 
@@ -63,14 +74,6 @@ $dbx-success-color-var: --dbx-success-color;
 
   .dbx-w100 {
     width: 100%;
-  }
-
-  .dbx-m0 {
-    margin: 0;
-  }
-
-  .dbx-p0 {
-    padding: 0;
   }
 
   // force
