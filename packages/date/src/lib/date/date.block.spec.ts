@@ -824,6 +824,17 @@ describe('isValidDateBlockTiming()', () => {
     expect(isValid).toBe(false);
   });
 
+  it('should return false if the end time is before the startsAt time.', () => {
+    const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
+    const invalidTiming = {
+      ...validTiming,
+      end: startsAt
+    };
+
+    const isValid = isValidDateBlockTiming(invalidTiming);
+    expect(isValid).toBe(false);
+  });
+
   it('should return false if the startsAt time is more than 24 hours after the start time.', () => {
     const invalidTiming: DateBlockTiming = { ...validTiming, startsAt: addMilliseconds(validTiming.start, MS_IN_DAY + 1) };
     const isValid = isValidDateBlockTiming(invalidTiming);

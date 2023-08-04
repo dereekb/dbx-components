@@ -369,7 +369,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   );
 
   readonly currentSelectionValueDateBlockDurationSpan$: Observable<DateBlockDurationSpan<DateBlock>[]> = this.currentSelectionValue$.pipe(
-    map((x) => (x ? expandDateScheduleRange(x) : [])),
+    map((x) => (x ? expandDateScheduleRange({ ...x, duration: 1 }) : [])),
     shareReplay(1)
   );
 
@@ -410,7 +410,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly selectionValueWithTimezone$ = this.currentSelectionValueWithTimezone$.pipe(filterMaybe(), shareReplay(1));
 
   readonly selectionValueWithTimezoneDateBlockDurationSpan$: Observable<DateBlockDurationSpan<DateBlock>[]> = this.selectionValueWithTimezone$.pipe(
-    map((x) => expandDateScheduleRange(x)),
+    map((x) => expandDateScheduleRange({ ...x, duration: 1 })),
     shareReplay(1)
   );
 

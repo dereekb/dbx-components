@@ -34,7 +34,7 @@ import {
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
@@ -125,6 +125,13 @@ export type DateBlockTimingStart = DateRangeStart;
  * Only the start and end of the date block range.
  */
 export type DateBlockTimingStartEndRange = Pick<DateBlockTiming, 'start' | 'end'>;
+
+/**
+ * The start date of a DateBlockTimingStart, along with the endDay which is a normalized day that is at midnight of the last day in the timezone.
+ *
+ * They are expected to both be in the same timezone.
+ */
+export type DateBlockTimingStartEndDayDateRange = DateBlockTimingStart & { endDay: Date };
 
 /**
  * A startsAt time and duration.
@@ -273,6 +280,8 @@ export function timingDateTimezoneUtcNormal(input: TimingDateTimezoneUtcNormalIn
 /**
  * Converts a DateBlockTimingStartEndRange and DateBlockTimingEvent that originated from the same DateBlockTiming back to the original DateBlockTiming.
  *
+ * NOTE: If the event's timing did not originate from the
+ *
  * @param dateBlockTimingStartEndRange
  * @param event
  * @returns
@@ -287,6 +296,72 @@ export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRang
 
   // compute startsAt, the start time for the first event
   const startsAt = copyHoursAndMinutesFromDatesWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
+  const timing = {
+    start,
+    end,
+    startsAt,
+    duration
+  };
+
+  return timing;
+}
+
+/**
+ * Converts a DateBlockTimingStartEndRange and a DateBlockTimingEvent to a DateBlockTiming.
+ *
+ * The input event does not have to be from the original DateBlockTimingStartEndRange. The DateBlockTiming's end value will be updated to fit the DateBlockTimingEvent info.
+ *
+ * @param dateBlockTimingStartEndRange
+ * @param event
+ * @returns
+ */
+export function safeDateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent): DateBlockTiming {
+  const { start, end } = dateBlockTimingStartEndRange;
+
+  const timezoneInstance = timingDateTimezoneUtcNormal(dateBlockTimingStartEndRange);
+  const systemTimezoneEnd = timezoneInstance.systemDateToTargetDate(end); // normalize it so it is back in it's original timezone hours/minutes
+  const endNormal = startOfDay(systemTimezoneEnd); // get the start of the day
+  const endDay = timezoneInstance.targetDateToSystemDate(endNormal); // get the end of the day
+
+  const endDayDateRange: DateBlockTimingStartEndDayDateRange = { start, endDay };
+  return _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(endDayDateRange, event, timezoneInstance);
+}
+
+/**
+ * Converts a DateBlockTimingStartEndDayDateRange and DateBlockTimingEvent to a DateBlockTiming. The event is used to derive the startsAt, duration and end time. The timezone offset is retained.
+ *
+ * @param dateBlockTimingStartEndDayDateRange
+ * @param event
+ * @returns
+ */
+export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent): DateBlockTiming {
+  // need the timezone instance to compute against the normal and convert to the system time, before going back.
+  // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
+  const timezoneInstance = timingDateTimezoneUtcNormal(dateBlockTimingStartEndDayDateRange);
+  return _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange, event, timezoneInstance);
+}
+
+/**
+ * Internal function that allows safeDateBlockTimingFromDateRangeAndEvent() and dateBlockTimingFromDateBlockTimingStartEndDayDateRange()
+ * to pass their timezone instances to this function, without having to create a new instance.
+ *
+ * See dateBlockTimingFromDateBlockTimingStartEndDayDateRange() for details.
+ *
+ * @param dateBlockTimingStartEndDayDateRange
+ * @param event
+ * @param timezoneInstance
+ * @returns
+ */
+function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezoneInstance: DateTimezoneUtcNormalInstance): DateBlockTiming {
+  const { start, endDay } = dateBlockTimingStartEndDayDateRange;
+  const { startsAt: eventStartsAt, duration } = event;
+
+  // compute startsAt, the start time for the first event
+  const startsAt = copyHoursAndMinutesFromDatesWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
+
+  // compute end, the end time for the last event using the last day
+  const end = addMinutes(copyHoursAndMinutesFromDatesWithTimezoneNormal(endDay, eventStartsAt, timezoneInstance), duration);
+
   const timing = {
     start,
     end,
@@ -604,6 +679,7 @@ export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
   let isValid: boolean = false;
 
   if (
+    isAfter(end, startsAt) && // end must be after the startsAt time
     duration <= MINUTES_IN_DAY &&
     !hasSeconds && // start cannot have seconds
     msDifference >= 0 && // startsAt is after secondsDifference
@@ -614,7 +690,7 @@ export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
 
     const expectedFinalStartTime = addHours(addMinutes(end, -duration), timezoneOffsetDelta);
     const difference = differenceInMilliseconds(startsAt, expectedFinalStartTime) % MS_IN_DAY;
-    isValid = difference === 0;
+    isValid = difference === 0; // && isExpectedEndTime;
   }
 
   return isValid;
