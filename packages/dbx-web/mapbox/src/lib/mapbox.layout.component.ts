@@ -1,5 +1,5 @@
 import { tap, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable } from 'rxjs';
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Maybe } from '@dereekb/util';
 import { dbxColorBackground, DbxThemeColor } from '@dereekb/dbx-web';
@@ -25,6 +25,9 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
   styleUrls: ['./mapbox.layout.component.scss']
 })
 export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnInit, OnDestroy {
+  @Output()
+  readonly openedChange = new EventEmitter<boolean>();
+
   @ViewChild(MatDrawerContainer, { read: ElementRef })
   readonly containerElement!: ElementRef;
 
@@ -39,7 +42,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   private _forceHasContent = new BehaviorSubject<boolean>(false);
   private _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
   private _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
-  private _openToggle = new BehaviorSubject<boolean>(true);
+  private _isOpen = new BehaviorSubject<boolean>(true);
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
   private _toggleSub = new SubscriptionObject();
 
@@ -53,7 +56,9 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
     shareReplay(1)
   );
 
-  readonly opened$ = combineLatest([this.hasContent$, this._openToggle]).pipe(
+  readonly isOpen$ = this._isOpen.asObservable();
+
+  readonly isOpenAndHasContent$ = combineLatest([this.hasContent$, this._isOpen]).pipe(
     map(([hasContent, open]) => hasContent && open),
     distinctUntilChanged(),
     shareReplay(1)
@@ -65,7 +70,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
     shareReplay(1)
   );
 
-  readonly drawerClasses$ = combineLatest([this.side$, this.dbxMapboxMapStore.hasContent$, this.opened$]).pipe(
+  readonly drawerClasses$ = combineLatest([this.side$, this.dbxMapboxMapStore.hasContent$, this.isOpenAndHasContent$]).pipe(
     //
     map(([side, hasContent, open]) => (hasContent ? 'has-drawer-content' : 'no-drawer-content') + ` ${side}-drawer ` + (open ? 'open-drawer' : '')),
     distinctUntilChanged(),
@@ -79,7 +84,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
     shareReplay(1)
   );
 
-  readonly buttonIcon$: Observable<string> = combineLatest([this.side$, this.opened$]).pipe(
+  readonly buttonIcon$: Observable<string> = combineLatest([this.side$, this.isOpenAndHasContent$]).pipe(
     map(([side, opened]) => {
       let icons = ['chevron_right', 'chevron_left'];
 
@@ -127,7 +132,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
           let obs: Observable<unknown>;
 
           if (mode === 'push') {
-            obs = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
+            obs = combineLatest([this.isOpenAndHasContent$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
               tap(([opened]) => {
                 let { right } = this.drawerContainer._contentMargins;
 
@@ -167,7 +172,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
               })
             );
           } else {
-            obs = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
+            obs = combineLatest([this.isOpenAndHasContent$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
               switchMap((_) => this.dbxMapboxMapStore.mapInstance$),
               tap((x) => {
                 this.drawerContainer.updateContentMargins();
@@ -183,10 +188,11 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   }
 
   ngOnDestroy(): void {
+    this.openedChange.complete();
     this._resized.complete();
     this._updateMargins.complete();
     this._side.complete();
-    this._openToggle.complete();
+    this._isOpen.complete();
     this._color.complete();
     this._toggleSub.destroy();
     this._forceHasContent.complete();
@@ -194,10 +200,10 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
 
   toggleDrawer(open?: boolean) {
     if (open == null) {
-      open = !this._openToggle.value;
+      open = !this._isOpen.value;
     }
 
-    this._openToggle.next(open);
+    this._isOpen.next(open);
   }
 
   @Input()
@@ -217,7 +223,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   @Input()
   set opened(opened: Maybe<boolean>) {
     if (opened != null) {
-      this._openToggle.next(opened);
+      this._isOpen.next(opened);
     }
   }
 
@@ -236,4 +242,18 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   onResized(event: ResizedEvent): void {
     this._resized.next(event);
   }
+
+  onOpened(opened: boolean) {
+    this.openedChange.next(opened);
+
+    if (this._isOpen.value !== opened) {
+      this.openedChange.next(opened);
+    }
+  }
+
+  // MARK: Compat
+  /**
+   * @deprecated use isOpenAndHasContent$ instead.
+   */
+  readonly opened$ = this.isOpenAndHasContent$;
 }

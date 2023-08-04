@@ -33,8 +33,8 @@ export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirecti
 
 @Component({
   template: `
-    <div class="pad-3">
-      <h5 class="no-margin pad-0">{{ name }}</h5>
+    <div class="dbx-p3">
+      <h5 class="no-margin dbx-p0">{{ name }}</h5>
       <div>{{ lorem }}</div>
     </div>
   `

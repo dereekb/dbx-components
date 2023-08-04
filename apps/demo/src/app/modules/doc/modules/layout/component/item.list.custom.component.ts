@@ -39,7 +39,7 @@ export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective
 
 @Component({
   template: `
-    <div class="pad-3">
+    <div class="dbx-p3">
       <h4 class="no-margin">{{ anchorType }}</h4>
       <p>{{ name }}</p>
     </div>
