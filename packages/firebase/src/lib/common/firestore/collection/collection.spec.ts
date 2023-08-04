@@ -1,4 +1,4 @@
-import { firestoreIdentityTypeArray, firestoreIdentityTypeArrayName, FirestoreModelCollectionAndIdPair, firestoreModelIdsFromKey, firestoreModelKeyCollectionTypeArray, firestoreModelKeyCollectionTypeArrayName, firestoreModelKeyParentKey, firestoreModelKeyParentKeyPartPairs, firestoreModelKeyPart, firestoreModelKeyPartPairs, firestoreModelKeyPartPairsKeyPath, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
+import { childFirestoreModelKeys, firestoreIdentityTypeArray, firestoreIdentityTypeArrayName, FirestoreModelCollectionAndIdPair, firestoreModelIdsFromKey, firestoreModelKeyCollectionTypeArray, firestoreModelKeyCollectionTypeArrayName, firestoreModelKeyParentKey, firestoreModelKeyParentKeyPartPairs, firestoreModelKeyPart, firestoreModelKeyPartPairs, firestoreModelKeyPartPairsKeyPath, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
 import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
@@ -145,7 +145,7 @@ describe('firestoreModelKey', () => {
   });
 });
 
-describe('firestoreModelKeys', () => {
+describe('firestoreModelKeys()', () => {
   const identity = firestoreModelIdentity('identity', 'i');
 
   it('should create an array of model keys', () => {
@@ -156,7 +156,24 @@ describe('firestoreModelKeys', () => {
   });
 });
 
-describe('firestoreModelKeyPath', () => {
+describe('childFirestoreModelKeys()', () => {
+  const parentIdentity = firestoreModelIdentity('parent', 'p');
+  const parentKey = firestoreModelKey(parentIdentity, '1234');
+
+  const identity = firestoreModelIdentity(parentIdentity, 'identity', 'i');
+
+  it('should create an array of child model keys', () => {
+    const ids = ['a', 'b', 'c', 'd'];
+    const result = childFirestoreModelKeys(parentKey, identity, ids);
+
+    expect(result.length).toBe(ids.length);
+
+    const first = result[0];
+    expect(first.startsWith(parentKey)).toBe(true);
+  });
+});
+
+describe('firestoreModelKeyPath()', () => {
   const identity = firestoreModelIdentity('identity', 'i');
 
   it('should join the input paths', () => {

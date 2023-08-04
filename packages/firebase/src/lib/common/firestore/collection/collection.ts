@@ -413,6 +413,31 @@ export function firestoreModelKeys<I extends RootFirestoreModelIdentity, K exten
 }
 
 /**
+ * Creates a FirestoreModelKey from a parent key and a child identity and id.
+ *
+ * @param parent
+ * @param identity
+ * @param id
+ * @returns
+ */
+export function childFirestoreModelKey(parent: ReadFirestoreModelKeyInput, identity: FirestoreModelIdentity, id: FirestoreModelId): FirestoreModelKey {
+  return childFirestoreModelKeys(parent, identity, [id])[0];
+}
+
+/**
+ * Creates a FirestoreModelKey array from a parent key, a child identity and an array of ids.
+ *
+ * @param parent
+ * @param identity
+ * @param ids
+ * @returns
+ */
+export function childFirestoreModelKeys(parent: ReadFirestoreModelKeyInput, identity: FirestoreModelIdentity, ids: FirestoreModelId[]): FirestoreModelKey[] {
+  const parentKey = readFirestoreModelKey(parent);
+  return ids.map((id) => `${parentKey}${FIRESTORE_COLLECTION_NAME_SEPARATOR}${firestoreModelKeyPart(identity, id)}`);
+}
+
+/**
  * Joins together a number of FirestoreModelKeyPart values.
  *
  * @param parts
@@ -431,9 +456,9 @@ export function firestoreModelKeyPath(...parts: FirestoreModelKeyPart[]): Firest
  */
 export function childFirestoreModelKeyPath(parent: FirestoreModelKeyPart, children: ArrayOrValue<FirestoreModelKeyPart>): FirestoreModelKey[] {
   if (Array.isArray(children)) {
-    return children.map((childPath) => `${parent}/${childPath}`);
+    return children.map((childPath) => `${parent}${FIRESTORE_COLLECTION_NAME_SEPARATOR}${childPath}`);
   } else {
-    return [`${parent}/${children}`];
+    return [`${parent}${FIRESTORE_COLLECTION_NAME_SEPARATOR}${children}`];
   }
 }
 
