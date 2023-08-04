@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 
 /**
- * Content drawer that connects with DbxMapboxMapStore to
+ * Content drawer that connects with DbxMapboxMapStore to show the content.
  */
 @Component({
   selector: 'dbx-mapbox-layout-drawer',

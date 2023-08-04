@@ -15,6 +15,8 @@ import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY } from '../component/mapbox.marker
   providers: [DbxMapboxMapStore, DbxMapboxInjectionStore, DbxMapboxChangeService]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
+  drawerIsOpen = false;
+
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
   readonly side$ = this._side.asObservable();
 
@@ -234,6 +236,10 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     this._color.complete();
     this._addedMarkersData.complete();
     this._showMarkers.complete();
+  }
+
+  onOpenedChange(toggle: boolean) {
+    this.drawerIsOpen = toggle;
   }
 
   addDrawerContent() {
