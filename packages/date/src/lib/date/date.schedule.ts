@@ -3,7 +3,30 @@ import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, DateBlockTimingStartEndRange, dateTimingRelativeIndexFactory, DateTimingRelativeIndexFactoryInput, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, safeDateBlockTimingFromDateRangeAndEvent } from './date.block';
+import {
+  changeTimingToSystemTimezone,
+  changeTimingToTimezone,
+  DateBlock,
+  dateBlockDayOfWeekFactory,
+  DateBlockDurationSpan,
+  DateBlockIndex,
+  dateBlockIndexRange,
+  DateBlockRange,
+  DateBlockRangeOrDateRange,
+  DateBlockRangeWithRange,
+  DateBlocksExpansionFactory,
+  dateBlocksExpansionFactory,
+  dateBlockTiming,
+  DateBlockTiming,
+  DateBlockTimingStartEndRange,
+  dateBlockTimingStartForNowInSystemTimezone,
+  dateBlockTimingStartForNowInTimezone,
+  dateTimingRelativeIndexFactory,
+  DateTimingRelativeIndexFactoryInput,
+  getCurrentDateBlockTimingStartDate,
+  groupToDateBlockRanges,
+  safeDateBlockTimingFromDateRangeAndEvent
+} from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
 import { copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
@@ -389,8 +412,10 @@ export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInpu
 
 /**
  * dateScheduleDateFilter() configuration.
+ *
+ * The input date range is a DateBlockTimingStartEndRange, where the start date is expected to be a DateBlockTimingStart.
  */
-export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRange> {
+export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateBlockTimingStartEndRange> {
   minMaxDateRange?: Maybe<Partial<DateBlockRangeOrDateRange>>;
   /**
    * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.
@@ -415,14 +440,17 @@ export function copyDateScheduleDateFilterConfig(inputFilter: DateScheduleDateFi
  * @returns
  */
 export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): DateScheduleDateFilter {
-  const { w, start: firstDate = new Date(), setStartAsMinDate = true, end, minMaxDateRange } = config;
+  const { w, start: inputStart, setStartAsMinDate = true, end, minMaxDateRange } = config;
+  const timingStart = inputStart != null ? changeTimingToSystemTimezone({ start: inputStart }) : dateBlockTimingStartForNowInSystemTimezone();
+  const { start: firstDate } = timingStart;
+
   const allowedDays: Set<DayOfWeek> = expandDateScheduleDayCodesToDayOfWeekSet(w);
 
   // Start date is either now or the filter's start date. It is never the minMax's start date, since that is irrelevant to the filter's range.
 
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
-  const dateIndexForDate = dateTimingRelativeIndexFactory({ start: firstDate });
+  const dateIndexForDate = dateTimingRelativeIndexFactory(timingStart);
 
   const indexFloor = setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
   const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, dateIndexForDate(minMaxDateRange.start)) : indexFloor; // start date should be the min inde
@@ -442,7 +470,8 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
     }
 
     day = dayForIndex(i);
-    return (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    const result = (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    return result;
   };
 }
 

@@ -46,12 +46,14 @@ import {
   getDateBlockTimingFirstEventDateRange,
   dateBlockTimingFromDateRangeAndEvent,
   getCurrentDateBlockTimingUtcData,
-  getCurrentDateBlockTimingOffsetData
+  getCurrentDateBlockTimingOffsetData,
+  dateBlockTimingStartForNowInSystemTimezone,
+  timingIsInExpectedTimezone
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
+import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, systemBaseDateToNormalDate, systemNormalDateToBaseDate, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { formatToISO8601DayString } from './date.format';
 
 describe('isValidDateBlockIndex()', () => {
@@ -206,6 +208,14 @@ describe('getCurrentDateBlockTimingOffset()', () => {
   // only date block timing offsets of -11 to 12 are valid
   range(-11, 12).forEach((x) => {
     describeUTCShift(x);
+  });
+});
+
+describe('dateBlockTimingStartForSystemTimezone()', () => {
+  it('should return the DateBlockTimingStart for the system timezone.', () => {
+    const result = dateBlockTimingStartForNowInSystemTimezone();
+    const isInSystemTimezone = timingIsInExpectedTimezone(result, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
+    expect(isInSystemTimezone).toBe(true);
   });
 });
 

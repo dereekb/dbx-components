@@ -47,19 +47,11 @@ describe('dateScheduleDateFilter()', () => {
         const schedule: DateScheduleDateFilterConfig = { start, w: '89' };
         const weekDaysAndWeekends = dateScheduleDateFilter(schedule);
 
-        it('should allow every day of the week (indexes)', () => {
-          const maxIndex = 14;
-          const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
-          const results = dateBlocks.filter(weekDaysAndWeekends);
-
-          expect(results.length).toBe(maxIndex);
-        });
-
         it('should allow every day of the week (dates)', () => {
           const maxIndex = 14;
           const dateBlocks: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
-          const results = dateBlocks.filter(weekDaysAndWeekends);
 
+          const results = dateBlocks.filter(weekDaysAndWeekends);
           expect(results.length).toBe(maxIndex);
         });
 

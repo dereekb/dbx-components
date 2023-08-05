@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.24.24](https://github.com/dereekb/dbx-components/compare/v9.24.23-dev...v9.24.24) (2023-08-05)
+
+
+### Bug Fixes
+
+* fixed dateScheduleDateFilter() timezone usage ([85bf021](https://github.com/dereekb/dbx-components/commit/85bf0219d92e9806657df3cf2c1ad0f58504c138))
+
+
+
 ## [9.24.23](https://github.com/dereekb/dbx-components/compare/v9.24.22-dev...v9.24.23) (2023-08-05)
 
 
