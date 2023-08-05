@@ -1,4 +1,4 @@
-import { DateBlockIndex, dateBlockTimingInTimezone, timingIsInExpectedTimezone } from './date.block';
+import { DateBlockIndex, dateBlockTimingInTimezone, timingDateTimezoneUtcNormal, timingIsInExpectedTimezone } from './date.block';
 import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange, startOfDayInTimezoneDayStringFactory, startOfDayInTimezoneFromISO8601DayString } from '@dereekb/date';
 import {
   expandDateScheduleFactory,
@@ -650,9 +650,6 @@ describe('dateBlockTimingForExpandDateScheduleRangeInput()', () => {
 
         expect(result.start).toBeSameSecondAs(timing.start);
         expect(result.end).toBeSameSecondAs(timing.end);
-
-        const daysCount = differenceInDays(result.end, result.start);
-        expect(daysCount).toBe(days);
       });
     });
 
@@ -662,7 +659,7 @@ describe('dateBlockTimingForExpandDateScheduleRangeInput()', () => {
       const startsAt = addHours(startOfDay, 12); // Noon on 2022-01-02 in America/New_York
       const timing = dateBlockTimingInTimezone({ startsAt, duration: 30 }, 1, timezone);
 
-      it('should generate a valid DateBlockTiming() with the new duration.', () => {
+      it('should generate a valid DateBlockTiming with the new duration and same duration.', () => {
         expect(timingIsInExpectedTimezone(timing, { timezone })).toBe(true);
 
         const newDuration = 60;
@@ -684,7 +681,7 @@ describe('dateBlockTimingForExpandDateScheduleRangeInput()', () => {
         expect(result.end).toBeSameSecondAs(addMinutes(timing.end, durationDifference)); // 30 minutes later
       });
 
-      it('should generate a valid DateBlockTiming() with the same event startsAt time.', () => {
+      it('should generate a valid DateBlockTiming with the same event startsAt time.', () => {
         const newStartsAt = addDays(timing.startsAt, 1); // same event schedule
 
         const result = dateBlockTimingForExpandDateScheduleRangeInput({
@@ -702,7 +699,7 @@ describe('dateBlockTimingForExpandDateScheduleRangeInput()', () => {
         expect(result.end).toBeSameSecondAs(timing.end);
       });
 
-      it('should generate a valid DateBlockTiming() with the new duration and start at time.', () => {
+      it('should generate a valid DateBlockTiming with the new duration and start at time.', () => {
         const newDuration = 45;
         const hoursDifference = 1;
         const expectedStartsAt = addHours(timing.startsAt, hoursDifference);

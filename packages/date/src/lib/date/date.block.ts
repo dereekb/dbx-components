@@ -375,6 +375,8 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
 /**
  * Returns a copy of the input timing with the start time timezone in the given timezone.
  *
+ * The start time is a normal, and should still refer to the same UTC date, but with the given timing's offset.
+ *
  * @param timing
  */
 export type ChangeTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T) & {
@@ -559,6 +561,15 @@ export function getRelativeDateForDateBlockTiming(timing: DateBlockTimingStart, 
  */
 export type DateBlockTimingRangeInput = Pick<DateRangeDayDistanceInput, 'distance'> | DateRange | number;
 
+export interface DateBlockTimingOptions {
+  /**
+   * Timezone to evaluate the startsAt time in.
+   *
+   * Will convert the input startsAt time to a normal in the given timezone, then converts it back to the system timezone.
+   */
+  timezone?: DateTimezoneUtcNormalFunctionInput;
+}
+
 /**
  * Creates a valid DateBlock timing from the DateDurationSpan and range input.
  *
@@ -573,14 +584,20 @@ export type DateBlockTimingRangeInput = Pick<DateRangeDayDistanceInput, 'distanc
  *
  * The start date from the inputDate is considered to to have the offset noted in DateBlock, and will be retained.
  */
-export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput): DateBlockTiming {
+export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput, options?: DateBlockTimingOptions): DateBlockTiming {
   const { duration } = durationInput;
+  const { timezone: timezoneInput } = options ?? {};
+  const timezoneInstance = timezoneInput ? dateTimezoneUtcNormal(timezoneInput) : undefined;
 
   if (duration > MINUTES_IN_DAY) {
     throw new Error('dateBlockTiming() duration cannot be longer than 24 hours.');
   }
 
-  let { startsAt } = durationInput;
+  let { startsAt: inputStartsAt } = durationInput;
+
+  // it is important that startsAt is evaluated the system time normal, as addDays/addMinutes and related functionality rely on the system timezone.
+  let startsAt = timezoneInstance ? timezoneInstance.systemDateToTargetDate(inputStartsAt) : inputStartsAt;
+
   let numberOfBlockedDays: number;
 
   let inputDate: Date | undefined;
@@ -620,6 +637,7 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
   }
 
   const start = range.start;
+  startsAt = timezoneInstance ? timezoneInstance.targetDateToSystemDate(startsAt) : startsAt;
 
   // calculate end to be the ending date/time of the final duration span
   const lastStart = addDays(startsAt, numberOfBlockedDays);
@@ -644,7 +662,7 @@ export function dateBlockTimingInTimezoneFunction(input: TimingDateTimezoneUtcNo
   const changeTimezoneFunction = changeTimingToTimezoneFunction(input);
 
   const fn = ((durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput) => {
-    const timing = dateBlockTiming(durationInput, inputRange);
+    const timing = dateBlockTiming(durationInput, inputRange, { timezone: changeTimezoneFunction._timezoneInstance });
     return changeTimezoneFunction(timing);
   }) as Building<DateBlockTimingInTimezoneFunction>;
 
