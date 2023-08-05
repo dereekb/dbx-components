@@ -77,7 +77,7 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
   /**
    * Filters the days of the schedule to only allow selecting days in the schedule.
    *
-   * If filter.start is provided, then the timezone is ignored, if one is present.
+   * If filter.start is provided, then the timezone in this normal is ignored, if one is present. Convert to the system timezone first.
    */
   filter?: Maybe<DateScheduleDateFilterConfig>;
   /**
@@ -99,7 +99,7 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   start: Date;
   /**
-   * Timezone to use. OnlyInfluences the output start date.
+   * Timezone to use. Only influences the output start date.
    */
   timezone?: Maybe<TimezoneString>;
   /**

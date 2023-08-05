@@ -37,7 +37,7 @@ import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDatesWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { parseISO8601DayStringToDate } from './date.format';
 
@@ -103,6 +103,13 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
 };
 
 /**
+ * DateBlockTiming with only the start time.
+ *
+ * The start time is midnight of what timezone it is in, and can be used to infer the target timezone offset.
+ */
+export type DateBlockTimingStart = DateRangeStart;
+
+/**
  * Is combination of DateRange and DateDurationSpan. The DateRange captures a range of days that a DateBlock takes up, and the DateDurationSpan
  * captures the Dates at which the Job occurs at.
  *
@@ -114,17 +121,12 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  * - The startsAt time should be on the same date as normalized start
  * - The end time should equal the ending date/time of the final end duration.
  */
-export interface DateBlockTiming extends DateRange, DateDurationSpan {}
+export interface DateBlockTiming extends DateBlockTimingStart, DateRange, DateDurationSpan {}
 
 /**
- * DateBlockTiming with only the start time. The start time infers what timezone it is in.
+ * The DateRange component for a DateBlockTiming. The start date is a DateBlockTimingStart.
  */
-export type DateBlockTimingStart = DateRangeStart;
-
-/**
- * Only the start and end of the date block range.
- */
-export type DateBlockTimingStartEndRange = Pick<DateBlockTiming, 'start' | 'end'>;
+export type DateBlockTimingStartEndRange = DateBlockTimingStart & Pick<DateBlockTiming, 'end'>;
 
 /**
  * The start date of a DateBlockTimingStart, along with the endDay which is a normalized day that is at midnight of the last day in the timezone.
@@ -411,6 +413,27 @@ export function changeTimingToTimezoneFunction(input: TimingDateTimezoneUtcNorma
 
 export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: TimingDateTimezoneUtcNormalInput): T {
   return changeTimingToTimezoneFunction(timezone)(timing);
+}
+
+export function changeTimingToSystemTimezone<T extends DateRangeStart>(timing: T): T {
+  return changeTimingToTimezoneFunction(SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE)(timing);
+}
+
+export function dateBlockTimingStartForNowInSystemTimezone(): DateBlockTimingStart {
+  return {
+    start: startOfDay(new Date())
+  };
+}
+
+/**
+ * Creates a DateBlockTimingStart for now in the given timezone.
+ *
+ * @param timezoneInput
+ * @returns
+ */
+export function dateBlockTimingStartForNowInTimezone(timezoneInput: TimingDateTimezoneUtcNormalInput): DateBlockTimingStart {
+  const dateBlockTimingStartSystemTimezone = dateBlockTimingStartForNowInSystemTimezone();
+  return changeTimingToTimezone(dateBlockTimingStartSystemTimezone, timezoneInput);
 }
 
 /**
