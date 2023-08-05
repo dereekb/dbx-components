@@ -330,7 +330,7 @@ describe('dateBlockTimingFromDateRangeAndEvent()', () => {
 
     function describeTestsForTimezone(timezone: TimezoneString) {
       const startOfTodayInTimezone = dateTimezoneUtcNormal({ timezone }).systemDateToTargetDate(startOfDay(new Date()));
-      const timing = dateBlockTiming({ startsAt: addHours(startOfTodayInTimezone, 3), duration: 60 }, 2); // 2 days
+      const timing = dateBlockTiming({ startsAt: addHours(startOfTodayInTimezone, 3), duration: 60 }, 1); // 1 day
 
       describe(`${timezone}`, () => {
         it('should return a copy of a timing.', () => {
@@ -444,6 +444,19 @@ describe('dateBlockTimingInTimezoneFunction()', () => {
         expect(result.startsAt).toBeSameSecondAs(startsAt);
         expect(result.duration).toBe(duration);
       });
+
+      it('should create a timing in the afteroon in the UTC timezone.', () => {
+        const duration = 60;
+        const startsAt = addHours(startOfToday, 12);
+        const result = fn({ startsAt, duration }, 2);
+
+        const { start } = result;
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(utcTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(startsAt);
+        expect(result.duration).toBe(duration);
+      });
     });
 
     describe('America/Denver', () => {
@@ -455,6 +468,19 @@ describe('dateBlockTimingInTimezoneFunction()', () => {
       it('should create a timing in the America/Denver timezone.', () => {
         const duration = 60;
         const startsAt = addHours(startOfToday, 3);
+        const result = fn({ startsAt, duration }, 2);
+
+        const { start } = result;
+        const utcHours = start.getUTCHours();
+        expect(utcHours).toBe(denverTimezoneOffsetInHours);
+
+        expect(result.startsAt).toBeSameSecondAs(startsAt);
+        expect(result.duration).toBe(duration);
+      });
+
+      it('should create a timing in the afteroon in the America/Denver timezone.', () => {
+        const duration = 60;
+        const startsAt = addHours(startOfToday, 12);
         const result = fn({ startsAt, duration }, 2);
 
         const { start } = result;
@@ -821,6 +847,17 @@ describe('isValidDateBlockTiming()', () => {
   it('should return false if the startsAt time is before the start time.', () => {
     const start = addHours(startOfDay(startsAt), 2);
     const isValid = isValidDateBlockTiming({ startsAt: addMinutes(start, -10), start, end: endOfDay(start), duration: 10 });
+    expect(isValid).toBe(false);
+  });
+
+  it('should return false if the end time is before the startsAt time.', () => {
+    const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
+    const invalidTiming = {
+      ...validTiming,
+      end: startsAt
+    };
+
+    const isValid = isValidDateBlockTiming(invalidTiming);
     expect(isValid).toBe(false);
   });
 

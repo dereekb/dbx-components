@@ -3,7 +3,7 @@ import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateBlockTimingFromDateRangeAndEvent, dateTimingRelativeIndexFactory, DateTimingRelativeIndexFactoryInput, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, DateBlockTimingStartEndRange, dateTimingRelativeIndexFactory, DateTimingRelativeIndexFactoryInput, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, safeDateBlockTimingFromDateRangeAndEvent } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
 import { copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
@@ -345,7 +345,7 @@ export class DateSchedule implements DateSchedule {
 /**
  * A schedule that occurs during a specific range.
  */
-export interface DateScheduleRange extends DateSchedule, DateRange {}
+export interface DateScheduleRange extends DateSchedule, DateBlockTimingStartEndRange {}
 
 /**
  * Returns true if both inputs have the same schedule and date range.
@@ -370,21 +370,9 @@ export function isSameDateScheduleRange(a: Maybe<DateScheduleRange>, b: Maybe<Da
  * @param startsAtTime
  * @returns
  */
-export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateScheduleRange, duration: number = 60, startsAtTime?: Date): DateBlockTiming {
-  const { start, end } = dateScheduleRange;
-  let timing: DateBlockTiming;
-
-  if (startsAtTime) {
-    timing = dateBlockTimingFromDateRangeAndEvent(dateScheduleRange, { startsAt: startsAtTime, duration });
-  } else {
-    timing = {
-      start,
-      end,
-      startsAt: start,
-      duration
-    };
-  }
-
+export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateScheduleRange, duration: number, startsAtTime?: Date): DateBlockTiming {
+  const { start } = dateScheduleRange;
+  const timing: DateBlockTiming = safeDateBlockTimingFromDateRangeAndEvent(dateScheduleRange, { startsAt: startsAtTime ?? start, duration });
   return timing;
 }
 
@@ -570,21 +558,42 @@ export function expandDateSchedule(input: ExpandDateScheduleInput): DateBlockDur
   return expansionFactory([dateBlockForRange]);
 }
 
+/**
+ * Input for ExpandDateScheduleRangeInput
+ */
 export interface ExpandDateScheduleRangeInput extends Omit<DateScheduleDateBlockTimingFilterConfig, 'schedule' | 'timing'> {
   readonly dateScheduleRange: DateScheduleRange;
   /**
-   * (Optional) duration of the timing
+   * Duration of the timing.
    */
-  readonly duration?: number;
+  readonly duration: number;
   /**
-   * (Optional) Hours/Minutes to copy from
+   * (Optional) Hours/Minutes to copy from. Note, this will modify the timing's end date to be a valid time.
    */
   readonly startsAtTime?: Date;
 }
 
-export function expandDateScheduleRange(input: ExpandDateScheduleRangeInput): DateBlockDurationSpan<DateBlock>[] {
+// dateBlockTimingForDateScheduleRange
+
+/**
+ * Creates a DateBlockTiming for the input ExpandDateScheduleRangeInput.
+ *
+ * @param input
+ * @returns
+ */
+export function dateBlockTimingForExpandDateScheduleRangeInput(input: ExpandDateScheduleRangeInput): DateBlockTiming {
   const { dateScheduleRange, duration, startsAtTime } = input;
-  const timing = dateBlockTimingForDateScheduleRange(dateScheduleRange, duration, startsAtTime);
+  return dateBlockTimingForDateScheduleRange(dateScheduleRange, duration, startsAtTime);
+}
+
+/**
+ *
+ * @param input
+ * @returns
+ */
+export function expandDateScheduleRange(input: ExpandDateScheduleRangeInput): DateBlockDurationSpan<DateBlock>[] {
+  const { dateScheduleRange } = input;
+  const timing = dateBlockTimingForExpandDateScheduleRangeInput(input);
   return expandDateSchedule({ ...input, schedule: dateScheduleRange, timing });
 }
 

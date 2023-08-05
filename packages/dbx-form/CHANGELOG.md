@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.24.23](https://github.com/dereekb/dbx-components/compare/v9.24.22-dev...v9.24.23) (2023-08-05)
+
+
+### Bug Fixes
+
+* fixed expandDateScheduleRange, dateBlockTimingForDateScheduleRange ([b758918](https://github.com/dereekb/dbx-components/commit/b758918c140011392ceb69e42a78e40b2f55cc35))
+
+
+
 ## [9.24.22](https://github.com/dereekb/dbx-components/compare/v9.24.21-dev...v9.24.22) (2023-08-04)
 
 

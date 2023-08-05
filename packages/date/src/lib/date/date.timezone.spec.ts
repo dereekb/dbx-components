@@ -225,5 +225,28 @@ describe('startOfDayInTimezoneDayStringFactory()', () => {
         expect(result.toISOString()).not.toBe(utcDateString);
       });
     });
+
+    describe('America/New_York', () => {
+      const timezone = 'America/New_York';
+      const fn = startOfDayInTimezoneDayStringFactory(timezone);
+      const instance = new DateTimezoneUtcNormalInstance({ timezone });
+
+      const expectedDay: ISO8601DayString = `2023-03-12`;
+      const utcDateString = `${expectedDay}T00:00:00.000Z`;
+      const utcStart = new Date(utcDateString);
+
+      const systemStart = instance.systemDateToBaseDate(utcStart);
+      const expectedStart = instance.targetDateToBaseDate(utcStart);
+
+      it('should return the start of the day date in America/New_York.', () => {
+        const inputDayString = formatToISO8601DayString(systemStart); // format to ensure that the same day is being passed
+        expect(expectedDay).toBe(inputDayString);
+        expect(systemStart).toBeSameSecondAs(startOfDay(systemStart));
+
+        const result = fn(inputDayString);
+        expect(result).toBeSameSecondAs(expectedStart);
+        expect(result.toISOString()).not.toBe(utcDateString);
+      });
+    });
   });
 });

@@ -408,6 +408,17 @@ export function startOfDayInTimezoneDayStringFactory(timezone?: DateTimezoneUtcN
   };
 }
 
+/**
+ * Loads the start of the day in the given timezone.
+ *
+ * @param day
+ * @param timezone
+ * @returns
+ */
+export function startOfDayInTimezoneFromISO8601DayString(day: ISO8601DayString, timezone?: DateTimezoneUtcNormalFunctionInput): Date {
+  return startOfDayInTimezoneDayStringFactory(timezone)(day);
+}
+
 // MARK: Timezone Utilities
 /**
  * Converts the two input dates, which are dates in a different timezone/normal, using the input DateTimezoneUtcNormalFunctionInput.

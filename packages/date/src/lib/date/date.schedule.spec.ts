@@ -1,5 +1,5 @@
-import { DateBlockIndex } from './date.block';
-import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange } from '@dereekb/date';
+import { DateBlockIndex, dateBlockTimingInTimezone, timingDateTimezoneUtcNormal, timingIsInExpectedTimezone } from './date.block';
+import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange, startOfDayInTimezoneDayStringFactory, startOfDayInTimezoneFromISO8601DayString } from '@dereekb/date';
 import {
   expandDateScheduleFactory,
   DateSchedule,
@@ -18,9 +18,10 @@ import {
   expandDateScheduleRange,
   expandDateScheduleRangeToDateBlockRanges,
   isSameDateSchedule,
-  dateScheduleDayCodesAreSetsEquivalent
+  dateScheduleDayCodesAreSetsEquivalent,
+  dateBlockTimingForExpandDateScheduleRangeInput
 } from './date.schedule';
-import { addDays } from 'date-fns';
+import { addDays, addHours, addMinutes, differenceInDays } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
 describe('dateScheduleDateFilter()', () => {
@@ -627,18 +628,119 @@ describe('isSameDateSchedule()', () => {
   });
 });
 
-describe('expandDateScheduleRange()', () => {
-  const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
-  const utc2022Week2EndDate = addDays(utc2022Week2StartDate, 6); // saturday
+describe('dateBlockTimingForExpandDateScheduleRangeInput()', () => {
+  const schedule: DateSchedule = { w: '89', ex: [0, 1], d: [2] };
 
-  it('should expand a week.', () => {
+  describe('timing with timezone', () => {
+    describe('UTC', () => {
+      const days = 7;
+      const duration = 60;
+      const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
+      const timing = dateBlockTimingInTimezone({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+
+      it('it should generate the expected dateBlockTiming.', () => {
+        const result = dateBlockTimingForExpandDateScheduleRangeInput({
+          dateScheduleRange: {
+            ...schedule,
+            ...timing
+          },
+          startsAtTime: timing.startsAt,
+          duration
+        });
+
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.end).toBeSameSecondAs(timing.end);
+      });
+    });
+
+    describe('America/New_York', () => {
+      const timezone = 'America/New_York';
+      const startOfDay = startOfDayInTimezoneFromISO8601DayString('2022-01-02', timezone);
+      const startsAt = addHours(startOfDay, 12); // Noon on 2022-01-02 in America/New_York
+      const timing = dateBlockTimingInTimezone({ startsAt, duration: 30 }, 1, timezone);
+
+      it('should generate a valid DateBlockTiming with the new duration and same duration.', () => {
+        expect(timingIsInExpectedTimezone(timing, { timezone })).toBe(true);
+
+        const newDuration = 60;
+
+        const result = dateBlockTimingForExpandDateScheduleRangeInput({
+          dateScheduleRange: {
+            ...schedule,
+            ...timing
+          },
+          startsAtTime: timing.startsAt,
+          duration: newDuration
+        });
+
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.duration).toBe(newDuration);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+
+        const durationDifference = newDuration - timing.duration;
+        expect(result.end).toBeSameSecondAs(addMinutes(timing.end, durationDifference)); // 30 minutes later
+      });
+
+      it('should generate a valid DateBlockTiming with the same event startsAt time.', () => {
+        const newStartsAt = addDays(timing.startsAt, 1); // same event schedule
+
+        const result = dateBlockTimingForExpandDateScheduleRangeInput({
+          dateScheduleRange: {
+            ...schedule,
+            ...timing
+          },
+          duration: timing.duration,
+          startsAtTime: newStartsAt
+        });
+
+        expect(result.duration).toBe(timing.duration);
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.end).toBeSameSecondAs(timing.end);
+      });
+
+      it('should generate a valid DateBlockTiming with the new duration and start at time.', () => {
+        const newDuration = 45;
+        const hoursDifference = 1;
+        const expectedStartsAt = addHours(timing.startsAt, hoursDifference);
+        const newStartsAt = addDays(expectedStartsAt, 1); // starts 1 hour earlier, and event is 1 day later
+
+        const result = dateBlockTimingForExpandDateScheduleRangeInput({
+          dateScheduleRange: {
+            ...schedule,
+            ...timing
+          },
+          duration: newDuration,
+          startsAtTime: newStartsAt
+        });
+
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.duration).toBe(newDuration);
+        expect(result.startsAt).toBeSameSecondAs(expectedStartsAt);
+
+        const durationDifference = newDuration - timing.duration;
+        expect(result.end).toBeSameSecondAs(addMinutes(timing.end, durationDifference + hoursDifference * 60)); // hour and 15 minutes later
+      });
+    });
+  });
+});
+
+describe('expandDateScheduleRange()', () => {
+  const duration = 60;
+
+  const days = 7;
+  const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
+  const timing = dateBlockTimingInTimezone({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+  const end = timing.end;
+
+  it('should expand the dateScheduleRange week.', () => {
     const dateScheduleRange: DateScheduleRange = {
       w: '89',
       start: utc2022Week2StartDate,
-      end: utc2022Week2EndDate
+      end
     };
 
-    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    const expansion = expandDateScheduleRange({ dateScheduleRange, duration });
     expect(expansion.length).toBe(7);
 
     expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
@@ -648,11 +750,11 @@ describe('expandDateScheduleRange()', () => {
     const dateScheduleRange: DateScheduleRange = {
       w: '89',
       start: utc2022Week2StartDate,
-      end: utc2022Week2EndDate,
+      end,
       ex: [0, 2, 4, 6]
     };
 
-    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    const expansion = expandDateScheduleRange({ dateScheduleRange, duration });
     expect(expansion.length).toBe(3);
 
     expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateScheduleRange.start, 1));
@@ -667,11 +769,11 @@ describe('expandDateScheduleRange()', () => {
     const dateScheduleRange: DateScheduleRange = {
       w: '8',
       start: utc2022Week2StartDate,
-      end: utc2022Week2EndDate,
+      end,
       d: [0]
     };
 
-    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    const expansion = expandDateScheduleRange({ dateScheduleRange, duration });
     expect(expansion.length).toBe(6);
 
     expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
@@ -681,10 +783,10 @@ describe('expandDateScheduleRange()', () => {
     const dateScheduleRange: DateScheduleRange = {
       w: '8',
       start: utc2022Week2StartDate,
-      end: utc2022Week2EndDate
+      end
     };
 
-    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    const expansion = expandDateScheduleRange({ dateScheduleRange, duration });
     expect(expansion.length).toBe(5);
 
     expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateScheduleRange.start, 1));
@@ -694,10 +796,10 @@ describe('expandDateScheduleRange()', () => {
     const dateScheduleRange: DateScheduleRange = {
       w: '9',
       start: utc2022Week2StartDate,
-      end: utc2022Week2EndDate
+      end
     };
 
-    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    const expansion = expandDateScheduleRange({ dateScheduleRange, duration });
     expect(expansion.length).toBe(2);
 
     expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
@@ -705,17 +807,20 @@ describe('expandDateScheduleRange()', () => {
 });
 
 describe('expandDateScheduleRangeToDateBlockRanges()', () => {
+  const duration = 60;
+  const days = 7;
   const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
-  const utc2022Week2EndDate = addDays(utc2022Week2StartDate, 6); // saturday
+  const timing = dateBlockTimingInTimezone({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+  const end = timing.end;
 
   it('should expand a week.', () => {
     const dateScheduleRange: DateScheduleRange = {
       w: '89',
       start: utc2022Week2StartDate,
-      end: utc2022Week2EndDate
+      end
     };
 
-    const expansion = expandDateScheduleRangeToDateBlockRanges({ dateScheduleRange });
+    const expansion = expandDateScheduleRangeToDateBlockRanges({ dateScheduleRange, duration });
     expect(expansion.length).toBe(1);
 
     expect(expansion[0].i).toBe(0);
