@@ -9,7 +9,7 @@ export class DateDistancePipe implements PipeTransform {
     if (input != null) {
       const to = inputTo ?? new Date();
       const from = ToJsDatePipe.toJsDate(input);
-      return formatDateDistance(from, to);
+      return formatDateDistance(to, from);
     } else {
       return unavailable;
     }
