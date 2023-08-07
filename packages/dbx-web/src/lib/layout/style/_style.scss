@@ -31,11 +31,19 @@ $dbx-success-color-var: --dbx-success-color;
 
   @each $i, $padding in theming.$padding-map {
     .dbx-m#{$i} {
-      padding: $padding;
+      margin: $padding;
+    }
+
+    .dbx-mv#{$i} {
+      margin: $padding 0;
     }
 
     .dbx-p#{$i} {
       padding: $padding;
+    }
+
+    .dbx-pv#{$i} {
+      padding: $padding 0;
     }
 
     .dbx-pt#{$i} {

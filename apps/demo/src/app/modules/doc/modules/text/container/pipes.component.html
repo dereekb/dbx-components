@@ -21,13 +21,24 @@
 
       <dbx-detail-block icon="event" header="dateDistance(DateOrDateString,Date)">
         <p class="dbx-hint">Formats the input date to show the distance between the date and the other input.</p>
-        <p class="dbx-ok">{{ date$ | async | dateDistance: (end$ | async) }}</p>
         <p class="dbx-ok">
           {{ date$ | async | dateDistance: (date$ | async) }}
+          <span class="dbx-hint">(Date to Date)</span>
+        </p>
+        <p class="dbx-ok">
+          {{ date$ | async | dateDistance: (end$ | async) }}
+          <span class="dbx-hint">(Date to End)</span>
+        </p>
+        <p class="dbx-ok">
+          {{ end$ | async | dateDistance: (date$ | async) }}
+          <span class="dbx-hint">(End to Date)</span>
+        </p>
+        <p class="dbx-ok">
+          {{ date$ | async | dateDistance }}
           <span class="dbx-hint">(Same Day Example)</span>
         </p>
         <p class="dbx-ok">
-          {{ end$ | async | dateDistance: (end$ | async) }}
+          {{ end$ | async | dateDistance }}
           <span class="dbx-hint">(Same Day In Future Example)</span>
         </p>
       </dbx-detail-block>
