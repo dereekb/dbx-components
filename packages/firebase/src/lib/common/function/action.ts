@@ -6,8 +6,8 @@ export type AsyncFirebaseFunctionCreateAction<P extends object, T, I = void> = P
 export type FirebaseFunctionReadAction<P extends object, T, I = void> = FirebaseFunctionCreateAction<P, T, I>;
 export type AsyncFirebaseFunctionReadAction<P extends object, T, I = void> = Promise<FirebaseFunctionReadAction<P, T, I>>;
 
-export type FirebaseFunctionUpdateAction<P extends object, T> = TransformAndValidateFunctionResult<P, (document: T) => Promise<T>>;
+export type FirebaseFunctionUpdateAction<P extends object, T> = TransformAndValidateFunctionResult<P, (input: T) => Promise<T>>;
 export type AsyncFirebaseFunctionUpdateAction<P extends object, T> = Promise<FirebaseFunctionUpdateAction<P, T>>;
 
-export type FirebaseFunctionDeleteAction<P extends object, T> = TransformAndValidateFunctionResult<P, (document: T) => Promise<void>>;
+export type FirebaseFunctionDeleteAction<P extends object, T> = TransformAndValidateFunctionResult<P, (input: T) => Promise<void>>;
 export type AsyncFirebaseFunctionDeleteAction<P extends object, T> = Promise<FirebaseFunctionDeleteAction<P, T>>;
