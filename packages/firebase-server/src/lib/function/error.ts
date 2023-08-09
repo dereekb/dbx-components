@@ -1,6 +1,8 @@
-import { ErrorMessageOrPartialServerError, partialServerError, ThrowErrorFunction } from '@dereekb/util';
+import { HttpsError } from 'firebase-functions/lib/common/providers/https';
+import { ErrorMessageOrPartialServerError, isServerError, partialServerError, ServerError, StringErrorCode, ThrowErrorFunction } from '@dereekb/util';
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { FirebaseAuthError, FirebaseErrorCode } from '@dereekb/firebase';
 
 export const NO_AUTH_ERROR_CODE = 'NO_AUTH';
 
@@ -142,10 +144,111 @@ export function internalServerError(messageOrError?: ErrorMessageOrPartialServer
 }
 
 // MARK: Utility
-export function handleFirebaseError(e: unknown, handleFirebaseError: ThrowErrorFunction<admin.FirebaseError>): never | void {
+export type FirebaseServerErrorInfoType = 'httpsError' | 'firebaseError' | 'unknown';
+
+/**
+ * Server error information
+ */
+export interface FirebaseServerErrorInfo {
+  /**
+   * Error type
+   */
+  readonly type: FirebaseServerErrorInfoType;
+  /**
+   * Original error
+   */
+  readonly e: unknown;
+  /**
+   * Firebase error code, if available.
+   */
+  readonly firebaseErrorCode?: FirebaseErrorCode;
+  /**
+   * Set if the error is a HttpsError
+   */
+  readonly httpsError?: HttpsError;
+  /**
+   * Set if the error is a HttpsError and a ServerError is provided.
+   */
+  readonly httpsErrorDetailsServerError?: ServerError;
+  /**
+   * StringErrorCode from httpsErrorDetailsServerError, if applicable.
+   */
+  readonly serverErrorCode?: StringErrorCode;
+  /**
+   * Set if the error is a FirebaseError
+   */
+  readonly firebaseError?: admin.FirebaseError;
+}
+
+export function isFirebaseHttpsError(input: unknown | HttpsError): input is HttpsError {
+  return typeof input === 'object' && (input as HttpsError).code != null && (input as HttpsError).httpErrorCode != null && (input as HttpsError).toJSON != null;
+}
+
+export function isFirebaseError(input: unknown | admin.FirebaseError): input is admin.FirebaseError {
+  return typeof input === 'object' && (input as admin.FirebaseError).code != null && (input as admin.FirebaseError).message != null && (input as admin.FirebaseError).toJSON != null;
+}
+
+/**
+ * Creates a FirebaseServerErrorInfo from the input.
+ *
+ * @param e
+ * @returns
+ */
+export function firebaseServerErrorInfo(e: unknown): FirebaseServerErrorInfo {
+  let type: FirebaseServerErrorInfoType = 'unknown';
+  let httpsError: HttpsError | undefined;
+  let firebaseError: admin.FirebaseError | undefined;
+  let firebaseErrorCode: FirebaseErrorCode | undefined;
+  let httpsErrorDetailsServerError: ServerError | undefined;
+  let serverErrorCode: StringErrorCode | undefined;
+
+  if (e != null) {
+    if (isFirebaseHttpsError(e)) {
+      type = 'httpsError';
+      httpsError = e;
+      firebaseErrorCode = httpsError.code as FirebaseErrorCode;
+
+      if (httpsError.details && isServerError(httpsError.details)) {
+        httpsErrorDetailsServerError = httpsError.details;
+        serverErrorCode = httpsErrorDetailsServerError.code as StringErrorCode;
+      }
+    } else if (isFirebaseError(e)) {
+      type = 'firebaseError';
+      firebaseError = e;
+      firebaseErrorCode = firebaseError.code as FirebaseErrorCode;
+    }
+  }
+
+  return {
+    httpsError,
+    firebaseError,
+    firebaseErrorCode,
+    httpsErrorDetailsServerError,
+    serverErrorCode,
+    type,
+    e
+  };
+}
+
+export function firebaseServerErrorInfoCodePair(e: unknown): [FirebaseErrorCode | undefined, FirebaseServerErrorInfo] {
+  const info = firebaseServerErrorInfo(e);
+  return [info.firebaseErrorCode, info];
+}
+
+export function firebaseServerErrorInfoServerErrorPair(e: unknown): [ServerError | undefined, FirebaseServerErrorInfo] {
+  const info = firebaseServerErrorInfo(e);
+  return [info.httpsErrorDetailsServerError, info];
+}
+
+export function firebaseServerErrorInfoServerErrorCodePair(e: unknown): [StringErrorCode | undefined, FirebaseServerErrorInfo] {
+  const info = firebaseServerErrorInfo(e);
+  return [info.serverErrorCode, info];
+}
+
+export function handleFirebaseError(e: unknown, handleFirebaseErrorFn: ThrowErrorFunction<admin.FirebaseError>): never | void {
   const firebaseError = (e as admin.FirebaseError).code ? (e as admin.FirebaseError) : undefined;
 
   if (firebaseError) {
-    handleFirebaseError(firebaseError);
+    handleFirebaseErrorFn(firebaseError);
   }
 }

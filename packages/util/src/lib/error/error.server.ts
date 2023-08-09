@@ -18,6 +18,10 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
   status: number;
 }
 
+export function isServerError(input: unknown): input is ServerError {
+  return typeof input === 'object' && (input as ServerError).status != null && (input as ServerError).code != null;
+}
+
 export type ErrorMessageOrPartialServerError<T = ServerErrorResponseData> = string | Partial<ReadableDataError | ServerError<T>>;
 
 /**
