@@ -1,7 +1,8 @@
 import { ReadableError } from '@dereekb/util';
+import { FirebaseErrorCode } from '../error';
 
 export interface FirebaseAuthError {
-  code: string;
+  code: FirebaseErrorCode;
   name: string;
   customData: unknown;
 }
