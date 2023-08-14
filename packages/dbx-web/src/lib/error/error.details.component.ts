@@ -7,7 +7,7 @@ import { Maybe, ReadableError } from '@dereekb/util';
     <dbx-error-widget-view [error]="error"></dbx-error-widget-view>
   `,
   host: {
-    class: 'dbx-block dbx-error-details'
+    class: 'd-block dbx-error-details'
   }
 })
 export class DbxErrorDetailsComponent {
