@@ -1,5 +1,5 @@
-import { DateBlockIndex, dateBlockTimingInTimezone, timingDateTimezoneUtcNormal, timingIsInExpectedTimezone } from './date.block';
-import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange, startOfDayInTimezoneDayStringFactory, startOfDayInTimezoneFromISO8601DayString } from '@dereekb/date';
+import { DateBlockIndex, dateBlockIndexRange, dateBlockTimingInTimezone, timingDateTimezoneUtcNormal, timingIsInExpectedTimezone } from './date.block';
+import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange, startOfDayInTimezoneDayStringFactory, startOfDayInTimezoneFromISO8601DayString, durationSpanToDateRange } from '@dereekb/date';
 import {
   expandDateScheduleFactory,
   DateSchedule,
@@ -22,7 +22,7 @@ import {
   dateBlockTimingForExpandDateScheduleRangeInput
 } from './date.schedule';
 import { addDays, addHours, addMinutes, differenceInDays } from 'date-fns';
-import { Day, range, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { Day, range, UTC_TIMEZONE_STRING, lastValue } from '@dereekb/util';
 
 describe('dateScheduleDateFilter()', () => {
   const start = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
@@ -795,6 +795,36 @@ describe('expandDateScheduleRange()', () => {
     expect(expansion.length).toBe(2);
 
     expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
+  });
+
+  describe('scenario', () => {
+    describe('CST daylight saving timing change', () => {
+      const duration = 1;
+
+      const dateScheduleRange: DateScheduleRange = {
+        start: new Date('2023-08-15T05:00:00.000Z'),
+        end: new Date('2023-12-21T22:30:00.000Z'),
+        w: '89',
+        ex: []
+      };
+
+      it('should expand all the days', () => {
+        const timing = dateBlockTimingForExpandDateScheduleRangeInput({ dateScheduleRange, duration });
+
+        const completeRange = dateBlockIndexRange(timing);
+        const daysInBetween = differenceInDays(dateScheduleRange.end, dateScheduleRange.start) + 1;
+
+        expect(completeRange.minIndex).toBe(0);
+        expect(completeRange.maxIndex).toBe(daysInBetween); // 129
+
+        const expansion = expandDateScheduleRange({ dateScheduleRange, duration });
+        const lastDay = lastValue(expansion);
+        const expectedEndDateRange = durationSpanToDateRange(lastDay);
+
+        expect(expectedEndDateRange.end).toBeSameSecondAs(timing.end); // should have the same end
+        expect(expansion.length).toBe(daysInBetween);
+      });
+    });
   });
 });
 
