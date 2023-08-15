@@ -38,7 +38,7 @@ export enum RelationChange {
 export type RelationString = string;
 export type RelationObject = RelationString | object;
 export type RelationModelType = string;
-export type RelationKey = string;
+export type RelationKey = string | number;
 
 export type ReadRelationKeyFn<T> = (model: T) => RelationKey;
 export type ReadRelationModelTypeFn<T> = (model: T) => RelationModelType;
@@ -263,11 +263,11 @@ export class ModelRelationUtility {
     }
   }
 
-  static removeKeysFromCollection<T extends RelationObject>(current: Maybe<T[]>, keysToRemove: string[], readKey: ReadRelationKeyFn<T>): T[] {
+  static removeKeysFromCollection<T extends RelationObject>(current: Maybe<T[]>, keysToRemove: RelationKey[], readKey: ReadRelationKeyFn<T>): T[] {
     return ModelRelationUtility.removeDuplicates(current, readKey, keysToRemove);
   }
 
-  static removeDuplicates<T>(relations: Maybe<T[]>, readKey: ReadRelationKeyFn<T>, additionalKeys: string[] = []): T[] {
+  static removeDuplicates<T>(relations: Maybe<T[]>, readKey: ReadRelationKeyFn<T>, additionalKeys: RelationKey[] = []): T[] {
     return relations?.length ? filterUniqueValues(relations, readKey, additionalKeys) : [];
   }
 

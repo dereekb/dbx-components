@@ -1,5 +1,5 @@
 import { range } from '../array/array.number';
-import { findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction, stepsFromIndexFunction, wrapIndexRangeFunction } from './indexed';
+import { computeNextFreeIndexFunction, findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, minAndMaxIndexFunction, minAndMaxIndexItemsFunction, sortAscendingIndexNumberRefFunction, stepsFromIndexFunction, wrapIndexRangeFunction } from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {
@@ -11,6 +11,92 @@ describe('sortAscendingIndexNumberRefFunction()', () => {
       items.sort(sortAscendingIndexNumberRefFunction());
 
       expect(items[0].i).toBe(0);
+    });
+  });
+});
+
+describe('computeNextFreeIndexFunction()', () => {
+  describe('function', () => {
+    const fn = computeNextFreeIndexFunction<IndexRef>((x) => x.i);
+
+    it('should return 0 if the input is empty', () => {
+      const items: IndexRef[] = [];
+      const result = fn(items);
+      expect(result).toBe(0);
+    });
+
+    it('should return the next index', () => {
+      const min = 0;
+      const max = 5;
+      const expectedNextIndex = max + 1;
+      const items = range(min, max + 1).map((i) => ({ i }));
+      const result = fn(items);
+
+      expect(result).toBe(expectedNextIndex);
+    });
+  });
+});
+
+describe('minAndMaxIndexFunction()', () => {
+  describe('function', () => {
+    const fn = minAndMaxIndexFunction<IndexRef>((x) => x.i);
+
+    it('should return null if the input is empty.', () => {
+      const items: IndexRef[] = [];
+      const result = fn(items);
+      expect(result).toBeNull();
+    });
+
+    it('should return the min and max index of a single item', () => {
+      const min = 0;
+      const max = min;
+      const items = range(min, max + 1).map((i) => ({ i }));
+      const result = fn(items);
+
+      expect(result?.min).toBe(min);
+      expect(result?.max).toBe(max);
+    });
+
+    it('should return the min and max index', () => {
+      const min = 0;
+      const max = 5;
+      const items = range(min, max + 1).map((i) => ({ i }));
+      const result = fn(items);
+
+      expect(result?.min).toBe(min);
+      expect(result?.max).toBe(max);
+    });
+  });
+});
+
+describe('minAndMaxIndexItemsFunction()', () => {
+  describe('function', () => {
+    const fn = minAndMaxIndexItemsFunction<IndexRef>((x) => x.i);
+
+    it('should return null if the input is empty.', () => {
+      const items: IndexRef[] = [];
+      const result = fn(items);
+      expect(result).toBeNull();
+    });
+
+    it('should return the min and max index of a single item', () => {
+      const min = 0;
+      const max = min;
+      const items = range(min, max + 1).map((i) => ({ i }));
+      const result = fn(items);
+
+      expect(result?.min.i).toBe(min);
+      expect(result?.max.i).toBe(max);
+    });
+
+    it('should return the min and max index', () => {
+      const min = 0;
+      const max = 5;
+      const items = range(min, max + 1).map((i) => ({ i }));
+      const result = fn(items);
+
+      expect(result?.min.i).toBe(min);
+      expect(result?.max.i).toBe(max);
     });
   });
 });

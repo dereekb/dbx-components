@@ -139,6 +139,12 @@ export function sumOfIntegersBetween(from: number, to: number): number {
 
 export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => a - b;
 
+/**
+ * Returns the min and max values from the input numbers.
+ *
+ * @param values
+ * @returns
+ */
 export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResult<number> {
   return minAndMaxFunction(sortCompareNumberFunction)(values);
 }
