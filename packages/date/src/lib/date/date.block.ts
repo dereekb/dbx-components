@@ -1067,7 +1067,7 @@ export function dateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>
   return blocks.filter(dateBlockIsWithinDateBlockRange);
 }
 
-export type IsDateBlockWithinDateBlockRangeInput = DateBlockIndex | DateBlock | DateBlockRange;
+export type IsDateBlockWithinDateBlockRangeInput = DateBlockOrDateBlockIndexOrDateBlockRange;
 
 /**
  * Function that returns true if the input range is equal or falls within the configured DateBlockRange.
@@ -1169,7 +1169,7 @@ export function isDateWithinDateBlockRangeFunction(config: IsDateWithinDateBlock
   const isDateBlockWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(rangeInput);
 
   return (input: IsDateWithinDateBlockRangeInput) => {
-    let range: DateBlockIndex | DateBlock | DateBlockRange;
+    let range: DateBlockOrDateBlockIndexOrDateBlockRange;
 
     if (isDate(input)) {
       range = indexFactory(input);
@@ -1214,6 +1214,11 @@ export class DateBlockRange extends DateBlock {
     }
   }
 }
+
+/**
+ * A DateBlockIndex, DateBlock, or DateBlockRange
+ */
+export type DateBlockOrDateBlockIndexOrDateBlockRange = DateBlockIndex | DateBlock | DateBlockRange;
 
 /**
  * Returns true if the input is a valid DateBlockRange.
@@ -1324,7 +1329,7 @@ export function dateBlockRangeWithRangeFromIndex(dateBlockIndex: DateBlockIndex)
  * @param input
  * @returns
  */
-export function dateBlockRangeWithRange(input: DateBlockIndex | DateBlock | DateBlockRange): DateBlockRangeWithRange {
+export function dateBlockRangeWithRange(input: DateBlockOrDateBlockIndexOrDateBlockRange): DateBlockRangeWithRange {
   if (typeof input === 'number') {
     return dateBlockRangeWithRangeFromIndex(input);
   } else {
@@ -1335,7 +1340,7 @@ export function dateBlockRangeWithRange(input: DateBlockIndex | DateBlock | Date
 /**
  * Function that returns true if the input range covers the full range of the configured DateBlockRange.
  */
-export type DateBlockRangeIncludedByRangeFunction = (range: DateBlockRangeWithRange) => boolean;
+export type DateBlockRangeIncludedByRangeFunction = (range: DateBlockOrDateBlockIndexOrDateBlockRange) => boolean;
 
 /**
  * Creates a DateBlockRangeIncludedByRangeFunction
@@ -1343,10 +1348,42 @@ export type DateBlockRangeIncludedByRangeFunction = (range: DateBlockRangeWithRa
  * @param inputRange
  * @returns
  */
-export function dateBlockRangeIncludedByRangeFunction(inputRange: DateBlockRange): DateBlockRangeIncludedByRangeFunction {
-  const i = inputRange.i;
-  const to = inputRange.to ?? i;
-  return (range) => range.i <= i && range.to >= to;
+export function dateBlockRangeIncludedByRangeFunction(inputRange: DateBlockOrDateBlockIndexOrDateBlockRange): DateBlockRangeIncludedByRangeFunction {
+  const { i, to } = dateBlockRangeWithRange(inputRange);
+  return (input) => {
+    const range = dateBlockRangeWithRange(input);
+    return range.i <= i && (range?.to ?? range.i) >= to;
+  };
+}
+
+/**
+ * Function that returns true if the input range overlaps the range of the configured DateBlockRange.
+ */
+export type DateBlockRangeOverlapsRangeFunction = (range: DateBlockOrDateBlockIndexOrDateBlockRange) => boolean;
+
+/**
+ * Creates a DateBlockRangeOverlapsRangeFunction
+ *
+ * @param inputRange
+ * @returns
+ */
+export function dateBlockRangeOverlapsRangeFunction(inputRange: DateBlockOrDateBlockIndexOrDateBlockRange): DateBlockRangeOverlapsRangeFunction {
+  const { i, to } = dateBlockRangeWithRange(inputRange);
+  return (input) => {
+    const range = dateBlockRangeWithRange(input);
+    return range.i <= to && (range?.to ?? range.i) >= i;
+  };
+}
+
+/**
+ * Returns true if either of the ranges overlap eachother.
+ *
+ * @param rangeA
+ * @param rangeB
+ * @returns
+ */
+export function dateBlockRangeOverlapsRange(rangeA: DateBlockOrDateBlockIndexOrDateBlockRange, rangeB: DateBlockOrDateBlockIndexOrDateBlockRange): boolean {
+  return dateBlockRangeOverlapsRangeFunction(rangeA)(rangeB);
 }
 
 /**
@@ -1931,6 +1968,8 @@ export type ModifyDateBlocksToFitRangeFunction = <B extends DateBlock | DateBloc
 export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): ModifyDateBlocksToFitRangeFunction {
   const { i, to } = dateBlockRangeWithRange(range);
   const dateBlockIsWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(range);
+  const overlapsRange = dateBlockRangeOverlapsRangeFunction(range);
+
   return <B extends DateBlock | DateBlockRange | UniqueDateBlock>(input: B[]) =>
     filterMaybeValues(
       input.map((x) => {
@@ -1938,9 +1977,13 @@ export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): Modif
 
         const inRange = dateBlockIsWithinDateBlockRange(x);
 
-        if (!inRange) {
+        if (inRange) {
+          // if contained within the range then return as-is
+          result = x;
+        } else {
+          // fit to the range otherwise
           const asRange = dateBlockRangeWithRange(x);
-          const rangesOverlap = asRange.i <= to && asRange.to >= i;
+          const rangesOverlap = overlapsRange(asRange);
 
           if (rangesOverlap) {
             result = {
@@ -1949,8 +1992,6 @@ export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): Modif
               to: Math.min(to, asRange.to) // should be no larger than to
             };
           }
-        } else {
-          result = x;
         }
 
         return result;

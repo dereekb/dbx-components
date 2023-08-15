@@ -2,7 +2,7 @@ import { findValuesFrom, FindValuesFromInput } from '../set/set';
 import { ArrayOrValue, asArray, lastValue } from '../array/array';
 import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
-import { reverseCompareFn, SortCompareFunction } from '../sort';
+import { MinAndMax, MinAndMaxFunction, minAndMaxFunction, MinAndMaxFunctionResult, reverseCompareFn, SortCompareFunction } from '../sort';
 import { FactoryWithRequiredInput } from '../getter/getter';
 import { Maybe } from './maybe.type';
 import { separateValues } from '../grouping';
@@ -128,6 +128,88 @@ export function indexDeltaGroup<T>(readIndex: ReadMaybeIndexFunction<T>, inputIt
  */
 export function sortByIndexAscendingCompareFunction<T>(readIndex: ReadIndexFunction<T>): SortCompareFunction<T> {
   return (a, b) => readIndex(a) - readIndex(b);
+}
+
+/**
+ * Computes the next free index given the input values.
+ */
+export type ComputeNextFreeIndexFunction<T> = (values: T[]) => IndexNumber;
+
+/**
+ * Creates a new ComputeNextFreeIndexFunction.
+ */
+export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>, nextIndex?: (value: T) => IndexNumber): ComputeNextFreeIndexFunction<T> {
+  const findMinMax = minAndMaxIndexItemsFunction<T>(readIndex);
+  const readNextIndex = nextIndex ?? ((x) => readIndex(x) + 1); //return the max index + 1 by default.
+
+  return (values: T[]) => {
+    const minMax = findMinMax(values);
+    const max = minMax?.max;
+
+    if (max != null) {
+      return readNextIndex(max);
+    } else {
+      return 0;
+    }
+  };
+}
+
+/**
+ * Reads the min and max index from the input values.
+ */
+export type MinAndMaxIndexFunction<T> = ((values: Iterable<T>) => MinAndMaxFunctionResult<IndexNumber>) & {
+  readonly _readIndex: ReadIndexFunction<T>;
+};
+
+/**
+ * Returns a MinAndMaxIndexFunction.
+ *
+ * @param readIndex
+ * @returns
+ */
+export function minAndMaxIndexFunction<T>(readIndex: ReadIndexFunction<T>): MinAndMaxIndexFunction<T> {
+  const minAndMaxItems = minAndMaxIndexItemsFunction(readIndex);
+  const fn = ((values: T[]) => {
+    const result = minAndMaxItems(values);
+
+    if (result != null) {
+      const { min, max } = result;
+      return { min: readIndex(min), max: readIndex(max) };
+    } else {
+      return null;
+    }
+  }) as Building<MinAndMaxIndexFunction<T>>;
+  fn._readIndex = readIndex;
+  return fn as MinAndMaxIndexFunction<T>;
+}
+
+/**
+ * Returns the min and max index value from the input IndexRef values.
+ *
+ * @param values
+ * @returns
+ */
+export function minAndMaxIndex<T extends IndexRef>(values: T[]): MinAndMaxFunctionResult<IndexNumber> {
+  return minAndMaxIndexFunction<T>(readIndexNumber)(values);
+}
+
+/**
+ * Reads the items with the min and max index from the input values.
+ */
+export type MinAndMaxIndexItemsFunction<T> = MinAndMaxFunction<T> & {
+  readonly _readIndex: ReadIndexFunction<T>;
+};
+
+/**
+ * Returns a MinAndMaxIndexItemsFunction.
+ *
+ * @param readIndex
+ * @returns
+ */
+export function minAndMaxIndexItemsFunction<T>(readIndex: ReadIndexFunction<T>): MinAndMaxIndexItemsFunction<T> {
+  const fn = minAndMaxFunction(readIndex) as Building<MinAndMaxIndexItemsFunction<T>>;
+  fn._readIndex = readIndex;
+  return fn as MinAndMaxIndexItemsFunction<T>;
 }
 
 /**

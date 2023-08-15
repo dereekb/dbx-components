@@ -48,7 +48,8 @@ import {
   getCurrentDateBlockTimingUtcData,
   getCurrentDateBlockTimingOffsetData,
   dateBlockTimingStartForNowInSystemTimezone,
-  timingIsInExpectedTimezone
+  timingIsInExpectedTimezone,
+  dateBlockRangeOverlapsRangeFunction
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
@@ -1672,6 +1673,38 @@ describe('dateBlockRangeIncludedByRangeFunction()', () => {
     it('should return false for a range that is partial and bigger and does not include the full range.', () => {
       const result = fn(dateBlockRange(6, 12));
       expect(result).toBe(false);
+    });
+  });
+});
+
+describe('dateBlockRangeOverlapsRangeFunction()', () => {
+  describe('function', () => {
+    const range = dateBlockRange(5, 10);
+    const fn = dateBlockRangeOverlapsRangeFunction(range);
+
+    it('should return true for the same range.', () => {
+      const result = fn(range);
+      expect(result).toBe(true);
+    });
+
+    it('should return true for a range that is larger and includes the full range.', () => {
+      const result = fn(dateBlockRange(2, 12));
+      expect(result).toBe(true);
+    });
+
+    it('should return false for a range that is smaller and does not overlap.', () => {
+      const result = fn(dateBlockRange(1, 4));
+      expect(result).toBe(false);
+    });
+
+    it('should return true for a range that has a partial overlap.', () => {
+      const result = fn(dateBlockRange(5, 8));
+      expect(result).toBe(true);
+    });
+
+    it('should return true for a range that is partial and bigger and does not include the full range.', () => {
+      const result = fn(dateBlockRange(6, 12));
+      expect(result).toBe(true);
     });
   });
 });

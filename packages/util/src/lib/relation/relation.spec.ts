@@ -1,9 +1,9 @@
 import { ModelKey, ModelTypeString } from '../model/model';
-import { ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange, RelationModelType } from './relation';
+import { ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange, RelationKey, RelationModelType } from './relation';
 
 class RelationTag {
   type: ModelTypeString;
-  key: ModelKey;
+  key: RelationKey;
 
   constructor(template: RelationTag) {
     this.type = template.type;
@@ -15,7 +15,7 @@ function READ_RELATION_TAG_TYPE<T extends RelationTag>(model: T): RelationModelT
   return model.type;
 }
 
-function READ_RELATION_KEY<T extends RelationTag>(model: T): RelationModelType {
+function READ_RELATION_KEY<T extends RelationTag>(model: T): RelationKey {
   return model.key;
 }
 
