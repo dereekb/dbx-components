@@ -1033,7 +1033,9 @@ export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange):
  * @param fitToTimingRange
  */
 export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTimingRangeInput, fitToTimingRange = true): DateBlockIndexRange {
-  const { start: zeroDate, end: endDate } = timing;
+  const { originalUtcDate: zeroDate } = getCurrentDateBlockTimingUtcData(timing);
+  const { end: endDate } = timing;
+
   let minIndex = 0;
   let maxIndex = differenceInDays(endDate, zeroDate) + 1;
 

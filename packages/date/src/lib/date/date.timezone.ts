@@ -1,4 +1,4 @@
-import { addMilliseconds, minutesToHours } from 'date-fns';
+import { addMilliseconds, addMinutes, minutesToHours } from 'date-fns';
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, minutesToMs } from './date';
@@ -435,6 +435,14 @@ export function copyHoursAndMinutesFromDatesWithTimezoneNormal(input: Date, copy
   const inputInSystemTimezone = timezoneInstance.systemDateToTargetDate(input);
   const copyFromInSystemTimezone = timezoneInstance.systemDateToTargetDate(copyFrom);
 
-  const copiedInSystemTimezone = copyHoursAndMinutesFromDate(inputInSystemTimezone, copyFromInSystemTimezone);
-  return timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
+  // handle the potential system date time offset when the system's timezone offset changes between dates...
+  const inputInSystemTimezoneOffset = inputInSystemTimezone.getTimezoneOffset();
+  const copyFromInSystemTimezoneOffset = copyFromInSystemTimezone.getTimezoneOffset();
+  const offsetDifference = inputInSystemTimezoneOffset - copyFromInSystemTimezoneOffset;
+
+  // copy the minutes then add the offset difference to get the appropriate time.
+  const copiedInSystemTimezone = addMinutes(copyHoursAndMinutesFromDate(inputInSystemTimezone, copyFromInSystemTimezone), offsetDifference);
+
+  const result = timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
+  return result;
 }
