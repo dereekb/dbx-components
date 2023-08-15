@@ -1,5 +1,5 @@
 import { set } from 'date-fns';
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix } from './url';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths } from './url';
 
 const domain = 'dereekb.com';
 
@@ -22,6 +22,47 @@ describe('hasWebsiteDomain()', () => {
   it('should return false for strings without a tld', () => {
     const result = hasWebsiteDomain('dereekb');
     expect(result).toBe(false);
+  });
+});
+
+describe('baseWebsiteUrl()', () => {
+  it('should return the base url from a website url', () => {
+    const expected = 'https://dereekb.com';
+    const result = baseWebsiteUrl(expected);
+    expect(result).toBe(expected);
+  });
+
+  it('should return the base url from a website url with an ending slash', () => {
+    const expected = 'https://dereekb.com/';
+    const result = baseWebsiteUrl(expected);
+    expect(result).toBe(expected);
+  });
+
+  it('should return the base url from a website domain', () => {
+    const domain = 'dereekb.com';
+    const expected = `https://${domain}`;
+    const result = baseWebsiteUrl(domain);
+    expect(result).toBe(expected);
+  });
+});
+
+describe('websiteUrlFromPaths()', () => {
+  it('should create a full url from a base path', () => {
+    const baseUrl = 'https://dereekb.com';
+    const path = '/hello/world';
+
+    const expected = `${baseUrl}${path}`;
+    const result = websiteUrlFromPaths(baseUrl, path);
+    expect(result).toBe(expected);
+  });
+
+  it('should create a full url from a base path with a slash', () => {
+    const baseUrl = 'https://dereekb.com';
+    const path = '/hello/world';
+
+    const expected = `${baseUrl}${path}`;
+    const result = websiteUrlFromPaths(baseUrl + '/', path);
+    expect(result).toBe(expected);
   });
 });
 

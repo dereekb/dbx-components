@@ -1,7 +1,8 @@
+import { ArrayOrValue, asArray } from '../array/array';
 import { EmailAddress } from '../contact/email';
 import { E164PhoneNumber, E164PhoneNumberExtensionPair, E164PhoneNumberWithExtension, E164PhoneNumberWithOptionalExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
-import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
+import { isolateSlashPathFunction, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 import { escapeStringForRegex, findAllCharacterOccurences } from './replace';
@@ -53,8 +54,37 @@ export function hasWebsiteDomain(input: string): input is WebsiteDomain {
 
 /**
  * A website url that starts with http:// or https://
+ *
+ * May or may not end with a slash.
  */
 export type BaseWebsiteUrl<D extends WebsiteDomain = WebsiteDomain> = `http://${D}` | `https://${D}`;
+
+/**
+ * Input for baseWebsiteUrl()
+ */
+export type BaseWebsiteUrlInput = string | WebsiteUrl | WebsiteDomain;
+
+/**
+ * Creates a base website url from the input domain or url.
+ *
+ * @param input
+ * @returns
+ */
+export function baseWebsiteUrl(input: BaseWebsiteUrlInput, defaultTld = 'com'): BaseWebsiteUrl {
+  let base: BaseWebsiteUrl;
+
+  if (hasHttpPrefix(input)) {
+    base = input;
+  } else {
+    base = addHttpToUrl(input);
+  }
+
+  if (!hasWebsiteDomain(base)) {
+    base = `${base}.${defaultTld || 'com'}`;
+  }
+
+  return base;
+}
 
 /**
  * A website url. Is at minimum a domain.
@@ -86,6 +116,17 @@ export type WebsiteDomainAndPath = string;
  * - /doc/home?test=true
  */
 export type WebsitePath = `/${string}`;
+
+/**
+ * Creates a WebsiteUrl from the input
+ * @param basePath
+ * @param paths
+ * @returns
+ */
+export function websiteUrlFromPaths(basePath: BaseWebsiteUrlInput, paths: ArrayOrValue<Maybe<WebsitePath>>): WebsiteUrl {
+  const basePathWithoutHttp = removeHttpFromUrl(baseWebsiteUrl(basePath));
+  return addHttpToUrl(mergeSlashPaths([basePathWithoutHttp, ...asArray(paths)]));
+}
 
 /**
  * Any query parameters that follow the path.
