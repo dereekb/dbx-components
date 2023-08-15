@@ -1,5 +1,6 @@
-import { convertMailgunTemplateEmailRequestToMailgunMessageData } from './mailgun';
+import { convertMailgunTemplateEmailRequestToMailgunMessageData, MailgunTemplateEmailRequest, MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY } from './mailgun';
 
+const replyToEmail = 'test.support@dereekb.com';
 const testEmail = 'test.components@dereekb.com';
 const testEmail2 = 'test2.components@dereekb.com';
 const templateName = 'test';
@@ -15,6 +16,9 @@ describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
       it('should encode the template variables properly.', () => {
         const request = {
           subject: 'Reset Your Dbx Components Password Requeset',
+          replyTo: {
+            email: replyToEmail
+          },
           to: {
             email: testEmail,
             name: 'Test'
@@ -47,6 +51,9 @@ describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
 
         // date is saved as an ISOString
         expect(result['v:date']).toBe(request.templateVariables.date.toISOString());
+
+        // check replyto is also set
+        expect(result[MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY]).toBe(replyToEmail);
       });
     });
   });
@@ -55,7 +62,7 @@ describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
     const overrideValue = 'o';
     const mergedValue = 'm';
 
-    const request = {
+    const request: MailgunTemplateEmailRequest = {
       to: [
         {
           email: testEmail,
@@ -72,6 +79,9 @@ describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
           }
         }
       ],
+      replyTo: {
+        email: replyToEmail
+      },
       subject: 'test',
       template: templateName,
       templateVariables: {
@@ -119,6 +129,15 @@ describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
       });
 
       expect(result[`v:${recipientVariablePrefix}value`]).toBe(`%recipient.value%`);
+    });
+
+    it('should add the replyTo email to the data.', () => {
+      const result = convertMailgunTemplateEmailRequestToMailgunMessageData({
+        request,
+        defaultSender: 'test.sender@dereekb.com'
+      });
+
+      expect(result[MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY]).toBe(replyToEmail);
     });
   });
 });
