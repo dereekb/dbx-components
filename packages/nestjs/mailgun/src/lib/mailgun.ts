@@ -11,8 +11,21 @@ export interface MailgunRecipient extends NameEmailPair {
 }
 
 export interface MailgunEmailRequest {
+  /**
+   * Customzie who the email is from.
+   */
   from?: MailgunRecipient;
+  /**
+   * Customize who to reply to.
+   */
+  replyTo?: MailgunRecipient;
+  /**
+   * Recipients of the email.
+   */
   to: ArrayOrValue<MailgunRecipient>;
+  /**
+   * Email subject
+   */
   subject: string;
 }
 
@@ -61,6 +74,7 @@ export type MailgunEmailMessageSendResult = MessagesSendResult;
 export type MailgunAPIResponse = APIResponse;
 
 export const DEFAULT_RECIPIENT_VARIABLE_PREFIX = 'recipient-';
+export const MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY = `h:Reply-To`;
 
 export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig {
   readonly request: MailgunTemplateEmailRequest;
@@ -83,6 +97,10 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
     template: request.template,
     ...request.messageData
   };
+
+  if (request.replyTo != null) {
+    data[MAILGUN_REPLY_TO_EMAIL_HEADER_DATA_VARIABLE_KEY] = convertMailgunRecipientToString(request.replyTo);
+  }
 
   if (request.testEmail === true || ((testEnvironment ?? isTestNodeEnv()) && request.testEmail !== false)) {
     data['o:testmode'] = true;
