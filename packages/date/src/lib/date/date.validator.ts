@@ -15,7 +15,7 @@ export function IsValidDateBlockTiming(validationOptions?: ValidationOptions) {
       validator: {
         validate: isValidDateBlockTiming,
         defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a valid DateBlockTiming.`;
+          return `"${JSON.stringify(args.value)}" is not a valid DateBlockTiming.`;
         }
       }
     });
@@ -35,7 +35,7 @@ export function IsValidDateBlockRange(validationOptions?: ValidationOptions) {
       validator: {
         validate: isValidDateBlockRange,
         defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a valid DateBlockRange.`;
+          return `"${JSON.stringify(args.value)}" is not a valid DateBlockRange.`;
         }
       }
     });
@@ -55,7 +55,7 @@ export function IsValidDateBlockRangeSeries(validationOptions?: ValidationOption
       validator: {
         validate: isValidDateBlockRangeSeries,
         defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a valid DateBlockRange series. Items must be sorted in ascending order and have no repeat indexes.`;
+          return `"${JSON.stringify(args.value)}" is not a valid DateBlockRange series. Items must be sorted in ascending order and have no repeat indexes.`;
         }
       }
     });
