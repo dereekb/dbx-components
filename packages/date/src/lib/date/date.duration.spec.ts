@@ -1,4 +1,4 @@
-import { plainToClass } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { DateBlockTiming, dateBlockTiming } from './date.block';
 
 describe('DateBlockTiming', () => {
@@ -6,7 +6,7 @@ describe('DateBlockTiming', () => {
     const data = dateBlockTiming({ startsAt: new Date(), duration: 60 }, 10);
     const json: object = JSON.parse(JSON.stringify(data));
 
-    const result = plainToClass(DateBlockTiming, json, {
+    const result = plainToInstance(DateBlockTiming, json, {
       excludeExtraneousValues: true
     });
 

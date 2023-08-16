@@ -1,5 +1,5 @@
 import { ClassType } from '@dereekb/util';
-import { ClassTransformOptions, plainToClass } from 'class-transformer';
+import { ClassTransformOptions, plainToInstance } from 'class-transformer';
 import { validate, ValidationError, ValidationOptions } from 'class-validator';
 
 // MARK: Transform and Validate Object
@@ -113,7 +113,7 @@ export function transformAndValidateObjectResult<T extends object, O, I extends 
   return async (input: I, context?: C) => {
     const { transform: transformOptions, validate: validateOptions } = optionsForContext(context);
 
-    const object: T = plainToClass(classType, input, {
+    const object: T = plainToInstance(classType, input, {
       ...transformOptions,
       // Note: Each variable on the target class must be marked with the @Expose() annotation.
       excludeExtraneousValues: true

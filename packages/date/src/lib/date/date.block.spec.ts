@@ -815,6 +815,18 @@ describe('dateBlockTiming()', () => {
       });
     });
 
+    describe('August 21 Midnight UTC', () => {
+      it('should generate the correct timing when inputting the range of days.', () => {
+        const startsAt = new Date('2023-08-21T00:00:00.000Z'); // 08-20-23 7PM CDT, should be for 08-20-23 UTC
+        const duration = 540;
+
+        const weekTiming = dateBlockTiming({ startsAt, duration }, 13); // Sunday-Saturday
+
+        expect(isValidDateBlockTiming(weekTiming)).toBe(true);
+        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
+      });
+    });
+
     describe('Sun Nov 6, 5:04PM', () => {
       it('should generate the correct timing for a single day.', () => {
         const now = systemNormalDateToBaseDate(new Date('2022-11-06T17:04:41.134Z')); // Sunday, Nov 6th, 5:04PM
@@ -850,7 +862,7 @@ describe('isValidDateBlockTiming()', () => {
   });
 
   it('should return false if the starts time has milliseconds.', () => {
-    const invalidTiming: DateBlockTiming = { ...validTiming, start: addMilliseconds(validTiming.start, 10) };
+    const invalidTiming: DateBlockTiming = { ...validTiming, start: addMilliseconds(validTiming.start, 30) };
     const isValid = isValidDateBlockTiming(invalidTiming);
     expect(isValid).toBe(false);
   });
@@ -891,6 +903,32 @@ describe('isValidDateBlockTiming()', () => {
   });
 
   describe('scenario', () => {
+    describe('valid timings', () => {
+      it('august 6 to august 21 2023', () => {
+        const timing = {
+          duration: 540,
+          start: new Date('2023-08-06T04:00:00.000Z'),
+          startsAt: new Date('2023-08-07T00:00:00.000Z'), // should be a 24 hour difference (invalid)
+          end: new Date('2023-08-21T09:00:00.000Z')
+        };
+
+        const isValid = isValidDateBlockTiming(timing);
+        expect(isValid).toBe(true);
+      });
+
+      it('august 15 to december 21 2023', () => {
+        const timing = {
+          start: new Date('2023-08-15T05:00:00.000Z'),
+          end: new Date('2023-12-21T22:30:00.000Z'),
+          startsAt: new Date('2023-08-15T13:30:00.000Z'),
+          duration: 480
+        };
+
+        const isValid = isValidDateBlockTiming(timing);
+        expect(isValid).toBe(true);
+      });
+    });
+
     describe('daylight savings changes', () => {
       /**
        * Illustrates the effects of daylight savings changes
@@ -1533,8 +1571,7 @@ describe('dateBlockIndexRange()', () => {
       expect(result.maxIndex).toBe(days);
     });
 
-    /*
-    it('should return a zero range if the end is the same time as the start in limit', () => {
+    it('should return a zero range (maxIndex is exclusive) if the end is the same time as the start in limit', () => {
       const days = 1;
       const timing = dateBlockTiming({ startsAt: start, duration }, days);
 
@@ -1544,11 +1581,10 @@ describe('dateBlockIndexRange()', () => {
       };
 
       const result = dateBlockIndexRange(timing, limit);
-  
+
       expect(result.minIndex).toBe(0);
-      expect(result.maxIndex).toBe(0);
+      expect(result.maxIndex).toBe(1);
     });
-    */
 
     it('should limit a two day timing to a single day', () => {
       const days = 2;

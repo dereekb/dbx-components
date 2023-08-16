@@ -30,11 +30,12 @@ import {
   Building,
   addToSet,
   ISO8601DayString,
-  Minutes
+  Minutes,
+  MS_IN_HOUR
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDatesWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
@@ -628,7 +629,8 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
 
   if (typeof inputRange === 'number') {
     numberOfBlockedDays = inputRange - 1;
-    range = dateRange({ type: DateRangeType.DAY, date: startsAt, distance: numberOfBlockedDays });
+
+    range = dateRange({ type: DateRangeType.DAY, date: startsAt });
   } else if (isDateRange(inputRange)) {
     range = inputRange;
     inputDate = inputRange.start;
@@ -641,7 +643,7 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
   } else {
     inputDate = startsAt; // TODO: May not be needed?
     numberOfBlockedDays = inputRange.distance - 1;
-    range = dateRange({ type: DateRangeType.DAY, date: inputDate, distance: inputRange.distance }, true);
+    range = dateRange({ type: DateRangeType.DAY, date: inputDate }, true);
   }
 
   if (inputDate != null) {
@@ -697,43 +699,81 @@ export function dateBlockTimingInTimezone(durationInput: DateDurationSpan, input
   return dateBlockTimingInTimezoneFunction(timezone)(durationInput, inputRange);
 }
 
-/**
- *
- * @param timing
- * @returns
- */
-export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
-  const { end, startsAt, duration } = timing;
+export interface IsValidDateBlockTimingInfo {
+  readonly isValid: boolean;
+  readonly isStartRoundedToSeconds: boolean;
+  readonly msDifference: boolean;
+  readonly endIsAfterTheStartsAtTime: boolean;
+  readonly durationLessThan24Hours: boolean;
+  readonly startHasZeroSeconds: boolean;
+  readonly startsAtIsAfterStart: boolean;
+  readonly startsAtIsLessThan24HoursAfterStart: boolean;
+  readonly isExpectedValidEnd: boolean;
+  readonly isPlausiblyValidEnd: boolean;
+}
+
+export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: TimezoneString) {
+  const { end, start, startsAt, duration } = timing;
 
   const {
-    offset,
     currentTimezoneOffsetInHours: startOffsetInHours // offset as computed on the given date.
   } = getCurrentDateBlockTimingOffsetData(timing);
 
-  /**
-   * Use the startNormal, as the startsAt time is in the correct UTC date for the expected first time, but the start must be normalized to the system time before it can be used.
-   */
-  const startNormal = addMilliseconds(timing.start, offset);
-  const msDifference = differenceInMilliseconds(startsAt, startNormal);
-  const hasSeconds = startNormal.getSeconds() !== 0;
+  const isStartRoundedToSeconds = start.getMilliseconds() === 0; // should have no milliseconds specified
+  const msDifference = differenceInMilliseconds(startsAt, start); // startsAt is a specific instance to compare to the midnight instant of the target timezone
+
+  const endIsAfterTheStartsAtTime = isAfter(end, startsAt);
+  const durationLessThan24Hours = duration <= MINUTES_IN_DAY;
+  const startHasZeroSeconds = start.getSeconds() === 0;
+  const startsAtIsAfterStart = msDifference >= 0;
+  const startsAtIsLessThan24HoursAfterStart = msDifference < MS_IN_DAY;
 
   let isValid: boolean = false;
 
+  let isExpectedValidEnd = false;
+  let isPlausiblyValidEnd = false;
+
   if (
-    isAfter(end, startsAt) && // end must be after the startsAt time
-    duration <= MINUTES_IN_DAY &&
-    !hasSeconds && // start cannot have seconds
-    msDifference >= 0 && // startsAt is after secondsDifference
-    msDifference < MS_IN_DAY // startsAt is not more than 24 hours later
+    isStartRoundedToSeconds &&
+    endIsAfterTheStartsAtTime && // end must be after the startsAt time
+    durationLessThan24Hours &&
+    startHasZeroSeconds && // start cannot have seconds
+    startsAtIsAfterStart && // startsAt is after start instance, secondsDifference
+    startsAtIsLessThan24HoursAfterStart // startsAt is not 24 hours or more later. If so, should start at that time instead.
   ) {
     const endOffset = getCurrentSystemOffsetInHours(timing.end);
     const timezoneOffsetDelta = endOffset - startOffsetInHours;
 
     const expectedFinalStartTime = addHours(addMinutes(end, -duration), timezoneOffsetDelta);
     const difference = differenceInMilliseconds(startsAt, expectedFinalStartTime) % MS_IN_DAY;
-    isValid = difference === 0; // && isExpectedEndTime;
+
+    isExpectedValidEnd = difference === 0;
+    isPlausiblyValidEnd = isExpectedValidEnd || Math.abs(difference) === MS_IN_HOUR;
+
+    isValid = isPlausiblyValidEnd;
   }
 
+  return {
+    isValid,
+    isStartRoundedToSeconds,
+    msDifference,
+    endIsAfterTheStartsAtTime,
+    durationLessThan24Hours,
+    startHasZeroSeconds,
+    startsAtIsAfterStart,
+    startsAtIsLessThan24HoursAfterStart,
+    isExpectedValidEnd,
+    isPlausiblyValidEnd
+  };
+}
+
+/**
+ *
+ * @param timing
+ * @returns
+ */
+export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
+  const { isValid } = isValidDateBlockTimingInfo(timing);
   return isValid;
 }
 
@@ -1033,8 +1073,7 @@ export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange):
  * @param fitToTimingRange
  */
 export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTimingRangeInput, fitToTimingRange = true): DateBlockIndexRange {
-  const { originalUtcDate: zeroDate } = getCurrentDateBlockTimingUtcData(timing);
-  const { end: endDate } = timing;
+  const { start: zeroDate, end: endDate } = timing;
 
   let minIndex = 0;
   let maxIndex = differenceInDays(endDate, zeroDate) + 1;

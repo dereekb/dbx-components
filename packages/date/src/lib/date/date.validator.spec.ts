@@ -1,14 +1,15 @@
 import { Maybe } from '@dereekb/util';
-import { Expose } from 'class-transformer';
+import { Expose, plainToInstance, Type } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
 import { setMinutes, setHours, startOfDay, addSeconds } from 'date-fns';
-import { DateBlockRange, dateBlockTiming, DateBlockTiming } from './date.block';
+import { DateBlockRange, dateBlockTiming, DateBlockTiming, isValidDateBlockTiming } from './date.block';
 import { IsValidDateBlockRange, IsValidDateBlockRangeSeries, IsValidDateBlockTiming } from './date.validator';
 
 class TestDateBlockTimingModelClass {
   @Expose()
   @IsOptional()
   @IsValidDateBlockTiming()
+  @Type(() => DateBlockTiming)
   timing!: Maybe<DateBlockTiming>;
 }
 
@@ -31,6 +32,60 @@ describe('IsValidDateBlockTiming', () => {
 
     const result = await validate(instance);
     expect(result.length).toBe(1);
+  });
+
+  describe('scenario', () => {
+    it('should serialize the value to a valid timing', async () => {
+      const timing = {
+        start: new Date('2023-08-15T05:00:00.000Z'),
+        end: new Date('2023-12-21T22:30:00.000Z'),
+        startsAt: new Date('2023-08-15T13:30:00.000Z'),
+        duration: 480
+      };
+
+      const json = JSON.stringify(timing);
+      const instance = plainToInstance(DateBlockTiming, JSON.parse(json), {
+        excludeExtraneousValues: true
+      });
+
+      const result = await validate(instance);
+      expect(result.length).toBe(0);
+    });
+
+    it('should serialize the august timing value as an invalid timing', async () => {
+      const timing = {
+        duration: 540,
+        start: new Date('2023-08-06T04:00:00.000Z'),
+        startsAt: new Date('2023-08-07T00:00:00.000Z'), // should be a 24 hour difference (invalid)
+        end: new Date('2023-08-21T09:00:00.000Z')
+      };
+
+      const json = JSON.stringify({ timing });
+      const instance = plainToInstance(TestDateBlockTimingModelClass, JSON.parse(json), {
+        excludeExtraneousValues: true
+      });
+
+      const result = await validate(instance);
+      expect(result.length).toBe(0);
+    });
+
+    it('should pass the valid timing', async () => {
+      const timing = {
+        start: new Date('2023-08-15T05:00:00.000Z'),
+        end: new Date('2023-12-21T22:30:00.000Z'),
+        startsAt: new Date('2023-08-15T13:30:00.000Z'),
+        duration: 480
+      };
+
+      const instance = new TestDateBlockTimingModelClass();
+      instance.timing = timing;
+
+      const isValid = isValidDateBlockTiming(timing);
+      expect(isValid).toBe(true);
+
+      const result = await validate(instance);
+      expect(result.length).toBe(0);
+    });
   });
 });
 
