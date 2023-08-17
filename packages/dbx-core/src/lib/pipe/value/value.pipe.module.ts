@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
+import { DollarAmountPipe } from './dollar.pipe';
 import { GetValueOncePipe, GetValuePipe } from './getvalue.pipe';
 
-const declarations = [GetValuePipe, GetValueOncePipe];
+const declarations = [DollarAmountPipe, GetValuePipe, GetValueOncePipe];
 
 @NgModule({
   exports: declarations,

@@ -1,4 +1,5 @@
-import { MINUTES_IN_HOUR, range } from '@dereekb/util';
+import { range } from '../array/array.number';
+import { Hours, Minutes, MINUTES_IN_HOUR } from './date';
 import { computeNextFractionalHour, fractionalHoursToMinutes, hourToFractionalHour, minutesToFractionalHours } from './hour';
 
 describe('fractionalHoursToMinutes()', () => {
