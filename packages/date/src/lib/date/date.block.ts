@@ -31,7 +31,9 @@ import {
   addToSet,
   ISO8601DayString,
   Minutes,
-  MS_IN_HOUR
+  MS_IN_HOUR,
+  minutesToFractionalHours,
+  FractionalHour
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
@@ -261,9 +263,15 @@ export function getDateBlockTimingFirstEventDateRange(timing: Pick<DateBlockTimi
   return fitDateRangeToDayPeriod({ start: timing.startsAt, end: timing.end });
 }
 
-export function getDateBlockTimingHoursInEvent(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): Hours {
+/**
+ * Returns the fractional hours in the event.
+ *
+ * @param timing
+ * @returns
+ */
+export function getDateBlockTimingHoursInEvent(timing: Pick<DateBlockTiming, 'startsAt' | 'end'>): FractionalHour {
   const dateRange = getDateBlockTimingFirstEventDateRange(timing);
-  return differenceInHours(dateRange.end, dateRange.start);
+  return minutesToFractionalHours(differenceInMinutes(dateRange.end, dateRange.start));
 }
 
 export type TimingDateTimezoneUtcNormalInput = DateRangeStart | DateTimezoneUtcNormalFunctionInput;
