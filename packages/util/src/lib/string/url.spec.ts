@@ -1,5 +1,5 @@
 import { set } from 'date-fns';
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths } from './url';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths, isWebsiteUrlWithPrefix, isWebsiteUrl } from './url';
 
 const domain = 'dereekb.com';
 
@@ -43,6 +43,50 @@ describe('baseWebsiteUrl()', () => {
     const expected = `https://${domain}`;
     const result = baseWebsiteUrl(domain);
     expect(result).toBe(expected);
+  });
+});
+
+describe('isWebsiteUrl()', () => {
+  it('should return false for an http prefix with no domain', () => {
+    expect(isWebsiteUrl('https://test')).toBe(false);
+  });
+
+  it('should return false for an non-http prefix with a valid url', () => {
+    expect(isWebsiteUrl('htt://test.com')).toBe(false);
+  });
+
+  it('should return false for a string with a dot', () => {
+    expect(isWebsiteUrl('dereek.')).toBe(false);
+  });
+
+  it('should return true for a valid website url without a prefix', () => {
+    expect(isWebsiteUrl('dereek.com')).toBe(true);
+  });
+
+  it('should return true for a valid website url with a path and query parameters', () => {
+    expect(isWebsiteUrl('dereek.com/test/hello/world?test=1')).toBe(true);
+  });
+
+  it('should return true for a valid website url with a prefix', () => {
+    expect(isWebsiteUrl('https://dereek.com')).toBe(true);
+  });
+
+  it('should return true for a valid website url with a prefix and a path', () => {
+    expect(isWebsiteUrl('https://dereek.com/test/hello/world')).toBe(true);
+  });
+
+  it('should return true for a valid website url with a prefix and a path and query parameters', () => {
+    expect(isWebsiteUrl('https://dereek.com/test/hello/world?test=1')).toBe(true);
+  });
+});
+
+describe('isWebsiteUrlWithPrefix()', () => {
+  it('should return false for a valid website url without the prefix', () => {
+    expect(isWebsiteUrlWithPrefix('dereek.com')).toBe(false);
+  });
+
+  it('should return true for a valid website url with a prefix', () => {
+    expect(isWebsiteUrlWithPrefix('https://dereek.com')).toBe(true);
   });
 });
 

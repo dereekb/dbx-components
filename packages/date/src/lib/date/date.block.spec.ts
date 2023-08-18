@@ -310,6 +310,17 @@ describe('getDateBlockTimingHoursInEvent()', () => {
     const result = getDateBlockTimingHoursInEvent(timing);
     expect(result).toBe(hours);
   });
+
+  describe('hours with fraction', () => {
+    const hours = 4.5;
+    const startsAt = startOfDay(new Date());
+    const timing = dateBlockTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
+
+    it('should return the hours in the timing.', () => {
+      const result = getDateBlockTimingHoursInEvent(timing);
+      expect(result).toBe(hours);
+    });
+  });
 });
 
 describe('dateBlockTimingFromDateRangeAndEvent()', () => {
