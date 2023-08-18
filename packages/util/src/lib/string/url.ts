@@ -1,11 +1,11 @@
 import { ArrayOrValue, asArray } from '../array/array';
 import { EmailAddress } from '../contact/email';
-import { E164PhoneNumber, E164PhoneNumberExtensionPair, E164PhoneNumberWithExtension, E164PhoneNumberWithOptionalExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
+import { E164PhoneNumberExtensionPair, E164PhoneNumberWithOptionalExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
-import { isolateSlashPathFunction, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
+import { isolateSlashPathFunction, isSlashPathFile, isSlashPathFolder, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
-import { escapeStringForRegex, findAllCharacterOccurences } from './replace';
+import { escapeStringForRegex, findAllCharacterOccurences, splitStringAtFirstCharacterOccurence } from './replace';
 import { splitJoinRemainder } from './string';
 import { TransformStringFunction } from './transform';
 import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from './char';
@@ -32,9 +32,9 @@ export type KnownHttpWebsiteProtocol = HttpWebsiteProtocol | HttpsWebsiteProtoco
 export type WebsiteDomain = string;
 
 /**
- * Simple website domain regex that looks for a period between the domain and the tld
+ * Simple website domain regex that looks for a period in the string between the domain and the tld
  */
-export const WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
+export const HAS_WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
 
 /**
  * Returns true if the input probably has a website domain in it.
@@ -49,7 +49,7 @@ export const WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
  * @returns
  */
 export function hasWebsiteDomain(input: string): input is WebsiteDomain {
-  return WEBSITE_DOMAIN_NAME_REGEX.test(input);
+  return HAS_WEBSITE_DOMAIN_NAME_REGEX.test(input);
 }
 
 /**
@@ -93,9 +93,45 @@ export function baseWebsiteUrl(input: BaseWebsiteUrlInput, defaultTld = 'com'): 
  * - dereekb.com
  * - https://components.dereekb.com
  * - https://components.dereekb.com/
- * - https://components.dereekb.com/doc/home
+ * - https://components.dereekb.com/doc/home?
+ * - https://components.dereekb.com/doc/home?test=true&test2=true
  */
 export type WebsiteUrl = string;
+
+/**
+ * Returns true if the input string is probably a website url.
+ *
+ * Checks that it has the http/https prefix, has a domain, and the path is a slash path. The query parameters are ignored.
+ */
+export function isWebsiteUrl(input: string): input is WebsiteUrl {
+  const noHttp = removeHttpFromUrl(input);
+  const splitPair = websiteDomainAndPathPairFromWebsiteUrl(noHttp);
+  const [path, query] = splitStringAtFirstCharacterOccurence(splitPair.path, '?'); // everything after the query is ignored
+  const isWebsiteUrl = hasWebsiteDomain(splitPair.domain) && isSlashPathFolder(path + '/');
+  return isWebsiteUrl;
+}
+
+/**
+ * A website url that starts with the proper http/https prefix.
+ */
+export type WebsiteUrlWithPrefix = string;
+
+/**
+ * Returns true if the input string is probably a website url.
+ *
+ * Checks that it has the http/https prefix, has a domain, and the path is a slash path. The query parameters are ignored.
+ */
+export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrl {
+  let isWebsiteUrlWithPrefix = false;
+
+  const hasPrefix = hasHttpPrefix(input);
+
+  if (hasPrefix) {
+    isWebsiteUrlWithPrefix = isWebsiteUrl(input);
+  }
+
+  return isWebsiteUrlWithPrefix;
+}
 
 /**
  * A website's domain and path combined, without the BaseWebsiteUrl
