@@ -1,6 +1,6 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput, isDateInDateRange } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore, isAfter } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore, isAfter, addBusinessDays, startOfWeek } from 'date-fns';
 import {
   changeTimingToTimezoneFunction,
   DateBlock,
@@ -49,13 +49,15 @@ import {
   getCurrentDateBlockTimingOffsetData,
   dateBlockTimingStartForNowInSystemTimezone,
   timingIsInExpectedTimezone,
-  dateBlockRangeOverlapsRangeFunction
+  dateBlockRangeOverlapsRangeFunction,
+  dateBlockTimingInTimezone
 } from './date.block';
-import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString } from '@dereekb/util';
+import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, systemBaseDateToNormalDate, systemNormalDateToBaseDate, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { formatToISO8601DayString } from './date.format';
+import { DateSchedule, expandDateSchedule } from './date.schedule';
 
 describe('isValidDateBlockIndex()', () => {
   it('should return false for -1.', () => {
@@ -1274,6 +1276,37 @@ describe('dateBlocksDayTimingInfoFactory()', () => {
   });
 
   describe('scenarios', () => {
+    describe('dateBlockDayTimingInfoFactory() comparison', () => {
+      describe('America/New_York timezone past days', () => {
+        const startsAt = startOfWeek(addBusinessDays(new Date(), -6), { weekStartsOn: Day.MONDAY });
+
+        const timezone = 'America/New_York';
+        const testDays = 17;
+        const timing = {
+          start: new Date('2023-08-13T04:00:00.000Z'),
+          end: new Date('2023-08-30T09:00:00.000Z'),
+          startsAt: new Date('2023-08-14T00:00:00.000Z'),
+          duration: 540
+        };
+
+        const s: DateSchedule = { w: '89', ex: range(0, testDays).filter(isOddNumber) };
+
+        it('should expand the same dates', () => {
+          const infoFactory = dateBlockDayTimingInfoFactory({ timing });
+
+          const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+          expandedDays.forEach((x) => {
+            const { i } = x;
+            const info = infoFactory(i);
+
+            const { startsAtOnDay } = info;
+            expect(startsAtOnDay).toBeSameSecondAs(x.startsAt);
+          });
+        });
+      });
+    });
+
     describe('only weekends', () => {
       const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
       const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
