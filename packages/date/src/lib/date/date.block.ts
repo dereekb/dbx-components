@@ -40,7 +40,7 @@ import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDatesWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { parseISO8601DayStringToDate } from './date.format';
 
@@ -306,7 +306,7 @@ export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRang
   const timezoneInstance = timingDateTimezoneUtcNormal(dateBlockTimingStartEndRange);
 
   // compute startsAt, the start time for the first event
-  const startsAt = copyHoursAndMinutesFromDatesWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
+  const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
   const timing = {
     start,
     end,
@@ -368,10 +368,10 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
   const { startsAt: eventStartsAt, duration } = event;
 
   // compute startsAt, the start time for the first event
-  const startsAt = copyHoursAndMinutesFromDatesWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
+  const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
 
   // compute end, the end time for the last event using the last day
-  const end = addMinutes(copyHoursAndMinutesFromDatesWithTimezoneNormal(endDay, eventStartsAt, timezoneInstance), duration);
+  const end = addMinutes(copyHoursAndMinutesFromDateWithTimezoneNormal(endDay, eventStartsAt, timezoneInstance), duration);
 
   const timing = {
     start,
@@ -497,6 +497,7 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
     const baseDiff = differenceInHours(input as Date, startDate);
     const diff = baseDiff + offsetDifferenceHours;
     const daysOffset = Math.floor(diff / 24);
+
     return daysOffset;
   }) as Configurable<Partial<DateTimingRelativeIndexFactory<T>>>;
   factory._timing = timing;
@@ -1016,6 +1017,7 @@ export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFact
   const { startsAt, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
+  const timezoneInstance = timingDateTimezoneUtcNormal(timing);
   const dayIndexFactory = dateTimingRelativeIndexFactory(timing);
   const dayFactory = dateBlockTimingDateFactory(timing);
 
@@ -1026,7 +1028,7 @@ export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFact
 
     const now = inputNow ?? date;
 
-    const startsAtOnDay = copyHoursAndMinutesFromDate(date, startsAt, false);
+    const startsAtOnDay = copyHoursAndMinutesFromDateWithTimezoneNormal(date, startsAt, timezoneInstance); // needs to be back in the target timezone
     const endsAtOnDay = addMinutes(startsAtOnDay, duration);
     const potentiallyInProgress = !isAfter(startsAtOnDay, now); // is potentially in progress if the now is equal-to or after the start time.
 

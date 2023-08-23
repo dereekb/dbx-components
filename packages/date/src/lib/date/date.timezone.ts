@@ -421,7 +421,18 @@ export function startOfDayInTimezoneFromISO8601DayString(day: ISO8601DayString, 
 
 // MARK: Timezone Utilities
 /**
- * Converts the two input dates, which are dates in a different timezone/normal, using the input DateTimezoneUtcNormalFunctionInput.
+ * Convenience function for calling copyHoursAndMinutesFromDatesWithTimezoneNormal() with now.
+ *
+ * @param input
+ * @param timezone
+ * @returns
+ */
+export function copyHoursAndMinutesFromNowWithTimezoneNormal(input: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
+  return copyHoursAndMinutesFromDateWithTimezoneNormal(input, new Date(), timezone);
+}
+
+/**
+ * Converts the two input dates, which are dates in the same timezone/normal but than the current system, using the input DateTimezoneUtcNormalFunctionInput.
  *
  * This converts the dates to the system timezone normal, copies the values, then back to the original timezone normal.
  *
@@ -429,7 +440,7 @@ export function startOfDayInTimezoneFromISO8601DayString(day: ISO8601DayString, 
  * @param copyFrom
  * @param timezone
  */
-export function copyHoursAndMinutesFromDatesWithTimezoneNormal(input: Date, copyFrom: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
+export function copyHoursAndMinutesFromDateWithTimezoneNormal(input: Date, copyFrom: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
 
   const inputInSystemTimezone = timezoneInstance.systemDateToTargetDate(input);
@@ -442,7 +453,12 @@ export function copyHoursAndMinutesFromDatesWithTimezoneNormal(input: Date, copy
 
   // copy the minutes then add the offset difference to get the appropriate time.
   const copiedInSystemTimezone = addMinutes(copyHoursAndMinutesFromDate(inputInSystemTimezone, copyFromInSystemTimezone), offsetDifference);
-
   const result = timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
   return result;
 }
+
+// MARK: compat
+/**
+ * @deprecated use copyHoursAndMinutesFromDateWithTimezoneNormal() instead.
+ */
+export const copyHoursAndMinutesFromDatesWithTimezoneNormal = copyHoursAndMinutesFromDateWithTimezoneNormal;

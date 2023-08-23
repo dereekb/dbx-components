@@ -29,7 +29,7 @@ import {
 } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasEndedFilterFunction, dateBlockDurationSpanHasStartedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
-import { copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
+import { copyHoursAndMinutesFromDateWithTimezoneNormal } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
