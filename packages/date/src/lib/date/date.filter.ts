@@ -6,7 +6,7 @@ import { dateDurationSpanEndDate } from './date.duration';
 export type DateBlockDurationSpanFilterFunction<B extends DateBlock = DateBlock> = FilterFunction<DateBlockDurationSpan<B>>;
 
 export function dateBlockDurationSpanHasStartedFilterFunction<B extends DateBlock = DateBlock>(now = new Date()): DateBlockDurationSpanFilterFunction<B> {
-  return (x) => !isBefore(x.startsAt, now); // startsAt <= now
+  return (x) => !isAfter(x.startsAt, now); // startsAt <= now
 }
 
 export function dateBlockDurationSpanHasNotStartedFilterFunction<B extends DateBlock = DateBlock>(now = new Date()): DateBlockDurationSpanFilterFunction<B> {
@@ -16,7 +16,7 @@ export function dateBlockDurationSpanHasNotStartedFilterFunction<B extends DateB
 export function dateBlockDurationSpanHasEndedFilterFunction<B extends DateBlock = DateBlock>(now = new Date()): DateBlockDurationSpanFilterFunction<B> {
   return (x) => {
     const endsAt = dateDurationSpanEndDate(x);
-    return !isBefore(endsAt, now); // endsAt <= now
+    return !isAfter(endsAt, now); // endsAt <= now
   };
 }
 
