@@ -19,7 +19,7 @@ export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopov
   @Input()
   config?: DbxFirebaseModelHistoryPopoverButtonConfig;
 
-  constructor(private readonly popupService: DbxPopoverService) {
+  constructor(private readonly dbxPopoverService: DbxPopoverService) {
     super();
   }
 
@@ -30,7 +30,7 @@ export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopov
       throw new Error('Missing origin.');
     }
 
-    return DbxFirebaseModelHistoryPopoverComponent.openPopover(this.popupService, {
+    return DbxFirebaseModelHistoryPopoverComponent.openPopover(this.dbxPopoverService, {
       origin,
       ...config
     });

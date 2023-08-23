@@ -1,4 +1,4 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable, mergeFilterFunctions } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
@@ -27,7 +27,7 @@ import {
   groupToDateBlockRanges,
   safeDateBlockTimingFromDateRangeAndEvent
 } from './date.block';
-import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
+import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasEndedFilterFunction, dateBlockDurationSpanHasStartedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
 import { copyHoursAndMinutesFromDatesWithTimezoneNormal } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
@@ -501,13 +501,25 @@ export interface DateScheduleDateBlockTimingFilterConfig {
    */
   now?: Date;
   /**
-   * (Optional) filters in blocks that have not yet started.
+   * (Optional) filters in blocks that have not yet started. Can be combined with the other filters.
+   */
+  onlyBlocksThatHaveStarted?: boolean;
+  /**
+   * (Optional) filters in blocks that have not yet ended. Can be combined with the other filters.
+   */
+  onlyBlocksThatHaveEnded?: boolean;
+  /**
+   * (Optional) filters in blocks that have not yet started. Can be combined with the other filters.
    */
   onlyBlocksNotYetStarted?: boolean;
   /**
-   * (Optional) filters in blocks that have not yet ended.
+   * (Optional) filters in blocks that have not yet ended. Can be combined with the other filters.
    */
   onlyBlocksNotYetEnded?: boolean;
+  /**
+   * (Optional) custom filter function. Can be combined with the other filters.
+   */
+  durationSpanFilter?: FilterFunction<DateBlockDurationSpan<DateBlock>>;
   /**
    * (Optional) Maximum number of blocks to return.
    */
@@ -541,14 +553,29 @@ export function dateScheduleDateBlockTimingFilter<B extends DateBlock = DateBloc
  * @returns
  */
 export function expandDateScheduleFactory<B extends DateBlock = DateBlock>(config: DateScheduleDateBlockTimingFilterConfig): DateBlocksExpansionFactory<B> {
-  const { invertSchedule = false, now, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateBlocksToReturn } = config;
+  const { invertSchedule = false, now, onlyBlocksThatHaveEnded, onlyBlocksThatHaveStarted, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateBlocksToReturn, durationSpanFilter: inputDurationSpanFilter } = config;
   let durationSpanFilter: FilterFunction<DateBlockDurationSpan<DateBlock>> | undefined;
+  let durationSpanFilters: FilterFunction<DateBlockDurationSpan<DateBlock>>[] = [];
+
+  if (inputDurationSpanFilter) {
+    durationSpanFilters.push(inputDurationSpanFilter);
+  }
 
   if (onlyBlocksNotYetStarted) {
-    durationSpanFilter = dateBlockDurationSpanHasNotStartedFilterFunction(now);
-  } else if (onlyBlocksNotYetEnded) {
-    durationSpanFilter = dateBlockDurationSpanHasNotEndedFilterFunction(now);
+    durationSpanFilters.push(dateBlockDurationSpanHasNotStartedFilterFunction(now));
+  } else if (onlyBlocksThatHaveEnded) {
+    durationSpanFilters.push(dateBlockDurationSpanHasEndedFilterFunction(now));
+  } else {
+    if (onlyBlocksThatHaveStarted) {
+      durationSpanFilters.push(dateBlockDurationSpanHasStartedFilterFunction(now));
+    }
+
+    if (onlyBlocksNotYetEnded) {
+      durationSpanFilters.push(dateBlockDurationSpanHasNotEndedFilterFunction(now));
+    }
   }
+
+  durationSpanFilter = mergeFilterFunctions(...durationSpanFilters);
 
   const expansionFactory = dateBlocksExpansionFactory<B>({
     timing: config.timing,
