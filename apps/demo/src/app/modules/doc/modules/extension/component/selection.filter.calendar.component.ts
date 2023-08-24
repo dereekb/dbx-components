@@ -1,7 +1,7 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
-import { DateScheduleDateFilterConfig, dateTimezoneUtcNormal, formatToISO8601DayString, readDaysOfWeekNames } from '@dereekb/date';
+import { dateBlockTiming, DateScheduleDateFilterConfig, dateTimezoneUtcNormal, formatToISO8601DayString, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
@@ -9,8 +9,7 @@ import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory,
 const daysRangeInFilter = 14;
 
 export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateScheduleDateFilterConfig = {
-  start: startOfDay(new Date()),
-  end: addDays(new Date(), daysRangeInFilter - 1), // two weeks
+  ...dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, daysRangeInFilter),
   w: '345', // Tues/Weds/Thurs
   ex: [1] // excludes the second day
 };
