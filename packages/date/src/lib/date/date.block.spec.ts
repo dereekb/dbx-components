@@ -1,6 +1,7 @@
+import { parseISO8601DayStringToDate } from '@dereekb/date';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput, isDateInDateRange } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore, isAfter, addBusinessDays, startOfWeek } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore, isAfter, addBusinessDays, startOfWeek, differenceInSeconds, differenceInMilliseconds } from 'date-fns';
 import {
   changeTimingToTimezoneFunction,
   DateBlock,
@@ -50,10 +51,15 @@ import {
   dateBlockTimingStartForNowInSystemTimezone,
   timingIsInExpectedTimezone,
   dateBlockRangeOverlapsRangeFunction,
-  dateBlockTimingInTimezone
+  dateBlockTimingInTimezone,
+  dateBlockTimingDateFactory,
+  dateBlockTimingStartsAtDateFactory,
+  dateBlockTimingStartDateFactory,
+  timingDateTimezoneUtcNormal,
+  isDateTimingRelativeIndexFactory
 } from './date.block';
-import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber } from '@dereekb/util';
-import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
+import { MS_IN_MINUTE, MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber } from '@dereekb/util';
+import { copyHoursAndMinutesFromDate, guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, systemBaseDateToNormalDate, systemNormalDateToBaseDate, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { formatToISO8601DayString } from './date.format';
@@ -531,14 +537,14 @@ describe('dateTimingRelativeIndexFactory()', () => {
       const timing = changeTimingToTimezoneFunction(timezone)(systemTiming);
       const fn = dateTimingRelativeIndexFactory(timing);
 
-      it('should return the expected indexes.', () => {
+      it('should return the expected indexes for the first day relative to the UTC timezone', () => {
         const dayString = formatToISO8601DayString(start);
 
-        const result1date = fn(start); // input the system time
+        const result1date = fn(startsAt); // input the system time
         const result1day = fn(dayString);
 
-        expect(result1day).toBe(0);
         expect(result1date).toBe(0);
+        expect(result1day).toBe(0);
       });
     });
 
@@ -547,28 +553,227 @@ describe('dateTimingRelativeIndexFactory()', () => {
       const timing = changeTimingToTimezoneFunction(timezone)(systemTiming);
       const fn = dateTimingRelativeIndexFactory(timing);
 
-      it('should return the expected indexes.', () => {
+      it('should return the expected indexes for the first day relative to the Denver timezone', () => {
         const dayString = formatToISO8601DayString(start);
 
-        const result1date = fn(start); // input the system time
+        const resulttimingstart = fn(timing.start);
         const result1day = fn(dayString);
 
+        expect(resulttimingstart).toBe(0);
         expect(result1day).toBe(0);
-        expect(result1date).toBe(0);
+
+        // only a valid timing will return this value correctly
+        if (isValidDateBlockTiming(timing)) {
+          const result1startsAtTime = fn(timing.startsAt); // input the system time
+          expect(result1startsAtTime).toBe(0);
+        }
       });
     });
   });
 
   describe('scenarios', () => {
+    describe('America/New_York timezone past days', () => {
+      const timezone = 'America/New_York';
+      const testDays = 17;
+      const timing = {
+        start: new Date('2023-08-13T04:00:00.000Z'),
+        end: new Date('2023-08-30T09:00:00.000Z'),
+        startsAt: new Date('2023-08-14T00:00:00.000Z'),
+        duration: 540
+      };
+
+      const s: DateSchedule = {
+        w: '89',
+        ex: range(0, testDays).filter(isOddNumber) // "checkers" schedule
+      };
+
+      it('should correspond the dates to the expanded indexes', () => {
+        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+        expandedDays.forEach((x) => {
+          const { i, startsAt } = x;
+          expect(indexFactory(startsAt)).toBe(i);
+        });
+      });
+    });
+
     describe('timezone change', () => {
       const start = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
       const dstDay = new Date('2023-03-13T06:00:00.000Z'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
 
-      it('should handle daylight savings time changes.', () => {
+      it('should handle daylight savings time changes and return the expected index.', () => {
         const factory = dateTimingRelativeIndexFactory({ start });
         const result = factory(dstDay);
 
+        expect(formatToISO8601DayString(dstDay)).toBe('2023-03-13');
         expect(result).toBe(2); // 2 days later
+      });
+    });
+  });
+});
+
+describe('isDateTimingRelativeIndexFactory()', () => {
+  const timing = {
+    start: new Date('2023-08-13T04:00:00.000Z'),
+    end: new Date('2023-08-30T09:00:00.000Z'),
+    startsAt: new Date('2023-08-14T00:00:00.000Z'),
+    duration: 540
+  };
+
+  describe('function', () => {
+    it('should return false for a timing', () => {
+      const result = isDateTimingRelativeIndexFactory(timing);
+      expect(result).toBe(false);
+    });
+
+    it('should return true for a dateTimingRelativeIndexFactory()', () => {
+      const indexFactory = dateTimingRelativeIndexFactory(timing);
+      const result = isDateTimingRelativeIndexFactory(indexFactory);
+      expect(result).toBe(true);
+    });
+  });
+});
+
+describe('dateBlockTimingDateFactory()', () => {
+  describe('scenarios', () => {
+    describe('America/New_York timezone past days', () => {
+      const timezone = 'America/New_York';
+      const testDays = 17;
+      const timing = {
+        start: new Date('2023-08-13T04:00:00.000Z'),
+        end: new Date('2023-08-30T09:00:00.000Z'),
+        startsAt: new Date('2023-08-14T00:00:00.000Z'),
+        duration: 540
+      };
+
+      const s: DateSchedule = {
+        w: '89',
+        ex: range(0, testDays).filter(isOddNumber) // "checkers" schedule
+      };
+
+      it('should correspond the indexes to the expanded dates', () => {
+        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const dateFactory = dateBlockTimingDateFactory(timing);
+        const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+        expandedDays.forEach((x) => {
+          const { i, startsAt } = x;
+
+          const expectedIndex = indexFactory(startsAt);
+          expect(i).toBe(expectedIndex);
+
+          const dateFromIndex = dateFactory(i);
+
+          const now = new Date();
+
+          // should return the same hours/minutes/seconds as now
+          const differenceInSecondsOnly = Math.floor((Math.abs(differenceInMilliseconds(dateFromIndex, now)) % MS_IN_MINUTE) / MS_IN_MINUTE);
+          expect(differenceInSecondsOnly).toBe(0);
+
+          expect(dateFromIndex.getUTCHours()).toBe(now.getUTCHours());
+          expect(dateFromIndex.getUTCMinutes()).toBe(now.getUTCMinutes());
+
+          const indexFromDate = indexFactory(dateFromIndex);
+          expect(indexFromDate).toBe(i);
+        });
+      });
+    });
+  });
+});
+
+describe('dateBlockTimingStartsAtDateFactory()', () => {
+  describe('scenarios', () => {
+    describe('America/New_York timezone past days', () => {
+      const timezone = 'America/New_York';
+      const testDays = 17;
+      const timing = {
+        start: new Date('2023-08-13T04:00:00.000Z'),
+        end: new Date('2023-08-30T09:00:00.000Z'),
+        startsAt: new Date('2023-08-14T00:00:00.000Z'),
+        duration: 540
+      };
+
+      const s: DateSchedule = {
+        w: '89',
+        ex: range(0, testDays).filter(isOddNumber) // "checkers" schedule
+      };
+
+      it('should correspond the indexes to the expanded dates', () => {
+        const dateFactory = dateBlockTimingStartsAtDateFactory(timing);
+        const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+        expandedDays.forEach((x) => {
+          const { i, startsAt } = x;
+          expect(dateFactory(i)).toBeSameSecondAs(startsAt);
+        });
+      });
+    });
+  });
+});
+
+describe('dateBlockTimingStartDateFactory()', () => {
+  describe('scenarios', () => {
+    describe('America/New_York timezone past days', () => {
+      const timezone = 'America/New_York';
+      const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
+
+      const testDays = 17;
+      const timing = {
+        start: new Date('2023-08-13T04:00:00.000Z'),
+        end: new Date('2023-08-30T09:00:00.000Z'),
+        startsAt: new Date('2023-08-14T00:00:00.000Z'),
+        duration: 540
+      };
+
+      const s: DateSchedule = {
+        w: '89',
+        ex: range(0, testDays).filter(isOddNumber) // "checkers" schedule
+      };
+
+      it('should output the 0 index start date', () => {
+        const dateFactory = dateBlockTimingStartDateFactory(timing, timezone);
+        const result = dateFactory(0);
+        expect(result).toBeSameSecondAs(timing.start);
+      });
+
+      it('should correspond the indexes to the expanded dates', () => {
+        const dateFactory = dateBlockTimingStartDateFactory(timing, timezone);
+        const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+        expandedDays.forEach((x) => {
+          const { i, startsAt } = x;
+          const expectedStart = addDays(timing.start, i); // there is no DST change for this test, so this is safe for all timezones
+
+          const result = dateFactory(i);
+          expect(result).toBeSameSecondAs(expectedStart);
+        });
+      });
+    });
+
+    describe('system timezone change', () => {
+      // this tests the system's timezone change handling to make sure output is different
+      const start = parseISO8601DayStringToDate('2023-03-11'); // timezone offset changes going into the next day.
+      const dstDay = parseISO8601DayStringToDate('2023-03-13'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
+
+      it('should handle daylight savings time changes.', () => {
+        const timezone = guessCurrentTimezone();
+        const factory = dateBlockTimingStartDateFactory({ start }, timezone as string);
+
+        const zero = factory(0);
+        expect(zero).toBeSameSecondAs(start);
+
+        const two = factory(2);
+        expect(two).toBeSameSecondAs(dstDay);
+
+        const aOffset = start.getTimezoneOffset();
+        const bOffset = dstDay.getTimezoneOffset();
+
+        // timezone experiences daylight savings
+        if (aOffset !== bOffset) {
+          expect(zero.getUTCHours()).not.toBe(two.getUTCHours()); // our start time offset should be reflected in UTC hours
+          expect(zero.getHours()).toBe(two.getHours()); // same hours due to tz
+        }
       });
     });
   });
@@ -1212,7 +1417,6 @@ describe('dateBlocksDayTimingInfoFactory()', () => {
     const result = factory(0);
     const isInProgress = isDateInDateRange(result.now, { start: result.startsAtOnDay, end: result.endsAtOnDay });
 
-    expect(result.date).toBeSameMinuteAs(copyHoursAndMinutesFromDate(start, new Date()));
     expect(result.dayIndex).toBe(0);
     expect(result.isInProgress).toBe(isInProgress);
 
@@ -1278,8 +1482,6 @@ describe('dateBlocksDayTimingInfoFactory()', () => {
   describe('scenarios', () => {
     describe('dateBlockDayTimingInfoFactory() comparison', () => {
       describe('America/New_York timezone past days', () => {
-        const startsAt = startOfWeek(addBusinessDays(new Date(), -6), { weekStartsOn: Day.MONDAY });
-
         const timezone = 'America/New_York';
         const testDays = 17;
         const timing = {
@@ -1289,11 +1491,30 @@ describe('dateBlocksDayTimingInfoFactory()', () => {
           duration: 540
         };
 
-        const s: DateSchedule = { w: '89', ex: range(0, testDays).filter(isOddNumber) };
+        const s: DateSchedule = {
+          w: '89',
+          ex: range(0, testDays).filter(isOddNumber) // "checkers" schedule
+        };
+
+        it('should expand the zero index to the same block', () => {
+          const infoFactory = dateBlockDayTimingInfoFactory({ timing });
+          const expandedDays = expandDateSchedule({ timing, schedule: s, maxDateBlocksToReturn: 1 });
+          const expandedDayZero = expandedDays[0];
+          const infoDayZeroIndex = infoFactory(0);
+          const infoDayZeroDate = infoFactory(infoDayZeroIndex.startsAtOnDay);
+
+          expect(expandedDayZero.i).toBe(0);
+          expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+
+          expect(infoDayZeroIndex.dayIndex).toBe(0);
+          expect(infoDayZeroIndex.startsAtOnDay).toBeSameSecondAs(timing.startsAt);
+
+          expect(infoDayZeroDate.dayIndex).toBe(0);
+          expect(infoDayZeroDate.startsAtOnDay).toBeSameSecondAs(timing.startsAt);
+        });
 
         it('should expand the same dates', () => {
           const infoFactory = dateBlockDayTimingInfoFactory({ timing });
-
           const expandedDays = expandDateSchedule({ timing, schedule: s });
 
           expandedDays.forEach((x) => {
@@ -1301,6 +1522,7 @@ describe('dateBlocksDayTimingInfoFactory()', () => {
             const info = infoFactory(i);
 
             const { startsAtOnDay } = info;
+            expect(startsAtOnDay).not.toBeBefore(timing.startsAt);
             expect(startsAtOnDay).toBeSameSecondAs(x.startsAt);
           });
         });

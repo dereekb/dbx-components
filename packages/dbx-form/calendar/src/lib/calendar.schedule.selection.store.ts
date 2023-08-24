@@ -41,7 +41,9 @@ import {
   dateScheduleDayCodesAreSetsEquivalent,
   dateScheduleDayCodesSetFromDaysOfWeek,
   simplifyDateScheduleDayCodes,
-  fullWeekDayScheduleDayCodes
+  fullWeekDayScheduleDayCodes,
+  dateBlockTimingStartDateFactory,
+  guessCurrentTimezone
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, removeFromSet, ISO8601DayString, filterValuesToSet, mapValuesToSet } from '@dereekb/util';
@@ -955,7 +957,7 @@ export interface CalendarScheduleSelectionRangeAndExclusion extends DateRange {
 
 export function computeScheduleSelectionRangeAndExclusion(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionRangeAndExclusion> {
   const { isEnabledDay, isEnabledFilterDay } = state;
-  const dateFactory = dateBlockTimingDateFactory(state);
+  const dateFactory = dateBlockTimingStartDateFactory(state, { useSystemTimezone: true });
   const dateBlockRange = computeCalendarScheduleSelectionDateBlockRange(state);
 
   if (dateBlockRange == null) {

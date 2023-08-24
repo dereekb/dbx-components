@@ -157,11 +157,13 @@ export type Minutes = number;
 export type Hours = number;
 export type Days = number;
 
+export const HOURS_IN_DAY = 24;
+export const SECONDS_IN_MINUTE = 60;
 export const MINUTES_IN_DAY = 1440;
 export const MINUTES_IN_HOUR = 60;
 export const MS_IN_MINUTE = 1000 * 60;
 export const MS_IN_HOUR = MS_IN_MINUTE * 60;
-export const MS_IN_DAY = MS_IN_HOUR * 24;
+export const MS_IN_DAY = MS_IN_HOUR * HOURS_IN_DAY;
 
 /**
  * Day of the month, 1-31

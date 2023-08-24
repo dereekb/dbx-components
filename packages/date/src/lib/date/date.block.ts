@@ -33,16 +33,17 @@ import {
   Minutes,
   MS_IN_HOUR,
   minutesToFractionalHours,
-  FractionalHour
+  FractionalHour,
+  HOURS_IN_DAY
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal } from './date.timezone';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
-import { parseISO8601DayStringToDate } from './date.format';
+import { parseISO8601DayStringToDate, parseISO8601DayStringToUTCDate } from './date.format';
 
 /**
  * Index from 0 of which day this block represents.
@@ -108,9 +109,14 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
 /**
  * DateBlockTiming with only the start time.
  *
- * The start time is midnight of what timezone it is in, and can be used to infer the target timezone offset.
+ * The start time is midnight of what timezone it is in, and can be used to infer the target timezone offset for that date.
  */
 export type DateBlockTimingStart = DateRangeStart;
+
+/**
+ * The DateBlockTimingStart and startsAt times
+ */
+export type DateBlockTimingStartAndStartsAt = DateBlockTimingStart & Pick<DateBlockTiming, 'startsAt'>;
 
 /**
  * Is combination of DateRange and DateDurationSpan. The DateRange captures a range of days that a DateBlock takes up, and the DateDurationSpan
@@ -165,7 +171,13 @@ export class DateBlockTiming extends DateDurationSpan {
 }
 
 export interface CurrentDateBlockTimingUtcData {
+  /**
+   * Non-normalized start date in the system time.
+   */
   originalUtcDate: Date;
+  /**
+   * Offset of the input timing to UTC.
+   */
   originalUtcOffsetInHours: Hours;
 }
 
@@ -197,9 +209,10 @@ export function dateBlockTimingEventRange(timing: Pick<DateBlockTiming, 'startsA
 export function getCurrentDateBlockTimingUtcData(timing: DateRangeStart): CurrentDateBlockTimingUtcData {
   const start = timing.start;
   const dateHours = start.getUTCHours();
+  const MAX_OFFSET_HOURS = 12;
 
   // if it is a positive offset, then the date is in the future so we subtract the offset from 24 hours to get the proper offset.
-  const originalUtcOffsetInHours = dateHours > 12 ? 24 - dateHours : -dateHours;
+  const originalUtcOffsetInHours = dateHours > MAX_OFFSET_HOURS ? HOURS_IN_DAY - dateHours : -dateHours;
   const originalUtcDate = addHours(start, originalUtcOffsetInHours); // convert to original UTC
 
   return {
@@ -220,7 +233,7 @@ export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): Cur
   // calculate the true offset
   let offset: Hours = originalUtcOffsetInHours - currentTimezoneOffsetInHours;
 
-  if (offset === -24) {
+  if (offset === -HOURS_IN_DAY) {
     offset = 0; // auckland can return -24 for itself
   }
 
@@ -446,7 +459,7 @@ export function dateBlockTimingStartForNowInTimezone(timezoneInput: TimingDateTi
 }
 
 /**
- * Returns the startsAt date in the current/system timezone for the given date.
+ * Returns the start date in the current/system timezone for the given date.
  *
  * @param timing
  */
@@ -471,37 +484,60 @@ export type DateTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | ISO8601
  */
 export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateTimingRelativeIndexFactoryInput) => DateBlockIndex) & {
   readonly _timing: T;
+  readonly _timingOffsetData: CurrentDateBlockTimingOffsetData;
 };
 
 /**
- * Creates a DateTimingRelativeIndexFactory.
+ * Returns true if the input is a DateTimingRelativeIndexFactory.
  *
- * @param timing
+ * @param input
  * @returns
  */
-export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateTimingRelativeIndexFactory<T> {
-  const startDate = getCurrentDateBlockTimingStartDate(timing);
-  const baseOffset = startDate.getTimezoneOffset();
+export function isDateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: unknown): input is DateTimingRelativeIndexFactory<T> {
+  return typeof input === 'function' && (input as DateTimingRelativeIndexFactory)._timing != null && (input as DateTimingRelativeIndexFactory)._timingOffsetData != null;
+}
 
-  const factory = ((input: DateOrDateBlockIndex | ISO8601DayString) => {
-    const inputType = typeof input;
-    if (inputType === 'number') {
-      return input;
-    } else if (inputType === 'string') {
-      input = parseISO8601DayStringToDate(input as string);
-    }
+/**
+ * Creates a DateTimingRelativeIndexFactory from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateTimingRelativeIndexFactory<T>): DateTimingRelativeIndexFactory<T> {
+  if (isDateTimingRelativeIndexFactory(input)) {
+    return input;
+  } else {
+    const timing = input;
+    const offsetData = getCurrentDateBlockTimingOffsetData(timing);
+    const { originalUtcOffsetInHours: toUtcOffset, currentTimezoneOffsetInHours, originalUtcDate: originalUtcDateInSystemTimeNormal } = offsetData;
+    const baseOffsetInHours = currentTimezoneOffsetInHours;
 
-    const inputOffset = (input as Date).getTimezoneOffset();
-    const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
+    const factory = ((input: DateOrDateBlockIndex | ISO8601DayString) => {
+      const inputType = typeof input;
 
-    const baseDiff = differenceInHours(input as Date, startDate);
-    const diff = baseDiff + offsetDifferenceHours;
-    const daysOffset = Math.floor(diff / 24);
+      if (inputType === 'number') {
+        return input;
+      } else if (inputType === 'string') {
+        const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // convert to system timezone
+        const diff = differenceInHours(startOfDayInUtc, originalUtcDateInSystemTimeNormal); // compare the system times
+        const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
 
-    return daysOffset;
-  }) as Configurable<Partial<DateTimingRelativeIndexFactory<T>>>;
-  factory._timing = timing;
-  return factory as DateTimingRelativeIndexFactory<T>;
+        return daysOffset ? daysOffset : 0; // do not return -0
+      } else {
+        const inputDateTimezoneOffset = (input as Date).getTimezoneOffset(); // get current system timezone offset
+        const offsetDifferenceHours = baseOffsetInHours + minutesToHours(inputDateTimezoneOffset); // handle timezone offset changes
+
+        const baseDiff = differenceInHours(input as Date, originalUtcDateInSystemTimeNormal); // compare the difference in system times
+        const diff = baseDiff + toUtcOffset - offsetDifferenceHours; // apply any timezone changes, then back to UTC for comparison
+        const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
+
+        return daysOffset ? daysOffset : 0; // do not return -0
+      }
+    }) as Configurable<Partial<DateTimingRelativeIndexFactory<T>>>;
+    factory._timing = timing;
+    factory._timingOffsetData = offsetData;
+    return factory as DateTimingRelativeIndexFactory<T>;
+  }
 }
 
 /**
@@ -554,7 +590,9 @@ export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date
 }
 
 /**
- * Returns the Date of the input DateBlockIndex relative to the configured Date. If a date is entered, the date is returned.
+ * Similar to the DateTimingRelativeIndexFactory, but returns a date instead of an index for the input.
+ *
+ * If an index is input, returns a date with the hours and minutes for now for the given date returned.
  */
 export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
   readonly _timing: T;
@@ -567,16 +605,80 @@ export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBloc
  * @returns
  */
 export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateBlockTimingDateFactory<T> {
-  const startDate = getCurrentDateBlockTimingStartDate(timing);
+  const offsetData = getCurrentDateBlockTimingOffsetData(timing);
+  const utcStartDate = offsetData.originalUtcDate;
+
   const factory = ((input: DateOrDateBlockIndex) => {
     if (isDate(input)) {
       return input;
     } else {
-      return addDays(startDate, input); // TODO: Is this right to use days, or should it use hours to avoid daylight savings?
+      const now = new Date();
+      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+      const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
+      return nowWithDateForIndex;
     }
   }) as Configurable<Partial<DateBlockTimingDateFactory>>;
   factory._timing = timing;
   return factory as DateBlockTimingDateFactory<T>;
+}
+
+/**
+ * Returns the start time of the input date or index.
+ */
+export type DateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
+  readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
+};
+
+/**
+ * Creates a DateBlockTimingDateFactory. The timezone is required to properly compute the accurate startsAt date for locations that experience daylight savings.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone): DateBlockTimingStartDateFactory<T> {
+  const indexFactory = dateTimingRelativeIndexFactory<T>(input);
+  const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
+
+  if (!timingIsInExpectedTimezone(indexFactory._timing, timezoneInstance)) {
+    throw new Error(`unexpected timezone "${timezone}" for start date "${indexFactory._timing.start}" for dateBlockTimingStartDateFactory(). Is expected to match the timezones.`);
+  }
+
+  const { start: baseTimingStart } = indexFactory._timing;
+  const baseStart = timezoneInstance.baseDateToTargetDate(baseTimingStart);
+
+  const factory = ((input: DateOrDateBlockIndex) => {
+    const index = indexFactory(input); // get the index
+    const startInUtc = addHours(baseStart, index * HOURS_IN_DAY);
+    return timezoneInstance.targetDateToBaseDate(startInUtc);
+  }) as Configurable<Partial<DateBlockTimingStartDateFactory>>;
+  factory._indexFactory = indexFactory;
+  return factory as DateBlockTimingStartDateFactory<T>;
+}
+
+/**
+ * Returns the startsAt time of the input date or index.
+ */
+export type DateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
+  readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
+};
+
+/**
+ * Creates a DateBlockTimingStartsAtDateFactory.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateTimingRelativeIndexFactory<T>): DateBlockTimingStartsAtDateFactory<T> {
+  const indexFactory = dateTimingRelativeIndexFactory<T>(input);
+  const { startsAt: baseTimingStartsAt } = indexFactory._timing;
+
+  const factory = ((input: DateOrDateBlockIndex) => {
+    const index = indexFactory(input); // get the index
+    const hoursOffset = index * HOURS_IN_DAY;
+    return addHours(baseTimingStartsAt, hoursOffset);
+  }) as Configurable<Partial<DateBlockTimingStartsAtDateFactory>>;
+  factory._indexFactory = indexFactory;
+  return factory as DateBlockTimingStartsAtDateFactory<T>;
 }
 
 /**
@@ -1014,21 +1116,21 @@ export type DateBlockDayTimingInfoFactory = (date: DateOrDateBlockIndex, now?: D
 
 export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFactoryConfig): DateBlockDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
-  const { startsAt, duration } = timing;
+  const { duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
-  const timezoneInstance = timingDateTimezoneUtcNormal(timing);
   const dayIndexFactory = dateTimingRelativeIndexFactory(timing);
   const dayFactory = dateBlockTimingDateFactory(timing);
+  const startsAtFactory = dateBlockTimingStartsAtDateFactory(dayIndexFactory);
 
   return (input: DateOrDateBlockIndex, inputNow?: Date) => {
-    const date = typeof input === 'number' ? copyHoursAndMinutesFromNow(dayFactory(input)) : input;
+    const date = typeof input === 'number' ? dayFactory(input) : input;
+
     const dayIndex = dayIndexFactory(input);
     const isInRange = checkIsInRange(dayIndex);
 
     const now = inputNow ?? date;
-
-    const startsAtOnDay = copyHoursAndMinutesFromDateWithTimezoneNormal(date, startsAt, timezoneInstance); // needs to be back in the target timezone
+    const startsAtOnDay = startsAtFactory(dayIndex); // convert back to the proper date
     const endsAtOnDay = addMinutes(startsAtOnDay, duration);
     const potentiallyInProgress = !isAfter(startsAtOnDay, now); // is potentially in progress if the now is equal-to or after the start time.
 
@@ -1091,7 +1193,7 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
   if (limit) {
     const { start, end } = dateBlockTiming(timing, limit);
     const limitMin = differenceInDays(start, zeroDate);
-    const hoursDiff = differenceInHours(end, zeroDate) / 24;
+    const hoursDiff = differenceInHours(end, zeroDate) / HOURS_IN_DAY;
     const limitMax = Math.ceil(hoursDiff);
 
     if (fitToTimingRange) {
@@ -2059,7 +2161,6 @@ export function modifyDateBlockToFitRange<B extends DateBlock | DateBlockRange |
 }
 
 // MARK: Compat
-
 /**
  * @deprecated use IsDateBlockWithinDateBlockRangeFunction instead.
  */

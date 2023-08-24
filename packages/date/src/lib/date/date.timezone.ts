@@ -41,6 +41,13 @@ export interface DateTimezoneConversionConfig {
 }
 
 /**
+ * DateTimezoneConversionConfig only configured to use the system timezone.
+ */
+export type DateTimezoneConversionConfigUseSystemTimezone = {
+  readonly useSystemTimezone: true;
+};
+
+/**
  * Returns true if both inputs are considered equivalent.
  *
  * @param a

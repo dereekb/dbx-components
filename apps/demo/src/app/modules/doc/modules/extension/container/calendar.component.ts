@@ -110,17 +110,11 @@ export class DocExtensionCalendarComponent implements OnInit {
     }),
     dateScheduleRangeField({
       timezone: this.timezone$,
-      key: 'dateScheduleWithMinDateRange',
+      key: 'dateScheduleWithTimingFilterAndMinDateRange',
       required: true,
-      description: 'Date schedule with a filter applied to it and additional exclusions.',
-      filter: {
-        //
-        start: addHours(startOfDay(addDays(new Date(), 1)), 6), // tomorrow at 6AM
-        end: addHours(startOfDay(addDays(new Date(), 1)), 18), // tomorrow at 6PM
-        w: '89',
-        ex: []
-      },
-      minMaxDateRange: { start: new Date() },
+      description: 'Date schedule with a filter and an explicit min date to be 4 days from now',
+      filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
+      minMaxDateRange: { start: addDays(new Date(), 4) },
       computeSelectionResultRelativeToFilter: true,
       initialSelectionState: 'all'
     }),
