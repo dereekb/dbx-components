@@ -519,7 +519,7 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
         return input;
       } else if (inputType === 'string') {
         const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // convert to system timezone
-        const diff = differenceInHours(startOfDayInUtc, originalUtcDateInSystemTimeNormal); // compare the system times
+        const diff = differenceInHours(startOfDayInUtc, originalUtcDateInSystemTimeNormal, { roundingMethod: 'floor' }); // compare the system times. Round down.
         const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
 
         return daysOffset ? daysOffset : 0; // do not return -0
@@ -527,7 +527,7 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
         const inputDateTimezoneOffset = (input as Date).getTimezoneOffset(); // get current system timezone offset
         const offsetDifferenceHours = baseOffsetInHours + minutesToHours(inputDateTimezoneOffset); // handle timezone offset changes
 
-        const baseDiff = differenceInHours(input as Date, originalUtcDateInSystemTimeNormal); // compare the difference in system times
+        const baseDiff = differenceInHours(input as Date, originalUtcDateInSystemTimeNormal, { roundingMethod: 'floor' }); // compare the difference in system times. Round down.
         const diff = baseDiff + toUtcOffset - offsetDifferenceHours; // apply any timezone changes, then back to UTC for comparison
         const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
 
@@ -629,17 +629,24 @@ export type DateBlockTimingStartDateFactory<T extends DateBlockTimingStart = Dat
   readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
 };
 
+export type DateBlockTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversionConfigUseSystemTimezone & {
+  /**
+   * Skips the assertion that the timezone matches. This defaults to true if not provided.
+   */
+  assertTimingMatchesTimezone: false;
+};
+
 /**
  * Creates a DateBlockTimingDateFactory. The timezone is required to properly compute the accurate startsAt date for locations that experience daylight savings.
  *
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone): DateBlockTimingStartDateFactory<T> {
+export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement): DateBlockTimingStartDateFactory<T> {
   const indexFactory = dateTimingRelativeIndexFactory<T>(input);
   const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
 
-  if (!timingIsInExpectedTimezone(indexFactory._timing, timezoneInstance)) {
+  if ((timezoneInstance.config as DateBlockTimingUseSystemAndIgnoreEnforcement).assertTimingMatchesTimezone !== false && !timingIsInExpectedTimezone(indexFactory._timing, timezoneInstance)) {
     throw new Error(`unexpected timezone "${timezone}" for start date "${indexFactory._timing.start}" for dateBlockTimingStartDateFactory(). Is expected to match the timezones.`);
   }
 

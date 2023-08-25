@@ -598,6 +598,21 @@ describe('dateTimingRelativeIndexFactory()', () => {
       });
     });
 
+    describe('one second before midnight', () => {
+      const start = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
+      const oneSecondBeforeNextDay = new Date('2023-03-12T05:59:59.999Z');
+      const theNextDay = new Date('2023-03-12T06:00:00.000Z');
+
+      it('should properly round the index down.', () => {
+        const factory = dateTimingRelativeIndexFactory({ start });
+        const result = factory(oneSecondBeforeNextDay);
+        expect(result).toBe(0); // should be the same day
+
+        const nextDayResult = factory(theNextDay);
+        expect(nextDayResult).toBe(1); // should be the next day
+      });
+    });
+
     describe('timezone change', () => {
       const start = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
       const dstDay = new Date('2023-03-13T06:00:00.000Z'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
