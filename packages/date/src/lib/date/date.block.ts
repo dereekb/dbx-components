@@ -1432,23 +1432,59 @@ export function isValidDateBlockRangeSeries(input: DateBlockRange[]): boolean {
 }
 
 /**
+ * Returns the lowest index between all the input date block ranges. Returns 0 by default if there is no minimum or input blocks.
+ *
+ * The input range is not expected to be sorted.
+ */
+export function getLeastDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockIndex {
+  return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.leastIndex ?? 0;
+}
+
+/**
  * Returns the largest index between all the input date block ranges. Returns 0 by default.
  *
  * The input range is not expected to be sorted.
  */
-export function getGreatestDateBlockIndexInDateBlockRanges(input: DateBlockRange[]): DateBlockIndex {
+export function getGreatestDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockIndex {
+  return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.greatestIndex ?? 0;
+}
+
+export interface LeastAndGreatestDateBlockIndexResult {
+  leastIndex: number;
+  greatestIndex: number;
+}
+
+/**
+ * Returns the largest index between all the input date block ranges. Returns null if the input is empty.
+ *
+ * The input range is not expected to be sorted.
+ */
+export function getLeastAndGreatestDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): Maybe<LeastAndGreatestDateBlockIndexResult> {
+  if (!input.length) {
+    return null;
+  }
+
+  let leastIndex = Number.MAX_SAFE_INTEGER;
   let greatestIndex = 0;
 
   for (let i = 0; i < input.length; i += 1) {
     const range = input[i];
-    const greatestRangeIndex = range.to || range.i;
+    const leastRangeIndex = range.i;
+    const greatestRangeIndex = (range as DateBlockRange).to || range.i;
+
+    if (leastRangeIndex < leastIndex) {
+      leastIndex = leastRangeIndex;
+    }
 
     if (greatestRangeIndex > greatestIndex) {
       greatestIndex = greatestRangeIndex;
     }
   }
 
-  return greatestIndex;
+  return {
+    leastIndex,
+    greatestIndex
+  };
 }
 
 /**

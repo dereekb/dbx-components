@@ -56,7 +56,9 @@ import {
   dateBlockTimingStartsAtDateFactory,
   dateBlockTimingStartDateFactory,
   timingDateTimezoneUtcNormal,
-  isDateTimingRelativeIndexFactory
+  isDateTimingRelativeIndexFactory,
+  getLeastDateBlockIndexInDateBlockRanges,
+  getLeastAndGreatestDateBlockIndexInDateBlockRanges
 } from './date.block';
 import { MS_IN_MINUTE, MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
@@ -137,6 +139,22 @@ describe('isValidDateBlockRangeSeries()', () => {
   });
 });
 
+describe('getLeastDateBlockIndexInDateBlockRanges()', () => {
+  it('should return 0 for empty arrays.', () => {
+    const greatestIndex = 0;
+
+    const result = getLeastDateBlockIndexInDateBlockRanges([]);
+    expect(result).toBe(greatestIndex);
+  });
+
+  it('should return the least index in the input ranges.', () => {
+    const leastIndex = 3;
+
+    const result = getLeastDateBlockIndexInDateBlockRanges([{ i: leastIndex }, { i: 12, to: 23 }, { i: 40, to: 42 }, { i: 50, to: 55 }]);
+    expect(result).toBe(leastIndex);
+  });
+});
+
 describe('getGreatestDateBlockIndexInDateBlockRanges()', () => {
   it('should return 0 for empty arrays.', () => {
     const greatestIndex = 0;
@@ -150,6 +168,13 @@ describe('getGreatestDateBlockIndexInDateBlockRanges()', () => {
 
     const result = getGreatestDateBlockIndexInDateBlockRanges([{ i: 0 }, { i: 12, to: 23 }, { i: 40, to: greatestIndex }, { i: 50, to: 55 }]);
     expect(result).toBe(greatestIndex);
+  });
+});
+
+describe('getLeastAndGreatestDateBlockIndexInDateBlockRanges()', () => {
+  it('should return null for empty arrays.', () => {
+    const result = getLeastAndGreatestDateBlockIndexInDateBlockRanges([]);
+    expect(result).toBe(null);
   });
 });
 
