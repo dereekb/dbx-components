@@ -9,7 +9,7 @@
       <dbx-button-spacer></dbx-button-spacer>
       <mat-datepicker-toggle class="mat-datepicker-button-highlight" matIconSuffix [for]="picker"></mat-datepicker-toggle>
       <dbx-button-spacer></dbx-button-spacer>
-      <mat-date-range-input (click)="clickedDateRangeInput()" [required]="required$ | async" [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
+      <mat-date-range-input (click)="clickedDateRangeInput()" [required]="required$ | async" [dateFilter]="(datePickerFilter$ | async) ?? defaultDatePickerFilter" [formGroup]="range" [rangePicker]="picker">
         <input [errorStateMatcher]="errorStateMatcher" matStartDate formControlName="start" placeholder="Start date" />
         <input [errorStateMatcher]="errorStateMatcher" matEndDate formControlName="end" placeholder="End date" />
       </mat-date-range-input>

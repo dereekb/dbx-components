@@ -8,7 +8,7 @@ import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject,
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
-import { MatDateRangePicker } from '@angular/material/datepicker';
+import { DateFilterFn, MatDateRangePicker } from '@angular/material/datepicker';
 
 interface RangeValue {
   start?: Maybe<Date>;
@@ -111,6 +111,19 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
   );
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
+
+  readonly defaultDatePickerFilter: DateFilterFn<Date> = () => true;
+  readonly datePickerFilter$: Observable<DateFilterFn<Date>> = this.dbxCalendarScheduleSelectionStore.isEnabledFilterDayFunction$.pipe(
+    map((isEnabled) => {
+      const fn = (date: Date | null) => {
+        const result = date ? isEnabled(date) : true;
+
+        return result;
+      };
+      return fn;
+    }),
+    shareReplay(1)
+  );
 
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, @Inject(MAT_FORM_FIELD_DEFAULT_OPTIONS) readonly matFormFieldDefaultOptions: MatFormFieldDefaultOptions) {}
 
