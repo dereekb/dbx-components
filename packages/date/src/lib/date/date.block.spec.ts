@@ -56,7 +56,11 @@ import {
   dateBlockTimingStartsAtDateFactory,
   dateBlockTimingStartDateFactory,
   timingDateTimezoneUtcNormal,
-  isDateTimingRelativeIndexFactory
+  isDateTimingRelativeIndexFactory,
+  getLeastDateBlockIndexInDateBlockRanges,
+  getLeastAndGreatestDateBlockIndexInDateBlockRanges,
+  dateRelativeStateForDateBlockRangeComparedToIndex,
+  getNextDateBlockTimingIndex
 } from './date.block';
 import { MS_IN_MINUTE, MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
@@ -137,6 +141,22 @@ describe('isValidDateBlockRangeSeries()', () => {
   });
 });
 
+describe('getLeastDateBlockIndexInDateBlockRanges()', () => {
+  it('should return 0 for empty arrays.', () => {
+    const greatestIndex = 0;
+
+    const result = getLeastDateBlockIndexInDateBlockRanges([]);
+    expect(result).toBe(greatestIndex);
+  });
+
+  it('should return the least index in the input ranges.', () => {
+    const leastIndex = 3;
+
+    const result = getLeastDateBlockIndexInDateBlockRanges([{ i: leastIndex }, { i: 12, to: 23 }, { i: 40, to: 42 }, { i: 50, to: 55 }]);
+    expect(result).toBe(leastIndex);
+  });
+});
+
 describe('getGreatestDateBlockIndexInDateBlockRanges()', () => {
   it('should return 0 for empty arrays.', () => {
     const greatestIndex = 0;
@@ -150,6 +170,13 @@ describe('getGreatestDateBlockIndexInDateBlockRanges()', () => {
 
     const result = getGreatestDateBlockIndexInDateBlockRanges([{ i: 0 }, { i: 12, to: 23 }, { i: 40, to: greatestIndex }, { i: 50, to: 55 }]);
     expect(result).toBe(greatestIndex);
+  });
+});
+
+describe('getLeastAndGreatestDateBlockIndexInDateBlockRanges()', () => {
+  it('should return null for empty arrays.', () => {
+    const result = getLeastAndGreatestDateBlockIndexInDateBlockRanges([]);
+    expect(result).toBe(null);
   });
 });
 
@@ -650,6 +677,85 @@ describe('isDateTimingRelativeIndexFactory()', () => {
   });
 });
 
+describe('getNextDateBlockTimingIndex()', () => {
+  it('should return the expected results', () => {
+    const a = { i: 2, to: 3, x: 'a' };
+    const b = { i: 6, to: 8, x: 'b' };
+    const c = { i: 9, to: 12, x: 'c' };
+    const d = { i: 20, to: 28, x: 'd' };
+    const ranges = [a, b, c, d];
+
+    const resultA = getNextDateBlockTimingIndex({ currentIndex: 0, ranges });
+    expect(resultA.currentResult).toBeUndefined();
+    expect(resultA.nextIndex).toBe(2);
+    expect(resultA.nextResult).toBeDefined();
+    expect(resultA.nextResult?.x).toBe(a.x);
+
+    const resultB = getNextDateBlockTimingIndex({ currentIndex: 6, ranges });
+    expect(resultB.currentResult).toBeDefined();
+    expect(resultB.currentResult?.x).toBe(b.x);
+    expect(resultB.nextIndex).toBe(7);
+    expect(resultB.nextResult).toBeDefined();
+    expect(resultB.nextResult?.x).toBe(b.x);
+
+    const resultC = getNextDateBlockTimingIndex({ currentIndex: 8, ranges });
+    expect(resultC.currentResult).toBeDefined();
+    expect(resultC.currentResult?.x).toBe(b.x);
+    expect(resultC.nextIndex).toBe(9);
+    expect(resultC.nextResult).toBeDefined();
+    expect(resultC.nextResult?.x).toBe(c.x);
+
+    const resultD = getNextDateBlockTimingIndex({ currentIndex: 12, ranges });
+    expect(resultD.currentResult).toBeDefined();
+    expect(resultD.currentResult?.x).toBe(c.x);
+    expect(resultD.nextIndex).toBe(d.i);
+    expect(resultD.nextResult).toBeDefined();
+    expect(resultD.nextResult?.x).toBe(d.x);
+
+    const resultE = getNextDateBlockTimingIndex({ currentIndex: 30, ranges });
+    expect(resultE.currentResult).toBeUndefined();
+    expect(resultE.nextResult).toBeUndefined();
+    expect(resultE.nextIndex).toBeUndefined();
+  });
+
+  it('should return no results if the input is an empty array', () => {
+    const result = getNextDateBlockTimingIndex({ currentIndex: 0, ranges: [] });
+
+    expect(result.currentResult).toBeUndefined();
+    expect(result.nextResult).toBeUndefined();
+    expect(result.pastResults.length).toBe(0);
+    expect(result.presentResults.length).toBe(0);
+    expect(result.futureResults.length).toBe(0);
+  });
+});
+
+describe('dateRelativeStateForDateBlockIndexAndDateBlockRange()', () => {
+  it('should return past for ranges less than the index.', () => {
+    const result = dateRelativeStateForDateBlockRangeComparedToIndex({ i: 0, to: 2 }, 3);
+    expect(result).toBe('past');
+  });
+
+  it('should return future for ranges greater than the index.', () => {
+    const result = dateRelativeStateForDateBlockRangeComparedToIndex({ i: 2, to: 2 }, 1);
+    expect(result).toBe('future');
+  });
+
+  it('should return present for ranges that contain the index.', () => {
+    const result = dateRelativeStateForDateBlockRangeComparedToIndex({ i: 0, to: 2 }, 1);
+    expect(result).toBe('present');
+  });
+
+  it('should return present for ranges that have the same i value.', () => {
+    const result = dateRelativeStateForDateBlockRangeComparedToIndex({ i: 0, to: 2 }, 0);
+    expect(result).toBe('present');
+  });
+
+  it('should return present for ranges that have the same to value.', () => {
+    const result = dateRelativeStateForDateBlockRangeComparedToIndex({ i: 0, to: 2 }, 2);
+    expect(result).toBe('present');
+  });
+});
+
 describe('dateBlockTimingDateFactory()', () => {
   describe('scenarios', () => {
     describe('America/New_York timezone past days', () => {
@@ -680,6 +786,8 @@ describe('dateBlockTimingDateFactory()', () => {
 
           const dateFromIndex = dateFactory(i);
 
+          expect(dateFromIndex).toBeAfter(timing.start);
+
           const now = new Date();
 
           // should return the same hours/minutes/seconds as now
@@ -688,6 +796,22 @@ describe('dateBlockTimingDateFactory()', () => {
 
           expect(dateFromIndex.getUTCHours()).toBe(now.getUTCHours());
           expect(dateFromIndex.getUTCMinutes()).toBe(now.getUTCMinutes());
+
+          const indexFromDate = indexFactory(dateFromIndex);
+          expect(indexFromDate).toBe(i);
+        });
+      });
+
+      it('should expand the same dates to the same indexes.', () => {
+        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const dateFactory = dateBlockTimingDateFactory(timing);
+        const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+        expandedDays.forEach((x) => {
+          const { i } = x;
+
+          const dateFromIndex = dateFactory(i);
+          expect(dateFromIndex).toBeAfter(timing.start);
 
           const indexFromDate = indexFactory(dateFromIndex);
           expect(indexFromDate).toBe(i);

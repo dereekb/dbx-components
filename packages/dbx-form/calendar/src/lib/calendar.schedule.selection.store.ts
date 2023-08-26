@@ -961,7 +961,6 @@ export function computeScheduleSelectionRangeAndExclusion(state: CalendarSchedul
   const { start: currentStart, isEnabledDay, isEnabledFilterDay } = state;
 
   const dateFactory = dateBlockTimingStartDateFactory({ start: currentStart }, { assertTimingMatchesTimezone: false, useSystemTimezone: true });
-  // const dateFactory = dateBlockTimingStartDateFactory(changeTimingToSystemTimezone({ start: currentStart }), { useSystemTimezone: true });
   const dateBlockRange = computeCalendarScheduleSelectionDateBlockRange(state);
 
   if (dateBlockRange == null) {

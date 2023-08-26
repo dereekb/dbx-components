@@ -34,7 +34,10 @@ import {
   MS_IN_HOUR,
   minutesToFractionalHours,
   FractionalHour,
-  HOURS_IN_DAY
+  HOURS_IN_DAY,
+  DateRelativeState,
+  groupValues,
+  makeValuesGroupMap
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
@@ -589,6 +592,112 @@ export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date
   return dateTimingRelativeIndexFactory(timing)(date);
 }
 
+export interface GetNextDateBlockTimingIndexInput<T extends DateBlockRange> {
+  /**
+   * Relevant index for now.
+   */
+  readonly currentIndex: DateBlockIndex;
+  /**
+   * All possible ranges to pick from.
+   */
+  readonly ranges: ArrayOrValue<T>;
+}
+
+export interface GetNextDateBlockTimingIndexResult<T extends DateBlockRange> {
+  /**
+   * The item that matches the current index first out of the options.
+   */
+  readonly currentResult: Maybe<T>;
+  /**
+   * The next picked index, if available.
+   */
+  readonly nextIndex: Maybe<DateBlockIndex>;
+  /**
+   * The item that matches the next index first out of the options.
+   */
+  readonly nextResult: Maybe<T>;
+  /**
+   * All ranges that match/contain the current index.
+   */
+  readonly presentResults: T[];
+  /**
+   * All ranges that come before the current index.
+   */
+  readonly pastResults: T[];
+  /**
+   * All ranges that come after the current index.
+   */
+  readonly futureResults: T[];
+}
+
+/**
+ * Computes a GetNextDateBlockTimingIndexResult from the input.
+ *
+ * @param input
+ */
+export function getNextDateBlockTimingIndex<T extends DateBlockRange>(input: GetNextDateBlockTimingIndexInput<T>): GetNextDateBlockTimingIndexResult<T> {
+  const { ranges, currentIndex } = input;
+
+  const relativeStateGroups = makeValuesGroupMap(asArray(ranges), (range) => {
+    return dateRelativeStateForDateBlockRangeComparedToIndex(range, currentIndex);
+  });
+
+  const pastResults = relativeStateGroups.get('past') ?? [];
+  const presentResults = relativeStateGroups.get('present') ?? [];
+  const futureResults = relativeStateGroups.get('future') ?? [];
+
+  const currentResult = presentResults[0];
+
+  let nextResult: Maybe<T>;
+  let nextIndex: Maybe<number> = currentIndex + 1;
+
+  const nextResultFromPresent = presentResults.find((x) => dateRelativeStateForDateBlockRangeComparedToIndex(x, nextIndex as number) === 'present');
+
+  if (nextResultFromPresent) {
+    nextResult = nextResultFromPresent;
+  } else {
+    // search through the future indexes, looking for the one with the lowest index.
+    const greatestAndLeastIndexResult = getLeastAndGreatestDateBlockIndexInDateBlockRanges(futureResults);
+
+    if (greatestAndLeastIndexResult) {
+      nextIndex = greatestAndLeastIndexResult.leastIndex;
+      nextResult = greatestAndLeastIndexResult.leastIndexItem;
+    } else {
+      nextIndex = undefined;
+    }
+  }
+
+  return {
+    currentResult,
+    nextIndex,
+    nextResult,
+    pastResults,
+    presentResults,
+    futureResults
+  };
+}
+
+/**
+ * Returns the DateRelativeState for the given index and range.
+ *
+ * @param nowIndex
+ * @param range
+ */
+export function dateRelativeStateForDateBlockRangeComparedToIndex(range: DateBlockRange, nowIndex: DateBlockIndex): DateRelativeState {
+  const { i, to } = dateBlockRange(range.i, range.to);
+  let state: DateRelativeState;
+
+  if (i > nowIndex) {
+    state = 'future'; // if i greater, then the range is in the future.
+  } else if (to < nowIndex) {
+    state = 'past'; // if i is less than or equal, and to is less than i, then it is in the past
+  } else {
+    state = 'present';
+  }
+
+  return state;
+}
+
 /**
  * Similar to the DateTimingRelativeIndexFactory, but returns a date instead of an index for the input.
  *
@@ -613,7 +722,14 @@ export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = Date
       return input;
     } else {
       const now = new Date();
-      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+      const nowHours = now.getUTCHours();
+      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+
+      // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
+      if (timing.start.getUTCHours() > nowHours) {
+        input += 1;
+      }
+
       const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
       return nowWithDateForIndex;
     }
@@ -1432,23 +1548,67 @@ export function isValidDateBlockRangeSeries(input: DateBlockRange[]): boolean {
 }
 
 /**
+ * Returns the lowest index between all the input date block ranges. Returns 0 by default if there is no minimum or input blocks.
+ *
+ * The input range is not expected to be sorted.
+ */
+export function getLeastDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockIndex {
+  return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.leastIndex ?? 0;
+}
+
+/**
  * Returns the largest index between all the input date block ranges. Returns 0 by default.
  *
  * The input range is not expected to be sorted.
  */
-export function getGreatestDateBlockIndexInDateBlockRanges(input: DateBlockRange[]): DateBlockIndex {
+export function getGreatestDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockIndex {
+  return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.greatestIndex ?? 0;
+}
+
+export interface LeastAndGreatestDateBlockIndexResult<T> {
+  leastIndex: number;
+  leastIndexItem: T;
+  greatestIndex: number;
+  greatestIndexItem: T;
+}
+
+/**
+ * Returns the largest index between all the input date block ranges. Returns null if the input is empty.
+ *
+ * The input range is not expected to be sorted.
+ */
+export function getLeastAndGreatestDateBlockIndexInDateBlockRanges<T extends DateBlockRange>(input: T[]): Maybe<LeastAndGreatestDateBlockIndexResult<T>> {
+  if (!input.length) {
+    return null;
+  }
+
+  let leastIndex = Number.MAX_SAFE_INTEGER;
   let greatestIndex = 0;
+  let leastIndexItem: T = input[0];
+  let greatestIndexItem: T = input[0];
 
   for (let i = 0; i < input.length; i += 1) {
     const range = input[i];
-    const greatestRangeIndex = range.to || range.i;
+    const leastRangeIndex = range.i;
+    const greatestRangeIndex = (range as DateBlockRange).to || range.i;
+
+    if (leastRangeIndex < leastIndex) {
+      leastIndex = leastRangeIndex;
+      leastIndexItem = range;
+    }
 
     if (greatestRangeIndex > greatestIndex) {
       greatestIndex = greatestRangeIndex;
+      greatestIndexItem = range;
     }
   }
 
-  return greatestIndex;
+  return {
+    leastIndex,
+    leastIndexItem,
+    greatestIndex,
+    greatestIndexItem
+  };
 }
 
 /**
