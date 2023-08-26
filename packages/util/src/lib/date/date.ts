@@ -209,3 +209,13 @@ export type YearNumber = number;
  * Current state of the date relative to another date.
  */
 export type DateRelativeState = 'past' | 'present' | 'future';
+
+/**
+ * Returns true if the value is a date.
+ *
+ * @param value
+ * @returns
+ */
+export function isDate(value: unknown): value is Date {
+  return value instanceof Date || (typeof value === 'object' && Object.prototype.toString.call(value) === '[object Date]');
+}

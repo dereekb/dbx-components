@@ -1,4 +1,6 @@
+import { DecisionFunction } from './../value/decision';
 import { Maybe } from '../value';
+import { IsInSetDecisionFunction, isInSetDecisionFunction } from '../set/set.decision';
 
 export type Sunday = 0;
 export type Monday = 1;
@@ -23,6 +25,23 @@ export type DayOfWeek = Sunday | Monday | Tuesday | Wednesday | Thusrsday | Frid
  */
 export function dayOfWeek(date: Date) {
   return date.getDay() as DayOfWeek;
+}
+
+/**
+ * Decision function that checks whether or not the input DayOfWeek or the DayOfWeek for the input Date is in the set.
+ */
+export type IsInAllowedDaysOfWeekSetDecisionFunction = IsInSetDecisionFunction<Date | DayOfWeek, DayOfWeek>;
+
+/**
+ * Creates a DecisionFunction that checks whether or not the input day or days of
+ *
+ * @param allowedDaysOfWeek
+ * @returns
+ */
+export function isInAllowedDaysOfWeekSet(allowedDaysOfWeek: Set<DayOfWeek>): IsInAllowedDaysOfWeekSetDecisionFunction {
+  return isInSetDecisionFunction<Date | DayOfWeek, DayOfWeek>(allowedDaysOfWeek, (x) => {
+    return typeof x === 'number' ? x : dayOfWeek(x);
+  });
 }
 
 /**

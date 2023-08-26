@@ -47,7 +47,7 @@ import {
   DateBlockTimingStart
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, removeFromSet, ISO8601DayString, filterValuesToSet, mapValuesToSet, asDecisionFunction } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, removeFromSet, ISO8601DayString, filterValuesToSet, mapValuesToSet, asDecisionFunction, isInAllowedDaysOfWeekSet } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of, scheduled, combineLatest } from 'rxjs';
@@ -330,6 +330,11 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly allowedDaysOfWeek$: Observable<Set<DayOfWeek>> = this.state$.pipe(
     map((x) => x.allowedDaysOfWeek),
     distinctUntilHasDifferentValues(),
+    shareReplay(1)
+  );
+
+  readonly isInAllowedDaysOfWeekFunction$ = this.allowedDaysOfWeek$.pipe(
+    map((x) => isInAllowedDaysOfWeekSet(x)),
     shareReplay(1)
   );
 
