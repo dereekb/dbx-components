@@ -613,7 +613,14 @@ export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = Date
       return input;
     } else {
       const now = new Date();
-      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+      const nowHours = now.getUTCHours();
+      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+
+      // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
+      if (timing.start.getUTCHours() > nowHours) {
+        input += 1;
+      }
+
       const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
       return nowWithDateForIndex;
     }

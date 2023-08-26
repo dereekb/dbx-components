@@ -705,6 +705,8 @@ describe('dateBlockTimingDateFactory()', () => {
 
           const dateFromIndex = dateFactory(i);
 
+          expect(dateFromIndex).toBeAfter(timing.start);
+
           const now = new Date();
 
           // should return the same hours/minutes/seconds as now
@@ -713,6 +715,22 @@ describe('dateBlockTimingDateFactory()', () => {
 
           expect(dateFromIndex.getUTCHours()).toBe(now.getUTCHours());
           expect(dateFromIndex.getUTCMinutes()).toBe(now.getUTCMinutes());
+
+          const indexFromDate = indexFactory(dateFromIndex);
+          expect(indexFromDate).toBe(i);
+        });
+      });
+
+      it('should expand the same dates to the same indexes.', () => {
+        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const dateFactory = dateBlockTimingDateFactory(timing);
+        const expandedDays = expandDateSchedule({ timing, schedule: s });
+
+        expandedDays.forEach((x) => {
+          const { i } = x;
+
+          const dateFromIndex = dateFactory(i);
+          expect(dateFromIndex).toBeAfter(timing.start);
 
           const indexFromDate = indexFactory(dateFromIndex);
           expect(indexFromDate).toBe(i);
