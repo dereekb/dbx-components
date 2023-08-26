@@ -4,7 +4,7 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
 import { Maybe } from '@dereekb/util';
-import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, map, shareReplay } from 'rxjs';
+import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, map, shareReplay, combineLatest } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
@@ -113,11 +113,10 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
   readonly pickerOpened$ = this._pickerOpened.asObservable();
 
   readonly defaultDatePickerFilter: DateFilterFn<Date> = () => true;
-  readonly datePickerFilter$: Observable<DateFilterFn<Date>> = this.dbxCalendarScheduleSelectionStore.isEnabledFilterDayFunction$.pipe(
-    map((isEnabled) => {
+  readonly datePickerFilter$: Observable<DateFilterFn<Date>> = combineLatest([this.dbxCalendarScheduleSelectionStore.isEnabledFilterDayFunction$, this.dbxCalendarScheduleSelectionStore.isInAllowedDaysOfWeekFunction$]).pipe(
+    map(([isEnabled, isAllowedDayOfWeek]) => {
       const fn = (date: Date | null) => {
-        const result = date ? isEnabled(date) : true;
-
+        const result = date ? isAllowedDayOfWeek(date) && isEnabled(date) : true;
         return result;
       };
       return fn;
