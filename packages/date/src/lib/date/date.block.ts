@@ -34,7 +34,10 @@ import {
   MS_IN_HOUR,
   minutesToFractionalHours,
   FractionalHour,
-  HOURS_IN_DAY
+  HOURS_IN_DAY,
+  DateRelativeState,
+  groupValues,
+  makeValuesGroupMap
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
@@ -587,6 +590,112 @@ export function dateTimingRelativeIndexArrayFactory<T extends DateBlockTimingSta
  */
 export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
   return dateTimingRelativeIndexFactory(timing)(date);
+}
+
+export interface GetNextDateBlockTimingIndexInput<T extends DateBlockRange> {
+  /**
+   * Relevant index for now.
+   */
+  readonly currentIndex: DateBlockIndex;
+  /**
+   * All possible ranges to pick from.
+   */
+  readonly ranges: ArrayOrValue<T>;
+}
+
+export interface GetNextDateBlockTimingIndexResult<T extends DateBlockRange> {
+  /**
+   * The item that matches the current index first out of the options.
+   */
+  readonly currentResult: Maybe<T>;
+  /**
+   * The next picked index, if available.
+   */
+  readonly nextIndex: Maybe<DateBlockIndex>;
+  /**
+   * The item that matches the next index first out of the options.
+   */
+  readonly nextResult: Maybe<T>;
+  /**
+   * All ranges that match/contain the current index.
+   */
+  readonly presentResults: T[];
+  /**
+   * All ranges that come before the current index.
+   */
+  readonly pastResults: T[];
+  /**
+   * All ranges that come after the current index.
+   */
+  readonly futureResults: T[];
+}
+
+/**
+ * Computes a GetNextDateBlockTimingIndexResult from the input.
+ *
+ * @param input
+ */
+export function getNextDateBlockTimingIndex<T extends DateBlockRange>(input: GetNextDateBlockTimingIndexInput<T>): GetNextDateBlockTimingIndexResult<T> {
+  const { ranges, currentIndex } = input;
+
+  const relativeStateGroups = makeValuesGroupMap(asArray(ranges), (range) => {
+    return dateRelativeStateForDateBlockRangeComparedToIndex(range, currentIndex);
+  });
+
+  const pastResults = relativeStateGroups.get('past') ?? [];
+  const presentResults = relativeStateGroups.get('present') ?? [];
+  const futureResults = relativeStateGroups.get('future') ?? [];
+
+  const currentResult = presentResults[0];
+
+  let nextResult: Maybe<T>;
+  let nextIndex: Maybe<number> = currentIndex + 1;
+
+  const nextResultFromPresent = presentResults.find((x) => dateRelativeStateForDateBlockRangeComparedToIndex(x, nextIndex as number) === 'present');
+
+  if (nextResultFromPresent) {
+    nextResult = nextResultFromPresent;
+  } else {
+    // search through the future indexes, looking for the one with the lowest index.
+    const greatestAndLeastIndexResult = getLeastAndGreatestDateBlockIndexInDateBlockRanges(futureResults);
+
+    if (greatestAndLeastIndexResult) {
+      nextIndex = greatestAndLeastIndexResult.leastIndex;
+      nextResult = greatestAndLeastIndexResult.leastIndexItem;
+    } else {
+      nextIndex = undefined;
+    }
+  }
+
+  return {
+    currentResult,
+    nextIndex,
+    nextResult,
+    pastResults,
+    presentResults,
+    futureResults
+  };
+}
+
+/**
+ * Returns the DateRelativeState for the given index and range.
+ *
+ * @param nowIndex
+ * @param range
+ */
+export function dateRelativeStateForDateBlockRangeComparedToIndex(range: DateBlockRange, nowIndex: DateBlockIndex): DateRelativeState {
+  const { i, to } = dateBlockRange(range.i, range.to);
+  let state: DateRelativeState;
+
+  if (i > nowIndex) {
+    state = 'future'; // if i greater, then the range is in the future.
+  } else if (to < nowIndex) {
+    state = 'past'; // if i is less than or equal, and to is less than i, then it is in the past
+  } else {
+    state = 'present';
+  }
+
+  return state;
 }
 
 /**
@@ -1456,9 +1565,11 @@ export function getGreatestDateBlockIndexInDateBlockRanges(input: (DateBlock | D
   return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.greatestIndex ?? 0;
 }
 
-export interface LeastAndGreatestDateBlockIndexResult {
+export interface LeastAndGreatestDateBlockIndexResult<T> {
   leastIndex: number;
+  leastIndexItem: T;
   greatestIndex: number;
+  greatestIndexItem: T;
 }
 
 /**
@@ -1466,13 +1577,15 @@ export interface LeastAndGreatestDateBlockIndexResult {
  *
  * The input range is not expected to be sorted.
  */
-export function getLeastAndGreatestDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): Maybe<LeastAndGreatestDateBlockIndexResult> {
+export function getLeastAndGreatestDateBlockIndexInDateBlockRanges<T extends DateBlockRange>(input: T[]): Maybe<LeastAndGreatestDateBlockIndexResult<T>> {
   if (!input.length) {
     return null;
   }
 
   let leastIndex = Number.MAX_SAFE_INTEGER;
   let greatestIndex = 0;
+  let leastIndexItem: T = input[0];
+  let greatestIndexItem: T = input[0];
 
   for (let i = 0; i < input.length; i += 1) {
     const range = input[i];
@@ -1481,16 +1594,20 @@ export function getLeastAndGreatestDateBlockIndexInDateBlockRanges(input: (DateB
 
     if (leastRangeIndex < leastIndex) {
       leastIndex = leastRangeIndex;
+      leastIndexItem = range;
     }
 
     if (greatestRangeIndex > greatestIndex) {
       greatestIndex = greatestRangeIndex;
+      greatestIndexItem = range;
     }
   }
 
   return {
     leastIndex,
-    greatestIndex
+    leastIndexItem,
+    greatestIndex,
+    greatestIndexItem
   };
 }
 
