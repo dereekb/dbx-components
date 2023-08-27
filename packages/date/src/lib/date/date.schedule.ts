@@ -21,8 +21,8 @@ import {
   DateBlockTimingStartEndRange,
   dateBlockTimingStartForNowInSystemTimezone,
   dateBlockTimingStartForNowInTimezone,
-  dateTimingRelativeIndexFactory,
-  DateTimingRelativeIndexFactoryInput,
+  dateBlockTimingRelativeIndexFactory,
+  DateBlockTimingRelativeIndexFactoryInput,
   getCurrentDateBlockTimingStartDate,
   groupToDateBlockRanges,
   safeDateBlockTimingFromDateRangeAndEvent
@@ -403,7 +403,7 @@ export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateSched
 /**
  * DateScheduleDateFilter input.
  */
-export type DateScheduleDateFilterInput = DateTimingRelativeIndexFactoryInput;
+export type DateScheduleDateFilterInput = DateBlockTimingRelativeIndexFactoryInput;
 
 /**
  * Returns true if the date falls within the schedule.
@@ -450,7 +450,7 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
 
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
-  const dateIndexForDate = dateTimingRelativeIndexFactory(timingStart);
+  const dateIndexForDate = dateBlockTimingRelativeIndexFactory(timingStart);
 
   const indexFloor = setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
   const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, dateIndexForDate(minMaxDateRange.start)) : indexFloor; // start date should be the min inde

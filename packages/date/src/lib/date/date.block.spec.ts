@@ -21,13 +21,13 @@ import {
   dateBlockTiming,
   DateBlockTiming,
   dateBlockTimingInTimezoneFunction,
-  dateTimingRelativeIndexArrayFactory,
-  dateTimingRelativeIndexFactory,
+  dateBlockTimingRelativeIndexArrayFactory,
+  dateBlockTimingRelativeIndexFactory,
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
   getCurrentDateBlockTimingOffset,
   getCurrentDateBlockTimingStartDate,
-  getRelativeIndexForDateTiming,
+  getRelativeIndexForDateBlockTiming,
   groupToDateBlockRanges,
   groupUniqueDateBlocks,
   isDateBlockWithinDateBlockRangeFunction,
@@ -56,7 +56,7 @@ import {
   dateBlockTimingStartsAtDateFactory,
   dateBlockTimingStartDateFactory,
   timingDateTimezoneUtcNormal,
-  isDateTimingRelativeIndexFactory,
+  isDateBlockTimingRelativeIndexFactory,
   getLeastDateBlockIndexInDateBlockRanges,
   getLeastAndGreatestDateBlockIndexInDateBlockRanges,
   dateRelativeStateForDateBlockRangeComparedToIndex,
@@ -581,7 +581,7 @@ describe('dateBlockTimingInTimezoneFunction()', () => {
   });
 });
 
-describe('dateTimingRelativeIndexFactory()', () => {
+describe('dateBlockTimingRelativeIndexFactory()', () => {
   describe('function', () => {
     const start = startOfDay(new Date());
     const startsAt = addHours(start, 12); // Noon on the day
@@ -592,7 +592,7 @@ describe('dateTimingRelativeIndexFactory()', () => {
     describe('UTC', () => {
       const timezone = 'UTC';
       const timing = changeTimingToTimezoneFunction(timezone)(systemTiming);
-      const fn = dateTimingRelativeIndexFactory(timing);
+      const fn = dateBlockTimingRelativeIndexFactory(timing);
 
       it('should return the expected indexes for the first day relative to the UTC timezone', () => {
         const dayString = formatToISO8601DayString(start);
@@ -608,7 +608,7 @@ describe('dateTimingRelativeIndexFactory()', () => {
     describe('America/Denver', () => {
       const timezone = 'America/Denver';
       const timing = changeTimingToTimezoneFunction(timezone)(systemTiming);
-      const fn = dateTimingRelativeIndexFactory(timing);
+      const fn = dateBlockTimingRelativeIndexFactory(timing);
 
       it('should return the expected indexes for the first day relative to the Denver timezone', () => {
         const dayString = formatToISO8601DayString(start);
@@ -645,7 +645,7 @@ describe('dateTimingRelativeIndexFactory()', () => {
       };
 
       it('should correspond the dates to the expanded indexes', () => {
-        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const indexFactory = dateBlockTimingRelativeIndexFactory(timing);
         const expandedDays = expandDateSchedule({ timing, schedule: s });
 
         expandedDays.forEach((x) => {
@@ -661,7 +661,7 @@ describe('dateTimingRelativeIndexFactory()', () => {
       const theNextDay = new Date('2023-03-12T06:00:00.000Z');
 
       it('should properly round the index down.', () => {
-        const factory = dateTimingRelativeIndexFactory({ start });
+        const factory = dateBlockTimingRelativeIndexFactory({ start });
         const result = factory(oneSecondBeforeNextDay);
         expect(result).toBe(0); // should be the same day
 
@@ -675,7 +675,7 @@ describe('dateTimingRelativeIndexFactory()', () => {
       const dstDay = new Date('2023-03-13T06:00:00.000Z'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
 
       it('should handle daylight savings time changes and return the expected index.', () => {
-        const factory = dateTimingRelativeIndexFactory({ start });
+        const factory = dateBlockTimingRelativeIndexFactory({ start });
         const result = factory(dstDay);
 
         expect(formatToISO8601DayString(dstDay)).toBe('2023-03-13');
@@ -685,7 +685,7 @@ describe('dateTimingRelativeIndexFactory()', () => {
   });
 });
 
-describe('isDateTimingRelativeIndexFactory()', () => {
+describe('isDateBlockTimingRelativeIndexFactory()', () => {
   const timing = {
     start: new Date('2023-08-13T04:00:00.000Z'),
     end: new Date('2023-08-30T09:00:00.000Z'),
@@ -695,13 +695,13 @@ describe('isDateTimingRelativeIndexFactory()', () => {
 
   describe('function', () => {
     it('should return false for a timing', () => {
-      const result = isDateTimingRelativeIndexFactory(timing);
+      const result = isDateBlockTimingRelativeIndexFactory(timing);
       expect(result).toBe(false);
     });
 
-    it('should return true for a dateTimingRelativeIndexFactory()', () => {
-      const indexFactory = dateTimingRelativeIndexFactory(timing);
-      const result = isDateTimingRelativeIndexFactory(indexFactory);
+    it('should return true for a dateBlockTimingRelativeIndexFactory()', () => {
+      const indexFactory = dateBlockTimingRelativeIndexFactory(timing);
+      const result = isDateBlockTimingRelativeIndexFactory(indexFactory);
       expect(result).toBe(true);
     });
   });
@@ -804,7 +804,7 @@ describe('dateBlockTimingDateFactory()', () => {
       };
 
       it('should correspond the indexes to the expanded dates', () => {
-        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const indexFactory = dateBlockTimingRelativeIndexFactory(timing);
         const dateFactory = dateBlockTimingDateFactory(timing);
         const expandedDays = expandDateSchedule({ timing, schedule: s });
 
@@ -833,7 +833,7 @@ describe('dateBlockTimingDateFactory()', () => {
       });
 
       it('should expand the same dates to the same indexes.', () => {
-        const indexFactory = dateTimingRelativeIndexFactory(timing);
+        const indexFactory = dateBlockTimingRelativeIndexFactory(timing);
         const dateFactory = dateBlockTimingDateFactory(timing);
         const expandedDays = expandDateSchedule({ timing, schedule: s });
 
@@ -948,12 +948,12 @@ describe('dateBlockTimingStartDateFactory()', () => {
   });
 });
 
-describe('dateTimingRelativeIndexArrayFactory()', () => {
+describe('dateBlockTimingRelativeIndexArrayFactory()', () => {
   const start = startOfDay(new Date());
 
   describe('function', () => {
-    const indexFactory = dateTimingRelativeIndexFactory({ start });
-    const factory = dateTimingRelativeIndexArrayFactory(indexFactory);
+    const indexFactory = dateBlockTimingRelativeIndexFactory({ start });
+    const factory = dateBlockTimingRelativeIndexArrayFactory(indexFactory);
 
     it('should convert a DateRange', () => {
       const days = 5;
@@ -1019,34 +1019,34 @@ describe('dateTimingRelativeIndexArrayFactory()', () => {
   });
 });
 
-describe('getRelativeIndexForDateTiming()', () => {
+describe('getRelativeIndexForDateBlockTiming()', () => {
   const start = startOfDay(new Date());
   const startsAt = addHours(start, 12); // Noon on the day
   const days = 5;
   const timing = dateBlockTiming({ startsAt, duration: 60 }, days);
 
   it('same time should return an index of 0', () => {
-    const result = getRelativeIndexForDateTiming(timing, startsAt);
+    const result = getRelativeIndexForDateBlockTiming(timing, startsAt);
     expect(result).toBe(0);
   });
 
   it('same 24 hour period should return an index of 0', () => {
-    const result = getRelativeIndexForDateTiming(timing, addHours(startsAt, 6));
+    const result = getRelativeIndexForDateBlockTiming(timing, addHours(startsAt, 6));
     expect(result).toBe(0);
   });
 
   it('yesterday should return an index of -1', () => {
-    const result = getRelativeIndexForDateTiming(timing, addDays(startsAt, -1));
+    const result = getRelativeIndexForDateBlockTiming(timing, addDays(startsAt, -1));
     expect(result).toBe(-1);
   });
 
   it('tomorrow should return an index of 1', () => {
-    const result = getRelativeIndexForDateTiming(timing, addDays(startsAt, 1));
+    const result = getRelativeIndexForDateBlockTiming(timing, addDays(startsAt, 1));
     expect(result).toBe(1);
   });
 
   it('one week later should return an index of 7', () => {
-    const result = getRelativeIndexForDateTiming(timing, addDays(startsAt, 7));
+    const result = getRelativeIndexForDateBlockTiming(timing, addDays(startsAt, 7));
     expect(result).toBe(7);
   });
 });
