@@ -42,7 +42,7 @@ import {
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
-import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
+import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow, isSameDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
@@ -187,6 +187,16 @@ export interface CurrentDateBlockTimingUtcData {
 export interface CurrentDateBlockTimingOffsetData extends CurrentDateBlockTimingUtcData {
   offset: Milliseconds;
   currentTimezoneOffsetInHours: Hours;
+}
+
+/**
+ * Returns true if the two timings are equivalent.
+ *
+ * @param a
+ * @param b
+ */
+export function isSameDateBlockTiming(a: Maybe<DateBlockTiming>, b: Maybe<DateBlockTiming>): boolean {
+  return a && b ? a.duration === b.duration && isSameDate(a.start, b.start) && isSameDate(a.startsAt, b.startsAt) && isSameDate(a.end, b.end) : a == b;
 }
 
 /**

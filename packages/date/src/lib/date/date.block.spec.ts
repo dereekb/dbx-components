@@ -60,7 +60,8 @@ import {
   getLeastDateBlockIndexInDateBlockRanges,
   getLeastAndGreatestDateBlockIndexInDateBlockRanges,
   dateRelativeStateForDateBlockRangeComparedToIndex,
-  getNextDateBlockTimingIndex
+  getNextDateBlockTimingIndex,
+  isSameDateBlockTiming
 } from './date.block';
 import { MS_IN_MINUTE, MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber } from '@dereekb/util';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
@@ -84,6 +85,35 @@ describe('isValidDateBlockIndex()', () => {
 
   it('should return true for 100.', () => {
     expect(isValidDateBlockIndex(100)).toBe(true);
+  });
+});
+
+describe('isSameDateBlockTiming()', () => {
+  const startsAt = startOfDay(new Date());
+  const timing = dateBlockTiming({ startsAt, duration: 60 }, 2); // 2 days
+
+  it('should return true if the timings are the same.', () => {
+    expect(isSameDateBlockTiming(timing, timing)).toBe(true);
+  });
+
+  it('should return true if comparing a null and undefined value', () => {
+    expect(isSameDateBlockTiming(null, undefined)).toBe(true);
+  });
+
+  it('should return false if comparing a null value and a timing', () => {
+    expect(isSameDateBlockTiming(null, timing)).toBe(false);
+  });
+
+  it('should return false if the durations are different', () => {
+    expect(isSameDateBlockTiming(timing, { ...timing, duration: 30 })).toBe(false);
+  });
+
+  it('should return false if the starts are different', () => {
+    expect(isSameDateBlockTiming(timing, { ...timing, start: new Date() })).toBe(false);
+  });
+
+  it('should return false if the startsAt are different', () => {
+    expect(isSameDateBlockTiming(timing, { ...timing, startsAt: new Date() })).toBe(false);
   });
 });
 
