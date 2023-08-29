@@ -1,6 +1,6 @@
 import { setIncludes, ReadKeyFunction, setsAreEquivalent, isEvenNumber } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
-import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue } from './set';
+import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue, keepFromSetCopy } from './set';
 
 describe('asSet()', () => {
   it('should turn a single string value into a set with that string', () => {
@@ -51,6 +51,32 @@ describe('filterValuesToSet()', () => {
     expect(result.size).toBe(2);
     expect(result).toContain(2);
     expect(result).toContain(4);
+  });
+});
+
+describe('keepFromSetCopy()', () => {
+  it('should return an empty set if the input is null/undefined', () => {
+    const set = new Set([1, 2, 3]);
+
+    const result = keepFromSetCopy(set, null);
+
+    expect(set.size).toBe(3);
+    expect(result).not.toBe(set);
+    expect(result).toBeDefined();
+    expect(result.size).toBe(0);
+  });
+
+  it('should keep all the values that is in both the set and the iterable.', () => {
+    const set = new Set([1, 2, 3]);
+    const values = [2, 3, 4];
+
+    const result = keepFromSetCopy(set, values);
+
+    expect(set.size).toBe(3);
+    expect(result).not.toBe(set);
+    expect(result.size).toBe(2);
+    expect(result.has(2)).toBe(true);
+    expect(result.has(3)).toBe(true);
   });
 });
 
