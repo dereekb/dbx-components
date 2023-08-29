@@ -17,7 +17,7 @@ import {
   DateBlockRangeWithRange,
   dateBlockDayTimingInfoFactory,
   dateBlocksExpansionFactory,
-  dateBlocksInDateBlockRange,
+  filterDateBlocksInDateBlockRange,
   dateBlockTiming,
   DateBlockTiming,
   dateBlockTimingInTimezoneFunction,
@@ -2069,7 +2069,7 @@ describe('dateBlocksInDateBlockRange()', () => {
     const range = { i: 0, to: 5 };
     const input = [{ i: 0 }, { i: 1 }, { i: 2 }];
 
-    const result = dateBlocksInDateBlockRange(input, range);
+    const result = filterDateBlocksInDateBlockRange(input, range);
     expect(result.length).toBe(input.length);
   });
 
@@ -2077,7 +2077,7 @@ describe('dateBlocksInDateBlockRange()', () => {
     const range = { i: 0, to: 5 };
     const input = [dateBlockRange(0, 5), dateBlockRange(2, 4)];
 
-    const result = dateBlocksInDateBlockRange(input, range);
+    const result = filterDateBlocksInDateBlockRange(input, range);
     expect(result.length).toBe(input.length);
   });
 
@@ -2085,7 +2085,7 @@ describe('dateBlocksInDateBlockRange()', () => {
     const range = { i: 0, to: 5 };
     const input = [{ i: 6 }, { i: 7 }, { i: 8 }];
 
-    const result = dateBlocksInDateBlockRange(input, range);
+    const result = filterDateBlocksInDateBlockRange(input, range);
     expect(result.length).toBe(0);
   });
 
@@ -2093,7 +2093,7 @@ describe('dateBlocksInDateBlockRange()', () => {
     const range = { i: 0, to: 5 };
     const input = dateBlockRange(0, 10);
 
-    const result = dateBlocksInDateBlockRange([input], range);
+    const result = filterDateBlocksInDateBlockRange([input], range);
     expect(result.length).toBe(0);
   });
 });
@@ -2102,6 +2102,20 @@ describe('isDateBlockWithinDateBlockRangeFunction()', () => {
   describe('function', () => {
     describe('range 0-0', () => {
       const fn = isDateBlockWithinDateBlockRangeFunction({ i: 0, to: 0 });
+
+      it('should return false for the range 0-1000', () => {
+        const result = fn({ i: 0, to: 1000 });
+        expect(result).toBe(false);
+      });
+
+      it('should return true for the range 0-0', () => {
+        const result = fn({ i: 0, to: 0 });
+        expect(result).toBe(true);
+      });
+    });
+
+    describe('index 0', () => {
+      const fn = isDateBlockWithinDateBlockRangeFunction(0);
 
       it('should return false for the range 0-1000', () => {
         const result = fn({ i: 0, to: 1000 });
@@ -2150,32 +2164,63 @@ describe('dateBlockRangeIncludedByRangeFunction()', () => {
 
 describe('dateBlockRangeOverlapsRangeFunction()', () => {
   describe('function', () => {
-    const range = dateBlockRange(5, 10);
-    const fn = dateBlockRangeOverlapsRangeFunction(range);
+    describe('index 8', () => {
+      const fn = dateBlockRangeOverlapsRangeFunction(8);
 
-    it('should return true for the same range.', () => {
-      const result = fn(range);
-      expect(result).toBe(true);
+      it('should return true for the range 8-9', () => {
+        const result = fn({ i: 8, to: 9 });
+        expect(result).toBe(true);
+      });
+
+      it('should return true for the range 0-1000', () => {
+        const result = fn({ i: 0, to: 1000 });
+        expect(result).toBe(true);
+      });
+
+      it('should return false for the range 0-0', () => {
+        const result = fn({ i: 0, to: 0 });
+        expect(result).toBe(false);
+      });
+
+      it('should work with the findIndex function', () => {
+        const ranges = [
+          { i: 4, to: 4 },
+          { i: 8, to: 9 }
+        ];
+
+        const result = ranges.findIndex(fn);
+        expect(result).toBe(1);
+      });
     });
 
-    it('should return true for a range that is larger and includes the full range.', () => {
-      const result = fn(dateBlockRange(2, 12));
-      expect(result).toBe(true);
-    });
+    describe('range 5-10', () => {
+      const range = dateBlockRange(5, 10);
+      const fn = dateBlockRangeOverlapsRangeFunction(range);
 
-    it('should return false for a range that is smaller and does not overlap.', () => {
-      const result = fn(dateBlockRange(1, 4));
-      expect(result).toBe(false);
-    });
+      it('should return true for the same range.', () => {
+        const result = fn(range);
+        expect(result).toBe(true);
+      });
 
-    it('should return true for a range that has a partial overlap.', () => {
-      const result = fn(dateBlockRange(5, 8));
-      expect(result).toBe(true);
-    });
+      it('should return true for a range that is larger and includes the full range.', () => {
+        const result = fn(dateBlockRange(2, 12));
+        expect(result).toBe(true);
+      });
 
-    it('should return true for a range that is partial and bigger and does not include the full range.', () => {
-      const result = fn(dateBlockRange(6, 12));
-      expect(result).toBe(true);
+      it('should return false for a range that is smaller and does not overlap.', () => {
+        const result = fn(dateBlockRange(1, 4));
+        expect(result).toBe(false);
+      });
+
+      it('should return true for a range that has a partial overlap.', () => {
+        const result = fn(dateBlockRange(5, 8));
+        expect(result).toBe(true);
+      });
+
+      it('should return true for a range that is partial and bigger and does not include the full range.', () => {
+        const result = fn(dateBlockRange(6, 12));
+        expect(result).toBe(true);
+      });
     });
   });
 });

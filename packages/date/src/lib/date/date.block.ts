@@ -37,7 +37,8 @@ import {
   HOURS_IN_DAY,
   DateRelativeState,
   groupValues,
-  makeValuesGroupMap
+  makeValuesGroupMap,
+  findBestIndexMatchFunction
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
@@ -1348,7 +1349,7 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
  * @param range
  * @returns
  */
-export function dateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
+export function filterDateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
   const dateBlockIsWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(range);
   return blocks.filter(dateBlockIsWithinDateBlockRange);
 }
@@ -2338,6 +2339,11 @@ export function modifyDateBlockToFitRange<B extends DateBlock | DateBlockRange |
 }
 
 // MARK: Compat
+/**
+ * @deprecated use dateBlocksInDateBlockRange instead.
+ */
+export const dateBlocksInDateBlockRange = filterDateBlocksInDateBlockRange;
+
 /**
  * @deprecated use IsDateBlockWithinDateBlockRangeFunction instead.
  */
