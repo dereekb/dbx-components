@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
 @use '../style/theming';
 
 // MARK: Variables
@@ -56,6 +59,32 @@ $button-spacer-width: 6px;
 }
 
 @mixin color($theme-config) {
+  // NOTE: Keep sync'd with _style.scss colors
+  $color-config: theming.get-color-config($theme-config);
+
+  $background: map.get($color-config, 'background');
+  $grey-color-bg: theming.get-color-from-palette($background, 'disabled-button');
+  $disabled-color-bg: theming.get-color-from-palette($background, 'disabled-button');
+
+  .dbx-icon-button > .mat-button {
+    background: inherit;
+  }
+
+  .dbx-icon-button.dbx-grey-bg {
+    background: none;
+
+    > .mat-button {
+      background: $grey-color-bg;
+    }
+  }
+
+  .dbx-icon-button.dbx-disabled-bg {
+    background: none;
+
+    > .mat-button {
+      background: $disabled-color-bg;
+    }
+  }
 }
 
 @mixin typography($typography-config) {

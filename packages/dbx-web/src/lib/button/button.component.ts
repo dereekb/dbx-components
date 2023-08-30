@@ -17,7 +17,7 @@ export enum DbxButtonDisplayType {
 @Component({
   selector: 'dbx-button',
   template: `
-    <dbx-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions">
+    <dbx-spinner-button (btnClick)="clickButton()" [options]="btnOptions">
       <ng-content></ng-content>
     </dbx-spinner-button>
   `,
