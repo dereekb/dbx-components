@@ -31,7 +31,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
    * Whether or not to show the dropwdown caret for a menu
    */
   @Input()
-  showMenuCaret = true;
+  showMenuCaret = false;
 
   @Input()
   navAlign: HorizontalConnectionPos = 'center';
@@ -115,6 +115,8 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     }),
     shareReplay(1)
   );
+
+  // TODO: potentially make the caret depending on the current button display.
 
   constructor(dbxRouterTransitionService: DbxRouterTransitionService, private cdRef: ChangeDetectorRef, private readonly _dbxScreenMediaService: DbxScreenMediaService, private readonly _dbxRouterService: DbxRouterService) {
     super(dbxRouterTransitionService);
