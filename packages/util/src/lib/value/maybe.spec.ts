@@ -1,4 +1,4 @@
-import { hasValueOrNotEmpty, hasValueOrNotEmptyObject } from './maybe';
+import { hasValueOrNotEmpty, hasValueOrNotEmptyObject, valuesAreBothNullishOrEquivalent } from './maybe';
 
 describe('hasValueOrNotEmpty()', () => {
   it('should return false for empty values.', () => {
@@ -43,5 +43,27 @@ describe('hasValueOrNotEmptyObject()', () => {
     expect(hasValueOrNotEmptyObject(new Map([[1, 1]]))).toBe(true);
     expect(hasValueOrNotEmptyObject('test')).toBe(true);
     expect(hasValueOrNotEmptyObject({ a: 1 })).toBe(true);
+  });
+});
+
+describe('valuesAreBothNullishOrEquivalent()', () => {
+  it('should return true if both values are null.', () => {
+    expect(valuesAreBothNullishOrEquivalent(null, null)).toBe(true);
+  });
+
+  it('should return true if both values are undefined.', () => {
+    expect(valuesAreBothNullishOrEquivalent(undefined, undefined)).toBe(true);
+  });
+
+  it('should return true if both values are null or undefined.', () => {
+    expect(valuesAreBothNullishOrEquivalent(null, undefined)).toBe(true);
+  });
+
+  it('should return true if both values are equivalent.', () => {
+    expect(valuesAreBothNullishOrEquivalent(false, false)).toBe(true);
+  });
+
+  it('should return false if one value is false and the other is nullish.', () => {
+    expect(valuesAreBothNullishOrEquivalent(false, undefined)).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, mergeLoadingStates, successResult } from './loading.state';
+import { beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, loadingStatesHaveEquivalentMetadata, mapLoadingStateResults, mergeLoadingStates, successResult } from './loading.state';
 
 describe('beginLoading()', () => {
   it('should return a loading state that is loading.', () => {
@@ -182,7 +182,7 @@ describe('loadingStateIsLoading()', () => {
 
   it('should return false if a loading state has value=null', () => {
     const result = loadingStateIsLoading({ value: null });
-    expect(result).toBe(true);
+    expect(result).toBe(false);
   });
 
   it('should return false if a loading state has loading=undefined, and error is set.', () => {
@@ -249,6 +249,28 @@ describe('loadingStateHasFinishedLoading()', () => {
 
   it('should return false if a loading state has loading=undefined, and error=undefined.', () => {
     const result = loadingStateHasFinishedLoading({ loading: undefined, error: undefined });
+    expect(result).toBe(false);
+  });
+});
+
+describe('loadingStatesHaveEquivalentMetadata()', () => {
+  it('should return true if two loading states have equivalent metadata.', () => {
+    const result = loadingStatesHaveEquivalentMetadata({ loading: true }, { loading: true, error: null });
+    expect(result).toBe(true);
+  });
+
+  it('should return true for two empty loading states', () => {
+    const result = loadingStatesHaveEquivalentMetadata({}, {});
+    expect(result).toBe(true);
+  });
+
+  it('should return false if two loading states have different pages.', () => {
+    const result = loadingStatesHaveEquivalentMetadata({ page: 1 }, { page: 2 });
+    expect(result).toBe(false);
+  });
+
+  it('should return false if only one loading state has a page.', () => {
+    const result = loadingStatesHaveEquivalentMetadata({ page: 1 }, {});
     expect(result).toBe(false);
   });
 });

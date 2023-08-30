@@ -1,6 +1,7 @@
 export * from './address';
 export * from './bound';
 export * from './build';
+export * from './comparator';
 export * from './cron';
 export * from './decision';
 export * from './equal';

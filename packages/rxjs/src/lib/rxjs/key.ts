@@ -1,4 +1,4 @@
-import { PrimativeKey, ReadKeyFunction, readKeysFunction, readKeysSetFunction, ReadMultipleKeysFunction, setContainsAllValues } from '@dereekb/util';
+import { objectKeyEqualityComparatorFunction, EqualityComparatorFunction, PrimativeKey, ReadKeyFunction, readKeysFunction, readKeysSetFunction, ReadMultipleKeysFunction, setContainsAllValues, objectKeysEqualityComparatorFunction } from '@dereekb/util';
 import { distinctUntilChanged, MonoTypeOperatorFunction } from 'rxjs';
 
 /**
@@ -7,25 +7,7 @@ import { distinctUntilChanged, MonoTypeOperatorFunction } from 'rxjs';
  * @param readkey
  */
 export function distinctUntilKeysChange<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): MonoTypeOperatorFunction<T[]> {
-  const readKeysSet = readKeysSetFunction(readKey);
-  const readKeysArray = readKeysFunction(readKey);
-
-  return distinctUntilChanged((a: T[], b: T[]) => {
-    if (a.length === b.length) {
-      if (a.length === 0) {
-        return true; // both the same/empty arrays
-      }
-
-      const aKeys = readKeysSet(a);
-      const bKeys = readKeysArray(b);
-
-      if (aKeys.size === bKeys.length) {
-        return setContainsAllValues(aKeys, bKeys);
-      }
-    }
-
-    return false;
-  });
+  return distinctUntilChanged<T[]>(objectKeysEqualityComparatorFunction(readKey));
 }
 
 /**
@@ -35,5 +17,5 @@ export function distinctUntilKeysChange<T, K extends PrimativeKey = PrimativeKey
  * @returns
  */
 export function distinctUntilObjectKeyChange<T>(readKey: ReadKeyFunction<T>): MonoTypeOperatorFunction<T> {
-  return distinctUntilChanged<T>((a, b) => (a != null && b != null ? readKey(a) === readKey(b) : a === b));
+  return distinctUntilChanged<T>(objectKeyEqualityComparatorFunction(readKey));
 }
