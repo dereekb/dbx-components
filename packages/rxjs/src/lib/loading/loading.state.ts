@@ -1,4 +1,4 @@
-import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError, lastValue, mergeObjects, filterMaybeValues } from '@dereekb/util';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError, lastValue, mergeObjects, filterMaybeValues, isSameNonNullValue, valuesAreBothNullishOrEquivalent } from '@dereekb/util';
 
 /**
  * A value/error pair used in loading situations.
@@ -171,17 +171,7 @@ export function loadingStateIsIdle<L extends LoadingState>(state: Maybe<L>): boo
 }
 
 export function loadingStateIsLoading<L extends LoadingState>(state: Maybe<L>): boolean {
-  if (state) {
-    const loading = state.loading;
-
-    if (loading === true) {
-      return true;
-    } else {
-      return loading ?? !(state.value || state.error);
-    }
-  } else {
-    return false;
-  }
+  return !loadingStateHasFinishedLoading(state);
 }
 
 export function isSuccessLoadingState<L extends LoadingState>(state: Maybe<L>): boolean {
@@ -268,6 +258,18 @@ export function loadingStateHasFinishedLoadingWithError<L extends LoadingState>(
   } else {
     return false;
   }
+}
+
+/**
+ * Returns true if the metadata from both input states are equivalent.
+ *
+ * The considered metadata is the page, loading, and error values.
+ *
+ * @param a
+ * @param b
+ */
+export function loadingStatesHaveEquivalentMetadata(a: Partial<PageLoadingState>, b: Partial<PageLoadingState>) {
+  return valuesAreBothNullishOrEquivalent(a.page, b.page) && a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
 }
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference

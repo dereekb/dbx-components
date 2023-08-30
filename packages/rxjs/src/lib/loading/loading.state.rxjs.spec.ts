@@ -1,8 +1,8 @@
-import { Maybe } from '@dereekb/util';
+import { Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util';
 import { BehaviorSubject, map, of, first } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
-import { combineLoadingStates, combineLoadingStatesStatus, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
+import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
 
 jest.setTimeout(1000);
 
@@ -307,6 +307,210 @@ describe('combineLoadingStatesStatus()', () => {
         expect(loadingStateHasFinishedLoading(x)).toBe(true);
         expect(loadingStateHasValue(x)).toBe(true);
         done();
+      });
+    });
+  });
+});
+
+describe('distinctLoadingState()', () => {
+  describe('scenario', () => {
+    describe('unique model keys', () => {
+      let values$: BehaviorSubject<LoadingState<string[]>>;
+
+      beforeEach(() => {
+        values$ = new BehaviorSubject<LoadingState<string[]>>({ loading: true });
+      });
+
+      afterEach(() => {
+        values$.complete();
+      });
+
+      describe('default', () => {
+        it('should emit on loading changes and when the value changes', (done) => {
+          const obs = values$.pipe(distinctLoadingState(objectKeysEqualityComparatorFunction((x) => x)));
+
+          let counter = 0;
+
+          obs.subscribe((state) => {
+            const c = counter;
+            counter += 1;
+
+            const { value } = state;
+
+            switch (c) {
+              case 0:
+                expect(value).toBeUndefined();
+                values$.next({ value: ['a'] }); // pass a value
+                break;
+              case 1:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                values$.next({ loading: true }); // is loading again, retain the value by default
+                break;
+              case 2:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(true);
+                values$.next({ value: ['b'] }); // loading changed
+                break;
+              case 3:
+                expect(value).toBeDefined();
+                expect(value).toContain('b');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                done();
+                break;
+            }
+          });
+        });
+
+        it('should emit the loading state changes with the existing value', (done) => {
+          const obs = values$.pipe(distinctLoadingState(objectKeysEqualityComparatorFunction((x) => x)));
+
+          let counter = 0;
+
+          obs.subscribe((state) => {
+            const c = counter;
+            counter += 1;
+
+            const { value } = state;
+
+            switch (c) {
+              case 0:
+                expect(value).toBeUndefined();
+                values$.next({ value: ['a'] }); // pass a value
+                break;
+              case 1:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                values$.next({ loading: true }); // is loading again, retain the value by default
+                break;
+              case 2:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(true);
+                values$.next({ value: ['a'] }); // pass the same value again
+                break;
+              case 3:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                done();
+                break;
+            }
+          });
+        });
+
+        it('should emit the existing value with a new error', (done) => {
+          const obs = values$.pipe(distinctLoadingState(objectKeysEqualityComparatorFunction((x) => x)));
+
+          let counter = 0;
+
+          obs.subscribe((state) => {
+            const c = counter;
+            counter += 1;
+
+            const { value } = state;
+
+            switch (c) {
+              case 0:
+                expect(value).toBeUndefined();
+                values$.next({ value: ['a'] }); // pass a value
+                break;
+              case 1:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                values$.next({ error: new Error() }); // is loading again, retain the value by default
+                break;
+              case 2:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(loadingStateHasError(state)).toBe(true);
+                values$.next({ loading: true }); // clear the error and begin loading again.
+                break;
+              case 3:
+                expect(value).toBeDefined();
+                expect(value).toContain('a'); // value should still be retained
+                expect(loadingStateIsLoading(state)).toBe(true);
+                done();
+                break;
+            }
+          });
+        });
+
+        it('should clear existing value when null is passed as a value', (done) => {
+          const obs = values$.pipe(distinctLoadingState(objectKeysEqualityComparatorFunction((x) => x)));
+
+          let counter = 0;
+
+          obs.subscribe((state) => {
+            const c = counter;
+            counter += 1;
+
+            const { value } = state;
+
+            switch (c) {
+              case 0:
+                expect(value).toBeUndefined();
+                values$.next({ value: ['a'] }); // pass a value
+                break;
+              case 1:
+                expect(value).toBeDefined();
+                expect(value).toContain('a');
+                expect(loadingStateIsLoading(state)).toBe(false);
+                values$.next({ value: null }); // is loading again, retain the value by default
+                break;
+              case 2:
+                expect(value).toBeNull();
+                expect(loadingStateIsLoading(state)).toBe(false);
+                values$.next({ loading: true }); // clear the error and begin loading again.
+                break;
+              case 3:
+                expect(value).toBeNull();
+                expect(loadingStateIsLoading(state)).toBe(true);
+                done();
+                break;
+            }
+          });
+        });
+
+        it('should not emit when the value is considered equivalent', (done) => {
+          const obs = values$.pipe(distinctLoadingState(objectKeysEqualityComparatorFunction((x) => x)));
+
+          let counter = 0;
+          const endCounter = 10;
+
+          const value = ['a', 'b', 'c'];
+
+          obs.subscribe((state) => {
+            const c = counter;
+
+            switch (c) {
+              case 0:
+                expect(loadingStateIsLoading(state)).toBe(true);
+                break;
+              case 1:
+                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(value).toBeDefined();
+                break;
+              default:
+                expect(counter).toBe(endCounter);
+                expect(loadingStateIsLoading(state)).toBe(true);
+                done();
+                break;
+            }
+          });
+
+          for (let i = 0; i < endCounter; i += 1) {
+            counter += 1;
+            values$.next({ value }); // pass the same value
+          }
+
+          values$.next({ loading: true }); // pass final loading state
+        });
       });
     });
   });

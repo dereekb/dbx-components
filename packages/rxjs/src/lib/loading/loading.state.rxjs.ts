@@ -1,7 +1,7 @@
-import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, takeFront } from '@dereekb/util';
-import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom } from 'rxjs';
+import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, takeFront, EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
+import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
-import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult, LoadingStateWithMaybeSoValue } from './loading.state';
+import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult, LoadingStateWithMaybeSoValue, loadingStatesHaveEquivalentMetadata } from './loading.state';
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
 
@@ -210,6 +210,101 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
 
         return mappedObs;
       })
+    );
+  };
+}
+
+export interface DistinctLoadingStateConfig<L extends LoadingState> {
+  /**
+   * Whether or not to pass the retained value when the next LoadingState's value (the value being considered by this DecisionFunction) is null/undefined.
+   *
+   * By default this uses a DecisionFunction that returns true on undefined and false on null.
+   */
+  passRetainedValue?: (value: Maybe<LoadingStateValue<L>>, previousValue: Maybe<LoadingStateValue<L>>, state: L, previousState: Maybe<L>) => boolean;
+  /**
+   * Whether or not to compare the
+   */
+  compareOnUndefinedValue?: boolean;
+  /**
+   * Used for comparing the values of the LoadingState.
+   */
+  valueComparator: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>>;
+  /**
+   * Used for comparing the metadata values of the LoadingState. By default uses loadingStatesHaveEquivalentMetadata.
+   */
+  metadataComparator?: EqualityComparatorFunction<Maybe<Partial<L>>>;
+}
+
+interface DistinctLoadingStateScan<L extends LoadingState> {
+  readonly isSameValue: boolean;
+  readonly isSameLoadingStateMetadata: boolean;
+  readonly value?: Maybe<LoadingStateValue<L>>;
+  readonly current?: L;
+  readonly previous?: L;
+}
+
+/**
+ * A special distinctUntilChanged-like operator for LoadingState and PageLoadingState.
+ *
+ * It saves the previous value and passes it through whenever the LoadingState changes.
+ *
+ * @param operator
+ * @param mapOnUndefined
+ * @returns
+ */
+export function distinctLoadingState<L extends LoadingState>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
+export function distinctLoadingState<L extends PageLoadingState>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
+export function distinctLoadingState<L extends Partial<PageLoadingState>>(config: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L>;
+export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputConfig: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L> {
+  const { compareOnUndefinedValue, valueComparator, metadataComparator: inputMetadataComparator, passRetainedValue: inputPassRetainedValue } = typeof inputConfig === 'function' ? ({ valueComparator: inputConfig } as DistinctLoadingStateConfig<L>) : inputConfig;
+  const passRetainedValue = inputPassRetainedValue ?? ((x) => x !== null);
+  const metadataComparator = inputMetadataComparator ?? (loadingStatesHaveEquivalentMetadata as EqualityComparatorFunction<Maybe<Partial<L>>>);
+
+  return (obs: Observable<L>) => {
+    return obs.pipe(
+      scan(
+        (acc: DistinctLoadingStateScan<L>, state: L) => {
+          const nextValue = state.value as Maybe<LoadingStateValue<L>>;
+
+          // determine the value change
+          let isSameValue = false;
+
+          if (loadingStateHasValue(state) || (compareOnUndefinedValue && loadingStateHasFinishedLoading(state) && !loadingStateHasError(state))) {
+            // if the value is the same, then
+            isSameValue = valueComparator(nextValue, acc.value);
+          } else if (passRetainedValue(nextValue as Maybe<LoadingStateValue<L>>, acc.value, state, acc.previous)) {
+            isSameValue = true;
+          }
+
+          // determine the metadata changes
+          let isSameLoadingStateMetadata = safeCompareEquality(state, acc.previous, metadataComparator);
+
+          // pick the value
+          const value: Maybe<LoadingStateValue<L>> = isSameValue ? acc.value : nextValue;
+
+          const current: L = {
+            ...state, // copy all metadata over
+            value // set the new value
+          };
+
+          return {
+            ...acc,
+            value,
+            isSameValue,
+            isSameLoadingStateMetadata,
+            previous: state,
+            current
+          };
+        },
+        {
+          isSameValue: false,
+          isSameLoadingStateMetadata: false
+        }
+      ),
+      // only pipe through when the value is different or the loading state metadata is different
+      filter((x) => !(x.isSameValue && x.isSameLoadingStateMetadata)),
+      // pass the current state
+      map((x) => x.current as L)
     );
   };
 }

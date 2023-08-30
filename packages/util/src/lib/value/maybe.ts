@@ -121,3 +121,14 @@ export function isDefinedAndNotFalse(value: unknown): boolean {
 export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullable<T> {
   return a === b && a != null;
 }
+
+/**
+ * Returns true if both inputs are null/undefined, or are the same value.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function valuesAreBothNullishOrEquivalent<T>(a: Maybe<T>, b: Maybe<T>): boolean {
+  return a != null && b != null ? a === b : a == b;
+}
