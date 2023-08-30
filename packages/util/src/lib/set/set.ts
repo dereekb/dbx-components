@@ -75,6 +75,17 @@ export function flattenArrayToSet<T>(array: T[][]): Set<T> {
   return new Set(flattenArray(array));
 }
 
+/**
+ * If the input values to keep is null or undefined, returns an empty set.
+ *
+ * @param set
+ * @param values
+ * @returns
+ */
+export function keepFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
+  return values != null ? filterValuesToSet(asIterable(values), (x) => set.has(x)) : new Set();
+}
+
 export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
   return filterValuesUsingSet(values, set, false);
 }

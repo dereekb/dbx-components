@@ -27,6 +27,12 @@ export type NavbarButtonMode = 'menu' | 'rotate';
   }
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
+  /**
+   * Whether or not to show the dropwdown caret for a menu
+   */
+  @Input()
+  showMenuCaret = true;
+
   @Input()
   navAlign: HorizontalConnectionPos = 'center';
 

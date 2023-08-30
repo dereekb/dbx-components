@@ -268,6 +268,32 @@ export function findBestIndexMatchFunction<T extends IndexRef>(items: Iterable<T
   }
 }
 
+/**
+ * Finds the best match given the input.
+ *
+ * Throws an error if the input is an empty array.
+ *
+ * @param input
+ * @param i
+ * @returns
+ */
+export function findBestIndexMatch<T extends IndexRef>(input: T[], i: IndexNumber): T {
+  return findBestIndexMatchFunction(input)({ i });
+}
+
+/**
+ * Finds the best match given the input.
+ *
+ * Returns undefined if the input is an empty array.
+ *
+ * @param input
+ * @param i
+ * @returns
+ */
+export function safeFindBestIndexMatch<T extends IndexRef>(input: Maybe<T[]>, i: IndexNumber): Maybe<T> {
+  return input != null && input.length > 0 ? findBestIndexMatch(input, i) : undefined;
+}
+
 // MARK: IndexRange
 /**
  * A min and max value that denote the maximum edges of a range of index values.

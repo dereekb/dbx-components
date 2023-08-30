@@ -3,7 +3,9 @@
   <ng-container *ngSwitchDefault>
     <ng-container [ngSwitch]="buttonMode$ | async">
       <ng-container *ngSwitchCase="'menu'">
-        <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchors$ | async"></dbx-icon-button>
+        <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchors$ | async">
+          <mat-icon *ngIf="showMenuCaret">arrow_drop_down</mat-icon>
+        </dbx-icon-button>
         <mat-menu #menu>
           <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
             <button mat-menu-item [ngClass]="x.selected ? 'active' : ''">

@@ -37,12 +37,13 @@ import {
   HOURS_IN_DAY,
   DateRelativeState,
   groupValues,
-  makeValuesGroupMap
+  makeValuesGroupMap,
+  findBestIndexMatchFunction
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
-import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
+import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow, isSameDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
@@ -187,6 +188,16 @@ export interface CurrentDateBlockTimingUtcData {
 export interface CurrentDateBlockTimingOffsetData extends CurrentDateBlockTimingUtcData {
   offset: Milliseconds;
   currentTimezoneOffsetInHours: Hours;
+}
+
+/**
+ * Returns true if the two timings are equivalent.
+ *
+ * @param a
+ * @param b
+ */
+export function isSameDateBlockTiming(a: Maybe<DateBlockTiming>, b: Maybe<DateBlockTiming>): boolean {
+  return a && b ? a.duration === b.duration && isSameDate(a.start, b.start) && isSameDate(a.startsAt, b.startsAt) && isSameDate(a.end, b.end) : a == b;
 }
 
 /**
@@ -476,38 +487,38 @@ export function isValidDateBlockTimingStartDate(date: Date): boolean {
 }
 
 /**
- * DateTimingRelativeIndexFactory input. Can be a Date, DateBlockIndex, or ISO8601DayString
+ * DateBlockTimingRelativeIndexFactory input. Can be a Date, DateBlockIndex, or ISO8601DayString
  */
-export type DateTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | ISO8601DayString;
+export type DateBlockTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | ISO8601DayString;
 
 /**
  * Returns the DateBlockIndex of the input date relative to the configured Date.
  *
  * Input dates should be in system time zone and not normalized to a different timezone.
  */
-export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateTimingRelativeIndexFactoryInput) => DateBlockIndex) & {
+export type DateBlockTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateBlockTimingRelativeIndexFactoryInput) => DateBlockIndex) & {
   readonly _timing: T;
   readonly _timingOffsetData: CurrentDateBlockTimingOffsetData;
 };
 
 /**
- * Returns true if the input is a DateTimingRelativeIndexFactory.
+ * Returns true if the input is a DateBlockTimingRelativeIndexFactory.
  *
  * @param input
  * @returns
  */
-export function isDateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: unknown): input is DateTimingRelativeIndexFactory<T> {
-  return typeof input === 'function' && (input as DateTimingRelativeIndexFactory)._timing != null && (input as DateTimingRelativeIndexFactory)._timingOffsetData != null;
+export function isDateBlockTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: unknown): input is DateBlockTimingRelativeIndexFactory<T> {
+  return typeof input === 'function' && (input as DateBlockTimingRelativeIndexFactory)._timing != null && (input as DateBlockTimingRelativeIndexFactory)._timingOffsetData != null;
 }
 
 /**
- * Creates a DateTimingRelativeIndexFactory from the input.
+ * Creates a DateBlockTimingRelativeIndexFactory from the input.
  *
  * @param input
  * @returns
  */
-export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateTimingRelativeIndexFactory<T>): DateTimingRelativeIndexFactory<T> {
-  if (isDateTimingRelativeIndexFactory(input)) {
+export function dateBlockTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateBlockTimingRelativeIndexFactory<T>): DateBlockTimingRelativeIndexFactory<T> {
+  if (isDateBlockTimingRelativeIndexFactory(input)) {
     return input;
   } else {
     const timing = input;
@@ -536,26 +547,26 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
 
         return daysOffset ? daysOffset : 0; // do not return -0
       }
-    }) as Configurable<Partial<DateTimingRelativeIndexFactory<T>>>;
+    }) as Configurable<Partial<DateBlockTimingRelativeIndexFactory<T>>>;
     factory._timing = timing;
     factory._timingOffsetData = offsetData;
-    return factory as DateTimingRelativeIndexFactory<T>;
+    return factory as DateBlockTimingRelativeIndexFactory<T>;
   }
 }
 
 /**
- * Function that wraps a DateTimingRelativeIndexFactory and converts multuple Date/DateBlockIndex/DateBlockRange values into an array of DateBlockIndex values.
+ * Function that wraps a DateBlockTimingRelativeIndexFactory and converts multuple Date/DateBlockIndex/DateBlockRange values into an array of DateBlockIndex values.
  */
-export type DateTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>) => DateBlockIndex[]) & {
-  readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
+export type DateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>) => DateBlockIndex[]) & {
+  readonly _indexFactory: DateBlockTimingRelativeIndexFactory<T>;
 };
 
 /**
- * Creates a DateTimingRelativeIndexArrayFactory from the input DateTimingRelativeIndexFactory.
+ * Creates a DateBlockTimingRelativeIndexArrayFactory from the input DateBlockTimingRelativeIndexFactory.
  *
  * @param indexFactory
  */
-export function dateTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(indexFactory: DateTimingRelativeIndexFactory<T>): DateTimingRelativeIndexArrayFactory<T> {
+export function dateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(indexFactory: DateBlockTimingRelativeIndexFactory<T>): DateBlockTimingRelativeIndexArrayFactory<T> {
   const factory = ((input: ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>) => {
     const inputAsArray = asArray(input);
     const result: DateBlockIndex[] = [];
@@ -577,9 +588,9 @@ export function dateTimingRelativeIndexArrayFactory<T extends DateBlockTimingSta
     });
 
     return result;
-  }) as Configurable<Partial<DateTimingRelativeIndexArrayFactory<T>>>;
+  }) as Configurable<Partial<DateBlockTimingRelativeIndexArrayFactory<T>>>;
   factory._indexFactory = indexFactory;
-  return factory as DateTimingRelativeIndexArrayFactory<T>;
+  return factory as DateBlockTimingRelativeIndexArrayFactory<T>;
 }
 
 /**
@@ -588,8 +599,8 @@ export function dateTimingRelativeIndexArrayFactory<T extends DateBlockTimingSta
  * @param timing
  * @param date
  */
-export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
-  return dateTimingRelativeIndexFactory(timing)(date);
+export function getRelativeIndexForDateBlockTiming(timing: DateBlockTimingStart, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
+  return dateBlockTimingRelativeIndexFactory(timing)(date);
 }
 
 export interface GetNextDateBlockTimingIndexInput<T extends DateBlockRange> {
@@ -699,7 +710,7 @@ export function dateRelativeStateForDateBlockRangeComparedToIndex(range: DateBlo
 }
 
 /**
- * Similar to the DateTimingRelativeIndexFactory, but returns a date instead of an index for the input.
+ * Similar to the DateBlockTimingRelativeIndexFactory, but returns a date instead of an index for the input.
  *
  * If an index is input, returns a date with the hours and minutes for now for the given date returned.
  */
@@ -742,7 +753,7 @@ export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = Date
  * Returns the start time of the input date or index.
  */
 export type DateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
-  readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
+  readonly _indexFactory: DateBlockTimingRelativeIndexFactory<T>;
 };
 
 export type DateBlockTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversionConfigUseSystemTimezone & {
@@ -758,8 +769,8 @@ export type DateBlockTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversio
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement): DateBlockTimingStartDateFactory<T> {
-  const indexFactory = dateTimingRelativeIndexFactory<T>(input);
+export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement): DateBlockTimingStartDateFactory<T> {
+  const indexFactory = dateBlockTimingRelativeIndexFactory<T>(input);
   const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
 
   if ((timezoneInstance.config as DateBlockTimingUseSystemAndIgnoreEnforcement).assertTimingMatchesTimezone !== false && !timingIsInExpectedTimezone(indexFactory._timing, timezoneInstance)) {
@@ -782,7 +793,7 @@ export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart =
  * Returns the startsAt time of the input date or index.
  */
 export type DateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
-  readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
+  readonly _indexFactory: DateBlockTimingRelativeIndexFactory<T>;
 };
 
 /**
@@ -791,8 +802,8 @@ export type DateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStart = 
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateTimingRelativeIndexFactory<T>): DateBlockTimingStartsAtDateFactory<T> {
-  const indexFactory = dateTimingRelativeIndexFactory<T>(input);
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>): DateBlockTimingStartsAtDateFactory<T> {
+  const indexFactory = dateBlockTimingRelativeIndexFactory<T>(input);
   const { startsAt: baseTimingStartsAt } = indexFactory._timing;
 
   const factory = ((input: DateOrDateBlockIndex) => {
@@ -1242,7 +1253,7 @@ export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFact
   const { duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
-  const dayIndexFactory = dateTimingRelativeIndexFactory(timing);
+  const dayIndexFactory = dateBlockTimingRelativeIndexFactory(timing);
   const dayFactory = dateBlockTimingDateFactory(timing);
   const startsAtFactory = dateBlockTimingStartsAtDateFactory(dayIndexFactory);
 
@@ -1338,7 +1349,7 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
  * @param range
  * @returns
  */
-export function dateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
+export function filterDateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
   const dateBlockIsWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(range);
   return blocks.filter(dateBlockIsWithinDateBlockRange);
 }
@@ -1425,7 +1436,7 @@ export function isDateWithinDateBlockRangeFunction(config: IsDateWithinDateBlock
     }
   }
 
-  const indexFactory = dateTimingRelativeIndexFactory({ start });
+  const indexFactory = dateBlockTimingRelativeIndexFactory({ start });
 
   function convertDateRangeToIndexRange(range: DateRangeStart & Partial<DateRange>) {
     const i = indexFactory(range.start);
@@ -2329,6 +2340,11 @@ export function modifyDateBlockToFitRange<B extends DateBlock | DateBlockRange |
 
 // MARK: Compat
 /**
+ * @deprecated use dateBlocksInDateBlockRange instead.
+ */
+export const dateBlocksInDateBlockRange = filterDateBlocksInDateBlockRange;
+
+/**
  * @deprecated use IsDateBlockWithinDateBlockRangeFunction instead.
  */
 export type DateBlockIsWithinDateBlockRangeFunction = IsDateBlockWithinDateBlockRangeFunction;
@@ -2352,3 +2368,38 @@ export type DateBlockDayInfoFactory = DateBlockDayTimingInfoFactory;
  * @deprecated use dateBlocksDayTimingInfoFactory instead.
  */
 export const dateBlocksDayInfoFactory = dateBlockDayTimingInfoFactory;
+
+/**
+ * @deprecated use DateBlockTimingRelativeIndexFactoryInput instead.
+ */
+export type DateTimingRelativeIndexFactoryInput = DateBlockTimingRelativeIndexFactoryInput;
+
+/**
+ * @deprecated use DateBlockTimingRelativeIndexFactoryInput instead.
+ */
+export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = DateBlockTimingRelativeIndexFactory<T>;
+
+/**
+ * @deprecated use isDateBlockTimingRelativeIndexFactory instead.
+ */
+export const isDateTimingRelativeIndexFactory = isDateBlockTimingRelativeIndexFactory;
+
+/**
+ * @deprecated use dateBlockTimingRelativeIndexFactory instead.
+ */
+export const dateTimingRelativeIndexFactory = dateBlockTimingRelativeIndexFactory;
+
+/**
+ * @deprecated use DateBlockTimingRelativeIndexArrayFactory instead.
+ */
+export type DateTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = DateBlockTimingRelativeIndexArrayFactory<T>;
+
+/**
+ * @deprecated use dateBlockTimingRelativeIndexArrayFactory instead.
+ */
+export const dateTimingRelativeIndexArrayFactory = dateBlockTimingRelativeIndexArrayFactory;
+
+/**
+ * @deprecated use getRelativeIndexForDateBlockTiming instead.
+ */
+export const getRelativeIndexForDateTiming = getRelativeIndexForDateBlockTiming;
