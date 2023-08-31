@@ -91,6 +91,22 @@ $list-item-padded-min-height: 42px;
       font-size: 0.8em;
     }
   }
+
+  .dbx-list-no-hover-effects .dbx-list > .dbx-list-content .dbx-list-view .mat-list-item {
+    cursor: unset;
+
+    &:hover {
+      background: none;
+    }
+  }
+
+  .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-nav-list .dbx-list-view-item.mat-list-item > .mat-list-item-content {
+    padding: 0;
+  }
+
+  .dbx-list-content .dbx-list-view .mat-list-base .mat-list-item .mat-divider {
+    position: unset; // do not touch the divider in dbx-list
+  }
 }
 
 @mixin color($theme-config) {

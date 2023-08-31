@@ -63,6 +63,10 @@ export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T
   return a == null || b == null || !setContainsAllValues(setA, b) || setA.size !== new Set(b).size;
 }
 
+export function hasSameValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
+  return !hasDifferentValues(a, b);
+}
+
 export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {
   return symmetricDifferenceArrayBetweenSets(new Set(a), new Set(b));
 }
