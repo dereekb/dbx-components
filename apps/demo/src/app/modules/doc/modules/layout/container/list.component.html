@@ -121,6 +121,13 @@
           <doc-custom-item-list [state$]="state$"></doc-custom-item-list>
         </div>
         <p>The dbxListItemDisableRippleModifier can also be used to disable ripples on models.</p>
+
+        <h4>Disabling Hover CSS Effects</h4>
+        <p>The list view uses mat-nav-list internally, which displays a hover over effect on the mat items by default.</p>
+        <p>These can be disabled by adding the dbx-list-no-hover-effects CSS class.</p>
+        <div style="height: 200px">
+          <doc-custom-item-list class="dbx-list-no-hover-effects" [state$]="state$"></doc-custom-item-list>
+        </div>
       </doc-feature-example>
     </doc-feature-layout>
   </dbx-content>

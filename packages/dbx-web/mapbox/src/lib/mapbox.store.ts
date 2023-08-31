@@ -1,4 +1,4 @@
-import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
+import { cleanup, filterMaybe, onTrueToFalse, tapLog } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
 import {
   isSameLatLngBound,
@@ -25,11 +25,12 @@ import {
   filterUndefinedValues,
   latLngBoundFromInput,
   vectorMinimumSizeResizeFunction,
-  isSameVector
+  isSameVector,
+  ZoomLevel
 } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
-import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, OperatorFunction } from 'rxjs';
+import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, OperatorFunction, throttleTime } from 'rxjs';
 import * as MapboxGl from 'mapbox-gl';
 import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
@@ -56,6 +57,19 @@ export interface DbxMapboxMarginCalculationSizing {
   leftMargin: number;
   rightMargin: number;
   fullWidth: number;
+}
+
+export type DbxMapboxStoreBoundRefreshType = 'always' | 'when_not_rendering' | 'only_after_render_finishes';
+
+export interface DbxMapboxStoreBoundRefreshSettings {
+  /**
+   * Max bound refresh interval.
+   */
+  throttle: number;
+  /**
+   * Whether or not to wait to update the bound until after it has finished rendering.
+   */
+  refreshType: DbxMapboxStoreBoundRefreshType;
 }
 
 export interface DbxMapboxStoreState {
@@ -106,6 +120,10 @@ export interface DbxMapboxStoreState {
    */
   minimumVirtualViewportSize?: Maybe<Partial<Vector>>;
   /**
+   * Bound refresh settings
+   */
+  boundRefreshSettings: DbxMapboxStoreBoundRefreshSettings;
+  /**
    * Whether or not to use the virtual bound (vs raw bound) for all bound-related observables.
    *
    * Defaults to true.
@@ -129,7 +147,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       zoomState: 'init',
       rotateState: 'init',
       retainContent: true,
-      useVirtualBound: true
+      useVirtualBound: true,
+      boundRefreshSettings: {
+        throttle: 300,
+        refreshType: 'always'
+      }
     });
   }
 
@@ -595,6 +617,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly mapInstance$ = this.currentMapInstance$.pipe(filterMaybe());
 
+  readonly boundRefreshSettings$ = this.state$.pipe(
+    map((x) => x.boundRefreshSettings),
+    shareReplay(1)
+  );
+
   readonly moveState$ = this.state$.pipe(
     map((x) => x.moveState),
     distinctUntilChanged(),
@@ -780,15 +807,35 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly virtualBound$: Observable<LatLngBound> = this.viewportBoundFunction$.pipe(
     switchMap((fn) => {
-      return combineLatest([this.center$, this.zoom$]).pipe(
-        map(([center, zoom]) =>
-          fn({
-            center,
-            zoom
-          })
-        )
+      return this.boundRefreshSettings$.pipe(
+        switchMap((settings) => {
+          const { throttle: throttleMs, refreshType } = settings;
+
+          let obs: Observable<[LatLngPoint, ZoomLevel]>;
+
+          switch (refreshType) {
+            case 'always':
+              obs = combineLatest([this.centerNow$, this.zoomNow$]);
+              break;
+            case 'when_not_rendering':
+            case 'only_after_render_finishes':
+              obs = this.bound$.pipe(switchMap(() => combineLatest([this.centerNow$, this.zoomNow$]))); // refresh whenever the bound refreshes
+              break;
+          }
+
+          return obs.pipe(
+            throttleTime(throttleMs, undefined, { leading: true, trailing: true }),
+            map(([center, zoom]) =>
+              fn({
+                center,
+                zoom
+              })
+            )
+          );
+        })
       );
     }),
+    distinctUntilChanged(isSameLatLngBound),
     shareReplay(1)
   );
 
@@ -842,22 +889,42 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
               return this.latLngBound(sw, ne);
             })
           )
-        ),
-        shareReplay(1)
+        )
       )
-    )
+    ),
+    distinctUntilChanged(isSameLatLngBound),
+    shareReplay(1)
   );
 
   readonly rawBound$: Observable<LatLngBound> = this.whenInitialized$.pipe(
     switchMap(() => {
-      return this.isRendering$.pipe(
-        onTrueToFalse(),
-        startWith(undefined),
-        switchMap((x) => this.rawBoundNow$.pipe(first())),
-        distinctUntilChanged(isSameLatLngBound),
-        shareReplay(1)
+      return this.boundRefreshSettings$.pipe(
+        switchMap((settings) => {
+          const { throttle: throttleMs, refreshType } = settings;
+
+          let obs: Observable<LatLngBound>;
+
+          switch (refreshType) {
+            case 'always':
+              obs = this.rawBoundNow$;
+              break;
+            case 'when_not_rendering':
+              obs = this.isRendering$.pipe(switchMap((x) => (x ? EMPTY : this.rawBoundNow$)));
+              break;
+            case 'only_after_render_finishes':
+              obs = this.isRendering$.pipe(
+                onTrueToFalse(),
+                switchMap((x) => this.rawBoundNow$.pipe(first()))
+              );
+              break;
+          }
+
+          return obs.pipe(throttleTime(throttleMs, undefined, { leading: true, trailing: true }));
+        })
       );
-    })
+    }),
+    distinctUntilChanged(isSameLatLngBound),
+    shareReplay(1)
   );
 
   readonly useVirtualBound$: Observable<boolean> = this.state$.pipe(
@@ -871,7 +938,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       if (useVirtualBound) {
         return this.virtualBound$;
       } else {
-        return this.bound$;
+        return this.rawBound$;
       }
     }),
     shareReplay(1)
@@ -991,8 +1058,9 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   readonly setMargin = this.updater((state, margin: Maybe<DbxMapboxMarginCalculationSizing>) => ({ ...state, margin: margin && (margin.rightMargin !== 0 || margin.leftMargin !== 0) ? margin : undefined }));
   readonly setMinimumVirtualViewportSize = this.updater((state, minimumVirtualViewportSize: Maybe<Partial<Vector>>) => ({ ...state, minimumVirtualViewportSize }));
   readonly setUseVirtualBound = this.updater((state, useVirtualBound: boolean) => ({ ...state, useVirtualBound }));
+  readonly setBoundRefreshSettings = this.updater((state, boundRefreshSettings: Partial<DbxMapboxStoreBoundRefreshSettings>) => ({ ...state, boundRefreshSettings: { ...state.boundRefreshSettings, ...boundRefreshSettings } }));
 
-  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined, useVirtualBound: state.useVirtualBound }));
+  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined, useVirtualBound: state.useVirtualBound, boundRefreshSettings: state.boundRefreshSettings }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));
