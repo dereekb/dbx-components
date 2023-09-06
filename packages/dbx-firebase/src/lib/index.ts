@@ -5,6 +5,7 @@ export * from './firebase';
 export * from './firestore';
 export * from './function';
 export * from './model';
+export * from './pipe';
 export * from './router';
 export * from './storage';
 export * from './module';

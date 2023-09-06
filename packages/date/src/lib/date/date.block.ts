@@ -1218,7 +1218,7 @@ export interface DateBlockDayTimingInfo {
    */
   hasOccuredToday: boolean;
   /**
-   * Whether or not today's timing is currenctly in progress.
+   * Whether or not today's timing is currently in progress.
    */
   isInProgress: boolean;
   /**
