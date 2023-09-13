@@ -8,7 +8,7 @@
           <doc-feature-example header="dbx-mapbox-layout" hint="This component provides a Google-maps like layout using a mat-sidenav.">
             <dbx-content-container style="height: 300px">
               <!-- Map View-->
-              <dbx-mapbox-layout (openedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [opened]="open$ | async" [drawerColor]="color$ | async">
+              <dbx-mapbox-layout (openedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [opened]="open$ | async" [drawerButtonColor]="color$ | async">
                 <!-- Drawer -->
                 <mgl-map dbxMapboxMap>
                   <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
@@ -28,7 +28,7 @@
               <span class="dbx-spacer"></span>
               <button mat-button (click)="leftDrawer()">Left Drawer</button>
               <button mat-button (click)="rightDrawer()">Right Drawer</button>
-              <button mat-button (click)="changeDrawerColor()">Change Button Color</button>
+              <button mat-button (click)="changeDrawerButtonColor()">Change Button Color</button>
             </dbx-bar>
             <h4>dbx-mapbox-markers</h4>
             <p>Used to render markers for the input data. Markers for data are generated via the [markerFactory] input.</p>
