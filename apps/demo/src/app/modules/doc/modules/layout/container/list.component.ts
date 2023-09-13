@@ -1,7 +1,7 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
 import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
-import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
+import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
@@ -77,6 +77,10 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
       })
     )
   );
+
+  readonly statePermanentlyLoading$: Observable<ListLoadingState<any>> = of(beginLoading() as ListLoadingState<any>);
+  readonly statePermanentlyLoadingAfterEmptyResult$: Observable<ListLoadingState<any>> = this.statePermanentlyLoading$.pipe(startWith(successResult([])));
+  readonly emptyResult$: Observable<ListLoadingState<any>> = of(successResult([]));
 
   readonly staticState$: Observable<ListLoadingState<DocValue>> = of(successResult(this.makeValues()));
 
