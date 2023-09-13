@@ -15,6 +15,18 @@ $button-spacer-width: 6px;
     }
   }
 
+  dbx-button.dbx-w100 {
+    // when using dbx-w100 with dbx-button, make the button full width
+    .dbx-button {
+      width: 100%;
+    }
+  }
+
+  .dbx-icon-button.mat-button {
+    // copy most of the same styling
+    padding: 0;
+  }
+
   .dbx-grow-button {
     width: 100%;
 
@@ -53,7 +65,7 @@ $button-spacer-width: 6px;
     justify-items: center;
 
     > * {
-      padding-bottom: 6px;
+      margin-bottom: 6px !important;
     }
   }
 }
