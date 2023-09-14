@@ -65,7 +65,7 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
   return date.toISOString();
 }
 
-export function guessCurrentTimezone(): Maybe<TimezoneString> {
+export function guessCurrentTimezone(): TimezoneString | undefined {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
 }
 

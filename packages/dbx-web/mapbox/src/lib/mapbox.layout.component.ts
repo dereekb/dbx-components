@@ -43,7 +43,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   private _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
   private _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
   private _isOpen = new BehaviorSubject<boolean>(true);
-  private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
+  private _color = new BehaviorSubject<Maybe<DbxThemeColor>>('background');
   private _toggleSub = new SubscriptionObject();
 
   readonly resized$ = this._resized.asObservable();
@@ -77,12 +77,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
     shareReplay(1)
   );
 
-  readonly drawerButtonClasses$ = combineLatest([this.dbxMapboxMapStore.hasContent$, this._color]).pipe(
-    //
-    map(([hasContent, color]) => dbxColorBackground(color)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly drawerButtonColor$ = this._color.pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly buttonIcon$: Observable<string> = combineLatest([this.side$, this.isOpenAndHasContent$]).pipe(
     map(([side, opened]) => {
@@ -235,7 +230,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   }
 
   @Input()
-  set drawerColor(color: Maybe<DbxThemeColor>) {
+  set drawerButtonColor(color: Maybe<DbxThemeColor>) {
     this._color.next(color);
   }
 

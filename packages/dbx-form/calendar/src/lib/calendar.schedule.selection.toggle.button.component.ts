@@ -44,7 +44,7 @@ export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implemen
         case 'none':
           buttonDisplay = {
             icon: 'clear',
-            text: 'Clear Selection'
+            text: 'Clear All'
           };
           break;
       }

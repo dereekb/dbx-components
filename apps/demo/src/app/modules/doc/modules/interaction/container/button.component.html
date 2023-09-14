@@ -28,7 +28,14 @@
       <dbx-button icon="settings" [iconOnly]="true" [working]="true"></dbx-button>
 
       <h4>With Colors</h4>
-      <dbx-button icon="settings" text="Test Button"></dbx-button>
+      <dbx-button icon="settings" color="primary" text="Test Button"></dbx-button>
+      <dbx-button icon="settings" color="accent" text="Test Button"></dbx-button>
+
+      <h4>Full Width</h4>
+      <p class="dbx-hint dbx-small">Full width can be added by using the .dbx-w100 css class</p>
+      <dbx-button class="dbx-w100" [raised]="true" icon="settings" color="primary" text="Test Button"></dbx-button>
+      <dbx-button class="dbx-w100" icon="settings" color="primary" text="Test Button"></dbx-button>
+      <dbx-button class="dbx-w100" [raised]="true" icon="settings" color="accent" text="Test Button"></dbx-button>
 
       <h4>With Custom Content</h4>
       <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="barButtonOptionsWorkingState">
@@ -157,10 +164,11 @@
 
       <dbx-content-pit>
         <div class="dbx-button-column">
-          <dbx-icon-button text="Test Button"></dbx-icon-button>
-          <dbx-icon-button text="Test Button"></dbx-icon-button>
-          <dbx-icon-button text="Test Button"></dbx-icon-button>
-          <dbx-icon-button text="Test Button"></dbx-icon-button>
+          <dbx-icon-button class="dbx-warn-bg" icon="settings" text="Warn Background"></dbx-icon-button>
+          <dbx-icon-button dbxColor="accent" text="Test Button"></dbx-icon-button>
+          <dbx-icon-button dbxColor="primary" text="Test Button"></dbx-icon-button>
+          <dbx-icon-button dbxColor="success" text="Test Button"></dbx-icon-button>
+          <dbx-icon-button dbxColor="ok" text="Test Button"></dbx-icon-button>
         </div>
       </dbx-content-pit>
     </doc-feature-example>

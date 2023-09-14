@@ -6,7 +6,7 @@ import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store'
 import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, MapboxFitPositions, DbxMapboxInjectionStore } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
-import { DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxThemeColor, DBX_THEME_COLORS } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY } from '../component/mapbox.markers.example.component';
 
@@ -309,8 +309,8 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     );
   }
 
-  changeDrawerColor() {
-    this._color.next(randomFromArrayFactory<DbxThemeColor>((['primary', 'accent', 'background', 'warn'] as DbxThemeColor[]).filter((x) => x !== this._color.value))());
+  changeDrawerButtonColor() {
+    this._color.next(randomFromArrayFactory<DbxThemeColor>(DBX_THEME_COLORS.filter((x) => x !== this._color.value))());
   }
 
   centerAustin(zoom?: number) {

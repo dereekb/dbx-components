@@ -1,4 +1,4 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable, mergeFilterFunctions } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
@@ -29,7 +29,7 @@ import {
 } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasEndedFilterFunction, dateBlockDurationSpanHasStartedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
-import { copyHoursAndMinutesFromDateWithTimezoneNormal } from './date.timezone';
+import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
@@ -386,16 +386,20 @@ export function isSameDateScheduleRange(a: Maybe<DateScheduleRange>, b: Maybe<Da
 }
 
 /**
- * Creates a DateBlockTiming for the input DateScheduleRange
+ * Creates a DateBlockTiming for the input DateScheduleRange.
+ *
+ * The Timezone the timing is in is recommended. If not provided, may produce incorrect results when dealing with daylight savings time changes.
  *
  * @param dateScheduleRange
  * @param duration
  * @param startsAtTime
+ * @param timezone
  * @returns
  */
-export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateScheduleRange, duration: number, startsAtTime?: Date): DateBlockTiming {
+export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateScheduleRange, duration: number, startsAtTime?: Date, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
+export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateScheduleRange, duration: number, startsAtTime?: Date, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
   const { start } = dateScheduleRange;
-  const timing: DateBlockTiming = safeDateBlockTimingFromDateRangeAndEvent(dateScheduleRange, { startsAt: startsAtTime ?? start, duration });
+  const timing: DateBlockTiming = safeDateBlockTimingFromDateRangeAndEvent(dateScheduleRange, { startsAt: startsAtTime ?? start, duration }, timezone);
   return timing;
 }
 
@@ -627,9 +631,11 @@ export interface ExpandDateScheduleRangeInput extends Omit<DateScheduleDateBlock
    * (Optional) Hours/Minutes to copy from. Note, this will modify the timing's end date to be a valid time.
    */
   readonly startsAtTime?: Date;
+  /**
+   * (Recommended) Timezone the timing is in. If not provided, may produce incorrect results when dealing with daylight savings time changes.
+   */
+  readonly timezone?: DateTimezoneUtcNormalInstance | TimezoneString;
 }
-
-// dateBlockTimingForDateScheduleRange
 
 /**
  * Creates a DateBlockTiming for the input ExpandDateScheduleRangeInput.
@@ -638,8 +644,8 @@ export interface ExpandDateScheduleRangeInput extends Omit<DateScheduleDateBlock
  * @returns
  */
 export function dateBlockTimingForExpandDateScheduleRangeInput(input: ExpandDateScheduleRangeInput): DateBlockTiming {
-  const { dateScheduleRange, duration, startsAtTime } = input;
-  return dateBlockTimingForDateScheduleRange(dateScheduleRange, duration, startsAtTime);
+  const { dateScheduleRange, duration, startsAtTime, timezone } = input;
+  return dateBlockTimingForDateScheduleRange(dateScheduleRange, duration, startsAtTime, timezone);
 }
 
 /**

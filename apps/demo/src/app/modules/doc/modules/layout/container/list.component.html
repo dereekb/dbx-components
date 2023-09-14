@@ -128,6 +128,24 @@
         <div style="height: 200px">
           <doc-custom-item-list class="dbx-list-no-hover-effects" [state$]="state$"></doc-custom-item-list>
         </div>
+
+        <h4>.dbx-list-empty-content</h4>
+        <p>Stying component that can be used to for the empty state.</p>
+        <doc-custom-item-list [state$]="emptyResult$">
+          <dbx-list-empty-content empty>
+            <p>Emtpy Result Content Text</p>
+          </dbx-list-empty-content>
+        </doc-custom-item-list>
+
+        <h4>Loading</h4>
+        <p>Permenant Loading State</p>
+        <doc-custom-item-list [state$]="statePermanentlyLoading$"></doc-custom-item-list>
+        <p>After Empty Result Passed (Test)</p>
+        <doc-custom-item-list [state$]="statePermanentlyLoadingAfterEmptyResult$">
+          <dbx-list-empty-content empty>
+            <p>Emtpy Result Content Text (Should not be visible)</p>
+          </dbx-list-empty-content>
+        </doc-custom-item-list>
       </doc-feature-example>
     </doc-feature-layout>
   </dbx-content>

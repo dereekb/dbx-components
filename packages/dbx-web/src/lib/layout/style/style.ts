@@ -2,6 +2,8 @@ import { CssClass, Maybe } from '@dereekb/util';
 
 export type DbxThemeColor = 'primary' | 'accent' | 'warn' | 'ok' | 'success' | 'background' | 'grey' | 'disabled' | 'notice';
 
+export const DBX_THEME_COLORS: DbxThemeColor[] = ['primary', 'accent', 'warn', 'ok', 'success', 'background', 'grey', 'disabled', 'notice'];
+
 export function dbxColorBackground(color: Maybe<DbxThemeColor | ''>): CssClass {
   let cssClass = 'dbx-bg';
 

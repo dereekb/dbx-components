@@ -13,7 +13,7 @@ import { DbxMapboxMenuComponent } from './mapbox.menu.component';
 import { DbxMapboxMapStoreInjectionBlockDirective } from './mapbox.store.provide';
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
-import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
+import { DbxRouterAnchorModule, DbxStyleLayoutModule } from '@dereekb/dbx-web';
 import { DbxMapboxMarkersComponent } from './mapbox.markers.component';
 import { DbxMapboxInjectionComponent } from './mapbox.injection.component';
 import { DbxMapboxLayoutVirtualResizeSyncComponent } from './mapbox.layout.resize.sync.directive';
@@ -36,6 +36,7 @@ const declarations = [
     //
     CommonModule,
     MatSidenavModule,
+    DbxStyleLayoutModule,
     DbxInjectionComponentModule,
     MatButtonModule,
     MatIconModule,

@@ -1,5 +1,5 @@
 import { LimitArrayConfig, hasNonNullValue, limitArray, Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay, skipWhile } from 'rxjs';
 import { loadingStateIsLoading, ListLoadingState } from './loading.state';
 import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, AbstractLoadingStateEvent, LoadingStateContextInstanceInputConfig } from './loading.context.state';
 import { isListLoadingStateEmpty } from './loading.state.list';
@@ -26,7 +26,11 @@ export class ListLoadingStateContextInstance<L = unknown, S extends ListLoadingS
     map((x) => x.value ?? []),
     shareReplay(1)
   );
-  readonly isEmpty$: Observable<boolean> = this.stream$.pipe(isListLoadingStateEmpty(), distinctUntilChanged());
+  readonly isEmpty$: Observable<boolean> = this.stream$.pipe(
+    skipWhile((x) => loadingStateIsLoading(x)), // skip until the first non-loading event has occured
+    isListLoadingStateEmpty(),
+    distinctUntilChanged()
+  );
 
   protected loadingEventForLoadingPair(state: S, config: LoadingEventForListLoadingStateConfig = {}): ListLoadingStateContextEvent<L> {
     const { showLoadingOnNoValue } = config;
