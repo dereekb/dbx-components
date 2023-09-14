@@ -351,6 +351,37 @@ describe('timingIsInExpectedTimezoneFunction()', () => {
         expect(result).toBe(false);
       });
     });
+
+    function describeTestsForTimezone(timezone: TimezoneString) {
+      const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+      const start = timezoneInstance.targetDateToSystemDate(startOfDay(new Date()));
+
+      const fn = timingIsInExpectedTimezoneFunction(timezoneInstance);
+
+      describe(`${timezone}`, () => {
+        it(`should return true if the ${timezone} timing starts in the timezone.`, () => {
+          const result = fn({ start });
+
+          expect(result).toBe(true);
+        });
+
+        it(`should return false if the timing does not start in the timezone ${timezone}.`, () => {
+          const utcStart = new Date('2023-03-12T00:00:00.000Z');
+
+          const result = fn({ start: utcStart });
+          expect(result).toBe(false);
+        });
+      });
+    }
+
+    describeTestsForTimezone('America/Denver');
+    describeTestsForTimezone('America/Los_Angeles');
+    describeTestsForTimezone('America/New_York');
+    describeTestsForTimezone('America/Chicago');
+    describeTestsForTimezone('Asia/Tokyo');
+    describeTestsForTimezone('Pacific/Fiji'); // +12
+    // describeTestsForTimezone('Pacific/Auckland'); //+12 // unsupported timezone when daylight savings is active
+    // describeTestsForTimezone('Pacific/Kiritimati'); //+14 // unsupported timezone
   });
 });
 
@@ -395,9 +426,11 @@ describe('dateBlockTimingFromDateRangeAndEvent()', () => {
 
     describe('system time', () => {
       const timing = systemTiming;
+      const systemTimezone = guessCurrentTimezone();
+      const systemTimezoneInstance = dateTimezoneUtcNormal({ timezone: systemTimezone });
 
       it('should return a copy of a timing.', () => {
-        const result = dateBlockTimingFromDateRangeAndEvent(timing, timing); // use the first event again
+        const result = dateBlockTimingFromDateRangeAndEvent(timing, timing, systemTimezoneInstance); // use the first event again
 
         expect(result.start).toBeSameSecondAs(timing.start);
         expect(result.end).toBeSameSecondAs(timing.end);
@@ -406,7 +439,7 @@ describe('dateBlockTimingFromDateRangeAndEvent()', () => {
       });
 
       it('should return the original timing using the second event', () => {
-        const result = dateBlockTimingFromDateRangeAndEvent(timing, { startsAt: addDays(timing.startsAt, 1), duration: timing.duration }); // use the first event again
+        const result = dateBlockTimingFromDateRangeAndEvent(timing, { startsAt: addDays(timing.startsAt, 1), duration: timing.duration }, systemTimezoneInstance); // use the first event again
 
         expect(result.start).toBeSameSecondAs(timing.start);
         expect(result.end).toBeSameSecondAs(timing.end);
@@ -416,12 +449,13 @@ describe('dateBlockTimingFromDateRangeAndEvent()', () => {
     });
 
     function describeTestsForTimezone(timezone: TimezoneString) {
-      const startOfTodayInTimezone = dateTimezoneUtcNormal({ timezone }).systemDateToTargetDate(startOfDay(new Date()));
-      const timing = dateBlockTiming({ startsAt: addHours(startOfTodayInTimezone, 3), duration: 60 }, 1); // 1 day
+      const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+      const startOfTodayInTimezone = timezoneInstance.targetDateToSystemDate(startOfDay(new Date()));
+      const timing = dateBlockTimingInTimezone({ startsAt: addHours(startOfTodayInTimezone, 3), duration: 60 }, 1, timezone); // 1 day
 
       describe(`${timezone}`, () => {
         it('should return a copy of a timing.', () => {
-          const result = dateBlockTimingFromDateRangeAndEvent(timing, timing); // use the first event again
+          const result = dateBlockTimingFromDateRangeAndEvent(timing, timing, timezoneInstance); // use the first event again
 
           expect(result.start).toBeSameSecondAs(timing.start);
           expect(result.end).toBeSameSecondAs(timing.end);
@@ -430,12 +464,42 @@ describe('dateBlockTimingFromDateRangeAndEvent()', () => {
         });
 
         it('should return the original timing using the second event', () => {
-          const result = dateBlockTimingFromDateRangeAndEvent(timing, { startsAt: addDays(timing.startsAt, 1), duration: timing.duration }); // use the first event again
+          const result = dateBlockTimingFromDateRangeAndEvent(timing, { startsAt: addDays(timing.startsAt, 1), duration: timing.duration }, timezoneInstance); // use the first event again
 
           expect(result.start).toBeSameSecondAs(timing.start);
           expect(result.end).toBeSameSecondAs(timing.end);
           expect(result.duration).toBe(timing.duration);
           expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        });
+
+        describe('daylight savings changes', () => {
+          const daylightSavingsLastDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-11-03T00:00:00Z'));
+          const timing = dateBlockTimingInTimezone({ startsAt: daylightSavingsLastDayActive, duration: 60 }, 5, timezone); // 1 day
+
+          describe('active to inactive', () => {
+            it('should return a copy of a timing', () => {
+              const result = dateBlockTimingFromDateRangeAndEvent(timing, timing, timezoneInstance); // use the first event again
+
+              expect(result.start).toBeSameSecondAs(timing.start);
+              expect(result.end).toBeSameSecondAs(timing.end);
+              expect(result.duration).toBe(timing.duration);
+              expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+            });
+          });
+
+          describe('inactive to active', () => {
+            const daylightSavingsBeforeFirstDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-03-10T00:00:00Z'));
+            const timing = dateBlockTimingInTimezone({ startsAt: daylightSavingsBeforeFirstDayActive, duration: 60 }, 5, timezone); // 1 day
+
+            it('should return a copy of a timing', () => {
+              const result = dateBlockTimingFromDateRangeAndEvent(timing, timing, timezoneInstance); // use the first event again
+
+              expect(result.start).toBeSameSecondAs(timing.start);
+              expect(result.end).toBeSameSecondAs(timing.end);
+              expect(result.duration).toBe(timing.duration);
+              expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+            });
+          });
         });
       });
     }
@@ -445,8 +509,10 @@ describe('dateBlockTimingFromDateRangeAndEvent()', () => {
     describeTestsForTimezone('America/Los_Angeles');
     describeTestsForTimezone('America/New_York');
     describeTestsForTimezone('America/Chicago');
-    describeTestsForTimezone('Pacific/Auckland');
-    describeTestsForTimezone('Pacific/Kiritimati');
+    describeTestsForTimezone('Pacific/Fiji');
+
+    // describeTestsForTimezone('Pacific/Auckland'); // unsupported timezone, daylight savings pushes it to +13
+    // describeTestsForTimezone('Pacific/Kiritimati'); // unsupported timezone
   });
 });
 
