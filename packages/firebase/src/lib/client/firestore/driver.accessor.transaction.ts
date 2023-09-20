@@ -27,9 +27,8 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return this.transaction.get(this.documentRef);
   }
 
-  getWithConverter<U extends DocumentData = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<DocumentData, U>> {
-    const withConverter = (converter != null ? this.documentRef.withConverter<U, DocumentData>(converter) : this.documentRef.withConverter(null)) as DocumentReference<U, DocumentData>;
-    return this.transaction.get(withConverter) as Promise<DocumentSnapshot<DocumentData, U>>;
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return this.transaction.get(this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>)) as Promise<DocumentSnapshot<U>>;
   }
 
   delete(): Promise<void> {
@@ -48,7 +47,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   update(data: UpdateData<object>): Promise<void> {
     assertFirestoreUpdateHasData(data);
-    this.transaction.update(this.documentRef, data);
+    this.transaction.update(this.documentRef, data as UpdateData<T>);
     return Promise.resolve();
   }
 }

@@ -25,8 +25,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 
   getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
-    const withConverter = (converter != null ? this.documentRef.withConverter<U, DocumentData>(converter) : this.documentRef.withConverter(null)) as DocumentReference<U, DocumentData>;
-    return getDoc(withConverter) as Promise<DocumentSnapshot<U>>;
+    return getDoc(this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>)) as Promise<DocumentSnapshot<U>>;
   }
 
   delete(): Promise<void> {
@@ -43,7 +42,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   update(data: UpdateData<object>): Promise<void> {
     assertFirestoreUpdateHasData(data);
-    return updateDoc(this.documentRef, data);
+    return updateDoc(this.documentRef, data as UpdateData<T>);
   }
 }
 
