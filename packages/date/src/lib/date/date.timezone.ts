@@ -162,6 +162,8 @@ export function calculateAllConversions<T = number>(date: Date, converter: DateT
 
 type GetOffsetForDateFunction = MapFunction<Date, number>;
 
+const DAYLIGHT_SAVINGS_ON_EVERYWHERE_DATE = new Date();
+
 export type DateTimezoneUtcNormalInstanceInput = Maybe<TimezoneString> | DateTimezoneConversionConfig;
 
 export type DateTimezoneUtcNormalInstanceTransformType = 'targetDateToBaseDate' | 'targetDateToSystemDate' | 'baseDateToTargetDate' | 'baseDateToSystemDate' | 'systemDateToTargetDate' | 'systemDateToBaseDate';
@@ -338,6 +340,17 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   calculateAllOffsets<T = number>(date: Date, map?: DateTimezoneConversionFunction<T>) {
     return calculateAllConversions<T>(date, this, map);
   }
+
+  /**
+   * Whether or not the system experiences daylight savings for the given year.
+   *
+   * @param year
+   */
+  systemExperiencesDaylightSavings(year = new Date()): boolean {
+    let jan = new Date(year.getFullYear(), 0, 1); // off
+    let jul = new Date(year.getFullYear(), 6, 1); // on
+    return this.baseDateToSystemDateOffset(jul) - this.baseDateToSystemDateOffset(jan) !== 0;
+  }
 }
 
 export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceInput | DateTimezoneUtcNormalInstance | TimezoneString | Milliseconds;
@@ -397,6 +410,10 @@ export function systemBaseDateToNormalDateOffset(date: Date): Milliseconds {
 
 export function systemNormalDateToBaseDateOffset(date: Date): Milliseconds {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDateOffset(date);
+}
+
+export function systemExperiencesDaylightSavings(year: Date): boolean {
+  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.systemExperiencesDaylightSavings(year);
 }
 
 // MARK: StartOfDayInTimezoneDayStringFactory

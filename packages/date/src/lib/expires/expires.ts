@@ -67,7 +67,7 @@ export function timeHasExpired(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?
 export function toExpires(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?: Milliseconds): Expires {
   let expiresAt = dateFromDateOrTimeNumber(time);
 
-  if (expiresAt && expiresIn) {
+  if (expiresAt && expiresIn != null) {
     expiresAt = addMilliseconds(expiresAt, expiresIn);
   }
 

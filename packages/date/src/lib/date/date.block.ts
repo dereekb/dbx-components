@@ -38,7 +38,8 @@ import {
   DateRelativeState,
   groupValues,
   makeValuesGroupMap,
-  findBestIndexMatchFunction
+  findBestIndexMatchFunction,
+  TimezoneStringRef
 } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
@@ -145,13 +146,14 @@ export type DateBlockTimingStartAndStartsAt = DateBlockTimingStart & Pick<DateBl
  * - The startsAt time should be greater than or equal to the normalized start
  * - The startsAt time should be on the same date as normalized start
  * - The end time should equal the ending date/time of the final end duration.
+ * - (Recommended, Optional) The timezone the date block timing is for. This timezone is required for areas that experience daylight savings in order to properly handle the offsets.
  */
-export interface DateBlockTiming extends DateBlockTimingStart, DateRange, DateDurationSpan {}
+export interface DateBlockTiming extends DateBlockTimingStart, DateRange, DateDurationSpan, Partial<TimezoneStringRef> {}
 
 /**
  * The DateRange component for a DateBlockTiming. The start date is a DateBlockTimingStart.
  */
-export type DateBlockTimingStartEndRange = DateBlockTimingStart & Pick<DateBlockTiming, 'end'>;
+export type DateBlockTimingStartEndRange = DateBlockTimingStart & Pick<DateBlockTiming, 'end' | 'timezone'>;
 
 /**
  * The start date of a DateBlockTimingStart, along with the endDay which is a normalized day that is at midnight of the last day in the timezone.
@@ -159,6 +161,11 @@ export type DateBlockTimingStartEndRange = DateBlockTimingStart & Pick<DateBlock
  * They are expected to both be in the same timezone.
  */
 export type DateBlockTimingStartEndDayDateRange = DateBlockTimingStart & { endDay: Date };
+
+/**
+ * The startsAt time of the event.
+ */
+export type DateBlockTimingEventStartsAt = Pick<DateBlockTiming, 'startsAt'>;
 
 /**
  * A startsAt time and duration.
@@ -175,6 +182,10 @@ export class DateBlockTiming extends DateDurationSpan {
   @IsDate()
   @Type(() => Date)
   end!: Date;
+
+  @Expose()
+  @IsOptional()
+  timezone?: TimezoneString;
 
   constructor(template?: DateBlockTiming) {
     super(template);
@@ -347,6 +358,8 @@ export function assertedTimingDateTimezoneUtcNormal(input: TimingDateTimezoneUtc
 /**
  * Converts a DateBlockTimingStartEndRange and DateBlockTimingEvent that originated from the same DateBlockTiming back to the original DateBlockTiming.
  *
+ * This does not check for validity of the input event, and as such can return an invalid timing. Instead, use safeDateBlockTimingFromDateRangeAndEvent() for enforced validity and return of a valid timing.
+ *
  * The timezone is recommended to be provided if available, otherwise daylight savings might be impacted.
  *
  * @param dateBlockTimingStartEndRange
@@ -354,18 +367,14 @@ export function assertedTimingDateTimezoneUtcNormal(input: TimingDateTimezoneUtc
  * @param timezone
  * @returns
  */
-export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent, timezone: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-/**
- * @deprecated timezone should be provided, as it will behave properly for daylight savings changes.
- */
-export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
+export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent): DateBlockTiming;
+export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent): DateBlockTiming {
   const { start, end } = dateBlockTimingStartEndRange;
   const { startsAt: eventStartsAt, duration } = event;
 
   // need the timezone instance to compute against the normal and convert to the system time, before going back.
   // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
-  const timezoneInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateBlockTimingStartEndRange, dateBlockTimingStartEndRange);
+  const timezoneInstance = timingDateTimezoneUtcNormal(dateBlockTimingStartEndRange);
 
   // compute startsAt, the start time for the first event
   const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
@@ -382,7 +391,7 @@ export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRang
 /**
  * Converts a DateBlockTimingStartEndRange and a DateBlockTimingEvent to a DateBlockTiming.
  *
- * The input event does not have to be from the original DateBlockTimingStartEndRange. The DateBlockTiming's end value will be updated to fit the DateBlockTimingEvent info.
+ * The input event does not have to be from the original DateBlockTimingStartEndRange, but the start date is always retained, and the same end day is retained, but may be updated to reflect a new end date/time.
  *
  * @param dateBlockTimingStartEndRange
  * @param event
@@ -398,9 +407,8 @@ export function safeDateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEnd
   const { start, end } = dateBlockTimingStartEndRange;
 
   const timezoneInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateBlockTimingStartEndRange, dateBlockTimingStartEndRange);
-  const systemTimezoneEnd = timezoneInstance.systemDateToTargetDate(end); // normalize it so it is back in it's original timezone hours/minutes
-  const endNormal = startOfDay(systemTimezoneEnd); // get the start of the day
-  const endDay = timezoneInstance.targetDateToSystemDate(endNormal); // get the end of the day
+  // const startDayFactory = dateBlockTimingStartDateFactory({ start }, timezoneInstance);
+  const endDay = end; // get midnight of the day the job usually ends at
 
   const endDayDateRange: DateBlockTimingStartEndDayDateRange = { start, endDay };
   return _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(endDayDateRange, event, timezoneInstance);
@@ -413,12 +421,7 @@ export function safeDateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEnd
  * @param event
  * @returns
  */
-export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-/**
- * @deprecated timezone should be provided, as it will behave properly for daylight savings changes.
- */
-export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
+export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
   // need the timezone instance to compute against the normal and convert to the system time, before going back.
   // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
   const timezoneInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateBlockTimingStartEndDayDateRange, dateBlockTimingStartEndDayDateRange);
@@ -444,7 +447,9 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
   const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
 
   // compute end, the end time for the last event using the last day
-  const end = addMinutes(copyHoursAndMinutesFromDateWithTimezoneNormal(endDay, eventStartsAt, timezoneInstance), duration);
+  const lastDayStartsAt = dateBlockTimingStartsAtDateFactory({ start, startsAt }, timezoneInstance)(endDay);
+
+  const end = addMinutes(lastDayStartsAt, duration);
 
   const timing = {
     start,
@@ -452,6 +457,8 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
     startsAt,
     duration
   };
+
+  console.log({ timezoneInstance, startsAt, eventStartsAt, lastDayStartsAt, dateBlockTimingStartEndDayDateRange, event, timing });
 
   return timing;
 }
@@ -815,7 +822,7 @@ export type DateBlockTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversio
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement): DateBlockTimingStartDateFactory<T> {
+export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartDateFactory<T> {
   const indexFactory = dateBlockTimingRelativeIndexFactory<T>(input);
   const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
 
@@ -848,14 +855,29 @@ export type DateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStart = 
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>): DateBlockTimingStartsAtDateFactory<T> {
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartsAtDateFactory<T>;
+/**
+ * @deprecated Timezone required to properly handle daylight savings times.
+ *
+ * @param input
+ * @param timezone
+ */
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone?: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartsAtDateFactory<T>;
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone?: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartsAtDateFactory<T> {
   const indexFactory = dateBlockTimingRelativeIndexFactory<T>(input);
-  const { startsAt: baseTimingStartsAt } = indexFactory._timing;
+  const { start, startsAt: baseTimingStartsAt } = indexFactory._timing;
+  const timezoneInstance = timingDateTimezoneUtcNormal(timezone ?? { start });
+
+  if ((timezoneInstance.config as DateBlockTimingUseSystemAndIgnoreEnforcement).assertTimingMatchesTimezone !== false && !timingIsInExpectedTimezone(indexFactory._timing, timezoneInstance)) {
+    throw new Error(`unexpected timezone "${timezone}" for start date "${indexFactory._timing.start}" for dateBlockTimingStartsAtDateFactory(). Is expected to match the timezones.`);
+  }
+
+  const baseStartsAtInUtc = timezoneInstance.baseDateToTargetDate(baseTimingStartsAt);
 
   const factory = ((input: DateOrDateBlockIndex) => {
     const index = indexFactory(input); // get the index
-    const hoursOffset = index * HOURS_IN_DAY;
-    return addHours(baseTimingStartsAt, hoursOffset);
+    const startAtInUtc = addHours(baseStartsAtInUtc, index * HOURS_IN_DAY);
+    return timezoneInstance.targetDateToBaseDate(startAtInUtc);
   }) as Configurable<Partial<DateBlockTimingStartsAtDateFactory>>;
   factory._indexFactory = indexFactory;
   return factory as DateBlockTimingStartsAtDateFactory<T>;
@@ -953,10 +975,14 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
   }
 
   const start = range.start;
-  startsAt = timezoneInstance ? timezoneInstance.targetDateToSystemDate(startsAt) : startsAt;
+  let lastStart = addDays(startsAt, numberOfBlockedDays); // add days so the system can change for daylight savings
+
+  if (timezoneInstance) {
+    startsAt = timezoneInstance.targetDateToSystemDate(startsAt);
+    lastStart = timezoneInstance.targetDateToSystemDate(lastStart); // may be affected by daylight savings
+  }
 
   // calculate end to be the ending date/time of the final duration span
-  const lastStart = addDays(startsAt, numberOfBlockedDays);
   const end: Date = addMinutes(lastStart, duration);
 
   return {
@@ -1003,8 +1029,8 @@ export interface IsValidDateBlockTimingInfo {
   readonly isPlausiblyValidEnd: boolean;
 }
 
-export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: TimezoneString) {
-  const { end, start, startsAt, duration } = timing;
+export function isValidDateBlockTimingInfo(timing: DateBlockTiming) {
+  const { end, start, startsAt, duration, timezone } = timing;
 
   const {
     currentTimezoneOffsetInHours: startOffsetInHours // offset as computed on the given date.
@@ -1023,6 +1049,7 @@ export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: T
 
   let isExpectedValidEnd = false;
   let isPlausiblyValidEnd = false;
+  let isTimezoneValidatedEnd = false;
 
   if (
     isStartRoundedToSeconds &&
@@ -1036,15 +1063,20 @@ export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: T
     const timezoneOffsetDelta = endOffset - startOffsetInHours;
 
     const expectedFinalStartTime = addHours(addMinutes(end, -duration), timezoneOffsetDelta);
-    const difference = differenceInMilliseconds(startsAt, expectedFinalStartTime) % MS_IN_DAY;
+    const finalMsDifference = differenceInMilliseconds(startsAt, expectedFinalStartTime);
+    const hoursDifference = Math.abs((finalMsDifference % MS_IN_DAY) / MS_IN_HOUR);
+    const difference = hoursDifference === 23 ? -1 : hoursDifference; // depending on daylight savings, may be off by 1 hour
 
     isExpectedValidEnd = difference === 0;
-    isPlausiblyValidEnd = isExpectedValidEnd || Math.abs(difference) === MS_IN_HOUR;
-
+    isPlausiblyValidEnd = isExpectedValidEnd || Math.abs(difference) === 1;
     isValid = isPlausiblyValidEnd;
+
+    if (isPlausiblyValidEnd && timezone) {
+      // TODO: validate properly for the timezone...
+    }
   }
 
-  return {
+  const result = {
     isValid,
     isStartRoundedToSeconds,
     msDifference,
@@ -1056,6 +1088,8 @@ export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: T
     isExpectedValidEnd,
     isPlausiblyValidEnd
   };
+
+  return result;
 }
 
 /**
