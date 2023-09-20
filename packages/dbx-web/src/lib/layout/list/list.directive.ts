@@ -11,6 +11,7 @@ export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
   <ng-content top select="[top]"></ng-content>
   <ng-content bottom select="[bottom]"></ng-content>
   <ng-content empty select="[empty]"></ng-content>
+  <ng-content emptyLoading select="[emptyLoading]"></ng-content>
 </dbx-list>
 `;
 
@@ -20,6 +21,7 @@ export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
   <ng-content top select="[top]"></ng-content>
   <ng-content bottom select="[bottom]"></ng-content>
   <ng-content empty select="[empty]"></ng-content>
+  <ng-content emptyLoading select="[emptyLoading]"></ng-content>
 </dbx-list>
 `;
 

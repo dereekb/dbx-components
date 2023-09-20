@@ -139,19 +139,47 @@
 
         <h4>Loading</h4>
         <p>Permenant Loading State</p>
-        <doc-custom-item-list [state$]="statePermanentlyLoading$"></doc-custom-item-list>
+        <doc-complex-item-list [state$]="statePermanentlyLoading$">
+          <dbx-list-empty-content emptyLoading>
+            <p>This should appear while the list is empty and loading...</p>
+          </dbx-list-empty-content>
+        </doc-complex-item-list>
+        <p>Loading After Non-empty Result Passed (Test)</p>
+        <doc-complex-item-list [state$]="statePermanentlyLoadingAfterNonEmptyResult$">
+          <dbx-list-empty-content empty>
+            <p>Emtpy Result Content Text (Should not be visible)</p>
+          </dbx-list-empty-content>
+          <dbx-list-empty-content emptyLoading>
+            <p>This should appear while the list is empty and loading...</p>
+          </dbx-list-empty-content>
+        </doc-complex-item-list>
+        <p>Not Loading After Non-empty Result Passed (Test)</p>
+        <doc-complex-item-list [state$]="stateWithNonEmptyResult$">
+          <dbx-list-empty-content empty>
+            <p>Emtpy Result Content Text (Should not be visible)</p>
+          </dbx-list-empty-content>
+          <dbx-list-empty-content emptyLoading>
+            <p>This should appear while the list is empty and loading...</p>
+          </dbx-list-empty-content>
+        </doc-complex-item-list>
         <p>After Empty Result Passed (Test)</p>
-        <doc-custom-item-list [state$]="statePermanentlyLoadingAfterEmptyResult$">
+        <doc-complex-item-list [state$]="statePermanentlyLoadingAfterEmptyResult$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text (Should not be visible)</p>
           </dbx-list-empty-content>
-        </doc-custom-item-list>
+          <dbx-list-empty-content emptyLoading>
+            <p>This should appear while the list is empty and loading...</p>
+          </dbx-list-empty-content>
+        </doc-complex-item-list>
         <p>After Empty Result Passed with empty value (Test)</p>
-        <doc-custom-item-list [state$]="statePermanentlyLoadingAfterEmptyResultWithEmptyValue$">
+        <doc-complex-item-list [state$]="statePermanentlyLoadingAfterEmptyResultWithEmptyValue$">
           <dbx-list-empty-content empty>
             <p>Emtpy Result Content Text (Should not be visible)</p>
           </dbx-list-empty-content>
-        </doc-custom-item-list>
+          <dbx-list-empty-content emptyLoading>
+            <p>This should appear while the list is empty and loading...</p>
+          </dbx-list-empty-content>
+        </doc-complex-item-list>
       </doc-feature-example>
     </doc-feature-layout>
   </dbx-content>

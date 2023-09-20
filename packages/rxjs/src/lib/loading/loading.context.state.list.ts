@@ -28,6 +28,15 @@ export class ListLoadingStateContextInstance<L = unknown, S extends ListLoadingS
   );
 
   /**
+   * Returns true while loading and the current value is considered empty.
+   */
+  readonly isEmptyLoading$: Observable<boolean> = this.stream$.pipe(
+    map((x) => loadingStateIsLoading(x) && listLoadingStateIsEmpty(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
    * Whether or not the current value is empty.
    *
    * Only resolves when the first non-loading event has occured.
