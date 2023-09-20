@@ -3,8 +3,16 @@ import { PageNumber } from '@dereekb/util';
 import { filter, map, Observable, OperatorFunction } from 'rxjs';
 import { ListLoadingState, loadingStateIsLoading, PageLoadingState } from './loading.state';
 
+// TODO: breaking change refactor: Switch the names of these functions below, so the isListLoadingStateEmpty is the non-operator function.
+
+/**
+ * Returns true if the loading state is not loading and is empty.
+ *
+ * @param listLoadingState
+ * @returns
+ */
 export function listLoadingStateIsEmpty<T = unknown>(listLoadingState: ListLoadingState<T>): boolean {
-  return Boolean(listLoadingState.value && !listLoadingState.value?.length);
+  return Boolean(!listLoadingState.value || !listLoadingState.value.length);
 }
 
 export function isListLoadingStateEmpty<T = unknown>(): OperatorFunction<ListLoadingState<T>, boolean> {

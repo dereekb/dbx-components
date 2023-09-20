@@ -79,7 +79,23 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   );
 
   readonly statePermanentlyLoading$: Observable<ListLoadingState<any>> = of(beginLoading() as ListLoadingState<any>);
+  readonly stateWithNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of(
+    successResult<DocValue[]>([
+      { name: 'A', icon: 'a' },
+      { name: 'B', icon: 'b' }
+    ])
+  );
+
+  readonly statePermanentlyLoadingWithEmptyResult$: Observable<ListLoadingState<any>> = of({ ...successResult([]), ...beginLoading() } as ListLoadingState<any>);
   readonly statePermanentlyLoadingAfterEmptyResult$: Observable<ListLoadingState<any>> = this.statePermanentlyLoading$.pipe(startWith(successResult([])));
+  readonly statePermanentlyLoadingAfterNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of({
+    ...successResult<DocValue[]>([
+      { name: 'A', icon: 'a' },
+      { name: 'B', icon: 'b' }
+    ]),
+    ...beginLoading()
+  } as ListLoadingState<any>);
+  readonly statePermanentlyLoadingAfterEmptyResultWithEmptyValue$: Observable<ListLoadingState<any>> = this.statePermanentlyLoadingWithEmptyResult$.pipe(startWith(successResult([])));
   readonly emptyResult$: Observable<ListLoadingState<any>> = of(successResult([]));
 
   readonly staticState$: Observable<ListLoadingState<DocValue>> = of(successResult(this.makeValues()));

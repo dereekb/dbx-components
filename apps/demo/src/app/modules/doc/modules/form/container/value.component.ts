@@ -217,6 +217,35 @@ export function schoolInfoJobSettingsEndTimeField() {
           max: addDays(startOfMonth(new Date()), 18)
         }
       }
+    }),
+    fixedDateRangeField({
+      key: 'thisMonthNormalDateRange',
+      label: 'One Month Normal Date Range',
+      selectionMode: 'normal',
+      description: 'Normal selection. Limited to the first 18 days of the month. Not required. Returns the date as an ISO8601DayString.',
+      valueMode: DbxDateTimeValueMode.DAY_STRING,
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: startOfMonth(new Date()),
+          max: addDays(startOfMonth(new Date()), 18)
+        }
+      }
+    }),
+    fixedDateRangeField({
+      key: 'maxAnyMonthNormalDateRange',
+      label: 'Max Any Calendar Month Long',
+      selectionMode: 'normal',
+      description: 'Normal selection. Limited date range. Selection range of 1 calendar month. Not required. Returns the date as an ISO8601DayString.',
+      valueMode: DbxDateTimeValueMode.DAY_STRING,
+      dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
+      timezone: this.timezone$,
+      pickerConfig: {
+        limits: {
+          min: addMonths(startOfMonth(new Date()), -2),
+          max: addDays(startOfMonth(new Date()), 60)
+        }
+      }
     })
   ];
 
