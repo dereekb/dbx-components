@@ -1,8 +1,8 @@
 import { LimitArrayConfig, hasNonNullValue, limitArray, Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay, skipWhile } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay, skipWhile, startWith } from 'rxjs';
 import { loadingStateIsLoading, ListLoadingState } from './loading.state';
 import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, AbstractLoadingStateEvent, LoadingStateContextInstanceInputConfig } from './loading.context.state';
-import { isListLoadingStateEmpty } from './loading.state.list';
+import { isListLoadingStateEmpty, listLoadingStateIsEmpty } from './loading.state.list';
 
 export interface ListLoadingStateContextEvent<T> extends AbstractLoadingStateEvent<T[]> {
   value?: Maybe<T[]>;
@@ -26,9 +26,30 @@ export class ListLoadingStateContextInstance<L = unknown, S extends ListLoadingS
     map((x) => x.value ?? []),
     shareReplay(1)
   );
+
+  /**
+   * Whether or not the current value is empty.
+   *
+   * Only resolves when the first non-loading event has occured.
+   *
+   * After that, will return true if the value is empty even if loading a new value.
+   */
   readonly isEmpty$: Observable<boolean> = this.stream$.pipe(
     skipWhile((x) => loadingStateIsLoading(x)), // skip until the first non-loading event has occured
     isListLoadingStateEmpty(),
+    distinctUntilChanged()
+  );
+
+  /**
+   * Whether or not the current value is empty and not loading.
+   *
+   * Only resolves when the first non-loading event has occured.
+   *
+   * After that, will return true if the value is empty even if loading a new value.
+   */
+  readonly isEmptyAndNotLoading$: Observable<boolean> = this.stream$.pipe(
+    skipWhile((x) => loadingStateIsLoading(x)), // skip until the first non-loading event has occured
+    map((x) => !loadingStateIsLoading(x) && listLoadingStateIsEmpty(x)),
     distinctUntilChanged()
   );
 

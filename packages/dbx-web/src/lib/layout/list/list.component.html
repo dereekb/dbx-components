@@ -4,4 +4,4 @@
   <dbx-injection [config]="injectedComponentConfig$ | async"></dbx-injection>
   <ng-content select="[bottom]"></ng-content>
 </div>
-<ng-content *ngIf="isEmpty$ | async" select="[empty]"></ng-content>
+<ng-content *ngIf="isEmptyAndNotLoading$ | async" select="[empty]"></ng-content>

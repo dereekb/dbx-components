@@ -1,4 +1,4 @@
-import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first } from 'rxjs';
+import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first, combineLatest } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive } from '@angular/core';
 import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
 import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, loadingStateHasFinishedLoading, startWithBeginLoading } from '@dereekb/rxjs';
@@ -104,6 +104,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
 
   readonly context = new ListLoadingStateContextInstance<T, S>({ showLoadingOnNoValue: false });
   readonly isEmpty$ = this.context.isEmpty$;
+  readonly isEmptyAndNotLoading$ = this.context.isEmptyAndNotLoading$;
   readonly disabled$ = this._disabled.asObservable();
   readonly selectionMode$ = this._selectionMode.asObservable();
 
