@@ -1,5 +1,5 @@
 import { Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util';
-import { BehaviorSubject, map, of, first } from 'rxjs';
+import { BehaviorSubject, map, of, first, skip, Observable, switchMap, delay } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
 import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
@@ -35,6 +35,23 @@ describe('mapLoadingStateValueWithOperator()', () => {
     });
   });
 
+  it('should return a loading state when the original loading state finishes with a value and when using an async operator that does not immediately return', (done) => {
+    const expectedValues = ['aaa', 'aac'];
+    const values = [...expectedValues, 'ddd', 'eee'];
+    const values$ = new BehaviorSubject<LoadingState<string[]>>({ value: values });
+
+    const obs = values$.pipe(mapLoadingStateValueWithOperator(switchMap(() => of('async value').pipe(delay(1000)))));
+
+    obs.pipe(first()).subscribe((state) => {
+      const { value } = state;
+
+      expect(value).toBeUndefined();
+      expect(loadingStateIsLoading(state)).toBe(true);
+
+      done();
+    });
+  });
+
   it('should not map undefined success values', (done) => {
     const expectedValue = undefined;
     const value = undefined;
@@ -45,7 +62,9 @@ describe('mapLoadingStateValueWithOperator()', () => {
 
     obs.subscribe((state) => {
       const { value } = state;
+
       expect(value).toBe(expectedValue);
+
       done();
     });
   });

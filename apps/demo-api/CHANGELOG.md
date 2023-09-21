@@ -2,6 +2,10 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.24.46](https://github.com/dereekb/dbx-components/compare/v9.24.45-dev...v9.24.46) (2023-09-21)
+
+
+
 ## [9.24.45](https://github.com/dereekb/dbx-components/compare/v9.24.44-dev...v9.24.45) (2023-09-20)
 
 
