@@ -1,6 +1,6 @@
 import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, takeFront, EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
-import { timeoutStartWith } from '../rxjs';
+import { timeoutStartWith } from '../rxjs/timeout';
 import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult, LoadingStateWithMaybeSoValue, loadingStatesHaveEquivalentMetadata } from './loading.state';
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
@@ -197,14 +197,12 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
       switchMap((state: L) => {
         let mappedObs: Observable<LoadingStateWithValueType<L, O>>;
 
-        // TODO: if the value changes to loading but retains the same values, the loading state will simply be passed along with the mapped values.
-
         if (loadingStateHasValue(state) || (mapOnUndefined && loadingStateHasFinishedLoading(state) && !loadingStateHasError(state))) {
           mappedObs = of((state as LoadingStateWithMaybeSoValue<LoadingStateValue<L>>).value).pipe(
             operator,
             map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>)),
             // if the operator does not return nearly instantly, then return the current state, minus a value
-            timeoutStartWith({ ...state, value: undefined } as unknown as LoadingStateWithValueType<L, O>, 0)
+            timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as LoadingStateWithValueType<L, O>, 0)
           );
         } else {
           mappedObs = of(state) as unknown as Observable<LoadingStateWithValueType<L, O>>;
