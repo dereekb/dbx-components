@@ -69,6 +69,16 @@ export function guessCurrentTimezone(): TimezoneString | undefined {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
 }
 
+export function requireCurrentTimezone(): TimezoneString {
+  const tz = guessCurrentTimezone();
+
+  if (!tz) {
+    throw new Error('requireCurrentTimezone() failed to guess the current timezone.');
+  }
+
+  return tz;
+}
+
 export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Maybe<Date> {
   return input != null ? toJsDate(input) : undefined;
 }

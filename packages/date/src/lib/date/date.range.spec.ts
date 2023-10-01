@@ -1,7 +1,8 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
-import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
+import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitUTCDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
 import { transformDateRangeToTimezoneFunction } from './date.range.timezone';
+import { dateTimezoneUtcNormal } from './date.timezone';
 
 describe('dateRange()', () => {
   const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
@@ -271,7 +272,7 @@ describe('dateRangeOverlapsDateRangeFunction()', () => {
   });
 });
 
-describe('fitDateRangeToDayPeriod()', () => {
+describe('fitUTCDateRangeToDayPeriod()', () => {
   describe('scenario', () => {
     const date = `2023-02-27`;
 
@@ -280,7 +281,7 @@ describe('fitDateRangeToDayPeriod()', () => {
       const expectedEnd = addHours(start, 3); // 10AM to 1PM
       const end = addDays(expectedEnd, 1);
 
-      const result = fitDateRangeToDayPeriod({ start, end });
+      const result = fitUTCDateRangeToDayPeriod({ start, end });
       expect(result.start).toBeSameSecondAs(start);
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });
@@ -290,7 +291,7 @@ describe('fitDateRangeToDayPeriod()', () => {
       const expectedEnd = addDays(addHours(start, -3), 1); // 10AM to 1PM
       const end = addDays(expectedEnd, 2);
 
-      const result = fitDateRangeToDayPeriod({ start, end });
+      const result = fitUTCDateRangeToDayPeriod({ start, end });
       expect(result.start).toBeSameSecondAs(start);
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });

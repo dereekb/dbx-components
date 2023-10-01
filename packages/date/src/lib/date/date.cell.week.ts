@@ -1,7 +1,23 @@
 import { addDays } from 'date-fns';
-import { MapFunction, Maybe } from '@dereekb/util';
+import { DayOfWeek, getNextDay, MapFunction, Maybe } from '@dereekb/util';
 import { DateCellIndex, DateCellTiming, getCurrentDateCellTimingStartDate } from './date.cell';
 import { YearWeekCode, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory, YearWeekCodeReader } from './date.week';
+
+/**
+ * Converts the input index into the DayOfWeek that it represents.
+ */
+export type DateCellDayOfWeekFactory = MapFunction<DateCellIndex, DayOfWeek>;
+
+/**
+ * Creates a DateCellDayOfWeekFactory
+ *
+ * @param dayForIndexZero
+ * @returns
+ */
+export function dateCellDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateCellDayOfWeekFactory {
+  const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getUTCDay() as DayOfWeek);
+  return (index: DateCellIndex) => getNextDay(dayForIndexZero, index);
+}
 
 /**
  * Used to return the proper YearWeekCode for the input DateCellIndex relative to the configured timing, or a Date.

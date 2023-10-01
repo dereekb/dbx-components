@@ -195,6 +195,7 @@ export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = y
   const { _normal } = factory;
 
   return (dateRange: DateRange) => {
+    // do in system timezone so we can use addWeeks/startOfWeek
     const start = _normal.systemDateToTargetDate(dateRange.start as Date);
     const end = _normal.systemDateToTargetDate(dateRange.end as Date);
 
@@ -207,6 +208,8 @@ export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = y
       weeks.push(week);
       current = addWeeks(current, 1);
     }
+
+    // TODO: Add test for {"start":"2023-09-24T03:21:24.127Z","end":"2023-09-30T04:59:59.999Z"}
 
     return weeks;
   };

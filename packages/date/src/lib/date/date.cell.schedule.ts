@@ -3,31 +3,11 @@ import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
-import {
-  changeTimingToSystemTimezone,
-  changeTimingToTimezone,
-  DateCell,
-  dateCellDayOfWeekFactory,
-  DateCellDurationSpan,
-  DateCellIndex,
-  dateCellIndexRange,
-  DateCellRange,
-  DateCellRangeOrDateRange,
-  DateCellRangeWithRange,
-  DateCellsExpansionFactory,
-  dateCellsExpansionFactory,
-  dateCellTiming,
-  DateCellTiming,
-  DateCellTimingStartEndRange,
-  dateCellTimingStartForNowInSystemTimezone,
-  dateCellTimingStartForNowInTimezone,
-  dateCellTimingRelativeIndexFactory,
-  DateCellTimingRelativeIndexFactoryInput,
-  getCurrentDateCellTimingStartDate,
-  groupToDateCellRanges,
-  safeDateCellTimingFromDateRangeAndEvent
-} from './date.cell';
+import { changeTimingToSystemTimezone, changeTimingToTimezone, DateCell, DateCellDurationSpan, DateCellIndex, dateCellTiming, DateCellTiming, DateCellTimingStartsAtEndRange } from './date.cell';
+import { safeDateCellTimingFromDateRangeAndEvent, DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellsExpansionFactory, dateCellsExpansionFactory, dateCellIndexRange } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
+import { DateCellRangeOrDateRange, DateCellRange, DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
+import { dateCellDayOfWeekFactory } from './date.cell.week';
 import { DateRange, isSameDateRange } from './date.range';
 import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
@@ -368,7 +348,7 @@ export class DateCellSchedule implements DateCellSchedule {
 /**
  * A schedule that occurs during a specific range.
  */
-export interface DateCellScheduleRange extends DateCellSchedule, DateCellTimingStartEndRange {}
+export interface DateCellScheduleRange extends DateCellSchedule, DateCellTimingStartsAtEndRange {}
 
 /**
  * Returns true if both inputs have the same schedule and date range.
@@ -417,9 +397,9 @@ export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFi
 /**
  * dateCellScheduleDateFilter() configuration.
  *
- * The input date range is a DateCellTimingStartEndRange, where the start date is expected to be a DateCellTimingStart.
+ * The input date range is a DateCellTimingStartsAtEndRange, where the start date is expected to be a DateCellTimingStart.
  */
-export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartEndRange> {
+export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartsAtEndRange> {
   minMaxDateRange?: Maybe<Partial<DateCellRangeOrDateRange>>;
   /**
    * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.

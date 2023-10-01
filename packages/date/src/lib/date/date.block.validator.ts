@@ -4,6 +4,8 @@ import { isValidDateBlockRange, isValidDateBlockRangeSeries, isValidDateBlockTim
 
 /**
  * isValidDateBlockTiming validator
+ *
+ * @deprecated
  */
 export function IsValidDateBlockTiming(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {

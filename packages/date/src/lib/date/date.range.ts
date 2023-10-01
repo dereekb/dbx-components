@@ -1,9 +1,10 @@
-import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString, DayOfWeek, dayOfWeek, daysOfWeekArray } from '@dereekb/util';
+import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString, DayOfWeek, dayOfWeek, daysOfWeekArray, TimezoneString } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
 import { isSameDate, isDate, isSameDateDay } from './date';
 import { sortByDateFunction } from './date.sort';
+import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput } from './date.timezone';
 
 /**
  * Represents a start date.
@@ -641,13 +642,15 @@ export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRan
 }
 
 /**
- * Reduces the date range to represent a 24 hour period.
+ * Reduces the UTC date range to represent a 24 hour period.
  *
  * For example, a range of 10AM one day to 1PM three days later will be simplified to 10AM to 1PM.
  *
  * The order of times is retained. Date ranges that are 1PM to 10AM three days later will be simplified to 1PM to 10AM.
+ *
+ * For the UTC timezone, meaning changes in daylight savings are not considered.
  */
-export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T): T {
+export function fitUTCDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T): T {
   const startTime = dateRange.start.getTime();
   const endTime = dateRange.end.getTime();
 

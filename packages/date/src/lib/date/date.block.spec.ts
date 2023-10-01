@@ -493,7 +493,6 @@ describe('safeDateBlockTimingFromDateRangeAndEvent()', () => {
           describe('active to inactive', () => {
             it(`should return a copy of the original ${timezone} timing`, () => {
               expect(isValidDateBlockTiming(timing)).toBe(true);
-
               const result = safeDateBlockTimingFromDateRangeAndEvent(timing, timing, timezoneInstance); // use the first event again
 
               expect(result.start).toBeSameSecondAs(timing.start);

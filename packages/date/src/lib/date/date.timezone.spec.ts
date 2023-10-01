@@ -27,6 +27,24 @@ describe('DateTimezoneUtcNormalInstance', () => {
     expect(systemTimezoneOffset).toBeDefined();
   });
 
+  describe('targetTimezoneExperiencesDaylightSavings()', () => {
+    it('should return false for "UTC" in 2023', () => {
+      instance = new DateTimezoneUtcNormalInstance({
+        timezone: 'UTC'
+      });
+
+      expect(instance.targetTimezoneExperiencesDaylightSavings(2023)).toBe(false);
+    });
+
+    it('should return true for "America/Denver" in 2023', () => {
+      instance = new DateTimezoneUtcNormalInstance({
+        timezone: 'America/Denver'
+      });
+
+      expect(instance.targetTimezoneExperiencesDaylightSavings(2023)).toBe(true);
+    });
+  });
+
   describe('scenarios', () => {
     describe('utc timezone', () => {
       const utcBaseDate = new Date('2022-02-11T00:00:00Z'); // date in utc

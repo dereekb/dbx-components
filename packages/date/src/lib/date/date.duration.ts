@@ -1,4 +1,4 @@
-import { DateRelativeState, Minutes as UtilMinutes } from '@dereekb/util';
+import { DateRelativeState, FractionalHour, Minutes as UtilMinutes, minutesToFractionalHours } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 import { addMinutes } from 'date-fns';
@@ -48,6 +48,10 @@ export function durationSpanToDateRange(span: DateDurationSpan): DateRange {
 
 export function durationSpanDateRelativeState(span: DateDurationSpan, now?: Date): DateRelativeState {
   return dateRangeRelativeState(durationSpanToDateRange(span), now);
+}
+
+export function fractionalHoursInDurationSpan(span: DateDurationSpan): FractionalHour {
+  return minutesToFractionalHours(span.duration);
 }
 
 // MARK: Compat
