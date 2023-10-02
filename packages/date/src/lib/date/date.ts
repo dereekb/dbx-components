@@ -65,10 +65,20 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
   return date.toISOString();
 }
 
+/**
+ * Guesses the current system's timezone.
+ *
+ * @returns
+ */
 export function guessCurrentTimezone(): TimezoneString | undefined {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
 }
 
+/**
+ * Convenience function for getCurrentTimezone() that asserts a timezone is returned.
+ *
+ * @returns
+ */
 export function requireCurrentTimezone(): TimezoneString {
   const tz = guessCurrentTimezone();
 

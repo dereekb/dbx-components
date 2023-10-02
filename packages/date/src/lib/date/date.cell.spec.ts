@@ -1,13 +1,10 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { DateRange, DateRangeInput, isDateInDateRange } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, isBefore, isAfter, addBusinessDays, startOfWeek, differenceInSeconds, differenceInMilliseconds } from 'date-fns';
-import { changeTimingToTimezoneFunction, DateCell, DateCellIndex, dateCellTiming, DateCellTiming, isValidDateCellIndex, isValidDateCellTiming, isValidDateCellTimingStartDate, getDateCellTimingFirstEventDateRange, isSameDateCellTiming, FullDateCellTiming, getDateCellTimingHoursInEvent } from './date.cell';
-import { MS_IN_MINUTE, MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, TimezoneString, isOddNumber, HOURS_IN_DAY, MINUTES_IN_HOUR } from '@dereekb/util';
-import { copyHoursAndMinutesFromDate, guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
-import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
-import { dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, systemBaseDateToNormalDate, systemNormalDateToBaseDate, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
-import { formatToISO8601DayString, parseISO8601DayStringToUTCDate } from './date.format';
-import { DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
+import { DateRange, DateRangeInput } from './date.range';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addMilliseconds, millisecondsToHours } from 'date-fns';
+import { dateCellTiming, DateCellTiming, isValidDateCellIndex, isValidDateCellTiming, isValidDateCellTimingStartDate, getDateCellTimingFirstEventDateRange, isSameDateCellTiming, FullDateCellTiming, getDateCellTimingHoursInEvent, changeDateCellTimingToTimezoneFunction } from './date.cell';
+import { MS_IN_DAY, MINUTES_IN_DAY, TimezoneString } from '@dereekb/util';
+import { guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
+import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('isValidDateCellIndex()', () => {
   it('should return false for -1.', () => {
@@ -397,26 +394,6 @@ describe('isSameDateCellTiming()', () => {
   });
 });
 
-describe('getCurrentDateCellTimingStartDate()', () => {
-  const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
-
-  describe('system time', () => {
-    it('should apply the expected offset.', () => {
-      const start = new Date(2022, 0, 2);
-
-      const systemTimezoneOffset = start.getTimezoneOffset();
-      const systemDateAsUtc = addMinutes(start, -systemTimezoneOffset);
-
-      expect(systemDateAsUtc).toBeSameSecondAs(utcDate);
-
-      const timing: DateCellTiming = dateCellTiming({ startsAt: start, duration: 60 }, 2);
-      const date = getCurrentDateCellTimingStartDate(timing);
-
-      expect(date).toBeSameSecondAs(start);
-    });
-  });
-});
-
 describe('getDateCellTimingFirstEventDateRange()', () => {
   const hours = 4;
   const startsAt = startOfDay(new Date());
@@ -451,13 +428,13 @@ describe('getDateCellTimingHoursInEvent()', () => {
   });
 });
 
-describe('changeTimingToTimezoneFunction()', () => {
+describe('changeDateCellTimingToTimezoneFunction()', () => {
   describe('function', () => {
     const startOfToday = startOfDay(new Date());
     const timing = dateCellTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
 
     describe('UTC', () => {
-      const fn = changeTimingToTimezoneFunction('UTC');
+      const fn = changeDateCellTimingToTimezoneFunction('UTC');
       const utcTimezoneOffsetInHours = 0; // GMT-0
 
       it('should convert the start date to the UTC timezone.', () => {
@@ -475,7 +452,7 @@ describe('changeTimingToTimezoneFunction()', () => {
       describe('UTC via other timing', () => {
         const startsAtInUtcDate = new Date('2022-01-02T00:00:00Z'); // 0 offset UTC date
         const utcTiming = { start: startsAtInUtcDate, startsAt: addHours(startsAtInUtcDate, 1), duration: 60 };
-        const fn = changeTimingToTimezoneFunction(utcTiming);
+        const fn = changeDateCellTimingToTimezoneFunction(utcTiming);
 
         it('should convert the start date to the UTC timezone.', () => {
           const result = fn(timing);
@@ -492,7 +469,7 @@ describe('changeTimingToTimezoneFunction()', () => {
     });
 
     describe('America/Denver', () => {
-      const fn = changeTimingToTimezoneFunction('America/Denver');
+      const fn = changeDateCellTimingToTimezoneFunction('America/Denver');
 
       // GMT-6 or GMT-7 depending on time of year
       const denverTimezoneOffsetInHours = millisecondsToHours(dateTimezoneUtcNormal('America/Denver').targetDateToBaseDateOffset(startOfToday));

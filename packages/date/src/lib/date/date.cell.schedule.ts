@@ -1,15 +1,15 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
-import { copyHoursAndMinutesFromDate } from './date';
-import { changeTimingToSystemTimezone, changeTimingToTimezone, DateCell, DateCellDurationSpan, DateCellIndex, dateCellTiming, DateCellTiming, DateCellTimingStartsAtEndRange } from './date.cell';
-import { safeDateCellTimingFromDateRangeAndEvent, DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellsExpansionFactory, dateCellsExpansionFactory, dateCellIndexRange } from './date.cell.factory';
+import { requireCurrentTimezone } from './date';
+import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingStartsAtEndRange } from './date.cell';
+import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellsExpansionFactory, dateCellsExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { DateCellRangeOrDateRange, DateCellRange, DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
 import { dateCellDayOfWeekFactory } from './date.cell.week';
-import { DateRange, isSameDateRange } from './date.range';
-import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
+import { isSameDateRange } from './date.range';
+import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateCellScheduleDayCode {
@@ -34,7 +34,7 @@ export enum DateCellScheduleDayCode {
   WEEKEND = 9
 }
 
-export function fullWeekDayScheduleDayCodes() {
+export function fullWeekDateCellScheduleDayCodes() {
   return [DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND];
 }
 
@@ -74,7 +74,7 @@ export function dateCellScheduleDayCodesFromEnabledDays(input: Maybe<EnabledDays
  */
 export type DateCellScheduleEncodedWeek = '' | StringOrder<`${DateCellScheduleDayCode}`, ''>;
 
-export const DATE_SCHEDULE_ENCODED_WEEK_REGEX = /^[0-9]{0,9}$/;
+export const DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX = /^[0-9]{0,9}$/;
 
 /**
  * Returns true if the input is a DateCellScheduleEncodedWeek.
@@ -83,7 +83,7 @@ export const DATE_SCHEDULE_ENCODED_WEEK_REGEX = /^[0-9]{0,9}$/;
  * @returns
  */
 export function isDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek {
-  return DATE_SCHEDULE_ENCODED_WEEK_REGEX.test(input);
+  return DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX.test(input);
 }
 
 /**
@@ -321,7 +321,7 @@ export function isSameDateCellSchedule(a: Maybe<DateCellSchedule>, b: Maybe<Date
 export class DateCellSchedule implements DateCellSchedule {
   @Expose()
   @IsString()
-  @Matches(DATE_SCHEDULE_ENCODED_WEEK_REGEX)
+  @Matches(DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX)
   w!: DateCellScheduleEncodedWeek;
 
   @Expose()
@@ -376,10 +376,18 @@ export function isSameDateCellScheduleRange(a: Maybe<DateCellScheduleRange>, b: 
  * @param timezone
  * @returns
  */
-export function dateCellTimingForDateCellScheduleRange(dateCellScheduleRange: DateCellScheduleRange, duration: number, startsAtTime?: Date, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateCellTiming;
-export function dateCellTimingForDateCellScheduleRange(dateCellScheduleRange: DateCellScheduleRange, duration: number, startsAtTime?: Date, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateCellTiming {
-  const { start } = dateCellScheduleRange;
-  const timing: DateCellTiming = safeDateCellTimingFromDateRangeAndEvent(dateCellScheduleRange, { startsAt: startsAtTime ?? start, duration }, timezone);
+export function dateCellTimingForDateCellScheduleRange(dateCellScheduleRange: DateCellScheduleRange, duration: number, startsAtTime?: Date): DateCellTiming;
+export function dateCellTimingForDateCellScheduleRange(dateCellScheduleRange: DateCellScheduleRange, duration: number, startsAtTime?: Date): DateCellTiming {
+  const timing: DateCellTiming = updateDateCellTimingWithDateCellTimingEvent({
+    timing: dateCellScheduleRange,
+    event: {
+      startsAt: startsAtTime ?? dateCellScheduleRange.startsAt,
+      duration
+    },
+    replaceStartsAt: startsAtTime != null,
+    replaceDuration: true
+  });
+
   return timing;
 }
 
@@ -396,8 +404,6 @@ export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFi
 
 /**
  * dateCellScheduleDateFilter() configuration.
- *
- * The input date range is a DateCellTimingStartsAtEndRange, where the start date is expected to be a DateCellTimingStart.
  */
 export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartsAtEndRange> {
   minMaxDateRange?: Maybe<Partial<DateCellRangeOrDateRange>>;
@@ -409,8 +415,9 @@ export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Part
 
 export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilterConfig {
   return {
-    start: inputFilter.start,
+    startsAt: inputFilter.startsAt,
     end: inputFilter.end,
+    timezone: inputFilter.timezone,
     w: inputFilter.w,
     d: inputFilter.d,
     ex: inputFilter.ex
@@ -424,21 +431,34 @@ export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellSchedu
  * @returns
  */
 export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilter {
-  const { w, start: inputStart, setStartAsMinDate = true, end, minMaxDateRange } = config;
-  const timingStart = inputStart != null ? changeTimingToSystemTimezone({ start: inputStart }) : dateCellTimingStartForNowInSystemTimezone();
-  const { start: firstDate } = timingStart;
+  const { w, startsAt: inputStartsAt, end: inputEnd, timezone: inputTimezone, setStartAsMinDate = true, minMaxDateRange } = config;
+
+  const timezone = inputTimezone ?? requireCurrentTimezone(); // if the timezone is not provided, assume the startsAt is a system timezone normal.
+  const normalInstance = dateTimezoneUtcNormal(timezone);
+
+  // derive the startsAt time for the range. If not provided, defaults to midnight in the target timezone.
+  const startsAt: Date = inputStartsAt != null ? inputStartsAt : normalInstance.startOfDayInTargetDate();
+  const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt);
 
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);
 
   // Start date is either now or the filter's start date. It is never the minMax's start date, since that is irrelevant to the filter's range.
 
-  const firstDateDay = getDay(firstDate);
+  const firstDateDay = getDay(startsAtInSystem);
   const dayForIndex = dateCellDayOfWeekFactory(firstDateDay);
-  const dateIndexForDate = dateCellTimingRelativeIndexFactory(timingStart);
+  const dateIndexForDate = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
+
+  let end: Maybe<Date>;
+
+  if (inputEnd != null) {
+    // use the startsAt time instead of the end time because endsAt can fall into the next day index range
+    const { expectedFinalStartsAt } = calculateExpectedDateCellTimingDurationPair({ startsAt, timezone, end: inputEnd });
+    end = expectedFinalStartsAt;
+  }
 
   const indexFloor = setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
   const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, dateIndexForDate(minMaxDateRange.start)) : indexFloor; // start date should be the min inde
-  const maxAllowedIndex = end != null ? dateIndexForDate(end) : minMaxDateRange?.end != null ? dateIndexForDate(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
+  const maxAllowedIndex = inputEnd != null ? dateIndexForDate(inputEnd) : minMaxDateRange?.end != null ? dateIndexForDate(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
 
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
@@ -521,7 +541,9 @@ export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCe
     w: schedule.w,
     d: schedule.d,
     ex: schedule.ex,
-    start: getCurrentDateCellTimingStartDate(timing) // start date in the current system timezone.
+    startsAt: timing.startsAt,
+    end: timing.end,
+    timezone: timing.timezone
   });
 
   return (block: Readonly<B>) => {
@@ -624,8 +646,8 @@ export interface ExpandDateCellScheduleRangeInput extends Omit<DateCellScheduleD
  * @returns
  */
 export function dateCellTimingForExpandDateCellScheduleRangeInput(input: ExpandDateCellScheduleRangeInput): DateCellTiming {
-  const { dateCellScheduleRange, duration, startsAtTime, timezone } = input;
-  return dateCellTimingForDateCellScheduleRange(dateCellScheduleRange, duration, startsAtTime, timezone);
+  const { dateCellScheduleRange, duration, startsAtTime } = input;
+  return dateCellTimingForDateCellScheduleRange(dateCellScheduleRange, duration, startsAtTime);
 }
 
 /**

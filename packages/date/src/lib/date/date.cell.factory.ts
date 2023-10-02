@@ -1,10 +1,14 @@
-import { Maybe, ArrayOrValue, asArray, mergeArrayIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, TimezoneString } from '@dereekb/util';
-import { addDays, addMinutes, isAfter, differenceInDays, differenceInHours } from 'date-fns';
-import { DateCell, DateCellIndex, DateOrDateCellIndex, DateCellTiming, DateCellArrayRef, DateCellArray, DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, DateCellCollection, DateCellDurationSpan, DateCellTimingStartsAt } from './date.cell';
+import { DateBlockIndex } from '@dereekb/date';
+import { Maybe, ArrayOrValue, asArray, mergeArrayIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, TimezoneString, makeGetter, Minutes } from '@dereekb/util';
+import { addDays, addMinutes, isAfter, differenceInDays, differenceInHours, addHours, differenceInMinutes } from 'date-fns';
+import { start } from 'repl';
+import { guessCurrentTimezone } from './date';
+import { assertedTimingDateTimezoneUtcNormal } from './date.block';
+import { DateCell, DateCellIndex, DateOrDateCellIndex, DateCellTiming, DateCellArrayRef, DateCellArray, DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, DateCellCollection, DateCellDurationSpan, DateCellTimingStartsAt, DateCellTimingEvent, DateCellTimingStartsAtEndRange, calculateExpectedDateCellTimingDuration } from './date.cell';
 import { DateCellRange, dateCellRangeHasRange, DateCellRangeWithRange, DateCellOrDateCellIndexOrDateCellRange, dateCellRangeWithRange, DateOrDateRangeOrDateCellIndexOrDateCellRange, isDateCellRange, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 import { DateRange, DateRangeStart, isDateRange, isDateRangeStart } from './date.range';
-import { DateTimezoneConversionConfigUseSystemTimezone, DateTimezoneUtcNormalInstance } from './date.timezone';
+import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
 
 /**
  * Convenience function for calling expandDateCells() with the input DateCellCollection.
@@ -294,7 +298,7 @@ export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStart
         const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
         diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the system times. Round down.
       } else {
-        const dateInUtc = normalInstance.systemDateToBaseDate(input as Date); // convert to UTC normal
+        const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
         diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in system times. Round down.
       }
 
@@ -372,8 +376,9 @@ export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCel
  * @returns
  */
 export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(timing: T): DateCellTimingDateFactory<T> {
-  const offsetData = getDateCellTimingStartOffsetData(timing);
-  const utcStartDate = offsetData.originalUtcDate;
+  const { start, normalInstance } = dateCellTimingStartPair(timing);
+  const utcStartDate = normalInstance.baseDateToSystemDate(start);
+  const startUtcHours = start.getUTCHours();
 
   const factory = ((input: DateOrDateCellIndex) => {
     if (isDate(input)) {
@@ -384,11 +389,11 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
       const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
 
       // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
-      if (timing.start.getUTCHours() > nowHours) {
+      if (startUtcHours > nowHours) {
         input += 1;
       }
 
-      const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
+      const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY); // add days to apply the correct offset to the target index
       return nowWithDateForIndex;
     }
   }) as Configurable<Partial<DateCellTimingDateFactory>>;
@@ -399,7 +404,7 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
 /**
  * Returns the start time of the input date or index.
  */
-export type DateCellTimingStartDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateOrDateCellIndex) => Date) & {
+export type DateCellTimingStartDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateCellTimingRelativeIndexFactoryInput) => Date) & {
   readonly _indexFactory: DateCellTimingRelativeIndexFactory<T>;
 };
 
@@ -411,25 +416,19 @@ export type DateCellTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversion
 };
 
 /**
- * Creates a DateCellTimingDateFactory. The timezone is required to properly compute the accurate startsAt date for locations that experience daylight savings.
+ * Creates a DateCellTimingDateFactory.
  *
  * @param timing
  * @returns
  */
 export function dateCellTimingStartDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartDateFactory<T> {
   const indexFactory = dateCellTimingRelativeIndexFactory<T>(input);
-  const normalInstance = timingDateTimezoneUtcNormal(timezone);
+  const { start, normalInstance } = dateCellTimingStartPair(indexFactory._timing);
+  const utcStartDate = normalInstance.baseDateToSystemDate(start);
 
-  if ((normalInstance.config as DateCellTimingUseSystemAndIgnoreEnforcement).assertTimingMatchesTimezone !== false && !timingIsInExpectedTimezone(indexFactory._timing, normalInstance)) {
-    throw new Error(`unexpected timezone "${timezone}" for start date "${indexFactory._timing.start}" for dateCellTimingStartDateFactory(). Is expected to match the timezones.`);
-  }
-
-  const { start: baseTimingStart } = indexFactory._timing;
-  const baseStart = normalInstance.baseDateToTargetDate(baseTimingStart);
-
-  const factory = ((input: DateOrDateCellIndex) => {
+  const factory = ((input: DateCellTimingRelativeIndexFactoryInput) => {
     const index = indexFactory(input); // get the index
-    const startInUtc = addHours(baseStart, index * HOURS_IN_DAY);
+    const startInUtc = addHours(utcStartDate, index * HOURS_IN_DAY);
     return normalInstance.targetDateToBaseDate(startInUtc);
   }) as Configurable<Partial<DateCellTimingStartDateFactory>>;
   factory._indexFactory = indexFactory;
@@ -439,7 +438,7 @@ export function dateCellTimingStartDateFactory<T extends DateCellTimingStartsAt 
 /**
  * Returns the startsAt time of the input date or index.
  */
-export type DateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateOrDateCellIndex) => Date) & {
+export type DateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateCellTimingRelativeIndexFactoryInput) => Date) & {
   readonly _indexFactory: DateCellTimingRelativeIndexFactory<T>;
 };
 
@@ -452,22 +451,42 @@ export type DateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt =
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T>;
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T> {
   const indexFactory = dateCellTimingRelativeIndexFactory<T>(input);
-  const { start, startsAt: baseTimingStartsAt } = indexFactory._timing;
-  const normalInstance = timingDateTimezoneUtcNormal(timezone ?? { start });
+  const normalInstance = indexFactory._normalInstance;
+  const utcStartsAtDate = normalInstance.baseDateToSystemDate(indexFactory._timing.startsAt);
 
-  if ((normalInstance.config as DateCellTimingUseSystemAndIgnoreEnforcement).assertTimingMatchesTimezone !== false && !timingIsInExpectedTimezone(indexFactory._timing, normalInstance)) {
-    throw new Error(`unexpected timezone "${timezone}" for start date "${indexFactory._timing.start}" for dateCellTimingStartsAtDateFactory(). Is expected to match the timezones.`);
-  }
-
-  const baseStartsAtInUtc = normalInstance.baseDateToTargetDate(baseTimingStartsAt);
-
-  const factory = ((input: DateOrDateCellIndex) => {
+  const factory = ((input: DateCellTimingRelativeIndexFactoryInput) => {
     const index = indexFactory(input); // get the index
-    const startAtInUtc = addHours(baseStartsAtInUtc, index * HOURS_IN_DAY);
+    const startAtInUtc = addHours(utcStartsAtDate, index * HOURS_IN_DAY);
     return normalInstance.targetDateToBaseDate(startAtInUtc);
   }) as Configurable<Partial<DateCellTimingStartsAtDateFactory>>;
   factory._indexFactory = indexFactory;
   return factory as DateCellTimingStartsAtDateFactory<T>;
+}
+
+/**
+ * Returns the startsAt time of the input date or index.
+ */
+export type DateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming> = ((input: DateCellTimingRelativeIndexFactoryInput) => Date) & {
+  readonly _startsAtDateFactory: DateCellTimingStartsAtDateFactory<T>;
+};
+
+/**
+ * Creates a DateCellTimingStartsAtDateFactory.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T>;
+export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCellTiming>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingEndDateFactory<T> {
+  const startsAtDateFactory = dateCellTimingStartsAtDateFactory(input);
+  const { duration } = startsAtDateFactory._indexFactory._timing;
+
+  const factory = ((input: DateCellTimingRelativeIndexFactoryInput) => {
+    const startsAt = startsAtDateFactory(input); // get the startsAt for that day
+    return addMinutes(startsAt, duration); // add the duration
+  }) as Configurable<Partial<DateCellTimingEndDateFactory>>;
+  factory._startsAtDateFactory = startsAtDateFactory;
+  return factory as DateCellTimingEndDateFactory<T>;
 }
 
 /**
@@ -481,28 +500,17 @@ export function getRelativeDateForDateCellTiming(timing: DateCellTimingStartsAt,
 }
 
 /**
- * Converts a DateCellTimingStartsAtEndRange and DateCellTimingEvent that originated from the same DateCellTiming back to the original DateCellTiming.
- *
- * This does not check for validity of the input event, and as such can return an invalid timing. Instead, use safeDateCellTimingFromDateRangeAndEvent() for enforced validity and return of a valid timing.
- *
- * The timezone is recommended to be provided if available, otherwise daylight savings might be impacted.
+ * Converts a DateCellTimingStartsAtEndRange to a DateCellTiming by calculating the difference in hours from the last startsAt timing and the end.
  *
  * @param dateCellTimingStartEndRange
  * @param event
  * @param timezone
  * @returns
  */
-export function dateCellTimingFromDateRangeAndEvent(dateCellTimingStartEndRange: DateCellTimingStartsAtEndRange, event: DateCellTimingEvent): DateCellTiming;
-export function dateCellTimingFromDateRangeAndEvent(dateCellTimingStartEndRange: DateCellTimingStartsAtEndRange, event: DateCellTimingEvent): DateCellTiming {
-  const { startsAt: originalStartsAt, end, timezone } = dateCellTimingStartEndRange;
-  const { startsAt: eventStartsAt, duration } = event;
+export function dateCellTimingFromDateCellTimingStartsAtEndRange(dateCellTimingStartsAtEndRange: DateCellTimingStartsAtEndRange): DateCellTiming {
+  const { startsAt, timezone, end } = dateCellTimingStartsAtEndRange;
+  const duration = calculateExpectedDateCellTimingDuration(dateCellTimingStartsAtEndRange);
 
-  // need the timezone instance to compute against the normal and convert to the system time, before going back.
-  // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
-  const normalInstance = dateTimezoneUtcNormal(dateCellTimingStartEndRange);
-
-  // compute startsAt, the start time for the first event
-  const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(originalStartsAt, eventStartsAt, normalInstance);
   const timing = {
     timezone,
     end,
@@ -513,74 +521,107 @@ export function dateCellTimingFromDateRangeAndEvent(dateCellTimingStartEndRange:
   return timing;
 }
 
+export interface UpdateDateCellTimingWithDateCellTimingEventInput {
+  /**
+   * Target timing to update.
+   */
+  readonly timing: DateCellTimingStartsAtEndRange;
+  /**
+   * Event used to update the timing.
+   */
+  readonly event: DateCellTimingEvent;
+  /**
+   * Custom start date day to use instead of the event's start date.
+   *
+   * It is generated relative to the timing's current startsAt, and not the event's starts at, so index 0 is the first day of the Timing, not the event.
+   *
+   * Ignored if replaceStartDay is not true.
+   */
+  readonly startDayDate?: DateCellTimingRelativeIndexFactoryInput;
+  /**
+   * Replaces the start date but keeps the startsAt time as-is.
+   *
+   * Can be combined with replaceStartsAt.
+   */
+  readonly replaceStartDay?: boolean;
+  /**
+   * Replaces the startsAt time, but keeps the initial start date.
+   *
+   * Can be combined with replaceStartDay
+   */
+  readonly replaceStartsAt?: boolean;
+  /**
+   * Replaces the end day but keeps the same time.
+   */
+  readonly endOnEvent?: boolean;
+  /**
+   * Replaces the duration but keeps the end day intact.
+   */
+  readonly replaceDuration?: boolean;
+}
+
 /**
- * Converts a DateCellTimingStartsAtEndRange and a DateCellTimingEvent to a DateCellTiming.
- *
- * The input event does not have to be from the original DateCellTimingStartsAtEndRange, but the start date is always retained, and the same end day is retained, but may be updated to reflect a new end date/time.
+ * Creates a new DateCellTiming from the input configuration.
  *
  * @param dateCellTimingStartEndRange
  * @param event
  * @param timezone
  * @returns
  */
-export function safeDateCellTimingFromDateRangeAndEvent(dateCellTimingStartEndRange: DateCellTimingStartsAtEndRange, event: DateCellTimingEvent): DateCellTiming;
-export function safeDateCellTimingFromDateRangeAndEvent(dateCellTimingStartEndRange: DateCellTimingStartsAtEndRange, event: DateCellTimingEvent): DateCellTiming {
-  const { startsAt, end } = dateCellTimingStartEndRange;
+export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): DateCellTiming {
+  const { timing, event, replaceStartDay, replaceStartsAt, startDayDate: startDateDay, endOnEvent, replaceDuration } = input;
+  const { timezone } = timing;
+  const currentDuration = calculateExpectedDateCellTimingDuration(timing);
 
-  const endDay = end; // get midnight of the day the job usually ends at
+  let startsAt: Date = timing.startsAt;
+  let end: Date = timing.end;
+  let duration: Minutes = currentDuration;
 
-  const endDayDateRange: DateCellTimingStartEndDayDateRange = { start, endDay };
-  return _dateCellTimingFromDateCellTimingStartEndDayDateRange(endDayDateRange, event);
-}
+  if (replaceStartDay || replaceStartsAt) {
+    // if replacing both startsAt and start day, then just set the new starts at time
+    if (replaceStartsAt && replaceStartDay) {
+      startsAt = event.startsAt; // use the new startsAt as-is
+    } else if (replaceStartDay) {
+      // keep the same time, but use the day
+      let { start: eventStartDate, normalInstance } = dateCellTimingStartPair({ startsAt: event.startsAt, timezone });
 
-/**
- * Converts a DateCellTimingStartEndDayDateRange and DateCellTimingEvent to a DateCellTiming. The event is used to derive the startsAt, duration and end time. The timezone offset is retained.
- *
- * @param dateCellTimingStartEndDayDateRange
- * @param event
- * @returns
- */
-export function dateCellTimingFromDateCellTimingStartEndDayDateRange(dateCellTimingStartEndRange: DateCellTimingStartsAtEndRange, event: DateCellTimingEvent): DateCellTiming {
-  // need the timezone instance to compute against the normal and convert to the system time, before going back.
-  // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
-  const normalInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateCellTimingStartEndDayDateRange, dateCellTimingStartEndDayDateRange);
-  return _dateCellTimingFromDateCellTimingStartEndDayDateRange(dateCellTimingStartEndDayDateRange, event, normalInstance);
-}
+      if (startDateDay != null) {
+        const startDateFactory = dateCellTimingStartDateFactory(timing);
+        eventStartDate = startDateFactory(startDateDay);
+      }
 
-/**
- * Internal function that allows safeDateCellTimingFromDateRangeAndEvent() and dateCellTimingFromDateCellTimingStartEndDayDateRange()
- * to pass their timezone instances to this function, without having to create a new instance.
- *
- * See dateCellTimingFromDateCellTimingStartEndDayDateRange() for details.
- *
- * @param dateCellTimingStartEndDayDateRange
- * @param event
- * @param normalInstance
- * @returns
- */
-function _dateCellTimingFromDateCellTimingStartEndDayDateRange(dateCellTimingStartEndRange: DateCellTimingStartsAtEndRange, event: DateCellTimingEvent, normalInstance: DateTimezoneUtcNormalInstance): DateCellTiming {
-  const { start, endDay } = dateCellTimingStartEndRange;
-  const { startsAt: eventStartsAt, duration } = event;
+      startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(eventStartDate, timing.startsAt, normalInstance);
+    } else {
+      // if we're only replacing the startsAt, copy the hours/minutes from the target time
+      const { start: currentStart, normalInstance } = dateCellTimingStartPair(timing);
+      startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(currentStart, event.startsAt, normalInstance);
+    }
+  }
 
-  // compute startsAt, the start time for the first event
-  const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, normalInstance);
+  if (endOnEvent || replaceDuration) {
+    const startsAtDateFactory = dateCellTimingStartsAtDateFactory({ startsAt, timezone });
+    let lastStartsAt: Date;
 
-  // compute end, the end time for the last event using the last day
-  const lastDayStartsAt = dateCellTimingStartsAtDateFactory({ start, startsAt }, normalInstance)(endDay);
+    // the end day should be the date provided by the event's startsAt date.
+    if (endOnEvent) {
+      lastStartsAt = startsAtDateFactory(event.startsAt);
+    } else {
+      lastStartsAt = startsAtDateFactory(addMinutes(timing.end, -duration));
+    }
 
-  const end = addMinutes(lastDayStartsAt, duration);
+    if (replaceDuration) {
+      duration = event.duration;
+    }
 
-  const timing = {
-    start,
-    end,
+    end = addMinutes(lastStartsAt, duration);
+  }
+
+  return {
+    timezone,
     startsAt,
+    end,
     duration
-    // timezone
   };
-
-  // console.log({ normalInstance, startsAt, eventStartsAt, lastDayStartsAt, dateCellTimingStartEndDayDateRange, event, timing });
-
-  return timing;
 }
 
 /**

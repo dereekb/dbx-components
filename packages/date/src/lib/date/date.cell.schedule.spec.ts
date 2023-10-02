@@ -1,4 +1,5 @@
-import { DateCell, DateCellIndex, dateCellIndexRange, dateCellTiming, dateCellTimingInTimezone, timingDateTimezoneUtcNormal, timingIsInExpectedTimezone } from './date.cell';
+import { requireCurrentTimezone } from '@dereekb/date';
+import { DateCell, DateCellIndex, dateCellTiming } from './date.cell';
 import {
   expandDateCellScheduleFactory,
   DateCellSchedule,
@@ -25,14 +26,15 @@ import { addDays, addHours, addMinutes, differenceInDays } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING, lastValue } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString } from './date.timezone';
+import { dateCellIndexRange } from './date.cell.factory';
 
 describe('dateCellScheduleDateFilter()', () => {
-  const start = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
+  const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
 
   describe('function', () => {
     describe('included', () => {
       const dayIndexes = [0, 1, 2, 3];
-      const schedule: DateCellScheduleDateFilterConfig = { start, w: '0', d: dayIndexes };
+      const schedule: DateCellScheduleDateFilterConfig = { startsAt, w: '0', d: dayIndexes };
       const firstFourDays = dateCellScheduleDateFilter(schedule);
 
       it('should allow the included days (indexes)', () => {
@@ -46,12 +48,12 @@ describe('dateCellScheduleDateFilter()', () => {
 
     describe('schedule', () => {
       describe('weekdays and weekends', () => {
-        const schedule: DateCellScheduleDateFilterConfig = { start, w: '89' };
+        const schedule: DateCellScheduleDateFilterConfig = { startsAt, w: '89' };
         const weekDaysAndWeekends = dateCellScheduleDateFilter(schedule);
 
         it('should allow every day of the week (dates)', () => {
           const maxIndex = 14;
-          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(startsAt, y));
 
           const results = dateCells.filter(weekDaysAndWeekends);
           expect(results.length).toBe(maxIndex);
@@ -59,7 +61,7 @@ describe('dateCellScheduleDateFilter()', () => {
 
         describe('with exclusion', () => {
           const ex = [0, 1, 2];
-          const scheduleWithExclusion: DateCellScheduleDateFilterConfig = { start, ex, w: '89' };
+          const scheduleWithExclusion: DateCellScheduleDateFilterConfig = { startsAt, ex, w: '89' };
           const weekDaysAndWeekendsWithExclusion = dateCellScheduleDateFilter(scheduleWithExclusion);
 
           it('should exclude the configured indexes.', () => {
@@ -73,7 +75,7 @@ describe('dateCellScheduleDateFilter()', () => {
       });
 
       describe('weekdays', () => {
-        const schedule: DateCellScheduleDateFilterConfig = { start, w: `${DateCellScheduleDayCode.WEEKDAY}` };
+        const schedule: DateCellScheduleDateFilterConfig = { startsAt, w: `${DateCellScheduleDayCode.WEEKDAY}` };
         const weekDays = dateCellScheduleDateFilter(schedule);
 
         it('should allow every weekday (indexes)', () => {
@@ -86,7 +88,7 @@ describe('dateCellScheduleDateFilter()', () => {
 
         it('should allow every weekday (dates)', () => {
           const maxIndex = 14;
-          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(startsAt, y));
           const results = dateCells.filter(weekDays);
 
           expect(results.length).toBe(maxIndex - 4);
@@ -94,7 +96,7 @@ describe('dateCellScheduleDateFilter()', () => {
       });
 
       describe('weekends', () => {
-        const schedule: DateCellScheduleDateFilterConfig = { start, w: `${DateCellScheduleDayCode.WEEKEND}` };
+        const schedule: DateCellScheduleDateFilterConfig = { startsAt, w: `${DateCellScheduleDayCode.WEEKEND}` };
         const weekends = dateCellScheduleDateFilter(schedule);
 
         it('should allow every weekend (indexes)', () => {
@@ -106,14 +108,14 @@ describe('dateCellScheduleDateFilter()', () => {
 
         it('should allow every weekend (dates)', () => {
           const maxIndex = 14;
-          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(startsAt, y));
           const results = dateCells.filter(weekends);
           expect(results.length).toBe(maxIndex - 10);
         });
       });
 
       describe('days', () => {
-        const schedule: DateCellScheduleDateFilterConfig = { start, w: `23` };
+        const schedule: DateCellScheduleDateFilterConfig = { startsAt, w: `23` };
         const mondayAndTuesdays = dateCellScheduleDateFilter(schedule);
 
         it('should only allow the specified days of the week (indexes)', () => {
@@ -134,18 +136,18 @@ describe('dateCellScheduleDateFilter()', () => {
 
         it('should only allow the specified days of the week (dates)', () => {
           const maxIndex = 14;
-          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const dateCells: Date[] = range(0, maxIndex).map((y) => addDays(startsAt, y));
           const results = dateCells.filter(mondayAndTuesdays);
 
           expect(results.length).toBe(4);
 
           // week 1
-          expect(results[0]).toBeSameSecondAs(addDays(start, 1));
-          expect(results[1]).toBeSameSecondAs(addDays(start, 2));
+          expect(results[0]).toBeSameSecondAs(addDays(startsAt, 1));
+          expect(results[1]).toBeSameSecondAs(addDays(startsAt, 2));
 
           // week 2
-          expect(results[2]).toBeSameSecondAs(addDays(start, 8));
-          expect(results[3]).toBeSameSecondAs(addDays(start, 9));
+          expect(results[2]).toBeSameSecondAs(addDays(startsAt, 8));
+          expect(results[3]).toBeSameSecondAs(addDays(startsAt, 9));
         });
       });
 
@@ -155,14 +157,14 @@ describe('dateCellScheduleDateFilter()', () => {
           const d: number[] = [];
           const ex: number[] = [];
 
-          const start = new Date('Wed, 26 Apr 2023 05:00:00 GMT');
+          const startsAt = new Date('Wed, 26 Apr 2023 05:00:00 GMT');
           const end = new Date('Wed, 26 Apr 2023 22:00:00 GMT');
 
           const filter = dateCellScheduleDateFilter({
             w,
             d,
             ex,
-            start,
+            startsAt,
             end
           });
 
@@ -630,7 +632,7 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
       const days = 7;
       const duration = 60;
       const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
-      const timing = dateCellTimingInTimezone({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+      const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
 
       it('it should generate the expected dateCellTiming.', () => {
         const result = dateCellTimingForExpandDateCellScheduleRangeInput({
@@ -642,7 +644,7 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
           duration
         });
 
-        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.end).toBeSameSecondAs(timing.end);
       });
     });
@@ -651,10 +653,10 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
       const timezone = 'America/New_York';
       const startOfDay = startOfDayInTimezoneFromISO8601DayString('2022-01-02', timezone);
       const startsAt = addHours(startOfDay, 12); // Noon on 2022-01-02 in America/New_York
-      const timing = dateCellTimingInTimezone({ startsAt, duration: 30 }, 1, timezone);
+      const timing = dateCellTiming({ startsAt, duration: 30 }, 1, timezone);
 
       it('should generate a valid DateCellTiming with the new duration and same duration.', () => {
-        expect(timingIsInExpectedTimezone(timing, { timezone })).toBe(true);
+        expect(timing.timezone).toBe(timezone);
 
         const newDuration = 60;
 
@@ -667,7 +669,7 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
           duration: newDuration
         });
 
-        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.duration).toBe(newDuration);
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
 
@@ -688,12 +690,12 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
         });
 
         expect(result.duration).toBe(timing.duration);
-        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.end).toBeSameSecondAs(timing.end);
       });
 
-      it('should generate a valid DateCellTiming with the new duration and start at time.', () => {
+      it('should generate a valid DateCellTiming with the new duration and startsAt at time.', () => {
         const newDuration = 45;
         const hoursDifference = 1;
         const expectedStartsAt = addHours(timing.startsAt, hoursDifference);
@@ -708,7 +710,7 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
           startsAtTime: newStartsAt
         });
 
-        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.duration).toBe(newDuration);
         expect(result.startsAt).toBeSameSecondAs(expectedStartsAt);
 
@@ -724,34 +726,36 @@ describe('expandDateCellScheduleRange()', () => {
 
   const days = 7;
   const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
-  const timing = dateCellTimingInTimezone({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
-  const end = timing.end;
+  const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+  const { timezone, end } = timing;
 
   it('should expand the dateCellScheduleRange week.', () => {
     const dateCellScheduleRange: DateCellScheduleRange = {
       w: '89',
-      start: utc2022Week2StartDate,
-      end
+      startsAt: utc2022Week2StartDate,
+      end,
+      timezone
     };
 
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(7);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.start);
+    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.startsAt);
   });
 
   it('should expand a week with excluded days.', () => {
     const dateCellScheduleRange: DateCellScheduleRange = {
       w: '89',
-      start: utc2022Week2StartDate,
+      startsAt: utc2022Week2StartDate,
       end,
-      ex: [0, 2, 4, 6]
+      ex: [0, 2, 4, 6],
+      timezone
     };
 
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(3);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateCellScheduleRange.start, 1));
+    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateCellScheduleRange.startsAt, 1));
 
     const indexes = expansion.map((x) => x.i);
     expect(indexes).toContain(1);
@@ -762,41 +766,44 @@ describe('expandDateCellScheduleRange()', () => {
   it('should expand a week with included days.', () => {
     const dateCellScheduleRange: DateCellScheduleRange = {
       w: '8',
-      start: utc2022Week2StartDate,
+      startsAt: utc2022Week2StartDate,
       end,
-      d: [0]
+      d: [0],
+      timezone
     };
 
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(6);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.start);
+    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.startsAt);
   });
 
   it('should expand a week with only weekdays.', () => {
     const dateCellScheduleRange: DateCellScheduleRange = {
       w: '8',
-      start: utc2022Week2StartDate,
-      end
+      startsAt: utc2022Week2StartDate,
+      end,
+      timezone
     };
 
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(5);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateCellScheduleRange.start, 1));
+    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateCellScheduleRange.startsAt, 1));
   });
 
   it('should expand a week with only weekends.', () => {
     const dateCellScheduleRange: DateCellScheduleRange = {
       w: '9',
-      start: utc2022Week2StartDate,
-      end
+      startsAt: utc2022Week2StartDate,
+      end,
+      timezone
     };
 
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(2);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.start);
+    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.startsAt);
   });
 
   describe('scenario', () => {
@@ -804,17 +811,18 @@ describe('expandDateCellScheduleRange()', () => {
       const duration = 1;
 
       const dateCellScheduleRange: DateCellScheduleRange = {
-        start: new Date('2023-08-15T05:00:00.000Z'),
+        startsAt: new Date('2023-08-15T05:00:00.000Z'),
         end: new Date('2023-12-21T22:30:00.000Z'),
         w: '89',
-        ex: []
+        ex: [],
+        timezone
       };
 
       it('should expand all the days', () => {
         const timing = dateCellTimingForExpandDateCellScheduleRangeInput({ dateCellScheduleRange, duration });
 
         const completeRange = dateCellIndexRange(timing);
-        const daysInBetween = differenceInDays(dateCellScheduleRange.end, dateCellScheduleRange.start) + 1;
+        const daysInBetween = differenceInDays(dateCellScheduleRange.end, dateCellScheduleRange.startsAt) + 1;
 
         expect(completeRange.minIndex).toBe(0);
         expect(completeRange.maxIndex).toBe(daysInBetween); // 129
@@ -834,14 +842,15 @@ describe('expandDateCellScheduleRangeToDateCellRanges()', () => {
   const duration = 60;
   const days = 7;
   const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
-  const timing = dateCellTimingInTimezone({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+  const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
   const end = timing.end;
 
   it('should expand a week.', () => {
     const dateCellScheduleRange: DateCellScheduleRange = {
       w: '89',
-      start: utc2022Week2StartDate,
-      end
+      startsAt: utc2022Week2StartDate,
+      end,
+      timezone
     };
 
     const expansion = expandDateCellScheduleRangeToDateCellRanges({ dateCellScheduleRange, duration });

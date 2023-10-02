@@ -1,7 +1,9 @@
 import { addDays } from 'date-fns';
 import { DayOfWeek, getNextDay, MapFunction, Maybe } from '@dereekb/util';
-import { DateCellIndex, DateCellTiming, getCurrentDateCellTimingStartDate } from './date.cell';
+import { DateCellIndex, DateCellTiming } from './date.cell';
 import { YearWeekCode, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory, YearWeekCodeReader } from './date.week';
+import { dateTimezoneUtcNormal } from './date.timezone';
+import { dateCellTimingStartDateFactory } from './date.cell.factory';
 
 /**
  * Converts the input index into the DayOfWeek that it represents.
@@ -30,18 +32,12 @@ export interface DateCellIndexYearWeekCodeConfig {
 
 export function dateCellIndexYearWeekCodeFactory(config: DateCellIndexYearWeekCodeConfig): DateCellIndexYearWeekCodeFactory {
   const { timing } = config;
-  const startDate = getCurrentDateCellTimingStartDate(timing); // midnight of day 0
+  const startDateFactory = dateCellTimingStartDateFactory(timing);
+  const normalInstance = startDateFactory._indexFactory._normalInstance;
 
   return (indexOrDate: DateCellIndex | Date) => {
-    let inputDate: Date;
-
-    if (typeof indexOrDate === 'number') {
-      inputDate = addDays(startDate, indexOrDate);
-    } else {
-      inputDate = indexOrDate;
-    }
-
-    const yearWeekCode = yearWeekCodeFromDate(inputDate);
+    const dateInSystemTimezone = normalInstance.systemDateToTargetDate(startDateFactory(indexOrDate));
+    const yearWeekCode = yearWeekCodeFromDate(dateInSystemTimezone);
     return yearWeekCode;
   };
 }

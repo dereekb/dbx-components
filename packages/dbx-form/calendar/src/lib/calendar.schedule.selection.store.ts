@@ -41,7 +41,7 @@ import {
   dateScheduleDayCodesAreSetsEquivalent,
   dateScheduleDayCodesSetFromDaysOfWeek,
   simplifyDateScheduleDayCodes,
-  fullWeekDayScheduleDayCodes,
+  fullWeekDateCellScheduleDayCodes,
   dateBlockTimingStartDateFactory,
   guessCurrentTimezone,
   DateBlockTimingStart
@@ -675,7 +675,7 @@ export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSel
 
 export function updateStateWithChangedDefaultScheduleDays(state: CalendarScheduleSelectionState, change: Maybe<Iterable<DateScheduleDayCode>>): CalendarScheduleSelectionState {
   const { defaultScheduleDays: currentDefaultScheduleDays } = state;
-  const defaultScheduleDays = new Set(change ?? fullWeekDayScheduleDayCodes());
+  const defaultScheduleDays = new Set(change ?? fullWeekDateCellScheduleDayCodes());
 
   if (dateScheduleDayCodesAreSetsEquivalent(defaultScheduleDays, currentDefaultScheduleDays)) {
     return state; // no change

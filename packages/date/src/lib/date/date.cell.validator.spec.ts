@@ -36,8 +36,11 @@ describe('IsValidDateCellTiming', () => {
   });
 
   describe('scenario', () => {
+    const timezone = 'America/Chicago';
+
     it('should serialize the value to a valid timing', async () => {
       const timing = {
+        timezone,
         start: new Date('2023-08-15T05:00:00.000Z'),
         end: new Date('2023-12-21T22:30:00.000Z'),
         startsAt: new Date('2023-08-15T13:30:00.000Z'),
@@ -54,9 +57,9 @@ describe('IsValidDateCellTiming', () => {
     });
 
     it('should serialize the august timing value as an invalid timing', async () => {
-      const timing = {
+      const timing: DateCellTiming = {
+        timezone,
         duration: 540,
-        start: new Date('2023-08-06T04:00:00.000Z'),
         startsAt: new Date('2023-08-07T00:00:00.000Z'), // should be a 24 hour difference (invalid)
         end: new Date('2023-08-21T09:00:00.000Z')
       };
@@ -71,8 +74,8 @@ describe('IsValidDateCellTiming', () => {
     });
 
     it('should pass the valid timing', async () => {
-      const timing = {
-        start: new Date('2023-08-15T05:00:00.000Z'),
+      const timing: DateCellTiming = {
+        timezone,
         end: new Date('2023-12-21T22:30:00.000Z'),
         startsAt: new Date('2023-08-15T13:30:00.000Z'),
         duration: 480

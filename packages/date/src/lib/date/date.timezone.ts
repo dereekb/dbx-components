@@ -388,7 +388,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    *
    * @param date The input is treated as an instant in time.
    */
-  startOfDayInTargetDate(date: Date | ISO8601DayString) {
+  startOfDayInTargetDate(date?: Date | ISO8601DayString) {
     return this.targetDateToBaseDate(this.startOfDayInBaseDate(date));
   }
 
@@ -397,11 +397,11 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    *
    * @param date
    */
-  startOfDayInBaseDate(date: Date | ISO8601DayString) {
+  startOfDayInBaseDate(date?: Date | ISO8601DayString) {
     if (typeof date === 'string') {
       return parseISO8601DayStringToUTCDate(date);
     } else {
-      const startOfDayForSystem = startOfDay(date);
+      const startOfDayForSystem = startOfDay(date ?? new Date());
       return this.baseDateToSystemDate(startOfDayForSystem);
     }
   }
@@ -412,12 +412,12 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    * @param date
    * @returns
    */
-  startOfDayInSystemDate(date: Date | ISO8601DayString) {
+  startOfDayInSystemDate(date?: Date | ISO8601DayString) {
     if (typeof date === 'string') {
       const utcDate = parseISO8601DayStringToUTCDate(date);
       return this.systemDateToBaseDate(utcDate);
     } else {
-      return startOfDay(date);
+      return startOfDay(date ?? new Date());
     }
   }
 

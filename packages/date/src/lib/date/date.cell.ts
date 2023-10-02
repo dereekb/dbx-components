@@ -455,17 +455,17 @@ export function getDateCellTimingHoursInEvent(timing: Pick<DateCellTiming, 'dura
  *
  * @param timing
  */
-export type ChangeTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T) & {
+export type ChangeDateCellTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T) & {
   readonly _normalInstance: DateTimezoneUtcNormalInstance;
 };
 
 /**
- * Creates a ChangeTimingToTimezoneFunction from the input.
+ * Creates a ChangeDateCellTimingToTimezoneFunction from the input.
  *
  * @param input
  * @returns
  */
-export function changeTimingToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ChangeTimingToTimezoneFunction {
+export function changeDateCellTimingToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ChangeDateCellTimingToTimezoneFunction {
   const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
   const timezone = normalInstance.configuredTimezoneString as string;
 
@@ -485,17 +485,64 @@ export function changeTimingToTimezoneFunction(timezoneInput: DateCellTimingTime
     };
 
     return newTiming;
-  }) as Building<ChangeTimingToTimezoneFunction>;
+  }) as Building<ChangeDateCellTimingToTimezoneFunction>;
   fn._normalInstance = normalInstance;
-  return fn as ChangeTimingToTimezoneFunction;
+  return fn as ChangeDateCellTimingToTimezoneFunction;
 }
 
-export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: DateCellTimingTimezoneInput): T {
-  return changeTimingToTimezoneFunction(timezone)(timing);
+export function changeDateCellTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: DateCellTimingTimezoneInput): T {
+  return changeDateCellTimingToTimezoneFunction(timezone)(timing);
 }
 
-export function changeTimingToSystemTimezone<T extends DateRangeStart>(timing: T): T {
-  return changeTimingToTimezoneFunction(SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE)(timing);
+export function changeDateCellTimingToSystemTimezone<T extends DateRangeStart>(timing: T): T {
+  return changeDateCellTimingToTimezoneFunction(SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE)(timing);
+}
+
+export interface CalculateExpectedDateCellTimingDurationPair {
+  readonly duration: Minutes;
+  readonly expectedFinalStartsAt: Date;
+}
+
+/**
+ * Returns the expected duration from the input.
+ *
+ * @param timing
+ * @returns
+ */
+export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStartsAtEndRange): CalculateExpectedDateCellTimingDurationPair {
+  const { end, startsAt, timezone } = timing;
+  const normalInstance = dateTimezoneUtcNormal(timezone);
+
+  const startsAtInUtc = normalInstance.baseDateToTargetDate(startsAt);
+  const endInUtc = normalInstance.baseDateToTargetDate(end);
+
+  const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(
+    // back to system
+    new Date(
+      Date.UTC(
+        //
+        endInUtc.getUTCFullYear(),
+        endInUtc.getUTCMonth(),
+        endInUtc.getUTCDate(),
+        startsAtInUtc.getUTCHours(),
+        startsAtInUtc.getUTCMinutes(),
+        startsAtInUtc.getUTCSeconds(),
+        startsAtInUtc.getUTCMilliseconds()
+      )
+    )
+  );
+
+  const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(end, expectedFinalStartsAt);
+  const duration = Math.abs((finalMsDifferenceBetweenStartAndEnd % MS_IN_HOUR) / MS_IN_MINUTE);
+
+  return {
+    duration,
+    expectedFinalStartsAt
+  };
+}
+
+export function calculateExpectedDateCellTimingDuration(timing: DateCellTimingStartsAtEndRange): Minutes {
+  return calculateExpectedDateCellTimingDurationPair(timing).duration;
 }
 
 export interface IsValidDateCellTimingInfo {
@@ -523,28 +570,8 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
     durationLessThan24Hours &&
     startsAtHasZeroSeconds
   ) {
-    const startsAtInUtc = normalInstance.baseDateToSystemDate(startsAt);
-    const endInUtc = normalInstance.baseDateToSystemDate(end);
-
-    const expectedFinalStartsAt = normalInstance.systemDateToBaseDate(
-      // back to system
-      new Date(
-        Date.UTC(
-          //
-          endInUtc.getUTCFullYear(),
-          endInUtc.getUTCMonth(),
-          endInUtc.getUTCDate(),
-          startsAtInUtc.getUTCHours(),
-          startsAtInUtc.getUTCMinutes(),
-          startsAtInUtc.getUTCSeconds(),
-          startsAtInUtc.getUTCMilliseconds()
-        )
-      )
-    );
-
-    const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(end, expectedFinalStartsAt);
-    const minutesDifference = Math.abs((finalMsDifferenceBetweenStartAndEnd % MS_IN_HOUR) / MS_IN_MINUTE);
-    isExpectedValidEnd = minutesDifference === duration; // should be the expected duration
+    const expectedDuration = calculateExpectedDateCellTimingDuration(timing);
+    isExpectedValidEnd = expectedDuration === duration; // should be the expected duration
   }
 
   const result = {
