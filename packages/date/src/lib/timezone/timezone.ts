@@ -1,7 +1,7 @@
 import { cachedGetter, Maybe, replaceStringsFunction, TimezoneAbbreviation, TimezoneString, TimezoneStringRef, UTC_TIMEZONE_STRING, UTCTimezoneAbbreviation } from '@dereekb/util';
 import { formatInTimeZone } from 'date-fns-tz';
 import { timeZonesNames } from '@vvo/tzdb';
-import { guessCurrentTimezone } from '../date';
+import { guessCurrentTimezone } from '../date/date';
 
 export function allTimezoneStrings(): TimezoneString[] {
   return timeZonesNames.concat(UTC_TIMEZONE_STRING);

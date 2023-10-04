@@ -1,7 +1,6 @@
 import { Maybe, TimezoneString } from '@dereekb/util';
-import { Expose, plainToInstance, Type } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
-import { setMinutes, setHours, startOfDay, addSeconds } from 'date-fns';
 import { IsKnownTimezone } from './timezone.validator';
 
 class TestIsKnownTimezoneModelClass {

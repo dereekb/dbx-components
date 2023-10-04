@@ -1,9 +1,9 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addMilliseconds, millisecondsToHours } from 'date-fns';
-import { dateCellTiming, DateCellTiming, isValidDateCellIndex, isValidDateCellTiming, isValidDateCellTimingStartDate, getDateCellTimingFirstEventDateRange, isSameDateCellTiming, FullDateCellTiming, getDateCellTimingHoursInEvent, changeDateCellTimingToTimezoneFunction } from './date.cell';
-import { MS_IN_DAY, MINUTES_IN_DAY, TimezoneString } from '@dereekb/util';
-import { guessCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
+import { dateCellTiming, DateCellTiming, isValidDateCellIndex, isValidDateCellTiming, isValidDateCellTimingStartDate, getDateCellTimingFirstEventDateRange, isSameDateCellTiming, FullDateCellTiming, getDateCellTimingHoursInEvent, changeDateCellTimingToTimezoneFunction, calculateExpectedDateCellTimingDuration, dateCellTimingTimezoneNormalInstance, calculateExpectedDateCellTimingDurationPair, isValidFullDateCellTiming, dateCellTimingStartPair, dateCellTimingStart } from './date.cell';
+import { MS_IN_DAY, MINUTES_IN_DAY, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
+import { guessCurrentTimezone, requireCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('isValidDateCellIndex()', () => {
@@ -89,7 +89,6 @@ describe('dateCellTiming()', () => {
         const result = dateCellTiming({ startsAt, duration: minutes }, dateRange);
 
         expect(result).toBeDefined();
-        expect(result.start).toBeSameMinuteAs(start);
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
         expect(result.duration).toBe(minutes);
         expect(result.end).toBeSameMinuteAs(addMinutes(startsAt, minutes));
@@ -104,7 +103,6 @@ describe('dateCellTiming()', () => {
         const expectedStartsAt = addDays(startsAt, 1);
 
         expect(result).toBeDefined();
-        expect(result.start).toBeSameMinuteAs(start);
         expect(result.startsAt).toBeSameMinuteAs(expectedStartsAt);
         expect(result.duration).toBe(minutes);
         expect(result.end).toBeSameMinuteAs(addMinutes(expectedStartsAt, minutes));
@@ -116,7 +114,6 @@ describe('dateCellTiming()', () => {
         const dateRange: DateRange = { start: start, end: endOfDay(addDays(startsAt, days - 1)) };
         const result = dateCellTiming({ startsAt, duration: minutes }, dateRange);
         expect(result).toBeDefined();
-        expect(result.start).toBeSameMinuteAs(start);
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
         expect(result.duration).toBe(minutes);
         expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days - 1), minutes));
@@ -129,7 +126,6 @@ describe('dateCellTiming()', () => {
         const dateRange: DateRange = { start: start, end: endOfDay(addDays(start, days)) };
         const result = dateCellTiming({ startsAt, duration: minutes }, dateRange);
         expect(result).toBeDefined();
-        expect(result.start).toBeSameMinuteAs(start);
         expect(result.startsAt).toBeSameMinuteAs(addDays(startsAt, 1));
         expect(result.duration).toBe(minutes);
         expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days), minutes));
@@ -161,27 +157,24 @@ describe('dateCellTiming()', () => {
       it('should generate the correct timing when inputting the number of days.', () => {
         const weekTiming = dateCellTiming({ startsAt, duration }, 7); // Sunday-Saturday
 
-        expect(weekTiming.start).toBeSameSecondAs(startsAt); // also the start of the day
         expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
         expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
         expect(weekTiming.duration).toBe(60);
         expect(weekTiming.timezone).toBe(systemTimezone);
       });
 
-      it('should generate the correct timing when inputting the range of days.', () => {
-        const weekTiming = dateCellTiming({ startsAt, duration }, { start: startsAt, end: endsAtDate }); // Sunday-Saturday
-
-        expect(weekTiming.start).toBeSameSecondAs(startsAt); // also the start of the day
-        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
-        expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
-        expect(weekTiming.duration).toBe(60);
-        expect(weekTiming.timezone).toBe(systemTimezone);
-      });
-
-      it('should generate the correct timing when inputting the range of days.', () => {
+      it('should generate the correct timing when inputting the distance of days.', () => {
         const weekTiming = dateCellTiming({ startsAt, duration }, { distance: 7 }); // Sunday-Saturday
 
-        expect(weekTiming.start).toBeSameSecondAs(startsAt); // also the start of the day
+        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
+        expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
+        expect(weekTiming.duration).toBe(60);
+        expect(weekTiming.timezone).toBe(systemTimezone);
+      });
+
+      it('should generate the correct timing when inputting a DateRange.', () => {
+        const weekTiming = dateCellTiming({ startsAt, duration }, { start: startsAt, end: endsAtDate }); // Sunday-Saturday
+
         expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
         expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
         expect(weekTiming.duration).toBe(60);
@@ -191,14 +184,19 @@ describe('dateCellTiming()', () => {
 
     describe('August 21 Midnight UTC', () => {
       it('should generate the correct timing when inputting the range of days.', () => {
-        const startsAt = new Date('2023-08-21T00:00:00.000Z'); // 08-20-23 7PM CDT, should be for 08-20-23 UTC
+        const timezone = 'UTC';
+        const midnightUtc = new Date('2023-08-21T00:00:00.000Z');
+        const expectedEndDate = new Date('2023-09-02T09:00:00.000Z'); // 13 days and 9 hours later
         const duration = 540;
 
-        const weekTiming = dateCellTiming({ startsAt, duration }, 13); // Sunday-Saturday
+        const weekTiming = dateCellTiming({ startsAt: midnightUtc, duration }, 13, timezone); // Sunday-Saturday
 
+        expect(weekTiming.timezone).toBe(timezone);
+        expect(weekTiming.start).toBeSameSecondAs(midnightUtc);
+        expect(weekTiming.startsAt).toBeSameSecondAs(midnightUtc);
+        expect(weekTiming.end).toBeSameSecondAs(expectedEndDate);
+        expect(isValidFullDateCellTiming(weekTiming)).toBe(true);
         expect(isValidDateCellTiming(weekTiming)).toBe(true);
-        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
-        expect(weekTiming.timezone).toBe(systemTimezone);
       });
     });
 
@@ -228,23 +226,23 @@ describe('dateCellTiming()', () => {
         const endDay = '2023-11-08';
         const totalDays = 6;
 
-        const startOfDayInTimezone = timezoneInstance.startOfDayInSystemDate(startDay);
-        const startOfEndDay = timezoneInstance.startOfDayInTargetDate(endDay);
+        const startOfDayInTimezone = timezoneInstance.startOfDayInTargetTimezone(startDay);
+        const startOfEndDay = timezoneInstance.startOfDayInTargetTimezone(endDay);
 
         const duration = 60;
 
         describe(`${timezone}`, () => {
           it(`should create a proper timing given the timezone ${timezone}`, () => {
             const result = dateCellTiming({ startsAt: startOfDayInTimezone, duration }, totalDays, timezoneInstance);
+            expect(isValidFullDateCellTiming(result)).toBe(true);
             expect(isValidDateCellTiming(result)).toBe(true);
 
+            expect(timezoneInstance.configuredTimezoneString).toBe(timezone);
+            expect(result.timezone).toBe(timezone);
             expect(result.start).toBeSameSecondAs(startOfDayInTimezone);
             expect(result.startsAt).toBeSameSecondAs(result.start); // starts at midnight, same instant
             expect(result.end).toBeSameSecondAs(addMinutes(startOfEndDay, duration));
             expect(result.duration).toBe(result.duration);
-            expect(result.timezone).toBe(timezone);
-
-            expect(isValidDateCellTiming(result)).toBe(true);
           });
         });
       }
@@ -256,6 +254,30 @@ describe('dateCellTiming()', () => {
       describeTestsForTimezone('America/Chicago');
       describeTestsForTimezone('Pacific/Fiji');
     });
+  });
+});
+
+describe('dateCellTimingStartPair()', () => {
+  describe('scenario', () => {
+    describe('August 21 Midnight UTC', () => {
+      it('should generate the correct timing when inputting the range of days.', () => {
+        const timezone = 'UTC';
+        const midnightUtc = new Date('2023-08-21T00:00:00.000Z');
+        const weekTiming = dateCellTiming({ startsAt: midnightUtc, duration: 60 }, 13, timezone); // Sunday-Saturday
+
+        const start = dateCellTimingStartPair(weekTiming);
+        expect(start.start).toBeSameSecondAs(weekTiming.start);
+      });
+    });
+  });
+});
+
+describe('dateCellTimingTimezoneNormalInstance()', () => {
+  it('should create a DateTimezoneUtcNormalInstance for the system timezone if input is not defined.', () => {
+    const systemTimezone = requireCurrentTimezone();
+    const normalInstance = dateCellTimingTimezoneNormalInstance();
+    expect(normalInstance).toBeDefined();
+    expect(normalInstance.configuredTimezoneString).toBe(systemTimezone);
   });
 });
 
@@ -409,7 +431,7 @@ describe('getDateCellTimingFirstEventDateRange()', () => {
 describe('getDateCellTimingHoursInEvent()', () => {
   const hours = 4;
   const startsAt = startOfDay(new Date());
-  const timing = dateCellTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
+  const timing = dateCellTiming({ startsAt, duration: MINUTES_IN_HOUR * hours }, 2); // 2 days
 
   it('should return the hours in the timing.', () => {
     const result = getDateCellTimingHoursInEvent(timing);
@@ -419,7 +441,7 @@ describe('getDateCellTimingHoursInEvent()', () => {
   describe('hours with fraction', () => {
     const hours = 4.5;
     const startsAt = startOfDay(new Date());
-    const timing = dateCellTiming({ startsAt, duration: 60 * hours }, 2); // 2 days
+    const timing = dateCellTiming({ startsAt, duration: MINUTES_IN_HOUR * hours }, 2); // 2 days
 
     it('should return the hours in the timing.', () => {
       const result = getDateCellTimingHoursInEvent(timing);
@@ -439,25 +461,31 @@ describe('changeDateCellTimingToTimezoneFunction()', () => {
 
       it('should convert the start date to the UTC timezone.', () => {
         const result = fn(timing);
+        const start = dateCellTimingStart(result);
 
-        const { start } = result;
         const utcHours = start.getUTCHours();
         expect(utcHours).toBe(utcTimezoneOffsetInHours);
 
+        expect(result.timezone).toBe('UTC');
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
         expect(result.end).toBeSameSecondAs(timing.end);
         expect(result.duration).toBe(timing.duration);
       });
 
-      describe('UTC via other timing', () => {
+      describe('UTC to America/Chicago', () => {
+        const timezone = 'America/Chicago';
+        const normalInstance = dateTimezoneUtcNormal(timezone);
+
         const startsAtInUtcDate = new Date('2022-01-02T00:00:00Z'); // 0 offset UTC date
-        const utcTiming = { start: startsAtInUtcDate, startsAt: addHours(startsAtInUtcDate, 1), duration: 60 };
+
+        const duration = 60;
+        const utcTiming: DateCellTiming = { timezone: 'UTC', startsAt: startsAtInUtcDate, end: addMinutes(startsAtInUtcDate, duration), duration: 60 };
         const fn = changeDateCellTimingToTimezoneFunction(utcTiming);
 
-        it('should convert the start date to the UTC timezone.', () => {
+        it('should convert the start date to the America/Chicago timezone.', () => {
           const result = fn(timing);
+          const start = dateCellTimingStart(result);
 
-          const { start } = result;
           const utcHours = start.getUTCHours();
           expect(utcHours).toBe(utcTimezoneOffsetInHours);
 
@@ -476,8 +504,8 @@ describe('changeDateCellTimingToTimezoneFunction()', () => {
 
       it('should convert the start date to the America/Denver timezone.', () => {
         const result = fn(timing);
+        const start = dateCellTimingStart(result);
 
-        const { start } = result;
         const utcHours = start.getUTCHours();
         expect(utcHours).toBe(denverTimezoneOffsetInHours);
 
@@ -489,12 +517,72 @@ describe('changeDateCellTimingToTimezoneFunction()', () => {
   });
 });
 
+describe('calculateExpectedDateCellTimingDurationPair()', () => {
+  const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
+  const duration = 60;
+  const validTiming = dateCellTiming({ startsAt, duration }, 1);
+
+  it('should calculate the proper duration.', () => {
+    const result = calculateExpectedDateCellTimingDurationPair(validTiming);
+    expect(result.duration).toBe(duration);
+  });
+
+  describe('daylight savings changes', () => {
+    /**
+     * Illustrates the effects of daylight savings changes
+     */
+    it('should return the expected duration even with a daylight savings changes', () => {
+      const startsAt = new Date('2023-03-01T14:00:00.000Z');
+      const days = 15; // difference of 15 day causes an issue
+      const duration = 60;
+      const timing = dateCellTiming({ startsAt, duration }, days);
+      const result = calculateExpectedDateCellTimingDurationPair(timing);
+      expect(result.duration).toBe(duration);
+    });
+
+    describe('timezones', () => {
+      function describeTestsForTimezone(timezone: TimezoneString) {
+        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+
+        const startDay = '2023-11-03';
+        const totalDays = 6;
+
+        const startOfDayInTimezone = timezoneInstance.startOfDayInSystemDate(startDay);
+        const duration = 60;
+
+        describe(`${timezone}`, () => {
+          it(`should return the expected duration for ${timezone}`, () => {
+            const result = dateCellTiming({ startsAt: startOfDayInTimezone, duration }, totalDays, timezoneInstance);
+            expect(result.duration).toBe(result.duration);
+            expect(result.timezone).toBe(timezone);
+          });
+        });
+      }
+
+      describeTestsForTimezone('UTC');
+      describeTestsForTimezone('America/Denver');
+      describeTestsForTimezone('America/Los_Angeles');
+      describeTestsForTimezone('America/New_York');
+      describeTestsForTimezone('America/Chicago');
+      describeTestsForTimezone('Pacific/Fiji');
+    });
+  });
+});
+
+describe('calculateExpectedDateCellTimingDuration()', () => {
+  const validTiming = dateCellTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
+
+  it('should return the expected duration from the input.', () => {
+    const result = calculateExpectedDateCellTimingDuration(validTiming);
+    expect(result).toBe(validTiming.duration);
+  });
+});
+
 describe('isValidDateCellTiming()', () => {
   const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
   const validTiming = dateCellTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
 
   it('should return true if a valid timing is input.', () => {
-    const validTiming = dateCellTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
     const isValid = isValidDateCellTiming(validTiming);
     expect(isValid).toBe(true);
   });
@@ -531,16 +619,36 @@ describe('isValidDateCellTiming()', () => {
   describe('scenario', () => {
     describe('valid timings', () => {
       it('august 6 to august 21 2023', () => {
-        const timing: FullDateCellTiming = {
-          duration: 540,
-          timezone: 'America/New_York',
-          start: new Date('2023-08-06T04:00:00.000Z'),
-          startsAt: new Date('2023-08-07T00:00:00.000Z'), // should be a 24 hour difference (invalid)
-          end: new Date('2023-08-21T09:00:00.000Z')
+        const days = 15;
+        const duration = MINUTES_IN_HOUR * 9; // 9 hours
+        const timezone = 'America/New_York';
+        const timezoneNormal = dateTimezoneUtcNormal({ timezone });
+
+        const start = timezoneNormal.startOfDayInTargetTimezone('2023-08-06');
+        const startsAt = addHours(start, 12);
+        const lastStartsAt = addDays(startsAt, days - 1);
+
+        const manualTiming: FullDateCellTiming = {
+          duration,
+          timezone,
+          start,
+          startsAt, // 12PM
+          end: addMinutes(lastStartsAt, duration)
         };
 
-        const isValid = isValidDateCellTiming(timing);
-        expect(isValid).toBe(true);
+        expect(isValidDateCellTiming(manualTiming)).toBe(true);
+        expect(isValidFullDateCellTiming(manualTiming)).toBe(true);
+
+        const timing = dateCellTiming({ startsAt: manualTiming.startsAt, duration }, days, timezone);
+
+        expect(timing.duration).toBe(manualTiming.duration);
+        expect(timing.timezone).toBe(manualTiming.timezone);
+        expect(timing.start).toBeSameSecondAs(manualTiming.start);
+        expect(timing.startsAt).toBeSameSecondAs(manualTiming.startsAt);
+        expect(timing.end).toBeSameSecondAs(manualTiming.end);
+
+        expect(isValidFullDateCellTiming(timing)).toBe(true);
+        expect(isValidDateCellTiming(timing)).toBe(true);
       });
 
       it('august 15 to december 21 2023', () => {

@@ -1,27 +1,6 @@
 import { addHours } from 'date-fns';
-import { fitDateRangeToDayPeriod, transformDateRangeToTimezoneFunction } from './date.range.timezone';
+import { fitDateRangeToDayPeriod } from './date.range.timezone';
 import { dateTimezoneUtcNormal } from './date.timezone';
-
-describe('transformDateRangeToTimezone()', () => {
-  describe('function', () => {
-    const fn = transformDateRangeToTimezoneFunction('America/Denver', 'systemDateToTargetDate');
-
-    const dateRangeInUTC = {
-      start: new Date('2023-03-11T06:00:00.000Z'),
-      end: new Date('2023-03-12T06:00:00.000Z')
-    };
-
-    it('should transform the date range.', () => {
-      const expectedStart = fn._timezoneInstance.systemDateToTargetDate(dateRangeInUTC.start);
-      const expectedEnd = fn._timezoneInstance.systemDateToTargetDate(dateRangeInUTC.end);
-
-      const result = fn(dateRangeInUTC);
-
-      expect(result.start).toBeSameSecondAs(expectedStart);
-      expect(result.end).toBeSameSecondAs(expectedEnd);
-    });
-  });
-});
 
 describe('fitDateRangeToDayPeriodFunction()', () => {
   describe('function', () => {

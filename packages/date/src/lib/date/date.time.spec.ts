@@ -51,6 +51,9 @@ describe('parseReadableTimeString()', () => {
     describe('no config provided', () => {
       it('should parse 12PM for UTC', () => {
         const result = parseReadableTimeString('12PM', { date })!;
+
+        console.log({ result });
+
         expect(result.utc).toBeSameMinuteAs(new Date('2021-08-16T12:00:00.000Z'));
         expect(result.date).toBeSameMinuteAs(new Date('2021-08-16T12:00:00.000Z'));
         expect(result.minutesSinceStartOfDay).toBe(720);

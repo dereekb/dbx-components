@@ -2,6 +2,7 @@ import { addMilliseconds, addMinutes, minutesToHours, startOfDay } from 'date-fn
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString, YearNumber, MapSameFunction, Building } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, minutesToMs } from './date';
+import { DateRange, dateRange, DateRangeInput, DateRangeType, TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 
 /**
@@ -47,6 +48,16 @@ export interface DateTimezoneConversionConfig {
    * Does not convert anything.
    */
   noConversion?: true;
+}
+
+/**
+ * Returns true if any DateTimezoneConversionConfig configuration value is provided.
+ *
+ * @param input
+ * @returns
+ */
+export function isValidDateTimezoneConversionConfig(input: DateTimezoneConversionConfig): boolean {
+  return input.useSystemTimezone || input.timezone != null || input.timezoneOffset != null || input.noConversion || false;
 }
 
 /**
@@ -220,7 +231,8 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   }
 
   get configuredTimezoneString(): Maybe<TimezoneString> {
-    return this.config.timezone ?? this.config.useSystemTimezone ? guessCurrentTimezone() : undefined;
+    const { timezone } = this.config;
+    return timezone ?? (this.config.useSystemTimezone ? guessCurrentTimezone() : undefined);
   }
 
   private readonly _getOffset: DateTimezoneOffsetFunction;
@@ -243,7 +255,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
       getOffsetInMsFn = getCurrentSystemOffsetInMs;
     } else if (config.timezoneOffset != null) {
       getOffsetInMsFn = () => this.config.timezoneOffset as number;
-    } else if (config.timezone) {
+    } else if (config.timezone != null) {
       useTimezone(config.timezone);
     } else {
       config = { noConversion: true };
@@ -323,6 +335,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     return (date) => this.transform(date, transform);
   }
 
+  transformDateRangeToTimezoneFunction(transformType?: DateTimezoneUtcNormalInstanceTransformType): TransformDateRangeToTimezoneFunction {
+    return transformDateRangeToTimezoneFunction(this, transformType);
+  }
+
   targetDateToBaseDate(date: Date): Date {
     return this._computeOffsetDate(date, 'target', 'base');
   }
@@ -388,8 +404,9 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    *
    * @param date The input is treated as an instant in time.
    */
-  startOfDayInTargetDate(date?: Date | ISO8601DayString) {
-    return this.targetDateToBaseDate(this.startOfDayInBaseDate(date));
+  startOfDayInTargetTimezone(date?: Date | ISO8601DayString) {
+    const baseDay = this.startOfDayInBaseDate(date);
+    return this.targetDateToBaseDate(baseDay);
   }
 
   /**
@@ -442,6 +459,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   transformDateInTimezoneNormalFunction(transform?: DateTimezoneUtcNormalInstanceTransformType): TransformDateInTimezoneNormalFunction {
     return transformDateInTimezoneNormalFunction(this, transform);
   }
+
+  transformDateRangeInTimezoneNormalFunction(transform?: DateTimezoneUtcNormalInstanceTransformType): TransformDateRangeInTimezoneNormalFunction {
+    return transformDateRangeInTimezoneNormalFunction(this, transform);
+  }
 }
 
 export type DateTimezoneUtcNormalFunctionInput = DateTimezoneUtcNormalInstanceInput | DateTimezoneUtcNormalInstance | TimezoneString | Milliseconds;
@@ -472,14 +493,19 @@ export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput
   return instance;
 }
 
-export function systemDateTimezoneUtcNormal() {
-  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
-}
-
 /**
  * Default DateTimezoneUtcNormalInstance configured with useSystemTimezone=true
  */
 export const SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE = new DateTimezoneUtcNormalInstance({ useSystemTimezone: true });
+
+/**
+ * Returns a DateTimezoneUtcNormalInstance configured with useSystemTimezone=true.
+ *
+ * @returns
+ */
+export function systemDateTimezoneUtcNormal(): DateTimezoneUtcNormalInstance {
+  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
+}
 
 export function baseDateToTargetDate(date: Date, timezone: Maybe<TimezoneString>): Date {
   const instance = new DateTimezoneUtcNormalInstance(timezone);
@@ -536,6 +562,47 @@ export function transformDateInTimezoneNormalFunction(timezoneInput: DateTimezon
   return fn as TransformDateInTimezoneNormalFunction;
 }
 
+// MARK: Transform DateRange In Normal
+/**
+ * Transforms the start and end dates in a date range to a specific timezone
+ */
+export type TransformDateRangeToTimezoneFunction = TransformDateRangeDatesFunction & {
+  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
+  readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
+};
+
+export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeToTimezoneFunction {
+  const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
+  const fn = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformType)) as Building<TransformDateRangeToTimezoneFunction>;
+  fn._timezoneInstance = timezoneInstance;
+  fn._transformType = transformType;
+  return fn as TransformDateRangeToTimezoneFunction;
+}
+
+/**
+ * Transforms the start and end dates in a date range using a specific DateTimezoneUtcNormalInstanceTransformType type, processes a transformation in that normal, then reverses the result back to the original timezone.
+ */
+export type TransformDateRangeInTimezoneNormalFunction = ((dateRange: DateRange, transform: TransformDateRangeDatesFunction) => DateRange) & {
+  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
+  readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
+};
+
+export function transformDateRangeInTimezoneNormalFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeInTimezoneNormalFunction {
+  const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
+  const transformToNormal = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformType));
+  const transformFromNormal = transformDateRangeDatesFunction(timezoneInstance.transformFunction(inverseDateTimezoneUtcNormalInstanceTransformType(transformType)));
+
+  const fn = ((inputRange: DateRange, transform: TransformDateRangeDatesFunction) => {
+    const inputNormal = transformToNormal(inputRange);
+    const normalResult = transform(inputNormal);
+    return transformFromNormal(normalResult);
+  }) as Building<TransformDateRangeToTimezoneFunction>;
+
+  fn._timezoneInstance = timezoneInstance;
+  fn._transformType = transformType;
+  return fn as TransformDateRangeToTimezoneFunction;
+}
+
 // MARK: StartOfDayInTimezoneDayStringFactory
 /**
  * Parses the input day to the start of the day in the given timezone.
@@ -544,7 +611,7 @@ export type StartOfDayInTimezoneDayStringFactory = (day: ISO8601DayString) => Da
 
 export function startOfDayInTimezoneDayStringFactory(timezone?: DateTimezoneUtcNormalFunctionInput): StartOfDayInTimezoneDayStringFactory {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
-  return (day) => timezoneInstance.startOfDayInTargetDate(day);
+  return (day) => timezoneInstance.startOfDayInTargetTimezone(day);
 }
 
 /**

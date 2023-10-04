@@ -1,11 +1,9 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
-import { copyHoursAndMinutesFromDate } from './date';
 import {
   changeTimingToSystemTimezone,
-  changeTimingToTimezone,
   DateBlock,
   dateBlockDayOfWeekFactory,
   DateBlockDurationSpan,
@@ -16,11 +14,9 @@ import {
   DateBlockRangeWithRange,
   DateBlocksExpansionFactory,
   dateBlocksExpansionFactory,
-  dateBlockTiming,
   DateBlockTiming,
   DateBlockTimingStartEndRange,
   dateBlockTimingStartForNowInSystemTimezone,
-  dateBlockTimingStartForNowInTimezone,
   dateBlockTimingRelativeIndexFactory,
   DateBlockTimingRelativeIndexFactoryInput,
   getCurrentDateBlockTimingStartDate,
@@ -28,8 +24,8 @@ import {
   safeDateBlockTimingFromDateRangeAndEvent
 } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasEndedFilterFunction, dateBlockDurationSpanHasStartedFilterFunction } from './date.filter';
-import { DateRange, isSameDateRange } from './date.range';
-import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
+import { isSameDateRange } from './date.range';
+import { DateTimezoneUtcNormalInstance } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {

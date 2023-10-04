@@ -1,46 +1,6 @@
 import { Building } from '@dereekb/util';
-import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceTransformType, inverseDateTimezoneUtcNormalInstanceTransformType } from './date.timezone';
+import { dateTimezoneUtcNormal, DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceTransformType, inverseDateTimezoneUtcNormalInstanceTransformType, transformDateRangeInTimezoneNormalFunction } from './date.timezone';
 import { DateRange, fitUTCDateRangeToDayPeriod, TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
-
-/**
- * Transforms the start and end dates in a date range to a specific timezone
- */
-export type TransformDateRangeToTimezoneFunction = TransformDateRangeDatesFunction & {
-  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
-  readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
-};
-
-export function transformDateRangeToTimezoneFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeToTimezoneFunction {
-  const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
-  const fn = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformType)) as Building<TransformDateRangeToTimezoneFunction>;
-  fn._timezoneInstance = timezoneInstance;
-  fn._transformType = transformType;
-  return fn as TransformDateRangeToTimezoneFunction;
-}
-
-/**
- * Transforms the start and end dates in a date range using a specific DateTimezoneUtcNormalInstanceTransformType type, processes a transformation in that normal, then reverses the result back to the original timezone.
- */
-export type TransformDateRangeInTimezoneNormalFunction = ((dateRange: DateRange, transform: TransformDateRangeDatesFunction) => DateRange) & {
-  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
-  readonly _transformType: DateTimezoneUtcNormalInstanceTransformType;
-};
-
-export function transformDateRangeInTimezoneNormalFunction(timezoneInput: DateTimezoneUtcNormalFunctionInput, transformType: DateTimezoneUtcNormalInstanceTransformType = 'systemDateToTargetDate'): TransformDateRangeInTimezoneNormalFunction {
-  const timezoneInstance = dateTimezoneUtcNormal(timezoneInput);
-  const transformToNormal = transformDateRangeDatesFunction(timezoneInstance.transformFunction(transformType));
-  const transformFromNormal = transformDateRangeDatesFunction(timezoneInstance.transformFunction(inverseDateTimezoneUtcNormalInstanceTransformType(transformType)));
-
-  const fn = ((inputRange: DateRange, transform: TransformDateRangeDatesFunction) => {
-    const inputNormal = transformToNormal(inputRange);
-    const normalResult = transform(inputNormal);
-    return transformFromNormal(normalResult);
-  }) as Building<TransformDateRangeToTimezoneFunction>;
-
-  fn._timezoneInstance = timezoneInstance;
-  fn._transformType = transformType;
-  return fn as TransformDateRangeToTimezoneFunction;
-}
 
 /**
  * Modifies the input DateRange to fit within a 24 hour period.

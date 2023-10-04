@@ -292,7 +292,7 @@ export function dateCellTiming(durationInput: DateDurationSpan, inputRange: Date
   let { startsAt: inputStartsAt } = durationInput;
 
   // it is important that startsAt is evaluated the system time normal, as addDays/addMinutes and related functionality rely on the system timezone.
-  let startsAt = normalInstance ? normalInstance.systemDateToTargetDate(inputStartsAt) : inputStartsAt;
+  let startsAtInSystemTimezone = normalInstance ? normalInstance.systemDateToTargetDate(inputStartsAt) : inputStartsAt;
 
   let numberOfBlockedDays: number;
 
@@ -300,10 +300,11 @@ export function dateCellTiming(durationInput: DateDurationSpan, inputRange: Date
   let range: DateRange;
 
   if (typeof inputRange === 'number') {
+    // input range is a number of days
     numberOfBlockedDays = inputRange - 1;
-
-    range = dateRange({ type: DateRangeType.DAY, date: startsAt });
+    range = dateRange({ type: DateRangeType.DAY, date: startsAtInSystemTimezone });
   } else if (isDateRange(inputRange)) {
+    // input range is a DateRange
     range = inputRange;
     inputDate = inputRange.start;
 
@@ -313,35 +314,33 @@ export function dateCellTiming(durationInput: DateDurationSpan, inputRange: Date
 
     numberOfBlockedDays = differenceInDays(inputRange.end, inputRange.start); // min of 1 day
   } else {
-    inputDate = startsAt; // TODO: May not be needed?
+    // input range is a Date
+    inputDate = startsAtInSystemTimezone;
     numberOfBlockedDays = inputRange.distance - 1;
     range = dateRange({ type: DateRangeType.DAY, date: inputDate }, true);
   }
 
   if (inputDate != null) {
     // input date takes priority, so move the startsAt's date to be on the same date.
-    startsAt = copyHoursAndMinutesFromDate(range.start, startsAt, true);
+    startsAtInSystemTimezone = copyHoursAndMinutesFromDate(range.start, startsAtInSystemTimezone, true);
 
-    const startedBeforeRange = isBefore(startsAt, range.start);
+    const startedBeforeRange = isBefore(startsAtInSystemTimezone, range.start);
 
     if (startedBeforeRange) {
-      startsAt = addDays(startsAt, 1); // starts 24 hours later
+      startsAtInSystemTimezone = addDays(startsAtInSystemTimezone, 1); // starts 24 hours later
       numberOfBlockedDays = Math.max(numberOfBlockedDays - 1, 0); // reduce number of applied days by 1, to a min of 0
     }
   } else {
-    startsAt = roundDownToMinute(startsAt); // clear seconds and milliseconds from startsAt
+    startsAtInSystemTimezone = roundDownToMinute(startsAtInSystemTimezone); // clear seconds and milliseconds from startsAt
   }
 
-  const start = range.start;
-  let lastStart = addDays(startsAt, numberOfBlockedDays); // use addDays so the system (if it experiences daylight savings) can change for daylight savings
-
-  if (normalInstance) {
-    startsAt = normalInstance.targetDateToSystemDate(startsAt);
-    lastStart = normalInstance.targetDateToSystemDate(lastStart); // may be affected by daylight savings
-  }
+  const lastStartsAtInSystemTimezone = addDays(startsAtInSystemTimezone, numberOfBlockedDays); // use addDays so the system (if it experiences daylight savings) can change for daylight savings
 
   // calculate end to be the ending date/time of the final duration span
-  const end: Date = addMinutes(lastStart, duration);
+  const end: Date = normalInstance.targetDateToSystemDate(addMinutes(lastStartsAtInSystemTimezone, duration));
+
+  const start = normalInstance.targetDateToSystemDate(startOfDay(startsAtInSystemTimezone));
+  const startsAt = normalInstance.targetDateToSystemDate(startsAtInSystemTimezone);
 
   return {
     start,
@@ -366,7 +365,8 @@ export interface DateCellTimingStartPair {
 export function dateCellTimingStartPair(timing: DateCellTimingStartsAt): DateCellTimingStartPair {
   const { startsAt, timezone } = timing;
   const normalInstance = dateTimezoneUtcNormal(timezone);
-  const start = normalInstance.startOfDayInTargetDate(startsAt);
+  const startsAtInSystem = normalInstance.systemDateToTargetDate(startsAt);
+  const start = normalInstance.startOfDayInTargetTimezone(startsAtInSystem);
 
   return {
     start,
@@ -445,7 +445,7 @@ export function getDateCellTimingFirstEventDateRange(timing: DateCellTimingStart
  * @param timing
  */
 export function getDateCellTimingHoursInEvent(timing: Pick<DateCellTiming, 'duration'>): FractionalHour {
-  return fractionalHoursToMinutes(timing.duration);
+  return minutesToFractionalHours(timing.duration);
 }
 
 /**
@@ -533,7 +533,7 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
   );
 
   const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(end, expectedFinalStartsAt);
-  const duration = Math.abs((finalMsDifferenceBetweenStartAndEnd % MS_IN_HOUR) / MS_IN_MINUTE);
+  const duration = finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE;
 
   return {
     duration,
@@ -572,6 +572,7 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
   ) {
     const expectedDuration = calculateExpectedDateCellTimingDuration(timing);
     isExpectedValidEnd = expectedDuration === duration; // should be the expected duration
+    isValid = isExpectedValidEnd;
   }
 
   const result = {
@@ -619,7 +620,7 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
   const startsAtIsAfterStart = msDifference >= 0;
   const startsAtIsLessThan24HoursAfterStart = msDifference < MS_IN_DAY;
 
-  const startInUtc = normalInstance.baseDateToSystemDate(start);
+  const startInUtc = normalInstance.baseDateToTargetDate(start);
   const startIsAtMidnight = startInUtc.getUTCHours() === 0 && startInUtc.getMinutes() === 0;
 
   const isValid: boolean =
@@ -639,7 +640,6 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
     startHasZeroSeconds,
     startsAtIsAfterStart,
     startsAtIsLessThan24HoursAfterStart,
-    // isValidDateCellTimingInfo
     endIsAfterTheStartsAtTime,
     durationLessThan24Hours,
     startsAtHasZeroSeconds,
@@ -648,4 +648,9 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
   };
 
   return result;
+}
+
+export function isValidFullDateCellTiming(timing: FullDateCellTiming): boolean {
+  const { isValid } = isValidFullDateCellTimingInfo(timing);
+  return isValid;
 }

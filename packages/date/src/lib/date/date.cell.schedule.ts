@@ -437,7 +437,7 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
   // derive the startsAt time for the range. If not provided, defaults to midnight in the target timezone.
-  const startsAt: Date = inputStartsAt != null ? inputStartsAt : normalInstance.startOfDayInTargetDate();
+  const startsAt: Date = inputStartsAt != null ? inputStartsAt : normalInstance.startOfDayInTargetTimezone();
   const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt);
 
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);
