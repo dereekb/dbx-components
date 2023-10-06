@@ -53,7 +53,7 @@ import { IsDate, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { parseISO8601DayStringToDate, parseISO8601DayStringToUTCDate } from './date.format';
 import { IsKnownTimezone } from '../timezone/timezone.validator';
 import { fitDateRangeToDayPeriod } from './date.range.timezone';
-import { assertedTimingDateTimezoneUtcNormal, timingDateTimezoneUtcNormal, TimingDateTimezoneUtcNormalInput } from './date.block';
+import { assertedTimingDateTimezoneUtcNormal, DateBlockTimingEvent, timingDateTimezoneUtcNormal, TimingDateTimezoneUtcNormalInput } from './date.block';
 
 /**
  * Index from 0 of which day this block represents.
@@ -530,6 +530,20 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
 
 export function calculateExpectedDateCellTimingDuration(timing: DateCellTimingStartsAtEndRange): Minutes {
   return calculateExpectedDateCellTimingDurationPair(timing).duration;
+}
+
+/**
+ * Returns the final StartsAt time.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateCellTimingFinalStartsAtEvent(timing: DateCellTimingStartsAtEndRange): DateBlockTimingEvent {
+  const { duration, expectedFinalStartsAt: startsAt } = calculateExpectedDateCellTimingDurationPair(timing);
+  return {
+    startsAt,
+    duration
+  };
 }
 
 export interface IsValidDateCellTimingInfo {

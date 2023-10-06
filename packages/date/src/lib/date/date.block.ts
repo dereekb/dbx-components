@@ -459,7 +459,7 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
     duration
   };
 
-  console.log({ timezoneInstance, startsAt, eventStartsAt, lastDayStartsAt, dateBlockTimingStartEndDayDateRange, event, timing });
+  // console.log({ timezoneInstance, startsAt, eventStartsAt, lastDayStartsAt, dateBlockTimingStartEndDayDateRange, event, timing });
 
   return timing;
 }

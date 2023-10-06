@@ -22,6 +22,103 @@ interface DataDateCellRange extends DateCellRangeWithRange {
   value: string;
 }
 
+describe('dateCellIndexRange()', () => {
+  const days = 5;
+  const start = systemNormalDateToBaseDate(new Date(0)); // 1970-01-01 UTC start of day
+
+  const duration = 60;
+  const timing = dateCellTiming({ startsAt: start, duration }, days);
+  const end = timing.end;
+
+  it('should generate the dateCellIndexRange for a given date.', () => {
+    const result = dateCellIndexRange(timing);
+    expect(result.minIndex).toBe(0);
+    expect(result.maxIndex).toBe(days);
+  });
+
+  it('should return the expected IndexRange for a single day', () => {
+    const days = 1;
+    const timing = dateCellTiming({ startsAt: start, duration }, days);
+    const result = dateCellIndexRange(timing);
+
+    expect(result.minIndex).toBe(0);
+    expect(result.maxIndex).toBe(days);
+  });
+
+  describe('with limit', () => {
+    it('should return the expected range if the limit is the same as the range', () => {
+      const days = 1;
+      const timing = dateCellTiming({ startsAt: start, duration }, days);
+
+      const limit = {
+        start: timing.start,
+        end: timing.end
+      };
+
+      const result = dateCellIndexRange(timing, limit);
+
+      expect(result.minIndex).toBe(0);
+      expect(result.maxIndex).toBe(days);
+    });
+
+    it('should return a zero range (maxIndex is exclusive) if the end is the same time as the start in limit', () => {
+      const days = 1;
+      const timing = dateCellTiming({ startsAt: start, duration }, days);
+
+      const limit = {
+        start: timing.start,
+        end: timing.start
+      };
+
+      const result = dateCellIndexRange(timing, limit);
+
+      expect(result.minIndex).toBe(0);
+      expect(result.maxIndex).toBe(1);
+    });
+
+    it('should limit a two day timing to a single day', () => {
+      const days = 2;
+      const timing = dateCellTiming({ startsAt: start, duration }, days);
+
+      const limit = {
+        start: timing.start,
+        end: addDays(timing.end, -1) // limit 1 day less
+      };
+
+      const result = dateCellIndexRange(timing, limit);
+
+      expect(result.minIndex).toBe(0);
+      expect(result.maxIndex).toBe(days - 1); // expects 1 day
+    });
+
+    it('should generate the dateCellIndexRange for one day in the future (1,5).', () => {
+      const limit = {
+        start: addHours(start, 24),
+        end: end
+      };
+
+      const result = dateCellIndexRange(timing, limit);
+      expect(result.minIndex).toBe(1);
+      expect(result.maxIndex).toBe(days);
+    });
+
+    describe('fitToTimingRange=false', () => {
+      it('should generate the dateCellIndexRange for the limit.', () => {
+        const daysPastEnd = 2;
+
+        const limit = {
+          start: addHours(start, 24),
+          end: addDays(end, daysPastEnd)
+        };
+
+        const result = dateCellIndexRange(timing, limit, false);
+        expect(result.minIndex).toBe(1);
+        expect(result.maxIndex).toBe(days + daysPastEnd);
+      });
+    });
+  });
+});
+
 describe('dateCellsExpansionFactory()', () => {
   describe('function', () => {
     function makeBlocks(input: RangeInput) {
@@ -37,9 +134,10 @@ describe('dateCellsExpansionFactory()', () => {
     const blocks: DataDateCell[] = makeBlocks(days);
     const blocksAsRange: DataDateCellRange = { i: 0, to: days - 1, value: 'a' };
 
-    it('should generate the timings for the input date blocks.', () => {
+    it('should generate the timings for the input date blocks for the number of blocks.', () => {
       const result = factory(blocks);
       expect(result.length).toBe(days);
+      expect(result.length).toBe(blocks.length);
     });
 
     it('should filter out block indexes that fall outside the range.', () => {
@@ -411,103 +509,6 @@ describe('dateCellTimingRelativeIndexArrayFactory()', () => {
   });
 });
 
-describe('dateCellIndexRange()', () => {
-  const days = 5;
-  const start = systemNormalDateToBaseDate(new Date(0)); // 1970-01-01 UTC start of day
-
-  const duration = 60;
-  const timing = dateCellTiming({ startsAt: start, duration }, days);
-  const end = timing.end;
-
-  it('should generate the dateCellIndexRange for a given date.', () => {
-    const result = dateCellIndexRange(timing);
-    expect(result.minIndex).toBe(0);
-    expect(result.maxIndex).toBe(days);
-  });
-
-  it('should return the expected IndexRange for a single day', () => {
-    const days = 1;
-    const timing = dateCellTiming({ startsAt: start, duration }, days);
-    const result = dateCellIndexRange(timing);
-
-    expect(result.minIndex).toBe(0);
-    expect(result.maxIndex).toBe(days);
-  });
-
-  describe('with limit', () => {
-    it('should return the expected range if the limit is the same as the range', () => {
-      const days = 1;
-      const timing = dateCellTiming({ startsAt: start, duration }, days);
-
-      const limit = {
-        start: timing.start,
-        end: timing.end
-      };
-
-      const result = dateCellIndexRange(timing, limit);
-
-      expect(result.minIndex).toBe(0);
-      expect(result.maxIndex).toBe(days);
-    });
-
-    it('should return a zero range (maxIndex is exclusive) if the end is the same time as the start in limit', () => {
-      const days = 1;
-      const timing = dateCellTiming({ startsAt: start, duration }, days);
-
-      const limit = {
-        start: timing.start,
-        end: timing.start
-      };
-
-      const result = dateCellIndexRange(timing, limit);
-
-      expect(result.minIndex).toBe(0);
-      expect(result.maxIndex).toBe(1);
-    });
-
-    it('should limit a two day timing to a single day', () => {
-      const days = 2;
-      const timing = dateCellTiming({ startsAt: start, duration }, days);
-
-      const limit = {
-        start: timing.start,
-        end: addDays(timing.end, -1) // limit 1 day less
-      };
-
-      const result = dateCellIndexRange(timing, limit);
-
-      expect(result.minIndex).toBe(0);
-      expect(result.maxIndex).toBe(days - 1); // expects 1 day
-    });
-
-    it('should generate the dateCellIndexRange for one day in the future (1,5).', () => {
-      const limit = {
-        start: addHours(start, 24),
-        end: end
-      };
-
-      const result = dateCellIndexRange(timing, limit);
-      expect(result.minIndex).toBe(1);
-      expect(result.maxIndex).toBe(days);
-    });
-
-    describe('fitToTimingRange=false', () => {
-      it('should generate the dateCellIndexRange for the limit.', () => {
-        const daysPastEnd = 2;
-
-        const limit = {
-          start: addHours(start, 24),
-          end: addDays(end, daysPastEnd)
-        };
-
-        const result = dateCellIndexRange(timing, limit, false);
-        expect(result.minIndex).toBe(1);
-        expect(result.maxIndex).toBe(days + daysPastEnd);
-      });
-    });
-  });
-});
-
 describe('dateCellDayTimingInfoFactory()', () => {
   const start = startOfDay(new Date());
   const startsAt = addHours(start, 12); // Noon on the day
@@ -684,8 +685,8 @@ describe('dateCellTimingDateFactory()', () => {
       const timezone = 'America/New_York';
       const testDays = 17;
 
-      const timing: DateCellTiming = dateCellTiming({ startsAt: new Date('2023-08-14T00:00:00.000Z'), duration: 540 }, testDays, timezone);
-
+      const startsAt: Date = new Date('2023-08-14T00:00:00.000Z'); // Aug 13th 10:00PM America/New_York
+      const timing: DateCellTiming = dateCellTiming({ startsAt, duration: 540 }, testDays, timezone);
       const start = dateCellTimingStart(timing);
 
       const s: DateCellSchedule = {
@@ -707,7 +708,6 @@ describe('dateCellTimingDateFactory()', () => {
           expect(i).toBe(expectedIndex);
 
           const dateFromIndex = dateFactory(i);
-
           expect(dateFromIndex).toBeAfter(start);
 
           const now = new Date();
