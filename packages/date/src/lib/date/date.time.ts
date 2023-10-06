@@ -232,7 +232,7 @@ export class DateTimeUtilityInstance {
       parseTimeString();
     }
 
-    console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal, relativeDateNormal.configuredTimezoneString);
+    // console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal, relativeDateNormal.configuredTimezoneString);
 
     // Raw parse result is always UTC for that date.
     // For example, 1AM will return 1AM UTC in a Date object.
@@ -244,7 +244,7 @@ export class DateTimeUtilityInstance {
       raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime as Date);
       result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime as Date);
 
-      console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
+      // console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
     }
 
     return {

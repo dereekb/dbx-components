@@ -683,12 +683,8 @@ describe('dateCellTimingDateFactory()', () => {
     describe('America/New_York timezone past days', () => {
       const timezone = 'America/New_York';
       const testDays = 17;
-      const timing: DateCellTiming = {
-        timezone,
-        end: new Date('2023-08-30T09:00:00.000Z'),
-        startsAt: new Date('2023-08-14T00:00:00.000Z'),
-        duration: 540
-      };
+
+      const timing: DateCellTiming = dateCellTiming({ startsAt: new Date('2023-08-14T00:00:00.000Z'), duration: 540 }, testDays, timezone);
 
       const start = dateCellTimingStart(timing);
 
@@ -698,6 +694,8 @@ describe('dateCellTimingDateFactory()', () => {
       };
 
       it('should correspond the indexes to the expanded dates', () => {
+        expect(isValidDateCellTiming(timing)).toBe(true);
+
         const indexFactory = dateCellTimingRelativeIndexFactory(timing);
         const dateFactory = dateCellTimingDateFactory(timing);
         const expandedDays = expandDateCellSchedule({ timing, schedule: s });
@@ -727,6 +725,8 @@ describe('dateCellTimingDateFactory()', () => {
       });
 
       it('should expand the same dates to the same indexes.', () => {
+        expect(isValidDateCellTiming(timing)).toBe(true);
+
         const indexFactory = dateCellTimingRelativeIndexFactory(timing);
         const dateFactory = dateCellTimingDateFactory(timing);
         const expandedDays = expandDateCellSchedule({ timing, schedule: s });

@@ -527,6 +527,48 @@ describe('calculateExpectedDateCellTimingDurationPair()', () => {
     expect(result.duration).toBe(duration);
   });
 
+  describe('scenarios', () => {
+    it('midnight UTC 2023-08-14 - 2023-08-31', () => {
+      const testDays = 17;
+
+      const duration = 540;
+      const timing: FullDateCellTiming = dateCellTiming(
+        {
+          startsAt: new Date('2023-08-14T00:00:00.000Z'),
+          duration
+        },
+        testDays,
+        'America/New_York'
+      );
+
+      const expectedFinalStartsAt = addMinutes(timing.end, -timing.duration);
+
+      const result = calculateExpectedDateCellTimingDurationPair(timing);
+      expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedFinalStartsAt);
+      expect(result.duration).toBe(duration);
+    });
+
+    it('midnight UTC 2023-11-01 - 2023-11-18', () => {
+      const testDays = 17;
+
+      const duration = 540;
+      const timing: FullDateCellTiming = dateCellTiming(
+        {
+          startsAt: new Date('2023-11-01T00:00:00.000Z'),
+          duration
+        },
+        testDays,
+        'America/New_York'
+      );
+
+      const expectedFinalStartsAt = addMinutes(timing.end, -timing.duration);
+
+      const result = calculateExpectedDateCellTimingDurationPair(timing);
+      expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedFinalStartsAt);
+      expect(result.duration).toBe(duration);
+    });
+  });
+
   describe('daylight savings changes', () => {
     /**
      * Illustrates the effects of daylight savings changes
@@ -618,50 +660,69 @@ describe('isValidDateCellTiming()', () => {
 
   describe('scenario', () => {
     describe('valid timings', () => {
-      it('august 6 to august 21 2023', () => {
-        const days = 15;
-        const duration = MINUTES_IN_HOUR * 9; // 9 hours
+      describe('America/New_York', () => {
         const timezone = 'America/New_York';
-        const timezoneNormal = dateTimezoneUtcNormal({ timezone });
 
-        const start = timezoneNormal.startOfDayInTargetTimezone('2023-08-06');
-        const startsAt = addHours(start, 12);
-        const lastStartsAt = addDays(startsAt, days - 1);
+        it('midnight UTC 2023-08-14 - 2023-08-31', () => {
+          const testDays = 17;
 
-        const manualTiming: FullDateCellTiming = {
-          duration,
-          timezone,
-          start,
-          startsAt, // 12PM
-          end: addMinutes(lastStartsAt, duration)
-        };
+          const timing: FullDateCellTiming = dateCellTiming(
+            {
+              startsAt: new Date('2023-08-14T00:00:00.000Z'),
+              duration: 540
+            },
+            testDays,
+            timezone
+          );
 
-        expect(isValidDateCellTiming(manualTiming)).toBe(true);
-        expect(isValidFullDateCellTiming(manualTiming)).toBe(true);
+          expect(isValidFullDateCellTiming(timing)).toBe(true);
+          expect(isValidDateCellTiming(timing)).toBe(true);
+        });
 
-        const timing = dateCellTiming({ startsAt: manualTiming.startsAt, duration }, days, timezone);
+        it('august 6 to august 21 2023', () => {
+          const days = 15;
+          const duration = MINUTES_IN_HOUR * 9; // 9 hours
+          const timezoneNormal = dateTimezoneUtcNormal({ timezone });
 
-        expect(timing.duration).toBe(manualTiming.duration);
-        expect(timing.timezone).toBe(manualTiming.timezone);
-        expect(timing.start).toBeSameSecondAs(manualTiming.start);
-        expect(timing.startsAt).toBeSameSecondAs(manualTiming.startsAt);
-        expect(timing.end).toBeSameSecondAs(manualTiming.end);
+          const start = timezoneNormal.startOfDayInTargetTimezone('2023-08-06');
+          const startsAt = addHours(start, 12);
+          const lastStartsAt = addDays(startsAt, days - 1);
 
-        expect(isValidFullDateCellTiming(timing)).toBe(true);
-        expect(isValidDateCellTiming(timing)).toBe(true);
-      });
+          const manualTiming: FullDateCellTiming = {
+            duration,
+            timezone,
+            start,
+            startsAt, // 12PM
+            end: addMinutes(lastStartsAt, duration)
+          };
 
-      it('august 15 to december 21 2023', () => {
-        const timing: FullDateCellTiming = {
-          timezone: 'America/New_York',
-          start: new Date('2023-08-15T05:00:00.000Z'),
-          end: new Date('2023-12-21T22:30:00.000Z'),
-          startsAt: new Date('2023-08-15T13:30:00.000Z'),
-          duration: 480
-        };
+          expect(isValidDateCellTiming(manualTiming)).toBe(true);
+          expect(isValidFullDateCellTiming(manualTiming)).toBe(true);
 
-        const isValid = isValidDateCellTiming(timing);
-        expect(isValid).toBe(true);
+          const timing = dateCellTiming({ startsAt: manualTiming.startsAt, duration }, days, timezone);
+
+          expect(timing.duration).toBe(manualTiming.duration);
+          expect(timing.timezone).toBe(manualTiming.timezone);
+          expect(timing.start).toBeSameSecondAs(manualTiming.start);
+          expect(timing.startsAt).toBeSameSecondAs(manualTiming.startsAt);
+          expect(timing.end).toBeSameSecondAs(manualTiming.end);
+
+          expect(isValidFullDateCellTiming(timing)).toBe(true);
+          expect(isValidDateCellTiming(timing)).toBe(true);
+        });
+
+        it('august 15 to december 21 2023', () => {
+          const timing: FullDateCellTiming = {
+            timezone,
+            start: new Date('2023-08-15T05:00:00.000Z'),
+            end: new Date('2023-12-21T22:30:00.000Z'),
+            startsAt: new Date('2023-08-15T13:30:00.000Z'),
+            duration: 480
+          };
+
+          const isValid = isValidDateCellTiming(timing);
+          expect(isValid).toBe(true);
+        });
       });
     });
 

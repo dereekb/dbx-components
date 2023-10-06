@@ -513,27 +513,14 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
   const { end, startsAt, timezone } = timing;
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
-  const startsAtInUtc = normalInstance.baseDateToTargetDate(startsAt);
-  const endInUtc = normalInstance.baseDateToTargetDate(end);
+  const startsAtInUtcNormal = normalInstance.baseDateToTargetDate(startsAt); // convert to UTC normal
+  const endInUtcNormal = normalInstance.baseDateToTargetDate(end);
 
-  const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(
-    // back to system
-    new Date(
-      Date.UTC(
-        //
-        endInUtc.getUTCFullYear(),
-        endInUtc.getUTCMonth(),
-        endInUtc.getUTCDate(),
-        startsAtInUtc.getUTCHours(),
-        startsAtInUtc.getUTCMinutes(),
-        startsAtInUtc.getUTCSeconds(),
-        startsAtInUtc.getUTCMilliseconds()
-      )
-    )
-  );
+  const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(endInUtcNormal, startsAtInUtcNormal);
+  const duration = (finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE) % MINUTES_IN_DAY || MINUTES_IN_DAY;
+  const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(addMinutes(endInUtcNormal, -duration));
 
-  const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(end, expectedFinalStartsAt);
-  const duration = finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE;
+  // console.log({ finalMsDifferenceBetweenStartAndEnd, duration, expectedFinalStartsAt, startsAt, end, endInUtc: endInUtcNormal, startsAtInUtc: startsAtInUtcNormal });
 
   return {
     duration,
@@ -549,6 +536,7 @@ export interface IsValidDateCellTimingInfo {
   readonly isValid: boolean;
   readonly startsAtHasZeroSeconds: boolean;
   readonly endIsAfterTheStartsAtTime: boolean;
+  readonly durationGreaterThanZero: boolean;
   readonly durationLessThan24Hours: boolean;
   readonly isExpectedValidEnd: boolean;
   readonly normalInstance: DateTimezoneUtcNormalInstance;
@@ -559,6 +547,7 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
   const endIsAfterTheStartsAtTime = isAfter(end, startsAt);
+  const durationGreaterThanZero = duration > 0;
   const durationLessThan24Hours = duration <= MINUTES_IN_DAY;
   const startsAtHasZeroSeconds = startsAt.getSeconds() === 0 && startsAt.getMilliseconds() === 0;
 
@@ -567,6 +556,7 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
 
   if (
     endIsAfterTheStartsAtTime && // end must be after the startsAt time
+    durationGreaterThanZero &&
     durationLessThan24Hours &&
     startsAtHasZeroSeconds
   ) {
@@ -578,6 +568,7 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
   const result = {
     isValid,
     endIsAfterTheStartsAtTime,
+    durationGreaterThanZero,
     durationLessThan24Hours,
     startsAtHasZeroSeconds,
     isExpectedValidEnd,
@@ -611,7 +602,7 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
   const { startsAt } = timing;
 
   const isValidInfo = isValidDateCellTimingInfo(timing);
-  const { endIsAfterTheStartsAtTime, durationLessThan24Hours, startsAtHasZeroSeconds, isExpectedValidEnd } = isValidInfo;
+  const { endIsAfterTheStartsAtTime, durationGreaterThanZero, durationLessThan24Hours, startsAtHasZeroSeconds, isExpectedValidEnd } = isValidInfo;
 
   const isStartRoundedToSeconds = start.getMilliseconds() === 0; // should have no milliseconds specified
   const msDifference = differenceInMilliseconds(startsAt, start); // startsAt is a specific instance to compare to the midnight instant of the target timezone
@@ -627,6 +618,7 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
     isValidInfo.isValid &&
     isStartRoundedToSeconds &&
     endIsAfterTheStartsAtTime && // end must be after the startsAt time
+    durationGreaterThanZero &&
     durationLessThan24Hours &&
     startHasZeroSeconds && // start cannot have seconds
     startsAtIsAfterStart && // startsAt is after start instance, secondsDifference
@@ -641,11 +633,14 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
     startsAtIsAfterStart,
     startsAtIsLessThan24HoursAfterStart,
     endIsAfterTheStartsAtTime,
+    durationGreaterThanZero,
     durationLessThan24Hours,
     startsAtHasZeroSeconds,
     isExpectedValidEnd,
     normalInstance
   };
+
+  // console.log({ timing, result, msDifference, startsAt, start });
 
   return result;
 }

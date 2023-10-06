@@ -296,10 +296,10 @@ export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStart
         return input;
       } else if (inputType === 'string') {
         const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
-        diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the system times. Round down.
+        diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the UTC times. Round down.
       } else {
         const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
-        diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in system times. Round down.
+        diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in UTC times. Round down.
       }
 
       const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
