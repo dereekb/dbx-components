@@ -1,21 +1,21 @@
-import { dateCellIndexsForDateScheduleDayCodes } from './date.cell.day';
-import { DateScheduleDayCode, weekdayDateScheduleDayCodes } from './date.schedule';
+import { dateCellIndexsForDateCellScheduleDayCodes } from './date.cell.schedule.day';
+import { DateCellScheduleDayCode, weekdayDateCellScheduleDayCodes } from './date.cell.schedule';
 
-describe('dateCellIndexsForDateScheduleDayCodes()', () => {
+describe('dateCellIndexsForDateCellScheduleDayCodes()', () => {
   describe('days array', () => {
     it('should create dateCellIndexes for the input day', () => {
       const sundayIndex = 0;
-      const days = DateScheduleDayCode.SUNDAY;
+      const days = DateCellScheduleDayCode.SUNDAY;
 
-      const result = dateCellIndexsForDateScheduleDayCodes(sundayIndex, days);
+      const result = dateCellIndexsForDateCellScheduleDayCodes(sundayIndex, days);
       expect(result[0]).toBe(0); // sunday is the first day
     });
 
     it('should create dateCellIndexes for the input days', () => {
       const sundayIndex = 0;
-      const days = [DateScheduleDayCode.SUNDAY, DateScheduleDayCode.MONDAY];
+      const days = [DateCellScheduleDayCode.SUNDAY, DateCellScheduleDayCode.MONDAY];
 
-      const result = dateCellIndexsForDateScheduleDayCodes(sundayIndex, days);
+      const result = dateCellIndexsForDateCellScheduleDayCodes(sundayIndex, days);
       expect(result[0]).toBe(0); // sunday is the first day
       expect(result[1]).toBe(1); // monday is the second day
     });
@@ -24,10 +24,10 @@ describe('dateCellIndexsForDateScheduleDayCodes()', () => {
   describe('string input', () => {
     it('should create dateCellIndexes for the input encoded week', () => {
       const sundayIndex = 0;
-      const weekdays = DateScheduleDayCode.WEEKDAY;
-      const expectedDays = weekdayDateScheduleDayCodes();
+      const weekdays = DateCellScheduleDayCode.WEEKDAY;
+      const expectedDays = weekdayDateCellScheduleDayCodes();
 
-      const result = dateCellIndexsForDateScheduleDayCodes(sundayIndex, weekdays);
+      const result = dateCellIndexsForDateCellScheduleDayCodes(sundayIndex, weekdays);
 
       expect(result.length).toBe(expectedDays.length);
 

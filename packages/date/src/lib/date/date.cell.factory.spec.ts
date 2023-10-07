@@ -1,9 +1,9 @@
 import { guessCurrentTimezone, requireCurrentTimezone, timingDateTimezoneUtcNormal } from '@dereekb/date';
-import { range, isOddNumber, RangeInput, MS_IN_MINUTE, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
-import { addDays, addHours, addMinutes, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
+import { range, isOddNumber, RangeInput, MS_IN_MINUTE, TimezoneString, MINUTES_IN_HOUR, MS_IN_HOUR } from '@dereekb/util';
+import { addDays, addHours, addMilliseconds, addMinutes, addSeconds, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
 import { start } from 'repl';
 import { changeDateCellTimingToTimezoneFunction, DateCell, DateCellTiming, dateCellTiming, dateCellTimingStart, DateCellTimingStartsAt, FullDateCellTiming, isValidDateCellTiming } from './date.cell';
-import { dateCellDayTimingInfoFactory, dateCellIndexRange, dateCellsExpansionFactory, dateCellTimingDateFactory, dateCellTimingFromDateCellTimingStartsAtEndRange, dateCellTimingRelativeIndexArrayFactory, dateCellTimingRelativeIndexFactory, dateCellTimingStartDateFactory, dateCellTimingStartsAtDateFactory, getRelativeIndexForDateCellTiming, isDateCellTimingRelativeIndexFactory, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
+import { dateCellDayTimingInfoFactory, dateCellIndexRange, dateCellTimingExpansionFactory, dateCellTimingDateFactory, dateCellTimingFromDateCellTimingStartsAtEndRange, dateCellTimingRelativeIndexArrayFactory, dateCellTimingRelativeIndexFactory, dateCellTimingStartDateFactory, dateCellTimingStartsAtDateFactory, getRelativeIndexForDateCellTiming, isDateCellTimingRelativeIndexFactory, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { DateCellRange, DateCellRangeWithRange } from './date.cell.index';
 import { DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
@@ -119,7 +119,7 @@ describe('dateCellIndexRange()', () => {
   });
 });
 
-describe('dateCellsExpansionFactory()', () => {
+describe('dateCellTimingExpansionFactory()', () => {
   describe('function', () => {
     function makeBlocks(input: RangeInput) {
       return range(input).map((i) => ({ i, value: `${i}` }));
@@ -130,7 +130,7 @@ describe('dateCellsExpansionFactory()', () => {
     const duration = 60;
 
     const timing = dateCellTiming({ startsAt, duration }, days); // system timezone
-    const factory = dateCellsExpansionFactory<DataDateCell | DataDateCellRange>({ timing });
+    const factory = dateCellTimingExpansionFactory<DataDateCell | DataDateCellRange>({ timing });
     const blocks: DataDateCell[] = makeBlocks(days);
     const blocksAsRange: DataDateCellRange = { i: 0, to: days - 1, value: 'a' };
 
@@ -188,7 +188,7 @@ describe('dateCellsExpansionFactory()', () => {
         const pastDays = 2;
 
         const now = addDays(startsAt, pastDays);
-        const factory = dateCellsExpansionFactory({ timing, durationSpanFilter: dateCellDurationSpanHasNotEndedFilterFunction(now) });
+        const factory = dateCellTimingExpansionFactory({ timing, durationSpanFilter: dateCellDurationSpanHasNotEndedFilterFunction(now) });
 
         it('should filter out spans that have not ended.', () => {
           const result = factory(blocks);
@@ -199,7 +199,7 @@ describe('dateCellsExpansionFactory()', () => {
 
     describe('with maxDateCellsToReturn', () => {
       const maxDateCellsToReturn = 1;
-      const factory = dateCellsExpansionFactory({ timing, maxDateCellsToReturn });
+      const factory = dateCellTimingExpansionFactory({ timing, maxDateCellsToReturn });
 
       it('should generate up to the maximum number of blocks to return.', () => {
         const result = factory(blocks);
@@ -210,7 +210,7 @@ describe('dateCellsExpansionFactory()', () => {
     describe('with rangeLimit', () => {
       describe('rangeLimit=duration', () => {
         const daysLimit = 3;
-        const factory = dateCellsExpansionFactory({ timing, rangeLimit: daysLimit });
+        const factory = dateCellTimingExpansionFactory({ timing, rangeLimit: daysLimit });
 
         it('should limit the index range to the first 3 days', () => {
           const offset = 1;
@@ -244,7 +244,7 @@ describe('dateCellsExpansionFactory()', () => {
       });
 
       describe('rangeLimit=range', () => {
-        const factory = dateCellsExpansionFactory({ timing, rangeLimit: { start: addDays(timing.start, 1), end: addDays(timing.end, -1) } });
+        const factory = dateCellTimingExpansionFactory({ timing, rangeLimit: { start: addDays(timing.start, 1), end: addDays(timing.end, -1) } });
 
         it('should limit the index range to the first 3 days', () => {
           const expectedResultCount = 3;
@@ -262,7 +262,7 @@ describe('dateCellsExpansionFactory()', () => {
       });
 
       describe('rangeLimit=DateRangeDayDistanceInput', () => {
-        const factory = dateCellsExpansionFactory({ timing, rangeLimit: { distance: 3 } });
+        const factory = dateCellTimingExpansionFactory({ timing, rangeLimit: { distance: 3 } });
 
         it('should limit the index range to the first 3 days', () => {
           const expectedResultCount = 3;
@@ -280,7 +280,7 @@ describe('dateCellsExpansionFactory()', () => {
       });
 
       describe('with rangeLimit=false', () => {
-        const factory = dateCellsExpansionFactory({ timing, rangeLimit: false });
+        const factory = dateCellTimingExpansionFactory({ timing, rangeLimit: false });
 
         it('should generate a span for all blocks', () => {
           const offset = 3;
@@ -322,8 +322,8 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
       it('should return the expected indexes for the first day relative to the UTC timezone', () => {
         const dayString = formatToISO8601DayString(start);
 
-        const result1date = fn(startsAt); // input the system time
         const result1day = fn(dayString);
+        const result1date = fn(timing.startsAt); // input the system time
 
         expect(result1date).toBe(0);
         expect(result1day).toBe(0);
@@ -337,9 +337,8 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
 
       it('should return the expected indexes for the first day relative to the Denver timezone', () => {
         const dayString = formatToISO8601DayString(start);
-
-        const resulttimingstart = fn(timing.start);
         const result1day = fn(dayString);
+        const resulttimingstart = fn(timing.start);
 
         expect(resulttimingstart).toBe(0);
         expect(result1day).toBe(0);
@@ -381,34 +380,37 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
       });
     });
 
-    describe('America/Chicago', () => {
-      const timezone = 'America/Chicago';
+    describe('daylight savings change', () => {
+      describe('America/Chicago', () => {
+        const timezone = 'America/Chicago';
+        const normallInstance = dateTimezoneUtcNormal(timezone);
 
-      describe('one second before midnight', () => {
-        const startsAt = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
-        const oneSecondBeforeNextDay = new Date('2023-03-12T05:59:59.999Z');
-        const theNextDay = new Date('2023-03-12T06:00:00.000Z');
+        describe('one second before midnight', () => {
+          const startsAt = normallInstance.startOfDayInTargetTimezone('2023-03-11'); // timezone offset changes going into the next day.
+          const theNextDay = normallInstance.startOfDayInTargetTimezone('2023-03-12');
+          const oneSecondBeforeNextDay = addMilliseconds(theNextDay, -(1 + MS_IN_HOUR)); // normallInstance.transformDateInTimezoneNormal(theNextDay, (x) => );
 
-        it('should properly round the index down.', () => {
-          const factory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
-          const result = factory(oneSecondBeforeNextDay);
-          expect(result).toBe(0); // should be the same day
+          it('should properly round the index down.', () => {
+            const factory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
+            const result = factory(oneSecondBeforeNextDay);
+            expect(result).toBe(0); // should be the same day
 
-          const nextDayResult = factory(theNextDay);
-          expect(nextDayResult).toBe(1); // should be the next day
+            const nextDayResult = factory(theNextDay);
+            expect(nextDayResult).toBe(1); // should be the next day
+          });
         });
-      });
 
-      describe('timezone change', () => {
-        const startsAt = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
-        const dstDay = new Date('2023-03-13T06:00:00.000Z'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
+        describe('timezone change', () => {
+          const startsAt = new Date('2023-03-11T06:00:00.000Z'); // timezone offset changes going into the next day.
+          const dstDay = new Date('2023-03-13T06:00:00.000Z'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
 
-        it('should handle daylight savings time changes and return the expected index.', () => {
-          const factory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
-          const result = factory(dstDay);
+          it('should handle daylight savings time changes and return the expected index.', () => {
+            const factory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
+            const result = factory(dstDay);
 
-          expect(formatToISO8601DayString(dstDay)).toBe('2023-03-13');
-          expect(result).toBe(2); // 2 days later
+            expect(formatToISO8601DayString(dstDay)).toBe('2023-03-13');
+            expect(result).toBe(2); // 2 days later
+          });
         });
       });
     });
@@ -584,17 +586,13 @@ describe('dateCellDayTimingInfoFactory()', () => {
   });
 
   describe('scenarios', () => {
-    describe('dateCellDayTimingInfoFactory() comparison', () => {
+    describe('expandDateCellSchedule() comparison', () => {
       describe('America/New_York timezone past days', () => {
         const timezone = 'America/New_York';
         const testDays = 17;
-        const timing: FullDateCellTiming = {
-          timezone,
-          start: new Date('2023-08-13T04:00:00.000Z'),
-          end: new Date('2023-08-30T09:00:00.000Z'),
-          startsAt: new Date('2023-08-14T00:00:00.000Z'),
-          duration: 540
-        };
+
+        const startsAt = new Date('2023-08-14T00:00:00.000Z');
+        const timing: FullDateCellTiming = dateCellTiming({ startsAt, duration: 540 }, testDays, timezone);
 
         const s: DateCellSchedule = {
           w: '89',
@@ -607,6 +605,8 @@ describe('dateCellDayTimingInfoFactory()', () => {
           const expandedDayZero = expandedDays[0];
           const infoDayZeroIndex = infoFactory(0);
           const infoDayZeroDate = infoFactory(infoDayZeroIndex.startsAtOnDay);
+
+          expect(timing.startsAt).toBeSameSecondAs(startsAt);
 
           expect(expandedDayZero.i).toBe(0);
           expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
@@ -773,7 +773,7 @@ describe('dateCellTimingStartsAtDateFactory()', () => {
       });
     });
 
-    describe('system timezone change', () => {
+    describe('daylight savings timezone change', () => {
       // this tests the system's timezone change handling to make sure output is different
       const start = parseISO8601DayStringToDate('2023-03-11'); // timezone offset changes going into the next day.
       const dstDay = parseISO8601DayStringToDate('2023-03-13'); // daylight Savings has occured for some timezones. We jump 2 days however to ensure all zones are in the next timezone where applicable.
@@ -797,6 +797,31 @@ describe('dateCellTimingStartsAtDateFactory()', () => {
           expect(zero.getHours()).toBe(two.getHours()); // same hours due to tz
         }
       });
+    });
+
+    describe('timezones', () => {
+      function describeTestsForTimezone(timezone: TimezoneString) {
+        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+        const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone();
+        const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration: 60 }, 1, timezone); // 1 day
+        const startsAtFactory = dateCellTimingStartsAtDateFactory(timing);
+
+        describe(`${timezone}`, () => {
+          it(`should return the first startsAt of the timing for ${timezone}`, () => {
+            const startsAt = startsAtFactory(0);
+
+            expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
+            expect(startsAt).toBeSameSecondAs(timing.startsAt);
+          });
+        });
+      }
+
+      describeTestsForTimezone('UTC');
+      describeTestsForTimezone('America/Denver');
+      describeTestsForTimezone('America/Los_Angeles');
+      describeTestsForTimezone('America/New_York');
+      describeTestsForTimezone('America/Chicago');
+      describeTestsForTimezone('Pacific/Fiji');
     });
   });
 });
@@ -928,114 +953,117 @@ describe('dateCellTimingFromDateCellTimingStartsAtEndRange()', () => {
 
 describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
   describe('function', () => {
-    function describeTestsForTimezone(timezone: TimezoneString) {
-      const timezoneInstance = dateTimezoneUtcNormal({ timezone });
-      const startOfTodayInTimezone = timezoneInstance.targetDateToSystemDate(startOfDay(new Date()));
-      const startOfTodayInTimezoneB = timezoneInstance.targetDateToBaseDate(parseISO8601DayStringToUTCDate(formatToISO8601DayString()));
-      const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration: 60 }, 1, timezone); // 1 day
+    describe('timezones', () => {
+      function describeTestsForTimezone(timezone: TimezoneString) {
+        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+        const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone();
+        const startOfTodayInTimezoneB = timezoneInstance.targetDateToBaseDate(parseISO8601DayStringToUTCDate(formatToISO8601DayString()));
+        const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration: 60 }, 1, timezone); // 1 day
 
-      describe(`${timezone}`, () => {
-        describe('replaceStartsAt=true', () => {
-          it('should return a copy of a timing.', () => {
-            const result = updateDateCellTimingWithDateCellTimingEvent({
-              timing,
-              event: timing,
-              replaceStartsAt: true
-            }); // use the first event again
+        describe(`${timezone}`, () => {
+          describe('replaceStartsAt=true', () => {
+            it('should return a copy of a timing.', () => {
+              const result = updateDateCellTimingWithDateCellTimingEvent({
+                timing,
+                event: timing,
+                replaceStartsAt: true
+              }); // use the first event again
 
-            expect(result.timezone).toBe(timing.timezone);
-            expect(result.end).toBeSameSecondAs(timing.end);
-            expect(result.duration).toBe(timing.duration);
-            expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+              expect(result.timezone).toBe(timing.timezone);
+              expect(result.end).toBeSameSecondAs(timing.end);
+              expect(result.duration).toBe(timing.duration);
+              expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
 
-            expect(isValidDateCellTiming(result)).toBe(true);
-          });
-
-          it('should return the original timing using the second event', () => {
-            const result = updateDateCellTimingWithDateCellTimingEvent({
-              timing,
-              event: { startsAt: addDays(timing.startsAt, 1), duration: timing.duration },
-              replaceStartsAt: true
-            }); // use the first event again
-
-            expect(result.timezone).toBe(timing.timezone);
-            expect(result.end).toBeSameSecondAs(timing.end);
-            expect(result.duration).toBe(timing.duration);
-            expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-
-            expect(isValidDateCellTiming(result)).toBe(true);
-          });
-
-          describe('daylight savings changes', () => {
-            const daylightSavingsLastDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-11-03T00:00:00Z'));
-            const timing = dateCellTiming({ startsAt: daylightSavingsLastDayActive, duration: 60 }, 5, timezone); // 1 day
-
-            describe('active to inactive', () => {
-              it(`should return a copy of the original ${timezone} timing`, () => {
-                expect(isValidDateCellTiming(timing)).toBe(true);
-
-                const result = updateDateCellTimingWithDateCellTimingEvent({
-                  timing,
-                  event: timing,
-                  replaceStartsAt: true
-                }); // use the first event again
-
-                expect(result.timezone).toBe(timing.timezone);
-                expect(result.end).toBeSameSecondAs(timing.end);
-                expect(result.duration).toBe(timing.duration);
-                expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-
-                expect(isValidDateCellTiming(result)).toBe(true);
-              });
-
-              it(`should return the proper timing with new duration of the day after daylight savings goes inactive in ${timezone}`, () => {
-                expect(isValidDateCellTiming(timing)).toBe(true);
-
-                const newDuration = timing.duration + MINUTES_IN_HOUR;
-                const result = updateDateCellTimingWithDateCellTimingEvent({
-                  timing,
-                  event: { startsAt: timing.startsAt, duration: newDuration },
-                  replaceStartsAt: true
-                }); // use the first event again
-
-                expect(result.timezone).toBe(timing.timezone);
-                expect(result.end).toBeSameSecondAs(addHours(timing.end, 1));
-                expect(result.duration).toBe(newDuration);
-                expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-
-                expect(isValidDateCellTiming(result)).toBe(true);
-              });
+              expect(isValidDateCellTiming(result)).toBe(true);
             });
 
-            describe('inactive to active', () => {
-              const daylightSavingsBeforeFirstDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-03-10T00:00:00Z'));
-              const timing = dateCellTiming({ startsAt: daylightSavingsBeforeFirstDayActive, duration: 60 }, 5, timezone); // 1 day
+            it('should return the original timing using the second event', () => {
+              const result = updateDateCellTimingWithDateCellTimingEvent({
+                timing,
+                event: { startsAt: addDays(timing.startsAt, 1), duration: timing.duration },
+                replaceStartsAt: true
+              }); // use the first event again
 
-              it(`should return a copy of a timing`, () => {
-                const result = updateDateCellTimingWithDateCellTimingEvent({
-                  timing,
-                  event: timing,
-                  replaceStartsAt: true
-                }); // use the first event again
+              expect(result.timezone).toBe(timing.timezone);
+              expect(result.end).toBeSameSecondAs(timing.end);
+              expect(result.duration).toBe(timing.duration);
+              expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
 
-                expect(result.timezone).toBe(timing.timezone);
-                expect(result.end).toBeSameSecondAs(timing.end);
-                expect(result.duration).toBe(timing.duration);
-                expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+              expect(isValidDateCellTiming(result)).toBe(true);
+            });
 
-                expect(isValidDateCellTiming(result)).toBe(true);
+            describe('daylight savings changes', () => {
+              const daylightSavingsLastDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-11-03T00:00:00Z'));
+              const timing = dateCellTiming({ startsAt: daylightSavingsLastDayActive, duration: 60 }, 5, timezone); // 1 day
+
+              describe('active to inactive', () => {
+                it(`should return a copy of the original ${timezone} timing`, () => {
+                  expect(isValidDateCellTiming(timing)).toBe(true);
+
+                  const result = updateDateCellTimingWithDateCellTimingEvent({
+                    timing,
+                    event: timing,
+                    replaceStartsAt: true
+                  }); // use the first event again
+
+                  expect(result.timezone).toBe(timing.timezone);
+                  expect(result.end).toBeSameSecondAs(timing.end);
+                  expect(result.duration).toBe(timing.duration);
+                  expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+
+                  expect(isValidDateCellTiming(result)).toBe(true);
+                });
+
+                it(`should return the proper timing with new duration of the day after daylight savings goes inactive in ${timezone}`, () => {
+                  expect(isValidDateCellTiming(timing)).toBe(true);
+
+                  const newDuration = timing.duration + MINUTES_IN_HOUR; // add one hour
+                  const result = updateDateCellTimingWithDateCellTimingEvent({
+                    timing,
+                    event: { startsAt: timing.startsAt, duration: newDuration },
+                    replaceStartsAt: true,
+                    replaceDuration: true
+                  }); // use the first event again
+
+                  expect(result.duration).toBe(newDuration);
+                  expect(result.timezone).toBe(timing.timezone);
+                  expect(result.end).toBeSameSecondAs(addHours(timing.end, 1)); // should adjust for the one more hour
+                  expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+
+                  expect(isValidDateCellTiming(result)).toBe(true);
+                });
+              });
+
+              describe('inactive to active', () => {
+                const daylightSavingsBeforeFirstDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-03-10T00:00:00Z'));
+                const timing = dateCellTiming({ startsAt: daylightSavingsBeforeFirstDayActive, duration: 60 }, 5, timezone); // 1 day
+
+                it(`should return a copy of a timing`, () => {
+                  const result = updateDateCellTimingWithDateCellTimingEvent({
+                    timing,
+                    event: timing,
+                    replaceStartsAt: true
+                  }); // use the first event again
+
+                  expect(result.timezone).toBe(timing.timezone);
+                  expect(result.end).toBeSameSecondAs(timing.end);
+                  expect(result.duration).toBe(timing.duration);
+                  expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+
+                  expect(isValidDateCellTiming(result)).toBe(true);
+                });
               });
             });
           });
         });
-      });
-    }
+      }
 
-    describeTestsForTimezone('UTC');
-    describeTestsForTimezone('America/Denver');
-    describeTestsForTimezone('America/Los_Angeles');
-    describeTestsForTimezone('America/New_York');
-    describeTestsForTimezone('America/Chicago');
-    describeTestsForTimezone('Pacific/Fiji');
+      describeTestsForTimezone('UTC');
+      describeTestsForTimezone('America/Denver');
+      describeTestsForTimezone('America/Los_Angeles');
+      describeTestsForTimezone('America/New_York');
+      describeTestsForTimezone('America/Chicago');
+      describeTestsForTimezone('Pacific/Fiji');
+    });
   });
 });

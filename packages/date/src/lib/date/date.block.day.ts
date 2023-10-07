@@ -4,6 +4,7 @@ import { DateScheduleDayCodesInput, expandDateScheduleDayCodes } from './date.sc
 /**
  * Converts the input day codes into DateBlockIndex values.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dayCodes
  * @returns
  */

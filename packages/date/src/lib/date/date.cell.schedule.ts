@@ -4,7 +4,7 @@ import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { requireCurrentTimezone } from './date';
 import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingStartsAtEndRange } from './date.cell';
-import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellsExpansionFactory, dateCellsExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
+import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { DateCellRangeOrDateRange, DateCellRange, DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
 import { dateCellDayOfWeekFactory } from './date.cell.week';
@@ -553,12 +553,12 @@ export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCe
 }
 
 /**
- * Creates a DateCellsExpansionFactory using the input DateCellScheduleDateCellTimingFilterConfig.
+ * Creates a DateCellTimingExpansionFactory using the input DateCellScheduleDateCellTimingFilterConfig.
  *
  * @param config
  * @returns
  */
-export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(config: DateCellScheduleDateCellTimingFilterConfig): DateCellsExpansionFactory<B> {
+export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(config: DateCellScheduleDateCellTimingFilterConfig): DateCellTimingExpansionFactory<B> {
   const { invertSchedule = false, now, onlyBlocksThatHaveEnded, onlyBlocksThatHaveStarted, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateCellsToReturn, durationSpanFilter: inputDurationSpanFilter } = config;
   let durationSpanFilter: FilterFunction<DateCellDurationSpan<DateCell>> | undefined;
   let durationSpanFilters: FilterFunction<DateCellDurationSpan<DateCell>>[] = [];
@@ -583,7 +583,7 @@ export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(con
 
   durationSpanFilter = mergeFilterFunctions(...durationSpanFilters);
 
-  const expansionFactory = dateCellsExpansionFactory<B>({
+  const expansionFactory = dateCellTimingExpansionFactory<B>({
     timing: config.timing,
     filter: invertFilter(dateCellScheduleDateCellTimingFilter(config) as FilterFunction, invertSchedule), // TODO: Use invertDecision
     durationSpanFilter,

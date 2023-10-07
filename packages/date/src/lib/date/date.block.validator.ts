@@ -5,7 +5,7 @@ import { isValidDateBlockRange, isValidDateBlockRangeSeries, isValidDateBlockTim
 /**
  * isValidDateBlockTiming validator
  *
- * @deprecated
+ * @deprecated use DateCell implementation instead.
  */
 export function IsValidDateBlockTiming(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -26,6 +26,8 @@ export function IsValidDateBlockTiming(validationOptions?: ValidationOptions) {
 
 /**
  * isValidDateBlockRange validator
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function IsValidDateBlockRange(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
@@ -46,6 +48,8 @@ export function IsValidDateBlockRange(validationOptions?: ValidationOptions) {
 
 /**
  * isValidDateBlockRangeSeries validator
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function IsValidDateBlockRangeSeries(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {

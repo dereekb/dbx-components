@@ -1,8 +1,6 @@
-import { addDays } from 'date-fns';
 import { DayOfWeek, getNextDay, MapFunction, Maybe } from '@dereekb/util';
 import { DateCellIndex, DateCellTiming } from './date.cell';
 import { YearWeekCode, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory, YearWeekCodeReader } from './date.week';
-import { dateTimezoneUtcNormal } from './date.timezone';
 import { dateCellTimingStartDateFactory } from './date.cell.factory';
 
 /**

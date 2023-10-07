@@ -1,14 +1,11 @@
-import { DateBlockIndex } from '@dereekb/date';
-import { Maybe, ArrayOrValue, asArray, mergeArrayIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, TimezoneString, makeGetter, Minutes } from '@dereekb/util';
-import { addDays, addMinutes, isAfter, differenceInDays, differenceInHours, addHours, differenceInMinutes } from 'date-fns';
-import { start } from 'repl';
+import { Maybe, ArrayOrValue, asArray, mergeArrayIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, Minutes } from '@dereekb/util';
+import { addMinutes, isAfter, differenceInHours, addHours } from 'date-fns';
 import { guessCurrentTimezone } from './date';
-import { assertedTimingDateTimezoneUtcNormal } from './date.block';
 import { DateCell, DateCellIndex, DateOrDateCellIndex, DateCellTiming, DateCellArrayRef, DateCellArray, DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, DateCellCollection, DateCellDurationSpan, DateCellTimingStartsAt, DateCellTimingEvent, DateCellTimingStartsAtEndRange, calculateExpectedDateCellTimingDuration, dateCellTimingFinalStartsAtEvent } from './date.cell';
-import { DateCellRange, dateCellRangeHasRange, DateCellRangeWithRange, DateCellOrDateCellIndexOrDateCellRange, dateCellRangeWithRange, DateOrDateRangeOrDateCellIndexOrDateCellRange, isDateCellRange, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
+import { DateCellRange, dateCellRangeHasRange, DateCellRangeWithRange, DateCellOrDateCellIndexOrDateCellRange, DateOrDateRangeOrDateCellIndexOrDateCellRange, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 import { DateRange, DateRangeStart, isDateRange, isDateRangeStart } from './date.range';
-import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
+import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone, DateTimezoneUtcNormalInstance } from './date.timezone';
 
 /**
  * IndexRange used with DateCells.
@@ -65,28 +62,28 @@ export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimin
  * @returns
  */
 export function expandDateCellCollection<B extends DateCell = DateCell>(collection: DateCellCollection<B>): DateCellDurationSpan<B>[] {
-  return expandDateCells(collection.timing, collection.blocks);
+  return expandDateCellTiming(collection.timing, collection.blocks);
 }
 
 /**
- * Convenience function for calling dateCellsExpansionFactory() then passing the blocks.
+ * Convenience function for calling dateCellTimingExpansionFactory() then passing the blocks.
  *
  * @param blocks
  * @param timing
  * @returns
  */
-export function expandDateCells<B extends DateCell = DateCell>(timing: DateCellTiming, blocks: B[]): DateCellDurationSpan<B>[] {
-  return dateCellsExpansionFactory<B>({ timing })(blocks);
+export function expandDateCellTiming<B extends DateCell = DateCell>(timing: DateCellTiming, blocks: B[]): DateCellDurationSpan<B>[] {
+  return dateCellTimingExpansionFactory<B>({ timing })(blocks);
 }
 
-export type DateCellsExpansionFactoryInput<B extends DateCell | DateCellRange = DateCell> = DateCellArrayRef<B> | DateCellArray<B>;
+export type DateCellTimingExpansionFactoryInput<B extends DateCell | DateCellRange = DateCell> = DateCellArrayRef<B> | DateCellArray<B>;
 
 /**
- * Used to convert the input DateCellsExpansionFactoryInput into an array of DateCellDurationSpan values
+ * Used to convert the input DateCellTimingExpansionFactoryInput into an array of DateCellDurationSpan values
  */
-export type DateCellsExpansionFactory<B extends DateCell | DateCellRange = DateCell> = (input: DateCellsExpansionFactoryInput<B>) => DateCellDurationSpan<B>[];
+export type DateCellTimingExpansionFactory<B extends DateCell | DateCellRange = DateCell> = (input: DateCellTimingExpansionFactoryInput<B>) => DateCellDurationSpan<B>[];
 
-export interface DateCellsExpansionFactoryConfig<B extends DateCell | DateCellRange = DateCell> {
+export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateCellRange = DateCell> {
   /**
    * Timing to use in the configuration.
    */
@@ -117,12 +114,12 @@ export interface DateCellsExpansionFactoryConfig<B extends DateCell | DateCellRa
 }
 
 /**
- * Creates a DateCellsExpansionFactory
+ * Creates a DateCellTimingExpansionFactory
  *
  * @param config
  * @returns
  */
-export function dateCellsExpansionFactory<B extends DateCell | DateCellRange = DateCell>(config: DateCellsExpansionFactoryConfig): DateCellsExpansionFactory<B> {
+export function dateCellTimingExpansionFactory<B extends DateCell | DateCellRange = DateCell>(config: DateCellTimingExpansionFactoryConfig): DateCellTimingExpansionFactory<B> {
   const { timing, rangeLimit, filter: inputFilter, durationSpanFilter: inputDurationSpanFilter, maxDateCellsToReturn = Number.MAX_SAFE_INTEGER, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
   const { duration } = timing;
   const indexRange = rangeLimit !== false ? dateCellIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
@@ -132,7 +129,7 @@ export function dateCellsExpansionFactory<B extends DateCell | DateCellRange = D
   const startsAtFactory = dateCellTimingStartsAtDateFactory(timing);
   const durationSpanFilter: FilterFunction<DateCellDurationSpan<B>> = inputDurationSpanFilter ?? (() => true);
 
-  return (input: DateCellsExpansionFactoryInput<B>) => {
+  return (input: DateCellTimingExpansionFactoryInput<B>) => {
     const blocks = Array.isArray(input) ? input : input.blocks;
     const spans: DateCellDurationSpan<B>[] = [];
 
@@ -182,7 +179,7 @@ export function dateCellsExpansionFactory<B extends DateCell | DateCellRange = D
   };
 }
 
-export type DateCellDayTimingInfoFactoryConfig = Pick<DateCellsExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
+export type DateCellDayTimingInfoFactoryConfig = Pick<DateCellTimingExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
 
 export interface DateCellDayTimingInfo {
   /**
@@ -346,9 +343,11 @@ export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStart
       } else if (inputType === 'string') {
         const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
         diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the UTC times. Round down.
+        // console.log({ startOfDayInUtc, diff, startInUtc });
       } else {
         const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
         diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in UTC times. Round down.
+        // console.log({ input, dateInUtc, diff, startInUtc, tz: normalInstance.configuredTimezoneString, systemTargetOffset: normalInstance.targetDateToSystemDateOffset(input as Date) / MS_IN_HOUR, targetBaseOffset: normalInstance.targetDateToBaseDateOffset(input as Date) / MS_IN_HOUR });
       }
 
       const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
@@ -501,7 +500,7 @@ export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStarts
 export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingStartsAtDateFactory<T> {
   const indexFactory = dateCellTimingRelativeIndexFactory<T>(input);
   const normalInstance = indexFactory._normalInstance;
-  const utcStartsAtDate = normalInstance.baseDateToSystemDate(indexFactory._timing.startsAt);
+  const utcStartsAtDate = normalInstance.baseDateToTargetDate(indexFactory._timing.startsAt);
 
   const factory = ((input: DateCellTimingRelativeIndexFactoryInput) => {
     const index = indexFactory(input); // get the index
@@ -647,7 +646,7 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
     }
   }
 
-  if (endOnEvent || replaceDuration) {
+  if (endOnEvent != null || replaceDuration != null) {
     const startsAtDateFactory = dateCellTimingStartsAtDateFactory({ startsAt, timezone });
     let lastStartsAt: Date;
 
@@ -655,7 +654,7 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
     if (endOnEvent) {
       lastStartsAt = startsAtDateFactory(event.startsAt);
     } else {
-      lastStartsAt = startsAtDateFactory(addMinutes(timing.end, -duration));
+      lastStartsAt = dateCellTimingFinalStartsAtEvent(timing).startsAt;
     }
 
     if (replaceDuration) {

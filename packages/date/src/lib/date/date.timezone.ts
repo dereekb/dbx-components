@@ -453,11 +453,15 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   /**
    * Creates a TransformDateInTimezoneNormalFunction using this normal instance.
    *
-   * @param transform
+   * @param transformType
    * @returns
    */
-  transformDateInTimezoneNormalFunction(transform?: DateTimezoneUtcNormalInstanceTransformType): TransformDateInTimezoneNormalFunction {
-    return transformDateInTimezoneNormalFunction(this, transform);
+  transformDateInTimezoneNormalFunction(transformType?: DateTimezoneUtcNormalInstanceTransformType): TransformDateInTimezoneNormalFunction {
+    return transformDateInTimezoneNormalFunction(this, transformType);
+  }
+
+  transformDateInTimezoneNormal(date: Date, transform: MapSameFunction<Date>, transformType?: DateTimezoneUtcNormalInstanceTransformType): Date {
+    return this.transformDateInTimezoneNormalFunction(transformType)(date, transform);
   }
 
   transformDateRangeInTimezoneNormalFunction(transform?: DateTimezoneUtcNormalInstanceTransformType): TransformDateRangeInTimezoneNormalFunction {

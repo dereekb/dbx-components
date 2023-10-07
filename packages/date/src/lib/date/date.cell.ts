@@ -1,59 +1,13 @@
-import {
-  DayOfWeek,
-  RequiredOnKeys,
-  IndexNumber,
-  IndexRange,
-  indexRangeCheckFunction,
-  IndexRef,
-  MINUTES_IN_DAY,
-  MS_IN_DAY,
-  UniqueModel,
-  lastValue,
-  FactoryWithRequiredInput,
-  FilterFunction,
-  mergeFilterFunctions,
-  range,
-  Milliseconds,
-  Hours,
-  MapFunction,
-  getNextDay,
-  SortCompareFunction,
-  sortAscendingIndexNumberRefFunction,
-  mergeArrayIntoArray,
-  Configurable,
-  ArrayOrValue,
-  asArray,
-  sumOfIntegersBetween,
-  filterMaybeValues,
-  Maybe,
-  TimezoneString,
-  Building,
-  addToSet,
-  ISO8601DayString,
-  Minutes,
-  MS_IN_HOUR,
-  minutesToFractionalHours,
-  FractionalHour,
-  HOURS_IN_DAY,
-  DateRelativeState,
-  groupValues,
-  makeValuesGroupMap,
-  findBestIndexMatchFunction,
-  TimezoneStringRef,
-  MS_IN_MINUTE,
-  fractionalHoursToMinutes
-} from '@dereekb/util';
-import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
+import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, Minutes, minutesToFractionalHours, FractionalHour, TimezoneStringRef, MS_IN_MINUTE } from '@dereekb/util';
+import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
-import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow, isSameDate } from './date';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
+import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone, systemDateTimezoneUtcNormal } from './date.timezone';
-import { IsDate, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { parseISO8601DayStringToDate, parseISO8601DayStringToUTCDate } from './date.format';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal } from './date.timezone';
+import { IsDate, IsNumber, IsString, Min } from 'class-validator';
 import { IsKnownTimezone } from '../timezone/timezone.validator';
 import { fitDateRangeToDayPeriod } from './date.range.timezone';
-import { assertedTimingDateTimezoneUtcNormal, DateBlockTimingEvent, timingDateTimezoneUtcNormal, TimingDateTimezoneUtcNormalInput } from './date.block';
 
 /**
  * Index from 0 of which day this block represents.
@@ -449,13 +403,11 @@ export function getDateCellTimingHoursInEvent(timing: Pick<DateCellTiming, 'dura
 }
 
 /**
- * Returns a copy of the input timing with the start time timezone in the given timezone.
- *
- * The start time is a normal, and should still refer to the same UTC date, but with the given timing's offset.
+ * Returns a copy of the input timing adjusted for the input timezone and all FullDateCellTiming values updated to reflect the changes.
  *
  * @param timing
  */
-export type ChangeDateCellTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T) & {
+export type ChangeDateCellTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T & FullDateCellTiming) & {
   readonly _normalInstance: DateTimezoneUtcNormalInstance;
 };
 
@@ -470,15 +422,16 @@ export function changeDateCellTimingToTimezoneFunction(timezoneInput: DateCellTi
   const timezone = normalInstance.configuredTimezoneString as string;
 
   const fn = (<T extends DateCellTiming>(timing: T) => {
-    const timingNormalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
-    const startsAtNormal = timingNormalInstance.baseDateToTargetDate(timing.startsAt);
-    const endNormal = timingNormalInstance.baseDateToTargetDate(timing.end);
+    const inputTimingNormalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
+    const startsAtNormal = inputTimingNormalInstance.baseDateToTargetDate(timing.startsAt);
+    const endNormal = inputTimingNormalInstance.baseDateToTargetDate(timing.end);
 
     const startsAt = normalInstance.targetDateToBaseDate(startsAtNormal);
     const end = normalInstance.targetDateToBaseDate(endNormal);
 
-    const newTiming = {
+    const newTiming: DateCellTiming = {
       ...timing,
+      start: dateCellTimingStart({ startsAt, timezone }),
       timezone,
       startsAt,
       end
@@ -538,7 +491,7 @@ export function calculateExpectedDateCellTimingDuration(timing: DateCellTimingSt
  * @param timing
  * @returns
  */
-export function dateCellTimingFinalStartsAtEvent(timing: DateCellTimingStartsAtEndRange): DateBlockTimingEvent {
+export function dateCellTimingFinalStartsAtEvent(timing: DateCellTimingStartsAtEndRange): DateCellTimingEvent {
   const { duration, expectedFinalStartsAt: startsAt } = calculateExpectedDateCellTimingDurationPair(timing);
   return {
     startsAt,
