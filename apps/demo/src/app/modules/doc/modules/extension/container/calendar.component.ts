@@ -33,7 +33,7 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   event: Maybe<DbxCalendarEvent<TestCalendarEventData>>;
 
-  readonly defaultDateScheduleRangeFieldValue$ = of({
+  readonly defaultDateCellScheduleRangeFieldValue$ = of({
     dateSchedule: {
       start: startOfDay(new Date()),
       end: addDays(startOfDay(new Date()), 14),
@@ -51,7 +51,7 @@ export class DocExtensionCalendarComponent implements OnInit {
     }
   });
 
-  readonly dateScheduleRangeFields = [
+  readonly dateCellScheduleRangeFields = [
     dateScheduleRangeField({
       key: 'futureDateSchedule',
       required: false,
@@ -68,7 +68,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       required: true,
       label: 'Custom Label',
       timezone: this.timezone$,
-      description: 'Input field used for picking a DateScheduleRange value.'
+      description: 'Input field used for picking a DateCellScheduleRange value.'
     }),
     dateScheduleRangeField({
       timezone: this.timezone$,

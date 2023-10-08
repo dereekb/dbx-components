@@ -13,7 +13,7 @@ import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
-export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
+export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
   appearance?: MatFormFieldAppearance;
   /**
    * Whether or not to allow inputting custom text into the picker.
@@ -66,7 +66,7 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
 })
-export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateScheduleRangeFieldProps = DbxFormCalendarDateScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+export class DbxFormCalendarDateCellScheduleRangeFieldComponent<T extends DbxFormCalendarDateCellScheduleRangeFieldProps = DbxFormCalendarDateCellScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
   private _timezoneSub = new SubscriptionObject();
