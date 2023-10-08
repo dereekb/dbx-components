@@ -198,6 +198,7 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
         let mappedObs: Observable<LoadingStateWithValueType<L, O>>;
 
         if (loadingStateHasValue(state) || (mapOnUndefined && loadingStateHasFinishedLoading(state) && !loadingStateHasError(state))) {
+          // map the value
           mappedObs = of((state as LoadingStateWithMaybeSoValue<LoadingStateValue<L>>).value).pipe(
             operator,
             map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>)),
@@ -205,7 +206,13 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
             timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as LoadingStateWithValueType<L, O>, 0)
           );
         } else {
-          mappedObs = of(state) as unknown as Observable<LoadingStateWithValueType<L, O>>;
+          // only pass through if there is an error, otherwise show loading.
+          if (loadingStateHasError(state)) {
+            mappedObs = of({ ...state, value: undefined }) as unknown as Observable<LoadingStateWithValueType<L, O>>;
+          } else {
+            // never pass through the non-mapped state's value as-is.
+            mappedObs = of({ ...state, loading: true, value: undefined }) as unknown as Observable<LoadingStateWithValueType<L, O>>;
+          }
         }
 
         return mappedObs;

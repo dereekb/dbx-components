@@ -200,7 +200,7 @@ export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = y
 
     const weeks: YearWeekCode[] = [];
 
-    let current = start;
+    let current = startOfWeek(start);
 
     while (!isAfter(current, end)) {
       const week = factory(current);
