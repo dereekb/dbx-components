@@ -35,6 +35,97 @@ describe('mapLoadingStateValueWithOperator()', () => {
     });
   });
 
+  describe('mapOnUndefined = true', () => {
+    it('should not pass through the value when loading is undefined and value is undefined', (done) => {
+      const expectedValue = 1;
+      let mapAttempted = false;
+      const values$ = new BehaviorSubject<LoadingState<string[] | undefined>>({ value: undefined }); // loading is not defined
+
+      const obs = values$.pipe(
+        mapLoadingStateValueWithOperator(
+          map(() => {
+            mapAttempted = true;
+            return expectedValue;
+          }),
+          true
+        )
+      );
+
+      obs.pipe(first()).subscribe((state) => {
+        expect(mapAttempted).toBe(false);
+        expect(loadingStateIsLoading(state)).toBe(true); // waiting for loading=false
+        expect(state.value).toBeUndefined();
+        done();
+      });
+    });
+
+    it('should pass through the value when loading is false and value is undefined', (done) => {
+      const expectedValue = 1;
+      let mapAttempted = false;
+      const values$ = new BehaviorSubject<LoadingState<string[] | undefined>>({ loading: false, value: undefined });
+
+      const obs = values$.pipe(
+        mapLoadingStateValueWithOperator(
+          map(() => {
+            mapAttempted = true;
+            return expectedValue;
+          }),
+          true
+        )
+      );
+
+      obs.pipe(first()).subscribe((state) => {
+        expect(mapAttempted).toBe(true);
+        expect(loadingStateIsLoading(state)).toBe(false); // finished
+        expect(state.value).toBe(expectedValue);
+        done();
+      });
+    });
+  });
+
+  it('should not pass through the value when loading is false and value is undefined', (done) => {
+    let mapAttempted = false;
+    const values$ = new BehaviorSubject<LoadingState<string[] | undefined>>({ value: undefined });
+
+    const obs = values$.pipe(
+      mapLoadingStateValueWithOperator(
+        map(() => {
+          mapAttempted = true;
+          return undefined;
+        })
+      )
+    );
+
+    obs.pipe(first()).subscribe((state) => {
+      expect(mapAttempted).toBe(false);
+      expect(loadingStateIsLoading(state)).toBe(true);
+      expect(state.value).toBe(undefined);
+      done();
+    });
+  });
+
+  it('should pass through an error when loading is false and value is undefined', (done) => {
+    let mapAttempted = false;
+    const error = new Error('test');
+    const values$ = new BehaviorSubject<LoadingState<string[] | undefined>>({ error, value: undefined });
+
+    const obs = values$.pipe(
+      mapLoadingStateValueWithOperator(
+        map(() => {
+          mapAttempted = true;
+          return undefined;
+        })
+      )
+    );
+
+    obs.pipe(first()).subscribe((state) => {
+      expect(loadingStateIsLoading(state)).toBe(false);
+      expect(state.value).toBe(undefined);
+      expect(state.error).toBe(error);
+      done();
+    });
+  });
+
   it('should return a loading state when the original loading state finishes with a value and when using an async operator that does not immediately return', (done) => {
     const expectedValues = ['aaa', 'aac'];
     const values = [...expectedValues, 'ddd', 'eee'];
