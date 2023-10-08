@@ -1,6 +1,6 @@
 import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection, expandDateScheduleDayCodes, systemBaseDateToNormalDate } from '@dereekb/date';
+import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, systemBaseDateToNormalDate } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns/esm';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
@@ -10,7 +10,7 @@ import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/select
 import { timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
-export interface TestCalendarEventData extends DateBlock {
+export interface TestCalendarEventData extends DateCell {
   value: string;
 }
 
@@ -57,7 +57,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       required: false,
       label: 'Future Dates',
       timezone: this.timezone$,
-      defaultScheduleDays: expandDateScheduleDayCodes('8'),
+      defaultScheduleDays: expandDateCellScheduleDayCodes('8'),
       minMaxDateRange: {
         start: startOfDay(new Date())
       },
@@ -132,7 +132,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       filter: {
         //
         ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-        start: systemBaseDateToNormalDate(startOfDay(new Date())),
+        startsAt: systemBaseDateToNormalDate(startOfDay(new Date())),
         end: systemBaseDateToNormalDate(startOfDay(addDays(new Date(), 3))),
         w: '89',
         ex: []
@@ -178,7 +178,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       const days = 90;
       const startsAt = setHours(addMonths(now, -1), 12);
 
-      const timing = dateBlockTiming({ startsAt, duration: minutes }, days);
+      const timing = dateCellTiming({ startsAt, duration: minutes }, days);
       const eventData: TestCalendarEventData[] = range(0, days).map((i) => {
         const event: TestCalendarEventData = {
           i,
@@ -188,12 +188,12 @@ export class DocExtensionCalendarComponent implements OnInit {
         return event;
       });
 
-      const dateBlockCollection: DateBlockCollection<TestCalendarEventData> = {
+      const dateCellCollection: DateCellCollection<TestCalendarEventData> = {
         timing,
         blocks: eventData
       };
 
-      const spans = expandDateBlockCollection(dateBlockCollection);
+      const spans = expandDateCellCollection(dateCellCollection);
       const events: CalendarEvent<TestCalendarEventData>[] = spans
         .filter((x) => x.i % iFilter)
         .map((x) => {

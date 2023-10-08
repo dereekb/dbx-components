@@ -5,6 +5,7 @@ import { dateCellTiming, DateCellTiming, isValidDateCellIndex, isValidDateCellTi
 import { MS_IN_DAY, MINUTES_IN_DAY, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { guessCurrentTimezone, requireCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
+import { plainToInstance } from 'class-transformer';
 
 describe('isValidDateCellIndex()', () => {
   it('should return false for -1.', () => {
@@ -21,6 +22,23 @@ describe('isValidDateCellIndex()', () => {
 
   it('should return true for 100.', () => {
     expect(isValidDateCellIndex(100)).toBe(true);
+  });
+});
+
+describe('DateCellTiming', () => {
+  it('should be parsed by class validator.', () => {
+    const data = dateCellTiming({ startsAt: new Date(), duration: 60 }, 10);
+    const json: object = JSON.parse(JSON.stringify(data));
+
+    const result = plainToInstance(DateCellTiming, json, {
+      excludeExtraneousValues: true
+    });
+
+    expect(result.startsAt).toBeDefined();
+    expect(result.end).toBeDefined();
+    expect(result.duration).toBe(data.duration);
+    expect(result.timezone).toBe(data.timezone);
+    expect(result.startsAt).toBeSameSecondAs(data.startsAt);
   });
 });
 

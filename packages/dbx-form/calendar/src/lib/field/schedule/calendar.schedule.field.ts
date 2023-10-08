@@ -5,7 +5,7 @@ import { DbxFormCalendarDateScheduleRangeFieldProps } from './calendar.schedule.
 export interface DateScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateScheduleRangeFieldProps {}
 
 export function dateScheduleRangeField(config: DateScheduleRangeFieldConfig = {}): FormlyFieldConfig {
-  const { key = 'schedule', appearance, hideCustomize, allowTextInput, filter, timezone, initialSelectionState, computeSelectionResultRelativeToFilter, exclusions, defaultScheduleDays, minMaxDateRange, cellContentFactory, dialogContentConfig, closeDialogConfig, customDetailsConfig } = config;
+  const { key = 'schedule', appearance, hideCustomize, allowTextInput, filter, timezone, initialSelectionState, computeSelectionResultRelativeToFilter, exclusions, defaultScheduleDays, minMaxDateRange, cellContentFactory, dialogContentConfig, customDetailsConfig } = config;
   const fieldConfig: FormlyFieldConfig = {
     ...formlyField({
       key,
@@ -21,7 +21,6 @@ export function dateScheduleRangeField(config: DateScheduleRangeFieldConfig = {}
         filter,
         exclusions,
         dialogContentConfig,
-        closeDialogConfig,
         computeSelectionResultRelativeToFilter,
         initialSelectionState,
         cellContentFactory,
