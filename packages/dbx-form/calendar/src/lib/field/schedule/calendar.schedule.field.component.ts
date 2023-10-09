@@ -6,7 +6,7 @@ import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
-import { DateRange, TimezoneString, isSameDateCellScheduleRange, DateCellScheduleDateFilterConfig, DateCellScheduleDayCode, DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
+import { DateRange, TimezoneString, isSameDateCellScheduleDateRange, DateCellScheduleDateFilterConfig, DateCellScheduleDayCode, DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
@@ -168,7 +168,7 @@ export class DbxFormCalendarDateCellScheduleRangeFieldComponent<T extends DbxFor
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
-    this._syncSub.subscription = this.value$.pipe(distinctUntilChanged(isSameDateCellScheduleRange)).subscribe((x) => {
+    this._syncSub.subscription = this.value$.pipe(distinctUntilChanged(isSameDateCellScheduleDateRange)).subscribe((x) => {
       this.dbxCalendarScheduleSelectionStore.setDateCellScheduleRangeValue(x);
     });
 

@@ -1,7 +1,7 @@
 import { Maybe, ArrayOrValue, asArray, mergeArrayIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, Minutes } from '@dereekb/util';
 import { addMinutes, isAfter, differenceInHours, addHours } from 'date-fns';
 import { guessCurrentTimezone } from './date';
-import { DateCell, DateCellIndex, DateOrDateCellIndex, DateCellTiming, DateCellArrayRef, DateCellArray, DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, DateCellCollection, DateCellDurationSpan, DateCellTimingStartsAt, DateCellTimingEvent, DateCellTimingStartsAtEndRange, calculateExpectedDateCellTimingDuration, dateCellTimingFinalStartsAtEvent } from './date.cell';
+import { DateCell, DateCellIndex, DateOrDateCellIndex, DateCellTiming, DateCellArrayRef, DateCellArray, DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, DateCellCollection, DateCellDurationSpan, DateCellTimingStartsAt, DateCellTimingEvent, DateCellTimingStartsAtEndRange, calculateExpectedDateCellTimingDuration, dateCellTimingFinalStartsAtEvent, FullDateCellTiming, dateCellTimingStart } from './date.cell';
 import { DateCellRange, dateCellRangeHasRange, DateCellRangeWithRange, DateCellOrDateCellIndexOrDateCellRange, DateOrDateRangeOrDateCellIndexOrDateCellRange, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 import { DateRange, DateRangeStart, isDateRange, isDateRangeStart } from './date.range';
@@ -616,7 +616,7 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
  * @param timezone
  * @returns
  */
-export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): DateCellTiming {
+export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): FullDateCellTiming {
   const { timing, event, replaceStartDay, replaceStartsAt, startDayDate: startDateDay, endOnEvent, replaceDuration } = input;
   const { timezone } = timing;
   const currentDuration = calculateExpectedDateCellTimingDuration(timing);
@@ -666,6 +666,7 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
 
   return {
     timezone,
+    start: dateCellTimingStart({ startsAt, timezone }), // calculate the new start
     startsAt,
     end,
     duration

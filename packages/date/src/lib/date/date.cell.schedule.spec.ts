@@ -1,4 +1,4 @@
-import { DateCell, DateCellIndex, dateCellTiming } from './date.cell';
+import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellIndex, dateCellTiming } from './date.cell';
 import {
   expandDateCellScheduleFactory,
   DateCellSchedule,
@@ -18,15 +18,88 @@ import {
   expandDateCellScheduleRangeToDateCellRanges,
   isSameDateCellSchedule,
   dateCellScheduleDayCodesAreSetsEquivalent,
-  dateCellTimingForExpandDateCellScheduleRangeInput,
-  DateCellScheduleRange,
-  expandDateCellSchedule
+  FullDateCellScheduleRange,
+  expandDateCellSchedule,
+  DateCellScheduleDateRange,
+  dateCellScheduleDateRange,
+  fullDateCellScheduleRange,
+  FullDateCellScheduleRangeInputDateRange,
+  DateCellScheduleDateRangeInput
 } from './date.cell.schedule';
 import { addDays, addHours, addMinutes, differenceInDays } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING, lastValue, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString, dateTimezoneUtcNormal } from './date.timezone';
 import { dateCellIndexRange } from './date.cell.factory';
+
+describe('dateCellScheduleDateRange()', () => {
+  const timezone = 'UTC';
+  const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
+  const timing = dateCellTiming({ startsAt, duration: 60 }, 2, timezone); // Sunday-Saturday
+
+  const validRange: FullDateCellScheduleRange = {
+    ...timing,
+    w: '89',
+    d: [],
+    ex: [0]
+  };
+
+  it('should return the same input DateCellScheduleDateRange', () => {
+    const result = dateCellScheduleDateRange(validRange);
+
+    expect(result.start).toBeSameSecondAs(timing.start);
+    expect(result.end).toBeSameSecondAs(timing.end);
+    expect(result.d).toBe(validRange.d);
+    expect(result.ex).toBe(validRange.ex);
+    expect(result.w).toBe(validRange.w);
+    expect(result.timezone).toBe(validRange.timezone);
+  });
+
+  it('should create a DateCellScheduleDateRange from the input when timezone is not present.', () => {
+    const result = dateCellScheduleDateRange({ ...validRange, timezone: undefined });
+    const systemTimezone = dateTimezoneUtcNormal({ useSystemTimezone: true });
+
+    expect(result.start).toBeSameSecondAs(systemTimezone.startOfDayInTargetTimezone(timing.start)); // should adjust start to be start of day in system timezone
+    expect(result.end).toBeSameSecondAs(timing.end);
+    expect(result.d).toBe(validRange.d);
+    expect(result.ex).toBe(validRange.ex);
+    expect(result.w).toBe(validRange.w);
+    expect(result.timezone).toBe(systemTimezone.configuredTimezoneString);
+  });
+
+  it('should create a DateCellScheduleDateRange from the input when start is not present.', () => {
+    const result = dateCellScheduleDateRange({ ...validRange, start: undefined });
+
+    expect(result.start).toBeSameSecondAs(timing.start); // should recreate start from the startsAt value
+    expect(result.end).toBeSameSecondAs(timing.end);
+    expect(result.d).toBe(validRange.d);
+    expect(result.ex).toBe(validRange.ex);
+    expect(result.w).toBe(validRange.w);
+    expect(result.timezone).toBe(validRange.timezone);
+  });
+
+  it('should create a DateCellScheduleDateRange from the input when startsAt is not present.', () => {
+    const result = dateCellScheduleDateRange({ ...validRange, startsAt: undefined });
+
+    expect(result.start).toBeSameSecondAs(timing.start);
+    expect(result.end).toBeSameSecondAs(timing.end);
+    expect(result.d).toBe(validRange.d);
+    expect(result.ex).toBe(validRange.ex);
+    expect(result.w).toBe(validRange.w);
+    expect(result.timezone).toBe(validRange.timezone);
+  });
+
+  it('should create a DateCellScheduleDateRange from the input when start and startsAt is not present.', () => {
+    const result = dateCellScheduleDateRange({ ...validRange, start: undefined, startsAt: undefined });
+
+    expect(result.start).toBeDefined();
+    expect(result.end).toBeSameSecondAs(timing.end);
+    expect(result.d).toBe(validRange.d);
+    expect(result.ex).toBe(validRange.ex);
+    expect(result.w).toBe(validRange.w);
+    expect(result.timezone).toBe(validRange.timezone);
+  });
+});
 
 describe('dateCellScheduleDateFilter()', () => {
   const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
@@ -654,7 +727,7 @@ describe('isSameDateCellSchedule()', () => {
   });
 });
 
-describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
+describe('fullDateCellScheduleRange()', () => {
   const schedule: DateCellSchedule = { w: '89', ex: [0, 1], d: [2] };
 
   describe('timing with timezone', () => {
@@ -663,19 +736,81 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
       const duration = 60;
       const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
       const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+      const fullRange = { ...timing, ...schedule };
 
-      it('it should generate the expected dateCellTiming.', () => {
-        const result = dateCellTimingForExpandDateCellScheduleRangeInput({
-          dateCellScheduleRange: {
-            ...schedule,
-            ...timing
-          },
-          startsAtTime: timing.startsAt,
-          duration
+      it('should return the input FullDateCellScheduleRange as-is', () => {
+        const result = fullDateCellScheduleRange({
+          dateCellScheduleRange: fullRange
         });
 
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.duration).toBe(timing.duration);
+        expect(result.timezone).toBe(timing.timezone);
         expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.d).toBe(fullRange.d);
+        expect(result.w).toBe(fullRange.w);
+        expect(result.ex).toBe(fullRange.ex);
+      });
+
+      it('should return a FullDateCellScheduleRange for DateCellScheduleDateRange input', () => {
+        const result = fullDateCellScheduleRange({
+          dateCellScheduleRange: {
+            ...fullRange,
+            // no startsAt or duration specified, only start/end
+            duration: undefined,
+            startsAt: undefined
+          }
+        });
+
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.timezone).toBe(timing.timezone);
+        expect(result.startsAt).toBeSameSecondAs(result.start); // should have copied the start
+        expect(result.duration).toBe(1); // default duration
+
+        const { expectedFinalStartsAt, duration } = calculateExpectedDateCellTimingDurationPair(result);
+        expect(result.end).not.toBeSameSecondAs(timing.end);
+        expect(result.end).toBeSameSecondAs(addMinutes(expectedFinalStartsAt, duration));
+
+        expect(result.d).toBe(fullRange.d);
+        expect(result.w).toBe(fullRange.w);
+        expect(result.ex).toBe(fullRange.ex);
+      });
+
+      it('should return a FullDateCellScheduleRange for DateCellScheduleEventRange input', () => {
+        const result = fullDateCellScheduleRange({
+          dateCellScheduleRange: {
+            ...fullRange,
+            // no duration specified
+            duration: undefined
+          }
+        });
+
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.duration).toBe(timing.duration); // duration is restored
+        expect(result.timezone).toBe(timing.timezone);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.d).toBe(fullRange.d);
+        expect(result.w).toBe(fullRange.w);
+        expect(result.ex).toBe(fullRange.ex);
+      });
+
+      describe('updateWithDefaults=true', () => {
+        it('it should generate the expected dateCellTiming.', () => {
+          const newDuration = 120;
+          const result = fullDateCellScheduleRange({
+            dateCellScheduleRange: fullRange,
+            startsAtTime: timing.startsAt,
+            duration: newDuration,
+            updateWithDefaults: true
+          });
+
+          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+          expect(result.duration).toBe(newDuration);
+          expect(result.end).not.toBeSameSecondAs(timing.end);
+          expect(result.end).toBeSameSecondAs(addMinutes(timing.end, newDuration - timing.duration));
+        });
       });
     });
 
@@ -684,65 +819,64 @@ describe('dateCellTimingForExpandDateCellScheduleRangeInput()', () => {
       const startOfDay = startOfDayInTimezoneFromISO8601DayString('2022-01-02', timezone);
       const startsAt = addHours(startOfDay, 12); // Noon on 2022-01-02 in America/New_York
       const timing = dateCellTiming({ startsAt, duration: 30 }, 1, timezone);
+      const fullRange = { ...timing, ...schedule };
 
-      it('should generate a valid DateCellTiming with the new duration and same duration.', () => {
-        expect(timing.timezone).toBe(timezone);
+      describe('updateWithDefaults=true', () => {
+        it('should generate a valid DateCellTiming with the new duration and same duration.', () => {
+          expect(timing.timezone).toBe(timezone);
 
-        const newDuration = 60;
+          const newDuration = 60;
 
-        const result = dateCellTimingForExpandDateCellScheduleRangeInput({
-          dateCellScheduleRange: {
-            ...schedule,
-            ...timing
-          },
-          startsAtTime: timing.startsAt,
-          duration: newDuration
+          const result = fullDateCellScheduleRange({
+            dateCellScheduleRange: fullRange,
+            startsAtTime: timing.startsAt,
+            duration: newDuration,
+            updateWithDefaults: true
+          });
+
+          expect(result.start).toBeSameSecondAs(timing.start);
+          expect(result.duration).toBe(newDuration);
+          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+          expect(result.timezone).toBe(timing.timezone);
+
+          const durationDifference = newDuration - timing.duration;
+          expect(result.end).toBeSameSecondAs(addMinutes(timing.end, durationDifference)); // 30 minutes later
         });
 
-        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-        expect(result.duration).toBe(newDuration);
-        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        it('should generate a valid DateCellTiming with the same event startsAt time and duration.', () => {
+          const newStartsAt = addDays(timing.startsAt, 1); // same event schedule
 
-        const durationDifference = newDuration - timing.duration;
-        expect(result.end).toBeSameSecondAs(addMinutes(timing.end, durationDifference)); // 30 minutes later
-      });
+          const result = fullDateCellScheduleRange({
+            dateCellScheduleRange: fullRange,
+            duration: timing.duration,
+            startsAtTime: newStartsAt,
+            updateWithDefaults: true
+          });
 
-      it('should generate a valid DateCellTiming with the same event startsAt time and duration.', () => {
-        const newStartsAt = addDays(timing.startsAt, 1); // same event schedule
-
-        const result = dateCellTimingForExpandDateCellScheduleRangeInput({
-          dateCellScheduleRange: {
-            ...schedule,
-            ...timing
-          },
-          duration: timing.duration,
-          startsAtTime: newStartsAt
+          expect(result.duration).toBe(timing.duration);
+          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+          expect(result.end).toBeSameSecondAs(timing.end);
+          expect(result.timezone).toBe(timing.timezone);
         });
 
-        expect(result.duration).toBe(timing.duration);
-        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-        expect(result.end).toBeSameSecondAs(timing.end);
-      });
+        it('should generate a valid DateCellTiming with the new duration and startsAt at time.', () => {
+          const newDuration = 45;
+          const hoursDifference = 1;
+          const newStartsAt = addHours(timing.startsAt, hoursDifference); // starts 1 hour earlier, and event is 1 day later
+          const expectedEnd = addMinutes(timing.end, hoursDifference * MINUTES_IN_HOUR - newDuration);
 
-      it('should generate a valid DateCellTiming with the new duration and startsAt at time.', () => {
-        const newDuration = 45;
-        const hoursDifference = 1;
-        const newStartsAt = addHours(timing.startsAt, hoursDifference); // starts 1 hour earlier, and event is 1 day later
-        const expectedEnd = addMinutes(timing.end, hoursDifference * MINUTES_IN_HOUR - newDuration);
+          const result = fullDateCellScheduleRange({
+            dateCellScheduleRange: fullRange,
+            duration: newDuration,
+            startsAtTime: newStartsAt,
+            updateWithDefaults: true
+          });
 
-        const result = dateCellTimingForExpandDateCellScheduleRangeInput({
-          dateCellScheduleRange: {
-            ...schedule,
-            ...timing
-          },
-          duration: newDuration,
-          startsAtTime: newStartsAt
+          expect(result.startsAt).toBeSameSecondAs(newStartsAt);
+          expect(result.duration).toBe(newDuration);
+          expect(result.end).toBeSameSecondAs(expectedEnd);
+          expect(result.timezone).toBe(timing.timezone);
         });
-
-        expect(result.startsAt).toBeSameSecondAs(newStartsAt);
-        expect(result.duration).toBe(newDuration);
-        expect(result.end).toBeSameSecondAs(expectedEnd);
       });
     });
   });
@@ -757,23 +891,24 @@ describe('expandDateCellScheduleRange()', () => {
   const { timezone, end } = timing;
 
   it('should expand the dateCellScheduleRange week.', () => {
-    const dateCellScheduleRange: DateCellScheduleRange = {
+    const startsAt = utc2022Week2StartDate;
+    const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
       w: '89',
-      startsAt: utc2022Week2StartDate,
+      startsAt,
       end,
       timezone
     };
 
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(7);
-
-    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.startsAt);
+    expect(expansion[0].startsAt).toBeSameSecondAs(startsAt);
   });
 
   it('should expand a week with excluded days.', () => {
-    const dateCellScheduleRange: DateCellScheduleRange = {
+    const startsAt = utc2022Week2StartDate;
+    const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
       w: '89',
-      startsAt: utc2022Week2StartDate,
+      startsAt,
       end,
       ex: [0, 2, 4, 6],
       timezone
@@ -782,7 +917,7 @@ describe('expandDateCellScheduleRange()', () => {
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(3);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateCellScheduleRange.startsAt, 1));
+    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(startsAt, 1));
 
     const indexes = expansion.map((x) => x.i);
     expect(indexes).toContain(1);
@@ -791,9 +926,10 @@ describe('expandDateCellScheduleRange()', () => {
   });
 
   it('should expand a week with included days.', () => {
-    const dateCellScheduleRange: DateCellScheduleRange = {
+    const startsAt = utc2022Week2StartDate;
+    const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
       w: '8',
-      startsAt: utc2022Week2StartDate,
+      startsAt,
       end,
       d: [0],
       timezone
@@ -802,13 +938,14 @@ describe('expandDateCellScheduleRange()', () => {
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(6);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.startsAt);
+    expect(expansion[0].startsAt).toBeSameSecondAs(startsAt);
   });
 
   it('should expand a week with only weekdays.', () => {
-    const dateCellScheduleRange: DateCellScheduleRange = {
+    const startsAt = utc2022Week2StartDate;
+    const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
       w: '8',
-      startsAt: utc2022Week2StartDate,
+      startsAt,
       end,
       timezone
     };
@@ -816,13 +953,14 @@ describe('expandDateCellScheduleRange()', () => {
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(5);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateCellScheduleRange.startsAt, 1));
+    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(startsAt, 1));
   });
 
   it('should expand a week with only weekends.', () => {
-    const dateCellScheduleRange: DateCellScheduleRange = {
+    const startsAt = utc2022Week2StartDate;
+    const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
       w: '9',
-      startsAt: utc2022Week2StartDate,
+      startsAt,
       end,
       timezone
     };
@@ -830,26 +968,29 @@ describe('expandDateCellScheduleRange()', () => {
     const expansion = expandDateCellScheduleRange({ dateCellScheduleRange, duration });
     expect(expansion.length).toBe(2);
 
-    expect(expansion[0].startsAt).toBeSameSecondAs(dateCellScheduleRange.startsAt);
+    expect(expansion[0].startsAt).toBeSameSecondAs(startsAt);
   });
 
   describe('scenario', () => {
     describe('CST daylight saving timing change', () => {
       const duration = 1;
 
-      const dateCellScheduleRange: DateCellScheduleRange = {
-        startsAt: new Date('2023-08-15T05:00:00.000Z'),
-        end: new Date('2023-12-21T22:30:00.000Z'),
+      const timezone = 'America/Chicago';
+      const startsAt = new Date('2023-08-15T05:00:00.000Z');
+      const end = new Date('2023-12-21T22:30:00.000Z');
+      const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
+        startsAt,
+        end,
         w: '89',
         ex: [],
         timezone
       };
 
       it('should expand all the days', () => {
-        const timing = dateCellTimingForExpandDateCellScheduleRangeInput({ dateCellScheduleRange, duration });
+        const timing = fullDateCellScheduleRange({ dateCellScheduleRange, duration, updateWithDefaults: true });
 
         const completeRange = dateCellIndexRange(timing);
-        const daysInBetween = differenceInDays(dateCellScheduleRange.end, dateCellScheduleRange.startsAt) + 1;
+        const daysInBetween = differenceInDays(end, startsAt) + 1;
 
         expect(completeRange.minIndex).toBe(0);
         expect(completeRange.maxIndex).toBe(daysInBetween); // 129
@@ -874,7 +1015,7 @@ describe('expandDateCellScheduleRangeToDateCellRanges()', () => {
   const end = timing.end;
 
   it('should expand a week.', () => {
-    const dateCellScheduleRange: DateCellScheduleRange = {
+    const dateCellScheduleRange: DateCellScheduleDateRangeInput = {
       w: '89',
       startsAt: utc2022Week2StartDate,
       end,

@@ -2,7 +2,7 @@ import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, M
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
-import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate } from './date';
+import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal } from './date.timezone';
 import { IsDate, IsNumber, IsString, Min } from 'class-validator';
@@ -93,6 +93,21 @@ export type DateCellTimingEnd = Pick<DateCellTiming, 'end'>;
  */
 export interface DateCellTiming extends DateDurationSpan, TimezoneStringRef, Pick<DateRange, 'end'> {}
 
+/**
+ * Corresponds to the range of dates in a DateCellTiming.
+ *
+ * NOTES:
+ * - The start time is midnight in the given timezone of the first day of the range.
+ * - The end time is the ending date/time of the final end duration.
+ * - The timezone is required to properly handle daylight savings and timezone differences.
+ */
+export interface DateCellTimingDateRange extends DateRange, TimezoneStringRef {}
+
+/**
+ * A DateCellTimingDateRange, but the start time is the startsAt time for the first event.
+ */
+export type DateCellTimingEventRange = DateCellTimingDateRange;
+
 export class DateCellTiming extends DateDurationSpan {
   @Expose()
   @IsDate()
@@ -161,9 +176,9 @@ export function dateCellTimingTimezoneNormalInstance(timezoneInput?: DateCellTim
 }
 
 /**
- * A DateCellTiming with the start date also provided.
+ * A DateCellTiming that also implements DateCellTimingDateRange.
  */
-export interface FullDateCellTiming extends DateCellTiming, DateRange {}
+export interface FullDateCellTiming extends DateCellTiming, DateCellTimingDateRange {}
 
 /**
  * The start date within a FullDateCellTiming.
@@ -353,24 +368,79 @@ export type DateCellTimingEventStartsAt = Pick<DateCellTiming, 'startsAt'>;
 export type DateCellTimingEvent = Pick<DateCellTiming, 'startsAt' | 'duration'>;
 
 /**
+ * Returns true if the two DateCellTimingStartsAtEndRange values are the same.
+ *
+ * @param a
+ * @param b
+ */
+export function isSameDateCellTimingEventStartsAtEndRange(a: Maybe<DateCellTimingStartsAtEndRange>, b: Maybe<DateCellTimingStartsAtEndRange>): boolean {
+  return a && b ? a.timezone === b.timezone && isSameDate(a.startsAt, b.startsAt) && isSameDate(a.end, b.end) : a == b;
+}
+
+/**
  * Returns true if the two timings are equivalent.
  *
  * @param a
  * @param b
  */
 export function isSameDateCellTiming(a: Maybe<DateCellTiming>, b: Maybe<DateCellTiming>): boolean {
-  return a && b ? a.duration === b.duration && a.timezone === b.timezone && isSameDate(a.startsAt, b.startsAt) : a == b;
+  return a && b ? a.duration === b.duration && isSameDateCellTimingEventStartsAtEndRange(a, b) : a == b;
 }
 
 /**
- * Returns the date range from the start of the first day in that timezone to the end time of the last event.
+ * Returns true if all variables in the input FullDateCellTimings are exact.
+ *
+ * In most cases this comparison is unnecessary, as the start date is derived from the startsAt time.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function isSameFullDateCellTiming(a: Maybe<FullDateCellTiming>, b: Maybe<FullDateCellTiming>): boolean {
+  return a && b ? isSameDate(a.start, b.start) && isSameDateCellTiming(a, b) : a == b;
+}
+
+/**
+ * Returns true if the input is a DateCellTiming.
+ *
+ * Does not check if it is a valid DateCellTiming.
+ *
+ * @param input
+ */
+export function isDateCellTiming(input: unknown): input is DateCellTiming {
+  if (typeof input === 'object') {
+    const asTiming = input as DateCellTiming;
+    return isDate(asTiming.startsAt) && isDate(asTiming.end) && typeof asTiming.timezone === 'string' && typeof asTiming.duration === 'number';
+  }
+
+  return false;
+}
+
+/**
+ * Returns true if the input is possibly a FullDateCellTiming.
+ *
+ * Does not check if it is a valid FullDateCellTiming.
+ *
+ * @param input
+ */
+export function isFullDateCellTiming(input: unknown): input is FullDateCellTiming {
+  if (typeof input === 'object') {
+    const asTiming = input as FullDateCellTiming;
+    return isDate(asTiming.start) && isDateCellTiming(asTiming);
+  }
+
+  return false;
+}
+
+/**
+ * Creates a DateCellTimingDateRange from the input timing.
  *
  * @param timing
  * @returns
  */
-export function dateCellTimingFullRange(timing: DateCellTimingStartsAtEndRange): DateRange {
+export function dateCellTimingDateRange(timing: DateCellTimingStartsAtEndRange): DateCellTimingDateRange {
   const start = dateCellTimingStart(timing);
-  return { start, end: timing.end };
+  return { start, end: timing.end, timezone: timing.timezone };
 }
 
 /**
@@ -379,8 +449,8 @@ export function dateCellTimingFullRange(timing: DateCellTimingStartsAtEndRange):
  * @param timing
  * @returns
  */
-export function dateCellTimingEventRange(timing: Pick<DateCellTiming, 'startsAt' | 'end'>): DateRange {
-  return { start: timing.startsAt, end: timing.end };
+export function dateCellTimingEventRange(timing: Pick<DateCellTiming, 'startsAt' | 'end' | 'timezone'>): DateCellTimingEventRange {
+  return { start: timing.startsAt, end: timing.end, timezone: timing.timezone };
 }
 
 /**

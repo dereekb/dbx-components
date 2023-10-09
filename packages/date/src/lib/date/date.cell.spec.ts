@@ -1,7 +1,26 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addMilliseconds, millisecondsToHours } from 'date-fns';
-import { dateCellTiming, DateCellTiming, isValidDateCellIndex, isValidDateCellTiming, isValidDateCellTimingStartDate, getDateCellTimingFirstEventDateRange, isSameDateCellTiming, FullDateCellTiming, getDateCellTimingHoursInEvent, changeDateCellTimingToTimezoneFunction, calculateExpectedDateCellTimingDuration, dateCellTimingTimezoneNormalInstance, calculateExpectedDateCellTimingDurationPair, isValidFullDateCellTiming, dateCellTimingStartPair, dateCellTimingStart } from './date.cell';
+import {
+  dateCellTiming,
+  DateCellTiming,
+  isValidDateCellIndex,
+  isValidDateCellTiming,
+  isValidDateCellTimingStartDate,
+  getDateCellTimingFirstEventDateRange,
+  isSameDateCellTiming,
+  FullDateCellTiming,
+  getDateCellTimingHoursInEvent,
+  changeDateCellTimingToTimezoneFunction,
+  calculateExpectedDateCellTimingDuration,
+  dateCellTimingTimezoneNormalInstance,
+  calculateExpectedDateCellTimingDurationPair,
+  isValidFullDateCellTiming,
+  dateCellTimingStartPair,
+  dateCellTimingStart,
+  isDateCellTiming,
+  isFullDateCellTiming
+} from './date.cell';
 import { MS_IN_DAY, MINUTES_IN_DAY, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { guessCurrentTimezone, requireCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
@@ -272,6 +291,30 @@ describe('dateCellTiming()', () => {
       describeTestsForTimezone('America/Chicago');
       describeTestsForTimezone('Pacific/Fiji');
     });
+  });
+});
+
+describe('isDateCellTiming()', () => {
+  const timing = dateCellTiming({ startsAt: new Date(), duration: 60 }, 2);
+
+  it('should return true for a DateCellTiming.', () => {
+    expect(isDateCellTiming(timing)).toBe(true);
+  });
+
+  it('should return false for an object that is not a DateCellTiming.', () => {
+    expect(isDateCellTiming({})).toBe(false);
+  });
+});
+
+describe('isFullDateCellTiming()', () => {
+  const timing: FullDateCellTiming = dateCellTiming({ startsAt: new Date(), duration: 60 }, 2);
+
+  it('should return true for a FullDateCellTiming.', () => {
+    expect(isFullDateCellTiming(timing)).toBe(true);
+  });
+
+  it('should return false for an object that is not a FullDateCellTiming.', () => {
+    expect(isFullDateCellTiming({})).toBe(false);
   });
 });
 
