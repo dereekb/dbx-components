@@ -1,8 +1,8 @@
-import { parse, differenceInMinutes, isValid, addHours, startOfDay } from 'date-fns';
+import { parse, differenceInMinutes, isValid, addHours, startOfDay, differenceInHours } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { isLogicalDateStringCode, LogicalDateStringCode, Maybe, ReadableTimeString, TimeAM, TimezoneString, UTC_TIMEZONE_STRING, dateFromLogicalDate } from '@dereekb/util';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
-import { DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig, systemNormalDateToBaseDate } from './date.timezone';
+import { DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig, isValidDateTimezoneConversionConfig, systemNormalDateToBaseDate } from './date.timezone';
 import { guessCurrentTimezone } from './date';
 
 export interface ParsedTimeString {
@@ -74,7 +74,7 @@ export class DateTimeUtilityInstance {
   }
 
   get timezone(): TimezoneString {
-    return this.normalInstance.config.timezone as string;
+    return this.normalInstance.configuredTimezoneString as string;
   }
 
   getTimeAM(date = new Date(), timezone?: TimezoneString): TimeAM {
@@ -220,7 +220,7 @@ export class DateTimeUtilityInstance {
      The input date needs to capture the right Day we want to parse on, since parse uses the system's information for hours/date information.
      We do this by adding the offset of the system with the offset of the target timezone.
      */
-    const relativeDateNormal = new DateTimezoneUtcNormalInstance(config);
+    const relativeDateNormal = isValidDateTimezoneConversionConfig(config) ? new DateTimezoneUtcNormalInstance({ ...config }) : this.normalInstance;
     const relativeDate = relativeDateNormal.systemDateToTargetDate(inputDate);
 
     // console.log('Relative Date: ', relativeDate, calculateAllConversions(inputDate, relativeDateNormal, (x) => millisecondsToHours(x)));
@@ -232,7 +232,7 @@ export class DateTimeUtilityInstance {
       parseTimeString();
     }
 
-    // console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal);
+    // console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal, relativeDateNormal.configuredTimezoneString);
 
     // Raw parse result is always UTC for that date.
     // For example, 1AM will return 1AM UTC in a Date object.

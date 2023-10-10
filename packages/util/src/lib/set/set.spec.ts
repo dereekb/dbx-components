@@ -1,4 +1,4 @@
-import { setIncludes, ReadKeyFunction, setsAreEquivalent, isEvenNumber } from '@dereekb/util';
+import { setIncludes, ReadKeyFunction, setsAreEquivalent, isEvenNumber, separateValuesToSets } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
 import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue, keepFromSetCopy } from './set';
 
@@ -51,6 +51,36 @@ describe('filterValuesToSet()', () => {
     expect(result.size).toBe(2);
     expect(result).toContain(2);
     expect(result).toContain(4);
+  });
+});
+
+describe('separateValuesToSets()', () => {
+  it('should return a result containing all the included and excluded values.', () => {
+    const values = [1, 2, 3, 4];
+    const result = separateValuesToSets(values, isEvenNumber);
+    expect(result.included.size).toBe(2);
+    expect(result.excluded.size).toBe(2);
+    expect(result.excluded).toContain(1);
+    expect(result.excluded).toContain(3);
+    expect(result.included).toContain(2);
+    expect(result.included).toContain(4);
+  });
+
+  it('should return a result containing all the included and excluded values in the input sets.', () => {
+    const inclusionSet = new Set<number>();
+    const exclusionSet = new Set<number>();
+
+    const values = [1, 2, 3, 4];
+    const result = separateValuesToSets(values, isEvenNumber, { included: inclusionSet, excluded: exclusionSet });
+
+    expect(result.included).toBe(inclusionSet);
+    expect(result.excluded).toBe(exclusionSet);
+    expect(result.included.size).toBe(2);
+    expect(result.excluded.size).toBe(2);
+    expect(result.excluded).toContain(1);
+    expect(result.excluded).toContain(3);
+    expect(result.included).toContain(2);
+    expect(result.included).toContain(4);
   });
 });
 

@@ -38,9 +38,10 @@ import {
   DateRelativeState,
   groupValues,
   makeValuesGroupMap,
-  findBestIndexMatchFunction
+  findBestIndexMatchFunction,
+  TimezoneStringRef
 } from '@dereekb/util';
-import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, fitDateRangeToDayPeriod, isDateRange, isDateRangeStart } from './date.range';
+import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, differenceInMinutes, startOfDay, milliseconds } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow, isSameDate } from './date';
@@ -48,15 +49,19 @@ import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInHours, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, copyHoursAndMinutesFromNowWithTimezoneNormal, DateTimezoneConversionConfigUseSystemTimezone } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { parseISO8601DayStringToDate, parseISO8601DayStringToUTCDate } from './date.format';
+import { fitDateRangeToDayPeriod } from './date.range.timezone';
 
 /**
  * Index from 0 of which day this block represents.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockIndex = number;
 
 /**
  * Returns true if the index is a non-negative integer.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  */
 export function isValidDateBlockIndex(input: DateBlockIndex): boolean {
@@ -65,11 +70,15 @@ export function isValidDateBlockIndex(input: DateBlockIndex): boolean {
 
 /**
  * Input type that is either a Date or a DateBlockIndex.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateOrDateBlockIndex = Date | DateBlockIndex;
 
 /**
  * A duration-span block.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateBlock extends IndexRef {
   i: DateBlockIndex;
@@ -91,6 +100,7 @@ export class DateBlock {
 /**
  * Converts the input number or DateBlock to a DateBlock.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateBlockOrIndex
  * @returns
  */
@@ -100,11 +110,15 @@ export function dateBlock(dateBlockOrIndex: DateBlockIndex | DateBlock): DateBlo
 
 /**
  * An array of DateBlock-like values.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockArray<B extends DateBlock = DateBlock> = B[];
 
 /**
  * Reference to a DateBlockArray
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
   blocks: DateBlockArray<B>;
@@ -114,6 +128,8 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  * DateBlockTiming with only the start time.
  *
  * The start time is midnight of what timezone it is in, and can be used to infer the target timezone offset for that date.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingStart = DateRangeStart;
 
@@ -121,16 +137,22 @@ export type DateBlockTimingStart = DateRangeStart;
  * The maximum number of hours that a DateBlockTiming's start can be offset. This means a max timezone of UTC+12.
  *
  * The timezones UTC+13 and UTC+14 are not supported, and will experience undetermined behavior.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export const MAX_DATE_BLOCK_TIMING_OFFSET_HOURS = 12;
 
 /**
  * The minimum number of hours that a DateBlockTiming's start can be offset. This means a min timezone of UTC-12.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export const MIN_DATE_BLOCK_TIMING_OFFSET_HOURS = -12;
 
 /**
  * The DateBlockTimingStart and startsAt times
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingStartAndStartsAt = DateBlockTimingStart & Pick<DateBlockTiming, 'startsAt'>;
 
@@ -145,23 +167,39 @@ export type DateBlockTimingStartAndStartsAt = DateBlockTimingStart & Pick<DateBl
  * - The startsAt time should be greater than or equal to the normalized start
  * - The startsAt time should be on the same date as normalized start
  * - The end time should equal the ending date/time of the final end duration.
+ * - (Recommended, Optional) The timezone the date block timing is for. This timezone is required for areas that experience daylight savings in order to properly handle the offsets.
+ *
+ * @deprecated use DateCell implementation instead.
  */
-export interface DateBlockTiming extends DateBlockTimingStart, DateRange, DateDurationSpan {}
+export interface DateBlockTiming extends DateBlockTimingStart, DateRange, DateDurationSpan, Partial<TimezoneStringRef> {}
 
 /**
  * The DateRange component for a DateBlockTiming. The start date is a DateBlockTimingStart.
+ *
+ * @deprecated use DateCell implementation instead.
  */
-export type DateBlockTimingStartEndRange = DateBlockTimingStart & Pick<DateBlockTiming, 'end'>;
+export type DateBlockTimingStartEndRange = DateBlockTimingStart & Pick<DateBlockTiming, 'end' | 'timezone'>;
 
 /**
  * The start date of a DateBlockTimingStart, along with the endDay which is a normalized day that is at midnight of the last day in the timezone.
  *
  * They are expected to both be in the same timezone.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingStartEndDayDateRange = DateBlockTimingStart & { endDay: Date };
 
 /**
+ * The startsAt time of the event.
+ *
+ * @deprecated use DateCell implementation instead.
+ */
+export type DateBlockTimingEventStartsAt = Pick<DateBlockTiming, 'startsAt'>;
+
+/**
  * A startsAt time and duration.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingEvent = Pick<DateBlockTiming, 'startsAt' | 'duration'>;
 
@@ -176,6 +214,10 @@ export class DateBlockTiming extends DateDurationSpan {
   @Type(() => Date)
   end!: Date;
 
+  @Expose()
+  @IsOptional()
+  timezone?: TimezoneString;
+
   constructor(template?: DateBlockTiming) {
     super(template);
 
@@ -186,6 +228,10 @@ export class DateBlockTiming extends DateDurationSpan {
   }
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface CurrentDateBlockTimingUtcData {
   /**
    * Non-normalized start date in the system time.
@@ -197,6 +243,10 @@ export interface CurrentDateBlockTimingUtcData {
   originalUtcOffsetInHours: Hours;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface CurrentDateBlockTimingOffsetData extends CurrentDateBlockTimingUtcData {
   offset: Milliseconds;
   currentTimezoneOffsetInHours: Hours;
@@ -205,6 +255,7 @@ export interface CurrentDateBlockTimingOffsetData extends CurrentDateBlockTiming
 /**
  * Returns true if the two timings are equivalent.
  *
+ * @deprecated use DateCell implementation instead.
  * @param a
  * @param b
  */
@@ -215,6 +266,7 @@ export function isSameDateBlockTiming(a: Maybe<DateBlockTiming>, b: Maybe<DateBl
 /**
  * Returns the date range from the start of the first event to the end time of the last event.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
@@ -225,6 +277,7 @@ export function dateBlockTimingFullRange(timing: Pick<DateBlockTiming, 'start' |
 /**
  * Returns the date range from the start of the first event to the end time of the last event.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
@@ -232,6 +285,12 @@ export function dateBlockTimingEventRange(timing: Pick<DateBlockTiming, 'startsA
   return { start: timing.startsAt, end: timing.end };
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timing
+ * @returns
+ */
 export function getCurrentDateBlockTimingUtcData(timing: DateRangeStart): CurrentDateBlockTimingUtcData {
   const start = timing.start;
   const dateHours = start.getUTCHours();
@@ -249,6 +308,7 @@ export function getCurrentDateBlockTimingUtcData(timing: DateRangeStart): Curren
 /**
  * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  */
 export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): CurrentDateBlockTimingOffsetData {
@@ -270,12 +330,27 @@ export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): Cur
   };
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timing
+ * @returns
+ */
 export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
   return getCurrentDateBlockTimingOffsetData(timing).offset;
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export type TimingIsExpectedTimezoneFunction = (timing: DateRangeStart) => boolean;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timezone
+ * @returns
+ */
 export function timingIsInExpectedTimezoneFunction(timezone: DateTimezoneUtcNormalFunctionInput) {
   const normal = dateTimezoneUtcNormal(timezone);
 
@@ -288,6 +363,13 @@ export function timingIsInExpectedTimezoneFunction(timezone: DateTimezoneUtcNorm
   };
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timing
+ * @param timezone
+ * @returns
+ */
 export function timingIsInExpectedTimezone(timing: DateRangeStart, timezone: DateTimezoneUtcNormalFunctionInput) {
   return timingIsInExpectedTimezoneFunction(timezone)(timing);
 }
@@ -305,6 +387,7 @@ export function getDateBlockTimingFirstEventDateRange(timing: Pick<DateBlockTimi
 /**
  * Returns the fractional hours in the event.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
@@ -318,6 +401,7 @@ export type TimingDateTimezoneUtcNormalInput = DateRangeStart | DateTimezoneUtcN
 /**
  * Creates a DateTimezoneUtcNormalInstance from the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -330,6 +414,7 @@ export function timingDateTimezoneUtcNormal(input: TimingDateTimezoneUtcNormalIn
 /**
  * Convenience function that extends timingDateTimezoneUtcNormal() but also asserts the that the timing matches it.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @param timing
  * @returns
@@ -347,25 +432,24 @@ export function assertedTimingDateTimezoneUtcNormal(input: TimingDateTimezoneUtc
 /**
  * Converts a DateBlockTimingStartEndRange and DateBlockTimingEvent that originated from the same DateBlockTiming back to the original DateBlockTiming.
  *
+ * This does not check for validity of the input event, and as such can return an invalid timing. Instead, use safeDateBlockTimingFromDateRangeAndEvent() for enforced validity and return of a valid timing.
+ *
  * The timezone is recommended to be provided if available, otherwise daylight savings might be impacted.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateBlockTimingStartEndRange
  * @param event
  * @param timezone
  * @returns
  */
-export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent, timezone: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-/**
- * @deprecated timezone should be provided, as it will behave properly for daylight savings changes.
- */
-export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
+export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent): DateBlockTiming;
+export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRange: DateBlockTimingStartEndRange, event: DateBlockTimingEvent): DateBlockTiming {
   const { start, end } = dateBlockTimingStartEndRange;
   const { startsAt: eventStartsAt, duration } = event;
 
   // need the timezone instance to compute against the normal and convert to the system time, before going back.
   // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
-  const timezoneInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateBlockTimingStartEndRange, dateBlockTimingStartEndRange);
+  const timezoneInstance = timingDateTimezoneUtcNormal(dateBlockTimingStartEndRange);
 
   // compute startsAt, the start time for the first event
   const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
@@ -382,8 +466,9 @@ export function dateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEndRang
 /**
  * Converts a DateBlockTimingStartEndRange and a DateBlockTimingEvent to a DateBlockTiming.
  *
- * The input event does not have to be from the original DateBlockTimingStartEndRange. The DateBlockTiming's end value will be updated to fit the DateBlockTimingEvent info.
+ * The input event does not have to be from the original DateBlockTimingStartEndRange, but the start date is always retained, and the same end day is retained, but may be updated to reflect a new end date/time.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateBlockTimingStartEndRange
  * @param event
  * @param timezone
@@ -398,9 +483,8 @@ export function safeDateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEnd
   const { start, end } = dateBlockTimingStartEndRange;
 
   const timezoneInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateBlockTimingStartEndRange, dateBlockTimingStartEndRange);
-  const systemTimezoneEnd = timezoneInstance.systemDateToTargetDate(end); // normalize it so it is back in it's original timezone hours/minutes
-  const endNormal = startOfDay(systemTimezoneEnd); // get the start of the day
-  const endDay = timezoneInstance.targetDateToSystemDate(endNormal); // get the end of the day
+  // const startDayFactory = dateBlockTimingStartDateFactory({ start }, timezoneInstance);
+  const endDay = end; // get midnight of the day the job usually ends at
 
   const endDayDateRange: DateBlockTimingStartEndDayDateRange = { start, endDay };
   return _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(endDayDateRange, event, timezoneInstance);
@@ -409,16 +493,12 @@ export function safeDateBlockTimingFromDateRangeAndEvent(dateBlockTimingStartEnd
 /**
  * Converts a DateBlockTimingStartEndDayDateRange and DateBlockTimingEvent to a DateBlockTiming. The event is used to derive the startsAt, duration and end time. The timezone offset is retained.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateBlockTimingStartEndDayDateRange
  * @param event
  * @returns
  */
-export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-/**
- * @deprecated timezone should be provided, as it will behave properly for daylight savings changes.
- */
-export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming;
-export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone?: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
+export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTimingStartEndDayDateRange: DateBlockTimingStartEndDayDateRange, event: DateBlockTimingEvent, timezone: DateTimezoneUtcNormalInstance | TimezoneString): DateBlockTiming {
   // need the timezone instance to compute against the normal and convert to the system time, before going back.
   // this is necessary because the start is a timezone normal for UTC, and the minutes need to be converted back properly adjusting for timezones.
   const timezoneInstance = assertedTimingDateTimezoneUtcNormal(timezone ?? dateBlockTimingStartEndDayDateRange, dateBlockTimingStartEndDayDateRange);
@@ -431,6 +511,7 @@ export function dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlock
  *
  * See dateBlockTimingFromDateBlockTimingStartEndDayDateRange() for details.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateBlockTimingStartEndDayDateRange
  * @param event
  * @param timezoneInstance
@@ -444,7 +525,9 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
   const startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(start, eventStartsAt, timezoneInstance);
 
   // compute end, the end time for the last event using the last day
-  const end = addMinutes(copyHoursAndMinutesFromDateWithTimezoneNormal(endDay, eventStartsAt, timezoneInstance), duration);
+  const lastDayStartsAt = dateBlockTimingStartsAtDateFactory({ start, startsAt }, timezoneInstance)(endDay);
+
+  const end = addMinutes(lastDayStartsAt, duration);
 
   const timing = {
     start,
@@ -452,6 +535,8 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
     startsAt,
     duration
   };
+
+  // console.log({ timezoneInstance, startsAt, eventStartsAt, lastDayStartsAt, dateBlockTimingStartEndDayDateRange, event, timing });
 
   return timing;
 }
@@ -461,6 +546,7 @@ function _dateBlockTimingFromDateBlockTimingStartEndDayDateRange(dateBlockTiming
  *
  * The start time is a normal, and should still refer to the same UTC date, but with the given timing's offset.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  */
 export type ChangeTimingToTimezoneFunction = (<T extends DateRangeStart>(timing: T) => T) & {
@@ -470,6 +556,7 @@ export type ChangeTimingToTimezoneFunction = (<T extends DateRangeStart>(timing:
 /**
  * Creates a ChangeTimingToTimezoneFunction from the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -493,14 +580,32 @@ export function changeTimingToTimezoneFunction(input: TimingDateTimezoneUtcNorma
   return fn as ChangeTimingToTimezoneFunction;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timing
+ * @param timezone
+ * @returns
+ */
 export function changeTimingToTimezone<T extends DateRangeStart>(timing: T, timezone: TimingDateTimezoneUtcNormalInput): T {
   return changeTimingToTimezoneFunction(timezone)(timing);
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timing
+ * @returns
+ */
 export function changeTimingToSystemTimezone<T extends DateRangeStart>(timing: T): T {
   return changeTimingToTimezoneFunction(SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE)(timing);
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @returns
+ */
 export function dateBlockTimingStartForNowInSystemTimezone(): DateBlockTimingStart {
   return {
     start: startOfDay(new Date())
@@ -521,6 +626,7 @@ export function dateBlockTimingStartForNowInTimezone(timezoneInput: TimingDateTi
 /**
  * Returns the start date in the current/system timezone for the given date.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  */
 export function getCurrentDateBlockTimingStartDate(timing: DateBlockTimingStart): Date {
@@ -528,12 +634,20 @@ export function getCurrentDateBlockTimingStartDate(timing: DateBlockTimingStart)
   return addMilliseconds(timing.start, offset);
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param date
+ * @returns
+ */
 export function isValidDateBlockTimingStartDate(date: Date): boolean {
   return getMinutes(date) === 0 && getSeconds(date) === 0 && getMilliseconds(date) === 0;
 }
 
 /**
  * DateBlockTimingRelativeIndexFactory input. Can be a Date, DateBlockIndex, or ISO8601DayString
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | ISO8601DayString;
 
@@ -541,6 +655,8 @@ export type DateBlockTimingRelativeIndexFactoryInput = DateOrDateBlockIndex | IS
  * Returns the DateBlockIndex of the input date relative to the configured Date.
  *
  * Input dates should be in system time zone and not normalized to a different timezone.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateBlockTimingRelativeIndexFactoryInput) => DateBlockIndex) & {
   readonly _timing: T;
@@ -550,6 +666,7 @@ export type DateBlockTimingRelativeIndexFactory<T extends DateBlockTimingStart =
 /**
  * Returns true if the input is a DateBlockTimingRelativeIndexFactory.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -560,6 +677,7 @@ export function isDateBlockTimingRelativeIndexFactory<T extends DateBlockTimingS
 /**
  * Creates a DateBlockTimingRelativeIndexFactory from the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -602,6 +720,8 @@ export function dateBlockTimingRelativeIndexFactory<T extends DateBlockTimingSta
 
 /**
  * Function that wraps a DateBlockTimingRelativeIndexFactory and converts multuple Date/DateBlockIndex/DateBlockRange values into an array of DateBlockIndex values.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>) => DateBlockIndex[]) & {
   readonly _indexFactory: DateBlockTimingRelativeIndexFactory<T>;
@@ -610,6 +730,7 @@ export type DateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimingSt
 /**
  * Creates a DateBlockTimingRelativeIndexArrayFactory from the input DateBlockTimingRelativeIndexFactory.
  *
+ * @deprecated use DateCell implementation instead.
  * @param indexFactory
  */
 export function dateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(indexFactory: DateBlockTimingRelativeIndexFactory<T>): DateBlockTimingRelativeIndexArrayFactory<T> {
@@ -642,6 +763,7 @@ export function dateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimi
 /**
  * Gets the relative index of the input date compared to the input timing.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @param date
  */
@@ -649,6 +771,10 @@ export function getRelativeIndexForDateBlockTiming(timing: DateBlockTimingStart,
   return dateBlockTimingRelativeIndexFactory(timing)(date);
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface GetNextDateBlockTimingIndexInput<T extends DateBlockRange> {
   /**
    * Relevant index for now.
@@ -660,6 +786,10 @@ export interface GetNextDateBlockTimingIndexInput<T extends DateBlockRange> {
   readonly ranges: ArrayOrValue<T>;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface GetNextDateBlockTimingIndexResult<T extends DateBlockRange> {
   /**
    * The item that matches the current index first out of the options.
@@ -690,6 +820,7 @@ export interface GetNextDateBlockTimingIndexResult<T extends DateBlockRange> {
 /**
  * Computes a GetNextDateBlockTimingIndexResult from the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  */
 export function getNextDateBlockTimingIndex<T extends DateBlockRange>(input: GetNextDateBlockTimingIndexInput<T>): GetNextDateBlockTimingIndexResult<T> {
@@ -737,6 +868,7 @@ export function getNextDateBlockTimingIndex<T extends DateBlockRange>(input: Get
 /**
  * Returns the DateRelativeState for the given index and range.
  *
+ * @deprecated use DateCell implementation instead.
  * @param nowIndex
  * @param range
  */
@@ -759,6 +891,8 @@ export function dateRelativeStateForDateBlockRangeComparedToIndex(range: DateBlo
  * Similar to the DateBlockTimingRelativeIndexFactory, but returns a date instead of an index for the input.
  *
  * If an index is input, returns a date with the hours and minutes for now for the given date returned.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
   readonly _timing: T;
@@ -767,6 +901,7 @@ export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBloc
 /**
  * Creates a DateBlockTimingDateFactory.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
@@ -797,11 +932,17 @@ export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = Date
 
 /**
  * Returns the start time of the input date or index.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
   readonly _indexFactory: DateBlockTimingRelativeIndexFactory<T>;
 };
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateBlockTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversionConfigUseSystemTimezone & {
   /**
    * Skips the assertion that the timezone matches. This defaults to true if not provided.
@@ -812,10 +953,11 @@ export type DateBlockTimingUseSystemAndIgnoreEnforcement = DateTimezoneConversio
 /**
  * Creates a DateBlockTimingDateFactory. The timezone is required to properly compute the accurate startsAt date for locations that experience daylight savings.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement): DateBlockTimingStartDateFactory<T> {
+export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartDateFactory<T> {
   const indexFactory = dateBlockTimingRelativeIndexFactory<T>(input);
   const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
 
@@ -837,6 +979,8 @@ export function dateBlockTimingStartDateFactory<T extends DateBlockTimingStart =
 
 /**
  * Returns the startsAt time of the input date or index.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
   readonly _indexFactory: DateBlockTimingRelativeIndexFactory<T>;
@@ -845,17 +989,32 @@ export type DateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStart = 
 /**
  * Creates a DateBlockTimingStartsAtDateFactory.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
-export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>): DateBlockTimingStartsAtDateFactory<T> {
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartsAtDateFactory<T>;
+/**
+ * @deprecated use DateCell implementation instead.
+ * @param input
+ * @param timezone
+ */
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone?: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartsAtDateFactory<T>;
+export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStartAndStartsAt = DateBlockTimingStartAndStartsAt>(input: T | DateBlockTimingRelativeIndexFactory<T>, timezone?: TimezoneString | DateTimezoneConversionConfigUseSystemTimezone | DateBlockTimingUseSystemAndIgnoreEnforcement | DateTimezoneUtcNormalInstance): DateBlockTimingStartsAtDateFactory<T> {
   const indexFactory = dateBlockTimingRelativeIndexFactory<T>(input);
-  const { startsAt: baseTimingStartsAt } = indexFactory._timing;
+  const { start, startsAt: baseTimingStartsAt } = indexFactory._timing;
+  const timezoneInstance = timingDateTimezoneUtcNormal(timezone ?? { start });
+
+  if ((timezoneInstance.config as DateBlockTimingUseSystemAndIgnoreEnforcement).assertTimingMatchesTimezone !== false && !timingIsInExpectedTimezone(indexFactory._timing, timezoneInstance)) {
+    throw new Error(`unexpected timezone "${timezone}" for start date "${indexFactory._timing.start}" for dateBlockTimingStartsAtDateFactory(). Is expected to match the timezones.`);
+  }
+
+  const baseStartsAtInUtc = timezoneInstance.baseDateToTargetDate(baseTimingStartsAt);
 
   const factory = ((input: DateOrDateBlockIndex) => {
     const index = indexFactory(input); // get the index
-    const hoursOffset = index * HOURS_IN_DAY;
-    return addHours(baseTimingStartsAt, hoursOffset);
+    const startAtInUtc = addHours(baseStartsAtInUtc, index * HOURS_IN_DAY);
+    return timezoneInstance.targetDateToBaseDate(startAtInUtc);
   }) as Configurable<Partial<DateBlockTimingStartsAtDateFactory>>;
   factory._indexFactory = indexFactory;
   return factory as DateBlockTimingStartsAtDateFactory<T>;
@@ -864,6 +1023,7 @@ export function dateBlockTimingStartsAtDateFactory<T extends DateBlockTimingStar
 /**
  * Returns the date of the input index.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @param date
  */
@@ -873,9 +1033,15 @@ export function getRelativeDateForDateBlockTiming(timing: DateBlockTimingStart, 
 
 /**
  * The DateRange input for dateBlockTiming()
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingRangeInput = Pick<DateRangeDayDistanceInput, 'distance'> | DateRange | number;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface DateBlockTimingOptions {
   /**
    * Timezone to evaluate the startsAt time in.
@@ -898,6 +1064,8 @@ export interface DateBlockTimingOptions {
  * The end date is used just to determine the number of days, but a minimum of 1 day is always enforced as a DateBlockTiming must contain atleast 1 day.
  *
  * The start date from the inputDate is considered to to have the offset noted in DateBlock, and will be retained.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput, options?: DateBlockTimingOptions): DateBlockTiming {
   const { duration } = durationInput;
@@ -953,10 +1121,14 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
   }
 
   const start = range.start;
-  startsAt = timezoneInstance ? timezoneInstance.targetDateToSystemDate(startsAt) : startsAt;
+  let lastStart = addDays(startsAt, numberOfBlockedDays); // add days so the system can change for daylight savings
+
+  if (timezoneInstance) {
+    startsAt = timezoneInstance.targetDateToSystemDate(startsAt);
+    lastStart = timezoneInstance.targetDateToSystemDate(lastStart); // may be affected by daylight savings
+  }
 
   // calculate end to be the ending date/time of the final duration span
-  const lastStart = addDays(startsAt, numberOfBlockedDays);
   const end: Date = addMinutes(lastStart, duration);
 
   return {
@@ -969,11 +1141,19 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
 
 /**
  * Creates a DateBlockTiming from the DateDurationSpan and range input with the start offset set in the pre-configured timezone.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockTimingInTimezoneFunction = ((durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput) => DateBlockTiming) & {
   readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
 };
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param input
+ * @returns
+ */
 export function dateBlockTimingInTimezoneFunction(input: TimingDateTimezoneUtcNormalInput): DateBlockTimingInTimezoneFunction {
   const changeTimezoneFunction = changeTimingToTimezoneFunction(input);
 
@@ -986,10 +1166,21 @@ export function dateBlockTimingInTimezoneFunction(input: TimingDateTimezoneUtcNo
   return fn as DateBlockTimingInTimezoneFunction;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param durationInput
+ * @param inputRange
+ * @param timezone
+ * @returns
+ */
 export function dateBlockTimingInTimezone(durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput, timezone: TimingDateTimezoneUtcNormalInput) {
   return dateBlockTimingInTimezoneFunction(timezone)(durationInput, inputRange);
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export interface IsValidDateBlockTimingInfo {
   readonly isValid: boolean;
   readonly isStartRoundedToSeconds: boolean;
@@ -1003,8 +1194,14 @@ export interface IsValidDateBlockTimingInfo {
   readonly isPlausiblyValidEnd: boolean;
 }
 
-export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: TimezoneString) {
-  const { end, start, startsAt, duration } = timing;
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param timing
+ * @returns
+ */
+export function isValidDateBlockTimingInfo(timing: DateBlockTiming) {
+  const { end, start, startsAt, duration, timezone } = timing;
 
   const {
     currentTimezoneOffsetInHours: startOffsetInHours // offset as computed on the given date.
@@ -1023,6 +1220,7 @@ export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: T
 
   let isExpectedValidEnd = false;
   let isPlausiblyValidEnd = false;
+  let isTimezoneValidatedEnd = false;
 
   if (
     isStartRoundedToSeconds &&
@@ -1036,15 +1234,20 @@ export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: T
     const timezoneOffsetDelta = endOffset - startOffsetInHours;
 
     const expectedFinalStartTime = addHours(addMinutes(end, -duration), timezoneOffsetDelta);
-    const difference = differenceInMilliseconds(startsAt, expectedFinalStartTime) % MS_IN_DAY;
+    const finalMsDifference = differenceInMilliseconds(startsAt, expectedFinalStartTime);
+    const hoursDifference = Math.abs((finalMsDifference % MS_IN_DAY) / MS_IN_HOUR);
+    const difference = hoursDifference === 23 ? -1 : hoursDifference; // depending on daylight savings, may be off by 1 hour
 
     isExpectedValidEnd = difference === 0;
-    isPlausiblyValidEnd = isExpectedValidEnd || Math.abs(difference) === MS_IN_HOUR;
-
+    isPlausiblyValidEnd = isExpectedValidEnd || Math.abs(difference) === 1;
     isValid = isPlausiblyValidEnd;
+
+    if (isPlausiblyValidEnd && timezone) {
+      // TODO: validate properly for the timezone...
+    }
   }
 
-  return {
+  const result = {
     isValid,
     isStartRoundedToSeconds,
     msDifference,
@@ -1056,10 +1259,13 @@ export function isValidDateBlockTimingInfo(timing: DateBlockTiming, timezone?: T
     isExpectedValidEnd,
     isPlausiblyValidEnd
   };
+
+  return result;
 }
 
 /**
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @returns
  */
@@ -1070,12 +1276,15 @@ export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
 
 /**
  * Converts the input index into the DayOfWeek that it represents.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockDayOfWeekFactory = MapFunction<DateBlockIndex, DayOfWeek>;
 
 /**
  * Creates a DateBlockDayOfWeekFactory
  *
+ * @deprecated use DateCell implementation instead.
  * @param dayForIndexZero
  * @returns
  */
@@ -1086,6 +1295,8 @@ export function dateBlockDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date
 
 /**
  * Reference to a DateBlockTiming
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateBlockTimingRef {
   timing: DateBlockTiming;
@@ -1093,17 +1304,22 @@ export interface DateBlockTimingRef {
 
 /**
  * An object that implements DateBlockTimingRef and DateBlockArrayRef
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateBlockCollection<B extends DateBlock = DateBlock> extends DateBlockTimingRef, DateBlockArrayRef<B> {}
 
 /**
  * An expanded DateBlock that implements DateDurationSpan and contains the DateBlock values.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockDurationSpan<B extends DateBlock = DateBlock> = DateDurationSpan & B;
 
 /**
  * Convenience function for calling expandDateBlocks() with the input DateBlockCollection.
  *
+ * @deprecated use DateCell implementation instead.
  * @param collection
  * @returns
  */
@@ -1114,6 +1330,7 @@ export function expandDateBlockCollection<B extends DateBlock = DateBlock>(colle
 /**
  * Convenience function for calling dateBlocksExpansionFactory() then passing the blocks.
  *
+ * @deprecated use DateCell implementation instead.
  * @param blocks
  * @param timing
  * @returns
@@ -1122,13 +1339,23 @@ export function expandDateBlocks<B extends DateBlock = DateBlock>(timing: DateBl
   return dateBlocksExpansionFactory<B>({ timing })(blocks);
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateBlocksExpansionFactoryInput<B extends DateBlock | DateBlockRange = DateBlock> = DateBlockArrayRef<B> | DateBlockArray<B>;
 
 /**
  * Used to convert the input DateBlocksExpansionFactoryInput into an array of DateBlockDurationSpan values
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlocksExpansionFactory<B extends DateBlock | DateBlockRange = DateBlock> = (input: DateBlocksExpansionFactoryInput<B>) => DateBlockDurationSpan<B>[];
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface DateBlocksExpansionFactoryConfig<B extends DateBlock | DateBlockRange = DateBlock> {
   /**
    * Timing to use in the configuration.
@@ -1162,6 +1389,7 @@ export interface DateBlocksExpansionFactoryConfig<B extends DateBlock | DateBloc
 /**
  * Creates a DateBlocksExpansionFactory
  *
+ * @deprecated use DateCell implementation instead.
  * @param config
  * @returns
  */
@@ -1224,8 +1452,16 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
   };
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateBlockDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface DateBlockDayTimingInfo {
   /**
    * Input date or calculated date if provided a dayIndex.
@@ -1291,9 +1527,17 @@ export interface DateBlockDayTimingInfo {
  * The date may not exist within the range, but will still compute values using the input date and timing configuration.
  *
  * Can optionally specify a now that is used for checking the inProgress functionality.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockDayTimingInfoFactory = (date: DateOrDateBlockIndex, now?: Date) => DateBlockDayTimingInfo;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param config
+ * @returns
+ */
 export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFactoryConfig): DateBlockDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
   const { duration } = timing;
@@ -1344,13 +1588,27 @@ export function dateBlockDayTimingInfoFactory(config: DateBlockDayTimingInfoFact
  * IndexRange used with DateBlocks.
  *
  * It has an exclusive max range. It is similar to a DateBlockRange.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockIndexRange = IndexRange;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param range
+ * @returns
+ */
 export function dateBlockRangeToDateBlockIndexRange(range: DateBlockRange): DateBlockIndexRange {
   return { minIndex: range.i, maxIndex: (range.to ?? range.i) + 1 };
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param range
+ * @returns
+ */
 export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange): DateBlockRangeWithRange {
   return { i: range.minIndex, to: range.maxIndex - 1 };
 }
@@ -1360,6 +1618,7 @@ export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange):
  *
  * An arbitrary limit can also be applied.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @param limit
  * @param fitToTimingRange
@@ -1391,6 +1650,7 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
 /**
  * Returns blocks that are only in the given DateBlockRange.
  *
+ * @deprecated use DateCell implementation instead.
  * @param blocks
  * @param range
  * @returns
@@ -1400,13 +1660,24 @@ export function filterDateBlocksInDateBlockRange<T extends DateBlock | DateBlock
   return blocks.filter(dateBlockIsWithinDateBlockRange);
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export type IsDateBlockWithinDateBlockRangeInput = DateBlockOrDateBlockIndexOrDateBlockRange;
 
 /**
  * Function that returns true if the input range is equal or falls within the configured DateBlockRange.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type IsDateBlockWithinDateBlockRangeFunction = (input: IsDateBlockWithinDateBlockRangeInput) => boolean;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param inputRange
+ * @returns
+ */
 export function isDateBlockWithinDateBlockRangeFunction(inputRange: IsDateBlockWithinDateBlockRangeInput): IsDateBlockWithinDateBlockRangeFunction {
   const range = dateBlockRangeWithRange(inputRange);
   return (input: IsDateBlockWithinDateBlockRangeInput) => {
@@ -1426,6 +1697,7 @@ export function isDateBlockWithinDateBlockRangeFunction(inputRange: IsDateBlockW
 /**
  * Returns true if the first DateBlock or DateBlockRange contains the second input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param range
  * @param isContainedWithin
  * @returns
@@ -1436,14 +1708,22 @@ export function isDateBlockWithinDateBlockRange(range: IsDateBlockWithinDateBloc
 
 /**
  * Input for a IsDateWithinDateBlockRangeFunction
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type IsDateWithinDateBlockRangeInput = DateOrDateBlockIndex | DateRangeStart | DateRange | DateBlock | DateBlockRange;
 
 /**
  * Function that returns true if the input range is equal or falls within the configured DateBlockRange.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type IsDateWithinDateBlockRangeFunction = (input: IsDateWithinDateBlockRangeInput) => boolean;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface IsDateWithinDateBlockRangeConfig {
   /**
    * Optional date to make the indexes relative to when converting date values.
@@ -1457,6 +1737,12 @@ export interface IsDateWithinDateBlockRangeConfig {
   range: IsDateWithinDateBlockRangeInput;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param config
+ * @returns
+ */
 export function isDateWithinDateBlockRangeFunction(config: IsDateWithinDateBlockRangeConfig): IsDateWithinDateBlockRangeFunction {
   const { start: inputStart, range: inputRange } = config;
   let start: Date | undefined = inputStart;
@@ -1523,6 +1809,8 @@ export function isDateWithinDateBlockRangeFunction(config: IsDateWithinDateBlock
 // MARK: DateBlockRange
 /**
  * Represents a range of DateBlock values.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateBlockRange extends DateBlock {
   /**
@@ -1533,6 +1821,10 @@ export interface DateBlockRange extends DateBlock {
   to?: DateBlockIndex;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export class DateBlockRange extends DateBlock {
   @Expose()
   @IsNumber()
@@ -1550,12 +1842,15 @@ export class DateBlockRange extends DateBlock {
 
 /**
  * A DateBlockIndex, DateBlock, or DateBlockRange
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockOrDateBlockIndexOrDateBlockRange = DateBlockIndex | DateBlock | DateBlockRange;
 
 /**
  * Returns true if the input is a valid DateBlockRange.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -1574,6 +1869,7 @@ export function isValidDateBlockRange(input: DateBlockRange): boolean {
 /**
  * Returns true if the input is a sorted DateBlockRange array and there are no repeat indexes.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -1608,6 +1904,8 @@ export function isValidDateBlockRangeSeries(input: DateBlockRange[]): boolean {
  * Returns the lowest index between all the input date block ranges. Returns 0 by default if there is no minimum or input blocks.
  *
  * The input range is not expected to be sorted.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function getLeastDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockIndex {
   return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.leastIndex ?? 0;
@@ -1617,6 +1915,8 @@ export function getLeastDateBlockIndexInDateBlockRanges(input: (DateBlock | Date
  * Returns the largest index between all the input date block ranges. Returns 0 by default.
  *
  * The input range is not expected to be sorted.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function getGreatestDateBlockIndexInDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockIndex {
   return getLeastAndGreatestDateBlockIndexInDateBlockRanges(input)?.greatestIndex ?? 0;
@@ -1633,6 +1933,8 @@ export interface LeastAndGreatestDateBlockIndexResult<T> {
  * Returns the largest index between all the input date block ranges. Returns null if the input is empty.
  *
  * The input range is not expected to be sorted.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function getLeastAndGreatestDateBlockIndexInDateBlockRanges<T extends DateBlockRange>(input: T[]): Maybe<LeastAndGreatestDateBlockIndexResult<T>> {
   if (!input.length) {
@@ -1670,18 +1972,30 @@ export function getLeastAndGreatestDateBlockIndexInDateBlockRanges<T extends Dat
 
 /**
  * Input type used for cases where a DateRange or a DateBlockRange are allowed as input but used the start/end parameters in DateRange.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateBlockRangeOrDateRange {
   start?: Maybe<DateOrDateBlockIndex>;
   end?: Maybe<DateOrDateBlockIndex>;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateOrDateBlockIndexOrDateBlockRange = DateOrDateBlockIndex | DateBlockRange;
+
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateOrDateRangeOrDateBlockIndexOrDateBlockRange = DateRange | DateOrDateBlockIndexOrDateBlockRange;
 
 /**
  * Creates a DateBlockRange
  *
+ * @deprecated use DateCell implementation instead.
  * @param i
  * @param to
  * @returns
@@ -1693,6 +2007,7 @@ export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange 
 /**
  * Creates a DateBlockRangeWithRange from the input DateBlockIndex.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateBlockIndex
  * @returns
  */
@@ -1703,6 +2018,7 @@ export function dateBlockRangeWithRangeFromIndex(dateBlockIndex: DateBlockIndex)
 /**
  * Creates a DateBlockRangeWithRange from the input DateBlockIndex, DateBlock, or DateBlockRange.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -1722,6 +2038,7 @@ export type DateBlockRangeIncludedByRangeFunction = (range: DateBlockOrDateBlock
 /**
  * Creates a DateBlockRangeIncludedByRangeFunction
  *
+ * @deprecated use DateCell implementation instead.
  * @param inputRange
  * @returns
  */
@@ -1735,12 +2052,15 @@ export function dateBlockRangeIncludedByRangeFunction(inputRange: DateBlockOrDat
 
 /**
  * Function that returns true if the input range overlaps the range of the configured DateBlockRange.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockRangeOverlapsRangeFunction = (range: DateBlockOrDateBlockIndexOrDateBlockRange) => boolean;
 
 /**
  * Creates a DateBlockRangeOverlapsRangeFunction
  *
+ * @deprecated use DateCell implementation instead.
  * @param inputRange
  * @returns
  */
@@ -1755,6 +2075,7 @@ export function dateBlockRangeOverlapsRangeFunction(inputRange: DateBlockOrDateB
 /**
  * Returns true if either of the ranges overlap eachother.
  *
+ * @deprecated use DateCell implementation instead.
  * @param rangeA
  * @param rangeB
  * @returns
@@ -1768,6 +2089,7 @@ export function dateBlockRangeOverlapsRange(rangeA: DateBlockOrDateBlockIndexOrD
  *
  * In many cases sortAscendingIndexNumberRefFunction may be preferential since
  *
+ * @deprecated use DateCell implementation instead.
  * @returns
  */
 export function sortDateBlockRangeAndSizeFunction<T extends DateBlockRange>(): SortCompareFunction<T> {
@@ -1777,6 +2099,7 @@ export function sortDateBlockRangeAndSizeFunction<T extends DateBlockRange>(): S
 /**
  * Sorts the input date ranges. This will retain the before/after order while also sorting items by index.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -1786,12 +2109,15 @@ export function sortDateBlockRanges<T extends DateBlockRange>(input: T[]): T[] {
 
 /**
  * DateBlockRange that is known to have a to value.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockRangeWithRange = RequiredOnKeys<DateBlockRange, 'to'>;
 
 /**
  * Groups the input values into DateBlockRange values.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  */
 export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockRangeWithRange[] {
@@ -1836,6 +2162,8 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
 
 /**
  * Returns an array containing all indexes in the date block range.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function allIndexesInDateBlockRange(input: DateBlockRange): DateBlockIndex[] {
   return input.to != null ? range((input as DateBlockRange).i, input.to + 1) : [input.i];
@@ -1844,6 +2172,7 @@ export function allIndexesInDateBlockRange(input: DateBlockRange): DateBlockInde
 /**
  * Returns the set of all indexes within the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -1862,6 +2191,10 @@ export function allIndexesInDateBlockRanges(input: (DateBlockIndex | DateBlockRa
   return set;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface DateBlockRangeBlockCountInfo {
   /**
    * Total number of blocks.
@@ -1880,6 +2213,7 @@ export interface DateBlockRangeBlockCountInfo {
 /**
  * Counts the number of blocks in the input range.
  *
+ * @deprecated use DateCell implementation instead.
  * @param inputDateBlockRange
  * @returns
  */
@@ -1907,6 +2241,7 @@ export function dateBlockRangeBlocksCountInfo(inputDateBlockRange: ArrayOrValue<
 /**
  * Counts the number of blocks in the input range.
  *
+ * @deprecated use DateCell implementation instead.
  * @param inputDateBlockRange
  * @returns
  */
@@ -1916,12 +2251,15 @@ export function dateBlockRangeBlocksCount(inputDateBlockRange: ArrayOrValue<Date
 
 /**
  * Checks whether or not the input range is fully included by the configured ranges.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateBlockRangesFullyCoverDateBlockRangeFunction = (range: DateBlockRange) => boolean;
 
 /**
  * Creates a dateBlockRangesFullyCoverDateBlockRangeFunction
  *
+ * @deprecated use DateCell implementation instead.
  * @param ranges
  * @returns
  */
@@ -1937,6 +2275,7 @@ export function dateBlockRangesFullyCoverDateBlockRangeFunction(ranges: ArrayOrV
 /**
  * Expands a DateBlockRange into an array of DateBlock values.
  *
+ * @deprecated use DateCell implementation instead.
  * @param block
  * @returns
  */
@@ -1948,17 +2287,22 @@ export function expandDateBlockRange<B extends DateBlockRange | DateBlockRangeWi
 
 /**
  * A DateBlock that also has the potential for a unique identifier.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface UniqueDateBlock extends DateBlock, UniqueModel {}
 
 /**
  * Represents a range of UniqueDateBlock values keyed by a similar identifier (or lack of identifier).
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface UniqueDateBlockRange extends UniqueDateBlock, DateBlockRange {}
 
 /**
  * Returns true if the input DateBlockRange is longer than 1 block (I.E. has a "to" value greater than it's "i" value).
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  */
 export function dateBlockRangeHasRange(input: DateBlockRange | UniqueDateBlock): input is DateBlockRangeWithRange {
@@ -1968,6 +2312,7 @@ export function dateBlockRangeHasRange(input: DateBlockRange | UniqueDateBlock):
 /**
  * Reads the to index if it exists, or returns the block's index itself.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -1977,6 +2322,8 @@ export function dateBlockEndIndex(input: DateBlockRange | UniqueDateBlock): Inde
 
 /**
  * A grouping of UniqueDateBlock values, sorted by date range.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface UniqueDateBlockRangeGroup<B extends DateBlockRange | UniqueDateBlock> extends DateBlockRange {
   /**
@@ -1987,6 +2334,8 @@ export interface UniqueDateBlockRangeGroup<B extends DateBlockRange | UniqueDate
 
 /**
  * Groups all input DateBlockRange or UniqueDateBlock values into a UniqueDateBlockRangeGroup value amd sorts the input.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function groupUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock>(input: B[]): UniqueDateBlockRangeGroup<B> {
   const blocks = sortDateBlockRanges([...input]);
@@ -2012,6 +2361,8 @@ export function groupUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock
  * Determines how to "fill" a DateRange when an empty range is detected.
  * - extend: extends the previous block to fill the range.
  * - fill: creates a new value using a factory.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type ExpandUniqueDateBlocksFillOption = 'extend' | 'fill';
 
@@ -2019,9 +2370,15 @@ export type ExpandUniqueDateBlocksFillOption = 'extend' | 'fill';
  * Determines how overwrite block values that are completely overlapping eachother.
  * - current: keeps the "current" value
  * - next: the next/new value overwrites the previous one
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type ExpandUniqueDateBlocksRetainOverlapOption = 'current' | 'next';
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueDateBlock> {
   /**
    * The expected start index.
@@ -2054,6 +2411,10 @@ export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueD
   fillFactory?: FactoryWithRequiredInput<B, DateBlockRangeWithRange>;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export interface ExpandUniqueDateBlocksResult<B extends DateBlockRange | UniqueDateBlock> extends UniqueDateBlockRangeGroup<B> {
   /**
    * Blocks that were competely removed. Some blocks stay partially retained.
@@ -2065,16 +2426,32 @@ export interface ExpandUniqueDateBlocksResult<B extends DateBlockRange | UniqueD
  * Expansion function used to sort/merge/replace DateBlockRange values by block.
  *
  * Can optionally specify a second array/group of blocks that are treated as "next" blocks which can take priority or not depending on the retain options.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type ExpandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock> = (input: B[] | UniqueDateBlockRangeGroup<B>, newBlocks?: B[] | UniqueDateBlockRangeGroup<B>) => ExpandUniqueDateBlocksResult<B>;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 type DateBlockRangePriority = ExpandUniqueDateBlocksRetainOverlapOption;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 type DateBlockRangePriorityPair<B extends DateBlockRange | UniqueDateBlock> = {
   priority: DateBlockRangePriority;
   block: B;
 };
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param config
+ * @returns
+ */
 export function expandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock>(config: ExpandUniqueDateBlocksConfig<B>): ExpandUniqueDateBlocksFunction<B> {
   const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap } = config;
   const retainOnOverlap = inputRetainOnOverlap ?? 'next';
@@ -2336,11 +2713,15 @@ export function expandUniqueDateBlocksFunction<B extends DateBlockRange | Unique
 
 /**
  * Modifies or filter out any blocks that are outside the range to fit within the configured range.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type ModifyDateBlocksToFitRangeFunction = <B extends DateBlock | DateBlockRange | UniqueDateBlock>(input: B[]) => B[];
 
 /**
  * Creatse a ModifyDateBlocksToFitRangeFunction
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): ModifyDateBlocksToFitRangeFunction {
   const { i, to } = dateBlockRangeWithRange(range);
@@ -2376,10 +2757,24 @@ export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): Modif
     );
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param range
+ * @param input
+ * @returns
+ */
 export function modifyDateBlocksToFitRange<B extends DateBlock | DateBlockRange | UniqueDateBlock>(range: DateBlockRange, input: B[]): B[] {
   return modifyDateBlocksToFitRangeFunction(range)(input);
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param range
+ * @param input
+ * @returns
+ */
 export function modifyDateBlockToFitRange<B extends DateBlock | DateBlockRange | UniqueDateBlock>(range: DateBlockRange, input: B): Maybe<B> {
   return modifyDateBlocksToFitRange(range, [input])[0];
 }

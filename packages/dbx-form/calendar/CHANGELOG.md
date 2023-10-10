@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.25.0](https://github.com/dereekb/dbx-components/compare/v9.24.47-dev...v9.25.0) (2023-10-10)
+
+
+### Features
+
+* DateCellTiming ([#24](https://github.com/dereekb/dbx-components/issues/24)) ([aed9ef5](https://github.com/dereekb/dbx-components/commit/aed9ef56fdd0438a7a4ba90da79d6a20465bbdfd))
+
+
+
 ## [9.24.47](https://github.com/dereekb/dbx-components/compare/v9.24.46-dev...v9.24.47) (2023-10-08)
 
 

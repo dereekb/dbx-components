@@ -1,6 +1,7 @@
+import { requireCurrentTimezone } from '@dereekb/date';
 import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay } from 'date-fns';
 import { ISO8601DayString, Milliseconds } from '@dereekb/util';
-import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromNowWithTimezoneNormal, copyHoursAndMinutesFromDateWithTimezoneNormal } from './date.timezone';
+import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromNowWithTimezoneNormal, copyHoursAndMinutesFromDateWithTimezoneNormal, systemDateTimezoneUtcNormal, transformDateRangeToTimezoneFunction } from './date.timezone';
 import MockDate from 'mockdate';
 import { formatToISO8601DayString } from './date.format';
 import { timingDateTimezoneUtcNormal } from './date.block';
@@ -27,7 +28,37 @@ describe('DateTimezoneUtcNormalInstance', () => {
     expect(systemTimezoneOffset).toBeDefined();
   });
 
+  describe('targetTimezoneExperiencesDaylightSavings()', () => {
+    it('should return false for "UTC" in 2023', () => {
+      instance = new DateTimezoneUtcNormalInstance({
+        timezone: 'UTC'
+      });
+
+      expect(instance.targetTimezoneExperiencesDaylightSavings(2023)).toBe(false);
+    });
+
+    it('should return true for "America/Denver" in 2023', () => {
+      instance = new DateTimezoneUtcNormalInstance({
+        timezone: 'America/Denver'
+      });
+
+      expect(instance.targetTimezoneExperiencesDaylightSavings(2023)).toBe(true);
+    });
+  });
+
   describe('scenarios', () => {
+    describe('useSystemTimezone=true', () => {
+      const instance = new DateTimezoneUtcNormalInstance({
+        useSystemTimezone: true
+      });
+
+      it('should return the same timezone returned by guessCurrentTimezone()', () => {
+        const currentTimezone = requireCurrentTimezone();
+        expect(currentTimezone).toBeDefined();
+        expect(instance.configuredTimezoneString).toBe(currentTimezone);
+      });
+    });
+
     describe('utc timezone', () => {
       const utcBaseDate = new Date('2022-02-11T00:00:00Z'); // date in utc
       let systemUtcDifference: Milliseconds;
@@ -72,32 +103,6 @@ describe('DateTimezoneUtcNormalInstance', () => {
           expect(instance.getCurrentOffset(utcBaseDate, 'system', 'target')).not.toBe(0);
         });
       }
-    });
-  });
-
-  describe('dateTimezoneUtcNormal()', () => {
-    it('should return a DateTimezoneUtcNormalInstance with the input TimezoneString', () => {
-      const timezone = 'America/Denver';
-      const result = dateTimezoneUtcNormal(timezone);
-      expect(result.config.timezone).toBe(timezone);
-    });
-
-    it('should return a DateTimezoneUtcNormalInstance with the input TimezoneOffset', () => {
-      const timezoneOffset = hoursToMilliseconds(5);
-      const result = dateTimezoneUtcNormal(timezoneOffset);
-      expect(result.config.timezoneOffset).toBe(timezoneOffset);
-    });
-
-    it('should return a DateTimezoneUtcNormalInstance with the input DateTimezoneUtcNormalInstance', () => {
-      const timezone = 'America/Denver';
-      const result = dateTimezoneUtcNormal(dateTimezoneUtcNormal(timezone));
-      expect(result.config.timezone).toBe(timezone);
-    });
-
-    it('should return a DateTimezoneUtcNormalInstance with the input DateTimezoneUtcNormalInstanceConfig', () => {
-      const timezone = 'America/Denver';
-      const result = dateTimezoneUtcNormal({ timezone });
-      expect(result.config.timezone).toBe(timezone);
     });
   });
 
@@ -180,6 +185,46 @@ describe('DateTimezoneUtcNormalInstance', () => {
   });
 });
 
+describe('dateTimezoneUtcNormal()', () => {
+  it('should return a DateTimezoneUtcNormalInstance with the input TimezoneString', () => {
+    const timezone = 'America/Denver';
+    const result = dateTimezoneUtcNormal(timezone);
+    expect(result.config.timezone).toBe(timezone);
+    expect(result.configuredTimezoneString).toBe(timezone);
+  });
+
+  it('should return a DateTimezoneUtcNormalInstance with the input TimezoneOffset', () => {
+    const timezoneOffset = hoursToMilliseconds(5);
+    const result = dateTimezoneUtcNormal(timezoneOffset);
+    expect(result.config.timezoneOffset).toBe(timezoneOffset);
+    expect(result.configuredTimezoneString).toBe(undefined);
+  });
+
+  it('should return a DateTimezoneUtcNormalInstance with the input DateTimezoneUtcNormalInstance', () => {
+    const timezone = 'America/Denver';
+    const result = dateTimezoneUtcNormal(dateTimezoneUtcNormal(timezone));
+    expect(result.config.timezone).toBe(timezone);
+    expect(result.configuredTimezoneString).toBe(timezone);
+  });
+
+  it('should return a DateTimezoneUtcNormalInstance with the input DateTimezoneUtcNormalInstanceConfig', () => {
+    const timezone = 'America/Denver';
+    const result = dateTimezoneUtcNormal({ timezone });
+    expect(result.config.timezone).toBe(timezone);
+    expect(result.configuredTimezoneString).toBe(timezone);
+  });
+});
+
+describe('systemDateTimezoneUtcNormal()', () => {
+  it('should use the system timezone', () => {
+    const instance = systemDateTimezoneUtcNormal();
+
+    const currentTimezone = requireCurrentTimezone();
+    expect(currentTimezone).toBeDefined();
+    expect(instance.configuredTimezoneString).toBe(currentTimezone);
+  });
+});
+
 describe('startOfDayInTimezoneDayStringFactory()', () => {
   describe('function', () => {
     describe('UTC', () => {
@@ -248,6 +293,27 @@ describe('startOfDayInTimezoneDayStringFactory()', () => {
         expect(result).toBeSameSecondAs(expectedStart);
         expect(result.toISOString()).not.toBe(utcDateString);
       });
+    });
+  });
+});
+
+describe('transformDateRangeToTimezone()', () => {
+  describe('function', () => {
+    const fn = transformDateRangeToTimezoneFunction('America/Denver', 'systemDateToTargetDate');
+
+    const dateRangeInUTC = {
+      start: new Date('2023-03-11T06:00:00.000Z'),
+      end: new Date('2023-03-12T06:00:00.000Z')
+    };
+
+    it('should transform the date range.', () => {
+      const expectedStart = fn._timezoneInstance.systemDateToTargetDate(dateRangeInUTC.start);
+      const expectedEnd = fn._timezoneInstance.systemDateToTargetDate(dateRangeInUTC.end);
+
+      const result = fn(dateRangeInUTC);
+
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
     });
   });
 });

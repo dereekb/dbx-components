@@ -96,6 +96,35 @@
     }
   }
 
+  // compact icons
+  .dbx-schedule-selection-calendar-compact-icons .dbx-schedule-selection-calendar {
+    .cal-month-view .cal-day-cell {
+      min-height: 64px;
+    }
+
+    .cal-month-view .cal-day-cell > .cal-cell-top {
+      min-height: 32px;
+      text-align: center;
+      padding-top: 12px;
+      box-sizing: border-box;
+
+      .cal-day-number {
+        font-size: 1.3em;
+        margin: 0;
+        float: unset;
+      }
+    }
+
+    .dbx-schedule-selection-calendar-cell {
+      display: flex;
+      min-height: 32px;
+
+      > span {
+        height: 18px;
+      }
+    }
+  }
+
   .dbx-schedule-selection-calendar-date-dialog {
     .dbx-calendar .dbx-calendar-header {
       height: unset;

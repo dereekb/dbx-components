@@ -142,6 +142,40 @@ export function filterValuesToSet<T>(values: Iterable<T>, fn: DecisionFunction<T
 }
 
 /**
+ * SeparateValuesToSets() result
+ */
+export interface SeparateValuesToSetsResult<T> {
+  readonly included: Set<T>;
+  readonly excluded: Set<T>;
+}
+
+/**
+ * Optional sets input that allows specifying specific sets to add the included/excluded values to.
+ */
+export type SeparateValuesToSetsInput<T> = Partial<SeparateValuesToSetsResult<T>>;
+
+/**
+ * Filters the input iterable using a DecisionFunction and returns a Set.
+ *
+ * @param values
+ * @param fn
+ * @returns
+ */
+export function separateValuesToSets<T>(values: Iterable<T>, fn: DecisionFunction<T>, input?: SeparateValuesToSetsInput<T>): SeparateValuesToSetsResult<T> {
+  const included = input?.included ?? new Set<T>();
+  const excluded = input?.excluded ?? new Set<T>();
+
+  for (const value of values) {
+    (fn(value) ? included : excluded).add(value);
+  }
+
+  return {
+    included,
+    excluded
+  };
+}
+
+/**
  * Maps the input iterable using a MapFunction and returns a Set of the mapped values.
  *
  * @param values

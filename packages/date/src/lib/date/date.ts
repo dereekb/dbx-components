@@ -65,8 +65,28 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
   return date.toISOString();
 }
 
+/**
+ * Guesses the current system's timezone.
+ *
+ * @returns
+ */
 export function guessCurrentTimezone(): TimezoneString | undefined {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
+}
+
+/**
+ * Convenience function for getCurrentTimezone() that asserts a timezone is returned.
+ *
+ * @returns
+ */
+export function requireCurrentTimezone(): TimezoneString {
+  const tz = guessCurrentTimezone();
+
+  if (!tz) {
+    throw new Error('requireCurrentTimezone() failed to guess the current timezone.');
+  }
+
+  return tz;
 }
 
 export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Maybe<Date> {
@@ -305,6 +325,16 @@ export function readDaysOfWeek<T>(values: T[], readDate: ReadDateFunction<T>): S
 
 export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T>, nameFunction: DayOfWeekNameFunction): string[] {
   return Array.from(readDaysOfWeek(values, readDate)).sort(sortNumbersAscendingFunction).map(nameFunction);
+}
+
+/**
+ * Returns true if the input date is at midnight for UTC.
+ *
+ * @param date
+ * @returns
+ */
+export function isStartOfDayInUTC(date: Date): boolean {
+  return date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
 }
 
 // MARK: Compat

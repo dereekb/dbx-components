@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { dateScheduleDayCodesAreSetsEquivalent, dateScheduleDayCodesFromEnabledDays, enabledDaysFromDateScheduleDayCodes } from '@dereekb/date';
+import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, dateScheduleDayCodesAreSetsEquivalent, dateScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes, enabledDaysFromDateScheduleDayCodes } from '@dereekb/date';
 import { HandleActionFunction } from '@dereekb/dbx-core';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { IsModifiedFunction } from '@dereekb/rxjs';
@@ -16,13 +16,13 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
   `
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
-  readonly template$: Observable<DbxScheduleSelectionCalendarDateDaysFormValue> = this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map(enabledDaysFromDateScheduleDayCodes), shareReplay(1));
+  readonly template$: Observable<DbxScheduleSelectionCalendarDateDaysFormValue> = this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map(enabledDaysFromDateCellScheduleDayCodes), shareReplay(1));
 
   readonly isFormModified: IsModifiedFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value: DbxScheduleSelectionCalendarDateDaysFormValue) => {
-    const newSetValue = new Set(dateScheduleDayCodesFromEnabledDays(value));
+    const newSetValue = new Set(dateCellScheduleDayCodesFromEnabledDays(value));
     return this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(
       map((currentSet) => {
-        const result = !dateScheduleDayCodesAreSetsEquivalent(newSetValue, currentSet);
+        const result = !dateCellScheduleDayCodesAreSetsEquivalent(newSetValue, currentSet);
         return result;
       })
     );
@@ -31,7 +31,7 @@ export class DbxScheduleSelectionCalendarDateDaysComponent {
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   readonly updateScheduleDays: HandleActionFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value) => {
-    this.dbxCalendarScheduleSelectionStore.setScheduleDays(new Set(dateScheduleDayCodesFromEnabledDays(value)));
+    this.dbxCalendarScheduleSelectionStore.setScheduleDays(new Set(dateCellScheduleDayCodesFromEnabledDays(value)));
     return of(true);
   };
 }

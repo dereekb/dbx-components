@@ -1,7 +1,8 @@
 import { DateOrDateString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isSameDateDay, safeToJsDate } from './date';
-import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, fitDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
+import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, transformDateRangeWithStartOfDay } from './date.range';
+import { fitDateRangeToDayPeriod } from './date.range.timezone';
 
 export type FormatDateFunction = MapFunction<Date, string>;
 export type FormatStrictDateRangeFunction = (startOrDateRange: DateRange) => string;

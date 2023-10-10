@@ -10,10 +10,10 @@ import { map } from 'rxjs';
     <dbx-content-border>
       <dbx-content-pit>
         <p>currentSelectionValue$: {{ currentSelectionValue$ | async | json }}</p>
-        <p>currentSelectionValueDateBlockDurationSpan$: {{ currentSelectionValueDateBlockDurationSpan$ | async | json }}</p>
+        <p>currentSelectionValueDateCellDurationSpanExpansion$: {{ currentSelectionValueDateCellDurationSpanExpansion$ | async | json }}</p>
         <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
         <p>selectionValueSelectedDates$: {{ selectionValueSelectedDates$ | async | json }}</p>
-        <p>selectionValueWithTimezoneDateBlockDurationSpan$: {{ selectionValueWithTimezoneDateBlockDurationSpan$ | async | json }}</p>
+        <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansion$ | async | json }}</p>
       </dbx-content-pit>
     </dbx-content-border>
     <dbx-subsection *ngIf="!config" header="Selector Components">
@@ -34,10 +34,10 @@ export class DocExtensionCalendarScheduleSelectionComponent {
   config?: Maybe<DbxScheduleSelectionCalendarComponentConfig>;
 
   readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
-  readonly currentSelectionValueDateBlockDurationSpan$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateBlockDurationSpan$;
+  readonly currentSelectionValueDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateCellDurationSpanExpansion$;
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));
   readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x)));
-  readonly selectionValueWithTimezoneDateBlockDurationSpan$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateBlockDurationSpan$;
+  readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 }
