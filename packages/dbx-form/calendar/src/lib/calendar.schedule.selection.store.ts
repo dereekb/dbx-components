@@ -6,11 +6,12 @@ import {
   DateCellRangeWithRange,
   dateCellTimingDateFactory,
   DateRange,
+  dateCellScheduleDateFilter,
   copyDateCellScheduleDateFilterConfig,
   DateCellScheduleDateFilterConfig,
   DateCellScheduleDayCode,
+  dateCellScheduleEncodedWeek,
   DateCellScheduleEncodedWeek,
-  FullDateCellScheduleRange,
   DateCellTimingRelativeIndexFactory,
   dateCellTimingRelativeIndexFactory,
   expandDateCellScheduleDayCodes,
@@ -23,7 +24,6 @@ import {
   isSameDate,
   isSameDateDay,
   isSameDateRange,
-  isSameDateCellScheduleDateRange,
   DateOrDateRangeOrDateCellIndexOrDateCellRange,
   dateCellTimingRelativeIndexArrayFactory,
   isInfiniteDateRange,
@@ -35,20 +35,15 @@ import {
   DateCellDurationSpan,
   formatToISO8601DayString,
   DateCellTimingRelativeIndexFactoryInput,
+  dateCellScheduleDayCodesAreSetsEquivalent,
   simplifyDateCellScheduleDayCodes,
   fullWeekDateCellScheduleDayCodes,
   dateCellTimingStartDateFactory,
-  DateCellTiming,
-  DateCellTimingStartsAt,
-  requireCurrentTimezone,
-  dateCellScheduleDateFilter,
-  changeDateCellTimingToSystemTimezone,
-  fullDateCellTiming,
-  isSameDateCellTiming,
-  FullDateCellTiming,
-  dateCellScheduleEncodedWeek,
-  dateCellScheduleDayCodesAreSetsEquivalent,
-  dateScheduleDayCodesAreSetsEquivalent
+  DateCellScheduleDateRange,
+  dateCellTimingStartsAtForStartOfDay,
+  isSameDateCellScheduleDateRange,
+  FullDateCellScheduleRangeInputDateRange,
+  fullDateCellScheduleRange
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, removeFromSet, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet } from '@dereekb/util';
@@ -84,7 +79,7 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
   /**
    * Filters the days of the schedule to only allow selecting days in the schedule.
    *
-   * If filter.startsAt is provided, then the timezone in this normal is ignored, if one is present. Convert to the current system timezone first.
+   * If filter.start is provided, then the timezone in this normal is ignored, if one is present. Convert to the system timezone first.
    */
   filter?: Maybe<DateCellScheduleDateFilterConfig>;
   /**
@@ -100,19 +95,17 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   minMaxDateRange?: Maybe<Partial<DateRange>>;
   /**
-   * Default startsAt date. Is updated as the inputStart is modified or filter is provided that provides the start date.
+   * Start date. Is updated as the inputStart is modified or filter is provided that provides the start date.
    *
-   * Defaults to midnight of the system/current timezone.
+   * Defaults to today and the current timezone.
    */
-  startsAt: DateCellTiming['startsAt'];
+  start: DateCellScheduleDateRange['start'];
   /**
-   * The configured system timezone. This does not change.
+   * System Timezone. Does not change.
    */
-  timezone: TimezoneString;
+  systemTimezone: TimezoneString;
   /**
-   * Timezone to use when outputting values.
-   *
-   * Only influences the output start date.
+   * Timezone to use when outputting the value. Only influences the output start date.
    */
   outputTimezone?: Maybe<TimezoneString>;
   /**
@@ -184,15 +177,14 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
 export function initialCalendarScheduleSelectionState(): CalendarScheduleSelectionState {
   const defaultScheduleDays = new Set([DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND]);
   const allowedDaysOfWeek = expandDateCellScheduleDayCodesToDayOfWeekSet(defaultScheduleDays);
-  const startsAt = startOfDay(new Date());
-  const timezone = requireCurrentTimezone();
-  const startTiming: DateCellTimingStartsAt = { startsAt, timezone };
-  const indexFactory = dateCellTimingRelativeIndexFactory(startTiming);
+  const defaultStartsAt = dateCellTimingStartsAtForStartOfDay(); // get midnight of the current timezone
+  const { startsAt, timezone: systemTimezone } = defaultStartsAt;
+  const indexFactory = dateCellTimingRelativeIndexFactory(defaultStartsAt);
   const indexDayOfWeek = dateCellDayOfWeekFactory(startsAt);
 
   return {
-    startsAt,
-    timezone,
+    start: startsAt,
+    systemTimezone,
     indexFactory,
     toggledIndexes: new Set(),
     defaultScheduleDays,
@@ -207,7 +199,7 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
 }
 
 export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
-  return findMaxDate([x.filter?.startsAt, x.minMaxDateRange?.start]);
+  return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
 }
 
 export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
@@ -222,7 +214,7 @@ export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelec
 }
 
 export function calendarScheduleStartBeingUsedFromFilter(x: Pick<CalendarScheduleSelectionState, 'filter' | 'computeSelectionResultRelativeToFilter'>) {
-  return x.computeSelectionResultRelativeToFilter && x.filter?.startsAt != null;
+  return x.computeSelectionResultRelativeToFilter && x.filter?.start != null;
 }
 
 @Injectable()
@@ -380,30 +372,19 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
-  readonly currentSelectionValueDateCellTiming$: Observable<Maybe<FullDateCellScheduleRange & DateCellTiming>> = this.currentSelectionValue$.pipe(
-    map((x) => (x ? { ...x.dateScheduleRange, duration: 1 } : undefined)),
-    distinctUntilChanged<Maybe<FullDateCellScheduleRange & DateCellTiming>>(isSameDateCellTiming),
-    shareReplay(1)
-  );
-
-  readonly currentSelectionValueFullDateCellTiming$: Observable<Maybe<FullDateCellTiming>> = this.currentSelectionValueDateCellTiming$.pipe(
-    map((x) => (x ? fullDateCellTiming(x) : undefined)),
-    shareReplay(1)
-  );
-
-  readonly currentSelectionValueStart$ = this.currentSelectionValueFullDateCellTiming$.pipe(
-    map((x) => x?.start),
+  readonly currentSelectionValueStart$ = this.currentSelectionValue$.pipe(
+    map((x) => x?.dateScheduleRange.start),
     distinctUntilChanged(isSameDate),
     shareReplay(1)
   );
 
-  readonly currentSelectionValueDateCellTimingDateFactory$ = this.currentSelectionValueDateCellTiming$.pipe(
-    map((x) => (x ? dateCellTimingDateFactory(x) : undefined)),
+  readonly currentSelectionValueDateCellTimingDateFactory$ = this.currentSelectionValue$.pipe(
+    map((x) => (x ? dateCellTimingDateFactory({ startsAt: x.dateScheduleRange.start, timezone: x.dateScheduleRange.timezone }) : undefined)),
     shareReplay(1)
   );
 
-  readonly currentSelectionValueDateCellDurationSpanExpansion$: Observable<DateCellDurationSpan<DateCell>[]> = this.currentSelectionValueDateCellTiming$.pipe(
-    map((x) => (x ? expandDateCellScheduleRange({ dateCellScheduleRange: x, duration: x.duration }) : [])),
+  readonly currentSelectionValueDateCellDurationSpanExpansion$: Observable<DateCellDurationSpan<DateCell>[]> = this.currentSelectionValue$.pipe(
+    map((x) => (x ? expandDateCellScheduleRange({ dateCellScheduleRange: x.dateScheduleRange }) : [])),
     shareReplay(1)
   );
 
@@ -422,17 +403,14 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly selectionValue$ = this.currentSelectionValue$.pipe(filterMaybe(), shareReplay(1));
 
-  readonly currentSelectionValueWithTimezone$: Observable<Maybe<CalendarScheduleSelectionValue>> = this.currentSelectionValue$.pipe(
+  readonly currentSelectionValueWithTimezone$ = this.currentSelectionValue$.pipe(
     combineLatestWith(this.effectiveOutputTimezoneNormal$),
     map(([x, timezoneNormal]) => {
       if (x && timezoneNormal) {
-        // TODO: consider using convertDateCellTimingToTimezone function
-
         x = {
           dateScheduleRange: {
             ...x.dateScheduleRange,
-            timezone: timezoneNormal.configuredTimezoneString,
-            startsAt: timezoneNormal.targetDateToSystemDate(x.dateScheduleRange.startsAt),
+            start: timezoneNormal.targetDateToSystemDate(x.dateScheduleRange.start),
             end: timezoneNormal.targetDateToSystemDate(x.dateScheduleRange.end)
           }
         } as CalendarScheduleSelectionValue;
@@ -447,7 +425,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly selectionValueWithTimezone$ = this.currentSelectionValueWithTimezone$.pipe(filterMaybe(), shareReplay(1));
 
   readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$: Observable<DateCellDurationSpan<DateCell>[]> = this.selectionValueWithTimezone$.pipe(
-    map((x) => expandDateCellScheduleRange({ dateCellScheduleRange: x.dateScheduleRange, duration: 1 })),
+    map((x) => expandDateCellScheduleRange({ dateCellScheduleRange: x.dateScheduleRange })),
     shareReplay(1)
   );
 
@@ -472,7 +450,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
-  readonly dateScheduleRangeValue$ = this.currentDateCellScheduleRangeValue$.pipe(filterMaybe(), shareReplay(1));
+  readonly dateCellScheduleRangeValue$ = this.currentDateCellScheduleRangeValue$.pipe(filterMaybe(), shareReplay(1));
 
   readonly cellContentFactory$ = this.state$.pipe(
     map((x) => x.cellContentFactory),
@@ -500,7 +478,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly setComputeSelectionResultRelativeToFilter = this.updater(updateStateWithComputeSelectionResultRelativeToFilter);
   readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
 
-  readonly setOutputTimezone = this.updater(updateStateWithOutputTimezoneValue);
+  readonly setOutputTimezone = this.updater(updateStateWithTimezoneValue);
   readonly setInputRange = this.updater(updateStateWithChangedRange);
 
   // NOTE: Selected dates are NOT selected indexes. They are the internal selected dates that are excluded from the selection.
@@ -519,7 +497,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly setScheduleDays = this.updater(updateStateWithChangedScheduleDays);
   readonly setAllowAllScheduleDays = this.updater((state) => updateStateWithChangedScheduleDays(state, [DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND]));
 
-  readonly setDateCellScheduleRangeValue = this.updater((state, value: Maybe<FullDateCellScheduleRange>) => updateStateWithDateCellScheduleRangeValue(state, value));
+  readonly setDateScheduleRangeValue = this.updater((state, value: Maybe<FullDateCellScheduleRangeInputDateRange>) => updateStateWithDateCellScheduleRangeValue(state, value));
   readonly setCellContentFactory = this.updater((state, cellContentFactory: CalendarScheduleSelectionCellContentFactory) => ({ ...state, cellContentFactory }));
 
   /**
@@ -533,7 +511,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   /**
    * @deprecated use setOutputTimezone instead.
    */
-  readonly setTimezone = this.updater(updateStateWithOutputTimezoneValue);
+  readonly setTimezone = this.setOutputTimezone;
 
   /**
    * @deprecated use ouputTimezone$
@@ -549,6 +527,16 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
    * @deprecated use effectiveOuputTimezoneNormal$
    */
   readonly effectiveTimezoneNormal$ = this.effectiveOutputTimezoneNormal$;
+
+  /**
+   * @deprecated use currentSelectionValueDateCellDurationSpanExpansion$
+   */
+  readonly currentSelectionValueDateBlockDurationSpan$ = this.currentSelectionValueDateCellDurationSpanExpansion$;
+
+  /**
+   * @deprecated use selectionValueWithTimezoneDateCellDurationSpanExpansion$
+   */
+  readonly selectionValueWithTimezoneDateBlockDurationSpan$ = this.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
 }
 
 export function updateStateWithInitialSelectionState(state: CalendarScheduleSelectionState, initialSelectionState: Maybe<AllOrNoneSelection>): CalendarScheduleSelectionState {
@@ -600,7 +588,7 @@ export function updateStateWithMinMaxDateRange(state: CalendarScheduleSelectionS
 }
 
 export function updateStateWithFilter(state: CalendarScheduleSelectionState, inputFilter: Maybe<DateCellScheduleDateFilterConfig>): CalendarScheduleSelectionState {
-  const { computedExclusions: exclusions, minMaxDateRange, timezone } = state;
+  const { computedExclusions: exclusions, minMaxDateRange, systemTimezone } = state;
 
   let isEnabledFilterDay: Maybe<DecisionFunction<DateCellTimingRelativeIndexFactoryInput>> = () => true;
   let filter: Maybe<DateCellScheduleDateFilterConfig> = null;
@@ -629,15 +617,14 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 
     if (minMaxDateRange) {
       enabledFilter.minMaxDateRange = minMaxDateRange;
-      enabledFilter.setStartAsMinDate = filter?.startsAt ? true : false; // If a start date is set, then it becomes the floor.
+      enabledFilter.setStartAsMinDate = filter?.start ? true : false; // If a start date is set, then it becomes the floor.
     }
 
     /**
      * If the input filter has a start date, use that as the relative start to ensure indexes are compared the same,
      * otherwise use the state's start. This is important for the index calculations.
      */
-    enabledFilter.startsAt = inputFilter?.startsAt ?? state.startsAt;
-    enabledFilter.timezone = timezone;
+    enabledFilter.start = inputFilter?.start ?? state.start;
 
     // create the filter
     isEnabledFilterDay = dateCellScheduleDateFilter(enabledFilter);
@@ -646,17 +633,11 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
   state = { ...state, filter, isEnabledFilterDay };
 
   // For the same reason as above, use the filter's start date as the relative start if applicable.
-  if (filter && filter.startsAt) {
-    let startsAt = filter.startsAt;
-
-    // Convert the startsAt to be in the system timezone range
-    if (filter.timezone != null && filter.timezone !== timezone) {
-      startsAt = changeDateCellTimingToSystemTimezone({ startsAt, end: startsAt, timezone: filter.timezone }).startsAt;
-    }
-
-    state.startsAt = startsAt;
-    state.indexFactory = dateCellTimingRelativeIndexFactory({ startsAt, timezone: filter.timezone ?? timezone });
-    state.indexDayOfWeek = dateCellDayOfWeekFactory(startsAt);
+  if (filter && filter.start) {
+    const start = filter.start;
+    state.start = start;
+    state.indexFactory = dateCellTimingRelativeIndexFactory({ startsAt: start, timezone: filter.timezone ?? systemTimezone });
+    state.indexDayOfWeek = dateCellDayOfWeekFactory(start);
   }
 
   // attempt to re-apply the initial selection state once filter is applied
@@ -674,43 +655,49 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
   return state;
 }
 
-export function updateStateWithOutputTimezoneValue(state: CalendarScheduleSelectionState, outputTimezone: Maybe<TimezoneString>): CalendarScheduleSelectionState {
-  const { currentSelectionValue, timezone: systemTimezone } = state;
+export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionState, timezone: Maybe<TimezoneString>): CalendarScheduleSelectionState {
+  const { currentSelectionValue } = state;
 
-  const outputTimezoneNormal = outputTimezone ? dateTimezoneUtcNormal(outputTimezone) : undefined;
+  const timezoneNormal = timezone ? dateTimezoneUtcNormal({ timezone }) : undefined;
 
-  if (outputTimezoneNormal && currentSelectionValue) {
+  if (timezoneNormal && currentSelectionValue) {
     // update the selection value to reflect the timezone changes.
     const { dateScheduleRange: currentDateCellScheduleRange } = currentSelectionValue;
-    const startsAt = outputTimezoneNormal.targetDateToSystemDate(currentDateCellScheduleRange.startsAt);
-    const end = outputTimezoneNormal.targetDateToSystemDate(currentDateCellScheduleRange.end);
+    const start = timezoneNormal.targetDateToSystemDate(currentDateCellScheduleRange.start);
+    const end = timezoneNormal.targetDateToSystemDate(currentDateCellScheduleRange.end);
 
-    const newRange: FullDateCellScheduleRange = {
+    const newRange: DateCellScheduleDateRange = {
       ...currentSelectionValue.dateScheduleRange,
-      startsAt,
-      end,
-      timezone: systemTimezone
+      start,
+      end
     };
 
-    return updateStateWithDateCellScheduleRangeValue({ ...state, outputTimezone, outputTimezoneNormal }, newRange);
+    return updateStateWithDateCellScheduleRangeValue({ ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }, newRange);
   } else {
-    return { ...state, outputTimezone: outputTimezone, outputTimezoneNormal }; // no change in value
+    return { ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }; // no change in value
   }
 }
 
-export function updateStateWithDateCellScheduleRangeValue(state: CalendarScheduleSelectionState, change: Maybe<FullDateCellScheduleRange>): CalendarScheduleSelectionState {
-  const { outputTimezoneNormal, currentSelectionValue } = state;
+export function updateStateWithDateCellScheduleRangeValue(state: CalendarScheduleSelectionState, inputChange: Maybe<FullDateCellScheduleRangeInputDateRange>): CalendarScheduleSelectionState {
+  const { outputTimezoneNormal: timezoneNormal, currentSelectionValue } = state;
   const currentDateCellScheduleRange = currentSelectionValue?.dateScheduleRange; // current range is always in system time
+  let change: Maybe<Pick<DateCellScheduleDateRange, 'start' | 'end' | 'ex' | 'w' | 'timezone'>>;
 
-  if (!calendarScheduleStartBeingUsedFromFilter(state) && outputTimezoneNormal) {
+  if (!calendarScheduleStartBeingUsedFromFilter(state) && timezoneNormal) {
     // When using timezones, always return from the start of the day. Inputs are converted to the system time and used as the start of the day.
     // Outputs remain accurate.
 
-    if (change) {
+    if (inputChange) {
+      // calculate the schedule range
+      const fullChange = fullDateCellScheduleRange({ dateCellScheduleRange: inputChange });
+
+      // convert the start/end to system time
       change = {
-        ...change,
-        startsAt: startOfDay(outputTimezoneNormal.systemDateToTargetDate(change.startsAt)),
-        end: startOfDay(outputTimezoneNormal.systemDateToTargetDate(change.end))
+        start: startOfDay(timezoneNormal.systemDateToTargetDate(fullChange.start)),
+        end: startOfDay(timezoneNormal.systemDateToTargetDate(fullChange.end)),
+        w: fullChange.w,
+        ex: fullChange.ex,
+        timezone: fullChange.timezone
       };
     }
   }
@@ -721,9 +708,7 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
     return state;
   } else {
     if (change != null) {
-      // TODO: may need/want to change the startsAt value to be midnight
-
-      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.startsAt, inputEnd: change.end, toggledIndexes: new Set(change.ex) };
+      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, toggledIndexes: new Set(change.ex) };
       return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || '89'));
     } else {
       return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
@@ -932,11 +917,11 @@ export function finalizeNewCalendarScheduleSelectionState(nextState: CalendarSch
 }
 
 export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarScheduleSelectionState): DecisionFunction<DateCellTimingRelativeIndexFactoryInput> {
-  const { allowedDaysOfWeek, indexFactory, inputStart, inputEnd, indexDayOfWeek } = state;
+  const { allowedDaysOfWeek, indexFactory, inputStart, inputEnd, indexDayOfWeek, systemTimezone } = state;
   let isInStartAndEndRange: IsDateWithinDateCellRangeFunction;
 
   if (inputStart && inputEnd) {
-    isInStartAndEndRange = isDateWithinDateCellRangeFunction({ startsAt: state, range: { start: inputStart, end: inputEnd } });
+    isInStartAndEndRange = isDateWithinDateCellRangeFunction({ startsAt: { startsAt: state.start, timezone: systemTimezone }, range: { start: inputStart, end: inputEnd } });
   } else {
     isInStartAndEndRange = () => false;
   }
@@ -955,7 +940,7 @@ export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarSche
 }
 
 export function computeScheduleSelectionValue(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionValue> {
-  const { indexFactory, allowedDaysOfWeek, effectiveScheduleDays, indexDayOfWeek, computeSelectionResultRelativeToFilter, filter, timezone } = state;
+  const { indexFactory, allowedDaysOfWeek, effectiveScheduleDays, indexDayOfWeek, computeSelectionResultRelativeToFilter, filter, systemTimezone } = state;
   const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(state);
 
   if (rangeAndExclusion == null) {
@@ -966,18 +951,18 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
   let filterOffsetExcludedRange: DateCellIndex[] = [];
   let indexOffset = dateCellRange.i;
 
-  let startsAt = rangeStart;
+  let start = rangeStart;
   let end = rangeEnd;
 
   // If computeSelectionResultRelativeToFilter is true, then we need to offset the values to be relative to that start.
-  if (computeSelectionResultRelativeToFilter && filter?.startsAt) {
-    startsAt = filter.startsAt;
+  if (computeSelectionResultRelativeToFilter && filter?.start) {
+    start = filter.start;
 
     if (filter?.end) {
       end = copyHoursAndMinutesFromDate(end, filter.end);
     }
 
-    const filterStartIndexOffset = indexFactory(rangeStart) - indexFactory(startsAt);
+    const filterStartIndexOffset = indexFactory(rangeStart) - indexFactory(start);
     filterOffsetExcludedRange = range(0, filterStartIndexOffset);
     indexOffset = indexOffset - filterStartIndexOffset;
   }
@@ -997,13 +982,13 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
   const d: DateCellIndex[] = []; // "included" blocks are never used/calculated.
 
   // Always ensure the end is after or equal to the start.
-  if (isBefore(end, startsAt)) {
-    end = startsAt; // end is start
+  if (isBefore(end, start)) {
+    end = start; // end is start
   }
 
-  const dateScheduleRange: FullDateCellScheduleRange = {
-    timezone,
-    startsAt,
+  const dateScheduleRange: DateCellScheduleDateRange = {
+    timezone: systemTimezone,
+    start,
     end,
     w,
     d,
@@ -1012,10 +997,7 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
 
   return {
     dateScheduleRange,
-    minMaxRange: {
-      start: startsAt,
-      end
-    }
+    minMaxRange: { start, end }
   };
 }
 
@@ -1025,9 +1007,9 @@ export interface CalendarScheduleSelectionRangeAndExclusion extends DateRange {
 }
 
 export function computeScheduleSelectionRangeAndExclusion(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionRangeAndExclusion> {
-  const { startsAt: currentStartsAt, isEnabledDay, isEnabledFilterDay, timezone: systemTimezone } = state;
+  const { start: currentStart, isEnabledDay, isEnabledFilterDay, systemTimezone } = state;
 
-  const dateFactory = dateCellTimingStartDateFactory({ startsAt: currentStartsAt, timezone: systemTimezone });
+  const dateFactory = dateCellTimingStartDateFactory({ startsAt: currentStart, timezone: systemTimezone });
   const dateCellRange = computeCalendarScheduleSelectionDateCellRange(state);
 
   if (dateCellRange == null) {
@@ -1053,7 +1035,7 @@ export function computeScheduleSelectionRangeAndExclusion(state: CalendarSchedul
 }
 
 export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSelectionState): Maybe<DateRange> {
-  const dateFactory = dateCellTimingDateFactory(state);
+  const dateFactory = dateCellTimingDateFactory({ startsAt: state.start, timezone: state.systemTimezone });
   const dateCellRange = computeCalendarScheduleSelectionDateCellRange(state);
   const dateRange: Maybe<DateRange> = dateCellRange != null ? { start: dateFactory(dateCellRange.i), end: dateFactory(dateCellRange.to as number) } : undefined;
   return dateRange;

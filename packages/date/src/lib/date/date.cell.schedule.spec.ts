@@ -24,13 +24,15 @@ import {
   dateCellScheduleDateRange,
   fullDateCellScheduleRange,
   FullDateCellScheduleRangeInputDateRange,
-  DateCellScheduleDateRangeInput
+  DateCellScheduleDateRangeInput,
+  isFullDateCellScheduleDateRange
 } from './date.cell.schedule';
-import { addDays, addHours, addMinutes, differenceInDays } from 'date-fns';
+import { addDays, addHours, addMinutes, differenceInDays, startOfHour } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING, lastValue, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString, dateTimezoneUtcNormal } from './date.timezone';
 import { dateCellIndexRange } from './date.cell.factory';
+import { requireCurrentTimezone } from './date';
 
 describe('dateCellScheduleDateRange()', () => {
   const timezone = 'UTC';
@@ -708,6 +710,34 @@ describe('dateCellScheduleDayCodesAreSetsEquivalent()', () => {
   });
 });
 
+describe('isFullDateCellScheduleDateRange()', () => {
+  const schedule: DateCellSchedule = { w: '89', ex: [0, 1], d: [2] };
+  const days = 7;
+  const duration = 60;
+  const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
+  const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration }, days, 'UTC');
+  const fullRange = { ...timing, ...schedule };
+
+  it('should return true for a FullDateCellScheduleDateRange', () => {
+    const dateScheduleDateRange = {
+      ...fullRange
+    };
+
+    expect(isFullDateCellScheduleDateRange(dateScheduleDateRange)).toBe(true);
+  });
+
+  it('should return false for a DateCellScheduleDateRange', () => {
+    const dateScheduleDateRange = {
+      ...fullRange,
+      // no startsAt or duration specified, only start/end
+      duration: undefined,
+      startsAt: undefined
+    };
+
+    expect(isFullDateCellScheduleDateRange(dateScheduleDateRange)).toBe(false);
+  });
+});
+
 describe('isSameDateCellSchedule()', () => {
   it('should return true for the same date schedule.', () => {
     const schedule: DateCellSchedule = { w: '89', ex: [0, 1], d: [2] };
@@ -811,6 +841,57 @@ describe('fullDateCellScheduleRange()', () => {
           expect(result.end).not.toBeSameSecondAs(timing.end);
           expect(result.end).toBeSameSecondAs(addMinutes(timing.end, newDuration - timing.duration));
         });
+      });
+    });
+
+    describe('Scenarios', () => {
+      describe('DateCellScheduleDateRange in October', () => {
+        const range: DateCellScheduleDateRange = {
+          d: [],
+          ex: [],
+          start: new Date('2023-10-10T05:00:00.000Z'),
+          end: new Date('2023-10-11T05:00:00.000Z'),
+          timezone: 'America/Chicago',
+          w: '89'
+        };
+
+        it('should return a FullDateCellScheduleRange for DateCellScheduleDateRange input', () => {
+          const result = fullDateCellScheduleRange({
+            dateCellScheduleRange: range
+          });
+          const expectedEnd = new Date('2023-10-11T05:01:00.000Z');
+
+          expect(result.startsAt).toBeSameSecondAs(range.start);
+          expect(result.start).toBeSameSecondAs(range.start);
+          expect(result.duration).toBe(1); // duration is restored
+          expect(result.timezone).toBe(range.timezone);
+          expect(result.end).toBeSameSecondAs(expectedEnd);
+          expect(result.d).toBe(range.d);
+          expect(result.w).toBe(range.w);
+          expect(result.ex).toBe(range.ex);
+        });
+      });
+    });
+
+    describe('System', () => {
+      const timezone = requireCurrentTimezone();
+      const startsAt = startOfHour(new Date());
+      const timing = dateCellTiming({ startsAt, duration: 1 }, 1, timezone);
+      const fullRange = { ...timing, ...schedule };
+
+      it('should return the input FullDateCellScheduleRange as-is', () => {
+        const result = fullDateCellScheduleRange({
+          dateCellScheduleRange: fullRange
+        });
+
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.start).toBeSameSecondAs(timing.start);
+        expect(result.duration).toBe(timing.duration); // duration is restored
+        expect(result.timezone).toBe(timing.timezone);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.d).toBe(fullRange.d);
+        expect(result.w).toBe(fullRange.w);
+        expect(result.ex).toBe(fullRange.ex);
       });
     });
 

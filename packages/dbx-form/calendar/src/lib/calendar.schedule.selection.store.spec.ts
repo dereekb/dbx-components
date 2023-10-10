@@ -53,7 +53,7 @@ describe('computeCalendarScheduleSelectionDateCellRange()', () => {
     let state = initialCalendarScheduleSelectionState();
 
     const days = 4;
-    const inputStart = state.startsAt;
+    const inputStart = state.start;
     const inputEnd = addDays(inputStart, days - 1);
 
     state = updateStateWithChangedRange(state, { inputStart, inputEnd });
@@ -83,7 +83,7 @@ describe('computeCalendarScheduleSelectionDateCellRange()', () => {
       let state = initialCalendarScheduleSelectionState();
 
       const days = 4;
-      const inputStart = state.startsAt;
+      const inputStart = state.start;
       const inputEnd = addDays(inputStart, days - 1);
 
       state = updateStateWithChangedRange(state, { inputStart, inputEnd });
@@ -101,7 +101,7 @@ describe('computeCalendarScheduleSelectionDateCellRange()', () => {
       let state = initialCalendarScheduleSelectionState();
 
       const days = 3;
-      const inputStart = state.startsAt;
+      const inputStart = state.start;
       const inputEnd = addDays(inputStart, days - 1);
 
       state = updateStateWithChangedRange(state, { inputStart, inputEnd });
@@ -122,7 +122,7 @@ describe('computeCalendarScheduleSelectionDateCellRange()', () => {
       let state = initialCalendarScheduleSelectionState();
 
       const days = 4;
-      const inputStart = state.startsAt;
+      const inputStart = state.start;
       const inputEnd = addDays(inputStart, days - 1);
 
       state = updateStateWithChangedRange(state, { inputStart, inputEnd });

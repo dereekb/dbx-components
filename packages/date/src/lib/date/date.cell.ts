@@ -1,8 +1,8 @@
-import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, Minutes, minutesToFractionalHours, FractionalHour, TimezoneStringRef, MS_IN_MINUTE } from '@dereekb/util';
+import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, Minutes, minutesToFractionalHours, FractionalHour, TimezoneStringRef, MS_IN_MINUTE, ISO8601DayString } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
-import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate } from './date';
+import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate, requireCurrentTimezone } from './date';
 import { Expose, Type } from 'class-transformer';
 import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal } from './date.timezone';
 import { IsDate, IsNumber, IsString, Min } from 'class-validator';
@@ -76,6 +76,40 @@ export type DateCellArrayRef<B extends DateCell = DateCell> = {
  * Used to derive the indexes for the days.
  */
 export type DateCellTimingStartsAt = Pick<DateCellTiming, 'startsAt' | 'timezone'>;
+
+/**
+ * Input for dateCellTimingStartsAtForStartOfDay()
+ */
+export interface DateCellTimingStartsAtForStartOfDayInput {
+  /**
+   * "Now" date in the system timezone normal.
+   */
+  readonly now?: Date | ISO8601DayString;
+  /**
+   * Timezone string
+   */
+  readonly timezone?: TimezoneString;
+}
+
+/**
+ * Creates a new DateCellTimingStartsAt for the given time and timezone.
+ *
+ * @param now
+ * @returns
+ */
+export function dateCellTimingStartsAtForStartOfDay(input: DateCellTimingStartsAtForStartOfDayInput = {}): DateCellTimingStartsAt {
+  const timezone = input.timezone ?? requireCurrentTimezone();
+  let startsAt = startOfDay(new Date());
+
+  if (input.timezone != null) {
+    startsAt = dateTimezoneUtcNormal(timezone).targetDateToSystemDate(startsAt);
+  }
+
+  return {
+    startsAt,
+    timezone
+  };
+}
 
 /**
  * The DateCellTimingEnd and endsAt times and timezone.

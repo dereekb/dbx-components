@@ -47,8 +47,7 @@ import {
   isSameDateCellTiming,
   FullDateCellTiming,
   dateCellScheduleEncodedWeek,
-  dateCellScheduleDayCodesAreSetsEquivalent,
-  dateScheduleDayCodesAreSetsEquivalent
+  dateCellScheduleDayCodesAreSetsEquivalent
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, removeFromSet, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet } from '@dereekb/util';

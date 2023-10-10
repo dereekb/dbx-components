@@ -1,7 +1,7 @@
 import { addMilliseconds, addMinutes, minutesToHours, startOfDay } from 'date-fns';
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString, YearNumber, MapSameFunction, Building } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
-import { copyHoursAndMinutesFromDate, guessCurrentTimezone, minutesToMs } from './date';
+import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
 import { DateRange, dateRange, DateRangeInput, DateRangeType, TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 
@@ -397,6 +397,16 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
   calculateAllOffsets<T = number>(date: Date, map?: DateTimezoneConversionFunction<T>) {
     return calculateAllConversions<T>(date, this, map);
+  }
+
+  /**
+   * Returns true if the input is midnight in the target timezone.
+   *
+   * @param date
+   */
+  isStartOfDayInTargetTimezone(date: Date): boolean {
+    const utcNormal = this.baseDateToTargetDate(date);
+    return isStartOfDayInUTC(utcNormal);
   }
 
   /**

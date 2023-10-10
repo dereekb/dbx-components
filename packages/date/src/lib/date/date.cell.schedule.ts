@@ -3,7 +3,7 @@ import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfW
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes, startOfDay } from 'date-fns';
-import { requireCurrentTimezone } from './date';
+import { isDate, isSameDate, requireCurrentTimezone } from './date';
 import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingDateRange, DateCellTimingStartsAtEndRange, FullDateCellTiming, isSameDateCellTiming, isSameFullDateCellTiming, DateCellTimingEventStartsAt, isValidDateCellTiming, isFullDateCellTiming } from './date.cell';
 import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
@@ -367,6 +367,45 @@ export class DateCellSchedule implements DateCellSchedule {
 export interface DateCellScheduleDateRange extends DateCellSchedule, DateCellTimingDateRange {}
 
 /**
+ * A special DateCellScheduleDateRange that has both the start and end times at the start of the day in the target timezone for their given ranges.
+ */
+export type DateCellScheduleStartOfDayDateRange = DateCellScheduleDateRange;
+
+/**
+ * Returns true if the input is possibly a FullDateCellScheduleRange.
+ *
+ * Does not check that the input is a valid FullDateCellScheduleRange.
+ *
+ * @param input
+ * @returns
+ */
+export function isDateCellScheduleDateRange(input: object): input is DateCellScheduleDateRange {
+  if (typeof input === 'object') {
+    const asRange = input as FullDateCellScheduleRange;
+    return isDateCellSchedule(asRange) && isDate(asRange.end) && isDate(asRange.start);
+  }
+
+  return false;
+}
+
+/**
+ * Returns true if the input is a DateCellScheduleDateRange without a duration or startsAt.
+ *
+ * @param input
+ * @returns
+ */
+export function isDateCellScheduleStartOfDayDateRange(input: object): input is DateCellScheduleStartOfDayDateRange {
+  if (isDateCellScheduleDateRange(input) && (input as Partial<FullDateCellScheduleRange>).duration == null && (input as Partial<FullDateCellScheduleRange>).startsAt == null) {
+    const { start, end, timezone } = input;
+
+    const normalInstance = dateTimezoneUtcNormal(timezone);
+    return normalInstance.isStartOfDayInTargetTimezone(start) && normalInstance.isStartOfDayInTargetTimezone(end);
+  }
+
+  return false;
+}
+
+/**
  * Returns true if both inputs have the same schedule and date range.
  *
  * @param a
@@ -519,6 +558,11 @@ export interface FullDateCellScheduleRangeInput {
 }
 
 /**
+ * If a duration is not set, this is the default used.
+ */
+export const DEFAULT_FULL_DATE_SCHEDULE_RANGE_DURATION = 1;
+
+/**
  * Creates a FullDateCellScheduleRange from the input.
  */
 export function fullDateCellScheduleRange(input: FullDateCellScheduleRangeInput): FullDateCellScheduleRange {
@@ -531,14 +575,18 @@ export function fullDateCellScheduleRange(input: FullDateCellScheduleRangeInput)
   const needsDurationAdjustment = inputStartsAt == null || (updateWithDefaults && inputDefaultDuration != null);
   const needsStartsAtAdjustment = inputDuration == null || (updateWithDefaults && inputDefaultStartsAtTime != null);
 
-  if (isFullDateCellScheduleDateRange(input)) {
-    initialFullDateRange = input; // no need to create a FullDateCellScheduleRange
+  if (isFullDateCellScheduleDateRange(dateCellScheduleRange)) {
+    initialFullDateRange = dateCellScheduleRange; // no need to create a FullDateCellScheduleRange
   } else {
     // fill in the blanks for the date range
     const initialDateRange = dateCellScheduleDateRange(dateCellScheduleRange) as FullDateCellScheduleRange;
     initialDateRange.startsAt = inputStartsAt ?? initialDateRange.start;
-    initialDateRange.duration = inputDuration ?? 1; // copy duration and startsAt
+    initialDateRange.duration = inputDuration ?? DEFAULT_FULL_DATE_SCHEDULE_RANGE_DURATION; // copy duration and startsAt
     initialFullDateRange = initialDateRange;
+
+    if (isDateCellScheduleStartOfDayDateRange(dateCellScheduleRange)) {
+      initialFullDateRange.end = addMinutes(initialFullDateRange.end, initialDateRange.duration);
+    }
   }
 
   let fullDateCellTiming: FullDateCellTiming = initialFullDateRange;
@@ -585,7 +633,7 @@ export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFi
 /**
  * dateCellScheduleDateFilter() configuration.
  */
-export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartsAtEndRange> {
+export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartsAtEndRange & DateCellTimingDateRange> {
   minMaxDateRange?: Maybe<Partial<DateCellRangeOrDateRange>>;
   /**
    * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.
@@ -595,6 +643,7 @@ export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Part
 
 export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilterConfig {
   return {
+    start: inputFilter.start,
     startsAt: inputFilter.startsAt,
     end: inputFilter.end,
     timezone: inputFilter.timezone,
@@ -614,13 +663,13 @@ export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellSchedu
  * @returns
  */
 export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilter {
-  const { w, startsAt: inputStartsAt, end: inputEnd, timezone: inputTimezone, setStartAsMinDate = true, minMaxDateRange } = config;
+  const { w, start: inputStart, startsAt: inputStartsAt, end: inputEnd, timezone: inputTimezone, setStartAsMinDate = true, minMaxDateRange } = config;
 
   const timezone = inputTimezone ?? requireCurrentTimezone(); // if the timezone is not provided, assume the startsAt is a system timezone normal.
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
-  // derive the startsAt time for the range. If not provided, defaults to midnight in the target timezone.
-  const startsAt: Date = inputStartsAt != null ? inputStartsAt : normalInstance.startOfDayInTargetTimezone();
+  // derive the startsAt time for the range. If not provided, defaults to inputStart, or midnight in the target timezone.
+  const startsAt: Date = inputStartsAt != null ? inputStartsAt : inputStart ?? normalInstance.startOfDayInTargetTimezone();
   const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt);
 
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);

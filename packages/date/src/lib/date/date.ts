@@ -327,6 +327,16 @@ export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T
   return Array.from(readDaysOfWeek(values, readDate)).sort(sortNumbersAscendingFunction).map(nameFunction);
 }
 
+/**
+ * Returns true if the input date is at midnight for UTC.
+ *
+ * @param date
+ * @returns
+ */
+export function isStartOfDayInUTC(date: Date): boolean {
+  return date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
+}
+
 // MARK: Compat
 /**
  * @deprecated Use roundDownToHour instead.

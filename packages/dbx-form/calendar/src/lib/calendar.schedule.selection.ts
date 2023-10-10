@@ -1,4 +1,4 @@
-import { DateCellIndex, FullDateCellScheduleRange, DateRange } from '@dereekb/date';
+import { DateCellIndex, FullDateCellScheduleRange, DateRange, DateCellScheduleDateRange } from '@dereekb/date';
 import { FactoryWithRequiredInput } from '@dereekb/util';
 import { CalendarMonthViewDay } from 'angular-calendar';
 
@@ -6,7 +6,7 @@ export interface CalendarScheduleSelectionValue {
   /**
    * Schedule range.
    */
-  dateScheduleRange: FullDateCellScheduleRange;
+  dateScheduleRange: DateCellScheduleDateRange;
   /**
    * Min and max dates in the selection.
    */

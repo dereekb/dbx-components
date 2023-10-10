@@ -23,7 +23,9 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
    * Is false by default.
    */
   allowTextInput?: boolean;
-
+  /**
+   * Whether or not to hide the customize button. Defaults to false.
+   */
   hideCustomize?: boolean;
   /**
    * Whether or not to allow customizing before picking a date range to customize.
@@ -43,7 +45,13 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
    * Optional min/max date range to filter on. Works in conjuction with the filter.
    */
   minMaxDateRange?: ObservableOrValue<Maybe<Partial<DateRange>>>;
+  /**
+   * (Optional) Observable with a filter value to apply to the date range.
+   */
   filter?: ObservableOrValue<Maybe<DateCellScheduleDateFilterConfig>>;
+  /**
+   * (Optional) Observable with days and values to exclude from the date range.
+   */
   exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>>>;
   /**
    * Custom dialog content config for the popup
@@ -169,7 +177,7 @@ export class DbxFormCalendarDateCellScheduleRangeFieldComponent<T extends DbxFor
     this._formControlObs.next(this.formControl);
 
     this._syncSub.subscription = this.value$.pipe(distinctUntilChanged(isSameDateCellScheduleDateRange)).subscribe((x) => {
-      this.dbxCalendarScheduleSelectionStore.setDateCellScheduleRangeValue(x);
+      this.dbxCalendarScheduleSelectionStore.setDateScheduleRangeValue(x);
     });
 
     this._valueSub.subscription = this.dbxCalendarScheduleSelectionStore.currentDateCellScheduleRangeValue$.subscribe((x) => {
