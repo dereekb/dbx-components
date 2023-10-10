@@ -1,8 +1,9 @@
 import { lastValue } from '@dereekb/util';
 import { addDays, addHours } from 'date-fns';
-import { DateScheduleDayCode, systemNormalDateToBaseDate } from '@dereekb/date';
-import { computeCalendarScheduleSelectionDateBlockRange, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithChangedScheduleDays } from './calendar.schedule.selection.store';
+import { DateCellScheduleDayCode, systemNormalDateToBaseDate } from '@dereekb/date';
+import { computeCalendarScheduleSelectionDateCellRange, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithChangedScheduleDays } from './calendar.schedule.selection.store';
 
+/*
 describe('computeScheduleSelectionValue()', () => {
   const start = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
 
@@ -12,6 +13,7 @@ describe('computeScheduleSelectionValue()', () => {
 
   describe('schedule days disabled', () => {});
 });
+*/
 
 describe('isEnabledDayInCalendarScheduleSelectionState()', () => {
   describe('function', () => {
@@ -23,7 +25,7 @@ describe('isEnabledDayInCalendarScheduleSelectionState()', () => {
 
         let state = initialCalendarScheduleSelectionState();
         state = updateStateWithChangedRange(state, { inputStart, inputEnd });
-        state = updateStateWithChangedScheduleDays(state, [DateScheduleDayCode.WEEKDAY]);
+        state = updateStateWithChangedScheduleDays(state, [DateCellScheduleDayCode.WEEKDAY]);
 
         it('Sunday March 12 2023 should not be enabled', () => {
           const date = new Date('2023-03-12T07:00:00.000Z');
@@ -46,7 +48,7 @@ describe('isEnabledDayInCalendarScheduleSelectionState()', () => {
   });
 });
 
-describe('computeCalendarScheduleSelectionDateBlockRange()', () => {
+describe('computeCalendarScheduleSelectionDateCellRange()', () => {
   it('should calculate a 4 day selection from the inputStart and inputEnd.', () => {
     let state = initialCalendarScheduleSelectionState();
 
@@ -56,7 +58,7 @@ describe('computeCalendarScheduleSelectionDateBlockRange()', () => {
 
     state = updateStateWithChangedRange(state, { inputStart, inputEnd });
 
-    const result = computeCalendarScheduleSelectionDateBlockRange(state);
+    const result = computeCalendarScheduleSelectionDateCellRange(state);
 
     expect(result?.i).toBe(0);
     expect(result?.to).toBe(days - 1);
@@ -70,7 +72,7 @@ describe('computeCalendarScheduleSelectionDateBlockRange()', () => {
       add
     });
 
-    const result = computeCalendarScheduleSelectionDateBlockRange(state);
+    const result = computeCalendarScheduleSelectionDateCellRange(state);
 
     expect(result?.i).toBe(0);
     expect(result?.to).toBe(lastValue(add));
@@ -91,7 +93,7 @@ describe('computeCalendarScheduleSelectionDateBlockRange()', () => {
         add
       });
 
-      const result = computeCalendarScheduleSelectionDateBlockRange(state);
+      const result = computeCalendarScheduleSelectionDateCellRange(state);
       expect(result).toBeUndefined();
     });
 
@@ -110,7 +112,7 @@ describe('computeCalendarScheduleSelectionDateBlockRange()', () => {
         add
       });
 
-      const result = computeCalendarScheduleSelectionDateBlockRange(state);
+      const result = computeCalendarScheduleSelectionDateCellRange(state);
       expect(result).toBeDefined();
       expect(result?.i).toBe(onlyEnabledIndex);
       expect(result?.to).toBe(onlyEnabledIndex);
@@ -130,7 +132,7 @@ describe('computeCalendarScheduleSelectionDateBlockRange()', () => {
         add
       });
 
-      const result = computeCalendarScheduleSelectionDateBlockRange(state);
+      const result = computeCalendarScheduleSelectionDateCellRange(state);
 
       expect(result?.i).toBe(0);
       expect(result?.to).toBe(1);

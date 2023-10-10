@@ -1,19 +1,19 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
-import { CompactContextStore, DbxDialogContentFooterConfig } from '@dereekb/dbx-web';
+import { CompactContextStore } from '@dereekb/dbx-web';
 import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
-import { DateOrDateRangeOrDateBlockIndexOrDateBlockRange, DateRange, DateScheduleDateFilterConfig, DateScheduleDayCode, DateScheduleDayCodesInput, DateScheduleEncodedWeek, TimezoneString, isSameDateScheduleRange } from '@dereekb/date';
+import { DateRange, TimezoneString, isSameDateCellScheduleDateRange, DateCellScheduleDateFilterConfig, DateCellScheduleDayCode, DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
-export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
+export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
   appearance?: MatFormFieldAppearance;
   /**
    * Whether or not to allow inputting custom text into the picker.
@@ -23,7 +23,9 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
    * Is false by default.
    */
   allowTextInput?: boolean;
-
+  /**
+   * Whether or not to hide the customize button. Defaults to false.
+   */
   hideCustomize?: boolean;
   /**
    * Whether or not to allow customizing before picking a date range to customize.
@@ -32,25 +34,25 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
    */
   allowCustomizeWithoutDateRange?: boolean;
   /**
-   * (Optional) Timezone to use for the start date.
+   * (Optional) Timezone to use for the output start date.
    */
   timezone?: ObservableOrValue<Maybe<TimezoneString>>;
   /**
    * (Optional) Default schedule days to allow.
    */
-  defaultScheduleDays?: ObservableOrValue<Maybe<Iterable<DateScheduleDayCode>>>;
+  defaultScheduleDays?: ObservableOrValue<Maybe<Iterable<DateCellScheduleDayCode>>>;
   /**
    * Optional min/max date range to filter on. Works in conjuction with the filter.
    */
   minMaxDateRange?: ObservableOrValue<Maybe<Partial<DateRange>>>;
-  filter?: ObservableOrValue<Maybe<DateScheduleDateFilterConfig>>;
-  exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>>;
   /**
-   * Custom close dialog config for the popup
-   *
-   * @deprecated Use dialogContentConfig instead.
+   * (Optional) Observable with a filter value to apply to the date range.
    */
-  closeDialogConfig?: Maybe<DbxDialogContentFooterConfig>;
+  filter?: ObservableOrValue<Maybe<DateCellScheduleDateFilterConfig>>;
+  /**
+   * (Optional) Observable with days and values to exclude from the date range.
+   */
+  exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>>>;
   /**
    * Custom dialog content config for the popup
    */
@@ -65,14 +67,14 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
   template: `
     <div class="dbx-schedule-selection-field">
       <dbx-schedule-selection-calendar-date-range [openPickerOnTextClick]="openPickerOnTextClick" [showCustomize]="showCustomize" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
-        <dbx-schedule-selection-calendar-date-dialog-button customizeButton [disabled]="disableCustomize$ | async" [contentConfig]="dialogContentConfig" [closeConfig]="closeDialogConfig"></dbx-schedule-selection-calendar-date-dialog-button>
+        <dbx-schedule-selection-calendar-date-dialog-button customizeButton [disabled]="disableCustomize$ | async" [contentConfig]="dialogContentConfig"></dbx-schedule-selection-calendar-date-dialog-button>
         <dbx-injection [config]="customDetailsConfig"></dbx-injection>
       </dbx-schedule-selection-calendar-date-range>
     </div>
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
 })
-export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateScheduleRangeFieldProps = DbxFormCalendarDateScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+export class DbxFormCalendarDateCellScheduleRangeFieldComponent<T extends DbxFormCalendarDateCellScheduleRangeFieldProps = DbxFormCalendarDateCellScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
   private _timezoneSub = new SubscriptionObject();
@@ -159,10 +161,6 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return this.props.computeSelectionResultRelativeToFilter;
   }
 
-  get closeDialogConfig() {
-    return this.props.closeDialogConfig;
-  }
-
   get dialogContentConfig() {
     return this.props.dialogContentConfig;
   }
@@ -178,11 +176,11 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
-    this._syncSub.subscription = this.value$.pipe(distinctUntilChanged(isSameDateScheduleRange)).subscribe((x) => {
+    this._syncSub.subscription = this.value$.pipe(distinctUntilChanged(isSameDateCellScheduleDateRange)).subscribe((x) => {
       this.dbxCalendarScheduleSelectionStore.setDateScheduleRangeValue(x);
     });
 
-    this._valueSub.subscription = this.dbxCalendarScheduleSelectionStore.currentDateScheduleRangeValue$.subscribe((x) => {
+    this._valueSub.subscription = this.dbxCalendarScheduleSelectionStore.currentDateCellScheduleRangeValue$.subscribe((x) => {
       this.formControl.setValue(x);
     });
 

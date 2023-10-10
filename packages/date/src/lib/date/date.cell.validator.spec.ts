@@ -1,24 +1,25 @@
 import { Maybe } from '@dereekb/util';
 import { Expose, plainToInstance, Type } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
-import { setMinutes, setHours, startOfDay, addSeconds } from 'date-fns';
-import { DateBlockRange, dateBlockTiming, DateBlockTiming, isValidDateBlockTiming } from './date.block';
-import { IsValidDateBlockRange, IsValidDateBlockRangeSeries, IsValidDateBlockTiming } from './date.validator';
+import { setMinutes, setHours, addSeconds } from 'date-fns';
+import { dateCellTiming, DateCellTiming, isValidDateCellTiming } from './date.cell';
+import { DateCellRange } from './date.cell.index';
+import { IsValidDateCellRange, IsValidDateCellRangeSeries, IsValidDateCellTiming } from './date.cell.validator';
 
-class TestDateBlockTimingModelClass {
+class TestDateCellTimingModelClass {
   @Expose()
   @IsOptional()
-  @IsValidDateBlockTiming()
-  @Type(() => DateBlockTiming)
-  timing!: Maybe<DateBlockTiming>;
+  @IsValidDateCellTiming()
+  @Type(() => DateCellTiming)
+  timing!: Maybe<DateCellTiming>;
 }
 
-describe('IsValidDateBlockTiming', () => {
+describe('IsValidDateCellTiming', () => {
   const startsAt = setMinutes(setHours(new Date(), 12), 0);
-  const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
+  const validTiming = dateCellTiming({ startsAt, duration: 60 }, 1);
 
   it('should pass valid timings.', async () => {
-    const instance = new TestDateBlockTimingModelClass();
+    const instance = new TestDateCellTimingModelClass();
     instance.timing = validTiming;
 
     const result = await validate(instance);
@@ -26,8 +27,8 @@ describe('IsValidDateBlockTiming', () => {
   });
 
   it('should fail on invalid timings', async () => {
-    const instance = new TestDateBlockTimingModelClass();
-    const invalidTiming: DateBlockTiming = { ...validTiming, start: addSeconds(validTiming.start, 10) };
+    const instance = new TestDateCellTimingModelClass();
+    const invalidTiming: DateCellTiming = { ...validTiming, startsAt: addSeconds(validTiming.start, 10) };
     instance.timing = invalidTiming;
 
     const result = await validate(instance);
@@ -35,8 +36,11 @@ describe('IsValidDateBlockTiming', () => {
   });
 
   describe('scenario', () => {
+    const timezone = 'America/Chicago';
+
     it('should serialize the value to a valid timing', async () => {
       const timing = {
+        timezone,
         start: new Date('2023-08-15T05:00:00.000Z'),
         end: new Date('2023-12-21T22:30:00.000Z'),
         startsAt: new Date('2023-08-15T13:30:00.000Z'),
@@ -44,7 +48,7 @@ describe('IsValidDateBlockTiming', () => {
       };
 
       const json = JSON.stringify(timing);
-      const instance = plainToInstance(DateBlockTiming, JSON.parse(json), {
+      const instance = plainToInstance(DateCellTiming, JSON.parse(json), {
         excludeExtraneousValues: true
       });
 
@@ -53,15 +57,15 @@ describe('IsValidDateBlockTiming', () => {
     });
 
     it('should serialize the august timing value as an invalid timing', async () => {
-      const timing = {
+      const timing: DateCellTiming = {
+        timezone,
         duration: 540,
-        start: new Date('2023-08-06T04:00:00.000Z'),
         startsAt: new Date('2023-08-07T00:00:00.000Z'), // should be a 24 hour difference (invalid)
         end: new Date('2023-08-21T09:00:00.000Z')
       };
 
       const json = JSON.stringify({ timing });
-      const instance = plainToInstance(TestDateBlockTimingModelClass, JSON.parse(json), {
+      const instance = plainToInstance(TestDateCellTimingModelClass, JSON.parse(json), {
         excludeExtraneousValues: true
       });
 
@@ -70,17 +74,17 @@ describe('IsValidDateBlockTiming', () => {
     });
 
     it('should pass the valid timing', async () => {
-      const timing = {
-        start: new Date('2023-08-15T05:00:00.000Z'),
+      const timing: DateCellTiming = {
+        timezone,
         end: new Date('2023-12-21T22:30:00.000Z'),
         startsAt: new Date('2023-08-15T13:30:00.000Z'),
         duration: 480
       };
 
-      const instance = new TestDateBlockTimingModelClass();
+      const instance = new TestDateCellTimingModelClass();
       instance.timing = timing;
 
-      const isValid = isValidDateBlockTiming(timing);
+      const isValid = isValidDateCellTiming(timing);
       expect(isValid).toBe(true);
 
       const result = await validate(instance);
@@ -89,16 +93,16 @@ describe('IsValidDateBlockTiming', () => {
   });
 });
 
-class TestDateBlockRangeModelClass {
+class TestDateCellRangeModelClass {
   @Expose()
   @IsOptional()
-  @IsValidDateBlockRange()
-  range!: Maybe<DateBlockRange>;
+  @IsValidDateCellRange()
+  range!: Maybe<DateCellRange>;
 }
 
-describe('IsValidDateBlockRange', () => {
+describe('IsValidDateCellRange', () => {
   it('should pass valid ranges.', async () => {
-    const instance = new TestDateBlockRangeModelClass();
+    const instance = new TestDateCellRangeModelClass();
     instance.range = { i: 0 };
 
     const result = await validate(instance);
@@ -106,8 +110,8 @@ describe('IsValidDateBlockRange', () => {
   });
 
   it('should fail on invalid ranges', async () => {
-    const instance = new TestDateBlockRangeModelClass();
-    const invalidRange: DateBlockRange = { i: -1 };
+    const instance = new TestDateCellRangeModelClass();
+    const invalidRange: DateCellRange = { i: -1 };
     instance.range = invalidRange;
 
     const result = await validate(instance);
@@ -115,16 +119,16 @@ describe('IsValidDateBlockRange', () => {
   });
 });
 
-class TestDateBlockRangesModelClass {
+class TestDateCellRangesModelClass {
   @Expose()
   @IsOptional()
-  @IsValidDateBlockRangeSeries()
-  ranges!: Maybe<DateBlockRange[]>;
+  @IsValidDateCellRangeSeries()
+  ranges!: Maybe<DateCellRange[]>;
 }
 
-describe('IsValidDateBlockRangeSeries', () => {
+describe('IsValidDateCellRangeSeries', () => {
   it('should pass a valid range series.', async () => {
-    const instance = new TestDateBlockRangesModelClass();
+    const instance = new TestDateCellRangesModelClass();
     instance.ranges = [{ i: 0 }];
 
     const result = await validate(instance);
@@ -132,8 +136,8 @@ describe('IsValidDateBlockRangeSeries', () => {
   });
 
   it('should fail on invalid ranges', async () => {
-    const instance = new TestDateBlockRangesModelClass();
-    const invalidRange: DateBlockRange[] = [{ i: 0, to: 0 }, { i: 0 }];
+    const instance = new TestDateCellRangesModelClass();
+    const invalidRange: DateCellRange[] = [{ i: 0, to: 0 }, { i: 0 }];
     instance.ranges = invalidRange;
 
     const result = await validate(instance);

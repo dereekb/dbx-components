@@ -1,21 +1,22 @@
 import { ObjectWithConstructor } from '@dereekb/util';
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
-import { isValidDateBlockRange, isValidDateBlockRangeSeries, isValidDateBlockTiming } from './date.block';
+import { isValidDateCellTiming } from './date.cell';
+import { isValidDateCellRange, isValidDateCellRangeSeries } from './date.cell.index';
 
 /**
- * isValidDateBlockTiming validator
+ * isValidDateCellTiming validator
  */
-export function IsValidDateBlockTiming(validationOptions?: ValidationOptions) {
+export function IsValidDateCellTiming(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
     registerDecorator({
-      name: 'isValidDateBlockTiming',
+      name: 'isValidDateCellTiming',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate: isValidDateBlockTiming,
+        validate: isValidDateCellTiming,
         defaultMessage(args: ValidationArguments) {
-          return `"${JSON.stringify(args.value)}" is not a valid DateBlockTiming.`;
+          return `"${JSON.stringify(args.value)}" is not a valid DateCellTiming.`;
         }
       }
     });
@@ -23,19 +24,19 @@ export function IsValidDateBlockTiming(validationOptions?: ValidationOptions) {
 }
 
 /**
- * isValidDateBlockRange validator
+ * isValidDateCellRange validator
  */
-export function IsValidDateBlockRange(validationOptions?: ValidationOptions) {
+export function IsValidDateCellRange(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
     registerDecorator({
-      name: 'isValidDateBlockRange',
+      name: 'isValidDateCellRange',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate: isValidDateBlockRange,
+        validate: isValidDateCellRange,
         defaultMessage(args: ValidationArguments) {
-          return `"${JSON.stringify(args.value)}" is not a valid DateBlockRange.`;
+          return `"${JSON.stringify(args.value)}" is not a valid DateCellRange.`;
         }
       }
     });
@@ -43,19 +44,19 @@ export function IsValidDateBlockRange(validationOptions?: ValidationOptions) {
 }
 
 /**
- * isValidDateBlockRangeSeries validator
+ * isValidDateCellRangeSeries validator
  */
-export function IsValidDateBlockRangeSeries(validationOptions?: ValidationOptions) {
+export function IsValidDateCellRangeSeries(validationOptions?: ValidationOptions) {
   return function (object: ObjectWithConstructor, propertyName: string) {
     registerDecorator({
-      name: 'isValidDateBlockRangeSeries',
+      name: 'isValidDateCellRangeSeries',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate: isValidDateBlockRangeSeries,
+        validate: isValidDateCellRangeSeries,
         defaultMessage(args: ValidationArguments) {
-          return `"${JSON.stringify(args.value)}" is not a valid DateBlockRange series. Items must be sorted in ascending order and have no repeat indexes.`;
+          return `"${JSON.stringify(args.value)}" is not a valid DateCellRange series. Items must be sorted in ascending order and have no repeat indexes.`;
         }
       }
     });

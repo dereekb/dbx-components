@@ -1,6 +1,7 @@
 import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, addWeeks, getDay } from 'date-fns';
-import { dateBlockTiming, DateBlockDurationSpan, dateBlocksExpansionFactory } from './date.block';
+import { dateCellTiming, DateCellDurationSpan } from './date.cell';
+import { dateCellTimingExpansionFactory } from './date.cell.factory';
 import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange } from './date.week';
 
 describe('yearWeekCodeForDateRange()', () => {
@@ -259,9 +260,9 @@ describe('yearWeekCodeDateFactory()', () => {
 
 describe('yearWeekCodeGroupFactory()', () => {
   const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
-  const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 30); // Sunday-Saturday
+  const weekTiming = dateCellTiming({ startsAt, duration: 60 }, 30); // Sunday-Saturday
 
-  const weekDaysAndWeekends = dateBlocksExpansionFactory({
+  const weekDaysAndWeekends = dateCellTimingExpansionFactory({
     timing: weekTiming
   });
 
@@ -292,18 +293,18 @@ describe('yearWeekCodeGroupFactory()', () => {
 
     describe('timezone', () => {
       describe('UTC', () => {
-        const groupFactory = yearWeekCodeGroupFactory<DateBlockDurationSpan>({
+        const groupFactory = yearWeekCodeGroupFactory<DateCellDurationSpan>({
           yearWeekCodeFactory: { timezone: 'UTC' },
           dateReader: (x) => x.startsAt
         });
 
         it('should group the input values by week.', () => {
-          const dateBlockForRange = {
+          const dateCellForRange = {
             i: 0,
             to: 13 // 2 weeks
           };
 
-          const dates = weekDaysAndWeekends([dateBlockForRange]);
+          const dates = weekDaysAndWeekends([dateCellForRange]);
           const groups = groupFactory(dates);
 
           expect(groups.length).toBe(2);

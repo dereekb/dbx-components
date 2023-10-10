@@ -1,6 +1,7 @@
 import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, getDay } from 'date-fns';
-import { dateBlockTiming, DateBlockDurationSpan, dateBlocksExpansionFactory } from './date.block';
+import { DateCellDurationSpan, dateCellTiming } from './date.cell';
+import { dateCellTimingExpansionFactory } from './date.cell.factory';
 import { yearMonthDayCodeFactory, yearMonthDayCode, yearMonthDayCodeDateFactory, yearMonthDayCodeGroupFactory, yearMonthDayCodeDay, yearMonthDayCodeMonth, yearMonthDayCodePairFromDate, yearMonthDayCodesForDateRangeFactory } from './date.day';
 
 describe('yearMonthDayCodePairFromDate()', () => {
@@ -294,27 +295,27 @@ describe('yearMonthDayCodeDateFactory()', () => {
 
 describe('yearMonthDayCodeGroupFactory()', () => {
   const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
-  const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 30); // Sunday-Saturday
+  const weekTiming = dateCellTiming({ startsAt, duration: 60 }, 30); // Sunday-Saturday
 
-  const weekDaysAndWeekends = dateBlocksExpansionFactory({
+  const weekDaysAndWeekends = dateCellTimingExpansionFactory({
     timing: weekTiming
   });
 
   describe('function', () => {
     describe('timezone', () => {
       describe('UTC', () => {
-        const groupFactory = yearMonthDayCodeGroupFactory<DateBlockDurationSpan>({
+        const groupFactory = yearMonthDayCodeGroupFactory<DateCellDurationSpan>({
           yearMonthDayCodeFactory: { timezone: 'UTC' },
           dateReader: (x) => x.startsAt
         });
 
         it('should group the input values by week.', () => {
-          const dateBlockForRange = {
+          const dateCellsForRange = {
             i: 0,
             to: 13 // 2 weeks
           };
 
-          const dates = weekDaysAndWeekends([dateBlockForRange, { i: 0, to: 0 }]); // two ranges to blocks, first day should have two items grouped.
+          const dates = weekDaysAndWeekends([dateCellsForRange, { i: 0, to: 0 }]); // two ranges to blocks, first day should have two items grouped.
           const groups = groupFactory(dates);
 
           expect(groups.length).toBe(14);

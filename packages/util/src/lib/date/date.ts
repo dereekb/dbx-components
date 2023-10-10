@@ -42,6 +42,8 @@ export type ISO8601DateStringUTCFull = string;
 
 /**
  * A valid timezone string.
+ *
+ * I.E. "UTC", "America/Denver", etc.
  */
 export type TimezoneString = string;
 

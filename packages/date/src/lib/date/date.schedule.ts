@@ -1,11 +1,9 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
-import { copyHoursAndMinutesFromDate } from './date';
 import {
   changeTimingToSystemTimezone,
-  changeTimingToTimezone,
   DateBlock,
   dateBlockDayOfWeekFactory,
   DateBlockDurationSpan,
@@ -16,11 +14,9 @@ import {
   DateBlockRangeWithRange,
   DateBlocksExpansionFactory,
   dateBlocksExpansionFactory,
-  dateBlockTiming,
   DateBlockTiming,
   DateBlockTimingStartEndRange,
   dateBlockTimingStartForNowInSystemTimezone,
-  dateBlockTimingStartForNowInTimezone,
   dateBlockTimingRelativeIndexFactory,
   DateBlockTimingRelativeIndexFactoryInput,
   getCurrentDateBlockTimingStartDate,
@@ -28,10 +24,13 @@ import {
   safeDateBlockTimingFromDateRangeAndEvent
 } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasEndedFilterFunction, dateBlockDurationSpanHasStartedFilterFunction } from './date.filter';
-import { DateRange, isSameDateRange } from './date.range';
-import { copyHoursAndMinutesFromDateWithTimezoneNormal, DateTimezoneUtcNormalInstance } from './date.timezone';
+import { isSameDateRange } from './date.range';
+import { DateTimezoneUtcNormalInstance } from './date.timezone';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
+/**
+ * @deprecated use DateCellScheduleDayCode instead
+ */
 export enum DateScheduleDayCode {
   /**
    * Special no-op/unused code
@@ -54,14 +53,23 @@ export enum DateScheduleDayCode {
   WEEKEND = 9
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export function fullWeekDayScheduleDayCodes() {
   return [DateScheduleDayCode.WEEKDAY, DateScheduleDayCode.WEEKEND];
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export function weekdayDateScheduleDayCodes() {
   return [DateScheduleDayCode.MONDAY, DateScheduleDayCode.TUESDAY, DateScheduleDayCode.WEDNESDAY, DateScheduleDayCode.THURSDAY, DateScheduleDayCode.FRIDAY];
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export function weekendDateScheduleDayCodes() {
   return [DateScheduleDayCode.SATURDAY, DateScheduleDayCode.SUNDAY];
 }
@@ -69,6 +77,7 @@ export function weekendDateScheduleDayCodes() {
 /**
  * Creates an EnabledDays from the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -80,6 +89,7 @@ export function enabledDaysFromDateScheduleDayCodes(input: Maybe<Iterable<DateSc
 /**
  * Creates an array of simplified DateScheduleDayCode[] values from the input.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -91,14 +101,20 @@ export function dateScheduleDayCodesFromEnabledDays(input: Maybe<EnabledDays>): 
 
 /**
  * Encoded days of the week that the job block schedule should contain.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateScheduleEncodedWeek = '' | StringOrder<`${DateScheduleDayCode}`, ''>;
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export const DATE_SCHEDULE_ENCODED_WEEK_REGEX = /^[0-9]{0,9}$/;
 
 /**
  * Returns true if the input is a DateScheduleEncodedWeek.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -109,6 +125,7 @@ export function isDateScheduleEncodedWeek(input: string): input is DateScheduleE
 /**
  * Returns true if the input string represents an empty DateScheduleEncodedWeek.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -121,6 +138,7 @@ export function isEmptyDateScheduleEncodedWeek(input: string): input is DateSche
  *
  * The returned encoded week is simplified.
  *
+ * @deprecated use DateCell implementation instead.
  * @param codes
  */
 export function dateScheduleEncodedWeek(codes: Iterable<DateScheduleDayCode>): DateScheduleEncodedWeek {
@@ -133,6 +151,7 @@ export function dateScheduleEncodedWeek(codes: Iterable<DateScheduleDayCode>): D
  *
  * For instance, if all days of the week are selected, they will be reduced to "8".
  *
+ * @deprecated use DateCell implementation instead.
  * @param codes
  * @returns
  */
@@ -183,11 +202,15 @@ export function simplifyDateScheduleDayCodes(codes: Iterable<DateScheduleDayCode
   return result;
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | ArrayOrValue<DateScheduleDayCode> | Set<DateScheduleDayCode>;
 
 /**
  * Expands the input DateScheduleDayCodesInput to a Set of DayOfWeek values.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -202,6 +225,12 @@ export function expandDateScheduleDayCodesToDayOfWeekSet(input: DateScheduleDayC
   return days;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param input
+ * @returns
+ */
 export function dateScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfWeek>): Set<DateScheduleDayCode> {
   const codes = new Set<DateScheduleDayCode>();
 
@@ -215,6 +244,7 @@ export function dateScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfWeek>
 /**
  * Expands the input into an array of DateScheduleDayCode values.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -225,6 +255,7 @@ export function expandDateScheduleDayCodes(input: DateScheduleDayCodesInput): Da
 /**
  * Expands the input DateScheduleDayCodesInput to a Set of DayOfWeek values.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -255,6 +286,7 @@ export function expandDateScheduleDayCodesToDayCodesSet(input: DateScheduleDayCo
 /**
  * Converts the input DateScheduleDayCodesInput to an array of DateScheduleDayCode values, but does not expand
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -278,14 +310,20 @@ export function rawDateScheduleDayCodes(input: DateScheduleDayCodesInput): DateS
 
 /**
  * Used to convert the input dates into a DateScheduleDayCode.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateScheduleDayCodeFactory = (date: Date) => DateScheduleDayCode;
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateScheduleDayCodeConfig = Pick<YearWeekCodeConfig, 'timezone'>;
 
 /**
  * Creates a DateScheduleDayCodeFactory using the optional input config.
  *
+ * @deprecated use DateCell implementation instead.
  * @param config
  * @returns
  */
@@ -301,6 +339,7 @@ export function dateScheduleDayCodeFactory(config?: DateScheduleDayCodeConfig): 
 /**
  * Returns true if the input codes, when expanded, are equivalent.
  *
+ * @deprecated use DateCell implementation instead.
  * @param a
  * @param b
  * @returns
@@ -314,6 +353,8 @@ export function dateScheduleDayCodesAreSetsEquivalent(a: DateScheduleDayCodesInp
 // MARK: DateSchedule
 /**
  * Scheduled used to filter to disable DateBlock values for a job.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateSchedule {
   /**
@@ -330,6 +371,13 @@ export interface DateSchedule {
   ex?: DateBlockIndex[];
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param a
+ * @param b
+ * @returns
+ */
 export function isSameDateSchedule(a: Maybe<DateSchedule>, b: Maybe<DateSchedule>): boolean {
   if (a && b) {
     return a.w === b.w && iterablesAreSetEquivalent(a.ex, b.ex) && iterablesAreSetEquivalent(a.d, b.d);
@@ -338,6 +386,10 @@ export function isSameDateSchedule(a: Maybe<DateSchedule>, b: Maybe<DateSchedule
   }
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export class DateSchedule implements DateSchedule {
   @Expose()
   @IsString()
@@ -367,12 +419,15 @@ export class DateSchedule implements DateSchedule {
 
 /**
  * A schedule that occurs during a specific range.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateScheduleRange extends DateSchedule, DateBlockTimingStartEndRange {}
 
 /**
  * Returns true if both inputs have the same schedule and date range.
  *
+ * @deprecated use DateCell implementation instead.
  * @param a
  * @param b
  * @returns
@@ -390,6 +445,7 @@ export function isSameDateScheduleRange(a: Maybe<DateScheduleRange>, b: Maybe<Da
  *
  * The Timezone the timing is in is recommended. If not provided, may produce incorrect results when dealing with daylight savings time changes.
  *
+ * @deprecated use DateCell implementation instead.
  * @param dateScheduleRange
  * @param duration
  * @param startsAtTime
@@ -406,11 +462,15 @@ export function dateBlockTimingForDateScheduleRange(dateScheduleRange: DateSched
 // MARK: DateScheduleDate
 /**
  * DateScheduleDateFilter input.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateScheduleDateFilterInput = DateBlockTimingRelativeIndexFactoryInput;
 
 /**
  * Returns true if the date falls within the schedule.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInput>;
 
@@ -418,6 +478,8 @@ export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInpu
  * dateScheduleDateFilter() configuration.
  *
  * The input date range is a DateBlockTimingStartEndRange, where the start date is expected to be a DateBlockTimingStart.
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateBlockTimingStartEndRange> {
   minMaxDateRange?: Maybe<Partial<DateBlockRangeOrDateRange>>;
@@ -427,6 +489,12 @@ export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<Date
   setStartAsMinDate?: boolean;
 }
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param inputFilter
+ * @returns
+ */
 export function copyDateScheduleDateFilterConfig(inputFilter: DateScheduleDateFilterConfig): DateScheduleDateFilterConfig {
   return {
     start: inputFilter.start,
@@ -440,6 +508,7 @@ export function copyDateScheduleDateFilterConfig(inputFilter: DateScheduleDateFi
 /**
  * Creates a DateScheduleDateFilter.
  *
+ * @deprecated use DateCell implementation instead.
  * @param config
  * @returns
  */
@@ -480,10 +549,16 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
 }
 
 // MARK: DateScheduleDateBlockTimingFilter
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type DateScheduleDateBlockTimingFilter<B extends DateBlock = DateBlock> = DecisionFunction<B>;
 
 /**
  * Configuration for dateScheduleDateBlockTimingFilter()
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface DateScheduleDateBlockTimingFilterConfig {
   /**
@@ -533,6 +608,7 @@ export interface DateScheduleDateBlockTimingFilterConfig {
 /**
  * Creates a DateScheduleDateBlockTimingFilter.
  *
+ * @deprecated use DateCell implementation instead.
  * @param param0
  * @returns
  */
@@ -553,6 +629,7 @@ export function dateScheduleDateBlockTimingFilter<B extends DateBlock = DateBloc
 /**
  * Creates a DateBlocksExpansionFactory using the input DateScheduleDateBlockTimingFilterConfig.
  *
+ * @deprecated use DateCell implementation instead.
  * @param config
  * @returns
  */
@@ -591,6 +668,9 @@ export function expandDateScheduleFactory<B extends DateBlock = DateBlock>(confi
   return expansionFactory;
 }
 
+/**
+ * @deprecated use DateCell implementation instead.
+ */
 export interface ExpandDateScheduleInput extends DateScheduleDateBlockTimingFilterConfig {
   inputRange?: IndexRange;
 }
@@ -600,6 +680,7 @@ export interface ExpandDateScheduleInput extends DateScheduleDateBlockTimingFilt
  *
  * Can optionally provide an IndexRange to specify a specific range to filter on. The range will be capped to the range of the timing.
  *
+ * @deprecated use DateCell implementation instead.
  * @param timing
  * @param schedule
  * @param inputRange
@@ -620,6 +701,8 @@ export function expandDateSchedule(input: ExpandDateScheduleInput): DateBlockDur
 
 /**
  * Input for ExpandDateScheduleRangeInput
+ *
+ * @deprecated use DateCell implementation instead.
  */
 export interface ExpandDateScheduleRangeInput extends Omit<DateScheduleDateBlockTimingFilterConfig, 'schedule' | 'timing'> {
   readonly dateScheduleRange: DateScheduleRange;
@@ -640,6 +723,7 @@ export interface ExpandDateScheduleRangeInput extends Omit<DateScheduleDateBlock
 /**
  * Creates a DateBlockTiming for the input ExpandDateScheduleRangeInput.
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -650,6 +734,7 @@ export function dateBlockTimingForExpandDateScheduleRangeInput(input: ExpandDate
 
 /**
  *
+ * @deprecated use DateCell implementation instead.
  * @param input
  * @returns
  */
@@ -660,8 +745,18 @@ export function expandDateScheduleRange(input: ExpandDateScheduleRangeInput): Da
 }
 
 // MARK: DateScheduleRange
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ */
 export type ExpandDateScheduleRangeToDateBlockRangeInput = ExpandDateScheduleRangeInput;
 
+/**
+ *
+ * @deprecated use DateCell implementation instead.
+ * @param input
+ * @returns
+ */
 export function expandDateScheduleRangeToDateBlockRanges(input: ExpandDateScheduleRangeToDateBlockRangeInput): DateBlockRangeWithRange[] {
   const dateBlockDurationSpans = expandDateScheduleRange(input);
   return groupToDateBlockRanges(dateBlockDurationSpans);

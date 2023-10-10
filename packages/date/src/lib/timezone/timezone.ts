@@ -1,11 +1,15 @@
 import { cachedGetter, Maybe, replaceStringsFunction, TimezoneAbbreviation, TimezoneString, TimezoneStringRef, UTC_TIMEZONE_STRING, UTCTimezoneAbbreviation } from '@dereekb/util';
 import { formatInTimeZone } from 'date-fns-tz';
 import { timeZonesNames } from '@vvo/tzdb';
-import { guessCurrentTimezone } from '../date';
+import { guessCurrentTimezone } from '../date/date';
 
 export function allTimezoneStrings(): TimezoneString[] {
   return timeZonesNames.concat(UTC_TIMEZONE_STRING);
 }
+
+export const allKnownTimezoneStrings = cachedGetter(() => {
+  return new Set(allTimezoneStrings());
+});
 
 export const allTimezoneInfos = cachedGetter(() => {
   const now = new Date();
@@ -56,4 +60,13 @@ const timezoneStringToSearchableStringReplace = replaceStringsFunction({
 
 export function timezoneStringToSearchableString(timezone: TimezoneString): string {
   return timezoneStringToSearchableStringReplace(timezone.toLocaleLowerCase());
+}
+
+/**
+ * Returns true if the input string is a known timezone.
+ *
+ * @param input
+ */
+export function isKnownTimezone(input: string | TimezoneString): boolean {
+  return allKnownTimezoneStrings().has(input);
 }
