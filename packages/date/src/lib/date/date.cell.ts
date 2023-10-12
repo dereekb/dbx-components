@@ -4,7 +4,7 @@ import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate, requireCurrentTimezone } from './date';
 import { Expose, Type } from 'class-transformer';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal } from './date.timezone';
+import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { IsDate, IsNumber, IsString, Min } from 'class-validator';
 import { IsKnownTimezone } from '../timezone/timezone.validator';
 import { fitDateRangeToDayPeriod } from './date.range.timezone';
@@ -467,7 +467,7 @@ export function isFullDateCellTiming(input: unknown): input is FullDateCellTimin
 }
 
 /**
- * Creates a DateCellTimingDateRange from the input timing.
+ * Creates a DateCellTimingDateRange from the input timing. Contains the start of the day in that timezone as the start date, and the end time for the final event.
  *
  * @param timing
  * @returns
@@ -555,6 +555,16 @@ export function changeDateCellTimingToTimezoneFunction(timezoneInput: DateCellTi
  */
 export function changeDateCellTimingToSystemTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
   return changeDateCellTimingToTimezone(timing, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
+}
+
+/**
+ * Convenience function for calling changeDateCellTimingToTimezone() with the UTC timezone.
+ *
+ * @param timing
+ * @returns
+ */
+export function changeDateCellTimingToUTCTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
+  return changeDateCellTimingToTimezone(timing, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
 }
 
 /**

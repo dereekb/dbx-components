@@ -59,6 +59,9 @@ export interface TimezoneStringRef {
   timezone: TimezoneString;
 }
 
+/**
+ * Constant for the UTC timezone string, "UTC".
+ */
 export const UTC_TIMEZONE_STRING = 'UTC';
 
 /**

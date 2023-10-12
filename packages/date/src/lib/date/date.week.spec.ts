@@ -2,14 +2,14 @@ import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, addWeeks, getDay } from 'date-fns';
 import { dateCellTiming, DateCellDurationSpan } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange } from './date.week';
+import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone } from './date.week';
 
 describe('yearWeekCodeForDateRange()', () => {
-  const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
+  const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000'); // date in current timezone
 
   it('should generate the year week codes for the date range.', () => {
     const totalWeeks = 3;
-    const range = { start: utc2022Week1StartDate, end: addWeeks(utc2022Week1StartDate, totalWeeks - 1) };
+    const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
     const result = yearWeekCodeForDateRange(range);
     expect(result.length).toBe(totalWeeks);
     expect(result[0]).toBe(yearWeekCode(2022, 1));
@@ -18,10 +18,34 @@ describe('yearWeekCodeForDateRange()', () => {
   });
 
   it('should generate the year week codes for a single day date range.', () => {
-    const range = { start: utc2022Week1StartDate, end: utc2022Week1StartDate };
+    const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
     const result = yearWeekCodeForDateRange(range);
     expect(result.length).toBe(1);
     expect(result[0]).toBe(yearWeekCode(2022, 1));
+  });
+});
+
+describe('yearWeekCodeForDateRangeInTimezone()', () => {
+  describe('UTC', () => {
+    const timezone = UTC_TIMEZONE_STRING;
+    const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000Z'); // date in UTC
+
+    it('should generate the year week codes for the date range.', () => {
+      const totalWeeks = 3;
+      const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
+      const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+      expect(result.length).toBe(totalWeeks);
+      expect(result[0]).toBe(yearWeekCode(2022, 1));
+      expect(result[1]).toBe(yearWeekCode(2022, 2));
+      expect(result[2]).toBe(yearWeekCode(2022, 3));
+    });
+
+    it('should generate the year week codes for a single day date range.', () => {
+      const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
+      const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(yearWeekCode(2022, 1));
+    });
   });
 });
 
