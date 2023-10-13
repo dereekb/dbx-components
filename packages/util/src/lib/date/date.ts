@@ -1,3 +1,4 @@
+import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -59,6 +60,22 @@ export interface TimezoneStringRef {
   timezone: TimezoneString;
 }
 
+/**
+ * Returns true only if the inputs have the same timezone, or both do not have a timezone set.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<Partial<TimezoneStringRef>>): boolean {
+  const tzA = a?.timezone;
+  const tzB = b?.timezone;
+  return valuesAreBothNullishOrEquivalent(tzA, tzB);
+}
+
+/**
+ * Constant for the UTC timezone string, "UTC".
+ */
 export const UTC_TIMEZONE_STRING = 'UTC';
 
 /**

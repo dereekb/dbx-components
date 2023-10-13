@@ -177,12 +177,21 @@ export type YearWeekCodeForDateRangeFactory = (dateRange: DateRange) => YearWeek
 /**
  * Returns the yearWeekCodes for the input Date's calendar month.
  *
- * The date is expected to be relative to UTC.
- *
  * @param date
  */
 export function yearWeekCodeForDateRange(dateRange: DateRange): YearWeekCode[] {
-  return yearWeekCodeForDateRangeFactory(yearWeekCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(dateRange);
+  return yearWeekCodeForDateRangeInTimezone(dateRange, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
+}
+
+/**
+ * Returns the yearWeekCodes for the input date range's calendar month and evaluates those dates from the input timezone.
+ *
+ * The timezone of the DateRange should be passed to ensure the proper yearWeekCodes are returned.
+ *
+ * @param date
+ */
+export function yearWeekCodeForDateRangeInTimezone(dateRange: DateRange, dateRangeTimezone: YearWeekCodeDateTimezoneInput): YearWeekCode[] {
+  return yearWeekCodeForDateRangeFactory(yearWeekCodeFactory({ timezone: dateRangeTimezone }))(dateRange);
 }
 
 /**

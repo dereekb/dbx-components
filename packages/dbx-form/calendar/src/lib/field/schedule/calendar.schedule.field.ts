@@ -2,9 +2,9 @@ import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, p
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';
 
-export interface DateCellScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateCellScheduleRangeFieldProps {}
+export interface DateScheduleRangeFieldConfig extends Omit<LabeledFieldConfig, 'key' | 'placeholder'>, DescriptionFieldConfig, Partial<FieldConfig>, DbxFormCalendarDateCellScheduleRangeFieldProps {}
 
-export function dateScheduleRangeField(config: DateCellScheduleRangeFieldConfig = {}): FormlyFieldConfig {
+export function dateScheduleRangeField(config: DateScheduleRangeFieldConfig = {}): FormlyFieldConfig {
   const { key = 'schedule', appearance, hideCustomize, allowTextInput, filter, timezone, initialSelectionState, computeSelectionResultRelativeToFilter, exclusions, defaultScheduleDays, minMaxDateRange, cellContentFactory, dialogContentConfig, customDetailsConfig } = config;
   const fieldConfig: FormlyFieldConfig = {
     ...formlyField({

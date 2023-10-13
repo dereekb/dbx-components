@@ -2,14 +2,14 @@ import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, addWeeks, getDay } from 'date-fns';
 import { dateCellTiming, DateCellDurationSpan } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange } from './date.week';
+import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone } from './date.week';
 
 describe('yearWeekCodeForDateRange()', () => {
-  const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
+  const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000'); // date in current timezone
 
   it('should generate the year week codes for the date range.', () => {
     const totalWeeks = 3;
-    const range = { start: utc2022Week1StartDate, end: addWeeks(utc2022Week1StartDate, totalWeeks - 1) };
+    const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
     const result = yearWeekCodeForDateRange(range);
     expect(result.length).toBe(totalWeeks);
     expect(result[0]).toBe(yearWeekCode(2022, 1));
@@ -18,10 +18,34 @@ describe('yearWeekCodeForDateRange()', () => {
   });
 
   it('should generate the year week codes for a single day date range.', () => {
-    const range = { start: utc2022Week1StartDate, end: utc2022Week1StartDate };
+    const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
     const result = yearWeekCodeForDateRange(range);
     expect(result.length).toBe(1);
     expect(result[0]).toBe(yearWeekCode(2022, 1));
+  });
+});
+
+describe('yearWeekCodeForDateRangeInTimezone()', () => {
+  describe('UTC', () => {
+    const timezone = UTC_TIMEZONE_STRING;
+    const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000Z'); // date in UTC
+
+    it('should generate the year week codes for the date range.', () => {
+      const totalWeeks = 3;
+      const range = { start: week1StartDateInSystemTimezone, end: addWeeks(week1StartDateInSystemTimezone, totalWeeks - 1) };
+      const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+      expect(result.length).toBe(totalWeeks);
+      expect(result[0]).toBe(yearWeekCode(2022, 1));
+      expect(result[1]).toBe(yearWeekCode(2022, 2));
+      expect(result[2]).toBe(yearWeekCode(2022, 3));
+    });
+
+    it('should generate the year week codes for a single day date range.', () => {
+      const range = { start: week1StartDateInSystemTimezone, end: week1StartDateInSystemTimezone };
+      const result = yearWeekCodeForDateRangeInTimezone(range, timezone);
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(yearWeekCode(2022, 1));
+    });
   });
 });
 
@@ -225,7 +249,7 @@ describe('yearWeekCodeDateFactory()', () => {
 
       describe('America/Denver', () => {
         const denver2022Week1StartDate = new Date('2021-12-26T07:00:00Z');
-        const denver2022Week2StartDate = new Date('2022-01-02T07:00:00Z'); // date in utc. Implies there is no offset to consider.
+        const denver2022Week2StartDate = new Date('2022-01-02T07:00:00Z'); // midnight UTC date in America/Denver
         const factory = yearWeekCodeDateFactory({ timezone: 'America/Denver' });
 
         it('should return the date for week 1.', () => {
@@ -241,7 +265,7 @@ describe('yearWeekCodeDateFactory()', () => {
 
       describe('Europe/Amsterdam', () => {
         const amsterdam2022Week1StartDate = new Date('2021-12-25T23:00:00.000Z');
-        const amsterdam2022Week2StartDate = new Date('2022-01-01T23:00:00.000Z'); // date in utc. Implies there is no offset to consider.
+        const amsterdam2022Week2StartDate = new Date('2022-01-01T23:00:00.000Z'); // midnight UTC date in Europe/Amsterdam
         const factory = yearWeekCodeDateFactory({ timezone: 'Europe/Amsterdam' });
 
         it('should return the date for week 1.', () => {

@@ -1,6 +1,6 @@
 import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole, WebsiteFileLink, EncodedWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, decodeWebsiteLinkEncodedDataToWebsiteFileLink } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
-import { DateBlockRange, DateSchedule, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
+import { DateBlockRange, DateCellRange, DateCellSchedule, DateSchedule, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
   ModelFieldMapFunctionsConfig,
   GetterOrValue,
@@ -786,14 +786,14 @@ export function firestoreWebsiteFileLinkEncodedArray() {
   });
 }
 
-// MARK: DateBlockRange
-export const DEFAULT_DATE_BLOCK_RANGE_VALUE: DateBlockRange = {
+// MARK: DateCellRange
+export const DEFAULT_DATE_CELL_RANGE_VALUE: DateCellRange = {
   i: 0
 };
 
-export const assignDateBlockRangeFunction = assignValuesToPOJOFunction<DateBlockRange>({ keysFilter: ['i', 'to'], valueFilter: KeyValueTypleValueFilter.NULL });
-export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBlockRange> = (input) => {
-  const block = assignDateBlockRangeFunction(DEFAULT_DATE_BLOCK_RANGE_VALUE, input);
+export const assignDateCellRangeFunction = assignValuesToPOJOFunction<DateCellRange>({ keysFilter: ['i', 'to'], valueFilter: KeyValueTypleValueFilter.NULL });
+export const firestoreDateCellRangeAssignFn: MapFunction<DateCellRange, DateCellRange> = (input) => {
+  const block = assignDateCellRangeFunction(DEFAULT_DATE_CELL_RANGE_VALUE, input);
 
   if (block.to == null) {
     block.to = block.i;
@@ -802,39 +802,100 @@ export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBl
   return block;
 };
 
-export function firestoreDateBlockRange() {
-  return firestoreField<DateBlockRange, DateBlockRange>({
-    default: DEFAULT_DATE_BLOCK_RANGE_VALUE,
-    fromData: firestoreDateBlockRangeAssignFn,
-    toData: firestoreDateBlockRangeAssignFn
+export function firestoreDateCellRange() {
+  return firestoreField<DateCellRange, DateCellRange>({
+    default: DEFAULT_DATE_CELL_RANGE_VALUE,
+    fromData: firestoreDateCellRangeAssignFn,
+    toData: firestoreDateCellRangeAssignFn
   });
 }
 
-// MARK: DateBlockRange Array
-export function firestoreDateBlockRangeArray() {
+// MARK: DateCellRange Array
+export function firestoreDateCellRangeArray() {
   return firestoreObjectArray({
-    firestoreField: firestoreDateBlockRange()
+    firestoreField: firestoreDateCellRange()
   });
 }
 
-// MARK: Date Schedule
-export const DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE: DateSchedule = {
+// MARK: Date Cell Schedule
+export const DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE: DateCellSchedule = {
   w: '0'
 };
 
-export const assignDateScheduleFunction = assignValuesToPOJOFunction<DateSchedule>({ keysFilter: ['w', 'd', 'ex'], valueFilter: KeyValueTypleValueFilter.NULL });
-export const firestoreDateScheduleAssignFn: MapFunction<DateSchedule, DateSchedule> = (input) => {
-  const block = assignDateScheduleFunction(DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE, input);
+export const assignDateCellScheduleFunction = assignValuesToPOJOFunction<DateCellSchedule>({ keysFilter: ['w', 'd', 'ex'], valueFilter: KeyValueTypleValueFilter.NULL });
+export const firestoreDateCellScheduleAssignFn: MapFunction<DateCellSchedule, DateCellSchedule> = (input) => {
+  const block = assignDateCellScheduleFunction(DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE, input);
   return block;
 };
 
-export function firestoreDateSchedule() {
-  return firestoreField<DateSchedule, DateSchedule>({
+export function firestoreDateCellSchedule() {
+  return firestoreField<DateCellSchedule, DateCellSchedule>({
     default: DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE,
     fromData: firestoreDateScheduleAssignFn,
     toData: firestoreDateScheduleAssignFn
   });
 }
+
+// MARK: DateBlockRange
+/**
+ * @deprecated DateBlockRange is deprecated. Use DEFAULT_DATE_CELL_RANGE_VALUE instead.
+ *
+ * @returns
+ */
+export const DEFAULT_DATE_BLOCK_RANGE_VALUE: DateBlockRange = DEFAULT_DATE_CELL_RANGE_VALUE;
+
+/**
+ * @deprecated DateBlockRange is deprecated. Use assignDateCellRangeFunction instead.
+ *
+ * @returns
+ */
+export const assignDateBlockRangeFunction = assignDateCellRangeFunction;
+
+/**
+ * @deprecated DateBlockRange is deprecated. Use firestoreDateCellRangeAssignFn instead.
+ *
+ * @returns
+ */
+export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBlockRange> = firestoreDateCellRangeAssignFn;
+
+/**
+ * @deprecated DateBlockRange is deprecated. Use firestoreDateBlockRange() instead.
+ *
+ * @returns
+ */
+export const firestoreDateBlockRange = firestoreDateCellRange;
+
+// MARK: DateBlockRange Array
+/**
+ * @deprecated DateBlockRange is deprecated. Use firestoreDateCellRangeArray() instead.
+ *
+ * @returns
+ */
+export const firestoreDateBlockRangeArray = firestoreDateCellRangeArray;
+
+// MARK: Date Schedule
+/**
+ * @deprecated use DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE instead.
+ */
+export const DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE: DateSchedule = DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE;
+
+/**
+ * @deprecated use assignDateCellScheduleFunction instead.
+ *
+ */
+export const assignDateScheduleFunction = assignDateCellScheduleFunction;
+
+/**
+ * @deprecated use firestoreDateCellScheduleAssignFn instead.
+ *
+ */
+export const firestoreDateScheduleAssignFn: MapFunction<DateSchedule, DateSchedule> = firestoreDateCellScheduleAssignFn;
+
+/**
+ * @deprecated use firestoreDateCellSchedule instead.
+ *
+ */
+export const firestoreDateSchedule = firestoreDateCellSchedule;
 
 // MARK: Address
 export const DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE: UnitedStatesAddress = {

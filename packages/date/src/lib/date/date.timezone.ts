@@ -513,6 +513,11 @@ export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalFunctionInput
 export const SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE = new DateTimezoneUtcNormalInstance({ useSystemTimezone: true });
 
 /**
+ * Default DateTimezoneUtcNormalInstance configured with useSystemTimezone=true
+ */
+export const UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE = new DateTimezoneUtcNormalInstance({ timezone: UTC_TIMEZONE_STRING });
+
+/**
  * Returns a DateTimezoneUtcNormalInstance configured with useSystemTimezone=true.
  *
  * @returns
