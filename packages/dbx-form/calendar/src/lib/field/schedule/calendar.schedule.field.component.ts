@@ -74,7 +74,7 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
 })
-export class DbxFormCalendarDateCellScheduleRangeFieldComponent<T extends DbxFormCalendarDateCellScheduleRangeFieldProps = DbxFormCalendarDateCellScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateCellScheduleRangeFieldProps = DbxFormCalendarDateCellScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
   private _timezoneSub = new SubscriptionObject();

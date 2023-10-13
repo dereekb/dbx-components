@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbxFormCalendarDateCellScheduleRangeFieldComponent } from './calendar.schedule.field.component';
+import { DbxFormCalendarDateScheduleRangeFieldComponent } from './calendar.schedule.field.component';
 import { FormlyModule } from '@ngx-formly/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
@@ -22,9 +22,9 @@ import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
     ReactiveFormsModule,
     MatInputModule,
     FormlyModule.forChild({
-      types: [{ name: 'date-schedule-range', component: DbxFormCalendarDateCellScheduleRangeFieldComponent }]
+      types: [{ name: 'date-schedule-range', component: DbxFormCalendarDateScheduleRangeFieldComponent }]
     })
   ],
-  declarations: [DbxFormCalendarDateCellScheduleRangeFieldComponent]
+  declarations: [DbxFormCalendarDateScheduleRangeFieldComponent]
 })
-export class DbxFormDateCellScheduleRangeFieldModule {}
+export class DbxFormDateScheduleRangeFieldModule {}
