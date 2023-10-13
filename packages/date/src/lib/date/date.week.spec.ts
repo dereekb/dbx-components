@@ -249,7 +249,7 @@ describe('yearWeekCodeDateFactory()', () => {
 
       describe('America/Denver', () => {
         const denver2022Week1StartDate = new Date('2021-12-26T07:00:00Z');
-        const denver2022Week2StartDate = new Date('2022-01-02T07:00:00Z'); // date in utc. Implies there is no offset to consider.
+        const denver2022Week2StartDate = new Date('2022-01-02T07:00:00Z'); // midnight UTC date in America/Denver
         const factory = yearWeekCodeDateFactory({ timezone: 'America/Denver' });
 
         it('should return the date for week 1.', () => {
@@ -265,7 +265,7 @@ describe('yearWeekCodeDateFactory()', () => {
 
       describe('Europe/Amsterdam', () => {
         const amsterdam2022Week1StartDate = new Date('2021-12-25T23:00:00.000Z');
-        const amsterdam2022Week2StartDate = new Date('2022-01-01T23:00:00.000Z'); // date in utc. Implies there is no offset to consider.
+        const amsterdam2022Week2StartDate = new Date('2022-01-01T23:00:00.000Z'); // midnight UTC date in Europe/Amsterdam
         const factory = yearWeekCodeDateFactory({ timezone: 'Europe/Amsterdam' });
 
         it('should return the date for week 1.', () => {

@@ -1,4 +1,41 @@
-import { isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString } from '@dereekb/util';
+import { hasSameTimezone, isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString } from '@dereekb/util';
+
+describe('hasSameTimezone', () => {
+  it('should return true if both timezone refs have the same timezone.', () => {
+    const a = { timezone: 'UTC' };
+    const b = { timezone: 'UTC' };
+
+    expect(hasSameTimezone(a, b)).toBe(true);
+  });
+
+  it('should return true if both timezone refs have the same undefined timezone.', () => {
+    const a = { timezone: undefined };
+    const b = {};
+
+    expect(hasSameTimezone(a, b)).toBe(true);
+  });
+
+  it('should return true if both timezone refs are null/undefined', () => {
+    const a = null;
+    const b = undefined;
+
+    expect(hasSameTimezone(a, b)).toBe(true);
+  });
+
+  it('should return false if both timezone refs do not have the same timezone.', () => {
+    const a = { timezone: 'UTC' };
+    const b = { timezone: 'America/Denver' };
+
+    expect(hasSameTimezone(a, b)).toBe(false);
+  });
+
+  it('should return false if one input is null and the other is defined', () => {
+    const a = { timezone: 'UTC' };
+    const b = null;
+
+    expect(hasSameTimezone(a, b)).toBe(false);
+  });
+});
 
 describe('isISO8601DateString()', () => {
   it('should validate date strings', () => {
