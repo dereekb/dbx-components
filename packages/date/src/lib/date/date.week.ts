@@ -1,4 +1,4 @@
-import { Building, makeValuesGroupMap, MapFunction, Maybe } from '@dereekb/util';
+import { Building, makeValuesGroupMap, MapFunction, Maybe, TimezoneString } from '@dereekb/util';
 import { getWeek, getYear, endOfWeek, startOfMonth, endOfMonth, addWeeks, startOfWeek, setWeek, isAfter } from 'date-fns';
 import { isDate } from './date';
 import { DateRange } from './date.range';
@@ -60,7 +60,7 @@ export function yearWeekCodePair(yearWeekCode: YearWeekCode): YearWeekCodePair {
 }
 
 /**
- * Creates a YearWeekCodePair using the input date and the current timezone.
+ * Creates a YearWeekCodePair using the input date and the current/system timezone.
  *
  * @param date
  * @returns
@@ -100,8 +100,14 @@ export function yearWeekCodeFromPair(pair: YearWeekCodePair): YearWeekCode {
  * @param date
  * @returns
  */
-export function yearWeekCodeFromDate(date: Date): YearWeekCode {
-  return yearWeekCodeFromPair(yearWeekCodePairFromDate(date));
+export function yearWeekCodeFromDate(date: Date, timezone?: YearWeekCodeDateTimezoneInput): YearWeekCode {
+  if (timezone) {
+    // use specified timezone
+    return yearWeekCodeFactory({ timezone })(date);
+  } else {
+    // Use system timezone
+    return yearWeekCodeFromPair(yearWeekCodePairFromDate(date));
+  }
 }
 
 /**
@@ -122,15 +128,19 @@ export interface YearWeekCodeConfig {
   timezone?: YearWeekCodeDateTimezoneInput;
 }
 
+/**
+ * Creates a DateTimezoneUtcNormalInstance using the input config.
+ *
+ * @param input
+ * @returns
+ */
 export function yearWeekCodeDateTimezoneInstance(input: YearWeekCodeDateTimezoneInput): DateTimezoneUtcNormalInstance {
   const normal = input ? (input instanceof DateTimezoneUtcNormalInstance ? input : dateTimezoneUtcNormal(input)) : SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE;
   return normal;
 }
 
 /**
- * Returns the yearWeekCode for the input Date or Year/Week combo.
- *
- * The date is expected to be relative to UTC.
+ * Returns the yearWeekCode for the input system Date or Year/Week combo.
  *
  * @param date
  */
@@ -277,10 +287,23 @@ export function yearWeekCodeDateFactory(config?: YearWeekCodeDateConfig): YearWe
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
   return (yearWeekCode: YearWeekCode) => {
     const pair = yearWeekCodePair(yearWeekCode);
-    const date = startOfWeek(setWeek(new Date(Date.UTC(pair.year, 0, 1, 0, 0, 0, 0)), pair.week));
-    const fixed = normal.targetDateToSystemDate(date);
+    const utcYearDate = new Date(Date.UTC(pair.year, 0, 1, 0, 0, 0, 0));
+    const systemYearDate = normal.systemDateToBaseDate(utcYearDate); // convert to system before using system date functions
+    const date = startOfWeek(setWeek(systemYearDate, pair.week));
+    const fixed = normal.targetDateToSystemDate(date); // back to timezone
     return fixed;
   };
+}
+
+/**
+ * Convenience function for calling yearWeekCodeDateFactory() with the input year week code and optional timezone.
+ *
+ * @param yearWeekCode
+ * @param timezone
+ * @returns
+ */
+export function startOfWeekForYearWeekCode(yearWeekCode: YearWeekCode, timezone?: YearWeekCodeDateTimezoneInput): Date {
+  return yearWeekCodeDateFactory({ timezone })(yearWeekCode);
 }
 
 /**

@@ -2,7 +2,8 @@ import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, addWeeks, getDay } from 'date-fns';
 import { dateCellTiming, DateCellDurationSpan } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone } from './date.week';
+import { dateTimezoneUtcNormal } from './date.timezone';
+import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone, yearWeekCodePair, startOfWeekForYearWeekCode } from './date.week';
 
 describe('yearWeekCodeForDateRange()', () => {
   const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000'); // date in current timezone
@@ -276,6 +277,30 @@ describe('yearWeekCodeDateFactory()', () => {
         it('should return the date for week 2.', () => {
           const result = factory(expected2022YearWeekCode2);
           expect(result).toBeSameSecondAs(amsterdam2022Week2StartDate);
+        });
+      });
+    });
+
+    describe('scenario', () => {
+      describe('2023-10-08T15:00:00.000Z', () => {
+        const timezone = 'America/Chicago';
+        const normal = dateTimezoneUtcNormal({ timezone });
+        const startOfWeekDate = normal.startOfDayInTargetTimezone('2023-10-08');
+
+        it('should convert the date to a yearWeekCode then back.', () => {
+          const yearWeekCode = yearWeekCodeFactory({ timezone })(startOfWeekDate);
+          expect(yearWeekCode).toBe(202341);
+
+          const pair = yearWeekCodePair(yearWeekCode);
+          expect(pair.year).toBe(2023);
+          expect(pair.week).toBe(41);
+
+          const date = yearWeekCodeDateFactory({ timezone })(yearWeekCode);
+          expect(date).toBeSameSecondAs(startOfWeekDate);
+
+          // test startOfWeekForYearWeekCode()
+          const date2 = startOfWeekForYearWeekCode(yearWeekCode, timezone);
+          expect(date2).toBeSameSecondAs(startOfWeekDate);
         });
       });
     });
