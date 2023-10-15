@@ -1,4 +1,4 @@
-import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, Minutes, minutesToFractionalHours, FractionalHour, TimezoneStringRef, MS_IN_MINUTE, ISO8601DayString } from '@dereekb/util';
+import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, Minutes, minutesToFractionalHours, FractionalHour, TimezoneStringRef, MS_IN_MINUTE, ISO8601DayString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
@@ -512,8 +512,60 @@ export function getDateCellTimingHoursInEvent(timing: Pick<DateCellTiming, 'dura
  * The startsAt time remains the same, while the end date may be updated to reflect timezone differences.
  */
 export type UpdateDateCellTimingToTimezoneFunction = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => T & FullDateCellTiming) & {
-  readonly _normalInstance: DateTimezoneUtcNormalInstance;
+  readonly _timezone: TimezoneString;
 };
+
+/**
+ * Creates a ChangeDateCellTimingToTimezoneFunction from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function updateDateCellTimingToTimezoneFunction(timezone: TimezoneString): UpdateDateCellTimingToTimezoneFunction {
+  const fn = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => {
+    const { startsAt } = timing;
+    const newTiming: T = {
+      ...timing,
+      start: dateCellTimingStart({ startsAt, timezone }),
+      timezone
+    };
+
+    return newTiming;
+  }) as Building<UpdateDateCellTimingToTimezoneFunction>;
+  fn._timezone = timezone;
+  return fn as UpdateDateCellTimingToTimezoneFunction;
+}
+
+/**
+ * Convenience function for calling updateDateCellTimingToTimezone() with the system timezone.
+ *
+ * @param timing
+ * @returns
+ */
+export function updateDateCellTimingToSystemTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
+  return updateDateCellTimingToTimezone(timing, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.configuredTimezoneString as string);
+}
+
+/**
+ * Convenience function for calling updateDateCellTimingToTimezone() with the UTC timezone.
+ *
+ * @param timing
+ * @returns
+ */
+export function updateDateCellTimingToUTCTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
+  return updateDateCellTimingToTimezone(timing, UTC_TIMEZONE_STRING);
+}
+
+/**
+ * Convenience function for calling updateDateCellTimingToTimezoneFunction() and passing the timing.
+ *
+ * @param timing
+ * @param timezone
+ * @returns
+ */
+export function updateDateCellTimingToTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T, timezone: TimezoneString): T {
+  return updateDateCellTimingToTimezoneFunction(timezone)(timing);
+}
 
 /**
  * Returns a copy of the input timing adjusted for the input timezone and all FullDateCellTiming values updated to reflect the changes.
@@ -754,3 +806,24 @@ export function isValidFullDateCellTiming(timing: FullDateCellTiming): boolean {
   const { isValid } = isValidFullDateCellTimingInfo(timing);
   return isValid;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use updateDateCellTimingToTimezoneFunction() or shiftDateCellTimingToTimezoneFunction() instead.
+ */
+export const changeDateCellTimingToTimezoneFunction = updateDateCellTimingToTimezoneFunction;
+
+/**
+ * @deprecated use updateDateCellTimingToSystemTimezone() or shiftDateCellTimingToSystemTimezone() instead.
+ */
+export const changeDateCellTimingToSystemTimezone = updateDateCellTimingToSystemTimezone;
+
+/**
+ * @deprecated use updateDateCellTimingToUTCTimezone() or shiftDateCellTimingToUTCTimezone() instead.
+ */
+export const changeDateCellTimingToUTCTimezone = updateDateCellTimingToUTCTimezone;
+
+/**
+ * @deprecated use updateDateCellTimingToTimezone() or shiftDateCellTimingToTimezone() instead.
+ */
+export const changeDateCellTimingToTimezone = updateDateCellTimingToTimezone;
