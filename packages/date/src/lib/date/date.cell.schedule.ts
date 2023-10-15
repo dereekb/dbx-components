@@ -328,7 +328,7 @@ export function isDateCellSchedule(input: object): input is DateCellSchedule {
 
 export function isSameDateCellSchedule(a: Maybe<DateCellSchedule>, b: Maybe<DateCellSchedule>): boolean {
   if (a && b) {
-    return a.w === b.w && iterablesAreSetEquivalent(a.ex, b.ex) && iterablesAreSetEquivalent(a.d, b.d);
+    return a.w === b.w && iterablesAreSetEquivalent(a.ex ?? [], b.ex ?? []) && iterablesAreSetEquivalent(a.d ?? [], b.d ?? []);
   } else {
     return a == b;
   }

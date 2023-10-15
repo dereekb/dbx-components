@@ -755,6 +755,18 @@ describe('isSameDateCellSchedule()', () => {
     const scheduleB: DateCellSchedule = { ...schedule, d: [] };
     expect(isSameDateCellSchedule(schedule, scheduleB)).toBe(false);
   });
+
+  it('should return true for equivalent date schedule, one with an empty d date and one with an undefined d date', () => {
+    const schedule: DateCellSchedule = { w: '89', ex: [0, 1], d: [] };
+    const scheduleB: DateCellSchedule = { ...schedule, d: undefined };
+    expect(isSameDateCellSchedule(schedule, scheduleB)).toBe(true);
+  });
+
+  it('should return true for equivalent date schedule, one with an empty ex date and one with an undefined ex date', () => {
+    const schedule: DateCellSchedule = { w: '89', ex: [] };
+    const scheduleB: DateCellSchedule = { ...schedule, ex: undefined };
+    expect(isSameDateCellSchedule(schedule, scheduleB)).toBe(true);
+  });
 });
 
 describe('fullDateCellScheduleRange()', () => {

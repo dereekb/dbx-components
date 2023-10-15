@@ -281,8 +281,9 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   );
 
   readonly currentInputRange$: Observable<Maybe<CalendarScheduleSelectionInputDateRange>> = this.state$.pipe(
-    map(({ inputStart, inputEnd }) => ({ inputStart, inputEnd })),
-    distinctUntilChanged((a, b) => isSameDate(a.inputStart, b.inputStart) && isSameDate(a.inputEnd, b.inputEnd)),
+    map(({ inputStart, inputEnd }) => ({ start: inputStart, end: inputEnd })),
+    distinctUntilChanged((a, b) => isSameDateRange(a as DateRange, b as DateRange)),
+    map((x) => ({ inputStart: x.start, inputEnd: x.end })),
     map((x) => {
       if (x.inputStart && x.inputEnd) {
         return x as CalendarScheduleSelectionInputDateRange;
@@ -627,6 +628,7 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
           filterStart = timezoneNormal.startOfDayInTargetTimezone(inputFilter.startsAt);
         } else {
           filterStart = inputFilter.startsAt;
+          filter.timezone = systemTimezone;
         }
       }
 
@@ -712,7 +714,7 @@ export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionSta
 }
 
 export function updateStateWithDateCellScheduleRangeValue(state: CalendarScheduleSelectionState, inputChange: Maybe<FullDateCellScheduleRangeInputDateRange>): CalendarScheduleSelectionState {
-  const { currentSelectionValue } = state;
+  const { currentSelectionValue, systemTimezone } = state;
   const currentDateCellScheduleRange = currentSelectionValue?.dateScheduleRange; // current range is always in system time
   let change: Maybe<Pick<DateCellScheduleDateRange, 'start' | 'end' | 'ex' | 'w' | 'timezone'>>;
 
@@ -720,8 +722,14 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
   // Outputs remain accurate.
 
   if (inputChange) {
+    // make sure a timezone is set. Input may not have a timezone attached. Default to system time.
+    const inputChangeWithTimezoneSet = {
+      ...inputChange,
+      timezone: inputChange.timezone ?? systemTimezone
+    };
+
     // calculate the schedule range
-    const fullChange = fullDateCellScheduleRange({ dateCellScheduleRange: inputChange });
+    const fullChange = fullDateCellScheduleRange({ dateCellScheduleRange: inputChangeWithTimezoneSet });
     const inputNormal = dateCellTimingTimezoneNormalInstance(fullChange);
 
     const startInSystemTz = inputNormal.systemDateToTargetDate(fullChange.start);
@@ -1039,8 +1047,17 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
   };
 }
 
+/**
+ * The selected date range and the corresponding cell range.
+ */
 export interface CalendarScheduleSelectionRangeAndExclusion extends DateRange {
+  /**
+   * Corresponds to the start and end indexes in the date range.
+   */
   dateCellRange: DateCellRangeWithRange;
+  /**
+   * All excluded indexes.
+   */
   excluded: DateCellIndex[];
 }
 
