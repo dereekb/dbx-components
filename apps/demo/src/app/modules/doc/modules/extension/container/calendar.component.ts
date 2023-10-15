@@ -5,7 +5,7 @@ import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns/esm
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
 import { CalendarScheduleSelectionDayState, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
-import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
+import { BehaviorSubject, delay, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
 import { timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
@@ -34,6 +34,11 @@ export class DocExtensionCalendarComponent implements OnInit {
   event: Maybe<DbxCalendarEvent<TestCalendarEventData>>;
 
   readonly defaultDateCellScheduleRangeFieldValue$ = of({
+    futureDateSchedule: {
+      start: addDays(startOfDay(new Date()), 1),
+      end: addDays(startOfDay(new Date()), 3),
+      w: '89'
+    },
     dateSchedule: {
       start: startOfDay(new Date()),
       end: addDays(startOfDay(new Date()), 14),
@@ -56,8 +61,8 @@ export class DocExtensionCalendarComponent implements OnInit {
       key: 'futureDateSchedule',
       required: false,
       label: 'Future Dates',
-      timezone: this.timezone$,
-      defaultScheduleDays: expandDateCellScheduleDayCodes('8'),
+      outputTimezone: this.timezone$,
+      defaultScheduleDays: expandDateCellScheduleDayCodes('89'),
       minMaxDateRange: {
         start: startOfDay(new Date())
       },
@@ -127,13 +132,13 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       key: 'dateScheduleForUtcTimezoneWithFilter',
       required: true,
-      description: 'Date schedule for the UTC timezone with filter. The timezone is ignored.',
-      timezone: 'UTC',
+      description: 'Date schedule for the timezone with filter. The timezone from the filter is ignored and overridden by the output timezone.',
+      outputTimezone: 'UTC',
       filter: {
         //
         ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-        startsAt: systemBaseDateToNormalDate(startOfDay(new Date())),
-        end: systemBaseDateToNormalDate(startOfDay(addDays(new Date(), 3))),
+        startsAt: startOfDay(new Date()),
+        end: addDays(new Date(), 3),
         w: '89',
         ex: []
       }

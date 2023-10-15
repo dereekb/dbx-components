@@ -4,7 +4,7 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
 import { Maybe } from '@dereekb/util';
-import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, map, shareReplay, combineLatest } from 'rxjs';
+import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, map, shareReplay, combineLatest, EMPTY } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
@@ -23,7 +23,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
   private _required = new BehaviorSubject<boolean>(false);
 
   readonly required$ = this._required.asObservable();
-  readonly timezone$ = this.dbxCalendarScheduleSelectionStore.currentTimezone$;
+  readonly timezone$ = this.dbxCalendarScheduleSelectionStore.effectiveOutputTimezone$;
 
   @Input()
   openPickerOnTextClick: boolean = true;
@@ -141,7 +141,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
           let obs: Observable<RangeValue>;
 
           if (opened) {
-            obs = of({});
+            obs = EMPTY;
           } else {
             obs = this.range.valueChanges.pipe(startWith(this.range.value));
           }

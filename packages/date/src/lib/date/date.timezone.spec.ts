@@ -1,4 +1,4 @@
-import { requireCurrentTimezone } from '@dereekb/date';
+import { isStartOfDayInUTC, requireCurrentTimezone } from '@dereekb/date';
 import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay } from 'date-fns';
 import { ISO8601DayString, Milliseconds } from '@dereekb/util';
 import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromNowWithTimezoneNormal, copyHoursAndMinutesFromDateWithTimezoneNormal, systemDateTimezoneUtcNormal, transformDateRangeToTimezoneFunction } from './date.timezone';
@@ -43,6 +43,16 @@ describe('DateTimezoneUtcNormalInstance', () => {
       });
 
       expect(instance.targetTimezoneExperiencesDaylightSavings(2023)).toBe(true);
+    });
+  });
+
+  describe('startOfDayInBaseDate()', () => {
+    it('should return a date in UTC', () => {
+      const date = new Date();
+      const instance = dateTimezoneUtcNormal({ useSystemTimezone: true });
+
+      const result = instance.startOfDayInBaseDate(date);
+      expect(isStartOfDayInUTC(result)).toBe(true);
     });
   });
 

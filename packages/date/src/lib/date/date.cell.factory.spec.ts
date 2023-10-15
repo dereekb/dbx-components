@@ -2,7 +2,7 @@ import { guessCurrentTimezone, requireCurrentTimezone, timingDateTimezoneUtcNorm
 import { range, isOddNumber, RangeInput, MS_IN_MINUTE, TimezoneString, MINUTES_IN_HOUR, MS_IN_HOUR } from '@dereekb/util';
 import { addDays, addHours, addMilliseconds, addMinutes, addSeconds, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
 import { start } from 'repl';
-import { changeDateCellTimingToTimezoneFunction, DateCell, DateCellTiming, dateCellTiming, dateCellTimingStart, DateCellTimingStartsAt, FullDateCellTiming, isValidDateCellTiming } from './date.cell';
+import { shiftDateCellTimingToTimezoneFunction, DateCell, DateCellTiming, dateCellTiming, dateCellTimingStart, DateCellTimingStartsAt, FullDateCellTiming, isValidDateCellTiming } from './date.cell';
 import { dateCellDayTimingInfoFactory, dateCellIndexRange, dateCellTimingExpansionFactory, dateCellTimingDateFactory, dateCellTimingFromDateCellTimingStartsAtEndRange, dateCellTimingRelativeIndexArrayFactory, dateCellTimingRelativeIndexFactory, dateCellTimingStartDateFactory, dateCellTimingStartsAtDateFactory, getRelativeIndexForDateCellTiming, isDateCellTimingRelativeIndexFactory, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { DateCellRange, DateCellRangeWithRange } from './date.cell.index';
@@ -316,7 +316,7 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
 
     describe('UTC', () => {
       const timezone = 'UTC';
-      const timing = changeDateCellTimingToTimezoneFunction(timezone)(systemTiming);
+      const timing = shiftDateCellTimingToTimezoneFunction(timezone)(systemTiming);
       const fn = dateCellTimingRelativeIndexFactory(timing);
 
       it('should return the expected indexes for the first day relative to the UTC timezone', () => {
@@ -332,7 +332,7 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
 
     describe('America/Denver', () => {
       const timezone = 'America/Denver';
-      const timing = changeDateCellTimingToTimezoneFunction(timezone)(systemTiming);
+      const timing = shiftDateCellTimingToTimezoneFunction(timezone)(systemTiming);
       const fn = dateCellTimingRelativeIndexFactory(timing);
 
       it('should return the expected indexes for the first day relative to the Denver timezone', () => {

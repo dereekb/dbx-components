@@ -98,7 +98,9 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   private _config = new BehaviorSubject<DbxScheduleSelectionCalendarComponentConfig>({});
   private _centerRangeSub = new SubscriptionObject();
 
-  readonly readonly$: Observable<boolean> = this._config.pipe(
+  readonly config$ = this._config.pipe(distinctUntilChanged(), shareReplay(1));
+
+  readonly readonly$: Observable<boolean> = this.config$.pipe(
     switchMap((x) => (x.readonly != null ? asObservableFromGetter(x.readonly) : of(undefined))),
     combineLatestWith(this._inputReadonly),
     map(([configReadonly, inputReadonly]) => {
@@ -107,7 +109,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     shareReplay(1)
   );
 
-  readonly showButtonsOnReadonly$: Observable<boolean> = this._config.pipe(
+  readonly showButtonsOnReadonly$: Observable<boolean> = this.config$.pipe(
     map((x) => x.showButtonsOnReadonly ?? false),
     distinctUntilChanged(),
     shareReplay(1)
@@ -125,7 +127,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     shareReplay(1)
   );
 
-  readonly showClearSelectionButton$ = this._config.pipe(
+  readonly showClearSelectionButton$ = this.config$.pipe(
     map((config) => config.showClearSelectionButton ?? true),
     combineLatestWith(this.showButtons$),
     map((x) => reduceBooleansWithAnd(x)),
@@ -133,7 +135,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     shareReplay(1)
   );
 
-  readonly datePopoverButtonInjectionConfig$: Observable<Maybe<DbxInjectionComponentConfig<any>>> = this._config.pipe(
+  readonly datePopoverButtonInjectionConfig$: Observable<Maybe<DbxInjectionComponentConfig<any>>> = this.config$.pipe(
     map((x) => x.buttonInjectionConfig),
     switchMapDbxInjectionComponentConfig(DbxScheduleSelectionCalendarDatePopoverButtonComponent),
     combineLatestWith(this.showButtons$),
@@ -147,7 +149,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   // refresh any time the selected day function updates
   readonly state$ = this.dbxCalendarScheduleSelectionStore.state$;
 
-  readonly beforeMonthViewRender$ = this._config.pipe(
+  readonly beforeMonthViewRender$ = this.config$.pipe(
     switchMap((x) => {
       let factory: Observable<DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory>;
 
