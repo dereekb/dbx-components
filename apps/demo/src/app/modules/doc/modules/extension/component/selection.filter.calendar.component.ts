@@ -37,6 +37,7 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
         <p>selectionValueSelectedIndexes$: {{ selectionValueSelectedIndexes$ | async | json }}</p>
         <p>selectionValueSelectedDates$: {{ selectionValueSelectedDates$ | async | json }}</p>
         <p>selectionValueWithTimezoneDateCellDurationSpanExpansion$: {{ selectionValueWithTimezoneDateCellDurationSpanExpansion$ | async | json }}</p>
+        <p>Output Timezone: {{ outputTimezone$ | async }}</p>
       </dbx-content-pit>
     </dbx-content-border>
   `,
@@ -49,6 +50,7 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
     }
   };
 
+  readonly outputTimezone$ = this.dbxCalendarScheduleSelectionStore.outputTimezone$;
   readonly currentSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
   readonly currentSelectionValueDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValueDateCellDurationSpanExpansion$;
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));

@@ -1,10 +1,10 @@
 import { DateRange } from '@dereekb/date';
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef, Building } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes, startOfDay } from 'date-fns';
 import { isDate, isSameDate, requireCurrentTimezone } from './date';
-import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingDateRange, DateCellTimingStartsAtEndRange, FullDateCellTiming, isSameDateCellTiming, isSameFullDateCellTiming, DateCellTimingEventStartsAt, isValidDateCellTiming, isFullDateCellTiming } from './date.cell';
+import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingDateRange, DateCellTimingStartsAtEndRange, FullDateCellTiming, isSameDateCellTiming, isSameFullDateCellTiming, DateCellTimingEventStartsAt, isValidDateCellTiming, isFullDateCellTiming, DateCellTimingTimezoneInput, shiftDateCellTimingToTimezoneFunction, dateCellTimingTimezoneNormalInstance } from './date.cell';
 import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { DateCellRangeOrDateRange, DateCellRange, DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
@@ -468,6 +468,58 @@ export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput)
     end,
     timezone
   };
+}
+
+/**
+ * Changes any input DateCellScheduleDateRange to a new DateCellScheduleDateRange in the configured timezone.
+ */
+export type ChangeDateCellScheduleDateRangeToTimezoneFunction = ((dateRange: DateCellScheduleDateRange) => DateCellScheduleDateRange) & {
+  readonly _normalInstance: DateTimezoneUtcNormalInstance;
+};
+
+/**
+ * Creates a ChangeDateCellScheduleDateRangeToTimezoneFunction for the input timezone.
+ *
+ * @param timezoneInput
+ * @returns
+ */
+export function changeDateCellScheduleDateRangeToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ChangeDateCellScheduleDateRangeToTimezoneFunction {
+  const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
+  const timezone = normalInstance.configuredTimezoneString as string;
+
+  const fn = ((input: DateCellScheduleDateRange) => {
+    const inputTimingNormalInstance = dateCellTimingTimezoneNormalInstance(input);
+
+    const startNormal = inputTimingNormalInstance.baseDateToTargetDate(input.start);
+    const endNormal = inputTimingNormalInstance.baseDateToTargetDate(input.end);
+
+    const start = normalInstance.targetDateToBaseDate(startNormal);
+    const end = normalInstance.targetDateToBaseDate(endNormal);
+
+    const result: DateCellScheduleDateRange = {
+      w: input.w,
+      d: input.d,
+      ex: input.ex,
+      start,
+      end,
+      timezone
+    };
+
+    return result;
+  }) as Building<ChangeDateCellScheduleDateRangeToTimezoneFunction>;
+  fn._normalInstance = normalInstance;
+  return fn as ChangeDateCellScheduleDateRangeToTimezoneFunction;
+}
+
+/**
+ * Convenience function for calling changeDateCellScheduleDateRangeToTimezoneFunction() and passing the new timing and timezone.
+ *
+ * @param timing
+ * @param timezone
+ * @returns
+ */
+export function changeDateCellScheduleDateRangeToTimezone(timing: DateCellScheduleDateRange, timezone: DateCellTimingTimezoneInput): DateCellScheduleDateRange {
+  return changeDateCellScheduleDateRangeToTimezoneFunction(timezone)(timing);
 }
 
 /**

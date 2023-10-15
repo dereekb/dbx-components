@@ -35,8 +35,16 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
   allowCustomizeWithoutDateRange?: boolean;
   /**
    * (Optional) Timezone to use for the output start date.
+   *
+   * @deprecated use 'outputTimezone' instead.
    */
   timezone?: ObservableOrValue<Maybe<TimezoneString>>;
+  /**
+   * (Optional) Timezone to use for the output start date.
+   *
+   * If a filter is provided, this timezone overrides the filter's timezone output.
+   */
+  outputTimezone?: ObservableOrValue<Maybe<TimezoneString>>;
   /**
    * (Optional) Default schedule days to allow.
    */
@@ -149,8 +157,8 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return this.props.exclusions;
   }
 
-  get timezone() {
-    return this.props.timezone;
+  get outputTimezone() {
+    return this.props.outputTimezone || this.props.timezone;
   }
 
   get initialSelectionState() {
@@ -184,7 +192,7 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
       this.formControl.setValue(x);
     });
 
-    const { timezone, minMaxDateRange, filter, exclusions, defaultScheduleDays } = this;
+    const { outputTimezone, minMaxDateRange, filter, exclusions, defaultScheduleDays } = this;
 
     if (filter != null) {
       this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
@@ -202,8 +210,8 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
       this._exclusionsSub.subscription = this.dbxCalendarScheduleSelectionStore.setExclusions(asObservable(exclusions)) as Subscription;
     }
 
-    if (timezone != null) {
-      this.dbxCalendarScheduleSelectionStore.setTimezone(asObservable(this.timezone));
+    if (outputTimezone != null) {
+      this.dbxCalendarScheduleSelectionStore.setOutputTimezone(asObservable(this.outputTimezone));
     }
 
     if (this.initialSelectionState !== undefined) {

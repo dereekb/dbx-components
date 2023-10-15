@@ -11,7 +11,7 @@ import {
   isSameDateCellTiming,
   FullDateCellTiming,
   getDateCellTimingHoursInEvent,
-  changeDateCellTimingToTimezoneFunction,
+  shiftDateCellTimingToTimezoneFunction,
   calculateExpectedDateCellTimingDuration,
   dateCellTimingTimezoneNormalInstance,
   calculateExpectedDateCellTimingDurationPair,
@@ -405,14 +405,14 @@ describe('getDateCellTimingHoursInEvent()', () => {
   });
 });
 
-describe('changeDateCellTimingToTimezoneFunction()', () => {
+describe('shiftDateCellTimingToTimezoneFunction()', () => {
   describe('function', () => {
     const startOfToday = startOfDay(new Date());
     const timing = dateCellTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
+    const utcTimezoneOffsetInHours = 0; // GMT-0
 
     describe('UTC', () => {
-      const fn = changeDateCellTimingToTimezoneFunction('UTC');
-      const utcTimezoneOffsetInHours = 0; // GMT-0
+      const fn = shiftDateCellTimingToTimezoneFunction('UTC');
 
       it('should convert the start date to the UTC timezone.', () => {
         const result = fn(timing);
@@ -429,44 +429,44 @@ describe('changeDateCellTimingToTimezoneFunction()', () => {
 
       describe('UTC to America/Chicago', () => {
         const timezone = 'America/Chicago';
-        const normalInstance = dateTimezoneUtcNormal(timezone);
+        const americaChicagoTimezoneOffsetInHours = 6;
 
         const startsAtInUtcDate = new Date('2022-01-02T00:00:00Z'); // 0 offset UTC date
 
         const duration = 60;
         const utcTiming: DateCellTiming = { timezone: 'UTC', startsAt: startsAtInUtcDate, end: addMinutes(startsAtInUtcDate, duration), duration: 60 };
-        const fn = changeDateCellTimingToTimezoneFunction(utcTiming);
+        const fn = shiftDateCellTimingToTimezoneFunction(timezone);
 
         it('should convert the start date to the America/Chicago timezone.', () => {
-          const result = fn(timing);
+          const result = fn(utcTiming);
           const start = dateCellTimingStart(result);
 
           const utcHours = start.getUTCHours();
-          expect(utcHours).toBe(utcTimezoneOffsetInHours);
-
-          expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-          expect(result.end).toBeSameSecondAs(timing.end);
+          expect(utcHours).not.toBe(utcTimezoneOffsetInHours);
+          expect(utcHours).toBe(americaChicagoTimezoneOffsetInHours);
           expect(result.duration).toBe(timing.duration);
         });
       });
-    });
 
-    describe('America/Denver', () => {
-      const fn = changeDateCellTimingToTimezoneFunction('America/Denver');
+      describe('UTC to America/Denver', () => {
+        const timezone = 'America/Denver';
+        const americaChicagoTimezoneOffsetInHours = 5;
 
-      // GMT-6 or GMT-7 depending on time of year
-      const denverTimezoneOffsetInHours = millisecondsToHours(dateTimezoneUtcNormal('America/Denver').targetDateToBaseDateOffset(startOfToday));
+        const startsAtInUtcDate = new Date('2022-01-02T00:00:00Z'); // 0 offset UTC date
 
-      it('should convert the start date to the America/Denver timezone.', () => {
-        const result = fn(timing);
-        const start = dateCellTimingStart(result);
+        const duration = 60;
+        const utcTiming: DateCellTiming = { timezone: 'UTC', startsAt: startsAtInUtcDate, end: addMinutes(startsAtInUtcDate, duration), duration: 60 };
+        const fn = shiftDateCellTimingToTimezoneFunction(timezone);
 
-        const utcHours = start.getUTCHours();
-        expect(utcHours).toBe(denverTimezoneOffsetInHours);
+        it('should convert the start date to the America/Denver timezone.', () => {
+          const result = fn(utcTiming);
+          const start = dateCellTimingStart(result);
 
-        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-        expect(result.end).toBeSameSecondAs(timing.end);
-        expect(result.duration).toBe(timing.duration);
+          const utcHours = start.getUTCHours();
+          expect(utcHours).not.toBe(utcTimezoneOffsetInHours);
+          expect(utcHours).toBe(americaChicagoTimezoneOffsetInHours);
+          expect(result.duration).toBe(timing.duration);
+        });
       });
     });
   });

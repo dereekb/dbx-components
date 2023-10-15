@@ -127,13 +127,13 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       key: 'dateScheduleForUtcTimezoneWithFilter',
       required: true,
-      description: 'Date schedule for the UTC timezone with filter. The timezone is ignored.',
-      timezone: 'UTC',
+      description: 'Date schedule for the timezone with filter. The timezone from the filter is ignored and overridden by the output timezone.',
+      outputTimezone: 'UTC',
       filter: {
         //
         ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-        startsAt: systemBaseDateToNormalDate(startOfDay(new Date())),
-        end: systemBaseDateToNormalDate(startOfDay(addDays(new Date(), 3))),
+        startsAt: startOfDay(new Date()),
+        end: addDays(new Date(), 3),
         w: '89',
         ex: []
       }

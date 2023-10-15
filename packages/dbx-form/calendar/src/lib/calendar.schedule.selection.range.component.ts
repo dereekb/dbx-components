@@ -23,7 +23,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
   private _required = new BehaviorSubject<boolean>(false);
 
   readonly required$ = this._required.asObservable();
-  readonly timezone$ = this.dbxCalendarScheduleSelectionStore.currentTimezone$;
+  readonly timezone$ = this.dbxCalendarScheduleSelectionStore.effectiveOutputTimezone$;
 
   @Input()
   openPickerOnTextClick: boolean = true;

@@ -507,11 +507,22 @@ export function getDateCellTimingHoursInEvent(timing: Pick<DateCellTiming, 'dura
 }
 
 /**
+ * Returns a copy of the input timing with the start date adjusted and the new timezone set.
+ *
+ * The startsAt time remains the same, while the end date may be updated to reflect timezone differences.
+ */
+export type UpdateDateCellTimingToTimezoneFunction = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => T & FullDateCellTiming) & {
+  readonly _normalInstance: DateTimezoneUtcNormalInstance;
+};
+
+/**
  * Returns a copy of the input timing adjusted for the input timezone and all FullDateCellTiming values updated to reflect the changes.
+ *
+ * The startsAt and end times are adjusted to match the same "time" in the new timezone. I.E: A timing of 8AM UTC that is converted to America/Denver would be converted to 8AM America/Denver.
  *
  * @param timing
  */
-export type ChangeDateCellTimingToTimezoneFunction = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => T & FullDateCellTiming) & {
+export type ShiftDateCellTimingToTimezoneFunction = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => T & FullDateCellTiming) & {
   readonly _normalInstance: DateTimezoneUtcNormalInstance;
 };
 
@@ -521,12 +532,12 @@ export type ChangeDateCellTimingToTimezoneFunction = (<T extends DateCellTimingS
  * @param input
  * @returns
  */
-export function changeDateCellTimingToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ChangeDateCellTimingToTimezoneFunction {
+export function shiftDateCellTimingToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ShiftDateCellTimingToTimezoneFunction {
   const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
   const timezone = normalInstance.configuredTimezoneString as string;
 
   const fn = (<T extends DateCellTimingStartsAtEndRange>(timing: T) => {
-    const inputTimingNormalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
+    const inputTimingNormalInstance = dateCellTimingTimezoneNormalInstance(timing);
     const startsAtNormal = inputTimingNormalInstance.baseDateToTargetDate(timing.startsAt);
     const endNormal = inputTimingNormalInstance.baseDateToTargetDate(timing.end);
 
@@ -542,40 +553,40 @@ export function changeDateCellTimingToTimezoneFunction(timezoneInput: DateCellTi
     };
 
     return newTiming;
-  }) as Building<ChangeDateCellTimingToTimezoneFunction>;
+  }) as Building<ShiftDateCellTimingToTimezoneFunction>;
   fn._normalInstance = normalInstance;
-  return fn as ChangeDateCellTimingToTimezoneFunction;
+  return fn as ShiftDateCellTimingToTimezoneFunction;
 }
 
 /**
- * Convenience function for calling changeDateCellTimingToTimezone() with the system timezone.
+ * Convenience function for calling shiftDateCellTimingToTimezone() with the system timezone.
  *
  * @param timing
  * @returns
  */
-export function changeDateCellTimingToSystemTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
-  return changeDateCellTimingToTimezone(timing, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
+export function shiftDateCellTimingToSystemTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
+  return shiftDateCellTimingToTimezone(timing, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
 }
 
 /**
- * Convenience function for calling changeDateCellTimingToTimezone() with the UTC timezone.
+ * Convenience function for calling shiftDateCellTimingToTimezone() with the UTC timezone.
  *
  * @param timing
  * @returns
  */
-export function changeDateCellTimingToUTCTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
-  return changeDateCellTimingToTimezone(timing, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
+export function shiftDateCellTimingToUTCTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
+  return shiftDateCellTimingToTimezone(timing, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
 }
 
 /**
- * Convenience function for calling changeDateCellTimingToTimezoneFunction() and passing the timing.
+ * Convenience function for calling shiftDateCellTimingToTimezoneFunction() and passing the timing.
  *
  * @param timing
  * @param timezone
  * @returns
  */
-export function changeDateCellTimingToTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T, timezone: DateCellTimingTimezoneInput): T {
-  return changeDateCellTimingToTimezoneFunction(timezone)(timing);
+export function shiftDateCellTimingToTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T, timezone: DateCellTimingTimezoneInput): T {
+  return shiftDateCellTimingToTimezoneFunction(timezone)(timing);
 }
 
 export interface CalculateExpectedDateCellTimingDurationPair {
