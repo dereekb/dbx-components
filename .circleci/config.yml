@@ -10,7 +10,7 @@ defaults: &defaults
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
 orbs:
-  nx: nrwl/nx@1.6.0
+  nx: nrwl/nx@1.6.2
   node: circleci/node@5.0.2
   snyk: snyk/snyk@1.2.3
 jobs:
