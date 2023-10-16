@@ -1,5 +1,5 @@
 import { DateRange } from '@dereekb/date';
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef, Building } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef, Building, sortNumbersAscendingFunction } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes, startOfDay } from 'date-fns';
@@ -196,11 +196,13 @@ export function dateCellScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfW
 /**
  * Expands the input into an array of DateCellScheduleDayCode values.
  *
+ * The values are sorted in ascending order.
+ *
  * @param input
  * @returns
  */
 export function expandDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput): DateCellScheduleDayCode[] {
-  return Array.from(expandDateCellScheduleDayCodesToDayCodesSet(input));
+  return Array.from(expandDateCellScheduleDayCodesToDayCodesSet(input)).sort(sortNumbersAscendingFunction);
 }
 
 /**
@@ -722,14 +724,11 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   const timezone = inputTimezone ?? requireCurrentTimezone(); // if the timezone is not provided, assume the startsAt is a system timezone normal.
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
-  // derive the startsAt time for the range. If not provided, defaults to inputStart, or midnight in the target timezone.
+  // derive the startsAt time for the range. If not provided, defaults to inputStart, or midnight today in the target timezone.
   const startsAt: Date = inputStartsAt != null ? inputStartsAt : inputStart ?? normalInstance.startOfDayInTargetTimezone();
-  const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt);
-
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);
 
-  // Start date is either now or the filter's start date. It is never the minMax's start date, since that is irrelevant to the filter's range.
-
+  const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt); // convert to the system date
   const firstDateDay = getDay(startsAtInSystem);
   const dayForIndex = dateCellDayOfWeekFactory(firstDateDay);
   const dateIndexForDate = dateCellTimingRelativeIndexFactory({ startsAt, timezone });

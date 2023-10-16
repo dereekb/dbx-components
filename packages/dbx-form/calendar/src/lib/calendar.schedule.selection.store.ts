@@ -45,7 +45,9 @@ import {
   FullDateCellScheduleRangeInputDateRange,
   fullDateCellScheduleRange,
   dateCellTimingTimezoneNormalInstance,
-  changeDateCellScheduleDateRangeToTimezone
+  changeDateCellScheduleDateRangeToTimezone,
+  updateDateCellTimingToSystemTimezone,
+  SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, removeFromSet, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet } from '@dereekb/util';
@@ -619,20 +621,34 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
     if (inputFilter) {
       filter = copyDateCellScheduleDateFilterConfig(inputFilter); // copy filter
 
+      let nextFilterTimezone: TimezoneString | undefined; // only set if inputFilter.start or inputFilter.startsAt
+
       // configure filter start
       if (inputFilter.start) {
         filterStart = inputFilter.start;
+
+        // if no timezone is specified, then use the system timezone and align filterStart to the start of the day.
+        if (!inputFilter.timezone) {
+          filterStart = SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(inputFilter.startsAt);
+          nextFilterTimezone = systemTimezone;
+        } else {
+          nextFilterTimezone = inputFilter.timezone;
+        }
       } else if (inputFilter.startsAt) {
         if (inputFilter.timezone) {
+          // if no timezone is provided, use startsAt as-is
           const timezoneNormal = dateTimezoneUtcNormal(inputFilter.timezone);
           filterStart = timezoneNormal.startOfDayInTargetTimezone(inputFilter.startsAt);
+          nextFilterTimezone = inputFilter.timezone;
         } else {
-          filterStart = inputFilter.startsAt;
-          filter.timezone = systemTimezone;
+          // set to the start of today in the system timezone.
+          filterStart = SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(inputFilter.startsAt);
+          nextFilterTimezone = systemTimezone;
         }
       }
 
       filter.start = filterStart ?? undefined;
+      filter.timezone = nextFilterTimezone;
 
       // configure exclusions
       if (exclusions?.length) {
@@ -659,7 +675,32 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
      * If the input filter has a start date, use that as the relative start to ensure indexes are compared the same,
      * otherwise use the state's start. This is important for the index calculations.
      */
-    enabledFilter.start = filter?.start ?? state.start;
+    let finalEnabledStart: Date;
+    let finalEnabledTimezone: TimezoneString;
+    //  filter?.start ?? state.start;
+
+    if (!enabledFilter.start) {
+      // use the current state's start, but make sure it is in the proper timezone.
+      if (enabledFilter.timezone) {
+        const timezoneNormal = dateTimezoneUtcNormal(enabledFilter.timezone);
+        finalEnabledStart = timezoneNormal.startOfDayInTargetTimezone(state.start); // get the start of the day for the current start
+        finalEnabledTimezone = enabledFilter.timezone;
+      } else {
+        finalEnabledStart = state.start;
+        finalEnabledTimezone = systemTimezone;
+      }
+    } else if (!enabledFilter.timezone) {
+      finalEnabledTimezone = systemTimezone;
+
+      const timezoneNormal = dateTimezoneUtcNormal(finalEnabledTimezone);
+      finalEnabledStart = timezoneNormal.startOfDayInTargetTimezone(enabledFilter.start); // get the start of the day for the target timezone
+    } else {
+      finalEnabledStart = enabledFilter.start;
+      finalEnabledTimezone = enabledFilter.timezone;
+    }
+
+    enabledFilter.start = finalEnabledStart;
+    enabledFilter.timezone = finalEnabledTimezone;
 
     // create the filter
     isEnabledFilterDay = dateCellScheduleDateFilter(enabledFilter);
@@ -669,10 +710,16 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 
   // For the same reason as above, use the filter's start date as the relative start if applicable.
   if (filter && filter.start) {
-    const start = filter.start;
-    state.start = start;
-    state.indexFactory = dateCellTimingRelativeIndexFactory({ startsAt: start, timezone: filter.timezone ?? systemTimezone });
-    state.indexDayOfWeek = dateCellDayOfWeekFactory(start);
+    let startForSystemTimezone: Date = filter.start;
+
+    if (filter.timezone) {
+      const timezoneNormal = dateTimezoneUtcNormal(filter.timezone);
+      startForSystemTimezone = timezoneNormal.systemDateToTargetDate(filter.start); // get the start of the day for the system timezone
+    }
+
+    state.start = startForSystemTimezone;
+    state.indexFactory = dateCellTimingRelativeIndexFactory({ startsAt: startForSystemTimezone, timezone: systemTimezone });
+    state.indexDayOfWeek = dateCellDayOfWeekFactory(startForSystemTimezone);
   }
 
   // attempt to re-apply the initial selection state once filter is applied
@@ -692,7 +739,6 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
 
 export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionState, timezone: Maybe<TimezoneString>): CalendarScheduleSelectionState {
   const { currentSelectionValue } = state;
-
   const timezoneNormal = timezone ? dateTimezoneUtcNormal({ timezone }) : undefined;
 
   if (timezoneNormal && currentSelectionValue) {
@@ -983,7 +1029,7 @@ export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarSche
 }
 
 export function computeScheduleSelectionValue(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionValue> {
-  const { indexFactory, allowedDaysOfWeek, effectiveScheduleDays, indexDayOfWeek, computeSelectionResultRelativeToFilter, filter, systemTimezone } = state;
+  const { indexFactory: systemIndexFactory, allowedDaysOfWeek, effectiveScheduleDays, indexDayOfWeek, computeSelectionResultRelativeToFilter, filter, systemTimezone } = state;
   let timezone = systemTimezone;
   const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(state);
 
@@ -1001,14 +1047,18 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
   // If computeSelectionResultRelativeToFilter is true, then we need to offset the values to be relative to that start.
   if (computeSelectionResultRelativeToFilter && filter?.start) {
     start = filter.start; // always start at the filter's start date
+    let startInSystemTimezone = start;
 
     if (filter.timezone) {
       timezone = filter.timezone;
       const filterNormal = dateTimezoneUtcNormal(timezone);
       end = filterNormal.startOfDayInTargetTimezone(end);
+      startInSystemTimezone = filterNormal.systemDateToTargetDate(start); // convert the start to the system timezone normal for deriving the index
     }
 
-    const filterStartIndexOffset = indexFactory(rangeStart) - indexFactory(start);
+    const rangeStartIndex = systemIndexFactory(rangeStart);
+    const startIndex = systemIndexFactory(startInSystemTimezone);
+    const filterStartIndexOffset = rangeStartIndex - startIndex;
     filterOffsetExcludedRange = range(0, filterStartIndexOffset);
     indexOffset = indexOffset - filterStartIndexOffset;
   }

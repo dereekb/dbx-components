@@ -9,13 +9,13 @@ import { dateCellTimingStartDateFactory } from './date.cell.factory';
 export type DateCellDayOfWeekFactory = MapFunction<DateCellIndex, DayOfWeek>;
 
 /**
- * Creates a DateCellDayOfWeekFactory
+ * Creates a DateCellDayOfWeekFactory.
  *
  * @param dayForIndexZero
  * @returns
  */
 export function dateCellDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateCellDayOfWeekFactory {
-  const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getUTCDay() as DayOfWeek);
+  const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getDay() as DayOfWeek);
   return (index: DateCellIndex) => getNextDay(dayForIndexZero, index);
 }
 
