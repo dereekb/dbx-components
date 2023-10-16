@@ -23,7 +23,6 @@ import {
   DateCellScheduleDateRange,
   dateCellScheduleDateRange,
   fullDateCellScheduleRange,
-  FullDateCellScheduleRangeInputDateRange,
   DateCellScheduleDateRangeInput,
   isFullDateCellScheduleDateRange
 } from './date.cell.schedule';
@@ -519,6 +518,13 @@ describe('expandDateCellScheduleDayCodes()', () => {
       expectedDays.forEach((day) => {
         expect(result).toContain(day);
       });
+    });
+
+    it('should sort the results.', () => {
+      const result = expandDateCellScheduleDayCodes([DateCellScheduleDayCode.SATURDAY, DateCellScheduleDayCode.FRIDAY]);
+
+      expect(result[0]).toBe(DateCellScheduleDayCode.FRIDAY);
+      expect(result[1]).toBe(DateCellScheduleDayCode.SATURDAY);
     });
   });
 

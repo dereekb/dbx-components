@@ -49,6 +49,19 @@ export function cutValueToPrecision(input: AsNumberInput, precision: NumberPreci
 }
 
 /**
+ * Cuts the value to zero precision.
+ */
+export const CUT_VALUE_TO_ZERO_PRECISION = cutValueToPrecisionFunction(0);
+
+/**
+ *
+ * @returns
+ */
+export function cutValueToInteger(input: AsNumberInput): number {
+  return CUT_VALUE_TO_ZERO_PRECISION(input);
+}
+
+/**
  * Rounds the input using cutToPrecision
  */
 export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {

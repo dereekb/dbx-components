@@ -1,6 +1,11 @@
 import { ISO8601DateString, Maybe, PasswordString, PhoneNumber, WebsiteUrl } from '@dereekb/util';
 
 /**
+ * Don't use passwords smaller tahn 6.
+ */
+export const FIREBASE_AUTH_PASSWORD_MIN_LENGTH = 6;
+
+/**
  * Firebase User Identifier (UID)
  */
 export type FirebaseAuthUserId = string;
