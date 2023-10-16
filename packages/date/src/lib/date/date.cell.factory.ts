@@ -654,7 +654,10 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
     if (endOnEvent) {
       lastStartsAt = startsAtDateFactory(event.startsAt);
     } else {
-      lastStartsAt = dateCellTimingFinalStartsAtEvent(timing).startsAt;
+      // get the timing's last start date, and use the new startsAt date factory to calculate the new end date
+      // this lets us get the proper last startsAt date for the previous last startsAt date
+      const timingLastStartDate = addMinutes(end, -currentDuration);
+      lastStartsAt = startsAtDateFactory(timingLastStartDate); // recalculate the new startsAt time
     }
 
     if (replaceDuration) {

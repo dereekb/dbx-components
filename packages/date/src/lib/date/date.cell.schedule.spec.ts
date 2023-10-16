@@ -1,4 +1,4 @@
-import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellIndex, dateCellTiming } from './date.cell';
+import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellIndex, dateCellTiming, dateCellTimingFinalStartsAtEvent, isValidDateCellTiming, isValidDateCellTimingInfo } from './date.cell';
 import {
   expandDateCellScheduleFactory,
   DateCellSchedule,
@@ -27,8 +27,8 @@ import {
   DateCellScheduleDateRangeInput,
   isFullDateCellScheduleDateRange
 } from './date.cell.schedule';
-import { addDays, addHours, addMinutes, differenceInDays, startOfHour } from 'date-fns';
-import { Day, range, UTC_TIMEZONE_STRING, lastValue, TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
+import { addDays, addHours, addMinutes, differenceInDays, differenceInMinutes, startOfHour } from 'date-fns';
+import { Day, range, UTC_TIMEZONE_STRING, lastValue, TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString, dateTimezoneUtcNormal } from './date.timezone';
 import { dateCellIndexRange } from './date.cell.factory';
@@ -883,6 +883,41 @@ describe('fullDateCellScheduleRange()', () => {
           expect(result.ex).toBe(range.ex);
         });
       });
+
+      describe('Simple Date Range in October', () => {
+        it('should return the expected end date.', () => {
+          const timezone = 'America/Chicago';
+          const start = new Date('2023-10-09T05:00:00.000Z');
+          const endDay = new Date('2023-10-13T05:00:00.000Z');
+
+          const startTime = new Date('2023-10-15T13:00:00.000Z');
+          const endTime = new Date('2023-10-15T20:00:00.000Z');
+          const duration = differenceInMinutes(endTime, startTime) % MINUTES_IN_DAY;
+
+          const timing = fullDateCellScheduleRange({
+            dateCellScheduleRange: {
+              timezone,
+              start,
+              end: endDay,
+              w: '89'
+            },
+            duration,
+            startsAtTime: startTime,
+            updateWithDefaults: true
+          });
+
+          const expectedFinalStartTime = new Date('2023-10-13T13:00:00.000Z');
+          const expectedEndTime = new Date('2023-10-13T20:00:00.000Z');
+
+          expect(timing.end).toBeSameSecondAs(expectedEndTime);
+
+          const finalStartsAt = dateCellTimingFinalStartsAtEvent(timing).startsAt;
+          expect(finalStartsAt).toBeSameSecondAs(expectedFinalStartTime);
+
+          const validInfo = isValidDateCellTimingInfo(timing);
+          expect(validInfo.isValid).toBe(true);
+        });
+      });
     });
 
     describe('System', () => {
@@ -915,9 +950,8 @@ describe('fullDateCellScheduleRange()', () => {
       const fullRange = { ...timing, ...schedule };
 
       describe('updateWithDefaults=true', () => {
-        it('should generate a valid DateCellTiming with the new duration and same duration.', () => {
+        it('should generate a valid DateCellTiming with the new duration and same startsAt time.', () => {
           expect(timing.timezone).toBe(timezone);
-
           const newDuration = 60;
 
           const result = fullDateCellScheduleRange({
@@ -926,6 +960,8 @@ describe('fullDateCellScheduleRange()', () => {
             duration: newDuration,
             updateWithDefaults: true
           });
+
+          expect(isValidDateCellTiming(result)).toBe(true);
 
           expect(result.start).toBeSameSecondAs(timing.start);
           expect(result.duration).toBe(newDuration);
@@ -946,17 +982,20 @@ describe('fullDateCellScheduleRange()', () => {
             updateWithDefaults: true
           });
 
+          expect(isValidDateCellTiming(result)).toBe(true);
+
           expect(result.duration).toBe(timing.duration);
           expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
           expect(result.end).toBeSameSecondAs(timing.end);
           expect(result.timezone).toBe(timing.timezone);
         });
 
-        it('should generate a valid DateCellTiming with the new duration and startsAt at time.', () => {
+        it('should generate a valid DateCellTiming with the new duration and new startsAt at time.', () => {
           const newDuration = 45;
           const hoursDifference = 1;
           const newStartsAt = addHours(timing.startsAt, hoursDifference); // starts 1 hour earlier, and event is 1 day later
-          const expectedEnd = addMinutes(timing.end, hoursDifference * MINUTES_IN_HOUR - newDuration);
+          const newLastStartsAt = addMinutes(timing.end, -timing.duration + hoursDifference * MINUTES_IN_HOUR);
+          const expectedEnd = addMinutes(newLastStartsAt, newDuration);
 
           const result = fullDateCellScheduleRange({
             dateCellScheduleRange: fullRange,
@@ -964,6 +1003,8 @@ describe('fullDateCellScheduleRange()', () => {
             startsAtTime: newStartsAt,
             updateWithDefaults: true
           });
+
+          expect(isValidDateCellTiming(result)).toBe(true);
 
           expect(result.startsAt).toBeSameSecondAs(newStartsAt);
           expect(result.duration).toBe(newDuration);

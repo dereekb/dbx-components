@@ -5,7 +5,7 @@ import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes, startOfDay } from 'date-fns';
 import { isDate, isSameDate, requireCurrentTimezone } from './date';
 import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingDateRange, DateCellTimingStartsAtEndRange, FullDateCellTiming, isSameDateCellTiming, isSameFullDateCellTiming, DateCellTimingEventStartsAt, isValidDateCellTiming, isFullDateCellTiming, DateCellTimingTimezoneInput, shiftDateCellTimingToTimezoneFunction, dateCellTimingTimezoneNormalInstance } from './date.cell';
-import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
+import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingStartsAtDateFactory } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { DateCellRangeOrDateRange, DateCellRange, DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
 import { dateCellDayOfWeekFactory } from './date.cell.week';
@@ -637,7 +637,9 @@ export function fullDateCellScheduleRange(input: FullDateCellScheduleRangeInput)
     initialFullDateRange = initialDateRange;
 
     if (isDateCellScheduleStartOfDayDateRange(dateCellScheduleRange)) {
-      initialFullDateRange.end = addMinutes(initialFullDateRange.end, initialDateRange.duration);
+      const startOfLastDay = initialFullDateRange.end;
+      const startsAtOnLastDay = dateCellTimingStartsAtDateFactory(initialFullDateRange)(startOfLastDay);
+      initialFullDateRange.end = addMinutes(startsAtOnLastDay, initialDateRange.duration);
     }
   }
 

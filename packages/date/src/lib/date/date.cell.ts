@@ -663,8 +663,6 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
   const duration = (finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE) % MINUTES_IN_DAY || MINUTES_IN_DAY;
   const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(addMinutes(endInUtcNormal, -duration));
 
-  // console.log({ finalMsDifferenceBetweenStartAndEnd, duration, expectedFinalStartsAt, startsAt, end, endInUtc: endInUtcNormal, startsAtInUtc: startsAtInUtcNormal });
-
   return {
     duration,
     expectedFinalStartsAt
