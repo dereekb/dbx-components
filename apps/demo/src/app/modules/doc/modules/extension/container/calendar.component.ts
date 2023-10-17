@@ -72,11 +72,11 @@ export class DocExtensionCalendarComponent implements OnInit {
       key: 'dateSchedule',
       required: true,
       label: 'Custom Label',
-      timezone: this.timezone$,
+      outputTimezone: this.timezone$,
       description: 'Input field used for picking a DateCellScheduleRange value.'
     }),
     dateScheduleRangeField({
-      timezone: this.timezone$,
+      outputTimezone: this.timezone$,
       key: 'dateScheduleWithFilter',
       required: true,
       description: 'Date schedule with a filter applied to it, and an initial selection of everything. Contains custom close config.',
@@ -95,7 +95,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       }
     }),
     dateScheduleRangeField({
-      timezone: this.timezone$,
+      outputTimezone: this.timezone$,
       key: 'dateScheduleWithMinMaxDateRange',
       required: true,
       description: 'Date schedule with a min and max date range applied to it and all days selected.',
@@ -104,7 +104,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       initialSelectionState: 'all'
     }),
     dateScheduleRangeField({
-      timezone: this.timezone$,
+      outputTimezone: this.timezone$,
       key: 'dateScheduleWithFilterAndExclusions',
       required: true,
       description: 'Date schedule with a filter applied to it and additional exclusions.',
@@ -114,7 +114,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       initialSelectionState: 'all'
     }),
     dateScheduleRangeField({
-      timezone: this.timezone$,
+      outputTimezone: this.timezone$,
       key: 'dateScheduleWithTimingFilterAndMinDateRange',
       required: true,
       description: 'Date schedule with a filter and an explicit min date to be 4 days from now',
@@ -127,7 +127,7 @@ export class DocExtensionCalendarComponent implements OnInit {
       key: 'dateScheduleForUtcTimezone',
       required: true,
       description: 'Date schedule for the UTC timezone.',
-      timezone: 'UTC'
+      outputTimezone: 'UTC'
     }),
     dateScheduleRangeField({
       key: 'dateScheduleForUtcTimezoneWithFilter',

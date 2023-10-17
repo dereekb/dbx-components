@@ -690,6 +690,9 @@ export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFi
  * dateCellScheduleDateFilter() configuration.
  */
 export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartsAtEndRange & DateCellTimingDateRange> {
+  /**
+   * The min/max date range for the filter.
+   */
   minMaxDateRange?: Maybe<Partial<DateCellRangeOrDateRange>>;
   /**
    * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.

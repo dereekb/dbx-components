@@ -204,12 +204,31 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
   };
 }
 
-export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
-  return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
-}
+/**
+ * This is used in cases where the dates in the min/max date range need to be shifted to the filter's timezone.
+ *
+ * This is because the index factory is always in system timezone, but when selecting all/none with a filter we need to use the filter's timezone.
+ *
+ * @param x
+ * @returns
+ */
+function calendarScheduleMinAndMaxDateRangeRelativeToFilter(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Partial<DateRange> {
+  let input: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'> = x;
 
-export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
-  return findMinDate([x.filter?.end, x.minMaxDateRange?.end]);
+  if (x.filter?.timezone && x.minMaxDateRange != null) {
+    const filterNormal = dateTimezoneUtcNormal(x.filter.timezone);
+    const transformFn = filterNormal.transformFunction('systemDateToTargetDate');
+
+    input = {
+      filter: x.filter,
+      minMaxDateRange: {
+        start: x.minMaxDateRange.start ? transformFn(x.minMaxDateRange.start) : undefined,
+        end: x.minMaxDateRange.end ? transformFn(x.minMaxDateRange.end) : undefined
+      }
+    };
+  }
+
+  return calendarScheduleMinAndMaxDateRange(input);
 }
 
 export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Partial<DateRange> {
@@ -217,6 +236,14 @@ export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelec
     start: calendarScheduleMinDate(x) || undefined,
     end: calendarScheduleMaxDate(x) || undefined
   };
+}
+
+export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
+  return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
+}
+
+export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
+  return findMinDate([x.filter?.end, x.minMaxDateRange?.end]);
 }
 
 export function calendarScheduleStartBeingUsedFromFilter(x: Pick<CalendarScheduleSelectionState, 'filter' | 'computeSelectionResultRelativeToFilter'>) {
@@ -875,7 +902,7 @@ export interface CalendarScheduleSelectionStateDatesChange {
 
 export function updateStateWithChangedDates(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionStateDatesChange): CalendarScheduleSelectionState {
   const { allowedDaysOfWeek, indexFactory, indexDayOfWeek, inputStart: currentInputStart, inputEnd: currentInputEnd, minMaxDateRange, filter } = state;
-  const { start: minDate, end: maxDate } = calendarScheduleMinAndMaxDateRange(state);
+  const { start: minDate, end: maxDate } = calendarScheduleMinAndMaxDateRangeRelativeToFilter(state);
   let inputStart = currentInputStart;
   let inputEnd = currentInputEnd;
 
@@ -974,8 +1001,8 @@ export function noSelectionCalendarScheduleSelectionState(state: CalendarSchedul
 }
 
 export function updateStateWithChangedRange(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionInputDateRange): CalendarScheduleSelectionState {
-  const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory, minMaxDateRange } = state;
-  const { start: minDate, end: maxDate }: Partial<DateRange> = minMaxDateRange ?? {};
+  const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory } = state;
+  const { start: minDate, end: maxDate } = calendarScheduleMinAndMaxDateRange(state);
 
   const inputStart: Date = startOfDay(change.inputStart);
   const inputEnd: Date = startOfDay(change.inputEnd); // midnight of the last day

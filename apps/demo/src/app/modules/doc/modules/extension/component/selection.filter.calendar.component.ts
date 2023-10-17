@@ -9,7 +9,7 @@ import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory,
 const daysRangeInFilter = 14;
 
 export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFilterConfig = {
-  ...dateCellTiming({ startsAt: startOfDay(new Date()), duration: 60 }, daysRangeInFilter),
+  ...dateCellTiming({ startsAt: startOfDay(new Date()), duration: 60 }, daysRangeInFilter, 'UTC'),
   w: '345', // Tues/Weds/Thurs
   ex: [1] // excludes the second day
 };
@@ -60,6 +60,7 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {
     dbxCalendarScheduleSelectionStore.setFilter(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER);
+    dbxCalendarScheduleSelectionStore.setMinMaxDateRange({ start: addDays(startOfDay(new Date()), 4) });
     dbxCalendarScheduleSelectionStore.setInitialSelectionState('all');
   }
 
