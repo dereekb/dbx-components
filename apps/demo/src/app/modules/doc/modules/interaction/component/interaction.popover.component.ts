@@ -13,6 +13,8 @@ export interface DocInteractionPopoverConfig {
     <dbx-popover-content>
       <dbx-popover-header icon="home" header="Header">
         <span>Custom Content</span>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-popover-close-button></dbx-popover-close-button>
       </dbx-popover-header>
       <dbx-popover-controls>
         <dbx-bar color="warn">

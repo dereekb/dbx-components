@@ -262,7 +262,7 @@ export function dateCellRangeOverlapsRange(rangeA: DateCellOrDateCellIndexOrDate
 /**
  * Sorts the input ranges by index and distance (to values).
  *
- * In many cases sortAscendingIndexNumberRefFunction may be preferential since
+ * In many cases sortAscendingIndexNumberRefFunction may be preferential.
  *
  * @returns
  */

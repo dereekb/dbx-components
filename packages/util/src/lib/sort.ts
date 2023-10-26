@@ -1,5 +1,6 @@
 import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
-import { Maybe } from './value/maybe.type';
+import { MapFunction, mapIdentityFunction, MapSameFunction } from './value/map';
+import { Maybe, MaybeMap } from './value/maybe.type';
 
 export type SortingOrder = 'asc' | 'desc';
 
@@ -25,6 +26,16 @@ export type SortComparisonNumber = number;
  * A comparison function that returns a SortComparisonNumber.
  */
 export type SortCompareFunction<T> = (a: T, b: T) => SortComparisonNumber;
+
+/**
+ * An object that has a reference to a SortCompareFunction<T> function.
+ */
+export interface SortCompareFunctionRef<T> {
+  /**
+   * Sort comparison function to sort with.
+   */
+  readonly sortWith: SortCompareFunction<T>;
+}
 
 /**
  * Comparison function that sorts in ascending order.
@@ -54,6 +65,79 @@ export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFuncti
   return order === 'asc' ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
 }
 
+/**
+ * Simple SortValuesFunction that only sorts the input and has no configuration.
+ */
+export type SimpleSortValuesFunction<T> = MapSameFunction<T[]>;
+
+/**
+ * Function that sorts the input values array. Can be configured to return a copy.
+ */
+export type SortValuesFunction<T> = (values: T[], sortOnCopy?: boolean) => T[];
+
+/**
+ * Input for sortValues().
+ */
+export interface SortValuesInput<T> extends MaybeMap<SortCompareFunctionRef<T>> {
+  /**
+   * Values to sort.
+   */
+  readonly values: T[];
+  /**
+   * Whether or not to sort on a copy of the input values.
+   */
+  readonly sortOnCopy?: boolean;
+  /**
+   * Whether or not to always return a copy of the input values, even if no sorting occurs.
+   */
+  readonly alwaysReturnCopy?: boolean;
+}
+
+/**
+ * Sorts the input values using the input.
+ *
+ * @param param0
+ * @returns
+ */
+export function sortValues<T>({ values, alwaysReturnCopy, sortOnCopy, sortWith }: SortValuesInput<T>): T[] {
+  const doSort = sortWith != null;
+
+  if (alwaysReturnCopy || (sortOnCopy && doSort)) {
+    values = [...values];
+  }
+
+  return doSort ? values.sort(sortWith) : values;
+}
+
+/**
+ * Creates a SortValuesFunction using the input.
+ *
+ * @param sortRef
+ * @returns
+ */
+export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault: boolean = true): SortValuesFunction<T> {
+  const sortWith = sortRef?.sortWith;
+  return (values: T[], sortOnCopy = sortOnCopyDefault) => sortValues<T>({ values, sortOnCopy, sortWith });
+}
+
+/**
+ * Creates a SortValuesFunction using the input. If the input is not defined, or it's sort function is not defined, then returns mapIdentityFunction().
+ */
+export function sortValuesFunctionOrMapIdentityWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean): SortValuesFunction<T> {
+  const sortWith = sortRef?.sortWith;
+  return sortWith ? sortValuesFunctionWithSortRef(sortRef, sortOnCopyDefault) : mapIdentityFunction();
+}
+
+/**
+ * Equivalent to sortValuesFunctionOrMapIdentityWithSortRef(), but returns a SimpleSortValuesFunction instead.
+ *
+ * @param sortRef
+ * @param sortOnCopyDefault
+ * @returns
+ */
+export const simpleSortValuesFunctionWithSortRef: <T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean) => SimpleSortValuesFunction<T> = sortValuesFunctionOrMapIdentityWithSortRef;
+
+// MARK: Min/Max
 export interface MinAndMax<T> {
   min: T;
   max: T;

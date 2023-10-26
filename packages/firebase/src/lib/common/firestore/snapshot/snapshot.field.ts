@@ -52,8 +52,10 @@ import {
   FilterUniqueFunction,
   BitwiseEncodedSet,
   bitwiseSetDencoder,
-  PrimativeValue,
-  BitwiseObjectDencoder
+  BitwiseObjectDencoder,
+  SortCompareFunctionRef,
+  sortValuesFunctionOrMapIdentityWithSortRef,
+  sortAscendingIndexNumberRefFunction
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -269,14 +271,15 @@ export function optionalFirestoreNumber<N extends number = number>(config?: Omit
   });
 }
 
-export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<FirestoreFieldDefault<T[]>>;
+export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<SortCompareFunctionRef<T>> & Partial<FirestoreFieldDefault<T[]>>;
 
 export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
+  const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
   return firestoreField<T[], T[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: passThrough,
-    toData: passThrough
+    fromData: (x: T[]) => sortFn(x, false),
+    toData: (x: T[]) => sortFn(x, true)
   });
 }
 
@@ -284,17 +287,20 @@ export function optionalFirestoreArray<T>() {
   return firestorePassThroughField<Maybe<T[]>>();
 }
 
-export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey> = FirestoreArrayFieldConfig<T> & {
-  readonly findUnique: FilterUniqueFunction<T, K>; // TODO: BREAKING CHANGE - Rename to filterUnique()
-};
+export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey> = FirestoreArrayFieldConfig<T> &
+  Partial<SortCompareFunctionRef<T>> & {
+    readonly findUnique: FilterUniqueFunction<T, K>; // TODO: BREAKING CHANGE - Rename to filterUnique()
+  };
 
 export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
   const { findUnique } = config;
+  const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
+
   return firestoreField<T[], T[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: findUnique,
-    toData: findUnique
+    fromData: (x: T[]) => sortFn(findUnique(x), false),
+    toData: (x: T[]) => sortFn(findUnique(x), true)
   });
 }
 
@@ -337,12 +343,13 @@ export function firestoreUniqueStringArray<S extends string = string>(config?: F
 export const firestoreModelKeyArrayField = firestoreUniqueStringArray<FirestoreModelKey>({});
 export const firestoreModelIdArrayField = firestoreModelKeyArrayField;
 
-export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
-  readonly convert: {
-    fromData: MapFunction<E, T>;
-    toData: MapFunction<T, E>;
+export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> &
+  Partial<SortCompareFunctionRef<T>> & {
+    readonly convert: {
+      fromData: MapFunction<E, T>;
+      toData: MapFunction<T, E>;
+    };
   };
-};
 
 /**
  * A Firestore array that encodes values to either string or number values using another FirestoreModelField config for encoding/decoding.
@@ -352,11 +359,13 @@ export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = Def
  */
 export function firestoreEncodedArray<T, E extends string | number>(config: FirestoreEncodedArrayFieldConfig<T, E>) {
   const { fromData, toData } = config.convert;
+  const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
+
   return firestoreField<T[], E[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: (input: E[]) => (input as MaybeSo<E>[]).map(fromData),
-    toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
+    fromData: (input: E[]) => sortFn((input as MaybeSo<E>[]).map(fromData), false),
+    toData: (input: T[]) => filterMaybeValues((sortFn(input, true) as MaybeSo<T>[]).map(toData))
   });
 }
 
@@ -366,6 +375,7 @@ export type FirestoreDencoderArrayFieldConfig<D extends PrimativeKey, E extends 
 
 /**
  * An array that is stored as an array of encoded values using a PrimativeKeyDencoderFunction.
+ *
  * @param config
  * @returns
  */
@@ -410,11 +420,11 @@ export type FirestoreMapFieldConfig<T, K extends string = string> = DefaultMapCo
      *
      * By default will filter all null/undefined values from maps.
      */
-    mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<K>>;
+    readonly mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<K>>;
     /**
      * Optional map function to apply to each input value before saving.
      */
-    mapFieldValues?: MapFunction<Maybe<T>, Maybe<T>>;
+    readonly mapFieldValues?: MapFunction<Maybe<T>, Maybe<T>>;
   };
 
 /**
@@ -472,7 +482,7 @@ export type FirestoreEncodedObjectMapFieldConfig<T, E, S extends string = string
      *
      * By default will filter all null/undefined values from maps.
      */
-    mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<E>>;
+    readonly mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<E>>;
     /**
      * Encoder to map a value to the encoded/stored value.
      */
@@ -587,7 +597,7 @@ export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFu
 /**
  * firestoreObjectArray configuration
  */
-export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & (FirestoreObjectArrayFieldConfigObjectFieldInput<T, O> | FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>);
+export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & (FirestoreObjectArrayFieldConfigObjectFieldInput<T, O> | FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>) & Partial<SortCompareFunctionRef<T>>;
 
 export type FirestoreObjectArrayFieldConfigObjectFieldInput<T extends object, O extends object = FirestoreModelData<T>> = {
   /**
@@ -618,13 +628,18 @@ export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O e
  */
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
   const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
+  const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   const { from, to } = toModelMapFunctions<T, O>(objectField);
   return firestoreField<T[], O[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: (input: O[]) => input.map((x) => from(x)),
-    toData: (input: T[]) => filterMaybeValues(input).map((x) => to(x))
+    fromData: (input: O[]) =>
+      sortFn(
+        input.map((x) => from(x)),
+        false
+      ),
+    toData: (input: T[]) => filterMaybeValues(sortFn(input, true)).map((x) => to(x))
   });
 }
 
@@ -811,8 +826,9 @@ export function firestoreDateCellRange() {
 }
 
 // MARK: DateCellRange Array
-export function firestoreDateCellRangeArray() {
+export function firestoreDateCellRangeArray(sort: boolean = true) {
   return firestoreObjectArray({
+    sortWith: sort ? sortAscendingIndexNumberRefFunction() : undefined,
     firestoreField: firestoreDateCellRange()
   });
 }
@@ -824,13 +840,13 @@ export const DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE: DateCellSchedule = {
 
 export const assignDateCellScheduleFunction = assignValuesToPOJOFunction<DateCellSchedule>({ keysFilter: ['w', 'd', 'ex'], valueFilter: KeyValueTypleValueFilter.NULL });
 export const firestoreDateCellScheduleAssignFn: MapFunction<DateCellSchedule, DateCellSchedule> = (input) => {
-  const block = assignDateCellScheduleFunction(DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE, input);
+  const block = assignDateCellScheduleFunction(DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE, input);
   return block;
 };
 
 export function firestoreDateCellSchedule() {
   return firestoreField<DateCellSchedule, DateCellSchedule>({
-    default: DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE,
+    default: DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE,
     fromData: firestoreDateScheduleAssignFn,
     toData: firestoreDateScheduleAssignFn
   });
