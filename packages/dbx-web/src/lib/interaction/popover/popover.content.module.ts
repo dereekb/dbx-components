@@ -12,8 +12,9 @@ import { DbxPopoverScrollContentComponent } from './popover.scroll.content.compo
 import { DbxKeypressModule } from '../../keypress';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
+import { DbxPopoverCloseButtonComponent } from './popover.close.component';
 
-const declarations = [DbxPopoverContentComponent, DbxPopoverControlsDirective, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent];
+const declarations = [DbxPopoverContentComponent, DbxPopoverControlsDirective, DbxPopoverHeaderComponent, DbxPopoverCloseButtonComponent, DbxPopoverScrollContentComponent];
 
 /**
  * Contains all popover content components, allowing other sibling dbx-web modules to use the directives without referencing the full popover module.
