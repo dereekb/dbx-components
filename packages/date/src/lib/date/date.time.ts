@@ -142,7 +142,8 @@ export class DateTimeUtilityInstance {
         'h:mm a', // 1:20 AM
         'h a', // 1 AM
         'ha', // 1AM
-        'h:mm' // 1:20
+        'h:mm', // 1:20
+        'HH:mm' // 01:20
       ];
 
       // tslint:disable-next-line: prefer-for-of

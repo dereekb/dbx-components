@@ -1,6 +1,6 @@
-import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate } from '@dereekb/util';
-import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter } from 'rxjs';
+import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, ISO8601DayString, DateOrDayString } from '@dereekb/util';
+import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDate, toJsDayDate, isStartOfDayInUTC, isSameDate } from '@dereekb/date';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
@@ -130,6 +130,13 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   timezone?: Maybe<ObservableOrValueGetter<Maybe<TimezoneString>>>;
 
   /**
+   * (Optional) The date to apply the time to.
+   *
+   * The timezone abbrviation will also use this date when using the time-only mode.
+   */
+  timeDate?: Maybe<ObservableOrValueGetter<Maybe<DateOrDayString>>>;
+
+  /**
    * Whether or not to display the timezone. True by default.
    */
   showTimezone?: boolean;
@@ -188,6 +195,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
 
   private _defaultTimezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
+  private _timeDate = new BehaviorSubject<Maybe<Observable<Maybe<DateOrDayString>>>>(undefined);
   private _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
 
   private _fullDayInputCtrl?: FormControl;
@@ -210,6 +218,13 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly timezoneInstance$: Observable<Maybe<DateTimezoneUtcNormalInstance>> = this.timezone$.pipe(
     map((timezone) => (timezone ? dateTimezoneUtcNormal({ timezone }) : undefined)),
+    shareReplay(1)
+  );
+
+  readonly timeDate$: Observable<Maybe<Date>> = this._timeDate.pipe(
+    switchMapMaybeDefault(),
+    map((x) => (x ? toJsDayDate(x) : undefined)),
+    distinctUntilChanged(isSameDateDay),
     shareReplay(1)
   );
 
@@ -312,6 +327,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     return this.field.props.timezone;
   }
 
+  get timeDate() {
+    return this.field.props.timeDate;
+  }
+
   get showTimezone() {
     return this.field.props.showTimezone ?? true;
   }
@@ -335,8 +354,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly date$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), filterMaybe(), shareReplay(1));
 
-  readonly timezoneAbbreviation$ = combineLatest([this.date$, this.timezone$]).pipe(
-    map(([date, timezone]) => getTimezoneAbbreviation(timezone, date)),
+  readonly timezoneAbbreviation$ = combineLatest([this.date$, this.timezone$, this.timeDate$]).pipe(
+    map(([date, timezone, timeDate]) => getTimezoneAbbreviation(timezone, timeDate ?? date)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -391,12 +410,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly dateInputMin$: Observable<Date | null> = this.syncConfigBeforeValue$;
   readonly dateInputMax$: Observable<Date | null> = this.syncConfigAfterValue$;
 
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$]).pipe(
-    map(([date, timeString, fullDay]) => {
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$, this.timeDate$]).pipe(
+    map(([date, timeString, fullDay, timeDate]) => {
       let result: Maybe<Date>;
 
-      if (!date && this.timeOnly) {
-        date = new Date();
+      if (!date || this.timeOnly) {
+        date = timeDate ?? new Date(); // use the time date, or default to the current day
       }
 
       if (date) {
@@ -412,7 +431,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
               date,
               useSystemTimezone: true
             }) ?? date;
-        } else {
+        } else if (!this.timeOnly) {
           result = date;
         }
       }
@@ -475,7 +494,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
           roundDownToMinute: true
         });
 
-        date = instance.limit(date);
+        date = instance.clamp(date);
         const minutes = stepsOffset * 5;
         date = addMinutes(date, minutes);
       }
@@ -523,19 +542,46 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         this.formControl.markAsTouched();
       });
 
-    this._valueSub.subscription = this.timeString$.subscribe((x) => {
-      // Skip events where the timeInput value is cleared.
-      if (!this.timeInputCtrl.value && x === '12:00AM') {
-        return;
-      }
+    let hasSetMidnightFromInput = false;
 
+    /*
+    this._valueSub.subscription = this.timeString$.subscribe((x) => {
       this.setTime(x);
     });
+    */
+
+    this._valueSub.subscription = this.valueInSystemTimezone$
+      .pipe(
+        map((x) => (x ? isSameDate(x, startOfDay(x)) : false)),
+        distinctUntilChanged(),
+        switchMap((isInputValueAtMidnight) => {
+          hasSetMidnightFromInput = false;
+          return this.timeString$.pipe(
+            // skip(1),
+            map((timeString) => [timeString, isInputValueAtMidnight] as [string, boolean])
+          );
+        })
+      )
+      .subscribe(([x, isInputValueAtMidnight]) => {
+        // Skip events where the timeInput value is cleared, unless the input value is at midnight and we've already processed it being at midnight
+        if (!this.timeInputCtrl.value && x === '12:00AM' && (!isInputValueAtMidnight || (isInputValueAtMidnight && hasSetMidnightFromInput))) {
+          return;
+        }
+
+        // update the has set flag
+        if (x === '12:00AM' && isInputValueAtMidnight) {
+          hasSetMidnightFromInput = true;
+        }
+
+        this.setTime(x);
+      });
 
     // Set default timezone if provided.
     if (this.timezone && !this.dateTimeField.fullDayInUTC) {
       this._defaultTimezone.next(asObservableFromGetter(this.timezone));
     }
+
+    this._timeDate.next(asObservableFromGetter(this.timeDate));
 
     // Watch for disabled changes so we can propogate them properly.
     this.formControl.registerOnDisabledChange((disabled) => {
@@ -593,6 +639,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._valueSub.destroy();
     this._config.complete();
     this._defaultTimezone.complete();
+    this._timeDate.complete();
     this._presets.complete();
     this._fullDayControlObs.complete();
     this._offset.complete();
@@ -638,9 +685,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   }
 
   setTime(time: ReadableTimeString): void {
-    this.timeInputCtrl.setValue(time);
-    this._offset.next(0);
-    this._updateTime.next();
+    if (this.timeInputCtrl.value !== time) {
+      this.timeInputCtrl.setValue(time);
+      this._offset.next(0);
+      this._updateTime.next();
+    }
   }
 
   keydownOnDateInput(event: KeyboardEvent): void {
