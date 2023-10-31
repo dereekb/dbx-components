@@ -1,4 +1,4 @@
-import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
+import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, repeatString, UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, transformDateRangeWithStartOfDay } from './date.range';
@@ -296,8 +296,17 @@ export function toJsDayDate(input: DateOrDayString): Date {
   return isDate(input) ? startOfDay(input as Date) : parseISO8601DayStringToDate(input as string);
 }
 
-export function parseISO8601DayStringToDate(dayString: ISO8601DayString): Date {
-  return startOfDay(parse(dayString, 'yyyy-MM-dd', new Date()));
+export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO8601DayString): Date {
+  // TODO: Does not support negative years.
+
+  const inputSplit = dayString.split('-');
+  const numberOfYs = inputSplit[0].length;
+
+  const format = repeatString('y', numberOfYs) + '-MM-dd';
+  dayString = dayString.slice(0, numberOfYs + 6); // remove everything past the days
+
+  const result = parse(dayString, format, new Date());
+  return startOfDay(result);
 }
 
 export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {

@@ -123,3 +123,20 @@ export function joinStringsWithSpaces(input: Maybe<string>[]): string {
     .filter((x) => Boolean(x))
     .join(' ');
 }
+
+/**
+ * Creates a string that repeats the given character a number of times.
+ *
+ * @param char
+ * @param reapeat
+ * @returns
+ */
+export function repeatString(string: string, reapeat: number): string {
+  let result = '';
+
+  for (let i = 0; i < reapeat; i += 1) {
+    result += string;
+  }
+
+  return result;
+}

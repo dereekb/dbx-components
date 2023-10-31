@@ -193,7 +193,7 @@ export class DocFormValueComponent {
         key: 'eat2'
       }
     }),
-    dateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DAY_STRING }),
+    dateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }),
     dateTimeRangeField({
       timezone: 'America/Chicago',
       timeDate: 'timezoneDay', // use the date from timezoneDay as the output date

@@ -1,4 +1,4 @@
-import { joinStringsWithSpaces, splitJoinNameString, splitJoinRemainder } from './string';
+import { joinStringsWithSpaces, repeatString, splitJoinNameString, splitJoinRemainder } from './string';
 
 describe('splitJoinRemainder()', () => {
   it('should handle having a single value', () => {
@@ -71,5 +71,12 @@ describe('joinStringsWithSpaces()', () => {
   it('should join the input strings and ignore undefined values.', () => {
     const result = joinStringsWithSpaces(['a', undefined, 'b', null, 'c']);
     expect(result).toBe('a b c');
+  });
+});
+
+describe('repeatString()', () => {
+  it('should repeat the given string', () => {
+    const result = repeatString('a', 3);
+    expect(result).toBe('aaa');
   });
 });
