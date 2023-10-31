@@ -1,6 +1,6 @@
-import { DateOrDateString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
+import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
-import { isSameDateDay, safeToJsDate } from './date';
+import { isDate, isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, transformDateRangeWithStartOfDay } from './date.range';
 import { fitDateRangeToDayPeriod } from './date.range.timezone';
 
@@ -284,6 +284,16 @@ export function formatStartedEndedDistanceString({ start, end }: DateRange): str
   }
 
   return distanceText;
+}
+
+/**
+ * Returns the input date as the start of the day in the system timezone, or parses the input ISO8601DayString to the start of the day in the system timezone.
+ *
+ * @param input
+ * @returns
+ */
+export function toJsDayDate(input: DateOrDayString): Date {
+  return isDate(input) ? startOfDay(input as Date) : parseISO8601DayStringToDate(input as string);
 }
 
 export function parseISO8601DayStringToDate(dayString: ISO8601DayString): Date {

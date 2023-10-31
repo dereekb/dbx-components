@@ -34,7 +34,7 @@ import {
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { BehaviorSubject, delay, of } from 'rxjs';
-import { DateRangeType, DateScheduleDayCode, DateScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal } from '@dereekb/date';
+import { DateRangeType, DateCellScheduleDayCode, DateScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
@@ -125,7 +125,7 @@ export class DocFormValueComponent {
             max: addDays(new Date(), 14)
           },
           schedule: {
-            w: `${DateScheduleDayCode.MONDAY}${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.FRIDAY}`,
+            w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
             d: [0, 1, 2, 3, 4, 5, 6] // next 7 days
           }
         };
@@ -137,7 +137,13 @@ export class DocFormValueComponent {
 
   readonly dateTimeRangeValues$ = of({
     sat: addHours(startOfDay(new Date()), 8),
-    eat: addHours(startOfDay(new Date()), 16)
+    eat: addHours(startOfDay(new Date()), 16),
+    satcdt: new Date('2023-11-08T06:00:00.000Z'),
+    eatcdt: new Date('2023-11-08T19:00:00.000Z'),
+    satcst: new Date('2024-03-21T05:00:00.000Z'),
+    eatcst: new Date('2024-03-21T18:00:00.000Z'),
+    sat2: new Date('2023-11-08T06:00:00.000Z'),
+    eat2: new Date('2024-03-21T18:00:00.000Z')
   }).pipe(delay(200)); // simulate a slight loading delay
 
   readonly dateTimeRangeFields: FormlyFieldConfig[] = [
@@ -148,6 +154,42 @@ export class DocFormValueComponent {
       },
       end: {
         key: 'eat'
+      }
+    }),
+    dateTimeRangeField({
+      timezone: 'America/Chicago',
+      timeDate: '2023-11-08',
+      start: {
+        label: 'Start Time on 2023-11-08 (CDT)',
+        key: 'satcdt'
+      },
+      end: {
+        key: 'eatcdt'
+      }
+    }),
+    dateTimeRangeField({
+      timezone: 'America/Chicago',
+      timeDate: '2024-03-21',
+      start: {
+        label: 'Start Time on 2024-03-21 (CST)',
+        key: 'satcst'
+      },
+      end: {
+        key: 'eatcst'
+      }
+    }),
+    dateTimeRangeField({
+      timezone: 'America/Chicago',
+      timeDate: '2023-11-08',
+      start: {
+        label: 'Start Time on 2023-11-08 (CDT)',
+        // timeDate: '2023-11-08',  // uses the default specified above
+        key: 'sat2'
+      },
+      end: {
+        label: 'End Time on 2024-03-21 (CST)',
+        timeDate: '2024-03-21',
+        key: 'eat2'
       }
     })
   ];
@@ -261,7 +303,7 @@ export function schoolInfoJobSettingsEndTimeField() {
               min: addDays(startOfDay(new Date()), -14)
             },
             schedule: {
-              w: `${DateScheduleDayCode.MONDAY}${DateScheduleDayCode.TUESDAY}` as DateScheduleEncodedWeek
+              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateScheduleEncodedWeek
             }
           };
 
@@ -274,7 +316,7 @@ export function schoolInfoJobSettingsEndTimeField() {
         getConfigObs: () => {
           const config: DbxDateTimePickerConfiguration = {
             schedule: {
-              w: `${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.THURSDAY}${DateScheduleDayCode.FRIDAY}` as DateScheduleEncodedWeek
+              w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateScheduleEncodedWeek
             }
           };
 

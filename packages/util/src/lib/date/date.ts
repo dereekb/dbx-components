@@ -113,6 +113,11 @@ export type DateOrDateString = Date | ISO8601DateString;
 export type ISO8601DayString = string; // '1921-06-23'
 
 /**
+ * A Date or an ISO8601DayString.
+ */
+export type DateOrDayString = Date | ISO8601DayString;
+
+/**
  * Regex for an ISO8601DayString.
  */
 export const ISO8601_DAY_STRING_REGEX = /^\d{4}-\d{2}-\d{2}$/;
