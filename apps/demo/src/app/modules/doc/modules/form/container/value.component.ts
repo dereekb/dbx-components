@@ -143,7 +143,8 @@ export class DocFormValueComponent {
     satcst: new Date('2024-03-21T05:00:00.000Z'),
     eatcst: new Date('2024-03-21T18:00:00.000Z'),
     sat2: new Date('2023-11-08T06:00:00.000Z'),
-    eat2: new Date('2024-03-21T18:00:00.000Z')
+    eat2: new Date('2024-03-21T18:00:00.000Z'),
+    timezoneDay: new Date('2023-11-01T06:00:00.000Z')
   }).pipe(delay(200)); // simulate a slight loading delay
 
   readonly dateTimeRangeFields: FormlyFieldConfig[] = [
@@ -190,6 +191,19 @@ export class DocFormValueComponent {
         label: 'End Time on 2024-03-21 (CST)',
         timeDate: '2024-03-21',
         key: 'eat2'
+      }
+    }),
+    dateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DAY_STRING }),
+    dateTimeRangeField({
+      timezone: 'America/Chicago',
+      timeDate: 'timezoneDay', // use the date from timezoneDay as the output date
+      start: {
+        label: 'Start Time (On Timezone Day)',
+        key: 'sat3'
+      },
+      end: {
+        label: 'End Time (On Timezone Day)',
+        key: 'eat3'
       }
     })
   ];

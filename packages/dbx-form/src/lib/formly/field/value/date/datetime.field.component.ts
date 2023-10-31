@@ -1,4 +1,4 @@
-import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, ISO8601DayString, DateOrDayString } from '@dereekb/util';
+import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, ISO8601DayString, DateOrDayString, isISO8601DayString, isISO8601DayStringStart } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDate, toJsDayDate, isStartOfDayInUTC, isSameDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -11,6 +11,7 @@ import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirst
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
+import { FormControlPath, streamValueFromControl } from '../../../../form/form.angular.util';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -134,7 +135,7 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    *
    * The timezone abbrviation will also use this date when using the time-only mode.
    */
-  timeDate?: Maybe<ObservableOrValueGetter<Maybe<DateOrDayString>>>;
+  timeDate?: Maybe<ObservableOrValueGetter<Maybe<FormControlPath | DateOrDayString>>>;
 
   /**
    * Whether or not to display the timezone. True by default.
@@ -223,7 +224,22 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly timeDate$: Observable<Maybe<Date>> = this._timeDate.pipe(
     switchMapMaybeDefault(),
-    map((x) => (x ? toJsDayDate(x) : undefined)),
+    switchMap((x) => {
+      let obs: Observable<Maybe<Date>>;
+
+      if (x) {
+        // if the string is not a date string, then treat it as a path
+        if (typeof x === 'string' && !isISO8601DayStringStart(x)) {
+          obs = streamValueFromControl<DateOrDayString>(this.form, x)?.pipe(map((x) => (x ? toJsDayDate(x) : undefined))) ?? of(undefined);
+        } else {
+          obs = of(toJsDayDate(x));
+        }
+      } else {
+        obs = of(undefined);
+      }
+
+      return obs;
+    }),
     distinctUntilChanged(isSameDateDay),
     shareReplay(1)
   );
