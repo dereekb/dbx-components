@@ -43,6 +43,10 @@ describe('isISO8601DateString()', () => {
     expect(isISO8601DateString('2020-04-30T00:00:00.000Z')).toBe(true);
     expect(isISO8601DateString('Sat, 03 Feb 2001 04:05:06 GMT')).toBe(false);
   });
+
+  it('should validate date strings with more than 4 digits', () => {
+    expect(isISO8601DateString('20202020-04-30T00:00:00.000')).toBe(true);
+  });
 });
 
 describe('isUTCDateString()', () => {
@@ -56,6 +60,7 @@ describe('isUTCDateString()', () => {
 
 describe('isISO8601DayString()', () => {
   it('should validate day strings', () => {
+    expect(isISO8601DayString('221970-01-01')).toBe(true);
     expect(isISO8601DayString('1970-01-01')).toBe(true);
     expect(isISO8601DayString('1970-1-1')).toBe(false);
   });

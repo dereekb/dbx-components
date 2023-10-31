@@ -8,7 +8,10 @@ import { Maybe } from '../value/maybe.type';
  */
 export type ISO8601DateString = string;
 
-export const ISO_8601_DATE_STRING_REGEX = /(\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})(Z|[+-](\d{2})\:(\d{2}))?/;
+/**
+ * TODO: Need to improve to support negative years.
+ */
+export const ISO_8601_DATE_STRING_REGEX = /(\d{4,})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})(Z|[+-](\d{2})\:(\d{2}))?/;
 
 export function isISO8601DateString(input: string): input is ISO8601DateString {
   return ISO_8601_DATE_STRING_REGEX.test(input);
@@ -104,11 +107,13 @@ export function isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): 
 export type DateOrDateString = Date | ISO8601DateString;
 
 /**
- * A full date string Formatted as ISO8601.
+ * A full date string Formatted as ISO8601 with 4 digits for the year.
  *
  * Year, Month, Day
  *
  * I.E. 1921-06-23
+ *
+ * NOTE: Negative years and years with more than 4 digits are not supported/expected. Support can be added later, but will require adding a more complex regex, and improved parsing in @dereekb/date
  */
 export type ISO8601DayString = string; // '1921-06-23'
 
@@ -120,10 +125,24 @@ export type DateOrDayString = Date | ISO8601DayString;
 /**
  * Regex for an ISO8601DayString.
  */
-export const ISO8601_DAY_STRING_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+export const ISO8601_DAY_STRING_REGEX = /^\d{4,}-\d{2}-\d{2}$/;
 
+/**
+ * Regex for a string that starts as an ISO8601DayString.
+ */
+export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
+
+/**
+ * Returns true if the input date is strictly a
+ * @param input
+ * @returns
+ */
 export function isISO8601DayString(input: string): input is ISO8601DayString {
   return ISO8601_DAY_STRING_REGEX.test(input);
+}
+
+export function isISO8601DayStringStart(input: string): input is ISO8601DayString {
+  return ISO8601_DAY_STRING_START_REGEX.test(input);
 }
 
 /**

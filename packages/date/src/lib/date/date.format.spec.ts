@@ -1,6 +1,7 @@
-import { addDays, addHours, addMinutes } from 'date-fns';
+import { isISO8601DateString, isISO8601DayString } from '@dereekb/util';
+import { addDays, addHours, addMinutes, isValid } from 'date-fns';
 import { DateRange, formatDateRangeDistance } from '@dereekb/date';
-import { formatDateRangeFunction, formatToDayRangeString, formatToShortDateString } from './date.format';
+import { formatDateRangeFunction, formatToDayRangeString, formatToShortDateString, parseISO8601DayStringToDate } from './date.format';
 
 describe('formatDateRangeFunction', () => {
   describe('function', () => {
@@ -159,6 +160,36 @@ describe('formatDateRangeDistanceFunction', () => {
         });
       });
     });
+  });
+});
+
+describe('parseISO8601DayStringToDate()', () => {
+  it('should parse an ISO8601 date string to midnight of that day.', () => {
+    const dayString = `2023-11-14`;
+    const startOfDayDate = parseISO8601DayStringToDate(dayString);
+
+    const dateString = `${dayString}T06:00:00.000Z`;
+    const result = parseISO8601DayStringToDate(dateString);
+
+    expect(result).toBeSameSecondAs(startOfDayDate);
+  });
+
+  it('should parse a ISO8601 day string that has a 6 digit years.', () => {
+    const dayString = `202352-11-14`;
+    expect(isISO8601DayString(dayString)).toBe(true);
+
+    const dateString = `${dayString}T06:00:00.000Z`;
+    expect(isISO8601DateString(dateString)).toBe(true);
+
+    const result = parseISO8601DayStringToDate(dateString);
+
+    expect(isValid(result)).toBe(true);
+  });
+
+  it('should return an invalid date for a non-ISO8601 day string that has a 6 digit year.', () => {
+    const dateString = `332023-11-14`;
+    const result = parseISO8601DayStringToDate(dateString);
+    expect(isValid(result)).toBe(false);
   });
 });
 
