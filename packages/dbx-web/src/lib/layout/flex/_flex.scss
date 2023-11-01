@@ -9,6 +9,7 @@ $dbx-flex-group-columns-count: 6;
   .dbx-flex-bar {
     display: flex;
     align-items: center;
+    overflow: auto;
   }
 
   .dbx-flex-group {
