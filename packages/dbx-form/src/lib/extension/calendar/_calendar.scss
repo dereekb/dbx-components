@@ -62,17 +62,18 @@
       }
     }
 
-    .date-range-field-customized {
+    .date-range-field-customized,
+    .dbx-schedule-selection-timezone {
       display: flex;
       align-items: center;
+    }
 
-      .date-range-field-customized-text {
-        padding: 4px 6px;
-        margin-right: 3px;
-        font-size: 0.8em;
-        font-weight: bold;
-        border-radius: 25px;
-      }
+    .date-range-field-customized .date-range-field-customized-text {
+      padding: 4px 6px;
+      margin-right: 3px;
+      font-size: 0.8em;
+      font-weight: bold;
+      border-radius: 25px;
     }
   }
 
