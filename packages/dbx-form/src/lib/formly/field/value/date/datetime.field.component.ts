@@ -1,4 +1,4 @@
-import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, ISO8601DayString, DateOrDayString, isISO8601DayString, isISO8601DayStringStart } from '@dereekb/util';
+import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, ISO8601DayString, DateOrDayString, isISO8601DayString, isISO8601DayStringStart, MapFunction, mapIdentityFunction } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDate, toJsDayDate, isStartOfDayInUTC, isSameDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -41,6 +41,18 @@ export interface DbxDateTimeFieldSyncField {
    * How to sync against the other field.
    */
   syncType: DbxDateTimeFieldSyncType;
+}
+
+/**
+ * Configuration for the time date field that has a reference and optional map function to map the value.
+ */
+export interface DbxDateTimeFieldTimeDateConfig<I = unknown> {
+  readonly path: FormControlPath;
+  readonly mapValue?: MapFunction<I, Maybe<DateOrDayString>>;
+}
+
+export function isDbxDateTimeFieldTimeDateConfig(input: unknown): input is DbxDateTimeFieldTimeDateConfig {
+  return input != null && typeof input === 'object' && typeof (input as DbxDateTimeFieldTimeDateConfig).path === 'string';
 }
 
 export interface DbxDateTimeFieldProps extends FormlyFieldProps {
@@ -135,7 +147,7 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    *
    * The timezone abbrviation will also use this date when using the time-only mode.
    */
-  timeDate?: Maybe<ObservableOrValueGetter<Maybe<FormControlPath | DateOrDayString>>>;
+  timeDate?: Maybe<ObservableOrValueGetter<Maybe<DbxDateTimeFieldTimeDateConfig | FormControlPath | DateOrDayString>>>;
 
   /**
    * Whether or not to display the timezone. True by default.
@@ -196,7 +208,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
 
   private _defaultTimezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
-  private _timeDate = new BehaviorSubject<Maybe<Observable<Maybe<DateOrDayString>>>>(undefined);
+  private _timeDate = new BehaviorSubject<Maybe<Observable<Maybe<DbxDateTimeFieldTimeDateConfig | FormControlPath | DateOrDayString>>>>(undefined);
   private _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
 
   private _fullDayInputCtrl?: FormControl;
@@ -229,8 +241,14 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
       if (x) {
         // if the string is not a date string, then treat it as a path
-        if (typeof x === 'string' && !isISO8601DayStringStart(x)) {
-          obs = streamValueFromControl<DateOrDayString>(this.form, x)?.pipe(map((x) => (x ? toJsDayDate(x) : undefined))) ?? of(undefined);
+
+        if ((typeof x === 'string' && !isISO8601DayStringStart(x)) || isDbxDateTimeFieldTimeDateConfig(x)) {
+          const { path, mapValue }: DbxDateTimeFieldTimeDateConfig = typeof x === 'string' ? { path: x } : x;
+          obs =
+            streamValueFromControl<DateOrDayString>(this.form, path)?.pipe(
+              map(mapValue ?? mapIdentityFunction()),
+              map((x) => (x ? toJsDayDate(x) : undefined))
+            ) ?? of(undefined);
         } else {
           obs = of(toJsDayDate(x));
         }

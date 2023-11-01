@@ -34,7 +34,7 @@ import {
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { BehaviorSubject, delay, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, DateScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal } from '@dereekb/date';
+import { DateRangeType, DateCellScheduleDayCode, DateScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
@@ -196,13 +196,24 @@ export class DocFormValueComponent {
     dateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }),
     dateTimeRangeField({
       timezone: 'America/Chicago',
-      timeDate: 'timezoneDay', // use the date from timezoneDay as the output date
+      timeDate: {
+        path: 'timezoneDay', // use the date from timezoneDay as the output date
+        mapValue: (x) => {
+          return x ? addDays(toJsDate(x as string), 1) : undefined;
+        }
+      },
       start: {
-        label: 'Start Time (On Timezone Day)',
+        label: 'Start Time (On Timezone Day + 1)',
         key: 'sat3'
       },
       end: {
-        label: 'End Time (On Timezone Day)',
+        label: 'End Time (On Timezone Day + 3)',
+        timeDate: {
+          path: 'timezoneDay',
+          mapValue: (x) => {
+            return x ? addDays(toJsDate(x as string), 3) : undefined;
+          }
+        },
         key: 'eat3'
       }
     })
