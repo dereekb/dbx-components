@@ -1,5 +1,5 @@
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { asArray, convertMaybeToArray, LabeledValue, Maybe } from '@dereekb/util';
+import { asArray, convertMaybeToArray, firstValue, LabeledValue, Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
 import { DescriptionFieldConfig, formlyField, FormlyValueParser, LabeledFieldConfig, MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
@@ -23,7 +23,7 @@ export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, Descri
    */
   readonly native?: boolean;
   /**
-   * Whether or not to add a clear option to the input values. If using an observable, this
+   * Whether or not to add a clear option to the input values.
    */
   readonly addClearOption?: string | boolean;
   /**
@@ -53,7 +53,7 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
   const options = addClearOption ? asObservable(inputOptions).pipe(map(addValueSelectionOptionFunction(typeof addClearOption === 'string' ? addClearOption : undefined))) : inputOptions;
   let parsers: FormlyValueParser[] | undefined = undefined;
 
-  parsers = config.multiple === false ? [(x: Maybe<T | T[]>) => (Array.isArray(x) ? x[0] : x)] : [(x) => convertMaybeToArray(x)];
+  parsers = config.multiple !== true ? [firstValue] : [convertMaybeToArray];
 
   return formlyField({
     key,
