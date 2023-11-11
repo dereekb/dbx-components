@@ -7,7 +7,7 @@ import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_D
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, hasDifferentValues, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyFormState {
   changesSinceLastResetCount: number;
@@ -40,8 +40,10 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   private _forceUpdate = new Subject<void>();
 
   private _disabledSub = new SubscriptionObject();
+  private _enforceDisabledSub = new SubscriptionObject();
 
-  form = new FormGroup({});
+  readonly form = new FormGroup({});
+
   model: T = {} as T;
   options: FormlyFormOptions = {};
 
@@ -127,8 +129,9 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   ngOnInit(): void {
     this.context.setDelegate(this);
 
-    this._disabledSub.subscription = this._disabled.pipe(distinctUntilChanged()).subscribe((disabled) => {
-      const isDisabled = BooleanStringKeyArrayUtilityInstance.isTrue(disabled);
+    const resyncDisabledState = () => {
+      const isDisabled = BooleanStringKeyArrayUtilityInstance.isTrue(this._disabled.value);
+      let change = false;
 
       if (this.form.disabled !== isDisabled) {
         if (isDisabled) {
@@ -136,7 +139,20 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
         } else {
           this.form.enable({ emitEvent: true });
         }
+
+        change = true;
       }
+
+      return change;
+    };
+
+    this._disabledSub.subscription = this._disabled.pipe(distinctUntilChanged(hasDifferentValues)).subscribe((disabled) => {
+      resyncDisabledState();
+    });
+
+    // NOTE: Form sometimes becomes undisabled somewhere/somehow. Re-enforce the disabled state where necessary.
+    this._enforceDisabledSub.subscription = this.form.statusChanges.pipe(throttleTime(50, undefined, { leading: true, trailing: true })).subscribe((change) => {
+      resyncDisabledState();
     });
   }
 
@@ -150,6 +166,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
       this._forceUpdate.complete();
       this._disabled.complete();
       this._disabledSub.destroy();
+      this._enforceDisabledSub.destroy();
     });
   }
 

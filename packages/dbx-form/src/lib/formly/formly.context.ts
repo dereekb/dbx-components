@@ -47,8 +47,8 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
   private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
   private _delegate = new BehaviorSubject<Maybe<DbxFormlyContextDelegate<T>>>(undefined);
 
-  readonly fields$ = this._fields.pipe(filterMaybe());
-  readonly disabled$ = this._disabled.pipe(filterMaybe());
+  readonly fields$ = this._fields.pipe(filterMaybe(), shareReplay(1));
+  readonly disabled$ = this._disabled.pipe(filterMaybe(), shareReplay(1));
   readonly stream$: Observable<DbxFormEvent> = this._delegate.pipe(
     distinctUntilChanged(),
     switchMap((x) => (x ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE))),
@@ -69,7 +69,7 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
       if (delegate != null) {
         delegate.init({
           fields: this.fields$,
-          initialDisabled: this._disabled.value,
+          initialDisabled: this.disabled,
           initialValue: this._initialValue.value
         });
       }
@@ -122,7 +122,8 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
   }
 
   setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
-    this._disabled.next(BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled));
+    const nextDisabled = BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled);
+    this._disabled.next(nextDisabled);
 
     if (this._delegate.value) {
       this._delegate.value.setDisabled(key, disabled);
