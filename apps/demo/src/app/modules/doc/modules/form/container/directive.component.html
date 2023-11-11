@@ -28,5 +28,10 @@
         <p>Changed: {{ value | json }}</p>
       </dbx-content-border>
     </doc-feature-example>
+    <doc-feature-example header="AbstractFormlyFormDirective" hint="This is the base directive most forms will extend from, or a subclass of this type.">
+      <h3>Disabled</h3>
+      <p>Disabled is an input on an AbstractFormlyFormDirective subclass and can be used to disable the form.</p>
+      <doc-form-example-form [dbxFormlyFields]="testFieldsD" [dbxFormSource]="data$" [disabled]="true"></doc-form-example-form>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

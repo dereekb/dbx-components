@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.25.11](https://github.com/dereekb/dbx-components/compare/v9.25.10-dev...v9.25.11) (2023-11-11)
+
+
+### Bug Fixes
+
+* fixed value selection field single value selection parser ([33f64cb](https://github.com/dereekb/dbx-components/commit/33f64cbe3f22a2d9b7f6e4e939b956264aed34a0))
+
+
+
 ## [9.25.10](https://github.com/dereekb/dbx-components/compare/v9.25.9-dev...v9.25.10) (2023-11-01)
 
 

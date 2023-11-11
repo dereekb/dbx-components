@@ -1,8 +1,8 @@
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { LabeledValue, Maybe } from '@dereekb/util';
+import { asArray, convertMaybeToArray, firstValue, LabeledValue, Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
-import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
+import { DescriptionFieldConfig, formlyField, FormlyValueParser, LabeledFieldConfig, MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
 
 export interface ValueSelectionOptionWithValue<T> extends LabeledValue<T> {
   disabled?: boolean;
@@ -21,23 +21,23 @@ export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, Descri
    *
    * Be sure to import FormlyMatNativeSelectModule.
    */
-  native?: boolean;
+  readonly native?: boolean;
   /**
-   * Whether or not to add a clear option to the input values. If using an observable, this
+   * Whether or not to add a clear option to the input values.
    */
-  addClearOption?: string | boolean;
+  readonly addClearOption?: string | boolean;
   /**
    * Values to select from.
    */
-  options: ObservableOrValue<ValueSelectionOption<T>[]>;
+  readonly options: ObservableOrValue<ValueSelectionOption<T>[]>;
   /**
    * Allow selecting multiple values and return an array.
    */
-  multiple?: boolean;
+  readonly multiple?: boolean;
   /**
    * The select all option configuration.
    */
-  selectAllOption?: true | string;
+  readonly selectAllOption?: true | string;
 }
 
 export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): FormlyFieldConfig {
@@ -51,6 +51,9 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
   }
 
   const options = addClearOption ? asObservable(inputOptions).pipe(map(addValueSelectionOptionFunction(typeof addClearOption === 'string' ? addClearOption : undefined))) : inputOptions;
+  let parsers: FormlyValueParser[] | undefined = undefined;
+
+  parsers = config.multiple !== true ? [firstValue] : [convertMaybeToArray];
 
   return formlyField({
     key,
@@ -58,9 +61,10 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
       options,
-      multiple: config.multiple ?? false,
+      multiple: config.multiple,
       ...selectAllOptionConfig
-    })
+    }),
+    parsers
   });
 }
 

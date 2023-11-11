@@ -8,7 +8,7 @@ import { Maybe } from '@dereekb/util';
 import { DbxValueListItemViewComponent } from './list.view.value.component';
 
 export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
-  multiple?: boolean;
+  readonly multiple?: boolean;
 }
 
 /**
