@@ -216,6 +216,16 @@ export function formatToISO8601DateString(date: Date = new Date()): ISO8601DaySt
   return date.toISOString();
 }
 
+/**
+ * Converts the input Date or ISO8601DayString to an ISO8601DayString.
+ *
+ * @param dateOrString
+ * @returns
+ */
+export function toISO8601DayString(dateOrString: DateOrDayString): ISO8601DayString {
+  return isDate(dateOrString) ? formatToISO8601DayString(dateOrString) : dateOrString;
+}
+
 export function formatToISO8601DayString(date: Date = new Date()): ISO8601DayString {
   return format(date, 'yyyy-MM-dd');
 }
@@ -296,7 +306,7 @@ export function toJsDayDate(input: DateOrDayString): Date {
   return isDate(input) ? startOfDay(input as Date) : parseISO8601DayStringToDate(input as string);
 }
 
-export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO8601DayString): Date {
+export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO8601DateString): Date {
   // TODO: Does not support negative years.
 
   const inputSplit = dayString.split('-');
