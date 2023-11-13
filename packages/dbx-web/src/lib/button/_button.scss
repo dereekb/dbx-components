@@ -8,14 +8,23 @@ $button-spacer-width: 6px;
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-wide-button {
+  // increases the height of the mat-button
+  .dbx-button-big {
+    .mat-button {
+      line-height: 46px; // 33% bigger
+    }
+  }
+
+  .dbx-wide-button, // @deprecated. Remove in future.
+  .dbx-button-wide {
     .dbx-button {
       min-width: 120px;
       max-width: 100%;
     }
   }
 
-  dbx-button.dbx-w100 {
+  dbx-button.dbx-w100,
+  dbx-button.dbx-button-wide {
     // when using dbx-w100 with dbx-button, make the button full width
     .dbx-button {
       width: 100%;

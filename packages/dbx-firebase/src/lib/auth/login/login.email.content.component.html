@@ -20,7 +20,7 @@
       <dbx-link [anchor]="forgotAnchor">Forgot Password?</dbx-link>
     </div>
     <div class="dbx-flex">
-      <dbx-button class="dbx-wide-button" [text]="buttonText" [raised]="true" color="primary" dbxActionButton></dbx-button>
+      <dbx-button class="dbx-button-wide" [text]="buttonText" [raised]="true" color="primary" dbxActionButton></dbx-button>
       <dbx-button-spacer></dbx-button-spacer>
       <span class="dbx-spacer"></span>
       <button mat-flat-button (click)="onCancel()">Cancel</button>
@@ -35,7 +35,7 @@
     <dbx-firebase-email-recovery-form dbxActionForm [dbxFormSource]="recoveryFormValue"></dbx-firebase-email-recovery-form>
     <p class="dbx-hint">An email will be sent to the above address to help you reset your password.</p>
     <div class="dbx-flex">
-      <dbx-button class="dbx-wide-button" text="Send Recovery Email" [raised]="true" color="primary" dbxActionButton></dbx-button>
+      <dbx-button class="dbx-button-wide" text="Send Recovery Email" [raised]="true" color="primary" dbxActionButton></dbx-button>
       <span class="dbx-spacer"></span>
       <button mat-flat-button (click)="onCancelReset()">Cancel Recovery</button>
     </div>
