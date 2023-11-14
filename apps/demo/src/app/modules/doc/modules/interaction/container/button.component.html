@@ -32,10 +32,10 @@
       <dbx-button icon="settings" color="accent" text="Test Button"></dbx-button>
 
       <h4>Full Width</h4>
-      <p class="dbx-hint dbx-small">Full width can be added by using the .dbx-w100 css class</p>
+      <p class="dbx-hint dbx-small">Full width can be added by using the .dbx-w100 or .dbx-button-wide css class</p>
       <dbx-button class="dbx-w100" [raised]="true" icon="settings" color="primary" text="Test Button"></dbx-button>
       <dbx-button class="dbx-w100" icon="settings" color="primary" text="Test Button"></dbx-button>
-      <dbx-button class="dbx-w100" [raised]="true" icon="settings" color="accent" text="Test Button"></dbx-button>
+      <dbx-button class="dbx-button-wide" [raised]="true" icon="settings" color="accent" text="Test Button"></dbx-button>
 
       <h4>With Custom Content</h4>
       <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="barButtonOptionsWorkingState">
@@ -157,6 +157,15 @@
         <dbx-button color="primary" [raised]="true" text="Test Button"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-button color="accent" [raised]="true" text="Test Button"></dbx-button>
+      </dbx-content-pit>
+
+      <h3>.dbx-button-big</h3>
+      <p>Makes the button taller.</p>
+
+      <dbx-content-pit>
+        <dbx-button class="dbx-button-big" color="primary" [raised]="true" text="Test Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button class="dbx-button-big" color="accent" [raised]="true" text="Test Button"></dbx-button>
       </dbx-content-pit>
 
       <h3>.dbx-button-column</h3>
