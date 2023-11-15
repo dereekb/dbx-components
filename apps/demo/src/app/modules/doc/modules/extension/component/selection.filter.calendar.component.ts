@@ -29,6 +29,8 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
         <dbx-button [raised]="true" text="Set First Five Dates" (buttonClick)="setFirstFiveSelection()"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
         <dbx-button [raised]="true" text="Set First Eight Days" (buttonClick)="setFirstEightSelectionWithDays()"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" text="Set No Days" (buttonClick)="setNoDays()"></dbx-button>
       </div>
       <dbx-content-pit>
         <p>Days: {{ selectedDaysOfWeek$ | async }}</p>
@@ -81,6 +83,10 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   setFirstEightSelectionWithDays() {
     const dayStrings = range(0, 8).map((x) => formatToISO8601DayString(addDays(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER.startsAt as Date, x)));
     this.dbxCalendarScheduleSelectionStore.setSelectedIndexes(dayStrings);
+  }
+
+  setNoDays() {
+    this.dbxCalendarScheduleSelectionStore.setSelectedIndexes([]);
   }
 
   setRandomSelection() {

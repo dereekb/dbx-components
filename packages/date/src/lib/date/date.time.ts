@@ -283,6 +283,12 @@ export function getTimeAM(date = new Date(), timezone?: Maybe<TimezoneString>): 
   return dateTimeInstance(timezone).getTimeAM(date);
 }
 
+/**
+ * Convenience function for toReadableTimeString that uses the current system timezone.
+ *
+ * @param date
+ * @returns
+ */
 export function toLocalReadableTimeString(date: Date): ReadableTimeString {
   return toReadableTimeString(date, guessCurrentTimezone());
 }

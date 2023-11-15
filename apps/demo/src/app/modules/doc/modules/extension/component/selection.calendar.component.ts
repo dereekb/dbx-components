@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
+import { DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
 import { Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 
@@ -40,4 +40,9 @@ export class DocExtensionCalendarScheduleSelectionComponent {
   readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
+
+  @Input()
+  set selectionMode(selectionMode: DbxCalendarScheduleSelectionStoreSelectionMode) {
+    this.dbxCalendarScheduleSelectionStore.setSelectionMode(selectionMode);
+  }
 }

@@ -20,7 +20,9 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
     map((x) => {
       if (x?.start && x.end) {
-        return `${formatToMonthDayString(x.start)} - ${formatToMonthDayString(x.end)}`;
+        const startString = formatToMonthDayString(x.start);
+        const endString = formatToMonthDayString(x.end);
+        return startString === endString ? startString : `${formatToMonthDayString(x.start)} - ${formatToMonthDayString(x.end)}`;
       } else {
         return 'Pick a Date Range';
       }

@@ -29,27 +29,31 @@ export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implemen
     shareReplay(1)
   );
 
-  readonly buttonDisplay$ = this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(
-    map((x) => {
-      let buttonDisplay: DbxButtonDisplayContent;
+  readonly buttonDisplay$ = this.dbxCalendarScheduleSelectionStore.selectionMode$.pipe(
+    switchMap((selectionMode) => {
+      return this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(
+        map((x) => {
+          let buttonDisplay: DbxButtonDisplayContent;
 
-      switch (x) {
-        case 'all':
-          buttonDisplay = {
-            icon: 'select_all',
-            text: 'Select All'
-          };
-          break;
-        default:
-        case 'none':
-          buttonDisplay = {
-            icon: 'clear',
-            text: 'Clear All'
-          };
-          break;
-      }
+          switch (x) {
+            case 'all':
+              buttonDisplay = {
+                icon: 'select_all',
+                text: 'Select All'
+              };
+              break;
+            default:
+            case 'none':
+              buttonDisplay = {
+                icon: 'clear',
+                text: selectionMode === 'multiple' ? 'Clear All' : 'Clear'
+              };
+              break;
+          }
 
-      return buttonDisplay;
+          return buttonDisplay;
+        })
+      );
     }),
     shareReplay(1)
   );
