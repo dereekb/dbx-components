@@ -147,6 +147,8 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly date$ = this.calendarStore.date$;
 
+  readonly singleSelectionConfig: DbxScheduleSelectionCalendarComponentConfig = {};
+
   readonly scheduleConfig$ = interval(5000).pipe(
     startWith(0),
     map((i) => {
