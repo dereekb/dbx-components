@@ -165,7 +165,10 @@
       background-color: map-get($theme, bg-secondary);
     }
 
-    .cal-cell-row .cal-cell:hover,
+    .cal-cell-row .cal-cell:hover {
+      background-color: map-get($theme, bg-hover);
+    }
+
     .cal-cell.cal-has-events.cal-open {
       background-color: map-get($theme, bg-active);
     }

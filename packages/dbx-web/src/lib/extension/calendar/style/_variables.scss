@@ -4,6 +4,7 @@ $cal-event-color-secondary-var: --cal-event-color-secondary;
 $cal-border-color-var: --cal-border-color;
 $cal-bg-primary-var: --cal-bg-primary;
 $cal-bg-secondary-var: --cal-bg-secondary;
+$cal-bg-hover-var: --cal-bg-hover;
 $cal-bg-active-var: --cal-bg-active;
 $cal-bg-active-dragover-var: --cal-bg-active-dragover;
 $cal-bg-highlight-var: --cal-bg-highlight;
@@ -30,6 +31,7 @@ $cal-event-color-secondary: var($cal-event-color-secondary-var);
 $cal-border-color: var($cal-border-color-var);
 $cal-bg-primary: var($cal-bg-primary-var);
 $cal-bg-secondary: var($cal-bg-secondary-var);
+$cal-bg-hover: var($cal-bg-hover-var);
 $cal-bg-active: var($cal-bg-active-var);
 $cal-bg-active-dragover: var($cal-bg-active-dragover-var);
 $cal-bg-highlight: var($cal-bg-highlight-var);
@@ -72,6 +74,8 @@ $cal-vars: map-merge(
     // the secondary background, used for alternating rows on the day and week views
     bg-secondary: $cal-bg-secondary,
     // the color used when hovering over cells and headers
+    bg-hover: $cal-bg-hover,
+    // the color used for a selected day
     bg-active: $cal-bg-active,
     // the color use when a cell is selected
     bg-selected-color: $cal-bg-selected-color,

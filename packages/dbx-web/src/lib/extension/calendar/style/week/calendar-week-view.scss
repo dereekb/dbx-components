@@ -315,7 +315,7 @@
 
     .cal-day-headers .cal-header:hover,
     .cal-day-headers .cal-drag-over {
-      background-color: map-get($theme, bg-active);
+      background-color: map-get($theme, bg-hover);
     }
 
     .cal-day-column {
@@ -356,7 +356,7 @@
       .cal-day-columns {
         &:not(.cal-resize-active) {
           .cal-hour-segment:hover {
-            background-color: map-get($theme, bg-active);
+            background-color: map-get($theme, bg-hover);
           }
         }
       }
