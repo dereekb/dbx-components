@@ -82,6 +82,18 @@ export function boundNumberFunction<T extends number = number>(boundNumberFuncti
   if (wrap) {
     return wrapNumberFunction<T>(boundNumberFunctionConfig);
   } else {
-    return (input: number) => Math.max(Math.min(input, max), min) as T;
+    return (input: number) => boundNumber<T>(input, min, max);
   }
+}
+
+/**
+ * Returns the input number clamped between the min and max values.
+ *
+ * @param input
+ * @param min
+ * @param max
+ * @returns
+ */
+export function boundNumber<T extends number = number>(input: number, min: T, max: T): T {
+  return Math.max(Math.min(input, max), min) as T;
 }

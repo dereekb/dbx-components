@@ -450,6 +450,17 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
 }
 
 /**
+ * Returns the last index of a DateCellTiming.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateCellTimingEndIndex(input: DateCellTiming | DateCellTimingRelativeIndexFactory<DateCellTiming>): IndexNumber {
+  const factory = dateCellTimingRelativeIndexFactory(input);
+  return factory(factory._timing.end);
+}
+
+/**
  * Returns the start time of the input date or index.
  */
 export type DateCellTimingStartDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateCellTimingRelativeIndexFactoryInput) => Date) & {

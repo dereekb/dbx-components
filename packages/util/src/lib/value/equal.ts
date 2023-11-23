@@ -1,9 +1,5 @@
 import { existsInIterable, isIterable, IterableOrValue, takeValuesFromIterable } from './../iterable/iterable';
-
-/**
- * Function used for equivalence comparisons on an object.
- */
-export type IsEqualFunction<T = unknown> = (a: T, b: T) => boolean;
+import { EqualityComparatorFunction } from './comparator';
 
 /**
  * Used to check if the input object is considered equal to the current context.
@@ -24,7 +20,7 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  * @param fn
  * @returns
  */
-export function isEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): IsEqualContext<T> {
+export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunction<T>): IsEqualContext<T> {
   return (value) => {
     return fn(contextValue, value);
   };
@@ -37,7 +33,7 @@ export function isEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): IsEq
  * @param fn
  * @returns
  */
-export function areEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): AreEqualContext<T> {
+export function areEqualContext<T>(contextValue: T, fn: EqualityComparatorFunction<T>): AreEqualContext<T> {
   const isEqual = isEqualContext(contextValue, fn);
 
   return (input: IterableOrValue<T>) => {
@@ -62,7 +58,7 @@ export function areEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): Are
  * @param fn
  * @returns
  */
-export function allObjectsAreEqual<T>(values: IterableOrValue<T>, fn: IsEqualFunction<T>): boolean {
+export function allObjectsAreEqual<T>(values: IterableOrValue<T>, fn: EqualityComparatorFunction<T>): boolean {
   if (isIterable(values)) {
     const firstValues = takeValuesFromIterable(values, 2);
     return firstValues.length > 1 ? areEqualContext(firstValues[0], fn)(values) : true;
@@ -70,3 +66,11 @@ export function allObjectsAreEqual<T>(values: IterableOrValue<T>, fn: IsEqualFun
 
   return true;
 }
+
+// MARK: Compat
+/**
+ * Function used for equivalence comparisons on an object.
+ *
+ * @deprecated use EqualityComparatorFunction instead.
+ */
+export type IsEqualFunction<T = unknown> = EqualityComparatorFunction<T>;

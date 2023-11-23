@@ -1,6 +1,8 @@
 import { Maybe } from '../value/maybe.type';
 
 // MARK: Types
+export type EmptyArray = never[];
+
 export type ArrayOrValue<T> = T | T[];
 
 // MARK: Functions
