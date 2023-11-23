@@ -1,5 +1,5 @@
 import { AbstractControl, ValidatorFn } from '@angular/forms';
-import { KeyValueTupleFilter, allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from '@dereekb/util';
+import { KeyValueTupleFilter, allObjectsAreEqual, EqualityComparatorFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from '@dereekb/util';
 
 export const FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY = 'fieldValuesAreEqual';
 
@@ -19,7 +19,7 @@ export interface FieldValuesAreEqualValidatorConfig<T extends object = object> {
   /**
    * Optional equivalence comparator.
    */
-  isEqual?: IsEqualFunction<T>;
+  isEqual?: EqualityComparatorFunction<T>;
 
   /**
    * Custom message for this validator.

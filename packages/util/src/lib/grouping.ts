@@ -1,5 +1,6 @@
 import { PrimativeKey, ReadKeyFunction } from './key';
 import { mapToObject } from './object';
+import { EqualityComparatorFunction } from './value/comparator';
 import { DecisionFunction } from './value/decision';
 import { Maybe } from './value/maybe.type';
 
@@ -24,7 +25,7 @@ export interface PairsGroupingResult<T> {
 
 export interface ArrayContentsDifferentParams<T, K extends PrimativeKey = PrimativeKey> {
   groupKeyFn: ReadKeyFunction<T, K>;
-  isEqual: (a: T, b: T) => boolean;
+  isEqual: EqualityComparatorFunction<T>;
 }
 
 /**

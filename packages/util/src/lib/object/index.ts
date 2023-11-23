@@ -1,3 +1,4 @@
+export * from './object.array.delta';
 export * from './object.array';
 export * from './object.empty';
 export * from './object.equal';
