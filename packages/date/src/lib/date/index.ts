@@ -19,6 +19,7 @@ export * from './date.range';
 export * from './date.range.string';
 export * from './date.range.timezone';
 export * from './date.round';
+export * from './date.rxjs';
 export * from './date.schedule';
 export * from './date.sort';
 export * from './date.time.limit';

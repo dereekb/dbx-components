@@ -1,4 +1,4 @@
-import { DATE_NOW_VALUE, DateNow, Maybe } from '@dereekb/util';
+import { DATE_NOW_VALUE, DateNow, Maybe, FactoryWithInput, MapFunction, mapIdentityFunction } from '@dereekb/util';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 
 export const DATE_TODAY_START_VALUE = 'today_start';
@@ -20,6 +20,32 @@ export type LogicalDateStringCode = DateNow | DateTodayStart | DateTodayEnd | Da
  */
 export type LogicalDate = Date | LogicalDateStringCode;
 
+export function logicalDateStringCodeDateFactory(logicalDateStringCode: LogicalDateStringCode): FactoryWithInput<Date, Date> {
+  let mapFn: MapFunction<Date, Date>;
+
+  switch (logicalDateStringCode.toLocaleLowerCase()) {
+    case DATE_NOW_VALUE:
+      mapFn = mapIdentityFunction();
+      break;
+    case DATE_TODAY_START_VALUE:
+      mapFn = startOfDay;
+      break;
+    case DATE_TODAY_END_VALUE:
+      mapFn = endOfDay;
+      break;
+    case DATE_WEEK_START_VALUE:
+      mapFn = startOfWeek;
+      break;
+    case DATE_WEEK_END_VALUE:
+      mapFn = endOfWeek;
+      break;
+    default:
+      throw new Error(`Unknown logical date string "${logicalDateStringCode}"`);
+  }
+
+  return (now: Date = new Date()) => mapFn(now);
+}
+
 /**
  * Returns a Date value from the input LogicalDate.
  *
@@ -31,25 +57,7 @@ export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>, now: Date =
   let result;
 
   if (typeof logicalDate === 'string') {
-    switch (logicalDate.toLocaleLowerCase()) {
-      case DATE_NOW_VALUE:
-        result = now;
-        break;
-      case DATE_TODAY_START_VALUE:
-        result = startOfDay(now);
-        break;
-      case DATE_TODAY_END_VALUE:
-        result = endOfDay(now);
-        break;
-      case DATE_WEEK_START_VALUE:
-        result = startOfWeek(now);
-        break;
-      case DATE_WEEK_END_VALUE:
-        result = endOfWeek(now);
-        break;
-      default:
-        throw new Error(`Unknown logical date string "${logicalDate}"`);
-    }
+    result = logicalDateStringCodeDateFactory(logicalDate)(now);
   } else {
     result = logicalDate;
   }

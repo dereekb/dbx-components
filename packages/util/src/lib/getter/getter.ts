@@ -155,3 +155,13 @@ export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, 
 export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[] {
   return input.map((x) => factory(x));
 }
+
+/**
+ * Wraps the factory so that when executed no arguments are passed to the factory.
+ *
+ * @param factory
+ * @returns
+ */
+export function protectedFactory<T>(factory: Factory<T>): Factory<T> {
+  return () => factory();
+}
