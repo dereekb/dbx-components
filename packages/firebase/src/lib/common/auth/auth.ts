@@ -6,6 +6,13 @@ import { ISO8601DateString, Maybe, PasswordString, PhoneNumber, WebsiteUrl } fro
 export const FIREBASE_AUTH_PASSWORD_MIN_LENGTH = 6;
 
 /**
+ * Passwords longer than 128 characters are not useful...
+ *
+ * (but they are allowed by Firebase. There is no posted upper limit)
+ */
+export const FIREBASE_AUTH_PASSWORD_MAX_LENGTH = 128;
+
+/**
  * Firebase User Identifier (UID)
  */
 export type FirebaseAuthUserId = string;
