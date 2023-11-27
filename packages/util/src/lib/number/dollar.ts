@@ -5,6 +5,10 @@ import { cutToPrecision } from './round';
  * Whole dollar amounts, before the ','.
  */
 export type WholeDollarAmount = number;
+/**
+ * Dollar amount number.
+ */
+export type DollarAmount = number;
 export type CentsAmount = number;
 
 export interface DollarsPair {
@@ -20,6 +24,11 @@ export interface DollarsPair {
 export type DollarAmountString = string;
 
 export const DOLLAR_AMOUNT_STRING_REGEX = /^\$?([0-9]+)\.?([0-9][0-9])$/;
+
+/**
+ * Dollar amounts are to two decimal places.
+ */
+export const DOLLAR_AMOUNT_PRECISION = 2;
 
 /**
  * Returns true if the input is a valid DollarAmountString value.
@@ -40,7 +49,7 @@ export function isDollarAmountString(value: string): boolean {
  */
 export function dollarAmountString(number: Maybe<number>): string {
   if (number) {
-    return cutToPrecision(number, 2).toFixed(2);
+    return cutToPrecision(number, DOLLAR_AMOUNT_PRECISION).toFixed(DOLLAR_AMOUNT_PRECISION);
   } else {
     return '0.00';
   }

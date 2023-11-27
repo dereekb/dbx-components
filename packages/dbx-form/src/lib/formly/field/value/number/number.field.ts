@@ -1,5 +1,5 @@
 import { ValidatorFn } from '@angular/forms';
-import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction } from '@dereekb/util';
+import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction, DOLLAR_AMOUNT_PRECISION } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
 import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser, MaterialFormFieldConfig } from '../../field';
@@ -129,5 +129,5 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
 export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
 
 export function dollarAmountField(config: DollarAmountFieldConfig) {
-  return numberField({ ...config, transform: { ...config.transform, precision: 2 } });
+  return numberField({ ...config, transform: { ...config.transform, precision: config.transform?.precision ?? DOLLAR_AMOUNT_PRECISION } });
 }
