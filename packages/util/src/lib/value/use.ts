@@ -1,5 +1,5 @@
 import { AsyncGetterOrValue, GetterOrValue, getValueFromGetter } from '../getter';
-import { PromiseOrValue } from '../promise/promise';
+import { PromiseOrValue } from '../promise/promise.type';
 import { MapFunction } from './map';
 import { Maybe } from './maybe.type';
 

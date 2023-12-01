@@ -45,6 +45,7 @@ $dbx-detail-block-content-offset: 30px;
 
     .mat-icon {
       padding-right: 6px;
+      flex-shrink: 0; // do not shrink
     }
 
     .dbx-anchor-a {
