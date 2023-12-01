@@ -23,7 +23,7 @@ export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: 
       throw new Error(`Invalid number of path segments provided for collection. Path: "${path}" + "${pathSegments}"`);
     }
 
-    const batches = batch(pathSegments, 2) as [string, string][];
+    const batches = batch(pathSegments, 2); // batch to tuple [string, string]
 
     batches.forEach((x) => {
       const [first, second] = x;
@@ -38,7 +38,7 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
   let doc = (path ? start.doc(path) : (start as GoogleCloudCollectionReference).doc()) as GoogleCloudDocumentReference;
 
   if (pathSegments?.length) {
-    const batches = batch(pathSegments, 2) as [string, string][];
+    const batches = batch(pathSegments, 2); // batch to tuple [string, string]
 
     batches.forEach((x) => {
       const [first, second] = x;

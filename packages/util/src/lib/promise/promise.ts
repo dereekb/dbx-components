@@ -54,7 +54,9 @@ export interface PerformAsyncTasksResult<I, O> {
 
 export interface PerformAsyncTaskConfig<I = unknown> {
   /**
-   * Whether or not to throw an error if the task fails. Defaults to false.
+   * Whether or not to throw an error if the task fails. Defaults to true.
+   *
+   * If retries are allowed, this will throw the final error from the final try.
    */
   readonly throwError?: boolean;
   /**
@@ -71,12 +73,7 @@ export interface PerformAsyncTaskConfig<I = unknown> {
   readonly beforeRetry?: (value: I, tryNumber?: number) => void | Promise<void>;
 }
 
-export interface PerformAsyncTasksConfig<I = unknown> extends PerformAsyncTaskConfig<I>, Pick<PerformTasksInParallelFunctionConfig<I>, 'maxParallelTasks' | 'waitBetweenTasks'> {
-  /**
-   * Whether or not tasks are performed sequentially or if tasks are all done in "parellel".
-   */
-  readonly sequential?: boolean;
-}
+export interface PerformAsyncTasksConfig<I = unknown> extends PerformAsyncTaskConfig<I>, Omit<PerformTasksInParallelFunctionConfig<I>, 'taskFactory'> {}
 
 /**
  * Performs the input tasks, and will retry tasks if they fail, up to a certain point.
@@ -84,8 +81,7 @@ export interface PerformAsyncTasksConfig<I = unknown> extends PerformAsyncTaskCo
  * This is useful for retrying sections that may experience optimistic concurrency collisions.
  */
 export async function performAsyncTasks<I, O = unknown>(input: I[], taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
-  const { sequential, maxParallelTasks } = config;
-
+  const { sequential, maxParallelTasks, waitBetweenTasks } = config;
   let taskResults: [I, O, boolean][] = [];
 
   await performTasksInParallelFunction({
@@ -93,7 +89,9 @@ export async function performAsyncTasks<I, O = unknown>(input: I[], taskFn: Prom
       _performAsyncTask(value, taskFn, config).then((x) => {
         taskResults[i] = x;
       }),
-    maxParallelTasks: maxParallelTasks || sequential ? 0 : undefined
+    maxParallelTasks,
+    sequential,
+    waitBetweenTasks
   })(input);
 
   const succeded: I[] = [];
@@ -128,7 +126,7 @@ export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: Per
 
 async function _performAsyncTask<I, O>(value: I, taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<[I, O, boolean]> {
   const { throwError: inputThrowError, retriesAllowed: inputRetriesAllowed, retryWait = 200, beforeRetry } = config;
-  const throwError = inputThrowError ?? true;
+  const throwError = inputThrowError ?? true; // throw errors by default
   const retriesAllowed = inputRetriesAllowed ? inputRetriesAllowed : 0;
 
   async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
@@ -182,6 +180,12 @@ export interface PerformTasksInParallelFunctionConfig<I> {
    */
   readonly taskFactory: (input: I, value: IndexNumber) => Promise<void>;
   /**
+   * Whether or not tasks are performed sequentially or if tasks are all done in "parellel".
+   *
+   * Is ignored if maxParallelTasks is set.
+   */
+  readonly sequential?: boolean;
+  /**
    * The maximum number of items to process in parallel. If there is no max, then all items will be processed in parallel.
    */
   readonly maxParallelTasks?: number;
@@ -215,14 +219,20 @@ export function performTasksInParallel<I>(input: I[], config: PerformTasksInPara
  * @param config
  */
 export function performTasksInParallelFunction<I>(config: PerformTasksInParallelFunctionConfig<I>): PerformTasksInParallelFunction<I> {
-  const { taskFactory, maxParallelTasks, waitBetweenTasks } = config;
+  const { taskFactory, sequential, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
+  const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
 
   if (!maxParallelTasks) {
+    // if the max number of parallel tasks is not defined, then run all tasks at once
     return async (input: I[]) => {
       await Promise.all(input.map((value, i) => taskFactory(value, i)));
     };
   } else {
     return (input: I[]) => {
+      if (input.length === 0) {
+        return Promise.resolve();
+      }
+
       return new Promise(async (resolve, reject) => {
         const maxPromisesToRunAtOneTime = Math.min(maxParallelTasks, input.length);
         const endIndex = input.length;

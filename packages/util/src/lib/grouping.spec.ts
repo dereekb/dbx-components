@@ -1,4 +1,20 @@
-import { restoreOrder, restoreOrderWithValues } from './grouping';
+import { batch, restoreOrder, restoreOrderWithValues } from './grouping';
+
+describe('batch', () => {
+  it('should split an array into batches.', () => {
+    const allValues = ['a', 'b', 'c', 'd'];
+    const result = batch(allValues, 2);
+
+    expect(result.length).toBe(2);
+    expect(result[0]).toContain('a');
+    expect(result[0]).toContain('b');
+    expect(result[0].i).toBe(0);
+
+    expect(result[1]).toContain('c');
+    expect(result[1]).toContain('d');
+    expect(result[1].i).toBe(1);
+  });
+});
 
 describe('restoreOrder', () => {
   const allValues = [

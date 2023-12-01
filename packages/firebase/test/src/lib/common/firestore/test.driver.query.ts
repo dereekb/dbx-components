@@ -1,9 +1,35 @@
 import { startOfDay, addDays, addHours } from 'date-fns';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { filter, first, from, skip } from 'rxjs';
-import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter, whereStringValueHasPrefix, whereStringHasRootIdentityModelKey } from '@dereekb/firebase';
-import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity } from '../mock';
+import { filter, first, from, skip, throwError } from 'rxjs';
+import {
+  firestoreIdBatchVerifierFactory,
+  limit,
+  orderBy,
+  startAfter,
+  startAt,
+  where,
+  limitToLast,
+  endAt,
+  endBefore,
+  makeDocuments,
+  FirestoreQueryFactoryFunction,
+  startAtValue,
+  endAtValue,
+  whereDocumentId,
+  FirebaseAuthUserId,
+  whereDateIsBetween,
+  whereDateIsInRange,
+  whereDateIsBefore,
+  whereDateIsOnOrAfter,
+  whereStringValueHasPrefix,
+  whereStringHasRootIdentityModelKey,
+  iterateFirestoreDocumentSnapshotPairs,
+  iterateFirestoreDocumentSnapshotBatches,
+  iterateFirestoreDocumentSnapshotPairBatches,
+  iterateFirestoreDocumentSnapshots
+} from '@dereekb/firebase';
+import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 import { DateRangeType } from '@dereekb/date';
 
@@ -36,7 +62,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
       });
     });
 
-    describe('firestoreIdBatchVerifier', () => {
+    describe('firestoreIdBatchVerifierFactory()', () => {
       const mockItemIdBatchVerifier = firestoreIdBatchVerifierFactory<MockItem, string>({
         readKeys: (x) => [x.id],
         fieldToQuery: '_id'
@@ -97,6 +123,130 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         );
 
         allMockUserItems = results.flat();
+      });
+
+      describe('utils', () => {
+        describe('iterate firestore utilities', () => {
+          describe('iterateFirestoreDocumentSnapshotPairs()', () => {
+            it('should iterate across all mock users by each snapshot pair.', async () => {
+              const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+
+              const mockUserItemsVisited = new Set<MockItemUserKey>();
+              const batchSize = 2;
+
+              const result = await iterateFirestoreDocumentSnapshotPairs({
+                batchSize,
+                iterateSnapshotPair: async (x) => {
+                  expect(x.data).toBeDefined();
+                  expect(x.snapshot).toBeDefined();
+                  expect(x.document).toBeDefined();
+
+                  const key = x.document.key;
+
+                  if (mockUserItemsVisited.has(key)) {
+                    throw new Error('encountered repeat key');
+                  } else {
+                    mockUserItemsVisited.add(key);
+                  }
+                },
+                useCheckpointResult: async (x) => {
+                  if (x.docSnapshots.length > 0) {
+                    expect(x.results[0].snapshots.length).toBeLessThanOrEqual(batchSize);
+                  }
+                },
+                documentAccessor,
+                queryFactory: f.instance.mockItemUserCollectionGroup,
+                constraintsFactory: [] // no constraints
+              });
+
+              expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+          });
+
+          describe('iterateFirestoreDocumentSnapshots()', () => {
+            it('should iterate across all mock users by each snapshot.', async () => {
+              const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+
+              const mockUserItemsVisited = new Set<MockItemUserKey>();
+              const batchSize = 2;
+
+              const result = await iterateFirestoreDocumentSnapshots({
+                batchSize,
+                iterateSnapshot: async (x) => {
+                  const key = x.ref.path;
+
+                  if (mockUserItemsVisited.has(key)) {
+                    throw new Error('encountered repeat key');
+                  } else {
+                    mockUserItemsVisited.add(key);
+                  }
+                },
+                useCheckpointResult: async (x) => {
+                  if (x.docSnapshots.length > 0) {
+                    expect(x.results[0].snapshots.length).toBeLessThanOrEqual(batchSize);
+                  }
+                },
+                queryFactory: f.instance.mockItemUserCollectionGroup,
+                constraintsFactory: [] // no constraints
+              });
+
+              expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+          });
+
+          describe('iterateFirestoreDocumentSnapshotPairBatches()', () => {
+            it('should iterate batches of snapshot pairs.', async () => {
+              const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+              const mockUserItemsVisited = new Set<MockItemUserKey>();
+              const batchSize = 2;
+
+              const result = await iterateFirestoreDocumentSnapshotPairBatches({
+                documentAccessor,
+                batchSize, // use specific batch size
+                iterateSnapshotPairsBatch: async (x) => {
+                  expect(x.length).toBeLessThanOrEqual(batchSize);
+
+                  const pair = x[0];
+                  expect(pair.data).toBeDefined();
+                  expect(pair.snapshot).toBeDefined();
+                  expect(pair.document).toBeDefined();
+                },
+                useCheckpointResult: async (x) => {
+                  x.docSnapshots.forEach((y) => mockUserItemsVisited.add(y.ref.path));
+                },
+                queryFactory: f.instance.mockItemUserCollectionGroup,
+                constraintsFactory: [] // no constraints
+              });
+
+              expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+          });
+
+          describe('iterateFirestoreDocumentSnapshotBatches()', () => {
+            it('should iterate batches of snapshots.', async () => {
+              const mockUserItemsVisited = new Set<MockItemUserKey>();
+              const batchSize = 2;
+
+              const result = await iterateFirestoreDocumentSnapshotBatches({
+                batchSize, // use specific batch size
+                iterateSnapshotBatch: async (x) => {
+                  expect(x.length).toBeLessThanOrEqual(batchSize);
+                },
+                useCheckpointResult: async (x) => {
+                  x.docSnapshots.forEach((y) => mockUserItemsVisited.add(y.ref.path));
+                },
+                queryFactory: f.instance.mockItemUserCollectionGroup,
+                constraintsFactory: [] // no constraints
+              });
+
+              expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+          });
+        });
       });
 
       describe('collection group', () => {

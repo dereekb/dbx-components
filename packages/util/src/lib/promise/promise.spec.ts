@@ -110,6 +110,42 @@ describe('performAsyncTasks()', () => {
 });
 
 describe('performTasksInParallelFunction()', () => {
+  it('should perform all the tasks (sync)', (done) => {
+    let tasksStarted = 0;
+
+    const tasksToRun = 6;
+    const maxParallel = 3;
+
+    const input = range(0, tasksToRun);
+
+    performTasksInParallel(input, {
+      taskFactory: async () => {
+        tasksStarted += 1;
+      },
+      maxParallelTasks: maxParallel
+    }).then(() => {
+      expect(tasksStarted).toBe(tasksToRun);
+      done();
+    });
+  });
+
+  it('should return if no items are present', (done) => {
+    let tasksStarted = 0;
+
+    const tasksToRun = 6;
+    const maxParallel = 3;
+
+    performTasksInParallel([], {
+      taskFactory: async () => {
+        tasksStarted += 1;
+      },
+      maxParallelTasks: maxParallel
+    }).then(() => {
+      expect(tasksStarted).toBe(0);
+      done();
+    });
+  });
+
   it('should throw the first caught error.', (done) => {
     let tasksStarted = 0;
 
@@ -162,6 +198,36 @@ describe('performTasksInParallelFunction()', () => {
     });
   });
 
+  describe('sequential=true', () => {
+    it('should set the maxParallel to 1', (done) => {
+      let tasksStarted = 0;
+
+      const tasksToRun = 6;
+      const maxParallel = 1;
+
+      const input = range(0, tasksToRun);
+
+      let success = false;
+
+      performTasksInParallel(input, {
+        taskFactory: async () => {
+          tasksStarted += 1;
+          return waitForMs(100);
+        },
+        sequential: true,
+        waitBetweenTasks: 50
+      }).then(() => {
+        expect(success).toBe(true);
+        done();
+      });
+
+      waitForMs(50).then(() => {
+        expect(tasksStarted).toBe(maxParallel); // should have started only one of the tasks
+        success = true;
+      });
+    });
+  });
+
   describe('maxParallel=', () => {
     describe('undefined', () => {
       it('should run all of the tasks in parallel at once.', (done) => {
@@ -191,6 +257,37 @@ describe('performTasksInParallelFunction()', () => {
     });
 
     describe('3', () => {
+      describe('with sequential=true', () => {
+        it('should ignore the sequential flag', (done) => {
+          let tasksStarted = 0;
+
+          const tasksToRun = 6;
+          const maxParallel = 3;
+
+          const input = range(0, tasksToRun);
+
+          let success = false;
+
+          performTasksInParallel(input, {
+            taskFactory: async () => {
+              tasksStarted += 1;
+              return waitForMs(100);
+            },
+            sequential: true,
+            maxParallelTasks: maxParallel,
+            waitBetweenTasks: 50
+          }).then(() => {
+            expect(success).toBe(true);
+            done();
+          });
+
+          waitForMs(50).then(() => {
+            expect(tasksStarted).toBe(maxParallel); // should have started only three of the tasks
+            success = true;
+          });
+        });
+      });
+
       it('should run 3 of the tasks in parallel at once.', (done) => {
         let tasksStarted = 0;
 
