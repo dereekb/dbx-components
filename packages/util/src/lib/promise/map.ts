@@ -1,5 +1,5 @@
 import { isPromise } from './is';
-import { PromiseOrValue } from './promise';
+import { PromiseOrValue } from './promise.type';
 
 /**
  * Performs a mapping function on the input PromiseOrValue value.

@@ -1,5 +1,5 @@
 import { copyObject, CopyObjectFunction } from '../object/object';
-import { PromiseOrValue } from '../promise/promise';
+import { PromiseOrValue } from '../promise/promise.type';
 import { ClassType, isNonClassFunction } from '../type';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';

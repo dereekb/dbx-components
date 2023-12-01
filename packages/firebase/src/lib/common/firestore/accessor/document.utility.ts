@@ -1,4 +1,4 @@
-import { AsyncGetterOrValue, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues } from '@dereekb/util';
+import { AsyncGetterOrValue, Maybe, performMakeLoop, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues } from '@dereekb/util';
 import { FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from '../collection';
 import { DocumentDataWithIdAndKey, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocumentData, FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
@@ -48,7 +48,7 @@ export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccesso
 }
 
 export function getDocumentSnapshots<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentSnapshot<FirestoreDocumentData<D>>[]> {
-  return PromiseUtility.runTasksForValues(documents, (x) => x.accessor.get());
+  return runAsyncTasksForValues(documents, (x) => x.accessor.get());
 }
 
 export type FirestoreDocumentSnapshotPair<D extends FirestoreDocument<any>> = {
@@ -61,7 +61,7 @@ export function getDocumentSnapshotPair<D extends FirestoreDocument<any>>(docume
 }
 
 export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotPair<D>[]> {
-  return PromiseUtility.runTasksForValues(documents, getDocumentSnapshotPair);
+  return runAsyncTasksForValues(documents, getDocumentSnapshotPair);
 }
 
 export type FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> = {
@@ -75,13 +75,13 @@ export function getDocumentSnapshotDataPair<D extends FirestoreDocument<any>>(do
 }
 
 export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]> {
-  return PromiseUtility.runTasksForValues(documents, getDocumentSnapshotDataPair);
+  return runAsyncTasksForValues(documents, getDocumentSnapshotDataPair);
 }
 
 export type FirestoreDocumentSnapshotDataTuple<D extends FirestoreDocument<any>> = [D, Maybe<FirestoreDocumentData<D>>];
 
 export function getDocumentSnapshotDataTuples<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataTuple<D>[]> {
-  return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => [document, snapshot.data()]));
+  return runAsyncTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => [document, snapshot.data()]));
 }
 
 export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>>;

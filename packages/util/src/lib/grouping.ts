@@ -1,5 +1,7 @@
 import { PrimativeKey, ReadKeyFunction } from './key';
 import { mapToObject } from './object';
+import { IndexRef } from './value/indexed';
+import { Building } from './value/build';
 import { EqualityComparatorFunction } from './value/comparator';
 import { DecisionFunction } from './value/decision';
 import { Maybe } from './value/maybe.type';
@@ -46,6 +48,8 @@ export interface RestoreOrderParams<T, K extends number | string = number | stri
 }
 
 // MARK: Functions
+export type IndexedBatch<T> = T[] & Readonly<IndexRef>;
+
 /**
  * Batches items from the input array into several batches of a maximum size.
  *
@@ -53,15 +57,19 @@ export interface RestoreOrderParams<T, K extends number | string = number | stri
  * @param batchSize
  * @returns
  */
-export function batch<T>(array: T[], batchSize: number): T[][] {
-  array = [].concat(array as []); // Copy array before splicing it.
-  const batch = [];
+export function batch<T>(input: T[], batchSize: number): IndexedBatch<T>[] {
+  const array: T[] = [...input]; // Copy array before splicing it.
+  const batches: IndexedBatch<T>[] = [];
+  let i = 0;
 
   while (array.length > 0) {
-    batch.push(array.splice(0, batchSize));
+    const batch = array.splice(0, batchSize) as IndexedBatch<T>;
+    (batch as Building<IndexedBatch<T>>).i = i;
+    batches.push(batch);
+    i += 1;
   }
 
-  return batch;
+  return batches;
 }
 
 export interface BatchCount {

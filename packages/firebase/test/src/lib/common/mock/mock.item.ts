@@ -29,7 +29,8 @@ import {
   SystemStateStoredData,
   SystemStateStoredDataConverterMap,
   SystemStateStoredDataFieldConverterConfig,
-  firestoreBitwiseObjectMap
+  firestoreBitwiseObjectMap,
+  FirestoreModelKey
 } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 

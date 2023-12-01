@@ -1,6 +1,6 @@
 import { DbxAuthService } from '@dereekb/dbx-core';
 import { tap, switchMap, BehaviorSubject, Observable, interval, combineLatest, map, exhaustMap, distinctUntilChanged, shareReplay } from 'rxjs';
-import { Initialized, Milliseconds, PromiseUtility } from '@dereekb/util';
+import { Initialized, Milliseconds, runAsyncTasksForValues } from '@dereekb/util';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { lazyFrom, SubscriptionObject, switchMapWhileTrue } from '@dereekb/rxjs';
 import { FirebaseDevelopmentFunctions, ScheduledFunctionDevelopmentFirebaseFunctionListEntry, ScheduledFunctionDevelopmentFirebaseFunctionListResult, ScheduledFunctionDevelopmentFunctionTypeEnum } from '@dereekb/firebase';
@@ -59,7 +59,7 @@ export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
                 exhaustMap(() => {
                   console.log('Running scheduled tasks in order... ', executionOrder);
 
-                  return PromiseUtility.runTasksForValues(executionOrder, (taskName) => this.runScheduledFunction(taskName), { sequential: true, retriesAllowed: 0, retryWait: 0 })
+                  return runAsyncTasksForValues(executionOrder, (taskName) => this.runScheduledFunction(taskName), { sequential: true, retriesAllowed: false })
                     .then(() => true)
                     .catch((e) => {
                       console.log('Failed running scheduled task: ', e);

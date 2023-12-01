@@ -1,4 +1,4 @@
-import { Maybe, PromiseUtility } from '@dereekb/util';
+import { Maybe, performAsyncTasks } from '@dereekb/util';
 import { DocumentReference, Firestore, FirestoreAccessorDriver, FirestoreCollectionName, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
 
 // MARK: Test Accessor
@@ -106,5 +106,5 @@ export type ClearTestFirestoreCollectionFunction = (collectionName: string, real
 export async function clearTestFirestoreContextCollections(context: TestFirestoreContext, clearCollection: ClearTestFirestoreCollectionFunction): Promise<void> {
   const names = context.drivers.firestoreAccessorDriver.getFuzzedCollectionsNameMap();
   const tuples = Array.from(names.entries());
-  await PromiseUtility.performTasks(tuples, ([name, fuzzyPath]) => clearCollection(name, fuzzyPath));
+  await performAsyncTasks(tuples, ([name, fuzzyPath]) => clearCollection(name, fuzzyPath));
 }

@@ -1,6 +1,6 @@
 import { asArray, ArrayOrValue } from '../array/array';
 import { filterMaybeValues } from '../array/array.value';
-import { PromiseOrValue } from '../promise/promise';
+import { PromiseOrValue } from '../promise/promise.type';
 import { build } from './build';
 import { isMaybeNot } from './maybe';
 import { Maybe, MaybeNot } from './maybe.type';
