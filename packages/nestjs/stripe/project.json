@@ -25,7 +25,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/nestjs/stripe"],
+      "outputs": ["{workspaceRoot}/coverage/packages/nestjs/stripe"],
       "options": {
         "jestConfig": "packages/nestjs/stripe/jest.config.ts",
         "passWithNoTests": true

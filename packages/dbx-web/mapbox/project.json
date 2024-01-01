@@ -1,12 +1,13 @@
 {
   "name": "dbx-web-mapbox",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/mapbox/src",
   "prefix": "dereekb",
   "targets": {
     "build-base": {
       "executor": "@nrwl/angular:package",
-      "outputs": ["dist/packages/dbx-web/mapbox"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-web/mapbox"],
       "options": {
         "project": "packages/dbx-web/mapbox/ng-package.json"
       },
@@ -23,7 +24,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/dbx-web/mapbox"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/mapbox"],
       "options": {
         "jestConfig": "packages/dbx-web/mapbox/jest.config.ts",
         "passWithNoTests": true

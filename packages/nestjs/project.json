@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/nestjs"],
+      "outputs": ["{workspaceRoot}/dist/packages/nestjs"],
       "options": {
         "commands": [
           {
@@ -42,7 +42,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/nestjs", "./.reports/jest/nestjs.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/nestjs", "{projectRoot}/.reports/jest/nestjs.junit.xml"],
       "options": {
         "jestConfig": "packages/nestjs/jest.config.ts",
         "passWithNoTests": true

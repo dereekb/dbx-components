@@ -7,7 +7,7 @@
   "targets": {
     "build-base": {
       "executor": "@nrwl/angular:package",
-      "outputs": ["dist/packages/dbx-form/calendar"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-form/calendar"],
       "options": {
         "project": "packages/dbx-form/calendar/ng-package.json"
       },
@@ -24,7 +24,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/dbx-form/calendar"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/calendar"],
       "options": {
         "jestConfig": "packages/dbx-form/calendar/jest.config.ts",
         "passWithNoTests": true

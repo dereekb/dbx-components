@@ -7,7 +7,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/dbx-web", "dist/packages/dbx-web/_index.scss", "dist/packages/dbx-web/LICENSE", "dist/packages/dbx-web/**/*.scss"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-web", "{workspaceRoot}/dist/packages/dbx-web/_index.scss", "{workspaceRoot}/dist/packages/dbx-web/LICENSE", "{workspaceRoot}/dist/packages/dbx-web/**/*.scss"],
       "options": {
         "commands": [
           {
@@ -45,7 +45,7 @@
     },
     "build-base": {
       "executor": "@nrwl/angular:package",
-      "outputs": ["dist/packages/dbx-web"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-web"],
       "options": {
         "project": "packages/dbx-web/ng-package.json"
       },
@@ -61,7 +61,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/dbx-web", "./.reports/jest/dbx-web.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/jest/dbx-web.junit.xml"],
       "options": {
         "jestConfig": "packages/dbx-web/jest.config.ts",
         "passWithNoTests": true

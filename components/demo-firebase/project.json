@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/components/demo-firebase"],
+      "outputs": ["{workspaceRoot}/dist/components/demo-firebase"],
       "options": {
         "command": "npx nx run demo-firebase:build-base",
         "color": true
@@ -31,7 +31,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/components/demo-firebase"],
+      "outputs": ["{workspaceRoot}/coverage/components/demo-firebase"],
       "options": {
         "jestConfig": "components/demo-firebase/jest.config.ts",
         "passWithNoTests": true
@@ -45,7 +45,7 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/components/demo-firebase", "./.reports/jest/firebase.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/components/demo-firebase", "{projectRoot}/.reports/jest/firebase.junit.xml"],
       "options": {
         "jestConfig": "components/demo-firebase/jest.config.ts",
         "passWithNoTests": true

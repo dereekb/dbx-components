@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/date"],
+      "outputs": ["{workspaceRoot}/dist/packages/date"],
       "options": {
         "command": "npx nx run date:build-base",
         "color": true
@@ -32,14 +32,25 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml"],
       "options": {
         "jestConfig": "packages/date/jest.config.ts",
         "passWithNoTests": true
       }
     },
     "test-timezones": {
-      "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml", "./.reports/jest/pacific-auckland.date.junit.xml", "./.reports/jest/america-anchorage.date.junit.xml", "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml", "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/asia-singapore.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"],
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/date",
+        "{projectRoot}/.reports/jest/utc.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-chicago.date.junit.xml",
+        "{projectRoot}/.reports/jest/pacific-auckland.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-new_york.date.junit.xml",
+        "{projectRoot}/.reports/jest/asia-tokyo.date.junit.xml",
+        "{projectRoot}/.reports/jest/asia-singapore.date.junit.xml",
+        "{projectRoot}/.reports/jest/europe-dublic.date.junit.xml"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
@@ -84,7 +95,18 @@
       }
     },
     "test-timezones-local": {
-      "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml", "./.reports/jest/pacific-auckland.date.junit.xml", "./.reports/jest/america-anchorage.date.junit.xml", "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml", "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/asia-singapore.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"],
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/date",
+        "{projectRoot}/.reports/jest/utc.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-chicago.date.junit.xml",
+        "{projectRoot}/.reports/jest/pacific-auckland.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml",
+        "{projectRoot}/.reports/jest/america-new_york.date.junit.xml",
+        "{projectRoot}/.reports/jest/asia-tokyo.date.junit.xml",
+        "{projectRoot}/.reports/jest/asia-singapore.date.junit.xml",
+        "{projectRoot}/.reports/jest/europe-dublic.date.junit.xml"
+      ],
       "executor": "nx:run-commands",
       "options": {
         "commands": [

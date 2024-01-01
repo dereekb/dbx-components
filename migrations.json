@@ -115,14 +115,6 @@
     {
       "version": "15.8.0-beta.0",
       "cli": "nx",
-      "description": "Update jest configs to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
-      "factory": "./src/migrations/update-15-8-0/update-configs-jest-29",
-      "package": "@nrwl/jest",
-      "name": "update-configs-jest-29"
-    },
-    {
-      "version": "15.8.0-beta.0",
-      "cli": "nx",
       "description": "Update jest test files to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
       "factory": "./src/migrations/update-15-8-0/update-tests-jest-29",
       "package": "@nrwl/jest",
@@ -260,20 +252,6 @@
       "factory": "./src/migrations/update-15-9-0/update-file-server-executor",
       "package": "@nrwl/angular",
       "name": "update-file-server-executor"
-    },
-    {
-      "version": "15.0.0",
-      "description": "Since Angular v15, the `RouterLink` contains the logic of the `RouterLinkWithHref` directive. This migration replaces all `RouterLinkWithHref` references with `RouterLink`.",
-      "factory": "./migrations/router-link-with-href/bundle",
-      "package": "@angular/core",
-      "name": "migration-v15-router-link-with-href"
-    },
-    {
-      "version": "15.0.0",
-      "description": "In Angular version 15, the deprecated `relativeLinkResolution` config parameter of the Router is removed. This migration removes all `relativeLinkResolution` fields from the Router config objects.",
-      "factory": "./migrations/relative-link-resolution/bundle",
-      "package": "@angular/core",
-      "name": "migration-v15-relative-link-resolution"
     },
     {
       "version": "15.0.0-0",

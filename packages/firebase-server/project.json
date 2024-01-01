@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/firebase-server"],
+      "outputs": ["{workspaceRoot}/dist/packages/firebase-server"],
       "options": {
         "commands": [
           {
@@ -48,7 +48,7 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/firebase-server", "./.reports/jest/firebase-server.junit.xml"],
+      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server", "{projectRoot}/.reports/jest/firebase-server.junit.xml"],
       "options": {
         "jestConfig": "packages/firebase-server/jest.config.ts",
         "passWithNoTests": true

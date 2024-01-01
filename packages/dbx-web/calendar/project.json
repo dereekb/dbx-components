@@ -1,12 +1,13 @@
 {
   "name": "dbx-web-calendar",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/calendar/src",
   "prefix": "dereekb",
   "targets": {
     "build-base": {
       "executor": "@nrwl/angular:package",
-      "outputs": ["dist/packages/dbx-web/calendar"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-web/calendar"],
       "options": {
         "project": "packages/dbx-web/calendar/ng-package.json"
       },
@@ -23,7 +24,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/dbx-web/calendar"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/calendar"],
       "options": {
         "jestConfig": "packages/dbx-web/calendar/jest.config.ts",
         "passWithNoTests": true

@@ -7,7 +7,7 @@
   "targets": {
     "build-base": {
       "executor": "@nrwl/angular:package",
-      "outputs": ["dist/packages/dbx-form/mapbox"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-form/mapbox"],
       "options": {
         "project": "packages/dbx-form/mapbox/ng-package.json"
       },
@@ -24,7 +24,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/dbx-form/mapbox"],
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/mapbox"],
       "options": {
         "jestConfig": "packages/dbx-form/mapbox/jest.config.ts",
         "passWithNoTests": true
