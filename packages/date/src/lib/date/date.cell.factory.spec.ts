@@ -1,9 +1,8 @@
 import { guessCurrentTimezone, requireCurrentTimezone, timingDateTimezoneUtcNormal } from '@dereekb/date';
 import { range, isOddNumber, RangeInput, MS_IN_MINUTE, TimezoneString, MINUTES_IN_HOUR, MS_IN_HOUR } from '@dereekb/util';
 import { addDays, addHours, addMilliseconds, addMinutes, addSeconds, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
-import { start } from 'repl';
-import { shiftDateCellTimingToTimezoneFunction, DateCell, DateCellTiming, dateCellTiming, dateCellTimingStart, DateCellTimingStartsAt, FullDateCellTiming, isValidDateCellTiming } from './date.cell';
-import { dateCellDayTimingInfoFactory, dateCellIndexRange, dateCellTimingExpansionFactory, dateCellTimingDateFactory, dateCellTimingFromDateCellTimingStartsAtEndRange, dateCellTimingRelativeIndexArrayFactory, dateCellTimingRelativeIndexFactory, dateCellTimingStartDateFactory, dateCellTimingStartsAtDateFactory, getRelativeIndexForDateCellTiming, isDateCellTimingRelativeIndexFactory, updateDateCellTimingWithDateCellTimingEvent } from './date.cell.factory';
+import { shiftDateCellTimingToTimezoneFunction, DateCell, DateCellTiming, dateCellTiming, dateCellTimingStart, DateCellTimingStartsAt, FullDateCellTiming, isValidDateCellTiming, dateCellTimingFinalStartsAtEvent } from './date.cell';
+import { dateCellDayTimingInfoFactory, dateCellIndexRange, dateCellTimingExpansionFactory, dateCellTimingDateFactory, dateCellTimingFromDateCellTimingStartsAtEndRange, dateCellTimingRelativeIndexArrayFactory, dateCellTimingRelativeIndexFactory, dateCellTimingStartDateFactory, dateCellTimingStartsAtDateFactory, getRelativeIndexForDateCellTiming, isDateCellTimingRelativeIndexFactory, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingEndIndex } from './date.cell.factory';
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { DateCellRange, DateCellRangeWithRange } from './date.cell.index';
 import { DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
@@ -116,6 +115,49 @@ describe('dateCellIndexRange()', () => {
         expect(result.maxIndex).toBe(days + daysPastEnd);
       });
     });
+  });
+});
+
+describe('dateCellTimingEndIndex()', () => {
+  it('should return the expected end index.', () => {
+    const days = 5;
+    const start = systemNormalDateToBaseDate(new Date(0)); // 1970-01-01 UTC start of day
+
+    const duration = 60;
+    const timing = dateCellTiming({ startsAt: start, duration }, days);
+
+    const result = dateCellTimingEndIndex(timing);
+    expect(result).toBe(days - 1);
+  });
+
+  it('should return the index of the last startsAt timing', () => {
+    const days = 5;
+    const start = systemNormalDateToBaseDate(new Date(0)); // 1970-01-01 UTC start of day
+
+    const duration = 60;
+    const timing = dateCellTiming({ startsAt: start, duration }, days);
+
+    const result = dateCellTimingEndIndex(timing);
+
+    const factory = dateCellTimingRelativeIndexFactory(timing);
+    const startTime = dateCellTimingFinalStartsAtEvent(factory._timing).startsAt;
+    const expectedFinalIndex = factory(startTime);
+
+    expect(result).toBe(expectedFinalIndex);
+  });
+
+  it('should be one less than the dateCellIndexRange.', () => {
+    const days = 5;
+    const start = systemNormalDateToBaseDate(new Date(0)); // 1970-01-01 UTC start of day
+
+    const duration = 60;
+    const timing = dateCellTiming({ startsAt: start, duration }, days);
+
+    const result = dateCellTimingEndIndex(timing);
+    const indexRange = dateCellIndexRange(timing);
+
+    expect(result).toBeLessThan(indexRange.maxIndex);
+    expect(result).toBe(indexRange.maxIndex - 1);
   });
 });
 

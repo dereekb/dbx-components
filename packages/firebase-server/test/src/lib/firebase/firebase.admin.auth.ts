@@ -315,7 +315,7 @@ export function createTestFirestoreTokenForUserRecord(auth: Auth, userRecord: Us
  * @returns
  */
 export function createEncodedTestFirestoreTokenForUserRecord(auth: Auth, userRecord: UserRecord): Promise<TestEncodedFirestoreToken> {
-  // TODO: Consider replacing createCustomToken, as the custom claims are put into an object called claims in the JWT, instead of spread over.
+  // TODO: Consider replacing createCustomToken, as the custom claims are put into an object called claims in the JWT, instead of spread over. The decodeEncodedCreateCustomTokenResult() function handles this issue, but it may not be expected.
 
   return auth.createCustomToken(userRecord.uid, testFirestoreClaimsFromUserRecord(userRecord));
 }
