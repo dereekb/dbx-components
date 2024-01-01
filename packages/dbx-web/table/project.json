@@ -26,6 +26,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/table"],
       "options": {
+        "tsConfig": "packages/dbx-web/table/tsconfig.lib.json",
         "jestConfig": "packages/dbx-web/table/jest.config.ts",
         "passWithNoTests": true
       }

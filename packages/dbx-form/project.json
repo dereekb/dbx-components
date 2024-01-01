@@ -56,6 +56,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-form", "{projectRoot}/.reports/jest/dbx-form.junit.xml"],
       "options": {
+        "tsConfig": "packages/dbx-form/tsconfig.lib.json",
         "jestConfig": "packages/dbx-form/jest.config.ts",
         "passWithNoTests": true
       }

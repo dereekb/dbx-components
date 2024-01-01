@@ -9,6 +9,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web", "{workspaceRoot}/dist/packages/dbx-web/_index.scss", "{workspaceRoot}/dist/packages/dbx-web/LICENSE", "{workspaceRoot}/dist/packages/dbx-web/**/*.scss"],
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "commands": [
           {
             "description": "build dbx-web production",
@@ -64,6 +65,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/jest/dbx-web.junit.xml"],
       "options": {
+        "tsConfig": "packages/dbx-web/tsconfig.lib.json",
         "jestConfig": "packages/dbx-web/jest.config.ts",
         "passWithNoTests": true
       }

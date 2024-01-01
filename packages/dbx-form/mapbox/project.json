@@ -27,6 +27,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/mapbox"],
       "options": {
+        "tsConfig": "packages/dbx-form/mapbox/tsconfig.lib.json",
         "jestConfig": "packages/dbx-form/mapbox/jest.config.ts",
         "passWithNoTests": true
       }

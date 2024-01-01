@@ -27,6 +27,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/calendar"],
       "options": {
+        "tsConfig": "packages/dbx-form/calendar/tsconfig.lib.json",
         "jestConfig": "packages/dbx-form/calendar/jest.config.ts",
         "passWithNoTests": true
       }

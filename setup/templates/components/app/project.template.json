@@ -31,6 +31,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/ANGULAR_COMPONENTS_FOLDER", "{projectRoot}/.reports/jest/ANGULAR_COMPONENTS_NAME.junit.xml"],
       "options": {
+        "tsConfig": "ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json",
         "jestConfig": "ANGULAR_COMPONENTS_FOLDER/jest.config.ts",
         "passWithNoTests": true
       }

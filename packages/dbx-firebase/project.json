@@ -9,6 +9,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase", "{workspaceRoot}/dist/packages/dbx-firebase/_index.scss", "{workspaceRoot}/dist/packages/dbx-firebase/LICENSE", "{workspaceRoot}/dist/packages/dbx-firebase/**/*.scss", "{workspaceRoot}/dist/packages/dbx-firebase/assets"],
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "commands": [
           {
             "description": "build dbx-firebase production",
@@ -56,6 +57,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "jestConfig": "packages/dbx-firebase/jest.config.ts",
         "passWithNoTests": true
       }
@@ -69,6 +71,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase'"
       }
     },
