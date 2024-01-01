@@ -5,26 +5,27 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/util/test",
         "tsConfig": "packages/util/test/tsconfig.lib.json",
         "packageJson": "packages/util/test/package.json",
         "main": "packages/util/test/src/index.ts",
-        "assets": ["packages/util/test/*.md"]
+        "assets": ["packages/util/test/*.md"],
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/util/test/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/util/test", "{projectRoot}/.reports/jest/util-test.junit.xml"],
       "options": {
         "jestConfig": "packages/util/test/jest.config.ts",

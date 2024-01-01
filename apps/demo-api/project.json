@@ -13,14 +13,16 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/node:webpack",
+      "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
         "tsConfig": "apps/demo-api/tsconfig.app.json",
         "assets": ["apps/demo-api/src/assets"],
-        "generatePackageJson": true
+        "generatePackageJson": true,
+        "compiler": "tsc",
+        "target": "node"
       },
       "configurations": {
         "production": {
@@ -64,7 +66,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/demo-api/**/*.ts"]
@@ -77,7 +79,7 @@
       }
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
       "options": {
         "jestConfig": "apps/demo-api/jest.config.ts",

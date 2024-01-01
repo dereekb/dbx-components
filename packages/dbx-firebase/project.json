@@ -36,10 +36,11 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/angular:package",
+      "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase"],
       "options": {
-        "project": "packages/dbx-firebase/ng-package.json"
+        "project": "packages/dbx-firebase/ng-package.json",
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "configurations": {
         "production": {
@@ -52,7 +53,7 @@
       "defaultConfiguration": "production"
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
         "jestConfig": "packages/dbx-firebase/jest.config.ts",
@@ -72,7 +73,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["packages/dbx-firebase/src/**/*.ts", "packages/dbx-firebase/src/**/*.html"]
       }

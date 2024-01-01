@@ -23,25 +23,26 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/util",
         "tsConfig": "packages/util/tsconfig.lib.json",
         "packageJson": "packages/util/package.json",
         "main": "packages/util/src/index.ts",
-        "assets": ["packages/util/*.md", "LICENSE"]
+        "assets": ["packages/util/*.md", "LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/util/src/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/util", "{projectRoot}/.reports/jest/util.junit.xml"],
       "options": {
         "jestConfig": "packages/util/jest.config.ts",

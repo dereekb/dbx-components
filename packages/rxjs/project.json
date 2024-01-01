@@ -13,25 +13,26 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/rxjs",
         "tsConfig": "packages/rxjs/tsconfig.lib.json",
         "packageJson": "packages/rxjs/package.json",
         "main": "packages/rxjs/src/index.ts",
-        "assets": ["packages/rxjs/*.md", "LICENSE"]
+        "assets": ["packages/rxjs/*.md", "LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/rxjs/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/rxjs", "{projectRoot}/.reports/jest/rxjs.junit.xml"],
       "options": {
         "jestConfig": "packages/rxjs/jest.config.ts",

@@ -13,24 +13,25 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/browser",
         "main": "packages/browser/src/index.ts",
         "tsConfig": "packages/browser/tsconfig.lib.json",
-        "assets": ["packages/browser/*.md", "LICENSE"]
+        "assets": ["packages/browser/*.md", "LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/browser/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/browser"],
       "options": {
         "jestConfig": "packages/browser/jest.config.ts",

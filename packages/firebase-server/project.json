@@ -23,18 +23,19 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/firebase-server",
         "tsConfig": "packages/firebase-server/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/package.json",
         "main": "packages/firebase-server/src/index.ts",
-        "assets": ["packages/firebase-server/*.md", "LICENSE"]
+        "assets": ["packages/firebase-server/*.md", "LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/firebase-server/src/**/*.ts"]
@@ -47,7 +48,7 @@
       }
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/firebase-server", "{projectRoot}/.reports/jest/firebase-server.junit.xml"],
       "options": {
         "jestConfig": "packages/firebase-server/jest.config.ts",

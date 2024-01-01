@@ -14,10 +14,11 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/angular:package",
+      "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
-        "project": "components/demo-components/ng-package.json"
+        "project": "components/demo-components/ng-package.json",
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "configurations": {
         "production": {
@@ -30,7 +31,7 @@
       "defaultConfiguration": "production"
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/components/demo-components"],
       "options": {
         "jestConfig": "components/demo-components/jest.config.ts",
@@ -38,7 +39,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["components/demo-components/**/*.ts", "components/demo-components/**/*.html"]
       }

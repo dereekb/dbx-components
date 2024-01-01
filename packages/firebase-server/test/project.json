@@ -5,14 +5,15 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/firebase-server/test",
         "tsConfig": "packages/firebase-server/test/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/test/package.json",
         "main": "packages/firebase-server/test/src/index.ts",
-        "assets": []
+        "assets": [],
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "dependsOn": []
     },
@@ -23,7 +24,7 @@
       }
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/test", "{projectRoot}/.reports/jest/firebase-server-test.junit.xml"],
       "options": {
         "jestConfig": "packages/firebase-server/test/jest.config.ts",
@@ -31,7 +32,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/firebase-server/test/**/*.ts"]

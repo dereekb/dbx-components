@@ -1,5 +1,5 @@
 // @ts-nocheck
-const nxPreset = require('@nrwl/jest/preset');
+const nxPreset = require('@nx/jest/preset');
 const isCI = require('is-ci');
 const { pathsToModuleNameMapper } = require('ts-jest');
 const { paths } = require('./tsconfig.base.json').compilerOptions;
@@ -65,7 +65,7 @@ module.exports = {
 
   moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   moduleNameMapper: pathsToModuleNameMapper(paths, { prefix: `${rootPath}/` }), // use to resolve packages in the project
-  resolver: `${rootPath}/jest.resolver.js`, // '@nrwl/jest/plugins/resolver',
+  resolver: `${rootPath}/jest.resolver.js`, // '@nx/jest/plugins/resolver',
 
   transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
 

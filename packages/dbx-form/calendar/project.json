@@ -6,10 +6,11 @@
   "prefix": "dereekb",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/angular:package",
+      "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-form/calendar"],
       "options": {
-        "project": "packages/dbx-form/calendar/ng-package.json"
+        "project": "packages/dbx-form/calendar/ng-package.json",
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "configurations": {
         "production": {
@@ -23,7 +24,7 @@
       "dependsOn": []
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-form/calendar"],
       "options": {
         "jestConfig": "packages/dbx-form/calendar/jest.config.ts",
@@ -31,7 +32,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["packages/dbx-form/calendar/**/*.ts", "packages/dbx-form/calendar/**/*.html"]
       }

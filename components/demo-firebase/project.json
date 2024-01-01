@@ -13,24 +13,25 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/components/demo-firebase",
         "main": "components/demo-firebase/src/index.ts",
         "tsConfig": "components/demo-firebase/tsconfig.lib.json",
-        "assets": ["components/demo-firebase/*.md"]
+        "assets": ["components/demo-firebase/*.md"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["components/demo-firebase/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/components/demo-firebase"],
       "options": {
         "jestConfig": "components/demo-firebase/jest.config.ts",
@@ -44,7 +45,7 @@
       }
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/components/demo-firebase", "{projectRoot}/.reports/jest/firebase.junit.xml"],
       "options": {
         "jestConfig": "components/demo-firebase/jest.config.ts",

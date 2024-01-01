@@ -11,7 +11,7 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "FIREBASE_COMPONENTS_DIST_FOLDER",
@@ -21,14 +21,14 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["FIREBASE_COMPONENTS_FOLDER/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/FIREBASE_COMPONENTS_FOLDER"],
       "options": {
         "jestConfig": "FIREBASE_COMPONENTS_FOLDER/jest.config.ts",
@@ -43,11 +43,8 @@
       }
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/FIREBASE_COMPONENTS_FOLDER",
-        "{projectRoot}/.reports/jest/FIREBASE_COMPONENTS_NAME.junit.xml"
-      ],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/FIREBASE_COMPONENTS_FOLDER", "{projectRoot}/.reports/jest/FIREBASE_COMPONENTS_NAME.junit.xml"],
       "options": {
         "jestConfig": "FIREBASE_COMPONENTS_FOLDER/jest.config.ts",
         "passWithNoTests": true

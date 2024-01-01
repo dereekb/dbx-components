@@ -1,8 +1,9 @@
 {
   "root": true,
   "ignorePatterns": ["**/*"],
-  "plugins": ["@nrwl/nx", "unused-imports", "import"],
-  "overrides": [{
+  "plugins": ["@nx", "unused-imports", "import"],
+  "overrides": [
+    {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
         "no-unused-vars": "warn",
@@ -19,21 +20,24 @@
             ]
           }
         ],
-        "@nrwl/nx/enforce-module-boundaries": ["off",
+        "@nx/enforce-module-boundaries": [
+          "off",
           {
             "enforceBuildableLibDependency": true,
             "allow": [],
-            "depConstraints": [{
-              "sourceTag": "*",
-              "onlyDependOnLibsWithTags": ["*"]
-            }]
+            "depConstraints": [
+              {
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": ["*"]
+              }
+            ]
           }
         ]
       }
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nrwl/nx/typescript"],
+      "extends": ["plugin:@nx/typescript"],
       "rules": {
         "@typescript-eslint/no-non-null-assertion": "warn",
         "@typescript-eslint/no-inferrable-types": "off"
@@ -41,7 +45,7 @@
     },
     {
       "files": ["*.spec.ts", "*.spec.tsx"],
-      "extends": ["plugin:@nrwl/nx/typescript"],
+      "extends": ["plugin:@nx/typescript"],
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
@@ -50,7 +54,7 @@
     },
     {
       "files": ["*.js", "*.jsx"],
-      "extends": ["plugin:@nrwl/nx/javascript"],
+      "extends": ["plugin:@nx/javascript"],
       "rules": {}
     }
   ]

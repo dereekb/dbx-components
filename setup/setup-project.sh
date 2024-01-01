@@ -185,21 +185,21 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
 # temporary: install jasmine-marbles@^0.9.2 explicitly due to dependency resolution issue
-npm install -D @nrwl/nest@$NX_VERSION jasmine-marbles@^0.9.2
-npx -y nx@$NX_VERSION g @nrwl/nest:app $API_APP_NAME
+npm install -D @nx/nest@$NX_VERSION jasmine-marbles@^0.9.2
+npx -y nx@$NX_VERSION g @nx/nest:app $API_APP_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
-npx -y nx@$NX_VERSION g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
+npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
-npm install -D @nrwl/node@$NX_VERSION
-npx -y nx@$NX_VERSION g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
+npm install -D @nx/node@$NX_VERSION
+npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
@@ -414,7 +414,7 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing specific angular version"
-npm install -D @nrwl/angular@$NX_VERSION jest-preset-angular@12.2.3 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
+npm install -D @nx/angular@$NX_VERSION jest-preset-angular@12.2.3 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
 npm install @angular/fire@^7.4.1 @angular/flex-layout@14.0.0-beta.41 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @angular/flex-layout dependencies here are, as install_local ignores any @angular prefix
 

@@ -5,26 +5,27 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/util/fetch",
         "tsConfig": "packages/util/fetch/tsconfig.lib.json",
         "packageJson": "packages/util/fetch/package.json",
         "main": "packages/util/fetch/src/index.ts",
-        "assets": ["packages/util/fetch/*.md"]
+        "assets": ["packages/util/fetch/*.md"],
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/util/fetch/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/util/fetch", "{projectRoot}/.reports/jest/util-fetch.junit.xml"],
       "options": {
         "jestConfig": "packages/util/fetch/jest.config.ts",

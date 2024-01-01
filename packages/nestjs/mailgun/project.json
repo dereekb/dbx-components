@@ -5,26 +5,27 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/nestjs/mailgun",
         "tsConfig": "packages/nestjs/mailgun/tsconfig.lib.json",
         "packageJson": "packages/nestjs/mailgun/package.json",
         "main": "packages/nestjs/mailgun/src/index.ts",
-        "assets": ["LICENSE"]
+        "assets": ["LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/nestjs/mailgun/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/nestjs/mailgun"],
       "options": {
         "jestConfig": "packages/nestjs/mailgun/jest.config.ts",

@@ -5,26 +5,27 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/nestjs/stripe",
         "tsConfig": "packages/nestjs/stripe/tsconfig.lib.json",
         "packageJson": "packages/nestjs/stripe/package.json",
         "main": "packages/nestjs/stripe/src/index.ts",
-        "assets": ["LICENSE"]
+        "assets": ["LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/nestjs/stripe/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/nestjs/stripe"],
       "options": {
         "jestConfig": "packages/nestjs/stripe/jest.config.ts",

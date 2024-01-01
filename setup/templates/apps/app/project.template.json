@@ -86,7 +86,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "ANGULAR_APP_FOLDER/src/**/*.ts",
@@ -95,7 +95,7 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": [
         "{workspaceRoot}/coverage/ANGULAR_APP_FOLDER",
         "{projectRoot}/.reports/jest/ANGULAR_APP_NAME.junit.xml"

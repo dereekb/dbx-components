@@ -23,10 +23,11 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/angular:package",
+      "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-analytics"],
       "options": {
-        "project": "packages/dbx-analytics/ng-package.json"
+        "project": "packages/dbx-analytics/ng-package.json",
+        "updateBuildableProjectDepsInPackageJson": true
       },
       "configurations": {
         "production": {
@@ -39,7 +40,7 @@
       "defaultConfiguration": "production"
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-analytics", "{projectRoot}/.reports/jest/dbx-analytics.junit.xml"],
       "options": {
         "jestConfig": "packages/dbx-analytics/jest.config.ts",
@@ -47,7 +48,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["packages/dbx-analytics/src/**/*.ts", "packages/dbx-analytics/src/**/*.html"]
       }

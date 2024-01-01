@@ -23,25 +23,26 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/nestjs",
         "tsConfig": "packages/nestjs/tsconfig.lib.json",
         "packageJson": "packages/nestjs/package.json",
         "main": "packages/nestjs/src/index.ts",
-        "assets": ["packages/nestjs/*.md", "LICENSE"]
+        "assets": ["packages/nestjs/*.md", "LICENSE"],
+        "updateBuildableProjectDepsInPackageJson": true
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/nestjs/src/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/nestjs", "{projectRoot}/.reports/jest/nestjs.junit.xml"],
       "options": {
         "jestConfig": "packages/nestjs/jest.config.ts",
