@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatLegacyInputModule } from '@angular/material/legacy-input';
+import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxDateTimeFieldComponent } from './datetime.field.component';
 import { DbxDatePipeModule, DbxValuePipeModule } from '@dereekb/dbx-core';
@@ -22,9 +22,9 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
   imports: [
     CommonModule,
     FormsModule,
-    MatLegacyInputModule,
+    MatInputModule,
     MatDividerModule,
-    MatLegacyFormFieldModule,
+    MatFormFieldModule,
     DbxButtonModule,
     MatButtonModule,
     MatDatepickerModule,

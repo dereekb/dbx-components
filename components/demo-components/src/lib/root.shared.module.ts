@@ -34,11 +34,11 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatLegacyAutocompleteModule } from '@angular/material/legacy-autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatLegacyCardModule } from '@angular/material/legacy-card';
 import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
-import { MatLegacyInputModule } from '@angular/material/legacy-input';
 import { MatLegacyListModule } from '@angular/material/legacy-list';
 import { MatLegacyTabsModule } from '@angular/material/legacy-tabs';
 import { OverlayModule } from '@angular/cdk/overlay';
@@ -86,12 +86,12 @@ const ANGULAR_MATERIAL_MODULES = [
   MatProgressBarModule,
   MatProgressSpinnerModule,
   MatMenuModule,
+  MatInputModule,
+  MatAutocompleteModule,
+  MatFormFieldModule,
   // TODO: Update/Replace Legacy Angular Material
-  MatLegacyAutocompleteModule,
   MatLegacyCardModule,
   MatLegacyChipsModule,
-  MatLegacyFormFieldModule,
-  MatLegacyInputModule,
   MatLegacyListModule,
   MatLegacyTabsModule,
   OverlayModule,

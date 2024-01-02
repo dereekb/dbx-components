@@ -2,8 +2,8 @@ import { DbxTextModule } from '@dereekb/dbx-web';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
-import { MatLegacyInputModule } from '@angular/material/legacy-input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { NgxEditorModule } from 'ngx-editor';
 import { DbxTextEditorFieldComponent } from './texteditor.field.component';
@@ -15,8 +15,8 @@ import { DbxTextEditorFieldComponent } from './texteditor.field.component';
     FormsModule,
     ReactiveFormsModule,
     NgxEditorModule,
-    MatLegacyFormFieldModule,
-    MatLegacyInputModule,
+    MatFormFieldModule,
+    MatInputModule,
     FormlyModule.forChild({
       types: [{ name: 'texteditor', component: DbxTextEditorFieldComponent }]
     })

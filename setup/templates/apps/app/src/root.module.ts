@@ -11,7 +11,7 @@ import { RootAppModule } from './app/app.module';
 import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
-import { MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/legacy-form-field';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { RootFirebaseModule } from './root.firebase.module';
 import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 import { StoreModule } from '@ngrx/store';
@@ -142,7 +142,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       suffixes: new Set(['dark'])
     }
   }, {
-    provide: MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS,
+    provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
     useValue: {
       floatLabel: 'always'
     }

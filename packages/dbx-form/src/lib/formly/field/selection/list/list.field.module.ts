@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyAutocompleteModule } from '@angular/material/legacy-autocomplete';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatLegacyInputModule } from '@angular/material/legacy-input';
+import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
@@ -21,10 +21,10 @@ import { MatDividerModule } from '@angular/material/divider';
     FormsModule,
     MatDividerModule,
     MatButtonModule,
-    MatLegacyInputModule,
-    MatLegacyFormFieldModule,
+    MatInputModule,
+    MatFormFieldModule,
     ReactiveFormsModule,
-    MatLegacyAutocompleteModule,
+    MatAutocompleteModule,
     MatIconModule,
     DbxInjectionComponentModule,
     DbxListLayoutModule,

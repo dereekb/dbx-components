@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DbxFormMapboxZoomFieldComponent } from './zoom.field.component';
 import { FormlyModule } from '@ngx-formly/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyInputModule } from '@angular/material/legacy-input';
+import { MatInputModule } from '@angular/material/input';
 import { DbxTextModule } from '@dereekb/dbx-web';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,7 +19,7 @@ import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
     DbxMapboxModule,
     FormsModule,
     ReactiveFormsModule,
-    MatLegacyInputModule,
+    MatInputModule,
     FormlyModule.forChild({
       types: [{ name: 'mapbox-zoom-picker', component: DbxFormMapboxZoomFieldComponent, wrappers: ['style', 'form-field'] }]
     }),

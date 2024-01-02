@@ -1,6 +1,6 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { MatAutocompleteSelectedEvent } from '@angular/material/legacy-autocomplete';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { map, shareReplay, skipWhile, distinctUntilChanged } from 'rxjs';
 import { tapDetectChanges } from '@dereekb/dbx-core';

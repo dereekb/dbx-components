@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatLegacyInputModule } from '@angular/material/legacy-input';
+import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxDatePipeModule } from '@dereekb/dbx-core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -21,9 +21,9 @@ import { DbxActionModule, DbxButtonModule, DbxLoadingModule } from '@dereekb/dbx
   imports: [
     CommonModule,
     FormsModule,
-    MatLegacyInputModule,
+    MatInputModule,
     MatDividerModule,
-    MatLegacyFormFieldModule,
+    MatFormFieldModule,
     MatSelectModule,
     MatButtonModule,
     MatDatepickerModule,

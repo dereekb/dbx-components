@@ -44,7 +44,7 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
         <mgl-map dbxMapboxMap></mgl-map>
       </div>
       <div class="dbx-mapbox-input-field-input">
-        <mat-form-field class="dbx-mapbox-input-field-input-field" appearance="standard">
+        <mat-form-field class="dbx-mapbox-input-field-input-field">
           <mat-label>Zoom Level</mat-label>
           <input type="number" matInput [min]="minZoom" [max]="maxZoom" [step]="zoomStep" [placeholder]="placeholder" [formControl]="formControl" />
         </mat-form-field>

@@ -9,7 +9,7 @@ import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from
 import { DateRange, TimezoneString, isSameDateCellScheduleDateRange, DateCellScheduleDateFilterConfig, DateCellScheduleDayCode, DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
-import { MatFormFieldAppearance } from '@angular/material/legacy-form-field';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 

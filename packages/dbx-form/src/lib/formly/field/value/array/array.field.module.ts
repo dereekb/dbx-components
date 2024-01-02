@@ -3,7 +3,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormRepeatArrayTypeComponent } from './array.field.component';
 import { DbxButtonModule, DbxSectionLayoutModule, DbxBarLayoutModule } from '@dereekb/dbx-web';
@@ -13,7 +13,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 @NgModule({
   imports: [
     CommonModule,
-    MatLegacyFormFieldModule,
+    MatFormFieldModule,
     ReactiveFormsModule,
     MatDividerModule,
     MatButtonModule,

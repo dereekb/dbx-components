@@ -14,7 +14,7 @@ import { DbxScheduleSelectionCalendarDatePopoverComponent } from './calendar.sch
 import { DbxScheduleSelectionCalendarDatePopoverContentComponent } from './calendar.schedule.selection.popover.content.component';
 import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.schedule.selection.range.component';
 import { DbxCalendarModule } from '@dereekb/dbx-web/calendar';
-import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './calendar.schedule.selection.days.form.component';
 import { DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
@@ -56,7 +56,7 @@ const declarations = [
     MatButtonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatLegacyFormFieldModule,
+    MatFormFieldModule,
     MatButtonToggleModule,
     DbxButtonModule,
     MatDatepickerModule,
