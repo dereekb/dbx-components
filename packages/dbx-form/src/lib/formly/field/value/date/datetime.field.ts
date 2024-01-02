@@ -34,7 +34,7 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
     type: 'datetime',
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
-      appearance: 'standard',
+      // appearance: 'standard', // TODO: Standard no longer allowed.
       dateLabel,
       timeLabel,
       allDayLabel,
