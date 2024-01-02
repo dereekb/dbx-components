@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxPhoneFieldComponent } from './phone.field.component';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
 import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
 

@@ -6,7 +6,7 @@ import { DbxActionModule, DbxButtonModule, DbxContentLayoutModule, DbxDialogInte
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatButtonModule } from '@angular/material/button';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxScheduleSelectionCalendarComponent } from './calendar.schedule.selection.component';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
 import { DbxScheduleSelectionCalendarDateDaysComponent } from './calendar.schedule.selection.days.component';

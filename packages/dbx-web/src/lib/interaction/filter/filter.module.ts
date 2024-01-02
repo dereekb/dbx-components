@@ -6,7 +6,7 @@ import { DbxPopoverInteractionModule } from '../popover/popover.module';
 import { DbxFilterPopoverComponent } from './filter.popover.component';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxFilterWrapperComponent } from './filter.wrapper.component';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxCoreFilterModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxButtonModule } from '../../button';
 import { DbxPresetFilterListComponent } from './filter.preset.list.component';
