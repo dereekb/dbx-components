@@ -41,11 +41,11 @@
     padding: 4px;
 
     // Remove padding from form
-    .mat-form-field-wrapper {
+    .mat-mdc-form-field-wrapper {
       padding-bottom: 6px;
     }
 
-    .mat-form-field-infix {
+    .mat-mdc-form-field-infix {
       padding: 0 !important;
       border: none !important;
     }
@@ -54,7 +54,7 @@
   .dbx-schedule-selection-calendar-date-range-field {
     width: 100%;
 
-    &.mat-form-field-type-mat-date-range-input .mat-form-field-infix {
+    &.mat-mdc-form-field-type-mat-date-range-input .mat-mdc-form-field-infix {
       display: flex;
 
       .mat-date-range-input {

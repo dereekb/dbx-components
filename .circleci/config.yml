@@ -5,14 +5,14 @@ defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
   docker:
-    - image: cimg/node:16.18
+    - image: cimg/node:18.19
 
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
 orbs:
   nx: nrwl/nx@1.6.2
-  node: circleci/node@5.0.2
-  snyk: snyk/snyk@1.2.3
+  node: circleci/node@5.1.1
+  snyk: snyk/snyk@2.0.2
 jobs:
   build:
     <<: *defaults

@@ -8,8 +8,8 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
 @mixin core() {
   .dbx-mat-form-field-disable-underline {
     > formly-wrapper-mat-form-field {
-      > mat-form-field.mat-form-field {
-        > .mat-form-field-wrapper > .mat-form-field-underline {
+      > mat-form-field.mat-mdc-form-field {
+        > .mat-mdc-form-field-wrapper > .mat-mdc-form-field-underline {
           display: none;
         }
       }

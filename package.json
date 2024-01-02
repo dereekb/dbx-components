@@ -70,7 +70,6 @@
     "ngx-infinite-scroll": "^16.0.0",
     "ngx-mapbox-gl": "^10.0.0",
     "ngx-mat-intl-tel-input": "^5.0.0",
-    "node-fetch": "~2.6.7",
     "reflect-metadata": "^0.1.13",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxfire": "^6.0.3",

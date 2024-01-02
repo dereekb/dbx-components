@@ -29,12 +29,13 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
   const { key = 'date', dateLabel, timeLabel, allDayLabel, atTimeLabel, timeDate, timezone, showTimezone, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, pickerConfig, getConfigObs, getSyncFieldsObs, hideDatePicker, hideDateHint, timeOnly = false, presets, materialFormField } = config;
 
+  const classGetter = 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper';
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'datetime',
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
-      // appearance: 'standard', // TODO: Standard no longer allowed.
+      classGetter,
       dateLabel,
       timeLabel,
       allDayLabel,
@@ -56,9 +57,7 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
     })
   });
 
-  return styleWrapper(fieldConfig, {
-    classGetter: 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper'
-  });
+  return fieldConfig;
 }
 
 export type DateDateRangeFieldDateConfig = Omit<DateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
@@ -165,11 +164,13 @@ export interface FixedDateRangeFieldConfig extends LabeledFieldConfig, Descripti
 export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> = {}) {
   const { key = 'dateRange', dateRangeInput, pickerConfig, timezone, selectionMode, showTimezone, valueMode, fullDayInUTC, presets, showRangeInput, materialFormField } = config;
 
+  const classGetter = 'dbx-mat-form-field-disable-underline dbx-form-fixed-date-range-field-wrapper';
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'fixeddaterange',
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
+      classGetter,
       dateRangeInput,
       pickerConfig,
       valueMode,
@@ -182,7 +183,5 @@ export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> =
     })
   });
 
-  return styleWrapper(fieldConfig, {
-    classGetter: 'dbx-mat-form-field-disable-underline dbx-form-fixed-date-range-field-wrapper'
-  });
+  return fieldConfig;
 }
