@@ -6,7 +6,7 @@ import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
 import { Maybe } from '@dereekb/util';
 import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, map, shareReplay, combineLatest, EMPTY } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
-import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatFormFieldDefaultOptions, MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/legacy-form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { DateFilterFn, MatDateRangePicker } from '@angular/material/datepicker';
 
@@ -124,7 +124,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
     shareReplay(1)
   );
 
-  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, @Inject(MAT_FORM_FIELD_DEFAULT_OPTIONS) readonly matFormFieldDefaultOptions: MatFormFieldDefaultOptions) {}
+  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, @Inject(MAT_LEGACY_FORM_FIELD_DEFAULT_OPTIONS) readonly matFormFieldDefaultOptions: MatFormFieldDefaultOptions) {}
 
   ngOnInit(): void {
     this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.currentInputRange$.subscribe((x) => {

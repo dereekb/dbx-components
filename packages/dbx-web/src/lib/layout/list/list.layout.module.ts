@@ -2,7 +2,7 @@ import { MatRippleModule } from '@angular/material/core';
 import { DbxRouterAnchorModule } from '../../router/layout/anchor/anchor.module';
 import { DbxLoadingModule } from '../../loading/loading.module';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
+import { MatLegacyListModule } from '@angular/material/legacy-list';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
@@ -18,7 +18,7 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxListItemIsSelectedModifierDirective } from './list.view.value.modifier.selection.directive';
 
 @NgModule({
-  imports: [CommonModule, MatRippleModule, FlexLayoutModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatListModule, MatIconModule],
+  imports: [CommonModule, MatRippleModule, FlexLayoutModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatLegacyListModule, MatIconModule],
   declarations: [
     //
     DbxListComponent,

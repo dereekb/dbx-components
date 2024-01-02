@@ -1,5 +1,5 @@
 import { Directive, EventEmitter, Output } from '@angular/core';
-import { MatSelectionListChange } from '@angular/material/list';
+import { MatSelectionListChange } from '@angular/material/legacy-list';
 import { ListSelectionState, ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';
 

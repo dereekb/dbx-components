@@ -2,9 +2,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabsModule } from '@angular/material/legacy-tabs';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatLegacyMenuModule } from '@angular/material/legacy-menu';
 import { DbxNavbarComponent } from './navbar.component';
 import { DbxIconButtonModule } from '../../../button';
 
@@ -16,7 +16,7 @@ import { DbxIconButtonModule } from '../../../button';
     MatTabsModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule,
+    MatLegacyMenuModule,
     DbxRouterAnchorModule
   ],
   declarations: [DbxNavbarComponent],

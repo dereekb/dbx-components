@@ -1,4 +1,4 @@
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatToolbarModule } from '@angular/material/legacy-toolbar';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxFlagComponent } from './flag.component';

@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatListModule } from '@angular/material/list';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatLegacyAutocompleteModule } from '@angular/material/legacy-autocomplete';
+import { MatLegacyListModule } from '@angular/material/legacy-list';
+import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
+import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { MatLegacyInputModule } from '@angular/material/legacy-input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxSearchableChipFieldComponent } from './searchable.chip.field.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,14 +23,14 @@ import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule
     DbxButtonModule,
     FormsModule,
     MatButtonModule,
-    MatInputModule,
-    MatFormFieldModule,
+    MatLegacyInputModule,
+    MatLegacyFormFieldModule,
     ReactiveFormsModule,
-    MatAutocompleteModule,
-    MatListModule,
+    MatLegacyAutocompleteModule,
+    MatLegacyListModule,
     DbxDatePipeModule,
     DbxRouterAnchorModule,
-    MatChipsModule,
+    MatLegacyChipsModule,
     MatIconModule,
     DbxInjectionComponentModule,
     FormlyModule.forChild({

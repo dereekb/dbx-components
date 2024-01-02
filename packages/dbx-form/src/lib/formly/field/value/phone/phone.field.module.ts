@@ -1,11 +1,11 @@
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatLegacyAutocompleteModule } from '@angular/material/legacy-autocomplete';
+import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { MatLegacyInputModule } from '@angular/material/legacy-input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxPhoneFieldComponent } from './phone.field.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
@@ -15,12 +15,12 @@ import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
 @NgModule({
   imports: [
     CommonModule,
-    MatInputModule,
-    MatFormFieldModule,
+    MatLegacyInputModule,
+    MatLegacyFormFieldModule,
     FormsModule,
     ReactiveFormsModule,
-    MatAutocompleteModule,
-    MatChipsModule,
+    MatLegacyAutocompleteModule,
+    MatLegacyChipsModule,
     MatIconModule,
     FlexLayoutModule,
     FormlyMatFormFieldModule,

@@ -5,7 +5,7 @@ import { Maybe } from '@dereekb/util';
 import { dbxColorBackground, DbxThemeColor } from '@dereekb/dbx-web';
 import { ResizedEvent } from 'angular-resize-event';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { MatDrawerContainer } from '@angular/material/sidenav';
+import { MatDrawerContainer } from '@angular/material/legacy-sidenav';
 import { MapboxEaseTo } from './mapbox';
 
 export type DbxMapboxLayoutSide = 'left' | 'right';

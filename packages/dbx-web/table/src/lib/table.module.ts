@@ -1,6 +1,6 @@
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule } from '@angular/material/legacy-table';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DbxTableItemHeaderComponent } from './table.item.header.component';

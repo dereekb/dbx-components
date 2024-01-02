@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
+import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { MatLegacyInputModule } from '@angular/material/legacy-input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxDatePipeModule } from '@dereekb/dbx-core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatLegacyMenuModule } from '@angular/material/legacy-menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFormSourceSelectFieldComponent } from './sourceselect.field.component';
 import { MatSelectModule } from '@angular/material/select';
@@ -21,20 +21,20 @@ import { DbxActionModule, DbxButtonModule, DbxLoadingModule } from '@dereekb/dbx
   imports: [
     CommonModule,
     FormsModule,
-    MatInputModule,
+    MatLegacyInputModule,
     MatDividerModule,
-    MatFormFieldModule,
+    MatLegacyFormFieldModule,
     MatSelectModule,
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatMenuModule,
+    MatLegacyMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,
     DbxLoadingModule,
     DbxButtonModule,
     DbxActionModule,
-    MatChipsModule,
+    MatLegacyChipsModule,
     MatIconModule,
     FlexLayoutModule,
     FormlyModule.forChild({

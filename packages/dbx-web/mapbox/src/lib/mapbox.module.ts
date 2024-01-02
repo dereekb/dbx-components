@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DbxMapboxMapDirective } from './mapbox.store.map.directive';
 import { DbxMapboxConfig } from './mapbox.service';
 import { DbxMapboxLayoutComponent } from './mapbox.layout.component';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenavModule } from '@angular/material/legacy-sidenav';
 import { DbxMapboxLayoutDrawerComponent } from './mapbox.layout.drawer.component';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
