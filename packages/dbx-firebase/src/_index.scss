@@ -3,6 +3,7 @@
 
 // Structural
 @forward './lib/style/core' show core;
+@forward './lib/style/all-typography' show all-component-typographies;
 
 // Config
 @forward './lib/style/config' show define-dbx-firebase-theme-config, get-dbx-firebase-theme-config;

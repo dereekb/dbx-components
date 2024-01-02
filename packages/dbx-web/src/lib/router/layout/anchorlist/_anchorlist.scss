@@ -70,7 +70,7 @@ $active-child-item-left-padding: 5px;
   }
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
   .dbx-anchor-list.mat-nav-list {
     .mat-list-item .mat-list-icon {
       font-size: 28px;

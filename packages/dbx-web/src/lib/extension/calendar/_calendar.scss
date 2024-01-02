@@ -206,7 +206,7 @@ $calendar-content-border-consideration: 2px;
   #{calendar.$cal-gradient-var}: inset 0 0 10px 0 rgba($background-color, 0.2);
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

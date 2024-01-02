@@ -215,7 +215,7 @@ $scroll-content-bottom-padding: 42px;
   }
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

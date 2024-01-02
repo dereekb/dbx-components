@@ -4,10 +4,6 @@
 @use 'dbx-form/src/index' as dbx-form;
 @use './variables';
 
-$app-typography-config: mat.define-typography-config(
-  $font-family: 'Fira Sans'
-);
-
 $opmore-navy: #1c3454;
 $opmore-pink: #ec4565;
 $opmore-white: #fff;
@@ -84,8 +80,9 @@ $doc-mat-theme: mat.define-light-theme(
       accent: $doc-accent,
       warn: $doc-warn
     ),
-    density: 0,
-    typography: $app-typography-config
+    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
+    density: null,
+    typography: null
   )
 );
 
@@ -111,8 +108,9 @@ $dark-doc-mat-theme: mat.define-dark-theme(
       accent: $dark-doc-accent,
       warn: $dark-doc-warn
     ),
+    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
     density: null,
-    typography: null // NOTE: setting density and typography to null is important since it uses the same typography and density as the light theme
+    typography: null
   )
 );
 

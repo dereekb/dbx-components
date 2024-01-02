@@ -1,4 +1,5 @@
 @use '../style/config';
+@use '../style/theming';
 @use './calendar/calendar';
 @use './table/table';
 
@@ -20,21 +21,25 @@
   }
 }
 
-@mixin all-extension-typography($theme-config) {
+@mixin all-extension-typography($theme-config-or-typography-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
 
-  @if ($theme-config != null) {
-    $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
-    $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
-  }
+  @if ($theme-config-or-typography-config != null) {
+    @if (theming.private-is-theme-object($theme-config-or-typography-config)) {
+      $theme-config: $theme-config-or-typography-config;
 
-  @if ($calendar-enabled == 1) {
-    @include calendar.typography($theme-config);
-  }
+      $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+      $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
+    }
 
-  @if ($table-enabled == 1) {
-    @include table.typography($theme-config);
+    @if ($calendar-enabled == 1) {
+      @include calendar.typography($theme-config-or-typography-config);
+    }
+
+    @if ($table-enabled == 1) {
+      @include table.typography($theme-config-or-typography-config);
+    }
   }
 }
 

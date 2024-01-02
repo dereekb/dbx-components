@@ -13,7 +13,7 @@
 @mixin color($theme-config) {
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

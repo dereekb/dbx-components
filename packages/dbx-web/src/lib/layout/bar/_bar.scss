@@ -60,8 +60,8 @@ $bar-fixed-height: 40px;
   }
 }
 
-@mixin typography($theme-config) {
-  $typography-config: theming.get-typography-config($theme-config);
+@mixin typography($theme-config-or-typography-config) {
+  $typography-config: theming.get-typography-config($theme-config-or-typography-config);
 
   .dbx-bar {
     font-size: theming.font-size($typography-config, 'caption');

@@ -202,7 +202,7 @@ $dbx-success-color-var: --dbx-success-color;
   }
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

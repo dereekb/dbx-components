@@ -30,7 +30,7 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
 @mixin color($theme-config) {
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

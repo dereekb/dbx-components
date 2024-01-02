@@ -221,7 +221,7 @@ $header-left-reserved-space-small-screen: 120px;
   }
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

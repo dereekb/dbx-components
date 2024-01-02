@@ -56,7 +56,7 @@ $dbx-popup-border-radius: 4px;
   }
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
   .dbx-popup-controls-header {
     @include theming.limit-text();
   }

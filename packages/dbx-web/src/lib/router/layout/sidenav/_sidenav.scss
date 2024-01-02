@@ -188,7 +188,7 @@ $active-background-transparent-color: 0.93;
     */
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {

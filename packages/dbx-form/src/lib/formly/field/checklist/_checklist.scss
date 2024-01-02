@@ -41,7 +41,7 @@ $dbx-checklist-item-spacing: 8px;
 @mixin color($theme-config) {
 }
 
-@mixin typography($theme-config) {
+@mixin typography($theme-config-or-typography-config) {
   .dbx-default-checklist-item-field {
     .item-label {
       font-size: 1.35em;

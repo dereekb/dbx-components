@@ -4,9 +4,7 @@
 @use '@dereekb/dbx-form' as dbx-form;
 @use './variables';
 
-$app-typography-config: mat.define-typography-config(
-  $font-family: 'Fira Sans'
-);
+$app-typography-config: mat.define-typography-config();
 
 $opmore-navy: #1C3454;
 $opmore-pink: #ec4565;
@@ -95,7 +93,7 @@ $dark-app-accent: mat.define-palette(mat.$green-palette);
 $dark-app-warn: mat.define-palette(mat.$red-palette);
 
 $dark-app-mat-theme: mat.define-dark-theme((color: (primary: $dark-app-primary, accent: $dark-app-accent, warn: $dark-app-warn), density: null, typography: null));
-// NOTE: setting density and typography to null is important since it uses the same typography and density as the light theme 
+// NOTE: setting density and typography to null is important since it uses the same typography and density as the light theme. If not using the light theme, set the density/topography here.
 
 $dark-app-theme: dbx.define-dbx-theme-config($dark-app-mat-theme, $app-dbx-theme-with-banner-config);
 $dark-app-form-theme: dbx-form.define-dbx-form-theme-config($dark-app-theme);
