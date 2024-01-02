@@ -3,7 +3,7 @@ import { filter, switchMap, BehaviorSubject, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Host, Input, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { Maybe, DestroyFunctionObject } from '@dereekb/util';
-import { MatMenuTrigger } from '@angular/material/legacy-menu';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
 

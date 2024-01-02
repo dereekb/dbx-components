@@ -12,7 +12,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
-import { MatLegacyMenuModule } from '@angular/material/legacy-menu';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
 import { DbxButtonModule } from '@dereekb/dbx-web';
@@ -29,7 +29,7 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatLegacyMenuModule,
+    MatMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,
     DbxValuePipeModule,

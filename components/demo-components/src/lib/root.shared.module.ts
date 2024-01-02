@@ -33,15 +33,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatLegacyAutocompleteModule } from '@angular/material/legacy-autocomplete';
 import { MatLegacyCardModule } from '@angular/material/legacy-card';
 import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
 import { MatLegacyFormFieldModule } from '@angular/material/legacy-form-field';
 import { MatLegacyInputModule } from '@angular/material/legacy-input';
 import { MatLegacyListModule } from '@angular/material/legacy-list';
-import { MatLegacyMenuModule } from '@angular/material/legacy-menu';
-import { MatLegacyPaginatorModule } from '@angular/material/legacy-paginator';
-import { MatLegacyTableModule } from '@angular/material/legacy-table';
 import { MatLegacyTabsModule } from '@angular/material/legacy-tabs';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
@@ -87,6 +85,7 @@ const ANGULAR_MATERIAL_MODULES = [
   MatCheckboxModule,
   MatProgressBarModule,
   MatProgressSpinnerModule,
+  MatMenuModule,
   // TODO: Update/Replace Legacy Angular Material
   MatLegacyAutocompleteModule,
   MatLegacyCardModule,
@@ -94,9 +93,6 @@ const ANGULAR_MATERIAL_MODULES = [
   MatLegacyFormFieldModule,
   MatLegacyInputModule,
   MatLegacyListModule,
-  MatLegacyMenuModule,
-  MatLegacyPaginatorModule,
-  MatLegacyTableModule,
   MatLegacyTabsModule,
   OverlayModule,
   PortalModule,

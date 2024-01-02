@@ -1,7 +1,7 @@
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
-import { MatTableModule } from '@angular/material/legacy-table';
+import { MatTableModule } from '@angular/material/table';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';

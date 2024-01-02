@@ -1,4 +1,4 @@
-import { MatToolbarModule } from '@angular/material/legacy-toolbar';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';

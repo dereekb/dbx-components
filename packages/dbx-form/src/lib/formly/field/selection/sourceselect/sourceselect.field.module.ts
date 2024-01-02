@@ -11,7 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
-import { MatLegacyMenuModule } from '@angular/material/legacy-menu';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFormSourceSelectFieldComponent } from './sourceselect.field.component';
 import { MatSelectModule } from '@angular/material/select';
@@ -28,7 +28,7 @@ import { DbxActionModule, DbxButtonModule, DbxLoadingModule } from '@dereekb/dbx
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatLegacyMenuModule,
+    MatMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,
     DbxLoadingModule,

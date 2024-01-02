@@ -1,5 +1,5 @@
 import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild } from '@angular/core';
-import { MatDrawerMode, MatSidenav } from '@angular/material/legacy-sidenav';
+import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { DbxScreenMediaService } from '../../../screen';
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { SubscriptionObject } from '@dereekb/rxjs';
