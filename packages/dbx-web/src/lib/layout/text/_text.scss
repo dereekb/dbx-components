@@ -196,7 +196,9 @@ $dbx-detail-block-content-offset: 30px;
   }
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config) {
+  $typography-config: theming.get-typography-config($theme-config);
+
   .dbx-label,
   .dbx-sublabel,
   .dbx-chip-sublabel {
@@ -211,6 +213,7 @@ $dbx-detail-block-content-offset: 30px;
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-text') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -218,7 +221,7 @@ $dbx-detail-block-content-offset: 30px;
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

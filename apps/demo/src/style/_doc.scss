@@ -4,6 +4,10 @@
 @use 'dbx-form/src/index' as dbx-form;
 @use './variables';
 
+$app-typography-config: mat.define-typography-config(
+  $font-family: 'Fira Sans'
+);
+
 $opmore-navy: #1c3454;
 $opmore-pink: #ec4565;
 $opmore-white: #fff;
@@ -80,10 +84,10 @@ $doc-mat-theme: mat.define-light-theme(
       accent: $doc-accent,
       warn: $doc-warn
     ),
-    density: null,
-    typography: null
+    density: 0,
+    typography: $app-typography-config
   )
-); // NOTE: setting density and typography to null is important!
+);
 
 $doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
@@ -108,11 +112,10 @@ $dark-doc-mat-theme: mat.define-dark-theme(
       warn: $dark-doc-warn
     ),
     density: null,
-    typography: null
+    typography: null // NOTE: setting density and typography to null is important since it uses the same typography and density as the light theme
   )
 );
 
-// NOTE: setting density and typography to null is important!
 $dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
 

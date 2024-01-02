@@ -13,7 +13,7 @@
   }
 }
 
-@mixin all-extension-typography($typography-config, $theme-config) {
+@mixin all-extension-typography($theme-config) {
   $calendar-enabled: 1;
 
   @if ($theme-config != null) {
@@ -21,7 +21,7 @@
   }
 
   @if ($calendar-enabled == 1) {
-    @include calendar.typography($typography-config);
+    @include calendar.typography($theme-config);
   }
 }
 

@@ -20,7 +20,7 @@
   }
 }
 
-@mixin all-extension-typography($typography-config, $theme-config) {
+@mixin all-extension-typography($theme-config) {
   $calendar-enabled: 1;
   $table-enabled: 1;
 
@@ -30,11 +30,11 @@
   }
 
   @if ($calendar-enabled == 1) {
-    @include calendar.typography($typography-config);
+    @include calendar.typography($theme-config);
   }
 
   @if ($table-enabled == 1) {
-    @include table.typography($typography-config);
+    @include table.typography($theme-config);
   }
 }
 

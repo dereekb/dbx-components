@@ -206,12 +206,13 @@ $calendar-content-border-consideration: 2px;
   #{calendar.$cal-gradient-var}: inset 0 0 10px 0 rgba($background-color, 0.2);
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-calendar') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -219,7 +220,7 @@ $calendar-content-border-consideration: 2px;
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

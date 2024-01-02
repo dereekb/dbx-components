@@ -12,12 +12,12 @@
   @include text.core();
 }
 
-@mixin all-value-typography($typography-config) {
-  @include array.typography($typography-config);
-  @include boolean.typography($typography-config);
-  @include date.typography($typography-config);
-  @include phone.typography($typography-config);
-  @include text.typography($typography-config);
+@mixin all-value-typography($theme-config) {
+  @include array.typography($theme-config);
+  @include boolean.typography($theme-config);
+  @include date.typography($theme-config);
+  @include phone.typography($theme-config);
+  @include text.typography($theme-config);
 }
 
 @mixin all-value-theme($theme-config) {

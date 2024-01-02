@@ -4,12 +4,10 @@
 @use 'dbx-firebase/src/index' as dbx-firebase;
 @use './style/style';
 
-$app-typography-config: mat.define-typography-config();
-
-@include mat.core($app-typography-config);
-@include dbx.core($app-typography-config);
-@include dbx-form.core($app-typography-config);
-@include dbx-firebase.core($app-typography-config);
+@include mat.core();
+@include dbx.core();
+@include dbx-form.core();
+@include dbx-firebase.core();
 
 @include style.dark-doc-theme('.doc-app-dark');
 @include style.doc-theme('.doc-app');

@@ -14,13 +14,13 @@
   @include style.core();
 }
 
-@mixin all-interaction-typography($typography-config) {
-  @include dialog.typography($typography-config);
-  @include filter.typography($typography-config);
-  @include popover.typography($typography-config);
-  @include popup.typography($typography-config);
-  @include prompt.typography($typography-config);
-  @include style.typography($typography-config);
+@mixin all-interaction-typography($theme-config) {
+  @include dialog.typography($theme-config);
+  @include filter.typography($theme-config);
+  @include popover.typography($theme-config);
+  @include popup.typography($theme-config);
+  @include prompt.typography($theme-config);
+  @include style.typography($theme-config);
 }
 
 @mixin all-interaction-theme($theme-config) {

@@ -4,13 +4,12 @@
 @use './root-variables';
 @use './config';
 
-@mixin core($typography-config, $theme-config: null) {
+@mixin core($theme-config: null) {
   // add root variables to body
   @if ($theme-config == null) {
     $theme-config: config.define-dbx-theme-config(());
   }
 
   @include all-core.all-component-core($theme-config);
-  @include all-typography.all-component-typographies($typography-config, $theme-config);
   @include root-variables.root-variables('body', $theme-config);
 }
