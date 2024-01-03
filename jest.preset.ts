@@ -22,18 +22,18 @@ let transform;
 switch (appTestType) {
   case 'angular':
     // angular needs jsdom and serializers
-    globalSetup = 'jest-preset-angular/global-setup';
+    // globalSetup = 'jest-preset-angular/global-setup';
     snapshotSerializers = jestPresetAngularSerializers;
     testEnvironment = 'jsdom';
     transform = {
-      '^.+\\.(ts|js|mjs|html|svg)$': 'jest-preset-angular'
+      '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$' }]
     };
     break;
   case 'firebase':
   case 'nestjs':
   case 'node':
     transform = {
-      '^.+\\.(ts|js|mjs|html|svg)$': 'ts-jest'
+      '^.+\\.(ts|js|mjs|html|svg)$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$' }]
     };
     break;
 }
@@ -45,7 +45,7 @@ module.exports = {
    * This project prefers to keep all the configuration between projects here, switching between them using the "appTestType" global variable for configuring things.
    */
   ...nxPreset,
-  maxConcurrency: 3,
+
   maxWorkers: 3,
   setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), ...appTestTypeSetupFiles, ...(customTestSetup ? customTestSetup : []), 'jest-date'],
 
@@ -53,21 +53,14 @@ module.exports = {
 
   testEnvironmentOptions: {},
 
-  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\.(html|svg)$'
-    }
-  },
-
   globalSetup,
 
-  moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   moduleNameMapper: pathsToModuleNameMapper(paths, { prefix: `${rootPath}/` }), // use to resolve packages in the project
   resolver: `${rootPath}/jest.resolver.js`, // '@nx/jest/plugins/resolver',
 
   transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
+
+  tsConfig: undefined, // clear tsConfig if set
 
   transform,
 
