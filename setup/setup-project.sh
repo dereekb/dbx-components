@@ -149,7 +149,7 @@ cd $PARENT_DIRECTORY
 
 # Create NX Workspace
 echo "Creating new dbx-components project in folder \"$NAME\" with project name \"$PROJECT_NAME\"..."
-npx --yes create-nx-workspace@$NX_VERSION --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST
+npx --yes create-nx-workspace@$NX_VERSION --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST --interactive=false --style=scss --preset=angular-monorepo --e2eTestRunner=cypress --standaloneApi=false --ssr=false --routing=false
 
 # Enter Folder
 echo "Entering new project folder, \"$NAME\""
