@@ -1,0 +1,35 @@
+@use 'sass:map';
+@use '../../../../style/theming';
+
+// MARK: Variables
+$dbx-formly-number-slider-field-thumb-label-margin-fix-size: 22px;
+
+// MARK: Mixin
+@mixin core() {
+  // slider field fix
+  .mat-form-field-appearance-outline .mat-mdc-form-field-infix > formly-field-mat-slider > .mat-mdc-slider {
+    margin: $dbx-formly-number-slider-field-thumb-label-margin-fix-size $dbx-formly-number-slider-field-thumb-label-margin-fix-size 0;
+    width: calc(100% - #{$dbx-formly-number-slider-field-thumb-label-margin-fix-size * 2}) !important;
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($theme-config-or-typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-number') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($theme-config);
+    }
+  }
+}

@@ -159,10 +159,6 @@ cd $NAME
 git branch setup
 git checkout setup
 
-# remove decorate angular cli
-rm decorate-angular-cli.js
-npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --properties es2015 browser module main' };";
-
 # Commit the cloud initialization
 git add --all
 git commit --no-verify -m "checkpoint: init nx-cloud"

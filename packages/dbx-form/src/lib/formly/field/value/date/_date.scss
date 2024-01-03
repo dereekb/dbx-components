@@ -17,8 +17,11 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
 
       > .mat-mdc-form-field-flex {
         padding-top: 0;
-
         @include theming.hide-mdc-notched-outline-border;
+
+        > .mdc-notched-outline .mdc-notched-outline__leading {
+          width: 9px; // align the field wrapper's title with the first input's title
+        }
       }
 
       > .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {

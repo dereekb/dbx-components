@@ -1,6 +1,7 @@
 @use './array/array';
 @use './boolean/boolean';
 @use './date/date';
+@use './number/number';
 @use './phone/phone';
 @use './text/text';
 
@@ -8,6 +9,7 @@
   @include array.core();
   @include boolean.core();
   @include date.core();
+  @include number.core();
   @include phone.core();
   @include text.core();
 }
@@ -16,6 +18,7 @@
   @include array.typography($theme-config);
   @include boolean.typography($theme-config);
   @include date.typography($theme-config);
+  @include number.typography($theme-config);
   @include phone.typography($theme-config);
   @include text.typography($theme-config);
 }
@@ -24,6 +27,7 @@
   @include array.theme($theme-config);
   @include boolean.theme($theme-config);
   @include date.theme($theme-config);
+  @include number.theme($theme-config);
   @include phone.theme($theme-config);
   @include text.theme($theme-config);
 }
