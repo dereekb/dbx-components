@@ -19,8 +19,7 @@
         "outputPath": "dist/components/demo-firebase",
         "main": "components/demo-firebase/src/index.ts",
         "tsConfig": "components/demo-firebase/tsconfig.lib.json",
-        "assets": ["components/demo-firebase/*.md"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["components/demo-firebase/*.md"]
       }
     },
     "lint": {

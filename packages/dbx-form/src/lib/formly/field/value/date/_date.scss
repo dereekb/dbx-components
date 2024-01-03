@@ -71,10 +71,6 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     justify-items: left;
   }
 
-  .dbx-datetime-hint-row {
-    // margin-left: 12px;
-  }
-
   .dbx-fixeddaterange-field {
     .mat-calendar,
     .dbx-fixeddaterange-field-input {

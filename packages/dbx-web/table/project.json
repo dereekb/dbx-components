@@ -9,8 +9,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web/table"],
       "options": {
-        "project": "packages/dbx-web/table/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "packages/dbx-web/table/ng-package.json"
       },
       "configurations": {
         "production": {

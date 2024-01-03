@@ -12,8 +12,7 @@
         "tsConfig": "packages/firebase-server/mailgun/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/mailgun/package.json",
         "main": "packages/firebase-server/mailgun/src/index.ts",
-        "assets": [],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": []
       }
     },
     "lint": {

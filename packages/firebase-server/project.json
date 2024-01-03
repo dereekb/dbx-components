@@ -30,8 +30,7 @@
         "tsConfig": "packages/firebase-server/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/package.json",
         "main": "packages/firebase-server/src/index.ts",
-        "assets": ["packages/firebase-server/*.md", "LICENSE"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["packages/firebase-server/*.md", "LICENSE"]
       }
     },
     "lint": {

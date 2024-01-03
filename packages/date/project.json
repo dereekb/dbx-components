@@ -20,8 +20,7 @@
         "tsConfig": "packages/date/tsconfig.lib.json",
         "packageJson": "packages/date/package.json",
         "main": "packages/date/src/index.ts",
-        "assets": ["packages/date/*.md", "LICENSE"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["packages/date/*.md", "LICENSE"]
       }
     },
     "lint": {

@@ -26,8 +26,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-analytics"],
       "options": {
-        "project": "packages/dbx-analytics/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "packages/dbx-analytics/ng-package.json"
       },
       "configurations": {
         "production": {

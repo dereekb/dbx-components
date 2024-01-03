@@ -30,8 +30,7 @@
         "tsConfig": "packages/util/tsconfig.lib.json",
         "packageJson": "packages/util/package.json",
         "main": "packages/util/src/index.ts",
-        "assets": ["packages/util/*.md", "LICENSE"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["packages/util/*.md", "LICENSE"]
       }
     },
     "lint": {

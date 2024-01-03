@@ -39,8 +39,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-form"],
       "options": {
-        "project": "packages/dbx-form/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "packages/dbx-form/ng-package.json"
       },
       "configurations": {
         "production": {

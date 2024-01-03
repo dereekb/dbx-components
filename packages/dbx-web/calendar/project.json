@@ -9,8 +9,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web/calendar"],
       "options": {
-        "project": "packages/dbx-web/calendar/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "packages/dbx-web/calendar/ng-package.json"
       },
       "configurations": {
         "production": {

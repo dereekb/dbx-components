@@ -12,8 +12,7 @@
         "tsConfig": "packages/firebase-server/test/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/test/package.json",
         "main": "packages/firebase-server/test/src/index.ts",
-        "assets": [],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": []
       },
       "dependsOn": []
     },

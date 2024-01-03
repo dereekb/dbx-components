@@ -17,8 +17,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
-        "project": "components/demo-components/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "components/demo-components/ng-package.json"
       },
       "configurations": {
         "production": {

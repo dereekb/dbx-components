@@ -9,8 +9,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-form/mapbox"],
       "options": {
-        "project": "packages/dbx-form/mapbox/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "packages/dbx-form/mapbox/ng-package.json"
       },
       "configurations": {
         "production": {

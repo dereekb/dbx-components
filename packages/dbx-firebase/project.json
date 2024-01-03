@@ -40,8 +40,7 @@
       "executor": "@nx/angular:package",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase"],
       "options": {
-        "project": "packages/dbx-firebase/ng-package.json",
-        "updateBuildableProjectDepsInPackageJson": true
+        "project": "packages/dbx-firebase/ng-package.json"
       },
       "configurations": {
         "production": {

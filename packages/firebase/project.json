@@ -27,8 +27,7 @@
         "tsConfig": "packages/firebase/tsconfig.lib.json",
         "packageJson": "packages/firebase/package.json",
         "main": "packages/firebase/src/index.ts",
-        "assets": ["packages/firebase/*.md", "LICENSE"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["packages/firebase/*.md", "LICENSE"]
       }
     },
     "lint": {

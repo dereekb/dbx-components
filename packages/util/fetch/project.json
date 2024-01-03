@@ -12,8 +12,7 @@
         "tsConfig": "packages/util/fetch/tsconfig.lib.json",
         "packageJson": "packages/util/fetch/package.json",
         "main": "packages/util/fetch/src/index.ts",
-        "assets": ["packages/util/fetch/*.md"],
-        "updateBuildableProjectDepsInPackageJson": true
+        "assets": ["packages/util/fetch/*.md"]
       },
       "dependsOn": []
     },
