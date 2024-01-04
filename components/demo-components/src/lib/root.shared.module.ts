@@ -39,8 +39,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatListModule } from '@angular/material/list';
 import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
-import { MatLegacyListModule } from '@angular/material/legacy-list';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
@@ -93,7 +93,7 @@ const ANGULAR_MATERIAL_MODULES = [
   MatTabsModule,
   // TODO: Update/Replace Legacy Angular Material
   MatLegacyChipsModule,
-  MatLegacyListModule,
+  MatListModule,
   OverlayModule,
   PortalModule,
   ScrollingModule,

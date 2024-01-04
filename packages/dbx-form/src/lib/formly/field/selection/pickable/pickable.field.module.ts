@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatLegacyListModule } from '@angular/material/legacy-list';
+import { MatListModule } from '@angular/material/list';
 import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,7 +26,7 @@ import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule
     MatFormFieldModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
-    MatLegacyListModule,
+    MatListModule,
     DbxDatePipeModule,
     DbxRouterAnchorModule,
     MatLegacyChipsModule,

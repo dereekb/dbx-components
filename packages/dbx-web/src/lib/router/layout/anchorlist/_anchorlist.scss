@@ -3,12 +3,32 @@
 @use '../../../style/theming';
 
 // MARK: Variables
-$anchor-list-item-disabled-item-opacity: 25%;
+$anchor-list-item-disabled-item-opacity: 45%;
+$anchor-list-item-muted-opacity: 74%;
+$anchor-list-item-parent-active-opacity: 90%;
+$anchor-list-item-active-opacity: 100%;
+
 $active-root-item-left-padding: 2px;
 $active-child-item-left-padding: 5px;
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-anchor-list.mat-mdc-nav-list {
+    padding-top: 0; // no padding
+
+    .mat-mdc-list-item {
+      .mat-icon.mat-mdc-list-item-icon.mdc-list-item__start {
+        // fix the icon alignment for items that are larger than the expected size
+        align-self: center;
+        margin-top: 0;
+      }
+
+      .mdc-list-item__content .mat-mdc-list-item-unscoped-content.mdc-list-item__secondary-text::before {
+        // ensure the custom content follows the text content shortly after
+        content: unset;
+      }
+    }
+  }
 }
 
 @mixin color($theme-config) {
@@ -20,59 +40,53 @@ $active-child-item-left-padding: 5px;
   $background-hover-color: theming.get-color-from-palette($background, 'hover');
   $background-disabled-color: theming.get-color-from-palette($background, 'contrast');
 
-  .dbx-anchor-list.mat-nav-list {
-    padding-top: 0;
+  .dbx-anchor-list.mat-mdc-nav-list {
+    --mat-divider-color: #{color.scale($color: $background-hover-color, $alpha: 15%)};
 
     // MARK: Muting
     // items that are not active are muted
-    .mat-list-item {
-      opacity: 0.74;
+    .mat-mdc-list-item {
+      opacity: #{$anchor-list-item-muted-opacity};
 
-      &.mat-list-item-disabled {
-        opacity: $anchor-list-item-disabled-item-opacity;
-        background: transparent;
+      &.mdc-list-item--disabled {
+        opacity: #{$anchor-list-item-disabled-item-opacity};
+        // background: transparent;
       }
     }
 
     // active route as a parent
     .dbx-anchor-active {
-      .mat-list-item {
-        opacity: 0.9;
+      .mat-mdc-list-item {
+        opacity: #{$anchor-list-item-parent-active-opacity};
       }
     }
 
     // selected
     .dbx-anchor-selected {
-      .mat-list-item {
-        opacity: 1;
+      .mat-mdc-list-item {
+        opacity: #{$anchor-list-item-active-opacity};
         background: color.scale($color: $background-hover-color, $alpha: 10%);
       }
     }
 
     // active route
     .dbx-anchor-active-eq {
-      .mat-list-item {
-        opacity: 1;
+      .mat-mdc-list-item {
+        opacity: #{$anchor-list-item-active-opacity};
         background: color.scale($color: $background-hover-color, $alpha: 25%);
       }
     }
 
     // MARK: Anchor Tree
-    /*
-    .dbx-anchor-list-root {
-      // nothing
-    }
-    */
-
-    .dbx-anchor-list-child .mat-list-item {
+    .dbx-anchor-list-child .mat-mdc-list-item {
       background: color.scale($background-hover-color, $alpha: 10%);
     }
   }
 }
 
 @mixin typography($theme-config-or-typography-config) {
-  .dbx-anchor-list.mat-nav-list {
-    .mat-list-item .mat-list-icon {
+  .dbx-anchor-list.mat-mdc-nav-list {
+    .mat-mdc-list-item .mat-mdc-list-item-icon {
       font-size: 28px;
       width: 28px;
       height: 28px;
@@ -80,10 +94,10 @@ $active-child-item-left-padding: 5px;
     }
 
     // MARK: Anchor Tree
-    .dbx-anchor-list-child .mat-list-item {
+    .dbx-anchor-list-child .mat-mdc-list-item {
       font-size: 0.875em;
 
-      .mat-list-icon {
+      .mat-mdc-list-item-icon {
         font-size: 22px;
         width: 22px;
         height: 22px;

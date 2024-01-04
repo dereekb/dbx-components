@@ -1,4 +1,4 @@
-import { MatLegacyListModule } from '@angular/material/legacy-list';
+import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
@@ -10,7 +10,7 @@ import { DbxAnchorListComponent } from './anchorlist.component';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
-  imports: [CommonModule, DbxInjectionComponentModule, MatTabsModule, MatButtonModule, MatIconModule, MatLegacyListModule, MatMenuModule, DbxRouterAnchorModule],
+  imports: [CommonModule, DbxInjectionComponentModule, MatTabsModule, MatButtonModule, MatIconModule, MatListModule, MatMenuModule, DbxRouterAnchorModule],
   declarations: [DbxAnchorListComponent],
   exports: [DbxAnchorListComponent]
 })

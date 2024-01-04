@@ -23,7 +23,7 @@ $list-item-padded-min-height: 42px;
       padding-bottom: 8px;
     }
 
-    .mat-list-base {
+    .mat-mdc-list-base {
       padding-top: 0;
     }
 
@@ -37,20 +37,28 @@ $list-item-padded-min-height: 42px;
   }
 
   .dbx-list-view {
-    .mat-list-base .dbx-list-view-item.mat-list-item {
-      height: unset;
+    .mat-mdc-list-base .dbx-list-view-item.mat-mdc-list-item {
+      height: 100%; // inherit height from embedded items
 
-      &.mat-list-item-with-avatar {
+      .mdc-list-item__content > .mat-mdc-list-item-unscoped-content.mdc-list-item__primary-text {
+        white-space: normal;
+
+        line-height: unset;
+        font-size: unset;
+        letter-spacing: unset;
+      }
+
+      &.mat-mdc-list-item-with-avatar {
         min-height: 56px;
 
-        .mat-list-item-content {
+        .mat-mdc-list-item-content {
           min-height: 56px;
         }
       }
     }
 
-    .mat-selection-list.mat-list-base .dbx-list-view-item.mat-list-item .mat-list-item-content .mat-list-text {
-      padding: 0; // kill padding on item in .mat-list-text for selection view, to match 0 padding in non-selection view
+    .mat-selection-list.mat-mdc-list-base .dbx-list-view-item.mat-mdc-list-item .mat-mdc-list-item-content .mat-mdc-list-text {
+      padding: 0; // kill padding on item in .mat-mdc-list-text for selection view, to match 0 padding in non-selection view
     }
   }
 
@@ -92,19 +100,19 @@ $list-item-padded-min-height: 42px;
     }
   }
 
-  .dbx-list-no-hover-effects .dbx-list > .dbx-list-content .dbx-list-view .mat-list-item {
+  .dbx-list-no-hover-effects .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item {
     cursor: unset;
 
     &:hover {
-      background: none;
+      --mdc-list-list-item-hover-state-layer-opacity: 0;
     }
   }
 
-  .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-nav-list .dbx-list-view-item.mat-list-item > .mat-list-item-content {
+  .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-mdc-nav-list .dbx-list-view-item.mat-mdc-list-item > .mat-mdc-list-item-content {
     padding: 0;
   }
 
-  .dbx-list-content .dbx-list-view .mat-list-base .mat-list-item .mat-divider {
+  .dbx-list-content .dbx-list-view .mat-mdc-list-base .mat-mdc-list-item .mat-divider {
     position: unset; // do not touch the divider in dbx-list
   }
 }

@@ -1,6 +1,6 @@
 import { Observable, map, shareReplay, distinctUntilChanged, of } from 'rxjs';
 import { Component, EventEmitter, Input } from '@angular/core';
-import { MatLegacySelectionListChange } from '@angular/material/legacy-list';
+import { MatSelectionListChange } from '@angular/material/list';
 import { DbxListSelectionMode, DbxListView, ListSelectionState, ListSelectionStateItem } from './list.view';
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
@@ -45,7 +45,7 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
       <ng-container *ngSwitchDefault>
         <mat-selection-list [disabled]="disabled$ | async" [multiple]="multiple" (selectionChange)="matSelectionChanged($event)">
           <mat-list-option class="dbx-list-view-item" *ngFor="let item of items; trackBy: trackByFunction" [selected]="item.selected" [disabled]="item.disabled" [value]="item.itemValue" (click)="onClickValue(item.itemValue)">
-            <mat-icon matListIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
+            <mat-icon matListItemIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
             <dbx-injection [config]="item.config"></dbx-injection>
           </mat-list-option>
         </mat-selection-list>
@@ -71,7 +71,7 @@ export class DbxSelectionValueListItemViewComponent<T> extends DbxValueListItemV
     }
   }
 
-  matSelectionChanged(selection: MatLegacySelectionListChange): void {
+  matSelectionChanged(selection: MatSelectionListChange): void {
     const options = selection.source.selectedOptions.selected;
     const items: ListSelectionStateItem<T>[] = options.map((x) => {
       const { value: itemValue, selected, disabled } = x;
