@@ -58,6 +58,10 @@
   .dbx-form-repeat-array-bar {
     background: none;
   }
+
+  .dbx-form-repeat-array-drag-button.mdc-button > .mat-icon {
+    margin: 0;
+  }
 }
 
 @mixin typography($theme-config-or-typography-config) {

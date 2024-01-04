@@ -33,9 +33,9 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
-  .dbx-icon-button.mat-mdc-button {
-    // copy most of the same styling
-    padding: 0;
+  .dbx-icon-button .mat-mdc-button .mdc-button__label {
+    display: flex;
+    align-items: center;
   }
 
   .dbx-grow-button {
