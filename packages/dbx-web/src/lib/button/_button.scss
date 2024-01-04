@@ -5,13 +5,15 @@
 
 // MARK: Variables
 $button-spacer-width: 6px;
+$big-button-height: 46px; // 33% bigger
 
 // MARK: Mixin
 @mixin core() {
-  // increases the height of the mat-button
+  // increases the height of the mat-mdc-button
   .dbx-button-big {
-    .mat-button {
-      line-height: 46px; // 33% bigger
+    .mdc-button.mat-mdc-button {
+      height: $big-button-height;
+      line-height: $big-button-height;
     }
   }
 
@@ -31,7 +33,7 @@ $button-spacer-width: 6px;
     }
   }
 
-  .dbx-icon-button.mat-button {
+  .dbx-icon-button.mat-mdc-button {
     // copy most of the same styling
     padding: 0;
   }
@@ -50,21 +52,6 @@ $button-spacer-width: 6px;
 
   .mat-icon-button.dbx-button-spacer {
     margin-right: $button-spacer-width;
-  }
-
-  .dbx-spinner-custom.mat-progress-spinner.mat-accent circle,
-  .dbx-spinner-custom.mat-spinner.mat-accent circle {
-    // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
-    stroke: unset !important;
-  }
-
-  .mat-button {
-    mat-icon.mat-button-icon,
-    mat-icon.mat-fab-icon {
-      &.mat-icon.mat-ligature-font[fontIcon]::before {
-        content: unset;
-      }
-    }
   }
 
   .dbx-button-column {
@@ -87,14 +74,22 @@ $button-spacer-width: 6px;
   $grey-color-bg: theming.get-color-from-palette($background, 'disabled-button');
   $disabled-color-bg: theming.get-color-from-palette($background, 'disabled-button');
 
-  .dbx-icon-button > .mat-button {
+  .dbx-icon-button > .mat-mdc-button {
     background: inherit;
+
+    &.mat-unthemed {
+      // TEMPORARY: For now we just unset the ripple colors but later we want to make sure that
+      // the colors from dbx-primary, dbx-accent, etc... are set on these label colors instead
+      // for buttons. Button column isn't correct for now either...
+      --mdc-text-button-label-text-color: unset;
+      --mat-mdc-button-persistent-ripple-color: unset;
+    }
   }
 
   .dbx-icon-button.dbx-grey-bg {
     background: none;
 
-    > .mat-button {
+    > .mat-mdc-button {
       background: $grey-color-bg;
     }
   }
@@ -102,7 +97,7 @@ $button-spacer-width: 6px;
   .dbx-icon-button.dbx-disabled-bg {
     background: none;
 
-    > .mat-button {
+    > .mat-mdc-button {
       background: $disabled-color-bg;
     }
   }

@@ -38,7 +38,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
       pointer-events: none;
     }
 
-    .dbx-datetime-timezone-button .mat-button {
+    .dbx-datetime-timezone-button .mat-mdc-button {
       font-size: 18px;
     }
   }

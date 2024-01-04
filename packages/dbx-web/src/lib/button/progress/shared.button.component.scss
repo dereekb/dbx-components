@@ -1,0 +1,11 @@
+:host {
+  button.mat-mdc-button {
+    // fixes visual glitch/issue with the mat-icon's presentation within the button
+    mat-icon.mat-button-icon,
+    mat-icon.mat-fab-icon {
+      &.mat-icon.mat-ligature-font[fontIcon]::before {
+        content: unset;
+      }
+    }
+  }
+}

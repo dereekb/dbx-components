@@ -1,11 +1,11 @@
 import { Maybe } from '../value/maybe.type';
 import { flattenArray } from '../array/array';
 import { asIterable, IterableOrValue, iterableToArray, useIterableOrValue } from '../iterable/iterable';
-import { symmetricDifference, values } from 'extra-set';
+import { symmetricDifference } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
 import { SetIncludesMode } from './set.mode';
 import { DecisionFunction } from '../value/decision';
-import { MapFunction } from '../value';
+import { MapFunction } from '../value/map';
 
 export type AllOrNoneSelection = 'all' | 'none';
 
@@ -58,13 +58,13 @@ export function removeFromSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>)
   useIterableOrValue(values, (x) => set.delete(x));
 }
 
+export function hasSameValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
+  return !hasDifferentValues(a, b);
+}
+
 export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
   const setA = new Set(a);
   return a == null || b == null || !setContainsAllValues(setA, b) || setA.size !== new Set(b).size;
-}
-
-export function hasSameValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
-  return !hasDifferentValues(a, b);
 }
 
 export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {

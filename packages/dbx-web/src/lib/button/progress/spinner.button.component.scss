@@ -1,17 +1,22 @@
 :host {
   button {
+    min-height: 36px;
+    height: unset; // allow height to expand
+
     outline: none;
     &.working {
       cursor: not-allowed;
     }
-    & ::ng-deep .mat-button-wrapper {
+    ::ng-deep .mdc-button__label {
       display: flex;
       align-items: center;
       justify-content: center;
     }
+
     &.fullWidth {
       width: 100%;
     }
+
     .spinner {
       position: absolute;
       // top: 25%;
@@ -21,6 +26,13 @@
         opacity: 1;
       }
     }
+
+    // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
+    .dbx-spinner-custom.mat-progress-spinner.mat-accent circle,
+    .dbx-spinner-custom.mat-spinner.mat-accent circle {
+      stroke: unset !important;
+    }
+
     .button-text {
       opacity: 1;
       transition: opacity 0.3s ease-in-out;

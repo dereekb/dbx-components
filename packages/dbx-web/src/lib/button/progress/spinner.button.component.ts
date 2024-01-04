@@ -1,15 +1,36 @@
 import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
 import { AbstractProgressButtonDirective } from './base.progress.button.directive';
+import { distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { spaceSeparatedCssClasses } from '@dereekb/util';
 
 @Component({
   selector: 'dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
-  styleUrls: ['./spinner.button.component.scss'],
+  styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
   @ViewChild('button', { static: true, read: ElementRef })
   readonly buttonRef!: ElementRef<HTMLElement>;
+
+  readonly buttonCss$ = this.baseCssClasses$.pipe(
+    map((x) => {
+      const options = x[0];
+      const classes = [...x[1]];
+
+      if (options.iconOnly) {
+        classes.push('mat-icon-button');
+      }
+
+      if (options.fab) {
+        classes.push('mat-fab');
+      }
+
+      return spaceSeparatedCssClasses(classes);
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   get showText() {
     return !(this.options.fab || this.options.iconOnly);

@@ -34,7 +34,7 @@
   $border-color: theming.get-color-from-palette($foreground, 'divider');
 
   .dbx-form-phone-field {
-    .country-selector.mat-button,
+    .country-selector.mat-mdc-button,
     .country-list-button.mat-menu-item {
       color: $text-color;
     }
