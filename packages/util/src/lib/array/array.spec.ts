@@ -1,4 +1,4 @@
-import { mergeIntoArray, range, flattenArray, Maybe } from '@dereekb/util';
+import { mergeArraysIntoArray, range, flattenArray, Maybe } from '@dereekb/util';
 import { takeLast } from './array';
 
 describe('flattenArray', () => {
@@ -74,13 +74,13 @@ describe('takeLast', () => {
   });
 });
 
-describe('mergeIntoArray', () => {
+describe('mergeArraysIntoArray()', () => {
   it('should add the values from the second array into the target array in the same order.', () => {
     const initial = [0];
     const second = range({ start: 1, end: 5 });
 
     const target = [...initial];
-    const result = mergeIntoArray(target, second);
+    const result = mergeArraysIntoArray(target, second);
 
     expect(result.length).toBe(initial.length + second.length);
     expect(result[0]).toBe(initial[0]);
@@ -95,7 +95,7 @@ describe('mergeIntoArray', () => {
     const second = range({ start: 1, end: 5 });
 
     const target = [...initial];
-    const result = mergeIntoArray(target, second, second); // second twice
+    const result = mergeArraysIntoArray(target, second, second); // second twice
 
     expect(result.length).toBe(initial.length + second.length * 2);
     expect(result[0]).toBe(initial[0]);

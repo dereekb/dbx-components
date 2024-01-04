@@ -21,6 +21,7 @@ export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<Do
 }
 
 @Component({
+  selector: 'doc-item-list-grid-view',
   template: DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE,
   providers: provideDbxListView(DocItemListGridViewComponent)
 })

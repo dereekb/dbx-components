@@ -9,11 +9,13 @@
       <p>
         <dbx-anchor [anchor]="url">
           <mat-card class="example-card" matRipple>
-            <mat-card-title-group>
-              <mat-card-title>With Card</mat-card-title>
-              <mat-card-subtitle>(To Url)</mat-card-subtitle>
-              <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" />
-            </mat-card-title-group>
+            <mat-card-header>
+              <mat-card-title-group>
+                <mat-card-title>With Card</mat-card-title>
+                <mat-card-subtitle>(To Url)</mat-card-subtitle>
+                <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" />
+              </mat-card-title-group>
+            </mat-card-header>
             <mat-card-content>
               {{ lorem }}
             </mat-card-content>
@@ -54,11 +56,13 @@
         <dbx-anchor [anchor]="url" [disabled]="true">
           <!-- disabled does not pass to card ripple automatically! -->
           <mat-card class="example-card" matRipple [matRippleDisabled]="true">
-            <mat-card-title-group>
-              <mat-card-title>With Card</mat-card-title>
-              <mat-card-subtitle>(To Url)</mat-card-subtitle>
-              <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" />
-            </mat-card-title-group>
+            <mat-card-header>
+              <mat-card-title-group>
+                <mat-card-title>With Card</mat-card-title>
+                <mat-card-subtitle>(To Url)</mat-card-subtitle>
+                <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" />
+              </mat-card-title-group>
+            </mat-card-header>
             <mat-card-content>
               {{ lorem }}
             </mat-card-content>

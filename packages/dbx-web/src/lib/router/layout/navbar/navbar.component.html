@@ -23,9 +23,12 @@
     </ng-container>
   </ng-container>
   <!-- Bar -->
-  <nav *ngSwitchCase="'bar'" mat-tab-nav-bar [attr.mat-align-tabs]="navAlign">
-    <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
-      <a mat-tab-link [active]="x.selected">{{ x.anchor.title }}</a>
-    </dbx-anchor>
-  </nav>
+  <ng-container *ngSwitchCase="'bar'">
+    <nav mat-tab-nav-bar [tabPanel]="tabPanel" [attr.mat-align-tabs]="navAlign">
+      <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
+        <a mat-tab-link [active]="x.selected">{{ x.anchor.title }}</a>
+      </dbx-anchor>
+    </nav>
+    <mat-tab-nav-panel #tabPanel>...</mat-tab-nav-panel>
+  </ng-container>
 </ng-container>

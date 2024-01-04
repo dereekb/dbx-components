@@ -1,4 +1,4 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
+import { StringOrder, Maybe, pushArrayItemsIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
@@ -177,7 +177,7 @@ export function simplifyDateScheduleDayCodes(codes: Iterable<DateScheduleDayCode
     }
 
     if (!hasAllWeekDays) {
-      mergeArrayIntoArray(result, weekDays as DateScheduleDayCode[]);
+      pushArrayItemsIntoArray(result, weekDays as DateScheduleDayCode[]);
     }
 
     if (!hasAllWeekendDays && hasSaturday) {

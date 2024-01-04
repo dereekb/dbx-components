@@ -1,7 +1,7 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injection';
-import { Initialized, Destroyable, Maybe, mergeArrayOrValueIntoArray } from '@dereekb/util';
+import { Initialized, Destroyable, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 
 /**
@@ -101,7 +101,7 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     if (providers || data) {
       injector = Injector.create({
         parent: parentInjector,
-        providers: mergeArrayOrValueIntoArray(
+        providers: pushItemOrArrayItemsIntoArray(
           [
             {
               provide: DBX_INJECTION_COMPONENT_DATA,

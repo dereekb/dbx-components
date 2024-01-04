@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray } from './array/array';
+import { ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray } from './array/array';
 import { setContainsAllValues } from './set/set';
 import { EqualityComparatorFunction, safeEqualityComparatorFunction } from './value/comparator';
 import { MapFunction } from './value/map';
@@ -43,7 +43,7 @@ export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readK
         const key = readKey(x);
 
         if (key != null) {
-          mergeArrayOrValueIntoArray(keys, key);
+          pushItemOrArrayItemsIntoArray(keys, key);
         }
       });
 

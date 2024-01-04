@@ -1,4 +1,4 @@
-import { ClassType, Getter, asGetter, makeGetter, mergeArrayOrValueIntoArray } from '@dereekb/util';
+import { ClassType, Getter, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { DynamicModule, FactoryProvider, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -125,7 +125,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
         }
 
         if (additionalProviders) {
-          mergeArrayOrValueIntoArray(providers, additionalProviders);
+          pushItemOrArrayItemsIntoArray(providers, additionalProviders);
         }
 
         const imports: (Type<unknown> | DynamicModule)[] = [moduleClass];

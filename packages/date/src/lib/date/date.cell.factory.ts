@@ -1,4 +1,4 @@
-import { Maybe, ArrayOrValue, asArray, mergeArrayIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, Minutes } from '@dereekb/util';
+import { Maybe, ArrayOrValue, asArray, pushArrayItemsIntoArray, FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, IndexRange, HOURS_IN_DAY, range, Configurable, ISO8601DayString, isDate, IndexNumber, Minutes } from '@dereekb/util';
 import { addMinutes, isAfter, differenceInHours, addHours } from 'date-fns';
 import { guessCurrentTimezone } from './date';
 import { DateCell, DateCellIndex, DateOrDateCellIndex, DateCellTiming, DateCellArrayRef, DateCellArray, DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, DateCellCollection, DateCellDurationSpan, DateCellTimingStartsAt, DateCellTimingEvent, DateCellTimingStartsAtEndRange, calculateExpectedDateCellTimingDuration, dateCellTimingFinalStartsAtEvent, FullDateCellTiming, dateCellTimingStart } from './date.cell';
@@ -389,7 +389,7 @@ export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTiming
         resultIndexes = [indexFactory(value)];
       }
 
-      mergeArrayIntoArray(result, resultIndexes);
+      pushArrayItemsIntoArray(result, resultIndexes);
     });
 
     return result;

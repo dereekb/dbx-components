@@ -19,7 +19,7 @@ import {
   getNextDay,
   SortCompareFunction,
   sortAscendingIndexNumberRefFunction,
-  mergeArrayIntoArray,
+  pushArrayItemsIntoArray,
   Configurable,
   ArrayOrValue,
   asArray,
@@ -751,7 +751,7 @@ export function dateBlockTimingRelativeIndexArrayFactory<T extends DateBlockTimi
         resultIndexes = [indexFactory(value)];
       }
 
-      mergeArrayIntoArray(result, resultIndexes);
+      pushArrayItemsIntoArray(result, resultIndexes);
     });
 
     return result;
@@ -2468,7 +2468,7 @@ export function expandUniqueDateBlocksFunction<B extends DateBlockRange | Unique
 
     if (newBlocks != null) {
       const inputOverwriteGroup = Array.isArray(newBlocks) ? groupUniqueDateBlocks(newBlocks) : newBlocks;
-      mergeArrayIntoArray(
+      pushArrayItemsIntoArray(
         sorted,
         inputOverwriteGroup.blocks.map((block) => ({ priority: 'next', block }))
       ).sort((a, b) => a.block.i - b.block.i);

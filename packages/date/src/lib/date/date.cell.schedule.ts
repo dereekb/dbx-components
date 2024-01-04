@@ -1,5 +1,5 @@
 import { DateRange } from '@dereekb/date';
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef, Building, sortNumbersAscendingFunction } from '@dereekb/util';
+import { StringOrder, Maybe, pushArrayItemsIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef, Building, sortNumbersAscendingFunction } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes, startOfDay } from 'date-fns';
@@ -139,7 +139,7 @@ export function simplifyDateCellScheduleDayCodes(codes: Iterable<DateCellSchedul
     }
 
     if (!hasAllWeekDays) {
-      mergeArrayIntoArray(result, weekDays as DateCellScheduleDayCode[]);
+      pushArrayItemsIntoArray(result, weekDays as DateCellScheduleDayCode[]);
     }
 
     if (!hasAllWeekendDays && hasSaturday) {

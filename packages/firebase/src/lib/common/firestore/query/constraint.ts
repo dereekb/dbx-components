@@ -1,5 +1,5 @@
 import { FieldPathOrStringPath, FieldPathOrStringPathOf } from './../types';
-import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe, StringKeyPropertyKeys, convertToArray } from '@dereekb/util';
+import { ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray, SeparateResult, separateValues, SortingOrder, Maybe, StringKeyPropertyKeys, convertToArray } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 export type FirestoreQueryConstraintType = string;
@@ -304,7 +304,7 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
   return (constraints) => {
     const separated = separateFn(constraints);
     const replacements = asArray(replaceFn(separated.excluded));
-    return replacements ? mergeArrayOrValueIntoArray(separated.included, replacements) : separated.included;
+    return replacements ? pushItemOrArrayItemsIntoArray(separated.included, replacements) : separated.included;
   };
 }
 
