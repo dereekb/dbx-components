@@ -2,7 +2,7 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { Subject } from 'rxjs';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MatLegacyChipInputEvent } from '@angular/material/legacy-chips';
+import { MatChipInputEvent } from '@angular/material/chips';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
@@ -41,7 +41,7 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
     return true;
   }
 
-  addChip(event: MatLegacyChipInputEvent): void {
+  addChip(event: MatChipInputEvent): void {
     const text = event.value ?? this.inputCtrl.value;
     return this._addWithTextValue(text);
   }

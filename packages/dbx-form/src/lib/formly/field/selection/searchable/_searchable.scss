@@ -8,9 +8,8 @@
     width: 100%;
   }
 
-  .dbx-searchable-text-field-value.mat-option,
-  .dbx-searchable-text-field-autocomplete .mat-option {
-    padding: 0;
+  .dbx-searchable-text-field-autocomplete > .mat-mdc-option > .mdc-list-item__primary-text {
+    width: 100%;
   }
 
   .dbx-default-searchable-field-display {

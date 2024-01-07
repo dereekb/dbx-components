@@ -4,13 +4,21 @@
     height: unset; // allow height to expand
 
     outline: none;
+
     &.working {
       cursor: not-allowed;
     }
+
     ::ng-deep .mdc-button__label {
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    &.mat-mdc-button.mat-mdc-icon-button {
+      // icon button fixes
+      min-width: unset;
+      --mdc-icon-button-icon-size: unset;
     }
 
     &.fullWidth {

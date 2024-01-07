@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DbxUnitedStatesAddressComponent } from './address.component';
@@ -23,7 +23,7 @@ import { DbxWarnComponent } from './warn.component';
 const declarations = [DbxUnitedStatesAddressComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent];
 
 @NgModule({
-  imports: [CommonModule, MatLegacyChipsModule, MatTooltipModule, MatIconModule],
+  imports: [CommonModule, MatChipsModule, MatTooltipModule, MatIconModule],
   declarations,
   exports: declarations
 })

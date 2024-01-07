@@ -40,7 +40,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
-import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
+import { MatChipsModule } from '@angular/material/chips';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
@@ -95,7 +95,7 @@ const ANGULAR_MATERIAL_MODULES = [
   MatTabsModule,
   MatListModule,
   // TODO: Update/Replace Legacy Angular Material
-  MatLegacyChipsModule,
+  MatChipsModule,
   OverlayModule,
   PortalModule,
   ScrollingModule,

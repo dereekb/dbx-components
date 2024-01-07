@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -33,7 +33,7 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
     ReactiveFormsModule,
     DbxDatePipeModule,
     DbxValuePipeModule,
-    MatLegacyChipsModule,
+    MatChipsModule,
     MatIconModule,
     FlexLayoutModule,
     FormlyModule.forChild({

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatLegacyChipsModule } from '@angular/material/legacy-chips';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
@@ -20,7 +20,7 @@ import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
     FormsModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
-    MatLegacyChipsModule,
+    MatChipsModule,
     MatIconModule,
     FlexLayoutModule,
     FormlyMatFormFieldModule,

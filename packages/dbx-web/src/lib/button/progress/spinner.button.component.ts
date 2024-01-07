@@ -19,7 +19,7 @@ export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
       const classes = [...x[1]];
 
       if (options.iconOnly) {
-        classes.push('mat-icon-button');
+        classes.push('mat-mdc-icon-button');
       }
 
       if (options.fab) {

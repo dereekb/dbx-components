@@ -1,4 +1,4 @@
-import { mergeIntoArray } from '../array/array';
+import { mergeArraysIntoArray } from '../array/array';
 import { ArrayFactory, AsyncArrayFactory } from '../array/array.factory';
 import { FilterUniqueFunction } from '../array/array.unique';
 import { PrimativeKey } from '../key';
@@ -75,7 +75,7 @@ export function idBatchFactory<T, K extends PrimativeKey = PrimativeKey>(config:
         }
 
         // add to the uniqueness acumulator to prevent further usage
-        mergeIntoArray(uniquenessAccumulator, newIds);
+        mergeArraysIntoArray(uniquenessAccumulator, newIds);
 
         const verifiedIds = await verifyTags(newIds);
 
