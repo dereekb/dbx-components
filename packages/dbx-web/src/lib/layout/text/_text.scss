@@ -146,6 +146,11 @@ $dbx-detail-block-content-offset: 30px;
   .dbx-modelkey {
     line-break: anywhere;
   }
+
+  .dbx-text-chips-listbox button.mat-mdc-chip-action {
+    pointer-events: none; // disable the chip click and selection events.
+    user-select: none;
+  }
 }
 
 @mixin color($theme-config) {

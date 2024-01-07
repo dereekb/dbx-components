@@ -3,9 +3,12 @@
     <dbx-anchor [anchor]="card.anchor">
       <mat-card matRipple>
         <mat-card-header>
-          <mat-card-title>{{ card.title }}</mat-card-title>
-          <mat-card-subtitle>{{ card.detail }}</mat-card-subtitle>
+          <mat-card-title-group>
+            <mat-card-title>{{ card.title }}</mat-card-title>
+            <mat-card-subtitle>{{ card.detail }}</mat-card-subtitle>
+          </mat-card-title-group>
         </mat-card-header>
+        <mat-card-actions align="end"></mat-card-actions>
       </mat-card>
     </dbx-anchor>
   </div>
