@@ -7,6 +7,7 @@ import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxNavbarComponent } from './navbar.component';
 import { DbxIconButtonModule } from '../../../button';
+import { UIRouterModule } from '@uirouter/angular';
 
 @NgModule({
   imports: [
@@ -17,6 +18,7 @@ import { DbxIconButtonModule } from '../../../button';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
+    UIRouterModule,
     DbxRouterAnchorModule
   ],
   declarations: [DbxNavbarComponent],

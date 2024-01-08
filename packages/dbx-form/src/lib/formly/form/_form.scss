@@ -25,6 +25,18 @@
     width: 100%;
     display: flex;
     align-items: center;
+
+    .dbx-formly {
+      width: 100%;
+    }
+
+    .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
+      padding: 0;
+
+      > .mat-mdc-form-field-flex {
+        @include theming.hide-mdc-notched-outline-border;
+      }
+    }
   }
 }
 

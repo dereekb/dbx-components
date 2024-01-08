@@ -25,10 +25,10 @@
   <!-- Bar -->
   <ng-container *ngSwitchCase="'bar'">
     <nav mat-tab-nav-bar [tabPanel]="tabPanel" [attr.mat-align-tabs]="navAlign">
-      <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
+      <dbx-anchor *ngFor="let x of anchors$ | async; trackBy: trackByFunction" [anchor]="x.anchor">
         <a mat-tab-link [active]="x.selected">{{ x.anchor.title }}</a>
       </dbx-anchor>
     </nav>
-    <mat-tab-nav-panel #tabPanel>...</mat-tab-nav-panel>
+    <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
   </ng-container>
 </ng-container>
