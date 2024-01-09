@@ -1,7 +1,7 @@
 import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, systemBaseDateToNormalDate } from '@dereekb/date';
-import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns/esm';
+import { addMonths, setHours, startOfDay, addDays, addHours } from 'date-fns';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
 import { CalendarScheduleSelectionDayState, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
