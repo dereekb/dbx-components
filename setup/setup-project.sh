@@ -36,7 +36,7 @@ IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 IS_NOT_CI_TEST=true
 
 # - Other Configuration
-SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
+SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"develop"}     # develop or main
 
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
@@ -180,23 +180,21 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
-# TODO: Remove jasmine-marbles install
-# temporary: install jasmine-marbles@^0.9.2 explicitly due to dependency resolution issue
-npm install -D @nrwl/nest@$NX_VERSION jasmine-marbles@^0.9.2
-npx -y nx@$NX_VERSION g @nrwl/nest:app $API_APP_NAME
+npm install -D @nx/nest@$NX_VERSION
+npx -y nx@$NX_VERSION g @nx/nest:app $API_APP_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
-npx -y nx@$NX_VERSION g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
+npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=false --simpleName=true
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
-npm install -D @nrwl/node@$NX_VERSION
-npx -y nx@$NX_VERSION g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
+npm install -D @nx/node@$NX_VERSION
+npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
@@ -366,7 +364,8 @@ git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
-npm install -D jest@29.4.4 jest-environment-jsdom@29.7.0 jest-preset-angular@13.1.4 ts-jest@^29.1.0 jest-date@^1.1.4 jest-junit@^16.0.0
+echo "Adding jest configurations..."
+npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@13.1.4 ts-jest@^29.1.1 jest-date@^1.1.4 jest-junit@^16.0.0
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
@@ -378,6 +377,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jes
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.typings.ts -o jest.setup.typings.ts
 
 # add env files to ensure that jest CI tests export properly.
+echo "Adding env files..."
 mkdir tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/.env -o tmp/env.tmp
 sed -e "s/APP_ID/$ANGULAR_APP_NAME/g" tmp/env.tmp > $ANGULAR_APP_FOLDER/.env
@@ -387,6 +387,7 @@ sed -e "s/APP_ID/$ANGULAR_COMPONENTS_NAME/g" tmp/env.tmp > $ANGULAR_COMPONENTS_F
 sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS_FOLDER/.env
 
 # make build-base and run-tests cacheable in nx cloud
+echo "Making tests cacheable in nx cloud..."
 npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']])); this.targetDefaults={ 'build': { 'dependsOn': ['^build'] }, 'publish': { 'dependsOn': ['build'] }, 'publish-npmjs': { 'dependsOn': ['build'] }, 'test': { 'dependsOn': ['build'] }, 'deploy': { 'dependsOn': ['build'] }, 'ci-deploy': { 'dependsOn': ['build'] } };";
 
 git add --all
@@ -411,7 +412,7 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing specific angular version"
-npm install -D @nrwl/angular@$NX_VERSION jest-preset-angular@13.1.4 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
+npm install -D @nx/angular@$NX_VERSION jest-preset-angular@13.1.4 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
 npm install @angular/fire@^16.0.0 @ngbracket/ngx-layout@16.1.3 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
@@ -436,7 +437,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@^12.0.0 @ngrx/store-devtools@16.0.1 @ngx-formly/schematics@6.2.2 @firebase/rules-unit-testing@^3.0.1 firebase-functions-test@^3.1.0 envfile env-cmd
+npm install -D firebase-tools@^12.0.0 @ngrx/store-devtools@16.3.0 @ngx-formly/schematics@6.2.2 @firebase/rules-unit-testing@^3.0.1 firebase-functions-test@^3.1.0 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
