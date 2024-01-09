@@ -2,7 +2,7 @@ import { HttpsError } from 'firebase-functions/lib/common/providers/https';
 import { ErrorMessageOrPartialServerError, isServerError, partialServerError, ServerError, StringErrorCode, ThrowErrorFunction } from '@dereekb/util';
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthError, FirebaseErrorCode } from '@dereekb/firebase';
+import { FirebaseErrorCode } from '@dereekb/firebase';
 
 export const NO_AUTH_ERROR_CODE = 'NO_AUTH';
 

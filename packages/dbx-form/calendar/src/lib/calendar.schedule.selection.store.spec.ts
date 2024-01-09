@@ -1,6 +1,6 @@
 import { lastValue } from '@dereekb/util';
 import { addDays, addHours } from 'date-fns';
-import { DateCellScheduleDayCode, systemNormalDateToBaseDate } from '@dereekb/date';
+import { DateCellScheduleDayCode } from '@dereekb/date';
 import { computeCalendarScheduleSelectionDateCellRange, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithChangedScheduleDays } from './calendar.schedule.selection.store';
 
 /*

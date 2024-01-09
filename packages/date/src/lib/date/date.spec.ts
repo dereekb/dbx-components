@@ -1,5 +1,5 @@
-import { expandDaysForDateRange, isSameDateDay, parseISO8601DayStringToDate } from '@dereekb/date';
-import { Day, isISO8601DateString, isISO8601DayString, isUTCDateString } from '@dereekb/util';
+import { expandDaysForDateRange, isSameDateDay } from '@dereekb/date';
+import { Day, isISO8601DateString, isUTCDateString } from '@dereekb/util';
 import { parseISO, addMinutes, addDays, endOfWeek, startOfWeek } from 'date-fns';
 import { parseJsDateString, readDaysOfWeek } from './date';
 

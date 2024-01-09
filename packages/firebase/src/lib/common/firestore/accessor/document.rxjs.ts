@@ -1,5 +1,4 @@
 import { Observable, combineLatest, shareReplay, map, OperatorFunction, of } from 'rxjs';
-import { FirestoreCollectionType, FirestoreModelKey, firestoreModelKeyCollectionType, firestoreModelKeyCollectionTypePair, FirestoreModelKeyCollectionTypePair } from '../collection/collection';
 import { DocumentDataWithIdAndKey, DocumentSnapshot } from '../types';
 import { FirestoreDocument, FirestoreDocumentData } from './document';
 import { getDataFromDocumentSnapshots } from './document.utility';

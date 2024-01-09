@@ -1,5 +1,5 @@
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { asArray, convertMaybeToArray, firstValue, LabeledValue, Maybe } from '@dereekb/util';
+import { convertMaybeToArray, firstValue, LabeledValue, Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
 import { DescriptionFieldConfig, formlyField, FormlyValueParser, LabeledFieldConfig, MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';

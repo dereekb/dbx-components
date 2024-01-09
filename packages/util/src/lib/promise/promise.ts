@@ -82,7 +82,7 @@ export interface PerformAsyncTasksConfig<I = unknown> extends PerformAsyncTaskCo
  */
 export async function performAsyncTasks<I, O = unknown>(input: I[], taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
   const { sequential, maxParallelTasks, waitBetweenTasks } = config;
-  let taskResults: [I, O, boolean][] = [];
+  const taskResults: [I, O, boolean][] = [];
 
   await performTasksInParallelFunction({
     taskFactory: (value: I, i) =>

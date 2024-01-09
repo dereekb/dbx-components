@@ -43,7 +43,7 @@ export type BitwiseSetDecoder<D extends BitwiseEncodedSetIndex> = (set: BitwiseE
 
 export function bitwiseSetDecoder<D extends BitwiseEncodedSetIndex>(maxIndex: number): BitwiseSetDecoder<D> {
   return (input: BitwiseEncodedSet) => {
-    let encodedSet = new Set<D>();
+    const encodedSet = new Set<D>();
 
     for (let i = 0; i < maxIndex; i += 1) {
       if (input & (1 << i)) {

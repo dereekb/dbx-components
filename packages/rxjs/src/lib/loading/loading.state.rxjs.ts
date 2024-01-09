@@ -1,4 +1,4 @@
-import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, takeFront, EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
+import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
 import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult, LoadingStateWithMaybeSoValue, loadingStatesHaveEquivalentMetadata } from './loading.state';
@@ -284,7 +284,7 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
           }
 
           // determine the metadata changes
-          let isSameLoadingStateMetadata = safeCompareEquality(state, acc.previous, metadataComparator);
+          const isSameLoadingStateMetadata = safeCompareEquality(state, acc.previous, metadataComparator);
 
           // pick the value
           const value: Maybe<LoadingStateValue<L>> = isSameValue ? acc.value : nextValue;

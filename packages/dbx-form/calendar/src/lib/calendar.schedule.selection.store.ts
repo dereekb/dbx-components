@@ -27,7 +27,6 @@ import {
   DateOrDateRangeOrDateCellIndexOrDateCellRange,
   dateCellTimingRelativeIndexArrayFactory,
   isInfiniteDateRange,
-  copyHoursAndMinutesFromDate,
   dateTimezoneUtcNormal,
   DateTimezoneUtcNormalInstance,
   expandDateCellScheduleRange,
@@ -46,12 +45,10 @@ import {
   fullDateCellScheduleRange,
   dateCellTimingTimezoneNormalInstance,
   changeDateCellScheduleDateRangeToTimezone,
-  updateDateCellTimingToSystemTimezone,
-  SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE,
-  getLeastAndGreatestDateCellIndexInDateCellRanges
+  SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValue, firstValueFromIterable, isIterable, removeFromSet } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValueFromIterable, isIterable, removeFromSet } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of } from 'rxjs';

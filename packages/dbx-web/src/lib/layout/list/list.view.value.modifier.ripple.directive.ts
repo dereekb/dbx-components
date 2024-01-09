@@ -1,5 +1,5 @@
 import { Directive, Input, OnDestroy } from '@angular/core';
-import { Maybe, ArrayOrValue, Modifier, DecisionFunction } from '@dereekb/util';
+import { Maybe, ArrayOrValue, Modifier } from '@dereekb/util';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { DbxValueListItem, DbxValueListItemDecisionFunction } from './list.view.value';
 import { AbstractDbxValueListItemModifierDirective } from './list.view.value.modifier.directive';

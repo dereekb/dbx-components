@@ -1,4 +1,4 @@
-import { isE164PhoneNumber, isE164PhoneNumberWithExtension, isISO8601DayString, ObjectWithConstructor } from '@dereekb/util';
+import { isE164PhoneNumber, isE164PhoneNumberWithExtension, ObjectWithConstructor } from '@dereekb/util';
 import { ValidationOptions, registerDecorator, ValidationArguments } from 'class-validator';
 
 /**

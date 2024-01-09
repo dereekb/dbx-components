@@ -3,7 +3,7 @@ import { ArrayFactory, AsyncArrayFactory } from '../array/array.factory';
 import { FilterUniqueFunction } from '../array/array.unique';
 import { PrimativeKey } from '../key';
 import { performBatchLoop } from '../promise/promise.loop';
-import { AsyncMapFunction, MapFunction, mapIdentityFunction } from '../value/map';
+import { AsyncMapFunction, MapFunction } from '../value/map';
 
 /**
  * Used to verify each id valid and available for use.

@@ -1,4 +1,4 @@
-import { cleanup, filterMaybe, onTrueToFalse, tapLog } from '@dereekb/rxjs';
+import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
 import {
   isSameLatLngBound,
@@ -21,7 +21,6 @@ import {
   neMostLatLngPoint,
   latLngBoundWrapsMap,
   Vector,
-  vectorsAreEqual,
   filterUndefinedValues,
   latLngBoundFromInput,
   vectorMinimumSizeResizeFunction,

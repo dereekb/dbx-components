@@ -2,9 +2,9 @@ import { DateRange } from '@dereekb/date';
 import { StringOrder, Maybe, pushArrayItemsIntoArray, firstValueFromIterable, DayOfWeek, addToSet, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, forEachInIterable, mergeFilterFunctions, TimezoneString, TimezoneStringRef, Building, sortNumbersAscendingFunction } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
-import { getDay, addMinutes, startOfDay } from 'date-fns';
-import { isDate, isSameDate, requireCurrentTimezone } from './date';
-import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingDateRange, DateCellTimingStartsAtEndRange, FullDateCellTiming, isSameDateCellTiming, isSameFullDateCellTiming, DateCellTimingEventStartsAt, isValidDateCellTiming, isFullDateCellTiming, DateCellTimingTimezoneInput, shiftDateCellTimingToTimezoneFunction, dateCellTimingTimezoneNormalInstance } from './date.cell';
+import { getDay, addMinutes } from 'date-fns';
+import { isDate, requireCurrentTimezone } from './date';
+import { calculateExpectedDateCellTimingDurationPair, DateCell, DateCellDurationSpan, DateCellIndex, DateCellTiming, DateCellTimingDateRange, DateCellTimingStartsAtEndRange, FullDateCellTiming, isSameFullDateCellTiming, DateCellTimingEventStartsAt, isFullDateCellTiming, DateCellTimingTimezoneInput, dateCellTimingTimezoneNormalInstance } from './date.cell';
 import { DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingStartsAtDateFactory } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { DateCellRangeOrDateRange, DateCellRange, DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
@@ -849,7 +849,7 @@ export function dateCellScheduleDateCellTimingFilter<B extends DateCell = DateCe
 export function expandDateCellScheduleFactory<B extends DateCell = DateCell>(config: DateCellScheduleDateCellTimingFilterConfig): DateCellTimingExpansionFactory<B> {
   const { invertSchedule = false, now, onlyBlocksThatHaveEnded, onlyBlocksThatHaveStarted, onlyBlocksNotYetEnded, onlyBlocksNotYetStarted, maxDateCellsToReturn, durationSpanFilter: inputDurationSpanFilter } = config;
   let durationSpanFilter: FilterFunction<DateCellDurationSpan<DateCell>> | undefined;
-  let durationSpanFilters: FilterFunction<DateCellDurationSpan<DateCell>>[] = [];
+  const durationSpanFilters: FilterFunction<DateCellDurationSpan<DateCell>>[] = [];
 
   if (inputDurationSpanFilter) {
     durationSpanFilters.push(inputDurationSpanFilter);

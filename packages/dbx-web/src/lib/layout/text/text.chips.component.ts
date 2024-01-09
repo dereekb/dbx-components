@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbxThemeColor } from '../style/style';
 
 export interface TextChip<T = unknown> {
   text: string;

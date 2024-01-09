@@ -2,7 +2,7 @@ import { ArrayOrValue, asArray } from '../array/array';
 import { EmailAddress } from '../contact/email';
 import { E164PhoneNumberExtensionPair, E164PhoneNumberWithOptionalExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
-import { isolateSlashPathFunction, isSlashPathFile, isSlashPathFolder, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
+import { isolateSlashPathFunction, isSlashPathFolder, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 import { escapeStringForRegex, findAllCharacterOccurences, splitStringAtFirstCharacterOccurence } from './replace';

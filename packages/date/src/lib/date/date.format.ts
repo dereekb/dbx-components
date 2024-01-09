@@ -2,7 +2,7 @@ import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString,
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, fitUTCDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
-import { fitDateRangeToDayPeriod, fitDateRangeToDayPeriodFunction } from './date.range.timezone';
+import { fitDateRangeToDayPeriodFunction } from './date.range.timezone';
 import { DateTimezoneUtcNormalFunctionInput } from './date.timezone';
 
 export type FormatDateFunction = MapFunction<Date, string>;

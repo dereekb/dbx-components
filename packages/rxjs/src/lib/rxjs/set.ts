@@ -1,4 +1,4 @@
-import { Maybe, setContainsAllValues, setContainsAnyValue, setContainsNoneOfValue, PrimativeKey, hasDifferentValues, ReadValueFunction, hasSameValues, EqualityComparatorFunction, invertDecision, compareEqualityWithValueFromItemsFunction } from '@dereekb/util';
+import { Maybe, setContainsAllValues, setContainsAnyValue, setContainsNoneOfValue, PrimativeKey, ReadValueFunction, hasSameValues, EqualityComparatorFunction, compareEqualityWithValueFromItemsFunction } from '@dereekb/util';
 import { distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from 'rxjs';
 import { combineLatestMapFrom } from './value';
 

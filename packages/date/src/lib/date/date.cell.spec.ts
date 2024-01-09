@@ -1,6 +1,6 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addMilliseconds, millisecondsToHours } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addMilliseconds } from 'date-fns';
 import {
   dateCellTiming,
   DateCellTiming,

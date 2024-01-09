@@ -1,4 +1,4 @@
-import { ModelKey, ModelTypeString } from '../model/model';
+import { ModelTypeString } from '../model/model';
 import { ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange, RelationKey, RelationModelType } from './relation';
 
 class RelationTag {

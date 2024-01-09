@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, OnDestroy, Input, OnInit } from '@angular/core';
 import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
-import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith, share } from 'rxjs';
+import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, Maybe, reduceBooleansWithAnd } from '@dereekb/util';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -185,7 +185,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
       .pipe(
         first(),
         switchMap((x) => {
-          let result: Observable<[typeof x, boolean]> = x
+          const result: Observable<[typeof x, boolean]> = x
             ? of([x, true])
             : this.dbxCalendarScheduleSelectionStore.minMaxDateRange$.pipe(
                 first(),

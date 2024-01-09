@@ -4,7 +4,7 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
 import { Maybe } from '@dereekb/util';
-import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of, map, shareReplay, combineLatest, EMPTY } from 'rxjs';
+import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, map, shareReplay, combineLatest, EMPTY } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';

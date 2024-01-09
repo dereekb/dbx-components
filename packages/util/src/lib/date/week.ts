@@ -1,4 +1,3 @@
-import { DecisionFunction } from './../value/decision';
 import { Maybe } from '../value';
 import { IsInSetDecisionFunction, isInSetDecisionFunction } from '../set/set.decision';
 
