@@ -41,6 +41,10 @@ $dbx-popup-border-radius: 4px;
     min-width: 220px;
     display: inline-block;
     text-align: right;
+
+    button.mdc-button.mat-mdc-button {
+      min-height: 28px;
+    }
   }
 }
 

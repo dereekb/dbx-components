@@ -21,6 +21,9 @@ $login-button-icon-size: 18px;
   .dbx-firebase-login-button {
     display: inline-block;
 
+    --mdc-typography-button-letter-spacing: normal;
+    --mdc-typography-button-font-weight: 600;
+
     .dbx-button {
       width: $login-button-width;
     }

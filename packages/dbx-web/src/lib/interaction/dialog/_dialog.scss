@@ -3,18 +3,26 @@
 // MARK: Variables
 $dialog-width: 400px;
 $max-dialog-width: 90vw;
-$mat-dialog-container-padding: 24px;
-$dbx-dialog-content-close-edge-padding: 2px;
-$dbx-dialog-content-close-offset: $mat-dialog-container-padding - $dbx-dialog-content-close-edge-padding;
+$mat-dialog-close-icon-size: 48px;
+$mat-dialog-close-icon-half-size: $mat-dialog-close-icon-size / 2;
+$mat-dialog-container-padding: 18px;
+$dbx-dialog-content-close-edge-padding: 4px;
+$dbx-dialog-content-close-top-offset: $dbx-dialog-content-close-edge-padding;
+$dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
 
 // MARK: Mixin
 @mixin core() {
   .dbx-dialog-content {
+    display: block;
+    padding: $mat-dialog-container-padding;
+
     &.normal-dialog-content {
       width: $dialog-width;
       min-width: $dialog-width;
     }
+  }
 
+  .mdc-dialog__container .dbx-dialog-content {
     &.wide-dialog-content {
       width: $max-dialog-width;
     }
@@ -23,14 +31,22 @@ $dbx-dialog-content-close-offset: $mat-dialog-container-padding - $dbx-dialog-co
   .dbx-dialog-content-close {
     display: flex;
     height: 0px;
-    padding-right: 3px;
     align-items: center;
     justify-content: flex-end;
   }
 
-  .mat-dialog-container .dbx-dialog-content-close {
-    position: relative;
-    right: -$dbx-dialog-content-close-offset;
+  .mdc-dialog__container .dbx-dialog-content-close > .dbx-dialog-content-close-button {
+    position: absolute;
+    top: $dbx-dialog-content-close-top-offset;
+    right: $dbx-dialog-content-close-right-offset;
+  }
+
+  .dbx-dialog-content-close.dbx-dialog-content-close-padding {
+    padding-bottom: $mat-dialog-container-padding;
+
+    > .dbx-dialog-content-close-button {
+      top: $dbx-dialog-content-close-edge-padding;
+    }
   }
 
   .dbx-dialog-content-footer {
