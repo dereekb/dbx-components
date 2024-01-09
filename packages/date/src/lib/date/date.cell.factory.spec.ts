@@ -1,4 +1,3 @@
-import { guessCurrentTimezone, requireCurrentTimezone, timingDateTimezoneUtcNormal } from '@dereekb/date';
 import { range, isOddNumber, RangeInput, MS_IN_MINUTE, TimezoneString, MINUTES_IN_HOUR, MS_IN_HOUR } from '@dereekb/util';
 import { addDays, addHours, addMilliseconds, addMinutes, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
 import { shiftDateCellTimingToTimezoneFunction, DateCell, DateCellTiming, dateCellTiming, dateCellTimingStart, DateCellTimingStartsAt, FullDateCellTiming, isValidDateCellTiming, dateCellTimingFinalStartsAtEvent } from './date.cell';
@@ -9,6 +8,7 @@ import { DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
 import { formatToISO8601DayString, parseISO8601DayStringToDate, parseISO8601DayStringToUTCDate } from './date.format';
 import { DateRange, isDateInDateRange } from './date.range';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
+import { guessCurrentTimezone, requireCurrentTimezone } from './date';
 
 /**
  * A DateCell with a string value.
@@ -874,7 +874,7 @@ describe('dateCellTimingStartDateFactory()', () => {
   describe('scenarios', () => {
     describe('America/New_York timezone past days', () => {
       const timezone = 'America/New_York';
-      const timezoneInstance = timingDateTimezoneUtcNormal(timezone);
+      const timezoneInstance = dateTimezoneUtcNormal(timezone);
 
       const testDays = 17;
       const timing: DateCellTiming = {

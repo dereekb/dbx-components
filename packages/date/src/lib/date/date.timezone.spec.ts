@@ -4,7 +4,6 @@ import { ISO8601DayString, Milliseconds } from '@dereekb/util';
 import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, systemDateTimezoneUtcNormal, transformDateRangeToTimezoneFunction } from './date.timezone';
 import MockDate from 'mockdate';
 import { formatToISO8601DayString } from './date.format';
-import { timingDateTimezoneUtcNormal } from './date.block';
 
 beforeEach(() => {
   MockDate.reset();
@@ -332,7 +331,7 @@ describe('copyHoursAndMinutesFromDateWithTimezoneNormal()', () => {
   describe('scenario', () => {
     describe('UTC', () => {
       const timezone = 'UTC';
-      const timezoneInstance = timingDateTimezoneUtcNormal({ timezone });
+      const timezoneInstance = dateTimezoneUtcNormal({ timezone });
 
       it('should copy the hours and minutes to the expected time', () => {
         const expectedDate = new Date('2023-08-13T21:31:00.000Z');
