@@ -3,7 +3,7 @@ import { ArrayFactory, AsyncArrayFactory } from '../array/array.factory';
 import { FilterUniqueFunction } from '../array/array.unique';
 import { PrimativeKey } from '../key';
 import { performBatchLoop } from '../promise/promise.loop';
-import { AsyncMapFunction, MapFunction } from '../value/map';
+import { AsyncMapFunction, MapFunction, mapIdentityFunction } from '../value/map';
 
 /**
  * Used to verify each id valid and available for use.
@@ -14,12 +14,6 @@ export type IdBatchVerifierFunction<T> = AsyncMapFunction<MapFunction<T[], T[]>>
  * Used by to verify tags have not already been taken.
  */
 export type IdBatchVerifier<T, K extends PrimativeKey = PrimativeKey> = {
-  /**
-   * Optional function to ensure uniqueness.
-   *
-   * @deprecated use filterUnique instead
-   */
-  findUnique?: FilterUniqueFunction<T, K>;
   /**
    * (Optional) Use to filter unique key values.
    */
@@ -49,7 +43,7 @@ export type IdBatchFactory<T> = AsyncArrayFactory<T>;
  */
 export function idBatchFactory<T, K extends PrimativeKey = PrimativeKey>(config: IdBatchFactoryConfig<T, K>): IdBatchFactory<T> {
   const { factory, verifier } = config;
-  const { maxBatchSize: tagsToGeneratePerBatch, findUnique = (x) => x, filterUnique = findUnique, verify: verifyTags } = verifier;
+  const { maxBatchSize: tagsToGeneratePerBatch, filterUnique = (x) => x, verify: verifyTags } = verifier;
   const maxUniquenessFailures = 20; // arbitrary failure point, but generally shouldn't occur with proper input.
 
   return async (totalTagIdentifiersToGenerate: number) => {

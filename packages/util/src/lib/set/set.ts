@@ -446,19 +446,3 @@ export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Ite
 export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
   return a && b ? a.size === b.size && setContainsAllValues(a, b, true) : a == b;
 }
-
-// MARK: Compat
-/**
- * @deprecated use symmetricDifferenceArray
- */
-export const symmetricDifferenceKeys = symmetricDifferenceArray;
-
-/**
- * @deprecated use symmetricDifferenceArrayBetweenSets
- */
-export const symmetricDifferenceKeysSet = symmetricDifferenceArrayBetweenSets;
-
-/**
- * @deprecated use filterValuesUsingSet
- */
-export const filterValuesFromSet = filterValuesUsingSet;

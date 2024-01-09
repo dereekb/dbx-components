@@ -36,12 +36,6 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
   /**
    * (Optional) Timezone to use for the output start date.
    *
-   * @deprecated use 'outputTimezone' instead.
-   */
-  timezone?: ObservableOrValue<Maybe<TimezoneString>>;
-  /**
-   * (Optional) Timezone to use for the output start date.
-   *
    * If a filter is provided, this timezone overrides the filter's timezone output.
    */
   outputTimezone?: ObservableOrValue<Maybe<TimezoneString>>;
@@ -158,7 +152,7 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
   }
 
   get outputTimezone() {
-    return this.props.outputTimezone || this.props.timezone;
+    return this.props.outputTimezone;
   }
 
   get initialSelectionState() {

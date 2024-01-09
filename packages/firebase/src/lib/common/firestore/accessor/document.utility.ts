@@ -274,14 +274,3 @@ export function documentReferenceFromDocument<T, D extends FirestoreDocument<T>>
 export function documentReferencesFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): DocumentReference<T>[] {
   return documents.map(documentReferenceFromDocument);
 }
-
-// MARK: Compat
-/**
- * @Deprecated use DocumentDataWithIdAndKeyFunction<T> instead.
- */
-export type DocumentDataWithIdFunction<T> = DocumentDataWithIdAndKeyFunction<T>;
-
-/**
- * @deprecated use documentDataWithIdAndKey instead.
- */
-export const documentDataWithId = documentDataWithIdAndKey;

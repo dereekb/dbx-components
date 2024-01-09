@@ -808,27 +808,3 @@ export function getDaysOfWeekInDateRange(dateRange: DateRange): DayOfWeek[] {
 
   return days;
 }
-
-// MARK: Compat
-/**
- * @deprecated use DateRelativeState instead.
- */
-export enum DateRangeState {
-  /**
-   * Range has yet to start and is in the future.
-   */
-  FUTURE = 'future',
-  /**
-   * Range is in the present, but not yet ended.
-   */
-  PRESENT = 'present',
-  /**
-   * Range is in the past.
-   */
-  PAST = 'past'
-}
-
-/**
- * @deprecated use dateRangeRelativeState() instead.
- */
-export const dateRangeState = dateRangeRelativeState;

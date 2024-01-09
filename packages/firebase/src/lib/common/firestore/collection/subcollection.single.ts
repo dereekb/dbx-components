@@ -17,14 +17,3 @@ export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocu
 
   return collection;
 }
-
-// MARK: Compat
-/**
- * @deprecated use DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER instead.
- */
-export const DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_ITEM_IDENTIFIER = '0';
-
-/**
- * @deprecated use SingleItemFirestoreCollectionDocumentIdentifier instead.
- */
-export type SingleItemFirestoreCollectionItemIdentifier = string;

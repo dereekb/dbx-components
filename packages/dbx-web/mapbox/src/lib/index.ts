@@ -1,4 +1,3 @@
-export * from './mapbox.cdref.service';
 export * from './mapbox.change.service';
 export * from './mapbox.injection.component';
 export * from './mapbox.injection.store.provide';

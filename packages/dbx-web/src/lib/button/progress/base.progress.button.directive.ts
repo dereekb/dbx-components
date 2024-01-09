@@ -28,8 +28,6 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
           working: options?.working || working,
           disabled: options?.disabled || disabled
         };
-
-        completeOptions.buttonIcon = completeOptions.buttonIcon || completeOptions.icon;
       }
 
       return completeOptions;

@@ -7,7 +7,7 @@ import { Directive, Input } from '@angular/core';
   selector: 'dbx-content-box, [dbxContentBox]',
   host: {
     class: 'd-block dbx-content-box',
-    '[class.dbx-content-elevate]': 'elevate && elevated',
+    '[class.dbx-content-elevate]': 'elevate',
     '[class.dbx-content-box-wide]': 'wide'
   }
 })
@@ -17,11 +17,4 @@ export class DbxContentBoxDirective {
 
   @Input()
   wide = true;
-
-  // MARK: Compat
-  /**
-   * @Deprecated use elevate instead
-   */
-  @Input()
-  elevated = true;
 }

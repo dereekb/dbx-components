@@ -158,14 +158,6 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * Custom presets to show in the dropdown.
    */
   presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
-
-  // MARK: Compat
-  /**
-   * Used for returning the configuration observable.
-   *
-   * @deprecated Use pickerConfig instead.
-   */
-  getConfigObs?: ObservableOrValueGetter<DbxDateTimePickerConfiguration>;
 }
 
 export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
@@ -552,7 +544,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
-    const inputPickerConfig = this.dateTimeField.getConfigObs || this.dateTimeField.pickerConfig;
+    const inputPickerConfig = this.dateTimeField.pickerConfig;
     this._config.next(inputPickerConfig ? asObservableFromGetter(inputPickerConfig) : undefined);
     this._syncConfigObs.next(this.dateTimeField.getSyncFieldsObs?.());
 
@@ -806,9 +798,3 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     });
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated Use DbxDateTimePickerConfiguration instead.
- */
-export type DateTimePickerConfiguration = DbxDateTimePickerConfiguration;

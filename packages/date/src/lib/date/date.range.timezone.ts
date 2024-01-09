@@ -30,18 +30,6 @@ export function fitDateRangeToDayPeriodFunction(timezone: DateTimezoneUtcNormalF
  * @param dateRange
  * @param timezone
  */
-export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T, timezone: DateTimezoneUtcNormalFunctionInput): T;
-/**
- * @deprecated Provide a timezone to properly handle daylight savings changes, or use fitUTCDateRangeToDayPeriod() explicitly.
- *
- * @param dateRange
- * @param timezone
- */
-export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T, timezone?: DateTimezoneUtcNormalFunctionInput): T;
-export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T, timezone?: DateTimezoneUtcNormalFunctionInput): T {
-  if (timezone) {
-    return fitDateRangeToDayPeriodFunction(timezone)(dateRange);
-  } else {
-    return fitUTCDateRangeToDayPeriod(dateRange);
-  }
+export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T, timezone: DateTimezoneUtcNormalFunctionInput): T {
+  return fitDateRangeToDayPeriodFunction(timezone)(dateRange);
 }

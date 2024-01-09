@@ -368,9 +368,3 @@ export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConf
     return groups;
   };
 }
-
-// MARK: Compat
-/**
- * @deprecated use UNKNOWN_YEAR_WEEK_CODE instead.
- */
-export const UNKNOWN_JOB_YEAR_WEEK = UNKNOWN_YEAR_WEEK_CODE;

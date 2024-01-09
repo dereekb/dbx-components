@@ -681,9 +681,3 @@ export function copyHoursAndMinutesFromDateWithTimezoneNormal(input: Date, copyF
   const result = timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
   return result;
 }
-
-// MARK: compat
-/**
- * @deprecated use copyHoursAndMinutesFromDateWithTimezoneNormal() instead.
- */
-export const copyHoursAndMinutesFromDatesWithTimezoneNormal = copyHoursAndMinutesFromDateWithTimezoneNormal;

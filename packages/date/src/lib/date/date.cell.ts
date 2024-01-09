@@ -804,24 +804,3 @@ export function isValidFullDateCellTiming(timing: FullDateCellTiming): boolean {
   const { isValid } = isValidFullDateCellTimingInfo(timing);
   return isValid;
 }
-
-// MARK: Compat
-/**
- * @deprecated use updateDateCellTimingToTimezoneFunction() or shiftDateCellTimingToTimezoneFunction() instead.
- */
-export const changeDateCellTimingToTimezoneFunction = updateDateCellTimingToTimezoneFunction;
-
-/**
- * @deprecated use updateDateCellTimingToSystemTimezone() or shiftDateCellTimingToSystemTimezone() instead.
- */
-export const changeDateCellTimingToSystemTimezone = updateDateCellTimingToSystemTimezone;
-
-/**
- * @deprecated use updateDateCellTimingToUTCTimezone() or shiftDateCellTimingToUTCTimezone() instead.
- */
-export const changeDateCellTimingToUTCTimezone = updateDateCellTimingToUTCTimezone;
-
-/**
- * @deprecated use updateDateCellTimingToTimezone() or shiftDateCellTimingToTimezone() instead.
- */
-export const changeDateCellTimingToTimezone = updateDateCellTimingToTimezone;

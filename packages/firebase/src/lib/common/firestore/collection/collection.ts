@@ -349,7 +349,15 @@ export type FirestoreModelKey = ModelKey;
  */
 export type FirestoreModelKeyCollectionTypePair = FirestoreModelKeyRef & FirestoreCollectionTypeRef;
 
-export function firestoreModelKeyPair() {}
+/**
+ * Creates a FirestoreModelKeyCollectionTypePair from the input FirestoreModelKey.
+ *
+ * @param key
+ * @returns
+ */
+export function firestoreModelKeyCollectionTypePair(key: FirestoreModelKey): FirestoreModelKeyCollectionTypePair {
+  return { key, collectionType: firestoreModelKeyCollectionType(key) as FirestoreCollectionType };
+}
 
 /**
  * Firestore Model Key Regex that checks for pairs.

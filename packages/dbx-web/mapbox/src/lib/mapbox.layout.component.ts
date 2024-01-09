@@ -245,10 +245,4 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
       this.openedChange.next(opened);
     }
   }
-
-  // MARK: Compat
-  /**
-   * @deprecated use isOpenAndHasContent$ instead.
-   */
-  readonly opened$ = this.isOpenAndHasContent$;
 }

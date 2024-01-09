@@ -20,15 +20,9 @@ export class DbxScheduleSelectionCalendarDateDialogButtonComponent {
   @Input()
   contentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
 
-  /**
-   * @deprecated use contentConfig instead.
-   */
-  @Input()
-  closeConfig?: Maybe<DbxDialogContentFooterConfig>;
-
   constructor(readonly matDialog: MatDialog, readonly injector: Injector) {}
 
   clickCustomize() {
-    DbxScheduleSelectionCalendarDateDialogComponent.openDialog(this.matDialog, { injector: this.injector, contentConfig: this.contentConfig, closeConfig: this.closeConfig });
+    DbxScheduleSelectionCalendarDateDialogComponent.openDialog(this.matDialog, { injector: this.injector, contentConfig: this.contentConfig });
   }
 }

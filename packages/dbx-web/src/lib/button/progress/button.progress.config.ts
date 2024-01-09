@@ -24,10 +24,6 @@ export interface DbxProgressButtonOptions {
   value?: number;
   fullWidth?: boolean;
   disabled?: boolean;
-  /**
-   * @deprecated use buttonIcon instead.
-   */
-  icon?: DbxProgressButtonIcon;
   type?: string;
   customStyle?: { [key: string]: string };
   customClass?: string;

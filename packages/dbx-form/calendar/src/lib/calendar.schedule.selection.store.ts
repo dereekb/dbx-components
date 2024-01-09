@@ -344,15 +344,6 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly inputRange$: Observable<CalendarScheduleSelectionInputDateRange> = this.currentInputRange$.pipe(filterMaybe(), shareReplay(1));
 
-  /**
-   * @deprecated This is not the same as the current selection value. This is the set of manually togged off dates. It will be removed in a future update.
-   */
-  readonly selectedDates$: Observable<Set<DateCellIndex>> = this.state$.pipe(
-    map((x) => x.toggledIndexes),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
   readonly isEnabledFilterDayFunction$: Observable<DecisionFunction<DateCellTimingRelativeIndexFactoryInput>> = this.state$.pipe(
     map((x) => x.isEnabledFilterDay),
     distinctUntilChanged(),
@@ -576,37 +567,6 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
    * Should typically not be used by the user directly with the intention of the parent synchronizing to this state.
    */
   readonly setViewReadonlyState = this.updater((state, isViewReadonly: boolean) => ({ ...state, isViewReadonly }));
-
-  // MARK: Compat
-  /**
-   * @deprecated use setOutputTimezone instead.
-   */
-  readonly setTimezone = this.setOutputTimezone;
-
-  /**
-   * @deprecated use ouputTimezone$
-   */
-  readonly currentTimezone$: Observable<Maybe<TimezoneString>> = this.outputTimezone$;
-
-  /**
-   * @deprecated use effectiveOuputTimezone$
-   */
-  readonly effectiveTimezone$: Observable<Maybe<TimezoneString>> = this.effectiveOutputTimezone$;
-
-  /**
-   * @deprecated use effectiveOuputTimezoneNormal$
-   */
-  readonly effectiveTimezoneNormal$ = this.effectiveOutputTimezoneNormal$;
-
-  /**
-   * @deprecated use currentSelectionValueDateCellDurationSpanExpansion$
-   */
-  readonly currentSelectionValueDateBlockDurationSpan$ = this.currentSelectionValueDateCellDurationSpanExpansion$;
-
-  /**
-   * @deprecated use selectionValueWithTimezoneDateCellDurationSpanExpansion$
-   */
-  readonly selectionValueWithTimezoneDateBlockDurationSpan$ = this.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
 }
 
 export function updateStateWithInitialSelectionState(state: CalendarScheduleSelectionState, initialSelectionState: Maybe<AllOrNoneSelection>): CalendarScheduleSelectionState {

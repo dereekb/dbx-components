@@ -96,14 +96,3 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
 export function filterUniqueValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
   return filterUniqueFunction(readKey, additionalKeys)(values);
 }
-
-// MARK: Compat
-/**
- * @deprecated use filterUniqueValues() instead.
- */
-export const findUnique = filterUniqueValues;
-
-/**
- * @deprecated use filterUniqueFunction() instead.
- */
-export const makeFindUniqueFunction = filterUniqueFunction;

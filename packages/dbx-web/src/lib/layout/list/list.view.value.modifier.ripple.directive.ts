@@ -41,9 +41,3 @@ export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxVal
     this._disableRippleForItem.next(disableRippleForItem ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION);
   }
 }
-
-// MARK: Compat
-/**
- * @Deprecated use DbxValueListItemDecisionFunction instead.
- */
-export type DisableRippleForValueFunction<T> = DecisionFunction<DbxValueListItem<T>>;
