@@ -90,10 +90,7 @@ export function compareEqualityWithValueFromItemsFunctionFactory<I, V>(readValue
     fn._readValues = readValues;
     fn._equalityComparator = equalityComparator;
 
-    return {
-      _readValues: readValues,
-      _equalityComparator: equalityComparator
-    };
+    return fn;
   }) as Building<CompareEqualityWithValueFromItemsFunctionFactory<I, V>>;
 
   fn._readValues = readValues;

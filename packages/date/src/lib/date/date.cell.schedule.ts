@@ -732,7 +732,7 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   const allowedDays: Set<DayOfWeek> = expandDateCellScheduleDayCodesToDayOfWeekSet(w);
 
   const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt); // convert to the system date
-  const firstDateDay = getDay(startsAtInSystem);
+  const firstDateDay = getDay(startsAtInSystem) as DayOfWeek;
   const dayForIndex = dateCellDayOfWeekFactory(firstDateDay);
   const dateIndexForDate = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
 
