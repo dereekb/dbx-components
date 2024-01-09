@@ -4,5 +4,34 @@
     <doc-feature-example header="AbstractDialogDirective" hint="This class will automatically close a dialog if a transition occurs.">
       <button mat-raised-button (click)="openDialog()">Open Dialog</button>
     </doc-feature-example>
+    <doc-feature-example header="dbx-dialog-content" hint="This class provides default styling for a dialog. It has additional components such as dbx-dialog-content-close that provide styling and an output for the close button.">
+      <dbx-content-pit>
+        <dbx-dialog-content>
+          <dbx-dialog-content-close></dbx-dialog-content-close>
+          <p>This is a dialog.</p>
+          <button mat-raised-button>Closed</button>
+        </dbx-dialog-content>
+      </dbx-content-pit>
+
+      <h3>dbx-dialog-content-width</h3>
+      <p>The normal width limits the width of the dialog to 400px, but a wide option is also available.</p>
+      <dbx-content-pit>
+        <dbx-dialog-content width="wide">
+          <dbx-dialog-content-close></dbx-dialog-content-close>
+          <p>This is a dialog.</p>
+          <button mat-raised-button>Closed</button>
+        </dbx-dialog-content>
+      </dbx-content-pit>
+
+      <h3>dbx-dialog-content-close padding</h3>
+      <p>The padding is added by default, but can be set false to allow the implementation to handle styling.</p>
+      <dbx-content-pit>
+        <dbx-dialog-content>
+          <dbx-dialog-content-close [padded]="false"></dbx-dialog-content-close>
+          <h3>No Close Padding</h3>
+          <p>This is a dialog with no close padding.</p>
+        </dbx-dialog-content>
+      </dbx-content-pit>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

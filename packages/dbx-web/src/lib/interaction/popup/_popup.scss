@@ -41,6 +41,10 @@ $dbx-popup-border-radius: 4px;
     min-width: 220px;
     display: inline-block;
     text-align: right;
+
+    button.mdc-button.mat-mdc-button {
+      min-height: 28px;
+    }
   }
 }
 
@@ -56,7 +60,7 @@ $dbx-popup-border-radius: 4px;
   }
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
   .dbx-popup-controls-header {
     @include theming.limit-text();
   }
@@ -65,6 +69,7 @@ $dbx-popup-border-radius: 4px;
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popup') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -72,7 +77,7 @@ $dbx-popup-border-radius: 4px;
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

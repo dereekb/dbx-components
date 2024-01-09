@@ -14,13 +14,13 @@
   @include wrapper.core();
 }
 
-@mixin all-field-typography($typography-config) {
-  @include checklist.typography($typography-config);
-  @include component.typography($typography-config);
-  @include selection.all-selection-typography($typography-config);
-  @include texteditor.typography($typography-config);
-  @include value.all-value-typography($typography-config);
-  @include wrapper.typography($typography-config);
+@mixin all-field-typography($theme-config) {
+  @include checklist.typography($theme-config);
+  @include component.typography($theme-config);
+  @include selection.all-selection-typography($theme-config);
+  @include texteditor.typography($theme-config);
+  @include value.all-value-typography($theme-config);
+  @include wrapper.typography($theme-config);
 }
 
 @mixin all-field-theme($theme-config) {

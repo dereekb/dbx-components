@@ -1,5 +1,5 @@
 import { IndexRef, MINUTES_IN_DAY, MS_IN_DAY, Maybe, TimezoneString, Building, Minutes, minutesToFractionalHours, FractionalHour, TimezoneStringRef, MS_IN_MINUTE, ISO8601DayString, UTC_TIMEZONE_STRING } from '@dereekb/util';
-import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange } from './date.range';
+import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate, requireCurrentTimezone } from './date';
@@ -292,7 +292,7 @@ export function dateCellTiming(durationInput: DateDurationSpan, inputRange: Date
   const normalInstance = dateCellTimingTimezoneNormalInstance(timezoneInput);
   const timezone = normalInstance.configuredTimezoneString as string;
 
-  let { startsAt: inputStartsAt } = durationInput;
+  const { startsAt: inputStartsAt } = durationInput;
 
   // it is important that startsAt is evaluated the system time normal, as addDays/addMinutes and related functionality rely on the system timezone.
   let startsAtInSystemTimezone = normalInstance ? normalInstance.systemDateToTargetDate(inputStartsAt) : inputStartsAt;
@@ -804,24 +804,3 @@ export function isValidFullDateCellTiming(timing: FullDateCellTiming): boolean {
   const { isValid } = isValidFullDateCellTimingInfo(timing);
   return isValid;
 }
-
-// MARK: Compat
-/**
- * @deprecated use updateDateCellTimingToTimezoneFunction() or shiftDateCellTimingToTimezoneFunction() instead.
- */
-export const changeDateCellTimingToTimezoneFunction = updateDateCellTimingToTimezoneFunction;
-
-/**
- * @deprecated use updateDateCellTimingToSystemTimezone() or shiftDateCellTimingToSystemTimezone() instead.
- */
-export const changeDateCellTimingToSystemTimezone = updateDateCellTimingToSystemTimezone;
-
-/**
- * @deprecated use updateDateCellTimingToUTCTimezone() or shiftDateCellTimingToUTCTimezone() instead.
- */
-export const changeDateCellTimingToUTCTimezone = updateDateCellTimingToUTCTimezone;
-
-/**
- * @deprecated use updateDateCellTimingToTimezone() or shiftDateCellTimingToTimezone() instead.
- */
-export const changeDateCellTimingToTimezone = updateDateCellTimingToTimezone;

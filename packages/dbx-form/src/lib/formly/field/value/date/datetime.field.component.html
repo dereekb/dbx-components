@@ -35,14 +35,14 @@
 
 <!-- Date Input Template -->
 <ng-template #dateInputTemplate>
-  <button class="mat-datepicker-button-highlight dbx-button-spacer" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
-    <mat-icon>calendar_today</mat-icon>
-  </button>
-  <mat-form-field class="dbx-datetime-row-field" [ngClass]="{ 'dbx-datetime-row-field-full-width': hideDatePicker }">
+  <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
     <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
-    <span matSuffix *ngIf="!(showTimeInput$ | async)">
+    <button matPrefix class="mat-datepicker-button-highlight dbx-button-spacer" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
+      <mat-icon>calendar_today</mat-icon>
+    </button>
+    <span matTextSuffix *ngIf="!(showTimeInput$ | async)">
       <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
     </span>
   </mat-form-field>
@@ -50,9 +50,6 @@
 
 <!-- Time Menu/Input Template -->
 <ng-template #timeMenuAndInputTemplate>
-  <button class="mat-datepicker-button-highlight dbx-button-spacer" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
-    <mat-icon>timer</mat-icon>
-  </button>
   <mat-menu #timemenu="matMenu">
     <ng-container *ngIf="timeMode === 'optional'">
       <button mat-menu-item (click)="removeTime()">
@@ -67,7 +64,10 @@
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
     <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
-    <span matSuffix>
+    <button matPrefix class="mat-datepicker-button-highlight dbx-button-spacer" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
+      <mat-icon>timer</mat-icon>
+    </button>
+    <span matTextSuffix>
       <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
     </span>
   </mat-form-field>

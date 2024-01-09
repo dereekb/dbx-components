@@ -126,9 +126,3 @@ export function firebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumen
       )
     );
 }
-
-// MARK: Compat
-/**
- * @deprecated DbxfirebaseDocumentStoreCrudFunction is undefined.
- */
-export type DbxfirebaseDocumentStoreCrudFunction<I, O = void> = DbxFirebaseDocumentStoreCrudFunction<I, O>;

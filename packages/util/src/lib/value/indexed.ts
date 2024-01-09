@@ -2,7 +2,7 @@ import { findValuesFrom, FindValuesFromInput } from '../set/set';
 import { ArrayOrValue, asArray, lastValue } from '../array/array';
 import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
-import { MinAndMax, MinAndMaxFunction, minAndMaxFunction, MinAndMaxFunctionResult, reverseCompareFn, SortCompareFunction } from '../sort';
+import { MinAndMaxFunction, minAndMaxFunction, MinAndMaxFunctionResult, reverseCompareFn, SortCompareFunction } from '../sort';
 import { FactoryWithRequiredInput } from '../getter/getter';
 import { Maybe } from './maybe.type';
 import { separateValues } from '../grouping';

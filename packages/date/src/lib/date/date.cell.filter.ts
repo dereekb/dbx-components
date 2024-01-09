@@ -1,5 +1,5 @@
 import { FilterFunction, filterMaybeValues, Maybe } from '@dereekb/util';
-import { isAfter, isBefore } from 'date-fns';
+import { isAfter } from 'date-fns';
 import { DateCell, DateCellDurationSpan } from './date.cell';
 import { DateCellRange, UniqueDateCell, dateCellRangeWithRange, dateCellRangeOverlapsRangeFunction, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
 import { dateDurationSpanEndDate } from './date.duration';

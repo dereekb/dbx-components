@@ -1,12 +1,12 @@
 import { TransformStringFunction } from '../string/transform';
-import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform } from './array.string';
+import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, filterUniqueCaseInsensitiveStrings, filterUniqueTransform } from './array.string';
 
-describe('findUniqueCaseInsensitiveStrings()', () => {
+describe('filterUniqueCaseInsensitiveStrings()', () => {
   it('should return only the strings that are unique from the array.', () => {
     const uniqueValues = ['a', 'b'];
     const values = [...uniqueValues, ...uniqueValues.map((x) => x.toUpperCase())];
 
-    const result = findUniqueCaseInsensitiveStrings(values, (x) => x);
+    const result = filterUniqueCaseInsensitiveStrings(values, (x) => x);
 
     expect(result.length).toBe(uniqueValues.length);
   });
@@ -105,9 +105,9 @@ describe('containsAllStringsAnyCase()', () => {
   });
 });
 
-describe('findUniqueTransform()', () => {
+describe('filterUniqueTransform()', () => {
   describe('caseInsensitive=true', () => {
-    const transform = findUniqueTransform({
+    const transform = filterUniqueTransform({
       caseInsensitive: true
     });
 
@@ -123,7 +123,7 @@ describe('findUniqueTransform()', () => {
     describe('caseInsensitive=true', () => {
       const transformFn: TransformStringFunction = (x) => `__${x}__`;
 
-      const transform = findUniqueTransform({
+      const transform = filterUniqueTransform({
         transform: transformFn,
         caseInsensitive: true
       });
@@ -139,7 +139,7 @@ describe('findUniqueTransform()', () => {
     describe('caseInsensitive=false', () => {
       const transformFn: TransformStringFunction = (x) => `NEW_${x}`;
 
-      const transform = findUniqueTransform({
+      const transform = filterUniqueTransform({
         transform: transformFn,
         caseInsensitive: false
       });
@@ -154,7 +154,7 @@ describe('findUniqueTransform()', () => {
   });
 
   describe('with toLowercase=true', () => {
-    const transform = findUniqueTransform({
+    const transform = filterUniqueTransform({
       toLowercase: true
     });
 
@@ -166,7 +166,7 @@ describe('findUniqueTransform()', () => {
   });
 
   describe('with toUppercase=true', () => {
-    const transform = findUniqueTransform({
+    const transform = filterUniqueTransform({
       toUppercase: true
     });
 

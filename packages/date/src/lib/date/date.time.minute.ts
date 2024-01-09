@@ -2,7 +2,7 @@ import { Minutes, DecisionFunction } from '@dereekb/util';
 import { addMinutes, isAfter, isBefore } from 'date-fns';
 import { roundDownToMinute } from './date';
 import { roundDateTimeDownToSteps, StepRoundDateTimeDown } from './date.round';
-import { dateScheduleDateFilter, DateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
+import { dateCellScheduleDateFilter, DateCellScheduleDateFilter, DateCellScheduleDateFilterConfig } from './date.cell.schedule';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 import { dateFromLogicalDate } from './date.logical';
 
@@ -32,7 +32,7 @@ export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
   /**
    * Schedule to filter the days to.
    */
-  schedule?: DateScheduleDateFilterConfig;
+  schedule?: DateCellScheduleDateFilterConfig;
 }
 
 /**
@@ -83,13 +83,13 @@ export class DateTimeMinuteInstance {
   private _date: Date;
   private _step: Minutes;
   private _limit: LimitDateTimeInstance;
-  private _dateFilter: DateScheduleDateFilter;
+  private _dateFilter: DateCellScheduleDateFilter;
 
   constructor(readonly config: DateTimeMinuteConfig = {}, dateOverride?: Date | null) {
     this._date = (dateOverride == undefined ? config.date : dateOverride) || new Date();
     this._step = config.step ?? 1;
     this._limit = new LimitDateTimeInstance(config);
-    this._dateFilter = config.schedule ? dateScheduleDateFilter(config.schedule) : () => true;
+    this._dateFilter = config.schedule ? dateCellScheduleDateFilter(config.schedule) : () => true;
   }
 
   get date(): Date {
@@ -189,16 +189,6 @@ export class DateTimeMinuteInstance {
     }
 
     return date;
-  }
-
-  /**
-   * @deprecated use clamp().
-   *
-   * @param date
-   * @returns
-   */
-  limit(date = this.date): Date {
-    return this.clamp(date);
   }
 
   clamp(date = this.date): Date {

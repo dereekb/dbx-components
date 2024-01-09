@@ -148,6 +148,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: {
+        subscriptSizing: 'dynamic',
         floatLabel: 'always',
         appearance: 'outline'
       }

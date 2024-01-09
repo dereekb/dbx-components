@@ -80,10 +80,11 @@ $doc-mat-theme: mat.define-light-theme(
       accent: $doc-accent,
       warn: $doc-warn
     ),
+    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
     density: null,
     typography: null
   )
-); // NOTE: setting density and typography to null is important!
+);
 
 $doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
@@ -107,12 +108,12 @@ $dark-doc-mat-theme: mat.define-dark-theme(
       accent: $dark-doc-accent,
       warn: $dark-doc-warn
     ),
+    // NOTE: setting density and typography to null is important to prevent redundant styles from being generated
     density: null,
     typography: null
   )
 );
 
-// NOTE: setting density and typography to null is important!
 $dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
 

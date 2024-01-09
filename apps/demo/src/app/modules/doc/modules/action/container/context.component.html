@@ -25,9 +25,11 @@
         <p>This is a computed state, based on the current number of "disabledKeys" within the action. This lets us know why an action is disabled. This disabled flag is only for blocking the triggered and readyValue states. We can begin working or resolve/reject without issue.</p>
         <div>
           <button mat-raised-button (click)="action.disable('example')">Disable</button>
+          <dbx-button-spacer></dbx-button-spacer>
           <button mat-raised-button (click)="action.disable('example_2')">Disable (Key 2)</button>
           <dbx-button-spacer></dbx-button-spacer>
           <button mat-raised-button (click)="action.enable('example')">Enable</button>
+          <dbx-button-spacer></dbx-button-spacer>
           <button mat-raised-button (click)="action.enable('example_2')">Enable (Key 2)</button>
         </div>
         <p>Disabled Keys: {{ action.sourceInstance.disabledKeys$ | async }}</p>

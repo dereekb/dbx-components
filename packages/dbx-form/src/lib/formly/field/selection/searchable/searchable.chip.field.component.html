@@ -1,14 +1,14 @@
 <div class="dbx-searchable-field">
   <!-- View -->
-  <mat-chip-list [multiple]="multiSelect" [required]="required" [selectable]="!isReadonlyOrDisabled" [disabled]="readonly" #chipList>
-    <mat-chip *ngFor="let displayValue of displayValues$ | async" [removable]="true" (removed)="removeWithDisplayValue(displayValue)">
-      <mat-icon class="dbx-icon-spacer" *ngIf="displayValue.icon">{{ displayValue.icon }}</mat-icon>
+  <mat-chip-grid [required]="required" [disabled]="readonly" #chipList>
+    <mat-chip-row *ngFor="let displayValue of displayValues$ | async" [removable]="true" (removed)="removeWithDisplayValue(displayValue)">
+      <mat-icon matChipAvatar *ngIf="displayValue.icon">{{ displayValue.icon }}</mat-icon>
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
       <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">{{ displayValue.sublabel }}</span>
-      <mat-icon *ngIf="!readonly" matChipRemove>cancel</mat-icon>
-    </mat-chip>
+      <mat-icon matChipRemove *ngIf="!readonly">cancel</mat-icon>
+    </mat-chip-row>
     <input #textInput [name]="name" [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto" autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()" />
-  </mat-chip-list>
+  </mat-chip-grid>
   <div class="searchable-field-form-loading">
     <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
   </div>

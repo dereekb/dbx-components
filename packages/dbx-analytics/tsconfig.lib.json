@@ -5,7 +5,9 @@
     "declaration": true,
     "declarationMap": true,
     "inlineSources": true,
-    "types": ["segment-analytics"]
+    "types": ["segment-analytics"],
+    "target": "ES2022",
+    "useDefineForClassFields": false
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts"]

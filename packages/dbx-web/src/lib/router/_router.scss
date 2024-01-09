@@ -10,11 +10,11 @@
   @include sidenav.core();
 }
 
-@mixin all-router-typography($typography-config) {
-  @include anchor.typography($typography-config);
-  @include anchorlist.typography($typography-config);
-  @include navbar.typography($typography-config);
-  @include sidenav.typography($typography-config);
+@mixin all-router-typography($theme-config) {
+  @include anchor.typography($theme-config);
+  @include anchorlist.typography($theme-config);
+  @include navbar.typography($theme-config);
+  @include sidenav.typography($theme-config);
 }
 
 @mixin all-router-theme($theme-config) {

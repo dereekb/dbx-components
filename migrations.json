@@ -1,44 +1,25 @@
 {
   "migrations": [
     {
-      "cli": "nx",
-      "version": "14.6.0-beta.0",
-      "description": "Update the @angular/cli package version to ~14.2.0.",
-      "factory": "./src/migrations/update-14-6-0/update-angular-cli",
-      "package": "@nrwl/angular",
-      "name": "update-angular-cli-version-14-2-0"
+      "version": "16.0.0-0",
+      "description": "Updates the Angular Material to v16",
+      "factory": "./ng-update/index_bundled#updateToV16",
+      "package": "@angular/material",
+      "name": "migration-v16"
     },
     {
-      "cli": "nx",
-      "version": "14.6.1-beta.0",
-      "description": "Change Cypress e2e and component testing presets to use __filename instead of __dirname and include a devServerTarget for component testing.",
-      "factory": "./src/migrations/update-14-6-1/update-cypress-configs-presets",
-      "package": "@nrwl/cypress",
-      "name": "update-cypress-configs-preset"
+      "version": "16.0.0-0",
+      "description": "Updates the Angular CDK to v16",
+      "factory": "./ng-update/index#updateToV16",
+      "package": "@angular/cdk",
+      "name": "migration-v16"
     },
     {
-      "cli": "nx",
-      "version": "14.7.0-beta.0",
-      "description": "Update Cypress if using v10 to support latest component testing features",
-      "factory": "./src/migrations/update-14-7-0/update-cypress-version-if-10",
-      "package": "@nrwl/cypress",
-      "name": "update-cypress-if-v10"
-    },
-    {
-      "cli": "nx",
-      "version": "14.7.6-beta.1",
-      "description": "Update usages of webpack executors to @nrwl/webpack",
-      "factory": "./src/migrations/update-14-7-6/update-webpack-executor",
-      "package": "@nrwl/node",
-      "name": "update-webpack-executor"
-    },
-    {
-      "version": "14.8.0-beta.0",
-      "description": "Migrates from @nrwl/workspace:run-commands to nx:run-commands",
-      "cli": "nx",
-      "implementation": "./src/migrations/update-14-8-0/change-run-commands-executor",
-      "package": "@nrwl/workspace",
-      "name": "14-8-0-change-run-commands-executor"
+      "description": "The road to v16.0-beta",
+      "version": "16.0.0-beta",
+      "factory": "./16_0_0-beta/index",
+      "package": "@ngrx/store",
+      "name": "ngrx-store-migration-16-0-0-beta"
     }
   ]
 }

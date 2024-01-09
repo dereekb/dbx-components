@@ -6,13 +6,14 @@
 
 // Structural
 @forward './lib/style/core' show core;
+@forward './lib/style/all-typography' show all-component-typographies;
 @forward './lib/style/root-variables' show root-variables;
 
 // Functions/Mixins
 @forward './lib/style/function';
 
 // Config
-@forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
+@forward './lib/style/config' show theme-config-from-theme-config-or-typography-config, define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
 
 // Theme bundles
 @forward './lib/style/all-theme' show all-component-themes;

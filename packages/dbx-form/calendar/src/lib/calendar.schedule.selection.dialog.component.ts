@@ -4,13 +4,6 @@ import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentFooter
 import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 
 /**
- * Token used to configure the default DbxDialogContentFooterConfig for DbxScheduleSelectionCalendarDateDialogComponent.
- *
- * @deprecated use DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CONTENT_CONFIG_TOKEN instead.
- */
-export const DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CLOSE_CONFIG_TOKEN = new InjectionToken('DbxScheduleSelectionCalendarDatePopupCloseConfig');
-
-/**
  * Token used to configure the default DbxScheduleSelectionCalendarDatePopupConfig for DbxScheduleSelectionCalendarDateDialogComponent.
  */
 export const DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CONTENT_CONFIG_TOKEN = new InjectionToken('DbxScheduleSelectionCalendarDatePopupContentConfig');
@@ -23,10 +16,6 @@ export interface DbxScheduleSelectionCalendarDatePopupContentConfig {
 export interface DbxScheduleSelectionCalendarDatePopupConfig {
   injector: Injector;
   contentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
-  /**
-   * @deprecated use contentConfig instead.
-   */
-  closeConfig?: Maybe<DbxDialogContentFooterConfig>;
 }
 
 @Component({
@@ -48,15 +37,9 @@ export class DbxScheduleSelectionCalendarDateDialogComponent extends AbstractDia
   }
 
   static openDialog(matDialog: MatDialog, config: DbxScheduleSelectionCalendarDatePopupConfig) {
-    const { injector, contentConfig: inputContentConfig, closeConfig: inputCloseConfig } = config;
-
-    const defaultCloseConfig = injector.get<Maybe<DbxDialogContentFooterConfig>>(DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CLOSE_CONFIG_TOKEN, null);
+    const { injector, contentConfig: inputContentConfig } = config;
     const defaultContentConfig = injector.get<Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>>(DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CONTENT_CONFIG_TOKEN, null);
-
     const contentConfig = mergeObjects([defaultContentConfig, inputContentConfig], KeyValueTypleValueFilter.NULL);
-    const closeConfig = mergeObjects([defaultCloseConfig, contentConfig?.closeConfig, inputCloseConfig], KeyValueTypleValueFilter.NULL);
-    contentConfig.closeConfig = closeConfig;
-
     return matDialog.open(DbxScheduleSelectionCalendarDateDialogComponent, {
       height: 'calc(var(--vh100) * 0.9)',
       width: '80vw',

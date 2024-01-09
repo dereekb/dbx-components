@@ -66,11 +66,3 @@ export function allObjectsAreEqual<T>(values: IterableOrValue<T>, fn: EqualityCo
 
   return true;
 }
-
-// MARK: Compat
-/**
- * Function used for equivalence comparisons on an object.
- *
- * @deprecated use EqualityComparatorFunction instead.
- */
-export type IsEqualFunction<T = unknown> = EqualityComparatorFunction<T>;

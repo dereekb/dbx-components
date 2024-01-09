@@ -25,7 +25,7 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxButton(DbxIconButtonComponent),
   host: {
-    class: 'dbx-icon-button mat-button'
+    class: 'dbx-icon-button'
   }
 })
 export class DbxIconButtonComponent extends AbstractDbxButtonDirective {}

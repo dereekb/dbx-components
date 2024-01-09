@@ -2,7 +2,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, map, Observable, shareReplay } from 'rxjs';
 import { Component, Directive, Inject, InjectionToken, Input, OnDestroy } from '@angular/core';
 import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
-import { Maybe, mergeIntoArray } from '@dereekb/util';
+import { Maybe, mergeArraysIntoArray } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
@@ -23,7 +23,7 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy
     map((x) => {
       const config: DbxInjectionComponentConfig = {
         ...x.display,
-        providers: mergeIntoArray(
+        providers: mergeArraysIntoArray(
           [
             {
               provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,
@@ -59,8 +59,8 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
 @Component({
   selector: 'dbx-default-searchable-field-display',
   template: `
-    <div class="dbx-default-searchable-field-display">
-      <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+    <div class="dbx-default-searchable-field-display dbx-flex-bar">
+      <mat-icon class="dbx-icon-spacer" *ngIf="icon">{{ icon }}</mat-icon>
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
       <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
     </div>

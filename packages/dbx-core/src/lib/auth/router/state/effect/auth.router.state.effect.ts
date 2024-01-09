@@ -1,4 +1,4 @@
-import { exhaustMap, filter, of } from 'rxjs';
+import { exhaustMap, filter } from 'rxjs';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { Actions, createEffect, ofType } from '@ngrx/effects';

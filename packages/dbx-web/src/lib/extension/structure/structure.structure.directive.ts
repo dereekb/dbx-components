@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Directive, ElementRef, Injector, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Directive, ElementRef, Injector } from '@angular/core';
 
 /**
  * Used to reference a cdRef, injector, and element at the given element.

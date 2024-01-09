@@ -1,4 +1,4 @@
-import { Maybe, SortCompareFunction, sortAscendingIndexNumberRefFunction, RequiredOnKeys, addToSet, ArrayOrValue, asArray, sumOfIntegersBetween, UniqueModel, IndexNumber, lastValue, FactoryWithRequiredInput, mergeArrayIntoArray, range, DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
+import { Maybe, SortCompareFunction, sortAscendingIndexNumberRefFunction, RequiredOnKeys, addToSet, ArrayOrValue, asArray, sumOfIntegersBetween, UniqueModel, IndexNumber, lastValue, FactoryWithRequiredInput, pushArrayItemsIntoArray, range, DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 import { DateCell, DateCellIndex, isValidDateCellIndex, DateOrDateCellIndex } from './date.cell';
@@ -739,7 +739,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
 
     if (newBlocks != null) {
       const inputOverwriteGroup = Array.isArray(newBlocks) ? groupUniqueDateCells(newBlocks) : newBlocks;
-      mergeArrayIntoArray(
+      pushArrayItemsIntoArray(
         sorted,
         inputOverwriteGroup.blocks.map((block) => ({ priority: 'next', block }))
       ).sort((a, b) => a.block.i - b.block.i);

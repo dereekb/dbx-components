@@ -1,5 +1,5 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { DbxFilterButtonConfig, DbxFilterButtonConfigWithPresetFilter } from '@dereekb/dbx-web';
+import { DbxFilterButtonConfigWithPresetFilter } from '@dereekb/dbx-web';
 import { Component, Input } from '@angular/core';
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';

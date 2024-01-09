@@ -117,33 +117,40 @@ export function pushElementOntoArray<T>(target: T[], element: T, times: number):
  * @returns
  */
 export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
-  return mergeIntoArray([], ...arrays);
+  return mergeArraysIntoArray([], ...arrays);
 }
 
 /**
- * Merges the input arrays into the target.
+ * Merges the input arrays into the target array by pushing each item from each array. Creates an empty array if the target is null/undefined.
  *
  * @param target
  * @param arrays
  * @returns
  */
-export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): T[] {
+export function mergeArraysIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): T[] {
   if (target == null) {
     target = [];
   }
 
   arrays.forEach((array) => {
     if (array != null) {
-      mergeArrayIntoArray(target as T[], array);
+      pushArrayItemsIntoArray(target as T[], array);
     }
   });
 
   return target;
 }
 
-export function mergeArrayOrValueIntoArray<T>(target: T[], value: ArrayOrValue<T>): T[] {
+/**
+ * Pushes the input value into the target array if it is not an array. If it is an array, inserts all values from that array into the target array.
+ *
+ * @param target
+ * @param value
+ * @returns
+ */
+export function pushItemOrArrayItemsIntoArray<T>(target: T[], value: ArrayOrValue<T>): T[] {
   if (Array.isArray(value)) {
-    return mergeArrayIntoArray(target, value);
+    return pushArrayItemsIntoArray(target, value);
   } else {
     target.push(value);
     return target;
@@ -158,7 +165,7 @@ export function mergeArrayOrValueIntoArray<T>(target: T[], value: ArrayOrValue<T
  * @param target
  * @param array
  */
-export function mergeArrayIntoArray<T>(target: T[], array: T[]): T[] {
+export function pushArrayItemsIntoArray<T>(target: T[], array: T[]): T[] {
   Array.prototype.push.apply(target, array);
   return target;
 }
@@ -218,3 +225,19 @@ export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (val
 
   return array;
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use mergeArraysIntoArray() instead. Will be removed in v10.1.
+ */
+export const mergeIntoArray = mergeArraysIntoArray;
+
+/**
+ * @deprecated Use pushArrayItemsIntoArray() instead. Will be removed in v10.1.
+ */
+export const mergeArrayIntoArray = pushArrayItemsIntoArray;
+
+/**
+ * @deprecated Use pushArrayItemsOrItemIntoArray() instead. Will be removed in v10.1.
+ */
+export const mergeArrayOrValueIntoArray = pushItemOrArrayItemsIntoArray;

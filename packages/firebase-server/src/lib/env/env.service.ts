@@ -10,9 +10,4 @@ export abstract class FirebaseServerEnvService {
   abstract readonly isProduction: boolean;
   abstract readonly developerToolsEnabled: boolean;
   abstract readonly developmentSchedulerEnabled: boolean;
-  // MARK: Compat
-  /**
-   * @deprecated use developerToolsEnabled instead.
-   */
-  abstract readonly isDevelopmentToolsEnabled: boolean;
 }

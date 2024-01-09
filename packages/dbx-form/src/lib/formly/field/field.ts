@@ -192,10 +192,3 @@ export function validatorsForFieldConfig(input: ValidatorsForFieldConfigInput): 
 export interface MaterialFormFieldConfig {
   materialFormField?: Pick<MaterialFormlyFormFieldProps, 'prefix' | 'suffix' | 'hideLabel' | 'hideRequiredMarker' | 'hideFieldUnderline' | 'floatLabel' | 'appearance' | 'color' | 'hintStart' | 'hintEnd'>;
 }
-
-/**
- * MARK: Compat
- *
- * @deprecated use propsAndConfigForFieldConfig instead.
- */
-export const propsForFieldConfig = propsAndConfigForFieldConfig;

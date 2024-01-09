@@ -7,7 +7,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/apps/demo"],
+      "outputs": ["{workspaceRoot}/dist/apps/demo"],
       "options": {
         "command": "npx nx run demo:build-base",
         "color": true
@@ -96,14 +96,14 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": ["apps/demo/src/**/*.ts", "apps/demo/src/**/*.html"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/demo", "./.reports/jest/demo.junit.xml"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/demo", "{projectRoot}/.reports/jest/demo.junit.xml"],
       "options": {
         "jestConfig": "apps/demo/jest.config.ts",
         "passWithNoTests": true

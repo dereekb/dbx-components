@@ -22,6 +22,7 @@ export class DbxFirebaseDevelopmentSchedulerListComponent extends AbstractDbxSel
 }
 
 @Component({
+  selector: 'dbx-firebase-development-scheduler-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseDevelopmentSchedulerListViewComponent)
 })

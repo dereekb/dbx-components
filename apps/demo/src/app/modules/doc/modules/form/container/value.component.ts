@@ -34,7 +34,7 @@ import {
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { BehaviorSubject, delay, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, DateScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate } from '@dereekb/date';
+import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'
@@ -118,7 +118,7 @@ export class DocFormValueComponent {
       key: 'dateWithASchedule',
       required: true,
       description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today. A minimum of today and a maximum of 14 days from now.',
-      getConfigObs: () => {
+      pickerConfig: () => {
         const config: DbxDateTimePickerConfiguration = {
           limits: {
             min: startOfDay(new Date()),
@@ -322,13 +322,13 @@ export function schoolInfoJobSettingsEndTimeField() {
       start: {
         key: 'startLimited',
         description: 'Must start on a M/T and no later than 14 days ago',
-        getConfigObs: () => {
+        pickerConfig: () => {
           const config: DbxDateTimePickerConfiguration = {
             limits: {
               min: addDays(startOfDay(new Date()), -14)
             },
             schedule: {
-              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateScheduleEncodedWeek
+              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateCellScheduleEncodedWeek
             }
           };
 
@@ -338,10 +338,10 @@ export function schoolInfoJobSettingsEndTimeField() {
       end: {
         key: 'endLimited',
         description: 'Must end on a W/T/F',
-        getConfigObs: () => {
+        pickerConfig: () => {
           const config: DbxDateTimePickerConfiguration = {
             schedule: {
-              w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateScheduleEncodedWeek
+              w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateCellScheduleEncodedWeek
             }
           };
 

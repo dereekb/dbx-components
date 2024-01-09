@@ -6,7 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/util"],
+      "outputs": ["{workspaceRoot}/dist/packages/util"],
       "options": {
         "commands": [
           {
@@ -23,7 +23,7 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/util",
@@ -34,15 +34,15 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["packages/util/src/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/util", "./.reports/jest/util.junit.xml"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/util", "{projectRoot}/.reports/jest/util.junit.xml"],
       "options": {
         "jestConfig": "packages/util/jest.config.ts",
         "passWithNoTests": true

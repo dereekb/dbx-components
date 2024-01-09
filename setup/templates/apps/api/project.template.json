@@ -4,14 +4,14 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["API_APP_DIST_FOLDER"],
+      "outputs": ["{workspaceRoot}/API_APP_DIST_FOLDER"],
       "options": {
         "command": "npx nx run API_APP_NAME:build-base",
         "color": true
       }
     },
     "build-base": {
-      "executor": "@nrwl/node:webpack",
+      "executor": "@nx/node:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "API_APP_DIST_FOLDER",
@@ -26,10 +26,12 @@
           "extractLicenses": false,
           "sourceMap": false,
           "inspect": false,
-          "fileReplacements": [{
-            "replace": "API_APP_FOLDER/src/environments/environment.ts",
-            "with": "API_APP_FOLDER/src/environments/environment.prod.ts"
-          }]
+          "fileReplacements": [
+            {
+              "replace": "API_APP_FOLDER/src/environments/environment.ts",
+              "with": "API_APP_FOLDER/src/environments/environment.prod.ts"
+            }
+          ]
         }
       }
     },
@@ -48,7 +50,8 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{
+        "commands": [
+          {
             "command": "npx nx build-base API_APP_NAME --watch"
           },
           {
@@ -59,7 +62,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["API_APP_FOLDER/**/*.ts"]
@@ -73,11 +76,8 @@
       }
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/API_APP_FOLDER",
-        "./.reports/jest/API_APP_NAME.junit.xml"
-      ],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/API_APP_FOLDER", "{projectRoot}/.reports/jest/API_APP_NAME.junit.xml"],
       "options": {
         "jestConfig": "API_APP_FOLDER/jest.config.ts",
         "passWithNoTests": true
@@ -98,9 +98,11 @@
     "ci-deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [{
+        "commands": [
+          {
             "command": "npx nx run API_APP_NAME:build-base:production"
-          }, {
+          },
+          {
             "command": "npx nx make-env API_APP_NAME"
           },
           {

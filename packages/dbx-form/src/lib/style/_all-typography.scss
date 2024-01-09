@@ -1,3 +1,4 @@
+@use './theming';
 @use '../form/form';
 @use '../formly/formly';
 @use '../layout/layout';
@@ -6,11 +7,18 @@
 @use '../extension/extension';
 
 // Includes all of the typographic styles.
-@mixin all-component-typographies($typography-config, $theme-config) {
+@mixin all-component-typographies($theme-config-or-typography-config: null) {
+  $typography-config: if(theming.private-is-theme-object($theme-config-or-typography-config), theming.get-typography-config($theme-config-or-typography-config), $theme-config-or-typography-config);
+
+  // If no actual color configuration has been specified, create a default one.
+  @if not $typography-config {
+    $typography-config: typography.define-typography-config();
+  }
+
   @include form.typography($typography-config);
   @include formly.typography($typography-config);
-  @include field.all-field-typography($typography-config);
+  @include field.all-field-typography($theme-config-or-typography-config);
   @include forms.typography($typography-config);
   @include layout.typography($typography-config);
-  @include extension.all-extension-typography($typography-config, $theme-config);
+  @include extension.all-extension-typography($theme-config-or-typography-config);
 }

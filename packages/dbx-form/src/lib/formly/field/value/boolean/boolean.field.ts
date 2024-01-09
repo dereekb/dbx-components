@@ -12,7 +12,7 @@ export function toggleField(config: ToggleFieldConfig): FormlyFieldConfig {
     wrappers: ['autotouch', 'form-field'], // NOTE: Must specify form-field if other wrapper specified, otherwise it will not be used.
     defaultValue: defaultValue ?? false,
     ...propsAndConfigForFieldConfig(config, {
-      appearance: 'standard',
+      // appearance: 'standard', // TODO: Standard no longer allowed.
       ...materialFormField
     })
   });
@@ -28,7 +28,7 @@ export function checkboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
     type: 'checkbox',
     defaultValue: defaultValue ?? false,
     ...propsAndConfigForFieldConfig(config, {
-      appearance: 'standard',
+      // appearance: 'standard', // TODO: Standard no longer allowed.
       ...materialFormField
     })
   });

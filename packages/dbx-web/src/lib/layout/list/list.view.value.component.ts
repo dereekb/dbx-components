@@ -35,7 +35,7 @@ export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxVal
     <mat-nav-list [disabled]="disabled$ | async">
       <dbx-anchor *ngFor="let item of items; trackBy: trackByFunction" [anchor]="item.anchor" [disabled]="item.disabled">
         <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
-          <mat-icon matListIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
+          <mat-icon matListItemIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
           <dbx-injection [config]="item.config"></dbx-injection>
         </a>
       </dbx-anchor>

@@ -43,7 +43,7 @@ export function flattenArrayUniqueCaseInsensitiveStrings(array: string[][]): str
   return unique(flattenArray<string>(array).map<string>(caseInsensitiveString));
 }
 
-export function findUniqueCaseInsensitiveStrings<T, K extends string = string>(models: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
+export function filterUniqueCaseInsensitiveStrings<T, K extends string = string>(models: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
   return filterUniqueValues(models, (x: T) => caseInsensitiveString(readKey(x)), toCaseInsensitiveStringArray(additionalKeys));
 }
 
@@ -60,7 +60,7 @@ export function containsAllStringsAnyCase(values: Iterable<string>, valuesToFind
   return valuesToFindArray.length ? containsAllValues(toCaseInsensitiveStringArray(values), valuesToFindArray, !mustContainAtleastOneItem) : true;
 }
 
-export interface FindUniqueStringsTransformConfig extends TransformStringFunctionConfig {
+export interface FilterUniqueStringsTransformConfig extends TransformStringFunctionConfig {
   /**
    * Whether or not to compare values as lowercase when finding uniqueness.
    *
@@ -69,15 +69,18 @@ export interface FindUniqueStringsTransformConfig extends TransformStringFunctio
   caseInsensitive?: boolean;
 }
 
-export type FindUniqueTransform = TransformStringsFunction;
+/**
+ * Transforms an array of strings into an array of unique strings.
+ */
+export type FilterUniqueTransform = TransformStringsFunction;
 
-export function findUniqueTransform(config: FindUniqueStringsTransformConfig): FindUniqueTransform {
+export function filterUniqueTransform(config: FilterUniqueStringsTransformConfig): FilterUniqueTransform {
   const transform: TransformStringsFunction = transformStrings(config);
   const caseInsensitiveCompare = config.caseInsensitive && !config.toLowercase && !config.toUppercase;
 
   if (caseInsensitiveCompare) {
     // transform after finding unique values
-    return (input: string[]) => transform(findUniqueCaseInsensitiveStrings(input, (x) => x));
+    return (input: string[]) => transform(filterUniqueCaseInsensitiveStrings(input, (x) => x));
   } else {
     // transform before, and then use a set to find unique values
     return (input: string[]) => Array.from(new Set(transform(input)));

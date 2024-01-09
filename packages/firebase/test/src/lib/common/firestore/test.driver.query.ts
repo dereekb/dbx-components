@@ -20,8 +20,8 @@ import {
   FirebaseAuthUserId,
   whereDateIsBetween,
   whereDateIsInRange,
-  whereDateIsBefore,
-  whereDateIsOnOrAfter,
+  whereDateIsBeforeWithSort,
+  whereDateIsOnOrAfterWithSort,
   whereStringValueHasPrefix,
   whereStringHasRootIdentityModelKey,
   iterateFirestoreDocumentSnapshotPairs,
@@ -799,12 +799,12 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
              * Since we choose to store dates as strings, we can compare ranges of dates.
              */
             describe('Searching Date Strings', () => {
-              describe('whereDateIsBefore()', () => {
+              describe('whereDateIsBeforeWithSort()', () => {
                 it('should return models with dates before the input.', async () => {
                   const startHoursLater = 2;
 
                   const endDate = addHours(startDate, startHoursLater);
-                  const result = await query(whereDateIsBefore<MockItem>('date', endDate)).getDocs();
+                  const result = await query(whereDateIsBeforeWithSort<MockItem>('date', endDate)).getDocs();
 
                   expect(result.docs.length).toBe(startHoursLater);
 
@@ -817,7 +817,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   const startHoursLater = 2;
 
                   const endDate = addHours(startDate, startHoursLater);
-                  const result = await query(whereDateIsBefore<MockItem>('date', endDate, 'asc')).getDocs();
+                  const result = await query(whereDateIsBeforeWithSort<MockItem>('date', endDate, 'asc')).getDocs();
 
                   expect(result.docs.length).toBe(startHoursLater);
 
@@ -827,12 +827,12 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 });
               });
 
-              describe('whereDateIsOnOrAfter()', () => {
+              describe('whereDateIsOnOrAfterWithSort()', () => {
                 it('should return models with dates before the input.', async () => {
                   const startHoursLater = 2;
 
                   const start = addHours(startDate, startHoursLater);
-                  const result = await query(whereDateIsOnOrAfter<MockItem>('date', start)).getDocs();
+                  const result = await query(whereDateIsOnOrAfterWithSort<MockItem>('date', start)).getDocs();
 
                   expect(result.docs.length).toBe(3);
 
@@ -846,7 +846,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   const startHoursLater = 2;
 
                   const start = addHours(startDate, startHoursLater);
-                  const result = await query(whereDateIsOnOrAfter<MockItem>('date', start, 'desc')).getDocs();
+                  const result = await query(whereDateIsOnOrAfterWithSort<MockItem>('date', start, 'desc')).getDocs();
 
                   expect(result.docs.length).toBe(3);
 

@@ -1,6 +1,6 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
 import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from '../types';
-import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
+import { asArray, Maybe, lastValue, mergeArraysIntoArray, ArrayOrValue } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from 'rxjs';
 import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
@@ -84,7 +84,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
 
             // Add filter constraints
             if (filterConstraints != null) {
-              mergeIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputContraints(asArray(filterConstraints)));
+              mergeArraysIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputContraints(asArray(filterConstraints)));
             }
 
             // Add cursor

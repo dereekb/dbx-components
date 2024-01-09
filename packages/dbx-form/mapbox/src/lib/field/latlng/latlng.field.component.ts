@@ -88,7 +88,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
         <button *ngIf="showCenterButton" mat-icon-button (click)="flyToMarker()">
           <mat-icon>my_location</mat-icon>
         </button>
-        <mat-form-field class="dbx-mapbox-input-field-input-field" appearance="standard">
+        <mat-form-field class="dbx-mapbox-input-field-input-field">
           <mat-label>Coordinates</mat-label>
           <input type="text" matInput [placeholder]="placeholder" [formControl]="formControl" />
           <mat-hint class="dbx-hint dbx-warn" *ngIf="useCurrentLocationDisabled$ | async">Could not access your current location.</mat-hint>

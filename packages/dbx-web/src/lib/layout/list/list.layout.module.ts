@@ -14,7 +14,7 @@ import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list
 import { DbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
 import { DbxListItemDisableRippleModifierDirective } from './list.view.value.modifier.ripple.directive';
 import { DbxValueListGridItemViewComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent } from './list.grid.view.component';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxListItemIsSelectedModifierDirective } from './list.view.value.modifier.selection.directive';
 
 @NgModule({

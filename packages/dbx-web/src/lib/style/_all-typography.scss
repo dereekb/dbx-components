@@ -9,7 +9,14 @@
 @use '../extension/extension';
 
 // Includes all of the typographic styles.
-@mixin all-component-typographies($typography-config, $theme-config) {
+@mixin all-component-typographies($theme-config-or-typography-config: null) {
+  $typography-config: if(theming.private-is-theme-object($theme-config-or-typography-config), theming.get-typography-config($theme-config-or-typography-config), $theme-config-or-typography-config);
+
+  // If no actual color configuration has been specified, create a default one.
+  @if not $typography-config {
+    $typography-config: typography.define-typography-config();
+  }
+
   @include button.typography($typography-config);
   @include error.typography($typography-config);
   @include action.all-action-typography($typography-config);
@@ -17,5 +24,5 @@
   @include layout.all-layout-typography($typography-config);
   @include loading.typography($typography-config);
   @include router.all-router-typography($typography-config);
-  @include extension.all-extension-typography($typography-config, $theme-config);
+  @include extension.all-extension-typography($typography-config);
 }

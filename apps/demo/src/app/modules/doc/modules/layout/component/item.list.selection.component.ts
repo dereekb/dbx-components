@@ -21,6 +21,7 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
 }
 
 @Component({
+  selector: 'doc-complex-item-list-selection',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: provideDbxListView(DocSelectionItemListViewComponent)
 })

@@ -133,17 +133,6 @@ export class LimitDateTimeInstance {
   }
 
   /**
-   *
-   * @deprecated use clamp() instead. Describes the intended function better.
-   *
-   * @param date
-   * @returns
-   */
-  limit(date: Date): Date {
-    return this.clamp(date);
-  }
-
-  /**
    * Clamps the input date to the current range.
    */
   clamp(date: Date): Date {

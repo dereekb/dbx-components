@@ -6,6 +6,7 @@ import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 export type DbxFormSubsectionConfig = DbxSectionHeaderConfig;
 
 @Component({
+  selector: 'dbx-form-subsection-wrapper',
   template: `
     <dbx-subsection [headerConfig]="headerConfig">
       <ng-container #fieldComponent></ng-container>

@@ -1,4 +1,4 @@
-import { FirestoreModelType, asFirestoreModelKeyCollectionType, buildFirebaseCollectionTypeModelTypeMap, FirebasePermissionErrorContext, FirestoreDocument, FirestoreModelIdentityTypeMap, FirestoreModelKey, InContextFirebaseModelsService } from '@dereekb/firebase';
+import { FirestoreModelType, buildFirebaseCollectionTypeModelTypeMap, FirebasePermissionErrorContext, FirestoreDocument, FirestoreModelIdentityTypeMap, FirestoreModelKey, InContextFirebaseModelsService, firestoreModelKeyCollectionTypePair } from '@dereekb/firebase';
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 import { GrantedRole } from '@dereekb/model';
 import { shareReplay, map, Observable, OperatorFunction, first, switchMap } from 'rxjs';
@@ -30,7 +30,7 @@ export function dbxFirebaseModelContextServiceInfoInstanceFactory<S extends InCo
     const key$ = asObservable(keyObs);
 
     return key$.pipe(
-      asFirestoreModelKeyCollectionType(),
+      map(firestoreModelKeyCollectionTypePair),
       switchMap((pair) => {
         return entityMap$.pipe(
           map((entityMap) => {

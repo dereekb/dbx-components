@@ -534,9 +534,3 @@ export function randomLatLngFromCenterFactory(config: RandomLatLngFromCenterFact
     precision
   });
 }
-
-// MARK: Compat
-/**
- * @deprecated use LatLngPointInput
- */
-export type LatLngInput = LatLngPointInput;

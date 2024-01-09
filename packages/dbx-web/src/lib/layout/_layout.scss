@@ -28,20 +28,20 @@
   @include text.core();
 }
 
-@mixin all-layout-typography($typography-config) {
-  @include bar.typography($typography-config);
-  @include block.typography($typography-config);
-  @include card.typography($typography-config);
-  @include column.typography($typography-config);
-  @include content.typography($typography-config);
-  @include flag.typography($typography-config);
-  @include flex.typography($typography-config);
-  @include item.typography($typography-config);
-  @include list.typography($typography-config);
-  @include section.typography($typography-config);
-  @include step.typography($typography-config);
-  @include style.typography($typography-config);
-  @include text.typography($typography-config);
+@mixin all-layout-typography($theme-config) {
+  @include bar.typography($theme-config);
+  @include block.typography($theme-config);
+  @include card.typography($theme-config);
+  @include column.typography($theme-config);
+  @include content.typography($theme-config);
+  @include flag.typography($theme-config);
+  @include flex.typography($theme-config);
+  @include item.typography($theme-config);
+  @include list.typography($theme-config);
+  @include section.typography($theme-config);
+  @include step.typography($theme-config);
+  @include style.typography($theme-config);
+  @include text.typography($theme-config);
 }
 
 @mixin all-layout-theme($theme-config) {

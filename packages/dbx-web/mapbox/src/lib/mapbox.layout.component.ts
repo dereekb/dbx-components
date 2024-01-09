@@ -2,7 +2,7 @@ import { tap, switchMap, first, startWith, shareReplay, throttleTime, map, disti
 import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Maybe } from '@dereekb/util';
-import { dbxColorBackground, DbxThemeColor } from '@dereekb/dbx-web';
+import { DbxThemeColor } from '@dereekb/dbx-web';
 import { ResizedEvent } from 'angular-resize-event';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawerContainer } from '@angular/material/sidenav';
@@ -245,10 +245,4 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
       this.openedChange.next(opened);
     }
   }
-
-  // MARK: Compat
-  /**
-   * @deprecated use isOpenAndHasContent$ instead.
-   */
-  readonly opened$ = this.isOpenAndHasContent$;
 }

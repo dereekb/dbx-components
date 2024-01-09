@@ -1,4 +1,4 @@
-import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString, DayOfWeek, dayOfWeek, daysOfWeekArray, TimezoneString, DateOrDayString } from '@dereekb/util';
+import { Building, DateOrDateString, DateRelativeState, FactoryWithRequiredInput, groupValues, MapFunction, Maybe, MS_IN_DAY, ISO8601DayString, DayOfWeek, dayOfWeek, daysOfWeekArray } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, endOfMinute, startOfHour, endOfHour, addMinutes, isBefore, addWeeks, addMonths } from 'date-fns';
@@ -808,27 +808,3 @@ export function getDaysOfWeekInDateRange(dateRange: DateRange): DayOfWeek[] {
 
   return days;
 }
-
-// MARK: Compat
-/**
- * @deprecated use DateRelativeState instead.
- */
-export enum DateRangeState {
-  /**
-   * Range has yet to start and is in the future.
-   */
-  FUTURE = 'future',
-  /**
-   * Range is in the present, but not yet ended.
-   */
-  PRESENT = 'present',
-  /**
-   * Range is in the past.
-   */
-  PAST = 'past'
-}
-
-/**
- * @deprecated use dateRangeRelativeState() instead.
- */
-export const dateRangeState = dateRangeRelativeState;

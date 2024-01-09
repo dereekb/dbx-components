@@ -7,9 +7,17 @@ import 'jest-preset-angular/setup-jest';
  */
 import 'reflect-metadata';
 
-var window: any;
+/**
+ * Must add TextEncoder/TextDecoder to the globals since it is not available in JSDOM by default.
+ *
+ * https://github.com/firebase/firebase-js-sdk/issues/7845
+ */
+import { TextEncoder, TextDecoder } from 'util';
+(global as any).TextEncoder = TextEncoder;
+(global as any).TextDecoder = TextDecoder;
 
-//https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
+// https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
+var window: any;
 beforeAll(() => {
   if (window) {
     // only use in jsdom environment
