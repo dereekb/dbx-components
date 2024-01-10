@@ -18,7 +18,7 @@
         "outputPath": "ANGULAR_APP_DIST_FOLDER",
         "index": "ANGULAR_APP_FOLDER/src/index.html",
         "main": "ANGULAR_APP_FOLDER/src/main.ts",
-        "polyfills": "ANGULAR_APP_FOLDER/src/polyfills.ts",
+        "polyfills": ["zone.js"],
         "tsConfig": "ANGULAR_APP_FOLDER/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [

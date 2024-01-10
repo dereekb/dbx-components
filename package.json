@@ -46,7 +46,7 @@
     "@vvo/tzdb": "^6.0.0",
     "angular-calendar": "^0.31.0",
     "angular-resize-event": "git+https://git@github.com/dereekb/angular-resize-event#ab642793288541c6093ef24f979c9815443cf565",
-    "change-case": "^5.0.0",
+    "change-case": "^4.1.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "date-fns": "^2.30.0",

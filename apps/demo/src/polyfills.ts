@@ -1,4 +1,11 @@
 /**
+ * NOTE: This is no longer used, but it can be if needed. Need to update the project.json
+ * to replace '"polyfills": ["zone.js"]' with '"polyfills": "apps/demo/src/polyfills.ts"'.
+ *
+ * It may be removed in a future update.
+ */
+
+/**
  * This file includes polyfills needed by Angular and is loaded before the app.
  * You can add your own extra polyfills to this file.
  *
