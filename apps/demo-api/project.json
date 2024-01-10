@@ -106,7 +106,7 @@
             "command": "npx nx run demo-api:build-base:production"
           },
           {
-            "command": "npx nx make-env demo-api"
+            "command": "npx nx make-env demo-api --skip-nx-cache"
           },
           {
             "command": "npx firebase --project=prod deploy --only functions --force"
