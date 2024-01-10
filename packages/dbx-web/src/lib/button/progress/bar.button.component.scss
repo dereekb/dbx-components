@@ -1,22 +1,30 @@
 :host {
-  button {
+  > button.dbx-bar-button.mdc-button.mat-mdc-button {
     &.working {
       cursor: not-allowed;
     }
     &.fullWidth {
       width: 100%;
     }
-    .bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    mat-icon {
-      padding-right: 5px;
-      &.is-mat-icon {
-        font-size: 18px;
-        position: relative;
-        top: 3px;
+    > ::ng-deep .mdc-button__label {
+      position: unset; // required so the bar can expand fully
+
+      display: flex;
+      align-items: center;
+
+      .bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      mat-icon {
+        padding-right: 5px;
+        &.is-mat-icon {
+          font-size: 18px;
+          position: relative;
+          top: 3px;
+        }
       }
     }
   }

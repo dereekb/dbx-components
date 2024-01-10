@@ -10,11 +10,11 @@
   @include sourceselect.core();
 }
 
-@mixin all-selection-typography($typography-config) {
-  @include list.typography($typography-config);
-  @include pickable.typography($typography-config);
-  @include searchable.typography($typography-config);
-  @include sourceselect.typography($typography-config);
+@mixin all-selection-typography($theme-config) {
+  @include list.typography($theme-config);
+  @include pickable.typography($theme-config);
+  @include searchable.typography($theme-config);
+  @include sourceselect.typography($theme-config);
 }
 
 @mixin all-selection-theme($theme-config) {

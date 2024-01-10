@@ -1,8 +1,9 @@
 import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, repeatString, UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay, safeToJsDate } from './date';
-import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, transformDateRangeWithStartOfDay } from './date.range';
-import { fitDateRangeToDayPeriod } from './date.range.timezone';
+import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, fitUTCDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
+import { fitDateRangeToDayPeriodFunction } from './date.range.timezone';
+import { DateTimezoneUtcNormalFunctionInput } from './date.timezone';
 
 export type FormatDateFunction = MapFunction<Date, string>;
 export type FormatStrictDateRangeFunction = (startOrDateRange: DateRange) => string;
@@ -78,6 +79,10 @@ export type FormatDateRangeDistanceFunctionConfig = {
    */
   onlyTimeRange?: boolean;
   /**
+   * (Optional) timezone to use when using onlyTimeRange. Defaults to UTC.
+   */
+  timeRangeTimezone?: DateTimezoneUtcNormalFunctionInput;
+  /**
    * Optional function to format dates that fall on the same day.
    */
   formatSameDay?: FormatStrictDateRangeFunction;
@@ -94,8 +99,8 @@ export type FormatDateRangeDistanceFunctionConfig = {
  * Formats the input date range using the start and end dates and distance format function
  */
 export function formatDateRangeDistanceFunction(inputConfig: FormatDateRangeDistanceFunctionConfig): FormatDateRangeFunction {
-  const { transform: inputTransform, formatSameDay, onlyTimeRange, strict = false } = inputConfig;
-  const transform: MapFunction<DateRange, DateRange> = inputTransform ?? (onlyTimeRange ? fitDateRangeToDayPeriod : mapIdentityFunction());
+  const { transform: inputTransform, formatSameDay, onlyTimeRange, timeRangeTimezone, strict = false } = inputConfig;
+  const transform: MapFunction<DateRange, DateRange> = inputTransform ?? (onlyTimeRange ? (timeRangeTimezone ? fitDateRangeToDayPeriodFunction(timeRangeTimezone) : fitUTCDateRangeToDayPeriod) : mapIdentityFunction());
 
   return (startOrDateRange: Date | DateRange, inputEnd?: Date) => {
     const dateRange = transform(dateOrDateRangeToDateRange(startOrDateRange, inputEnd));
@@ -323,14 +328,3 @@ export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString
   const [yearString, monthString, dateString] = inputDateString.split('-');
   return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
 }
-
-// MARK: Compat
-/**
- * @Deprecated use parseISO8601DayStringToDate instead.
- */
-export const dateStringToDate = parseISO8601DayStringToDate;
-
-/**
- * @Deprecated use parseISO8601DayStringToUTCDate instead.
- */
-export const dateStringToUTCDate = parseISO8601DayStringToUTCDate;

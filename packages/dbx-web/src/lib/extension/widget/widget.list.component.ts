@@ -22,6 +22,7 @@ export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<
 }
 
 @Component({
+  selector: 'dbx-widget-grid-view',
   template: DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE,
   providers: provideDbxListView(DbxWidgetListGridViewComponent)
 })

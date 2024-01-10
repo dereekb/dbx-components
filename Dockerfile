@@ -1,5 +1,5 @@
 # NOTE: Be careful updating this file, as it is used by the setup script.
-FROM node:16.18-bullseye
+FROM node:18.19-bullseye
 
 # Set the working directory in the container to /code
 WORKDIR /code

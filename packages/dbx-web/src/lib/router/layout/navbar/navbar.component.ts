@@ -2,7 +2,7 @@ import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctU
 import { ScreenMediaWidthType } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, findNext, Maybe } from '@dereekb/util';
-import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, TrackByFunction } from '@angular/core';
 import { ClickableAnchorLinkSegueRef, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 
@@ -115,6 +115,8 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     }),
     shareReplay(1)
   );
+
+  readonly trackByFunction: TrackByFunction<NavAnchorLink> = (index: number, item: NavAnchorLink) => item.anchor;
 
   // TODO: potentially make the caret depending on the current button display.
 

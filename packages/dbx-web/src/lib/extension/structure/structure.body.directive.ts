@@ -1,7 +1,4 @@
-import { Observable, BehaviorSubject, map } from 'rxjs';
-import { Component, Directive, Input, OnDestroy } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { Directive } from '@angular/core';
 import { DbxStructureDirective } from './structure.structure.directive';
 
 /**

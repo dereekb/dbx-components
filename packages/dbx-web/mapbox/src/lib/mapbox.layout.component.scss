@@ -33,6 +33,15 @@ $dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-bu
     display: flex;
     overflow: hidden;
 
+    &.mat-mdc-icon-button {
+      // fix the drawer button icon
+      padding-left: 0;
+
+      ::ng-deep > .mat-mdc-button-persistent-ripple {
+        border-radius: unset;
+      }
+    }
+
     .left-drawer & {
       left: 0;
       border-radius: 0px 20px 20px 0px;

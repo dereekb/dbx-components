@@ -2,7 +2,7 @@ import { addMilliseconds, addMinutes, minutesToHours, startOfDay } from 'date-fn
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString, YearNumber, MapSameFunction, Building } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
-import { DateRange, dateRange, DateRangeInput, DateRangeType, TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
+import { DateRange, TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { parseISO8601DayStringToUTCDate } from './date.format';
 
 /**
@@ -455,8 +455,8 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    */
   targetTimezoneExperiencesDaylightSavings(year: Date | YearNumber = new Date()): boolean {
     const yearNumber = typeof year === 'number' ? year : year.getFullYear();
-    let jan = new Date(yearNumber, 0, 1); // off
-    let jul = new Date(yearNumber, 6, 1); // on
+    const jan = new Date(yearNumber, 0, 1); // off
+    const jul = new Date(yearNumber, 6, 1); // on
     return Math.abs(this.targetDateToBaseDateOffset(jul) - this.targetDateToBaseDateOffset(jan)) !== 0;
   }
 
@@ -681,9 +681,3 @@ export function copyHoursAndMinutesFromDateWithTimezoneNormal(input: Date, copyF
   const result = timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
   return result;
 }
-
-// MARK: compat
-/**
- * @deprecated use copyHoursAndMinutesFromDateWithTimezoneNormal() instead.
- */
-export const copyHoursAndMinutesFromDatesWithTimezoneNormal = copyHoursAndMinutesFromDateWithTimezoneNormal;

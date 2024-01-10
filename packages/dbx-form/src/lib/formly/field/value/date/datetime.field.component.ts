@@ -1,6 +1,6 @@
-import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, ISO8601DayString, DateOrDayString, isISO8601DayString, isISO8601DayStringStart, MapFunction, mapIdentityFunction } from '@dereekb/util';
-import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDate, toJsDayDate, isStartOfDayInUTC, isSameDate } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
+import { Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, DecisionFunction, Milliseconds, TimezoneString, LogicalDate, DateOrDayString, isISO8601DayStringStart, MapFunction, mapIdentityFunction } from '@dereekb/util';
+import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate } from '@dereekb/date';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
@@ -158,14 +158,6 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * Custom presets to show in the dropdown.
    */
   presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
-
-  // MARK: Compat
-  /**
-   * Used for returning the configuration observable.
-   *
-   * @deprecated Use pickerConfig instead.
-   */
-  getConfigObs?: ObservableOrValueGetter<DbxDateTimePickerConfiguration>;
 }
 
 export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
@@ -552,7 +544,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
-    const inputPickerConfig = this.dateTimeField.getConfigObs || this.dateTimeField.pickerConfig;
+    const inputPickerConfig = this.dateTimeField.pickerConfig;
     this._config.next(inputPickerConfig ? asObservableFromGetter(inputPickerConfig) : undefined);
     this._syncConfigObs.next(this.dateTimeField.getSyncFieldsObs?.());
 
@@ -806,9 +798,3 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     });
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated Use DbxDateTimePickerConfiguration instead.
- */
-export type DateTimePickerConfiguration = DbxDateTimePickerConfiguration;

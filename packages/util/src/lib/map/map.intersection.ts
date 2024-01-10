@@ -1,4 +1,4 @@
-import { ArrayOrValue, mergeArrayOrValueIntoArray } from '../array/array';
+import { ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
 
 /**
  * Object used as a map of keys that will intersect with input keys.
@@ -22,7 +22,7 @@ export function mapKeysIntersectionObjectToArray<T>(object: MapKeysIntersectionO
     const values = object[key];
 
     if (values != null) {
-      mergeArrayOrValueIntoArray(applyArray, values);
+      pushItemOrArrayItemsIntoArray(applyArray, values);
     }
   });
 

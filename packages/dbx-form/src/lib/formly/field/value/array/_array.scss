@@ -58,14 +58,19 @@
   .dbx-form-repeat-array-bar {
     background: none;
   }
+
+  .dbx-form-repeat-array-drag-button.mdc-button > .mat-icon {
+    margin: 0;
+  }
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-array') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -73,7 +78,7 @@
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

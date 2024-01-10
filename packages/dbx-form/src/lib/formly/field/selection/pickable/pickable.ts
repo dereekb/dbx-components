@@ -29,24 +29,3 @@ export type PickableValueFieldFilterFunction<T, M = unknown> = (flterText: Maybe
  * Used to hash the value from the input pickable value.
  */
 export type PickableValueFieldHashFunction<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFunction<T, H>;
-
-// MARK: Compat
-/**
- * @deprecated Replace with PickableValueFieldLoadValuesFunction
- */
-export type PickableValueFieldLoadValuesFn<T, M = unknown> = PickableValueFieldLoadValuesFunction<T, M>;
-
-/**
- * @deprecated Replace with PickableValueFieldDisplayFunction
- */
-export type PickableValueFieldDisplayFn<T, M = unknown> = PickableValueFieldDisplayFunction<T, M>;
-
-/**
- * @deprecated Replace with PickableValueFieldFilterFunction
- */
-export type PickableValueFieldFilterFn<T, M = unknown> = PickableValueFieldFilterFunction<T, M>;
-
-/**
- * @deprecated Replace with  PickableValueFieldHashFunction
- */
-export type PickableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = PickableValueFieldHashFunction<T, H>;

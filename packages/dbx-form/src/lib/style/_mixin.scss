@@ -1,3 +1,13 @@
 @use 'sass:map';
 @use './config';
 @use './variables';
+
+@mixin hide-mdc-notched-outline-border {
+  > .mdc-notched-outline {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border: 0;
+    }
+  }
+}

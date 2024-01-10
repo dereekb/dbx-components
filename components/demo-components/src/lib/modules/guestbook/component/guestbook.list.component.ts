@@ -20,6 +20,7 @@ export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperD
 }
 
 @Component({
+  selector: 'demo-guestbook-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: provideDbxListView(DemoGuestbookListViewComponent)
 })

@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/util/fetch",
@@ -17,15 +17,15 @@
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/util/fetch/**/*.ts"]
+        "lintFilePatterns": ["packages/util/fetch/**/*.ts", "packages/util/fetch/package.json", "packages/util/fetch/project.json"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/util/fetch", "./.reports/jest/util-fetch.junit.xml"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/util/fetch", "{projectRoot}/.reports/jest/util-fetch.junit.xml"],
       "options": {
         "jestConfig": "packages/util/fetch/jest.config.ts",
         "passWithNoTests": true

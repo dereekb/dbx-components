@@ -7,8 +7,9 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/dbx-firebase", "dist/packages/dbx-firebase/_index.scss", "dist/packages/dbx-firebase/LICENSE", "dist/packages/dbx-firebase/**/*.scss", "dist/packages/dbx-firebase/assets"],
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase", "{workspaceRoot}/dist/packages/dbx-firebase/_index.scss", "{workspaceRoot}/dist/packages/dbx-firebase/LICENSE", "{workspaceRoot}/dist/packages/dbx-firebase/**/*.scss", "{workspaceRoot}/dist/packages/dbx-firebase/assets"],
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "commands": [
           {
             "description": "build dbx-firebase production",
@@ -36,8 +37,8 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/angular:package",
-      "outputs": ["dist/packages/dbx-firebase"],
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase"],
       "options": {
         "project": "packages/dbx-firebase/ng-package.json"
       },
@@ -52,9 +53,10 @@
       "defaultConfiguration": "production"
     },
     "run-tests": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/dbx-firebase", "./.reports/jest/dbx-firebase.junit.xml"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "jestConfig": "packages/dbx-firebase/jest.config.ts",
         "passWithNoTests": true
       }
@@ -68,13 +70,14 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
+        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase'"
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-firebase/src/**/*.ts", "packages/dbx-firebase/src/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-firebase/src/**/*.ts", "packages/dbx-firebase/src/**/*.html", "packages/dbx-firebase/package.json", "packages/dbx-firebase/project.json"]
       }
     },
     "publish-npmjs": {

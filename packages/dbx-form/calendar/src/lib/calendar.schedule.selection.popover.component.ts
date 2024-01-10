@@ -10,6 +10,7 @@ export interface DbxScheduleSelectionCalendarDatePopoverConfig {
 }
 
 @Component({
+  selector: 'dbx-schedule-selection-calendar-date-popover',
   template: `
     <dbx-popover-content>
       <dbx-popover-scroll-content>

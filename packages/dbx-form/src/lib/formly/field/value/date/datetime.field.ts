@@ -2,7 +2,7 @@ import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig } from '../../field';
 import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DbxDateTimePickerConfiguration } from './datetime.field.component';
-import { flexLayoutWrapper, styleWrapper } from '../../wrapper/wrapper';
+import { flexLayoutWrapper } from '../../wrapper/wrapper';
 import { Maybe } from '@dereekb/util';
 import { DbxFixedDateRangeFieldProps } from './fixeddaterange.field.component';
 
@@ -27,14 +27,15 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 }
 
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
-  const { key = 'date', dateLabel, timeLabel, allDayLabel, atTimeLabel, timeDate, timezone, showTimezone, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, pickerConfig, getConfigObs, getSyncFieldsObs, hideDatePicker, hideDateHint, timeOnly = false, presets, materialFormField } = config;
+  const { key = 'date', dateLabel, timeLabel, allDayLabel, atTimeLabel, timeDate, timezone, showTimezone, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, pickerConfig, getSyncFieldsObs, hideDatePicker, hideDateHint, timeOnly = false, presets, materialFormField } = config;
 
+  const classGetter = 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper';
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'datetime',
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
-      appearance: 'standard',
+      classGetter,
       dateLabel,
       timeLabel,
       allDayLabel,
@@ -51,14 +52,11 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
       hideDatePicker,
       hideDateHint,
       pickerConfig,
-      getConfigObs,
       getSyncFieldsObs
     })
   });
 
-  return styleWrapper(fieldConfig, {
-    classGetter: 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper'
-  });
+  return fieldConfig;
 }
 
 export type DateDateRangeFieldDateConfig = Omit<DateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
@@ -165,11 +163,13 @@ export interface FixedDateRangeFieldConfig extends LabeledFieldConfig, Descripti
 export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> = {}) {
   const { key = 'dateRange', dateRangeInput, pickerConfig, timezone, selectionMode, showTimezone, valueMode, fullDayInUTC, presets, showRangeInput, materialFormField } = config;
 
+  const classGetter = 'dbx-mat-form-field-disable-underline dbx-form-fixed-date-range-field-wrapper';
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'fixeddaterange',
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
+      classGetter,
       dateRangeInput,
       pickerConfig,
       valueMode,
@@ -182,7 +182,5 @@ export function fixedDateRangeField(config: Partial<FixedDateRangeFieldConfig> =
     })
   });
 
-  return styleWrapper(fieldConfig, {
-    classGetter: 'dbx-mat-form-field-disable-underline dbx-form-fixed-date-range-field-wrapper'
-  });
+  return fieldConfig;
 }

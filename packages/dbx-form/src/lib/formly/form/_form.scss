@@ -11,11 +11,11 @@
   // adapt the search form to fit in the header
   // TODO: Consider test that other one-field input forms fit in the dbx-section-page-header
   .dbx-section-page-header-search-form {
-    .mat-form-field .mat-form-field-wrapper {
+    .mat-mdc-form-field .mat-mdc-form-field-wrapper {
       margin: 0;
       padding: 0;
 
-      .mat-form-field-infix {
+      .mat-mdc-form-field-infix {
         padding: 11px;
       }
     }
@@ -25,18 +25,31 @@
     width: 100%;
     display: flex;
     align-items: center;
+
+    .dbx-formly {
+      width: 100%;
+    }
+
+    .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
+      padding: 0;
+
+      > .mat-mdc-form-field-flex {
+        @include theming.hide-mdc-notched-outline-border;
+      }
+    }
   }
 }
 
 @mixin color($theme-config) {
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-formly-form') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -44,7 +57,7 @@
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

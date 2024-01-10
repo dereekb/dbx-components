@@ -1,5 +1,5 @@
 import { chainMapSameFunctions, MapSameFunction } from '../value/map';
-import { asArray, ArrayOrValue, mergeArrayOrValueIntoArray } from '../array/array';
+import { asArray, ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, replaceStringsFunction, splitStringAtIndex } from '../string';
 import { chainMapFunction, indexRange, IndexRangeInput, mapIdentityFunction, Maybe } from '../value';
 import { FactoryWithRequiredInput } from '../getter/getter';
@@ -338,7 +338,7 @@ export function slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFact
   const finalizeFn = chainMapFunction(typeFactory, validationFactory);
 
   return (paths: ArrayOrValue<Maybe<SlashPath>>) => {
-    const merged = mergeSlashPaths(mergeArrayOrValueIntoArray([basePath], paths));
+    const merged = mergeSlashPaths(pushItemOrArrayItemsIntoArray([basePath], paths));
     return finalizeFn(merged);
   };
 }

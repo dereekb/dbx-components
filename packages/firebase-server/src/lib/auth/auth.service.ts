@@ -783,6 +783,3 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
     };
   }
 }
-
-// MARK: Compat
-export { FirebaseAuthNewUserClaimsData as FirebaseServerAuthNewUserClaimsData, FirebaseAuthSetupPassword as FirebaseServerAuthSetupPassword };

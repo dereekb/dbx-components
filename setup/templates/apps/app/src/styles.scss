@@ -4,12 +4,10 @@
 @use '@dereekb/dbx-firebase' as dbx-firebase;
 @use './style/style';
 
-$app-typography-config: mat.define-typography-config();
-
-@include mat.core($app-typography-config);
-@include dbx.core($app-typography-config);
-@include dbx-form.core($app-typography-config);
-@include dbx-firebase.core($app-typography-config);
+@include mat.core();
+@include dbx.core();
+@include dbx-form.core();
+@include dbx-firebase.core();
 
 @include style.dark-app-theme('.app-theme-dark');
 @include style.app-theme('.app-theme');
@@ -19,7 +17,7 @@ body {
   background: black;
   height: 100%;
   overflow-x: hidden;
-  font-family: 'Fira Sans', sans-serif;
+  font-family: 'Helvetica Neue', sans-serif;
 }
 
 a {

@@ -1,6 +1,7 @@
 @use './array/array';
 @use './boolean/boolean';
 @use './date/date';
+@use './number/number';
 @use './phone/phone';
 @use './text/text';
 
@@ -8,22 +9,25 @@
   @include array.core();
   @include boolean.core();
   @include date.core();
+  @include number.core();
   @include phone.core();
   @include text.core();
 }
 
-@mixin all-value-typography($typography-config) {
-  @include array.typography($typography-config);
-  @include boolean.typography($typography-config);
-  @include date.typography($typography-config);
-  @include phone.typography($typography-config);
-  @include text.typography($typography-config);
+@mixin all-value-typography($theme-config) {
+  @include array.typography($theme-config);
+  @include boolean.typography($theme-config);
+  @include date.typography($theme-config);
+  @include number.typography($theme-config);
+  @include phone.typography($theme-config);
+  @include text.typography($theme-config);
 }
 
 @mixin all-value-theme($theme-config) {
   @include array.theme($theme-config);
   @include boolean.theme($theme-config);
   @include date.theme($theme-config);
+  @include number.theme($theme-config);
   @include phone.theme($theme-config);
   @include text.theme($theme-config);
 }

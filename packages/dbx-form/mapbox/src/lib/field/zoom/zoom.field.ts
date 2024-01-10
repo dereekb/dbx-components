@@ -1,4 +1,4 @@
-import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig, styleWrapper } from '@dereekb/dbx-form';
+import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';
 
@@ -6,11 +6,14 @@ export interface MapboxZoomFieldConfig extends Omit<LabeledFieldConfig, 'key'>, 
 
 export function mapboxZoomField(config: MapboxZoomFieldConfig = {}): FormlyFieldConfig {
   const { key = 'zoom', showMap, center, minZoom, maxZoom, zoomStep } = config;
+
+  const classGetter = 'dbx-mat-form-field-disable-underline';
   const fieldConfig: FormlyFieldConfig = {
     ...formlyField({
       key,
       type: 'mapbox-zoom-picker',
       ...propsAndConfigForFieldConfig(config, {
+        classGetter,
         label: config.label ?? 'Zoom',
         autocomplete: false,
         showMap,
@@ -22,7 +25,5 @@ export function mapboxZoomField(config: MapboxZoomFieldConfig = {}): FormlyField
     })
   };
 
-  return styleWrapper(fieldConfig, {
-    classGetter: 'dbx-mat-form-field-disable-underline'
-  });
+  return fieldConfig;
 }

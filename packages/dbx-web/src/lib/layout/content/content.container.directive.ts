@@ -1,5 +1,4 @@
 import { Input, Directive } from '@angular/core';
-import { Maybe } from '@dereekb/util';
 
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 

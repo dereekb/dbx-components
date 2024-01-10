@@ -1,5 +1,5 @@
 import { Directive, Input, OnDestroy } from '@angular/core';
-import { Maybe, ArrayOrValue, Modifier, DecisionFunction } from '@dereekb/util';
+import { Maybe, ArrayOrValue, Modifier } from '@dereekb/util';
 import { BehaviorSubject, Observable, map } from 'rxjs';
 import { DbxValueListItem, DbxValueListItemDecisionFunction } from './list.view.value';
 import { AbstractDbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
@@ -41,9 +41,3 @@ export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxVal
     this._disableRippleForItem.next(disableRippleForItem ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION);
   }
 }
-
-// MARK: Compat
-/**
- * @Deprecated use DbxValueListItemDecisionFunction instead.
- */
-export type DisableRippleForValueFunction<T> = DecisionFunction<DbxValueListItem<T>>;

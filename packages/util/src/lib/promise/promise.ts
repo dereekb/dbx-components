@@ -82,7 +82,7 @@ export interface PerformAsyncTasksConfig<I = unknown> extends PerformAsyncTaskCo
  */
 export async function performAsyncTasks<I, O = unknown>(input: I[], taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
   const { sequential, maxParallelTasks, waitBetweenTasks } = config;
-  let taskResults: [I, O, boolean][] = [];
+  const taskResults: [I, O, boolean][] = [];
 
   await performTasksInParallelFunction({
     taskFactory: (value: I, i) =>
@@ -277,51 +277,3 @@ export function performTasksInParallelFunction<I>(config: PerformTasksInParallel
     };
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated Use functions directly instead.
- */
-export class PromiseUtility {
-  // MARK: Run
-  static async runTaskForValue<O>(taskFn: () => Promise<O>, config?: RunAsyncTaskForValueConfig<0>): Promise<Maybe<O>> {
-    return runAsyncTaskForValue(taskFn, { ...config, retriesAllowed: 5 });
-  }
-  static async runTasksForValues<T, K = unknown>(input: T[], taskFn: PromiseAsyncTaskFn<T, K>, config?: RunAsyncTasksForValuesConfig<T>): Promise<K[]> {
-    return runAsyncTasksForValues(input, taskFn, { ...config, retriesAllowed: 5 });
-  }
-
-  // MARK: Perform
-  static async performTasks<T, K = unknown>(input: T[], taskFn: PromiseAsyncTaskFn<T, K>, config: PerformAsyncTasksConfig<T> = { throwError: true }): Promise<PerformAsyncTasksResult<T, K>> {
-    return performAsyncTasks(input, taskFn, { ...config, retriesAllowed: 5 });
-  }
-
-  static async performTask<O>(taskFn: () => Promise<O>, config?: PerformAsyncTaskConfig<0>): Promise<PerformAsyncTaskResult<O>> {
-    return performAsyncTask(taskFn, { ...config, retriesAllowed: 5 });
-  }
-}
-
-/**
- * @deprecated use PerformAsyncTaskResult<O>
- */
-export type PerformTaskResult<O> = PerformAsyncTaskResult<O>;
-
-/**
- * @deprecated use PerformAsyncTasksResult<T, K>
- */
-export type PerformTasksResult<T, K> = PerformAsyncTasksResult<T, K>;
-
-/**
- * @deprecated use PerformAsyncTaskConfig<T>
- */
-export type PerformTaskConfig<T = unknown> = PerformAsyncTaskConfig<T>;
-
-/**
- * @deprecated use RunAsyncTaskForValueConfig<T>
- */
-export type ValueTaskConfig<T = unknown> = RunAsyncTaskForValueConfig<T>;
-
-/**
- * @deprecated use PerformAsyncTasksConfig<T>
- */
-export type PerformTasksConfig<T = unknown> = PerformAsyncTasksConfig<T>;

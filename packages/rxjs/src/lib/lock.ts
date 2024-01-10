@@ -84,7 +84,7 @@ export class LockSet implements Destroyable {
   setLocked(key: LockKey, config?: boolean | SetLockedConfig, duration?: number): void {
     let lockedConfig: SetLockedConfig;
 
-    if (typeof config !== 'object') {
+    if (typeof config === 'object') {
       lockedConfig = config as SetLockedConfig;
     } else {
       lockedConfig = {

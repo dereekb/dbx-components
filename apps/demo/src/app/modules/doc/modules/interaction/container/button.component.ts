@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { DbxProgressButtonOptions } from '@dereekb/dbx-web';
+import { Milliseconds } from '@dereekb/util';
+
+const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
 @Component({
   templateUrl: './button.component.html'
@@ -17,7 +20,7 @@ export class DocInteractionButtonComponent {
       this[key] = { ...this[key], working: true };
       setTimeout(() => {
         this[key] = { ...this[key], working: false };
-      }, 3350);
+      }, DEMO_SPINNER_TIME);
     };
   }
 
@@ -218,7 +221,7 @@ export class DocInteractionButtonComponent {
     this.barButtonOptionsWorkingState = true;
     setTimeout(() => {
       this.barButtonOptionsWorkingState = false;
-    }, 3350);
+    }, DEMO_SPINNER_TIME);
   };
 
   clickBar2 = this.activateAndDeactivate('barButtonOptions1');

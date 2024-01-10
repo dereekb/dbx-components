@@ -1,4 +1,4 @@
-import { FirestoreDocument, FirestoreDocumentData } from '@dereekb/firebase';
+import { DocumentDataWithIdAndKey, FirestoreDocument, FirestoreDocumentData, setIdAndKeyFromKeyIdRefOnDocumentData } from '@dereekb/firebase';
 import * as functions from 'firebase-functions';
 import { isContextWithAuthData } from './context';
 import { modelNotAvailableError, unauthenticatedContextHasNoUidError } from './error';
@@ -26,6 +26,18 @@ export async function assertSnapshotData<D extends FirestoreDocument<any>>(docum
   }
 
   return data;
+}
+
+/**
+ * Convenience function for assertSnapshotData that also attaches the id and key of the document to the data.
+ *
+ * @param document
+ * @param message
+ * @returns
+ */
+export async function assertSnapshotDataWithKey<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>> {
+  const data = await assertSnapshotData(document, message);
+  return setIdAndKeyFromKeyIdRefOnDocumentData(data, document);
 }
 
 /**

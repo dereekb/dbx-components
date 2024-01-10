@@ -1,13 +1,28 @@
 {
   "name": "@dereekb/dbx-firebase",
-  "version": "9.25.16",
+  "version": "10.0.0",
   "peerDependencies": {
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0"
+    "@angular/core": "^16.2.12",
+    "@dereekb/dbx-analytics": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/util": "*",
+    "rxjs": "^7.5.0",
+    "@angular/common": "^16.2.12",
+    "firebase": "^10.5.0",
+    "@angular/fire": "^16.0.0",
+    "@dereekb/date": "*",
+    "@dereekb/firebase": "*",
+    "@dereekb/dbx-core": "*",
+    "@angular/material": "^16.2.12",
+    "@dereekb/dbx-web": "*",
+    "@dereekb/dbx-form": "*",
+    "@ngx-formly/core": "^6.0.0",
+    "ng-overlay-container": "^16.0.0",
+    "@firebase/app-check": "0.8.1",
+    "@dereekb/model": "*",
+    "@ngrx/component-store": "^16.0.0"
   },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  },
+  "dependencies": {},
   "exports": {
     ".": {
       "sass": "./_index.scss"

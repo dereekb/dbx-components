@@ -76,7 +76,7 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
 
 @Component({
   template: `
-    <div class="dbx-default-pickable-item-field-list-item">
+    <div class="dbx-default-pickable-item-field-list-item dbx-flex-bar">
       <mat-icon class="dbx-icon-spacer" *ngIf="icon">{{ icon }}</mat-icon>
       <span class="dbx-chip-label">{{ label }}</span>
       <span class="dbx-chip-sublabel" *ngIf="sublabel">({{ sublabel }})</span>

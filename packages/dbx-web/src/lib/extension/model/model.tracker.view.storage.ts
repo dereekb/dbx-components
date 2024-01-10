@@ -75,12 +75,4 @@ export class DbxModelViewTrackerStorage {
     const storageKey = `${this.storageKey}_${folder ?? 'default'}`;
     return storageKey;
   }
-
-  // MARK: Compat
-  /**
-   * @deprecated use addTrackerEvent() instead.
-   */
-  addEvent(event: DbxModelViewTrackerEvent): Observable<void> {
-    return this.addTrackerEvent(event);
-  }
 }

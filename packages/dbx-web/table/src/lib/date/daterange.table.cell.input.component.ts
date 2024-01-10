@@ -7,7 +7,7 @@ import { Days, Maybe } from '@dereekb/util';
 import { FormGroup, FormControl } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { addDays, format as formatDate } from 'date-fns';
-import { BehaviorSubject, distinctUntilChanged, filter, map, Observable, of, startWith, switchMap, throttleTime, combineLatest } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, filter, map, Observable, of, startWith, switchMap, throttleTime, combineLatest, shareReplay } from 'rxjs';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 @Injectable()
@@ -91,14 +91,17 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnIn
 
   readonly buttonFormat$ = this._config.pipe(map((x) => x.buttonFormat ?? DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT));
 
-  readonly dateRangeString$ = combineLatest([this.buttonFormat$, this.range.valueChanges]).pipe(
+  readonly rangeValue$ = this.range.valueChanges.pipe(startWith(this.range.value));
+  readonly dateRangeString$ = combineLatest([this.buttonFormat$, this.rangeValue$]).pipe(
     map(([buttonFormat, { start, end }]) => {
       if (start && end) {
         return `${formatDate(start, buttonFormat)} - ${formatDate(end, buttonFormat)}`;
       } else {
         return `Select Date`;
       }
-    })
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   constructor(readonly tableStore: DbxTableStore<DateRangeDayDistanceInput>) {}
@@ -123,7 +126,7 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnIn
           if (opened) {
             obs = of({});
           } else {
-            obs = this.range.valueChanges.pipe(startWith(this.range.value));
+            obs = this.rangeValue$;
           }
 
           return obs;

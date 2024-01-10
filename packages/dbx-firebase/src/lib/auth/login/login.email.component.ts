@@ -3,6 +3,7 @@ import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DEFAULT_CONFIGURED_D
 import { DbxFirebaseLoginEmailContentComponent } from './login.email.content.component';
 
 @Component({
+  selector: 'dbx-firebase-login-email',
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE
 })
 export class DbxFirebaseLoginEmailComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {

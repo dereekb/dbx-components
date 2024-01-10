@@ -10,11 +10,4 @@ export class DefaultFirebaseServerEnvService extends ServerEnvironmentService im
   get developmentSchedulerEnabled() {
     return !this.isProduction && !this.isTestingEnv;
   }
-
-  /**
-   * @deprecated use developerToolsEnabled instead.
-   */
-  get isDevelopmentToolsEnabled() {
-    return this.developerToolsEnabled;
-  }
 }

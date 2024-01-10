@@ -26,12 +26,6 @@ export type WrapperFormlyFieldConfig<P, C extends FormlyFieldConfig> = FormlyFie
 };
 
 export function addWrapperToFormlyFieldConfig<C extends FormlyFieldConfig, P extends object>(fieldConfig: C, wrapperKey: string, wrapperProps: P): WrapperFormlyFieldConfig<P, C> {
-  // ??? can probably remove?
-  fieldConfig.props = {
-    ...fieldConfig.props,
-    ...wrapperProps
-  };
-
   return {
     wrappers: [wrapperKey],
     props: wrapperProps,

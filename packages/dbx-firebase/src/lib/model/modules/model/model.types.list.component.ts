@@ -23,6 +23,7 @@ export class DbxFirebaseModelTypeInstanceComponent extends AbstractDbxSelectionL
 }
 
 @Component({
+  selector: 'dbx-firebase-model-type-instance-list-view',
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: provideDbxListView(DbxFirebaseModelTypeInstanceViewComponent)
 })

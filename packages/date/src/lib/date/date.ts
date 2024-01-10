@@ -1,5 +1,5 @@
 import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
-import { DayOfWeekNameFunction, DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString, DayOfWeek, dayOfWeek, sortNumbersAscendingFunction, DateOrDayString } from '@dereekb/util';
+import { DayOfWeekNameFunction, DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString, DayOfWeek, dayOfWeek, sortNumbersAscendingFunction } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
 
@@ -335,22 +335,4 @@ export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T
  */
 export function isStartOfDayInUTC(date: Date): boolean {
   return date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
-}
-
-// MARK: Compat
-/**
- * @deprecated Use roundDownToHour instead.
- */
-export const removeMinutesAndSeconds = roundDownToHour;
-
-/**
- * @deprecated Use roundDownToMinute instead.
- */
-export const removeSeconds = roundDownToMinute;
-
-/**
- * @deprecated Use formatToISO8601DateString instead.
- */
-export function nowISODateString(): ISO8601DateString {
-  return toISODateString(new Date());
 }

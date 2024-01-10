@@ -12,27 +12,20 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
   .dbx-mat-form-date-time-field-wrapper {
     padding-top: 10px; // padding for label
 
-    > formly-wrapper-mat-form-field {
-      > .mat-form-field > .mat-form-field-wrapper {
-        > .mat-form-field-flex {
-          padding-top: 0;
+    > formly-wrapper-mat-form-field > .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
+      padding: 0;
 
-          > .mat-form-field-infix {
-            border: none;
-          }
-        }
+      > .mat-mdc-form-field-flex {
+        padding-top: 0;
+        @include theming.hide-mdc-notched-outline-border;
 
-        > .mat-form-field-subscript-wrapper {
-          margin-top: 2px;
+        > .mdc-notched-outline .mdc-notched-outline__leading {
+          width: 9px; // align the field wrapper's title with the first input's title
         }
       }
-    }
 
-    .dbx-datetime-row-field > .mat-form-field-wrapper {
-      padding-bottom: 4px;
-
-      > .mat-form-field-subscript-wrapper {
-        margin-top: 0px;
+      > .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
+        padding-bottom: 0;
       }
     }
   }
@@ -45,7 +38,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
       pointer-events: none;
     }
 
-    .dbx-datetime-timezone-button .mat-button {
+    .dbx-datetime-timezone-button .mat-mdc-button {
       font-size: 18px;
     }
   }
@@ -55,16 +48,9 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     justify-content: center;
     align-items: center;
 
-    .dbx-datetime-row-field {
-      width: calc(100% - #{$dbx-datetime-button-width});
-    }
-
-    .dbx-datetime-row-field.dbx-datetime-row-field-full-width {
-      width: 100%;
-    }
-
-    &.dbx-datetime-hint-row {
-      margin-top: -6px;
+    .mat-mdc-form-field-subscript-wrapper {
+      // hide the subscript wrapper since it is not used here
+      height: 0;
     }
   }
 
@@ -88,10 +74,6 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     justify-items: left;
   }
 
-  .dbx-datetime-hint-row {
-    // margin-left: 12px;
-  }
-
   .dbx-fixeddaterange-field {
     .mat-calendar,
     .dbx-fixeddaterange-field-input {
@@ -108,7 +90,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     }
   }
 
-  .mat-form-field.dbx-fixeddaterange-field-input {
+  .mat-mdc-form-field.dbx-fixeddaterange-field-input {
     display: block;
   }
 
@@ -117,11 +99,11 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     pointer-events: none;
   }
 
-  .dbx-form-fixed-date-range-field-wrapper .mat-form-field-appearance-outline .mat-form-field-infix {
+  .dbx-form-fixed-date-range-field-wrapper .mat-mdc-form-field-appearance-outline .mat-mdc-form-field-infix {
     padding: 4px 0;
   }
 
-  .dbx-form-fixed-date-range-field-wrapper .mat-form-field-appearance-outline > .mat-form-field-wrapper > .mat-form-field-flex > .mat-form-field-infix {
+  .dbx-form-fixed-date-range-field-wrapper .mat-mdc-form-field-appearance-outline > .mat-mdc-form-field-wrapper > .mat-mdc-form-field-flex > .mat-mdc-form-field-infix {
     padding: 0;
   }
 }
@@ -138,12 +120,13 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
   }
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-date') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -151,7 +134,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

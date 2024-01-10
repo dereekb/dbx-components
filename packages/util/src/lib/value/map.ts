@@ -11,6 +11,13 @@ import { Maybe, MaybeNot } from './maybe.type';
 export type MapFunction<I, O> = (input: I) => O;
 
 /**
+ * Function that reads a value from the input.
+ *
+ * Equivalent to a MapFunction.
+ */
+export type ReadValueFunction<I, O> = MapFunction<I, O>;
+
+/**
  * Turns a normal MapFunction into one that passes through Maybe values without attempting to map them.
  *
  * @param mapFunction

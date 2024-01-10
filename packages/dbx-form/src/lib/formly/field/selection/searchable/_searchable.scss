@@ -8,9 +8,8 @@
     width: 100%;
   }
 
-  .dbx-searchable-text-field-value.mat-option,
-  .dbx-searchable-text-field-autocomplete .mat-option {
-    padding: 0;
+  .dbx-searchable-text-field-autocomplete > .mat-mdc-option > .mdc-list-item__primary-text {
+    width: 100%;
   }
 
   .dbx-default-searchable-field-display {
@@ -40,12 +39,13 @@
 @mixin color($theme-config) {
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-selection-searchable') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -53,7 +53,7 @@
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

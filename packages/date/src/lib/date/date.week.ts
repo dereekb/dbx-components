@@ -1,4 +1,4 @@
-import { Building, makeValuesGroupMap, MapFunction, Maybe, TimezoneString } from '@dereekb/util';
+import { Building, makeValuesGroupMap, MapFunction, Maybe } from '@dereekb/util';
 import { getWeek, getYear, endOfWeek, startOfMonth, endOfMonth, addWeeks, startOfWeek, setWeek, isAfter } from 'date-fns';
 import { isDate } from './date';
 import { DateRange } from './date.range';
@@ -368,9 +368,3 @@ export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConf
     return groups;
   };
 }
-
-// MARK: Compat
-/**
- * @deprecated use UNKNOWN_YEAR_WEEK_CODE instead.
- */
-export const UNKNOWN_JOB_YEAR_WEEK = UNKNOWN_YEAR_WEEK_CODE;

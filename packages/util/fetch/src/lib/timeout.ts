@@ -14,11 +14,12 @@ export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
 
     // if signal is not provided, and a timeout is specified, configure the timeout
     if (!init?.signal && timeout) {
-      controller = new AbortController();
+      const abortController = new AbortController();
+      controller = abortController;
 
       init = {
         ...init,
-        signal: controller.signal // pass the abort signal
+        signal: abortController.signal // pass the abort signal
       };
     }
 

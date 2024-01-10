@@ -4,8 +4,8 @@
 
 // MARK: Mixin
 @mixin core() {
-  .mat-form-field.mat-form-field-type-toggle {
-    .mat-form-field-wrapper .mat-form-field-subscript-wrapper {
+  .mat-mdc-form-field.mat-mdc-form-field-type-toggle {
+    .mat-mdc-form-field-wrapper .mat-mdc-form-field-subscript-wrapper {
       // margin on the checkbox field is unnecessary. By removing it, it becomes more in-line with the other fields.
       margin-top: 0px;
     }
@@ -15,12 +15,13 @@
 @mixin color($theme-config) {
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-boolean') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -28,7 +29,7 @@
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

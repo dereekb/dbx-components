@@ -207,7 +207,7 @@ export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Mayb
  * @param snapshot
  * @returns
  */
-export function setIdAndKeyFromSnapshotOnDocumentData<T>(data: T, snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>> {
+export function setIdAndKeyFromSnapshotOnDocumentData<T>(data: T, snapshot: DocumentSnapshot<T>): DocumentDataWithIdAndKey<T> {
   const target = data as DocumentDataWithIdAndKey<T>;
 
   target.id = snapshot.id; //set the id on data
@@ -223,7 +223,7 @@ export function setIdAndKeyFromSnapshotOnDocumentData<T>(data: T, snapshot: Docu
  * @param snapshot
  * @returns
  */
-export function setIdAndKeyFromKeyIdRefOnDocumentData<T>(data: T, modelRef: FirestoreModelKeyRef & FirestoreModelIdRef): Maybe<DocumentDataWithIdAndKey<T>> {
+export function setIdAndKeyFromKeyIdRefOnDocumentData<T>(data: T, modelRef: FirestoreModelKeyRef & FirestoreModelIdRef): DocumentDataWithIdAndKey<T> {
   const target = data as DocumentDataWithIdAndKey<T>;
 
   target.id = modelRef.id; // set the id on data
@@ -274,14 +274,3 @@ export function documentReferenceFromDocument<T, D extends FirestoreDocument<T>>
 export function documentReferencesFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): DocumentReference<T>[] {
   return documents.map(documentReferenceFromDocument);
 }
-
-// MARK: Compat
-/**
- * @Deprecated use DocumentDataWithIdAndKeyFunction<T> instead.
- */
-export type DocumentDataWithIdFunction<T> = DocumentDataWithIdAndKeyFunction<T>;
-
-/**
- * @deprecated use documentDataWithIdAndKey instead.
- */
-export const documentDataWithId = documentDataWithIdAndKey;

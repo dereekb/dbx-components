@@ -1,4 +1,4 @@
-import { E164PhoneNumber, E164PhoneNumberWithExtension, E164PhoneNumberWithOptionalExtension, MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
+import { E164PhoneNumberWithOptionalExtension, MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
 
 export interface ClickableFunction {
   onClick?: (event?: Maybe<MouseEvent>) => void;

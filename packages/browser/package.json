@@ -1,5 +1,11 @@
 {
   "name": "@dereekb/browser",
-  "version": "9.25.16",
-  "type": "commonjs"
+  "version": "10.0.0",
+  "type": "commonjs",
+  "peerDependencies": {
+    "@dereekb/util": "*",
+    "@dereekb/rxjs": "*",
+    "rxjs": "^7.5.0"
+  },
+  "dependencies": {}
 }

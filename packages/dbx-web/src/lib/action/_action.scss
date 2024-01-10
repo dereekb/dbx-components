@@ -4,8 +4,8 @@
   @include snackbar.core();
 }
 
-@mixin all-action-typography($typography-config) {
-  @include snackbar.typography($typography-config);
+@mixin all-action-typography($theme-config) {
+  @include snackbar.typography($theme-config);
 }
 
 @mixin all-action-theme($theme-config) {

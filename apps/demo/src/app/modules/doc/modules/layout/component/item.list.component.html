@@ -1,6 +1,6 @@
 <mat-selection-list style="width: 100%" [multiple]="true" (selectionChange)="matSelectionChanged($event)">
   <mat-list-option *ngFor="let item of values$ | async" [value]="item" (click)="onClickValue(item)">
-    <mat-icon matListIcon>{{ item.icon }}</mat-icon>
-    <h3 matLine>{{ item.name }}</h3>
+    <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+    <h3 matListItemTitle>{{ item.name }}</h3>
   </mat-list-option>
 </mat-selection-list>

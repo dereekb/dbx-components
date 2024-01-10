@@ -7,9 +7,10 @@
 $width: 240px;
 $mobile-width: 80vw;
 $icon-only-width: 65px;
-$mat-list-item-height: 48px;
+$mat-mdc-list-item-height: 48px;
 $active-border-left-width: 2px;
 $dbx-sidenav-nav-bottom-padding: 24px;
+$faded-text-transparent-color: 0.2;
 $active-background-transparent-color: 0.93;
 
 // MARK: Mixin
@@ -62,7 +63,7 @@ $active-background-transparent-color: 0.93;
       }
     }
 
-    .mat-nav-list.dbx-anchor-list {
+    .mat-mdc-nav-list.dbx-anchor-list {
       padding-top: 0;
     }
   }
@@ -85,6 +86,10 @@ $active-background-transparent-color: 0.93;
 
   $background: map.get($color-config, 'background');
   $text-color: theming.get-color-from-palette($primary, '800-contrast');
+  $text-faded-color: transparentize(
+    $color: $text-color,
+    $amount: $faded-text-transparent-color
+  );
   $sidenav-background-color: theming.get-color-from-palette($primary, 800);
   $inactive-text-color: theming.get-color-from-palette($primary, '800-contrast');
   $active-icon-color: theming.get-color-from-palette($accent, 400);
@@ -94,31 +99,28 @@ $active-background-transparent-color: 0.93;
       color: $text-color;
       background-color: $sidenav-background-color;
 
-      .mat-drawer-inner-container {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        height: 100%;
-        min-height: 320px;
-      }
+      .dbx-anchor-list.mat-mdc-nav-list {
+        --mdc-list-list-item-label-text-color: #{$text-color};
+        --mdc-list-list-item-supporting-text-color: #{$text-color};
+        --mdc-list-list-item-leading-icon-color: #{$text-color};
 
-      .dbx-anchor-list.mat-nav-list {
-        color: $inactive-text-color;
+        --mdc-list-list-item-hover-label-text-color: #{$text-faded-color};
+        --mdc-list-list-item-hover-supporting-text-color: #{$text-faded-color};
+        --mdc-list-list-item-hover-leading-icon-color: #{$text-faded-color};
 
-        .mat-list-item {
-          color: $inactive-text-color;
-          height: $mat-list-item-height;
+        .mat-mdc-list-item {
+          height: $mat-mdc-list-item-height;
         }
 
         .dbx-anchor-active {
-          .mat-list-item {
-            .mat-list-icon {
+          .mat-mdc-list-item {
+            .mat-mdc-list-item-icon {
               color: $active-icon-color;
             }
           }
         }
 
-        .dbx-anchor-list-root .dbx-anchor-active .mat-list-item {
+        .dbx-anchor-list-root .dbx-anchor-active .mat-mdc-list-item {
           // root list items glow when active
           background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
         }
@@ -126,11 +128,11 @@ $active-background-transparent-color: 0.93;
         // directly active links have a side-
         .dbx-anchor-active-eq,
         .dbx-anchor-list-child .dbx-anchor-active {
-          .mat-list-item {
+          .mat-mdc-list-item {
             border-left: $active-border-left-width solid $active-icon-color;
 
-            .mat-list-icon {
-              color: $active-icon-color;
+            .mat-mdc-list-item-icon {
+              --mdc-list-list-item-leading-icon-color: #{$active-icon-color};
 
               // Offset the added border by clearing the default padding width (4px)
               padding-left: anchorlist.$active-root-item-left-padding - $active-border-left-width;
@@ -138,8 +140,8 @@ $active-background-transparent-color: 0.93;
           }
         }
 
-        .dbx-anchor-list-child .dbx-anchor-active .mat-list-item,
-        .dbx-anchor-list-child .dbx-anchor-active-eq .mat-list-item {
+        .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
+        .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
           padding-left: anchorlist.$active-child-item-left-padding - $active-border-left-width;
           background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
         }
@@ -149,7 +151,7 @@ $active-background-transparent-color: 0.93;
 
   /*
     .active {
-      &.mat-list-item {
+      &.mat-mdc-list-item {
         background-color: rgba(0, 0, 0, 0.1);
       }
 
@@ -188,12 +190,13 @@ $active-background-transparent-color: 0.93;
     */
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -201,7 +204,7 @@ $active-background-transparent-color: 0.93;
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

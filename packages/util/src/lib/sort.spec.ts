@@ -1,4 +1,4 @@
-import { isMapIdentityFunction, mapIdentityFunction, minAndMaxFunction, sortAscendingIndexNumberRefFunction, sortNumbersAscendingFunction, sortValues, sortValuesFunctionOrMapIdentityWithSortRef } from '@dereekb/util';
+import { isMapIdentityFunction, minAndMaxFunction, sortNumbersAscendingFunction, sortValues, sortValuesFunctionOrMapIdentityWithSortRef } from '@dereekb/util';
 
 describe('sortValues()', () => {
   it('should sort the values if sortWith is defined.', () => {

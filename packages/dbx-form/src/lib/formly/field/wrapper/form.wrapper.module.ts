@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormInfoWrapperComponent } from './info.wrapper.component';
 import { DbxFormSectionWrapperComponent } from './section.wrapper.component';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxFormFlexWrapperComponent } from './flex.wrapper.component';
 import { DbxFormSubsectionWrapperComponent } from './subsection.wrapper.component';
 import { DbxFormExpandWrapperComponent } from './expandable.wrapper.component';

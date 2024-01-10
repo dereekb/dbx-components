@@ -154,7 +154,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
 
     return this._dialogRef.afterClosed().pipe(
       first(),
-      map((result: DbxActionTransitionSafetyDialogResult = DbxActionTransitionSafetyDialogResult.STAY) => {
+      map((result: DbxActionTransitionSafetyDialogResult | undefined = DbxActionTransitionSafetyDialogResult.STAY) => {
         // Default to Stay if the user clicks outside.
         switch (result) {
           case DbxActionTransitionSafetyDialogResult.DISCARD:

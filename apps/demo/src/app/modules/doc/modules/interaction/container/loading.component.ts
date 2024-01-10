@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { tapLog } from '@dereekb/rxjs';
 import { readableError, ReadableError } from '@dereekb/util';
 import { interval, map, shareReplay } from 'rxjs';
 

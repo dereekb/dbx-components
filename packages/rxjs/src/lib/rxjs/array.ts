@@ -1,5 +1,5 @@
 import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction, switchMap, combineLatest, of, first, ObservableInput } from 'rxjs';
-import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray, asArray, MapFunction } from '@dereekb/util';
+import { Maybe, ArrayOrValue, pushItemOrArrayItemsIntoArray, forEachWithArray, pushArrayItemsIntoArray, asArray, MapFunction } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => unknown[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
@@ -30,7 +30,7 @@ export function scanIntoArray<T>(config: { immutable?: boolean } = {}): Operator
       if (immutable) {
         acc = acc.concat(next);
       } else {
-        acc = mergeArrayOrValueIntoArray(acc, next);
+        acc = pushItemOrArrayItemsIntoArray(acc, next);
       }
     }
 
@@ -76,7 +76,7 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
       scan<Maybe<ArrayOrValue<T>>, T[]>((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
         if (next != null) {
           if (flattenArray && Array.isArray(next)) {
-            mergeArrayIntoArray(acc, next);
+            pushArrayItemsIntoArray(acc, next);
           } else {
             acc.push(next as T);
           }

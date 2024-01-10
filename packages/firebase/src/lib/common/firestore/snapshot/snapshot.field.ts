@@ -1,6 +1,6 @@
 import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole, WebsiteFileLink, EncodedWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, decodeWebsiteLinkEncodedDataToWebsiteFileLink } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
-import { DateBlockRange, DateCellRange, DateCellSchedule, DateSchedule, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
+import { DateCellRange, DateCellSchedule, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
   ModelFieldMapFunctionsConfig,
   GetterOrValue,
@@ -12,8 +12,8 @@ import {
   ModelFieldMapFunctionsWithDefaultsConfig,
   filterMaybeValues,
   MaybeSo,
-  FindUniqueStringsTransformConfig,
-  findUniqueTransform,
+  FilterUniqueStringsTransformConfig,
+  filterUniqueTransform,
   MapFunction,
   FilterKeyValueTuplesInput,
   KeyValueTypleValueFilter,
@@ -289,18 +289,18 @@ export function optionalFirestoreArray<T>() {
 
 export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey> = FirestoreArrayFieldConfig<T> &
   Partial<SortCompareFunctionRef<T>> & {
-    readonly findUnique: FilterUniqueFunction<T, K>; // TODO: BREAKING CHANGE - Rename to filterUnique()
+    readonly filterUnique: FilterUniqueFunction<T, K>;
   };
 
 export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
-  const { findUnique } = config;
+  const { filterUnique: filterUnique } = config;
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   return firestoreField<T[], T[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: (x: T[]) => sortFn(findUnique(x), false),
-    toData: (x: T[]) => sortFn(findUnique(x), true)
+    fromData: (x: T[]) => sortFn(filterUnique(x), false),
+    toData: (x: T[]) => sortFn(filterUnique(x), true)
   });
 }
 
@@ -311,11 +311,11 @@ export type FirestoreUniqueKeyedArrayFieldConfig<T, K extends PrimativeKey = Pri
 export function firestoreUniqueKeyedArray<T, K extends PrimativeKey = PrimativeKey>(config: FirestoreUniqueKeyedArrayFieldConfig<T, K>) {
   return firestoreUniqueArray({
     ...config,
-    findUnique: filterUniqueFunction<T, K>(config.readKey)
+    filterUnique: filterUniqueFunction<T, K>(config.readKey)
   });
 }
 
-export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'findUnique'>;
+export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'filterUnique'>;
 
 /**
  * FirestoreField configuration for an array of unique enum values.
@@ -326,17 +326,17 @@ export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<Fire
 export function firestoreEnumArray<S extends string | number>(config: FirestoreEnumArrayFieldConfig<S> = {}) {
   return firestoreUniqueArray<S, S>({
     ...config,
-    findUnique: unique
+    filterUnique: unique
   });
 }
 
-export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'findUnique'> & FindUniqueStringsTransformConfig;
+export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'filterUnique'> & FilterUniqueStringsTransformConfig;
 
 export function firestoreUniqueStringArray<S extends string = string>(config?: FirestoreUniqueStringArrayFieldConfig<S>) {
-  const findUnique = (config != null ? findUniqueTransform(config) : unique) as FilterUniqueFunction<S>;
+  const filterUnique = (config != null ? filterUniqueTransform(config) : unique) as FilterUniqueFunction<S>;
   return firestoreUniqueArray<S, S>({
     ...config,
-    findUnique
+    filterUnique: filterUnique
   });
 }
 
@@ -691,13 +691,6 @@ export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFiresto
 }
 
 /**
- * Default value used by firestoreLatLngString
- *
- * @Deprecated use DEFAULT_LAT_LNG_STRING_VALUE
- */
-export const DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE = DEFAULT_LAT_LNG_STRING_VALUE;
-
-/**
  * Configuration for a LatLngString field.
  *
  * NOTE: The preference is to store LatLng values as strings as opposed to a lat/lng object or value pair as we could not sort/search lat and lng together, so indexing on them is useless.
@@ -728,7 +721,7 @@ export function firestoreTimezoneString(config?: FirestoreTimezoneStringConfig) 
   const { default: defaultValue, defaultBeforeSave } = config ?? {};
 
   return firestoreString<TimezoneString>({
-    default: defaultValue || DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE,
+    default: defaultValue || DEFAULT_LAT_LNG_STRING_VALUE,
     defaultBeforeSave
   });
 }
@@ -847,71 +840,10 @@ export const firestoreDateCellScheduleAssignFn: MapFunction<DateCellSchedule, Da
 export function firestoreDateCellSchedule() {
   return firestoreField<DateCellSchedule, DateCellSchedule>({
     default: DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE,
-    fromData: firestoreDateScheduleAssignFn,
-    toData: firestoreDateScheduleAssignFn
+    fromData: firestoreDateCellScheduleAssignFn,
+    toData: firestoreDateCellScheduleAssignFn
   });
 }
-
-// MARK: DateBlockRange
-/**
- * @deprecated DateBlockRange is deprecated. Use DEFAULT_DATE_CELL_RANGE_VALUE instead.
- *
- * @returns
- */
-export const DEFAULT_DATE_BLOCK_RANGE_VALUE: DateBlockRange = DEFAULT_DATE_CELL_RANGE_VALUE;
-
-/**
- * @deprecated DateBlockRange is deprecated. Use assignDateCellRangeFunction instead.
- *
- * @returns
- */
-export const assignDateBlockRangeFunction = assignDateCellRangeFunction;
-
-/**
- * @deprecated DateBlockRange is deprecated. Use firestoreDateCellRangeAssignFn instead.
- *
- * @returns
- */
-export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBlockRange> = firestoreDateCellRangeAssignFn;
-
-/**
- * @deprecated DateBlockRange is deprecated. Use firestoreDateBlockRange() instead.
- *
- * @returns
- */
-export const firestoreDateBlockRange = firestoreDateCellRange;
-
-// MARK: DateBlockRange Array
-/**
- * @deprecated DateBlockRange is deprecated. Use firestoreDateCellRangeArray() instead.
- *
- * @returns
- */
-export const firestoreDateBlockRangeArray = firestoreDateCellRangeArray;
-
-// MARK: Date Schedule
-/**
- * @deprecated use DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE instead.
- */
-export const DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE: DateSchedule = DEFAULT_FIRESTORE_DATE_CELL_SCHEDULE_VALUE;
-
-/**
- * @deprecated use assignDateCellScheduleFunction instead.
- *
- */
-export const assignDateScheduleFunction = assignDateCellScheduleFunction;
-
-/**
- * @deprecated use firestoreDateCellScheduleAssignFn instead.
- *
- */
-export const firestoreDateScheduleAssignFn: MapFunction<DateSchedule, DateSchedule> = firestoreDateCellScheduleAssignFn;
-
-/**
- * @deprecated use firestoreDateCellSchedule instead.
- *
- */
-export const firestoreDateSchedule = firestoreDateCellSchedule;
 
 // MARK: Address
 export const DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE: UnitedStatesAddress = {
@@ -993,19 +925,3 @@ export function firestoreBitwiseObjectMap<T extends object, K extends string = s
     decoder: dencoder
   });
 }
-
-// MARK: Compat
-/**
- * @deprecated use FirestoreDencoderMapFieldValueType instead.
- */
-export type FirestoreEncodedMapFieldValueType<D extends PrimativeKey, S extends string = string> = FirestoreDencoderMapFieldValueType<D, S>;
-
-/**
- * @deprecated use FirestoreDencoderMapFieldConfig instead.
- */
-export type FirestoreEncodedMapFieldConfig<D extends PrimativeKey, E extends PrimativeKey, S extends string = string> = FirestoreDencoderMapFieldConfig<D, E, S>;
-
-/**
- * @deprecated use firestoreDencoderMap() instead.
- */
-export const firestoreEncodedMap = firestoreDencoderMap;

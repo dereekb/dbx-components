@@ -53,9 +53,3 @@ export function durationSpanDateRelativeState(span: DateDurationSpan, now?: Date
 export function fractionalHoursInDurationSpan(span: DateDurationSpan): FractionalHour {
   return minutesToFractionalHours(span.duration);
 }
-
-// MARK: Compat
-/**
- * @deprecated use durationSpanDateRelativeState instead.
- */
-export const durationSpanDateRangeState = durationSpanDateRelativeState;

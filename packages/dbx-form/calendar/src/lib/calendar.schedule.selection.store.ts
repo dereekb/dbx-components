@@ -27,7 +27,6 @@ import {
   DateOrDateRangeOrDateCellIndexOrDateCellRange,
   dateCellTimingRelativeIndexArrayFactory,
   isInfiniteDateRange,
-  copyHoursAndMinutesFromDate,
   dateTimezoneUtcNormal,
   DateTimezoneUtcNormalInstance,
   expandDateCellScheduleRange,
@@ -46,12 +45,10 @@ import {
   fullDateCellScheduleRange,
   dateCellTimingTimezoneNormalInstance,
   changeDateCellScheduleDateRangeToTimezone,
-  updateDateCellTimingToSystemTimezone,
-  SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE,
-  getLeastAndGreatestDateCellIndexInDateCellRanges
+  SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValue, firstValueFromIterable, isIterable, removeFromSet } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValueFromIterable, isIterable, removeFromSet } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of } from 'rxjs';
@@ -344,15 +341,6 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly inputRange$: Observable<CalendarScheduleSelectionInputDateRange> = this.currentInputRange$.pipe(filterMaybe(), shareReplay(1));
 
-  /**
-   * @deprecated This is not the same as the current selection value. This is the set of manually togged off dates. It will be removed in a future update.
-   */
-  readonly selectedDates$: Observable<Set<DateCellIndex>> = this.state$.pipe(
-    map((x) => x.toggledIndexes),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
   readonly isEnabledFilterDayFunction$: Observable<DecisionFunction<DateCellTimingRelativeIndexFactoryInput>> = this.state$.pipe(
     map((x) => x.isEnabledFilterDay),
     distinctUntilChanged(),
@@ -576,37 +564,6 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
    * Should typically not be used by the user directly with the intention of the parent synchronizing to this state.
    */
   readonly setViewReadonlyState = this.updater((state, isViewReadonly: boolean) => ({ ...state, isViewReadonly }));
-
-  // MARK: Compat
-  /**
-   * @deprecated use setOutputTimezone instead.
-   */
-  readonly setTimezone = this.setOutputTimezone;
-
-  /**
-   * @deprecated use ouputTimezone$
-   */
-  readonly currentTimezone$: Observable<Maybe<TimezoneString>> = this.outputTimezone$;
-
-  /**
-   * @deprecated use effectiveOuputTimezone$
-   */
-  readonly effectiveTimezone$: Observable<Maybe<TimezoneString>> = this.effectiveOutputTimezone$;
-
-  /**
-   * @deprecated use effectiveOuputTimezoneNormal$
-   */
-  readonly effectiveTimezoneNormal$ = this.effectiveOutputTimezoneNormal$;
-
-  /**
-   * @deprecated use currentSelectionValueDateCellDurationSpanExpansion$
-   */
-  readonly currentSelectionValueDateBlockDurationSpan$ = this.currentSelectionValueDateCellDurationSpanExpansion$;
-
-  /**
-   * @deprecated use selectionValueWithTimezoneDateCellDurationSpanExpansion$
-   */
-  readonly selectionValueWithTimezoneDateBlockDurationSpan$ = this.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
 }
 
 export function updateStateWithInitialSelectionState(state: CalendarScheduleSelectionState, initialSelectionState: Maybe<AllOrNoneSelection>): CalendarScheduleSelectionState {

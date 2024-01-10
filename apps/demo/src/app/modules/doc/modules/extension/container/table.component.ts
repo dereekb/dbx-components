@@ -1,5 +1,5 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
-import { startOfDay } from 'date-fns/esm';
+import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayString } from '@dereekb/date';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableViewDelegate } from '@dereekb/dbx-web/table';

@@ -45,7 +45,7 @@ export function firestoreIdBatchVerifierFactory<T, I extends PrimativeKey>(confi
 
     const verifier: IdBatchVerifier<I, I> = {
       maxBatchSize: FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT,
-      findUnique: unique,
+      filterUnique: unique,
       verify
     };
 

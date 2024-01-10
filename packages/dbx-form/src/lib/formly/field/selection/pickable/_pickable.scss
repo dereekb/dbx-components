@@ -12,24 +12,18 @@
     max-height: 400px;
     overflow: auto;
   }
-
-  .dbx-default-pickable-item-field-list-item {
-    height: 56px;
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-  }
 }
 
 @mixin color($theme-config) {
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-selection-pickable') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -37,7 +31,7 @@
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

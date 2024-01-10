@@ -6,14 +6,14 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["dist/packages/rxjs"],
+      "outputs": ["{workspaceRoot}/dist/packages/rxjs"],
       "options": {
         "command": "npx nx run rxjs:build-base",
         "color": true
       }
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/rxjs",
@@ -24,15 +24,15 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/rxjs/**/*.ts"]
+        "lintFilePatterns": ["packages/rxjs/**/*.ts", "packages/rxjs/package.json", "packages/rxjs/project.json"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/packages/rxjs", "./.reports/jest/rxjs.junit.xml"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/rxjs", "{projectRoot}/.reports/jest/rxjs.junit.xml"],
       "options": {
         "jestConfig": "packages/rxjs/jest.config.ts",
         "passWithNoTests": true

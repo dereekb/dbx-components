@@ -60,7 +60,9 @@ $bar-fixed-height: 40px;
   }
 }
 
-@mixin typography($typography-config) {
+@mixin typography($theme-config-or-typography-config) {
+  $typography-config: theming.get-typography-config($theme-config-or-typography-config);
+
   .dbx-bar {
     font-size: theming.font-size($typography-config, 'caption');
   }
@@ -69,6 +71,7 @@ $bar-fixed-height: 40px;
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-bar') {
     $color: theming.get-color-config($theme-config);
+    $density: theming.get-density-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
@@ -76,7 +79,7 @@ $bar-fixed-height: 40px;
     }
 
     @if $typography !=null {
-      @include typography($typography);
+      @include typography($theme-config);
     }
   }
 }

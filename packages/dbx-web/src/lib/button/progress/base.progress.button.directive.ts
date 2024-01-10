@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, OnDestroy, OnInit, Optional, Directive, Input, Output, HostListener, EventEmitter, Inject } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { CssClass, Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Observable, shareReplay, map, BehaviorSubject, combineLatest, first, distinctUntilChanged } from 'rxjs';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressButtonTargetedConfig, DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
@@ -28,14 +28,41 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
           working: options?.working || working,
           disabled: options?.disabled || disabled
         };
-
-        completeOptions.buttonIcon = completeOptions.buttonIcon || completeOptions.icon;
       }
 
       return completeOptions;
     }),
     filterMaybe(),
     distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly baseCssClasses$: Observable<[DbxProgressButtonOptions, CssClass[]]> = this.options$.pipe(
+    map((x) => {
+      const classes: CssClass[] = [x.customClass ?? ''];
+
+      if (x.fullWidth) {
+        classes.push('fullWidth');
+      }
+
+      if (x.disabled) {
+        classes.push('disabled');
+      }
+
+      if (x.raised) {
+        classes.push('mat-mdc-raised-button mdc-button--raised');
+      }
+
+      if (x.stroked) {
+        classes.push('mat-mdc-outlined-button mdc-button--outlined');
+      }
+
+      if (x.flat) {
+        classes.push('mat-mdc-unelevated-button mdc-button--unelevated');
+      }
+
+      return [x, classes] as [DbxProgressButtonOptions, CssClass[]];
+    }),
     shareReplay(1)
   );
 
