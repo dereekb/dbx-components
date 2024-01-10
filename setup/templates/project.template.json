@@ -12,6 +12,7 @@
       "executor": "@jscutlery/semver:version",
       "options": {
         "baseBranch": "main",
+        "preset": "angular",
         "tagPrefix": "v",
         "syncVersions": true,
         "commitMessageFormat": "release(${projectName}): v${version} release"
