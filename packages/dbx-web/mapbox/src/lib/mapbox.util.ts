@@ -1,5 +1,5 @@
 import { LatLngBound, LatLngPoint, Vector, VectorTuple } from '@dereekb/util';
-import { bounds } from '@mapbox/geo-viewport';
+import { bounds } from '@placemarkio/geo-viewport';
 import { MapboxTileSize, MapboxZoomLevel } from './mapbox';
 
 export interface MapboxViewportBoundFunctionConfig {
