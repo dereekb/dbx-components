@@ -1,7 +1,7 @@
 import { startOfDay, addDays, addHours } from 'date-fns';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { filter, first, from, skip, throwError } from 'rxjs';
+import { filter, first, from, skip } from 'rxjs';
 import {
   firestoreIdBatchVerifierFactory,
   limit,

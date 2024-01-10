@@ -37,7 +37,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/nestjs/src/**/*.ts"]
+        "lintFilePatterns": ["packages/nestjs/src/**/*.ts", "packages/nestjs/package.json", "packages/nestjs/project.json"]
       }
     },
     "test": {

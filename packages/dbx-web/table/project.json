@@ -33,7 +33,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-web/table/**/*.ts", "packages/dbx-web/table/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-web/table/**/*.ts", "packages/dbx-web/table/**/*.html", "packages/dbx-web/table/package.json", "packages/dbx-web/table/project.json"]
       }
     }
   },

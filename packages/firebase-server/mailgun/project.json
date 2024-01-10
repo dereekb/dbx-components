@@ -19,7 +19,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/firebase-server/mailgun/**/*.ts"]
+        "lintFilePatterns": ["packages/firebase-server/mailgun/**/*.ts", "packages/firebase-server/mailgun/package.json", "packages/firebase-server/mailgun/project.json"]
       }
     },
     "test": {

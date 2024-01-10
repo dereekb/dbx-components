@@ -2,10 +2,12 @@
   "name": "@dereekb/dbx-analytics",
   "version": "9.25.16",
   "peerDependencies": {
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0"
+    "@dereekb/rxjs": "*",
+    "rxjs": "^7.5.0",
+    "@angular/core": "^16.2.12",
+    "@dereekb/dbx-core": "*",
+    "@dereekb/util": "*",
+    "@dereekb/browser": "*"
   },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  }
+  "dependencies": {}
 }

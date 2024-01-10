@@ -88,10 +88,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": [
-          "ANGULAR_APP_FOLDER/src/**/*.ts",
-          "ANGULAR_APP_FOLDER/src/**/*.html"
-        ]
+        "lintFilePatterns": ["ANGULAR_APP_FOLDER/src/**/*.ts", "ANGULAR_APP_FOLDER/src/**/*.html", "ANGULAR_APP_FOLDER/package.json", "ANGULAR_APP_FOLDER/project.json"]
       }
     },
     "test": {

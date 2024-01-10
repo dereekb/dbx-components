@@ -1,2 +1,2 @@
 #!/bin/bash
-npx nx affected --target=build --all
+npx nx run-many --target=build

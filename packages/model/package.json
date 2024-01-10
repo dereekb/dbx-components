@@ -1,5 +1,11 @@
 {
   "name": "@dereekb/model",
   "version": "9.25.16",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {},
+  "peerDependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "@dereekb/util": "*"
+  }
 }

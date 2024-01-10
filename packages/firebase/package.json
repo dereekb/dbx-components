@@ -1,9 +1,6 @@
 {
   "name": "@dereekb/firebase",
   "version": "9.25.16",
-  "devDependencies": {
-    "@firebase/rules-unit-testing": "^2.0.0"
-  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -19,5 +16,19 @@
     }
   },
   "main": "./src/index.js",
-  "types": "./src/index.d.ts"
+  "types": "./src/index.d.ts",
+  "peerDependencies": {
+    "@firebase/firestore": "4.4.0",
+    "@dereekb/util": "*",
+    "@firebase/storage": "0.12.0",
+    "@dereekb/rxjs": "*",
+    "@dereekb/model": "*",
+    "@dereekb/date": "*",
+    "rxjs": "^7.5.0",
+    "firebase": "^10.5.0",
+    "ts-essentials": "^9.1.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0"
+  },
+  "dependencies": {}
 }

@@ -66,3 +66,4 @@ service_account.json
 
 # CI/Jest
 /.reports
+.nx

@@ -34,7 +34,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-form/calendar/**/*.ts", "packages/dbx-form/calendar/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-form/calendar/**/*.ts", "packages/dbx-form/calendar/**/*.html", "packages/dbx-form/calendar/package.json", "packages/dbx-form/calendar/project.json"]
       }
     }
   },

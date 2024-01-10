@@ -34,7 +34,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/firebase/src/**/*.ts"]
+        "lintFilePatterns": ["packages/firebase/src/**/*.ts", "packages/firebase/package.json", "packages/firebase/project.json"]
       }
     },
     "watch": {

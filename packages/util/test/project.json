@@ -20,7 +20,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/util/test/**/*.ts"]
+        "lintFilePatterns": ["packages/util/test/**/*.ts", "packages/util/test/package.json", "packages/util/test/project.json"]
       }
     },
     "test": {

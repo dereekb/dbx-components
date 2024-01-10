@@ -1,5 +1,5 @@
 import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FlatFirestoreModelKey, flatFirestoreModelKey, TwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { AsyncGetterOrValue, Getter, GetterOrValue, getValueFromGetter, Maybe, PromiseOrValue } from '@dereekb/util';
+import { AsyncGetterOrValue, getValueFromGetter, PromiseOrValue } from '@dereekb/util';
 import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
 

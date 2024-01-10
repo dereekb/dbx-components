@@ -1,2 +1,2 @@
 #!/bin/bash
-npx nx run-many --exclude=util-test,firebase-test,firebase-server-test --target=lint --fix
+npx nx run-many --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix

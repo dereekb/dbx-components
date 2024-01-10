@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "description": "",
-        "command": "npx nx run-many --exclude=util-test,firebase-test,firebase-server-test --target=lint --fix"
+        "command": "npx nx run-many --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix"
       }
     },
     "start-release": {

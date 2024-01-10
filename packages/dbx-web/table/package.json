@@ -1,11 +1,4 @@
 {
   "name": "@dereekb/dbx-web/table",
-  "version": "9.25.16",
-  "peerDependencies": {
-    "@angular/common": "^14.2.0",
-    "@angular/core": "^14.2.0"
-  },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  }
+  "version": "9.25.16"
 }

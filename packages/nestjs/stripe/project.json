@@ -20,7 +20,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/nestjs/stripe/**/*.ts"]
+        "lintFilePatterns": ["packages/nestjs/stripe/**/*.ts", "packages/nestjs/stripe/package.json", "packages/nestjs/stripe/project.json"]
       }
     },
     "test": {

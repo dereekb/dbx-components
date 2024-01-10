@@ -1,5 +1,4 @@
 import { useJestFunctionFixture, useJestFunctionMapFixture } from '@dereekb/util/test';
-import { NestApplicationRunnableHttpFunctionFactory, NestApplicationScheduleCloudFunctionFactory } from '@dereekb/firebase-server';
 import { FirebaseAdminFunctionNestTestContext, wrapCloudFunctionForNestTestsGetter, WrapCloudFunctionForNestTestsInput } from './firebase.admin.nest.function';
 import { WrappedCloudFunctionV1 } from './firebase.function';
 import { mapObjectMap } from '@dereekb/util';

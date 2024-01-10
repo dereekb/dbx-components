@@ -63,7 +63,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-form/src/**/*.ts", "packages/dbx-form/src/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-form/src/**/*.ts", "packages/dbx-form/src/**/*.html", "packages/dbx-form/package.json", "packages/dbx-form/project.json"]
       }
     },
     "publish-npmjs": {

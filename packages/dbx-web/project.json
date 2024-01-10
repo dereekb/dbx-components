@@ -72,7 +72,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-web/src/**/*.ts", "packages/dbx-web/src/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-web/src/**/*.ts", "packages/dbx-web/src/**/*.html", "packages/dbx-web/package.json", "packages/dbx-web/project.json"]
       }
     },
     "publish-npmjs": {

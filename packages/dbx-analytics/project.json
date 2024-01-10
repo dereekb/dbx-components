@@ -50,7 +50,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-analytics/src/**/*.ts", "packages/dbx-analytics/src/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-analytics/src/**/*.ts", "packages/dbx-analytics/src/**/*.html", "packages/dbx-analytics/package.json", "packages/dbx-analytics/project.json"]
       }
     },
     "publish-npmjs": {

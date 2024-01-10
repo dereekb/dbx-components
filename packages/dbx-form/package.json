@@ -2,13 +2,30 @@
   "name": "@dereekb/dbx-form",
   "version": "9.25.16",
   "peerDependencies": {
-    "@angular/common": "^14.0.0",
-    "@angular/core": "^14.0.0",
-    "lodash.clonedeep": "^4.5.0"
+    "@angular/common": "^16.2.12",
+    "@angular/core": "^16.2.12",
+    "date-fns": "^2.30.0",
+    "rxjs": "^7.5.0",
+    "@dereekb/dbx-core": "*",
+    "@dereekb/rxjs": "*",
+    "@dereekb/util": "*",
+    "@angular/material": "^16.2.12",
+    "@uirouter/core": "^6.0.8",
+    "@dereekb/dbx-web": "*",
+    "@angular/forms": "^16.2.12",
+    "@ngx-formly/core": "^6.0.0",
+    "@ngx-formly/material": "^6.0.0",
+    "change-case": "^4.1.2",
+    "@angular/cdk": "^16.2.12",
+    "@dereekb/date": "*",
+    "@ngbracket/ngx-layout": "16.1.3",
+    "ngx-editor": "^16.0.0",
+    "ngx-mat-intl-tel-input": "^5.0.0",
+    "@dereekb/model": "*",
+    "lodash": "4.17.21",
+    "@angular/platform-browser": "^16.2.12"
   },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  },
+  "dependencies": {},
   "exports": {
     ".": {
       "sass": "./_index.scss"

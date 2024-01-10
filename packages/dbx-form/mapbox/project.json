@@ -34,7 +34,7 @@
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
-        "lintFilePatterns": ["packages/dbx-form/mapbox/**/*.ts", "packages/dbx-form/mapbox/**/*.html"]
+        "lintFilePatterns": ["packages/dbx-form/mapbox/**/*.ts", "packages/dbx-form/mapbox/**/*.html", "packages/dbx-form/mapbox/package.json", "packages/dbx-form/mapbox/project.json"]
       }
     }
   },

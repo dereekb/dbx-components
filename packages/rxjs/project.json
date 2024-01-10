@@ -27,7 +27,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/rxjs/**/*.ts"]
+        "lintFilePatterns": ["packages/rxjs/**/*.ts", "packages/rxjs/package.json", "packages/rxjs/project.json"]
       }
     },
     "test": {
