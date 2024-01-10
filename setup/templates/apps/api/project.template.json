@@ -11,14 +11,16 @@
       }
     },
     "build-base": {
-      "executor": "@nx/node:webpack",
+      "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "API_APP_DIST_FOLDER",
         "main": "API_APP_FOLDER/src/main.ts",
         "tsConfig": "API_APP_FOLDER/tsconfig.app.json",
         "assets": ["API_APP_FOLDER/src/assets"],
-        "generatePackageJson": true
+        "generatePackageJson": true,
+        "compiler": "tsc",
+        "target": "node"
       },
       "configurations": {
         "production": {
