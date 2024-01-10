@@ -36,7 +36,14 @@ IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 IS_NOT_CI_TEST=true
 
 # - Other Configuration
-SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"develop"}     # develop or main
+DEFAULT_SOURCE_BRANCH="main"
+
+if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
+then
+  DEFAULT_SOURCE_BRANCH="develop" # default to develop if it is a CI test
+fi
+
+SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develop or main
 
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
