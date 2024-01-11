@@ -31,9 +31,9 @@
   },
   "functions": {
     "source": "API_APP_DIST_FOLDER",
-    "runtime": "nodejs16",
+    "runtime": "nodejs18",
     "engines": {
-      "node": "16"
+      "node": "18"
     },
     "ignore": [
       "firebase.json",
