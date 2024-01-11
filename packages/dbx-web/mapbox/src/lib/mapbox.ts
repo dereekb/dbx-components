@@ -1,16 +1,23 @@
 import { LatLngPointInput, LatLngBoundInput, ZoomLevel, ZoomLevelRange, ExtendLatLngBoundInput } from '@dereekb/util';
 import * as MapboxGl from 'mapbox-gl';
 
-export type KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v11' | 'mapbox://styles/mapbox/outdoors-v11' | 'mapbox://styles/mapbox/light-v10' | 'mapbox://styles/mapbox/dark-v10' | 'mapbox://styles/mapbox/satellite-v9' | 'mapbox://styles/mapbox/satellite-streets-v11' | 'mapbox://styles/mapbox/navigation-day-v1' | 'mapbox://styles/mapbox/navigation-night-v1';
+/**
+ * List of styles that are defined here:
+ *
+ * https://docs.mapbox.com/api/maps/styles/
+ */
+export type KnownMapboxStyle = 'mapbox://styles/mapbox/standard' | 'mapbox://styles/mapbox/streets-v12' | 'mapbox://styles/mapbox/outdoors-v12' | 'mapbox://styles/mapbox/light-v11' | 'mapbox://styles/mapbox/dark-v11' | 'mapbox://styles/mapbox/satellite-v9' | 'mapbox://styles/mapbox/satellite-streets-v12' | 'mapbox://styles/mapbox/navigation-day-v1' | 'mapbox://styles/mapbox/navigation-night-v1';
 
 export const KNOWN_MAPBOX_STYLES: KnownMapboxStyle[] = [
-  //
-  'mapbox://styles/mapbox/streets-v11',
-  'mapbox://styles/mapbox/outdoors-v11',
-  'mapbox://styles/mapbox/light-v10',
-  'mapbox://styles/mapbox/dark-v10',
+  // standard
+  'mapbox://styles/mapbox/standard',
+  // classic
+  'mapbox://styles/mapbox/streets-v12',
+  'mapbox://styles/mapbox/outdoors-v12',
+  'mapbox://styles/mapbox/light-v11',
+  'mapbox://styles/mapbox/dark-v11',
   'mapbox://styles/mapbox/satellite-v9',
-  'mapbox://styles/mapbox/satellite-streets-v11',
+  'mapbox://styles/mapbox/satellite-streets-v12',
   'mapbox://styles/mapbox/navigation-day-v1',
   'mapbox://styles/mapbox/navigation-night-v1'
 ];
