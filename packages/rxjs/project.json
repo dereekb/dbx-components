@@ -13,14 +13,29 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/packages/rxjs",
-        "tsConfig": "packages/rxjs/tsconfig.lib.json",
-        "packageJson": "packages/rxjs/package.json",
         "main": "packages/rxjs/src/index.ts",
-        "assets": ["packages/rxjs/*.md", "LICENSE"]
+        "tsConfig": "packages/rxjs/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/rxjs/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/rxjs/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
       }
     },
     "lint": {

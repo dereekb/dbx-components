@@ -39,6 +39,11 @@
             "glob": "packages/util/README.md",
             "input": ".",
             "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
           }
         ]
       },

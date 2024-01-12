@@ -1,10 +1,10 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { switchMap, distinctUntilChanged, shareReplay, map, Observable, BehaviorSubject, of, combineLatest, EMPTY, filter, skip } from 'rxjs';
 import { FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
 import { asObservable, ObservableOrValue } from '../rxjs/getter';
 import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
 import { Destroyable, Maybe } from '@dereekb/util';
+import { SubscriptionObject } from '../subscription';
 
 /**
  * A basic FilterSource implementation.
