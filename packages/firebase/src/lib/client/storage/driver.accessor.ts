@@ -1,7 +1,7 @@
 import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StorageListFilesOptions, StorageListFilesResult, StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, StoragePath } from '../../common/storage/storage';
 import { FirebaseStorage, StorageClientUploadBytesInput, StorageDataString, StorageDeleteFileOptions, StorageUploadOptions } from '../../common/storage/types';
-import { ListResult, list, StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from '@firebase/storage';
+import { ListResult, list, StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
 import { ErrorInput, errorMessageContainsString, Maybe } from '@dereekb/util';
 

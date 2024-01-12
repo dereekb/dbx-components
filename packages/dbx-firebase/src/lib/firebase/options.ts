@@ -1,9 +1,9 @@
 import { InjectionToken } from '@angular/core';
+import { PersistentCacheSettings } from 'firebase/firestore';
 import { FirebaseOptions } from 'firebase/app';
 import { DbxFirebaseLoginModuleRootConfig } from '../auth/login/firebase.login.module';
 import { DbxFirebaseAppCheckConfig } from './appcheck';
 import { DbxFirebaseEmulatorsConfig } from './emulators';
-import { PersistentCacheSettings } from 'firebase/firestore';
 
 export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
 

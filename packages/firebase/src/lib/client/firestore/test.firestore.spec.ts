@@ -1,4 +1,4 @@
-import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore, writeBatch } from '@firebase/firestore';
+import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore, writeBatch } from 'firebase/firestore';
 import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, mockItemIdentity, mockItemConverter } from '@dereekb/firebase/test';
 import { FirestoreDocumentContext, makeFirestoreCollection } from '../../common/firestore';
 import { transactionDocumentContext } from './driver.accessor.transaction';

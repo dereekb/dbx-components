@@ -1,6 +1,6 @@
 import { isDate } from 'date-fns';
 import { DocumentData, SystemState, SystemStateDocument } from '@dereekb/firebase';
-import { CollectionReference, doc, getDoc, setDoc } from '@firebase/firestore';
+import { CollectionReference, doc, getDoc, setDoc } from 'firebase/firestore';
 import { MockSystemData, MOCK_SYSTEM_STATE_TYPE } from '../common/mock/mock.item';
 import { MockItemCollectionFixture, testWithMockItemCollectionFixture } from '../common/mock/mock.item.collection.fixture';
 import { authorizedFirebaseFactory } from './firebase.authorized';

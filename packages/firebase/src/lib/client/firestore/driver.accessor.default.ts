@@ -1,4 +1,4 @@
-import { onSnapshot, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from '@firebase/firestore';
+import { onSnapshot, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { Observable } from 'rxjs';
 import { assertFirestoreUpdateHasData, DocumentData, FirestoreAccessorIncrementUpdate, FirestoreDataConverter, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, streamFromOnSnapshot, WriteResult } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
