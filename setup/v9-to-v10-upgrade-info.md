@@ -136,4 +136,5 @@ Make sure to add the `.nx` folder to `.gitignore`.
 - PerformTasksResult renamed to PerformAsyncTasksResult
 - FirebaseAuthNewUserClaimsData renamed to FirebaseAuthNewUserClaims
 - DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE removed and replaced with DEFAULT_LAT_LNG_STRING_VALUE from @dereekb/util
+- FirebaseServerEnvironmentConfig removed from @dereekb/firebase-server. Use ServerEnvironmentConfig from @dereekb/nestjs now instead.
 - 
