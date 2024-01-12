@@ -1,25 +1,29 @@
 {
   "name": "@dereekb/util",
   "version": "10.0.5",
-  "type": "commonjs",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "main": "./src/index.js",
-      "require": "./src/index.js",
-      "default": "./src/index.js"
+      "types": "./index.cjs.d.ts",
+      "main": "./index.cjs.js",
+      "module": "./index.esm.js",
+      "import": "./index.cjs.mjs",
+      "default": "./index.cjs.js"
     },
     "./test": {
-      "types": "./test/src/index.d.ts",
-      "main": "./test/src/index.js",
-      "require": "./test/src/index.js",
-      "default": "./test/src/index.js"
+      "types": "./test/index.cjs.d.ts",
+      "main": "./test/index.cjs.js",
+      "module": "./test/index.esm.js",
+      "require": "./test/index.cjs.js",
+      "import": "./test/index.cjs.mjs",
+      "default": "./test/index.cjs.js"
     },
     "./fetch": {
-      "types": "./fetch/src/index.d.ts",
-      "main": "./fetch/src/index.js",
-      "require": "./fetch/src/index.js",
-      "default": "./fetch/src/index.js"
+      "types": "./fetch/index.cjs.d.ts",
+      "main": "./fetch/index.cjs.js",
+      "module": "./fetch/index.esm.js",
+      "require": "./fetch/index.cjs.js",
+      "import": "./fetch/index.cjs.mjs",
+      "default": "./fetch/index.cjs.js"
     }
   },
   "main": "./src/index.js",

@@ -5,16 +5,18 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/packages/util/test",
-        "tsConfig": "packages/util/test/tsconfig.lib.json",
-        "packageJson": "packages/util/test/package.json",
         "main": "packages/util/test/src/index.ts",
-        "assets": ["packages/util/test/*.md"]
-      },
-      "dependsOn": []
+        "tsConfig": "packages/util/test/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/util/test/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true
+      }
     },
     "lint": {
       "executor": "@nx/linter:eslint",

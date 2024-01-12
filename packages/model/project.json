@@ -24,7 +24,18 @@
         "project": "packages/model/package.json",
         "format": ["esm", "cjs"],
         "generateExportsField": true,
-        "assets": ["packages/model/*.md", "LICENSE"]
+        "assets": [
+          {
+            "glob": "packages/model/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
       }
     },
     "lint": {

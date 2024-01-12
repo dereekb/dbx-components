@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
-import { firebaseFunctionMapFactory } from '@dereekb/firebase';
 import { MaybeNot, build, cachedGetter, capitalizeFirstLetter, ValuesTypesAsArray, CommaSeparatedKeysOfObject, separateValues, Getter, lowercaseFirstLetter } from '@dereekb/util';
 import { Functions, HttpsCallable, httpsCallable } from 'firebase/functions';
 import { NonNever } from 'ts-essentials';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, onCallTypedModelParams, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
+import { FirestoreModelIdentity, FirestoreModelTypes } from '../../common/firestore/collection';
 import { FirebaseFunctionTypeMap, FirebaseFunctionMap, FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
-import { FirebaseFunctionTypeConfigMap } from './function.factory';
+import { FirebaseFunctionTypeConfigMap, firebaseFunctionMapFactory } from './function.factory';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, OnCallCreateModelResult, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, onCallTypedModelParams } from '../../common/model/function';
 
 /**
  * Used to specify which function to direct requests to.
