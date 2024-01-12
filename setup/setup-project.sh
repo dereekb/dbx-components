@@ -40,7 +40,7 @@ DEFAULT_SOURCE_BRANCH="main"
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
-  DEFAULT_SOURCE_BRANCH="develop" # default to develop if it is a CI test
+  DEFAULT_SOURCE_BRANCH="develop" # default to the develop branch if it is a CI test
 fi
 
 SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develop or main
@@ -52,7 +52,7 @@ DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"10.0.0"}
 NX_VERSION=${NX_SETUP_VERSIONS:-"16.10.0"}
 ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"~16.2.11"}
 
-echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION"
+echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -250,7 +250,8 @@ else
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/storage.rules -o storage.rules
 fi
 
-# edit firebase.json to have the correct configuration.
+# now edit firebase.json to have the correct configuration.
+echo "Updating firebase.json config..."
 
 # Hosting
 npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '/api/**', function: 'api' }, { source: '**', destination: '/index.html' }] }";
