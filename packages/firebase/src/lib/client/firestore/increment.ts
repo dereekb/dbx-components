@@ -1,5 +1,5 @@
 import { mapObjectMap } from '@dereekb/util';
-import { UpdateData, increment } from '@firebase/firestore';
+import { UpdateData, increment } from 'firebase/firestore';
 import { FirestoreAccessorIncrementUpdate } from '../../common/firestore/accessor/accessor';
 
 /**

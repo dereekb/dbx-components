@@ -1,4 +1,4 @@
-import { DocumentSnapshot } from '@firebase/firestore';
+import { DocumentSnapshot } from 'firebase/firestore';
 import { first } from 'rxjs';
 import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from '@dereekb/firebase/test';
 import { FirestoreDocumentAccessor } from '../../common';

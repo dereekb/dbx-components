@@ -1,4 +1,4 @@
-import { DocumentReference, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from '@firebase/firestore';
+import { DocumentReference, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from 'firebase/firestore';
 import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
