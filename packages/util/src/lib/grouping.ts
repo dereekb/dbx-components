@@ -1,5 +1,5 @@
 import { PrimativeKey, ReadKeyFunction } from './key';
-import { mapToObject } from './object';
+import { mapToObject } from './object/object';
 import { IndexRef } from './value/indexed';
 import { Building } from './value/build';
 import { EqualityComparatorFunction } from './value/comparator';

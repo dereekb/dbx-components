@@ -2,7 +2,7 @@ import { symmetricDifferenceArray } from '../set/set';
 import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
 import { MapFunction } from '../value/map';
-import { filterUniqueValues } from '../array';
+import { filterUniqueValues } from '../array/array.unique';
 
 /**
  * A string model key

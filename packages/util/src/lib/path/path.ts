@@ -1,9 +1,10 @@
 import { chainMapSameFunctions, MapSameFunction } from '../value/map';
 import { asArray, ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
-import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, replaceStringsFunction, splitStringAtIndex } from '../string';
+import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from '../string/char';
 import { chainMapFunction, indexRange, IndexRangeInput, mapIdentityFunction, Maybe } from '../value';
 import { FactoryWithRequiredInput } from '../getter/getter';
 import { sliceIndexRangeFunction } from '../array/array.index';
+import { replaceStringsFunction } from '../string/replace';
 
 export const SLASH_PATH_SEPARATOR = '/';
 export const SLASH_PATH_FILE_TYPE_SEPARATOR = '.';

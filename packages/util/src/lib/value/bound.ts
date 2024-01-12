@@ -1,9 +1,9 @@
-import { asArray, Maybe } from '@dereekb/util';
+import { Maybe } from '../value/maybe.type';
 import { Rectangle, rectangleOverlapsRectangle, Vector } from './vector';
 import { Writable } from 'ts-essentials';
 import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE, copyLatLngPoint } from './point';
 import { DecisionFunction } from './decision';
-import { ArrayOrValue, firstValue } from '../array';
+import { asArray, ArrayOrValue, firstValue } from '../array';
 
 export type LatLngBoundSouthWestPoint = LatLngPoint;
 export type LatLngBoundNothEastPoint = LatLngPoint;

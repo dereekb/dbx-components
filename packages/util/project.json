@@ -23,14 +23,33 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/packages/util",
-        "tsConfig": "packages/util/tsconfig.lib.json",
-        "packageJson": "packages/util/package.json",
         "main": "packages/util/src/index.ts",
-        "assets": ["packages/util/*.md", "LICENSE"]
+        "tsConfig": "packages/util/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/util/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/util/README.md",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
       }
     },
     "lint": {
