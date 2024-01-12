@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "10.0.3",
+  "version": "10.0.4",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
@@ -38,7 +38,7 @@
     "rxjs": "^7.5.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
-    "@nestjs/platform-express": "10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
     "class-validator": "^0.14.0",
     "ts-essentials": "^9.1.2"
   },

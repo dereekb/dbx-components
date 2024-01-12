@@ -59,6 +59,9 @@ Copy the new version of the following files:
 ### Remove updateBuildableProjectDepsInPackageJson from project.json
 Remove the configuration of `updateBuildableProjectDepsInPackageJson` from all project.json files
 
+### Removing "ngcc" script usage in package.json
+You can remove the ngcc script usage from the postinstall configuration under scripts. Angular no longer uses ngcc.
+
 ### Replacing Dependencies
 Replace the following dependencies:
 
@@ -73,7 +76,9 @@ Node16 needs to be replaced with Node18. Here are some of the files that need to
 - `.circleci/config.yml`: Update the orbs ( -> `circleci/node@5.1.1`, `nrwl/nx@1.6.2`) and image ( -> `cimg/node:18.19`). 
 - `Dockerfile`: Update from FROM line to be `FROM node:18.19-bullseye`
 - `firebase.json`: Need to update functions to use nodejs18. Update engine to be 18.
-  
+
+Don't forget to use `./reset.sh` to rebuild the docker image before using.
+
 ## Angular Material 16
 The biggest change comes from Angular Material 16. Various CSS styles changed, so any SCSS files that use material classes might need to be updated.
 
@@ -113,6 +118,23 @@ If using multiple themes we'll need to define a few things. Add the following sn
 @include dbx-firebase.all-component-typographies($app-typography-config);
 ```
 
+### Update .gitignore
+Make sure to add the `.nx` folder to `.gitignore`.
+
 ## Code Fixes
 
-TODO...
+### Library Breaking Changes to Fix
+- findUnique as an option property was renamed to filterUnique
+- DateBlockTiming and related types were removed.
+- whereDateIsBefore() renamed to whereDateIsBeforeWithSort()
+- whereDateIsOnOrAfter() renamed to whereDateIsOnOrAfterWithSort()
+- getConfigObs removed from dateTimeField() options. Use pickerConfig instead.
+- DateTimePickerConfiguration renamed to DbxDateTimePickerConfiguration
+- dateScheduleRangeField() options property outputTimezone renamed to outputTimezone
+- 'standard' angular appearance configuration used in the materialFormField property for various field builders has been removed. Can only use outline or fill now as an option.
+- PromiseUtility was removed. Functions that were contained within that utility class can now be imported directly.
+- PerformTasksResult renamed to PerformAsyncTasksResult
+- FirebaseAuthNewUserClaimsData renamed to FirebaseAuthNewUserClaims
+- DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE removed and replaced with DEFAULT_LAT_LNG_STRING_VALUE from @dereekb/util
+- FirebaseServerEnvironmentConfig removed from @dereekb/firebase-server. Use ServerEnvironmentConfig from @dereekb/nestjs now instead.
+- 

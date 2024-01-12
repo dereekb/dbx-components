@@ -4,7 +4,7 @@ import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { FirebaseApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideStorage, getStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { provideFunctions, getFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
-import { provideFirestore, getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence, enableMultiTabIndexedDbPersistence } from '@angular/fire/firestore';
+import { provideFirestore, connectFirestoreEmulator, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, FirestoreSettings, persistentSingleTabManager } from '@angular/fire/firestore';
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
 import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
@@ -13,31 +13,44 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck';
 import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.interceptor';
 
-// TODO: remove "as any" typescript casting - https://github.com/angular/angularfire/issues/3086
-
 /**
  * Default firebase firestore provider module.
  */
 @NgModule({
   imports: [
-    provideFirestore(((injector: Injector) => {
+    provideFirestore((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
-      const firestore = getFirestore(firebaseApp);
+
+      const firestoreSettings: FirestoreSettings = {};
+
+      const { enableMultiTabIndexedDbPersistence, enableIndexedDbPersistence } = firebaseOptions;
+      const { persistentCacheSettings } = firebaseOptions;
+
+      if (enableIndexedDbPersistence !== false) {
+        let tabManager;
+
+        if (enableMultiTabIndexedDbPersistence !== false) {
+          tabManager = persistentMultipleTabManager();
+        } else {
+          tabManager = persistentSingleTabManager(undefined);
+        }
+
+        firestoreSettings.localCache = persistentLocalCache({
+          tabManager,
+          ...persistentCacheSettings
+        });
+      }
+
+      const firestore = initializeFirestore(firebaseApp, firestoreSettings);
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
 
       if (emulators?.useEmulators && emulators?.firestore) {
         connectFirestoreEmulator(firestore, emulators.firestore.host, emulators.firestore.port, {});
       }
 
-      if (firebaseOptions.enableMultiTabIndexedDbPersistence !== false) {
-        enableMultiTabIndexedDbPersistence(firestore);
-      } else if (firebaseOptions.enableIndexedDbPersistence !== false) {
-        enableIndexedDbPersistence(firestore);
-      }
-
       return firestore;
-    }) as any)
+    })
   ]
 })
 export class DbxFirebaseDefaultFirestoreProviderModule {}
