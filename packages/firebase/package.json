@@ -5,16 +5,13 @@
   "exports": {
     ".": {
       "types": "./index.cjs.d.ts",
-      "main": "./index.cjs.js",
-      "module": "./index.esm.js",
-      "import": "./index.cjs.mjs",
+      "import": "./index.esm.js",
       "default": "./index.cjs.js"
     },
     "./test": {
-      "types": "./test/index.d.ts",
-      "main": "./test/index.js",
-      "require": "./test/index.js",
-      "default": "./test/index.js"
+      "types": "./test/index.cjs.d.ts",
+      "import": "./test/index.esm.js",
+      "default": "./test/index.cjs.js"
     }
   },
   "main": "./src/index.js",
