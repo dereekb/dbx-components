@@ -1,33 +1,27 @@
 {
   "name": "@dereekb/util",
   "version": "10.0.5",
+  "type": "commonjs",
   "exports": {
     ".": {
       "types": "./index.cjs.d.ts",
-      "main": "./index.cjs.js",
-      "module": "./index.esm.js",
-      "import": "./index.cjs.mjs",
+      "import": "./index.esm.js",
       "default": "./index.cjs.js"
     },
     "./test": {
       "types": "./test/index.cjs.d.ts",
-      "main": "./test/index.cjs.js",
-      "module": "./test/index.esm.js",
-      "require": "./test/index.cjs.js",
-      "import": "./test/index.cjs.mjs",
+      "import": "./test/index.esm.js",
       "default": "./test/index.cjs.js"
     },
     "./fetch": {
       "types": "./fetch/index.cjs.d.ts",
-      "main": "./fetch/index.cjs.js",
-      "module": "./fetch/index.esm.js",
-      "require": "./fetch/index.cjs.js",
-      "import": "./fetch/index.cjs.mjs",
+      "import": "./fetch/index.esm.js",
       "default": "./fetch/index.cjs.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./index.cjs.d.ts",
+  "types": "./index.cjs.js",
   "peerDependencies": {
     "make-error": "^1.3.0",
     "ts-essentials": "^9.1.2",
