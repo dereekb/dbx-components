@@ -1,4 +1,4 @@
-import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, repeatString, UTCDateString } from '@dereekb/util';
+import { DateOrDateString, DateOrDayString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, repeatString, UTCDateString, parseISO8601DayStringToUTCDate } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, DateRange, dateRangeRelativeState, fitUTCDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
@@ -322,9 +322,4 @@ export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO860
 
   const result = parse(dayString, format, new Date());
   return startOfDay(result);
-}
-
-export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {
-  const [yearString, monthString, dateString] = inputDateString.split('-');
-  return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
 }

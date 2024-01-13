@@ -133,6 +133,17 @@ export const ISO8601_DAY_STRING_REGEX = /^\d{4,}-\d{2}-\d{2}$/;
 export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
 
 /**
+ * Parses a ISO8601DayString to a Date.
+ *
+ * @param inputDateString
+ * @returns
+ */
+export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {
+  const [yearString, monthString, dateString] = inputDateString.split('-');
+  return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
+}
+
+/**
  * Returns true if the input date is strictly a
  * @param input
  * @returns

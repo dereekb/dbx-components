@@ -1,9 +1,8 @@
 import { addMilliseconds, addMinutes, minutesToHours, startOfDay } from 'date-fns';
-import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString, YearNumber, MapSameFunction, Building } from '@dereekb/util';
+import { parseISO8601DayStringToUTCDate, MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING, ISO8601DayString, YearNumber, MapSameFunction, Building } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
 import { DateRange, TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
-import { parseISO8601DayStringToUTCDate } from './date.format';
 
 /**
  * Inherited from the RRule library where RRule only deals with UTC date/times, dates going into it must always be in UTC.
