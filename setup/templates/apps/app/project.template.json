@@ -26,7 +26,7 @@
           "ANGULAR_APP_FOLDER/src/assets",
           "ANGULAR_APP_FOLDER/src/lib"
         ],
-        "allowedCommonJsDependencies": ["validator", "date-fns-tz", "@dereekb/browser", "@dereekb/util", "@dereekb/rxjs", "@dereekb/date", "@dereekb/firebase"],
+        "allowedCommonJsDependencies": ["core-js", "validator", "date-fns", "date-fns-tz"],
         "styles": [
           "mapbox-gl/src/css/mapbox-gl.css",
           "ANGULAR_APP_FOLDER/src/styles.scss"
