@@ -1,7 +1,8 @@
 import { Maybe, SortCompareFunction, sortAscendingIndexNumberRefFunction, RequiredOnKeys, addToSet, ArrayOrValue, asArray, sumOfIntegersBetween, UniqueModel, IndexNumber, lastValue, FactoryWithRequiredInput, pushArrayItemsIntoArray, range, DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
-import { DateCell, DateCellIndex, isValidDateCellIndex, DateOrDateCellIndex } from './date.cell';
+import type { DateCellIndex, DateOrDateCellIndex } from './date.cell';
+import { DateCell, isValidDateCellIndex } from './date.cell';
 import { DateRange } from './date.range';
 
 // MARK: DateCellRange
