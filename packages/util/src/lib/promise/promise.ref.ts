@@ -1,4 +1,4 @@
-import { Configurable } from '../type';
+import { type Configurable } from '../type';
 
 /**
  * A reference to a Promise and its resolve/reject functions.

@@ -1,4 +1,4 @@
-import { NestContextCallableRequest } from '../function/nest';
+import { type NestContextCallableRequest } from '../function/nest';
 
 export interface AssertDevelopmentRequestFunctionContext<N, I = unknown> {
   request: NestContextCallableRequest<N, I>;

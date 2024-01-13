@@ -1,5 +1,5 @@
-import { Maybe } from '../value';
-import { IsInSetDecisionFunction, isInSetDecisionFunction } from '../set/set.decision';
+import { type Maybe } from '../value';
+import { type IsInSetDecisionFunction, isInSetDecisionFunction } from '../set/set.decision';
 
 export type Sunday = 0;
 export type Monday = 1;

@@ -1,6 +1,6 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 import { range } from '../array/array.number';
-import { StoredDataStorageKey } from './storage';
+import { type StoredDataStorageKey } from './storage';
 import { hasNonNullValue } from '../value/maybe';
 
 /**

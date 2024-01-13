@@ -1,6 +1,6 @@
-import { FirebaseTransactionContext, FirestoreCollectionLike, FirestoreDocument, FirestoreModelKey, LimitedFirestoreDocumentAccessor } from '../../firestore';
-import { InContextModelLoader, ModelLoader } from '@dereekb/model';
-import { Getter } from '@dereekb/util';
+import { type FirebaseTransactionContext, type FirestoreCollectionLike, type FirestoreDocument, type FirestoreModelKey, type LimitedFirestoreDocumentAccessor } from '../../firestore';
+import { type InContextModelLoader, type ModelLoader } from '@dereekb/model';
+import { type Getter } from '@dereekb/util';
 
 export type FirebaseModelLoaderContext = FirebaseTransactionContext;
 

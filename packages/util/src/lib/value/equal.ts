@@ -1,5 +1,5 @@
-import { existsInIterable, isIterable, IterableOrValue, takeValuesFromIterable } from './../iterable/iterable';
-import { EqualityComparatorFunction } from './comparator';
+import { existsInIterable, isIterable, type IterableOrValue, takeValuesFromIterable } from './../iterable/iterable';
+import { type EqualityComparatorFunction } from './comparator';
 
 /**
  * Used to check if the input object is considered equal to the current context.

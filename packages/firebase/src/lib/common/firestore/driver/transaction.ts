@@ -1,4 +1,4 @@
-import { Firestore, Transaction, ReadOnlyTransactionOptions, ReadWriteTransactionOptions } from '../types';
+import { type Firestore, type Transaction, type ReadOnlyTransactionOptions, type ReadWriteTransactionOptions } from '../types';
 
 /**
  * Function that runs in a transaction context and returns a value.

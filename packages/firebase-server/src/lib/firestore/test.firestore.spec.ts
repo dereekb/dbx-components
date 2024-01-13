@@ -1,7 +1,7 @@
-import { DocumentReference, Transaction, Firestore } from '@google-cloud/firestore';
-import { DocumentSnapshot, makeFirestoreCollection } from '@dereekb/firebase';
-import { mockItemIdentity, MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemConverter } from '@dereekb/firebase/test';
-import { Maybe } from '@dereekb/util';
+import { type DocumentReference, type Transaction, type Firestore } from '@google-cloud/firestore';
+import { type DocumentSnapshot, makeFirestoreCollection } from '@dereekb/firebase';
+import { mockItemIdentity, type MockItem, mockItemCollectionReference, MockItemDocument, type MockItemFirestoreCollection, mockItemConverter } from '@dereekb/firebase/test';
+import { type Maybe } from '@dereekb/util';
 import { dbxComponentsAdminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { googleCloudFirestoreDrivers } from './driver';
 

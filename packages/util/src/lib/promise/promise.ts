@@ -1,7 +1,7 @@
 import { range } from '../array/array.number';
-import { Milliseconds } from '../date/date';
-import { IndexNumber } from '../value';
-import { Maybe } from '../value/maybe.type';
+import { type Milliseconds } from '../date/date';
+import { type IndexNumber } from '../value';
+import { type Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
 
 export type RunAsyncTaskForValueConfig<T = unknown> = Omit<PerformAsyncTaskConfig<T>, 'throwError'>;

@@ -1,4 +1,4 @@
-import { filterUndefinedValues, Maybe, mergeObjects } from '@dereekb/util';
+import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
 import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction } from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';

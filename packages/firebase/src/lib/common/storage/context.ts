@@ -1,7 +1,7 @@
-import { FirebaseStorageAccessor } from './driver/accessor';
-import { FirebaseStorageDrivers } from './driver/driver';
-import { StorageBucketId, storagePathFactory, StoragePathFactory, StoragePathInput } from './storage';
-import { FirebaseStorage } from './types';
+import { type FirebaseStorageAccessor } from './driver/accessor';
+import { type FirebaseStorageDrivers } from './driver/driver';
+import { type StorageBucketId, storagePathFactory, type StoragePathFactory, type StoragePathInput } from './storage';
+import { type FirebaseStorage } from './types';
 
 /**
  * A @dereekb/firebase FirebaseStorageContext. Wraps the main FirebaseStorage context and the drivers, as well as utility/convenience functions.

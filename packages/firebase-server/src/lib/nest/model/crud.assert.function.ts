@@ -1,5 +1,5 @@
-import { Maybe } from '@dereekb/util';
-import { NestContextCallableRequestWithAuth } from '../function/nest';
+import { type Maybe } from '@dereekb/util';
+import { type NestContextCallableRequestWithAuth } from '../function/nest';
 
 export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
   request: NestContextCallableRequestWithAuth<N, I>;

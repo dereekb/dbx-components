@@ -1,5 +1,5 @@
-import { Maybe, TimezoneString } from '@dereekb/util';
-import { DateRangeParams } from '../date/date.range';
+import { type Maybe, type TimezoneString } from '@dereekb/util';
+import { type DateRangeParams } from '../date/date.range';
 
 export interface FindEqualsDateParam {
   /**

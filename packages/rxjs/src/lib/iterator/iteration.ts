@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { Destroyable, Maybe, PageNumber } from '@dereekb/util';
-import { LoadingState, PageLoadingState } from '../loading';
+import { type Observable } from 'rxjs';
+import { type Destroyable, type Maybe, type PageNumber } from '@dereekb/util';
+import { type LoadingState, type PageLoadingState } from '../loading';
 
 export interface ItemIteratorNextRequest {
   /**

@@ -1,6 +1,6 @@
-import { ClassType } from '@dereekb/util';
-import { ClassTransformOptions, plainToInstance } from 'class-transformer';
-import { validate, ValidationError, ValidationOptions } from 'class-validator';
+import { type ClassType } from '@dereekb/util';
+import { type ClassTransformOptions, plainToInstance } from 'class-transformer';
+import { validate, type ValidationError, type ValidationOptions } from 'class-validator';
 
 // MARK: Transform and Validate Object
 export interface TransformAndValidateObjectOutput<T, O> {

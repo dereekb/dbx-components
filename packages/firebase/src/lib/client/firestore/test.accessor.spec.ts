@@ -1,7 +1,7 @@
-import { DocumentSnapshot } from 'firebase/firestore';
+import { type DocumentSnapshot } from 'firebase/firestore';
 import { first } from 'rxjs';
-import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from '@dereekb/firebase/test';
-import { FirestoreDocumentAccessor } from '../../common';
+import { type MockItem, type MockItemDocument, type MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from '@dereekb/firebase/test';
+import { type FirestoreDocumentAccessor } from '../../common';
 
 describe('FirestoreDocumentDataAccessor', () => {
   authorizedTestWithMockItemCollection((f) => {

@@ -1,4 +1,4 @@
-import { ArrayDecisionFunction, arrayDecisionFunction } from './array.find';
+import { type ArrayDecisionFunction, arrayDecisionFunction } from './array.find';
 
 describe('arrayDecisionFunction()', () => {
   describe('function', () => {

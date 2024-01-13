@@ -1,11 +1,11 @@
-import { Firestore as FirebaseFirestore, runTransaction, doc, collection, writeBatch, Transaction, collectionGroup } from 'firebase/firestore';
-import { FirestoreAccessorDriver } from '../../common/firestore/driver/accessor';
-import { FirestoreAccessorDriverCollectionGroupFunction, FirestoreAccessorDriverCollectionRefFunction, FirestoreAccessorDriverDocumentRefFunction, FirestoreAccessorDriverFullPathDocumentRefFunction, FirestoreAccessorDriverSubcollectionRefFunction, TransactionFunction } from '../../common/firestore/driver';
+import { type Firestore as FirebaseFirestore, runTransaction, doc, collection, writeBatch, type Transaction, collectionGroup } from 'firebase/firestore';
+import { type FirestoreAccessorDriver } from '../../common/firestore/driver/accessor';
+import { type FirestoreAccessorDriverCollectionGroupFunction, type FirestoreAccessorDriverCollectionRefFunction, type FirestoreAccessorDriverDocumentRefFunction, type FirestoreAccessorDriverFullPathDocumentRefFunction, type FirestoreAccessorDriverSubcollectionRefFunction, type TransactionFunction } from '../../common/firestore/driver';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 import { defaultFirestoreDocumentContext } from './driver.accessor.default';
 import { transactionDocumentContext } from './driver.accessor.transaction';
-import { TransactionFirestoreDocumentContextFactory } from '../../common/firestore/accessor/context.transaction';
-import { WriteBatchFirestoreDocumentContextFactory } from '../../common/firestore/accessor/context.batch';
+import { type TransactionFirestoreDocumentContextFactory } from '../../common/firestore/accessor/context.transaction';
+import { type WriteBatchFirestoreDocumentContextFactory } from '../../common/firestore/accessor/context.batch';
 
 export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {

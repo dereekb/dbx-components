@@ -1,7 +1,7 @@
-import { GrantedRole } from '@dereekb/model';
-import { ArrayOrValue } from '@dereekb/util';
-import { FirebaseTransactionContext } from '../../firestore/reference';
-import { FirebaseContextGrantedModelRoles } from './permission';
+import { type GrantedRole } from '@dereekb/model';
+import { type ArrayOrValue } from '@dereekb/util';
+import { type FirebaseTransactionContext } from '../../firestore/reference';
+import { type FirebaseContextGrantedModelRoles } from './permission';
 
 export type FirebasePermissionContext = FirebaseTransactionContext;
 

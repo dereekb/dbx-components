@@ -1,11 +1,11 @@
-import { AuthRole, AuthRoleSet } from './auth.role';
+import { type AuthRole, type AuthRoleSet } from './auth.role';
 import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { objectToTuples } from '../object/object.map';
-import { ArrayOrValue, asArray } from '../array/array';
+import { type ArrayOrValue, asArray } from '../array/array';
 import { addToSet, setContainsAllValues } from '../set';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Key in the claims.

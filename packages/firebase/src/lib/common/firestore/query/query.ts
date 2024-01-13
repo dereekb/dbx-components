@@ -1,9 +1,9 @@
-import { Observable } from 'rxjs';
-import { ArrayOrValue, flattenArrayOrValueArray, Maybe } from '@dereekb/util';
-import { QueryLikeReferenceRef } from '../reference';
-import { Query, QueryDocumentSnapshot, QuerySnapshot, Transaction } from '../types';
-import { addOrReplaceLimitInConstraints, FirestoreQueryConstraint } from './constraint';
-import { FirestoreQueryDriverRef } from '../driver/query';
+import { type Observable } from 'rxjs';
+import { type ArrayOrValue, flattenArrayOrValueArray, type Maybe } from '@dereekb/util';
+import { type QueryLikeReferenceRef } from '../reference';
+import { type Query, type QueryDocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
+import { addOrReplaceLimitInConstraints, type FirestoreQueryConstraint } from './constraint';
+import { type FirestoreQueryDriverRef } from '../driver/query';
 
 export interface FirestoreExecutableQueryGetDocsContext {
   readonly transaction?: Transaction;

@@ -1,4 +1,4 @@
-import { Configurable } from '../type';
+import { type Configurable } from '../type';
 
 /**
  * Denotes a typically read-only like model is being built/configured.

@@ -1,6 +1,6 @@
-import { Building } from './build';
-import { ReadValueFunction } from './map';
-import { Maybe } from './maybe.type';
+import { type Building } from './build';
+import { type ReadValueFunction } from './map';
+import { type Maybe } from './maybe.type';
 
 /**
  * A comparator that returns true if the two input values are considered equivalent.

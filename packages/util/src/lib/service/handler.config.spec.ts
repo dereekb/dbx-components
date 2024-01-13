@@ -1,5 +1,5 @@
-import { Handler, HandlerFunction, makeHandler } from './handler';
-import { HandlerBindAccessor, handlerBindAccessor, HandlerConfigurer, handlerConfigurerFactory, handlerMappedSetFunction } from './handler.config';
+import { type Handler, type HandlerFunction, makeHandler } from './handler';
+import { type HandlerBindAccessor, handlerBindAccessor, type HandlerConfigurer, handlerConfigurerFactory, handlerMappedSetFunction } from './handler.config';
 
 interface TestConfigurer extends HandlerBindAccessor<number, string> {
   test: boolean;

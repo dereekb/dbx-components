@@ -1,6 +1,6 @@
-import { isObservable, Observable } from 'rxjs';
-import { ErrorInput, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
-import { WorkInstance, WorkInstanceDelegate } from './work.instance';
+import { isObservable, type Observable } from 'rxjs';
+import { type ErrorInput, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { WorkInstance, type WorkInstanceDelegate } from './work.instance';
 
 /**
  * A function that handles the incoming value to do work and creates a WorkContext.

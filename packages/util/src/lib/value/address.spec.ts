@@ -1,4 +1,4 @@
-import { isCompleteUnitedStatesAddress, isUsStateCodeString, UnitedStatesAddress } from './address';
+import { isCompleteUnitedStatesAddress, isUsStateCodeString, type UnitedStatesAddress } from './address';
 
 describe('isCompleteUnitedStatesAddress()', () => {
   it('should return true for a complete address.', () => {

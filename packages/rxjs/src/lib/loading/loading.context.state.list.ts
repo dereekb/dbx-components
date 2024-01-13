@@ -1,7 +1,7 @@
-import { LimitArrayConfig, hasNonNullValue, limitArray, Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay, skipWhile } from 'rxjs';
-import { loadingStateIsLoading, ListLoadingState } from './loading.state';
-import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, AbstractLoadingStateEvent, LoadingStateContextInstanceInputConfig } from './loading.context.state';
+import { type LimitArrayConfig, hasNonNullValue, limitArray, type Maybe } from '@dereekb/util';
+import { type Observable, distinctUntilChanged, map, shareReplay, skipWhile } from 'rxjs';
+import { loadingStateIsLoading, type ListLoadingState } from './loading.state';
+import { type AbstractLoadingEventForLoadingPairConfig, type AbstractLoadingStateContext, AbstractLoadingStateContextInstance, type AbstractLoadingStateEvent, type LoadingStateContextInstanceInputConfig } from './loading.context.state';
 import { isListLoadingStateEmpty, listLoadingStateIsEmpty } from './loading.state.list';
 
 export interface ListLoadingStateContextEvent<T> extends AbstractLoadingStateEvent<T[]> {

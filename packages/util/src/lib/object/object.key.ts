@@ -1,7 +1,7 @@
-import { PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction, readKeysSetFunction, readKeysFunction } from '../key';
+import { type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction, readKeysSetFunction, readKeysFunction } from '../key';
 import { setContainsAllValues } from '../set/set';
-import { Maybe } from '../value/maybe.type';
-import { EqualityComparatorFunction, safeEqualityComparatorFunction } from '../value/comparator';
+import { type Maybe } from '../value/maybe.type';
+import { type EqualityComparatorFunction, safeEqualityComparatorFunction } from '../value/comparator';
 
 /**
  * Creates a EqualityComparatorFunction that compares the two input values

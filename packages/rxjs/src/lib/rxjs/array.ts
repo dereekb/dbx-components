@@ -1,5 +1,5 @@
-import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction, switchMap, combineLatest, of, first, ObservableInput } from 'rxjs';
-import { Maybe, ArrayOrValue, pushItemOrArrayItemsIntoArray, forEachWithArray, pushArrayItemsIntoArray, asArray, MapFunction } from '@dereekb/util';
+import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, type MonoTypeOperatorFunction, type Observable, type OperatorFunction, switchMap, combineLatest, of, first, type ObservableInput } from 'rxjs';
+import { type Maybe, type ArrayOrValue, pushItemOrArrayItemsIntoArray, forEachWithArray, pushArrayItemsIntoArray, asArray, type MapFunction } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => unknown[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;

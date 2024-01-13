@@ -1,6 +1,6 @@
 import { uniqueCaseInsensitiveStrings } from '../array';
 import { websiteDomainAndPathPairFromWebsiteUrl } from '../string/url';
-import { EmailAddress } from './email';
+import { type EmailAddress } from './email';
 
 export type EmailAddressDomain = string; // Domain name of an email address.
 

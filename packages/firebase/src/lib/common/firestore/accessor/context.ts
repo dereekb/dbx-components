@@ -1,4 +1,4 @@
-import { FirestoreDocumentDataAccessorFactory } from './accessor';
+import { type FirestoreDocumentDataAccessorFactory } from './accessor';
 
 /**
  * A specific document context type.

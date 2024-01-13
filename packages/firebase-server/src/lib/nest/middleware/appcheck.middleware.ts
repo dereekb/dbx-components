@@ -1,9 +1,9 @@
 import * as admin from 'firebase-admin';
-import { ForbiddenException, Injectable, Logger, NestMiddleware } from '@nestjs/common';
-import { Request } from 'firebase-functions/v2/https';
-import { Response } from 'express';
-import { Maybe } from '@dereekb/util';
-import { AppCheckRequest } from './appcheck';
+import { ForbiddenException, Injectable, Logger, type NestMiddleware } from '@nestjs/common';
+import { type Request } from 'firebase-functions/v2/https';
+import { type Response } from 'express';
+import { type Maybe } from '@dereekb/util';
+import { type AppCheckRequest } from './appcheck';
 import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
 
 /**

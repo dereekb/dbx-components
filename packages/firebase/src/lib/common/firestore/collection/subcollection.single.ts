@@ -1,6 +1,6 @@
 import { build } from '@dereekb/util';
-import { extendFirestoreCollectionWithSingleDocumentAccessor, FirestoreDocument, FirestoreSingleDocumentAccessor, SingleItemFirestoreCollectionDocumentIdentifierRef } from '../accessor/document';
-import { FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent } from './subcollection';
+import { extendFirestoreCollectionWithSingleDocumentAccessor, type FirestoreDocument, type FirestoreSingleDocumentAccessor, type SingleItemFirestoreCollectionDocumentIdentifierRef } from '../accessor/document';
+import { type FirestoreCollectionWithParent, type FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent } from './subcollection';
 
 // MARK: Single-Item Subcollection
 export interface SingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionWithParentConfig<T, PT, D, PD>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}

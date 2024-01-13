@@ -1,5 +1,5 @@
-import { MapDescriptorAssertionOptions } from './assert';
-import { AccessorValueAssertion, PropertyDescriptorUtility } from './assertion';
+import { type MapDescriptorAssertionOptions } from './assert';
+import { type AccessorValueAssertion, PropertyDescriptorUtility } from './assertion';
 
 // MARK: Generic
 export function Assert<T>(assertion: AccessorValueAssertion<T>, options?: MapDescriptorAssertionOptions<T>) {

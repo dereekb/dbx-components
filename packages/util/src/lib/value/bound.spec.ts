@@ -1,4 +1,4 @@
-import { LatLngBound, isSameLatLngBound } from '@dereekb/util';
+import { type LatLngBound, isSameLatLngBound } from '@dereekb/util';
 import { isSameLatLngPoint, latLngPoint } from './point';
 import { boundToRectangle, isLatLngBound, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, latLngBound, latLngBoundCenterPoint, latLngBoundFromInput, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
 

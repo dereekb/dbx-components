@@ -1,6 +1,6 @@
-import { ArrayOrValue, asArray } from '../array/array';
+import { type ArrayOrValue, asArray } from '../array/array';
 import { useIterableOrValue } from '../iterable/iterable';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  *

@@ -1,4 +1,4 @@
-import { E164PhoneNumber, E164PhoneNumberWithExtension } from '@dereekb/util';
+import { E164PhoneNumber, type E164PhoneNumberWithExtension } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
 import { IsE164PhoneNumber, IsE164PhoneNumberWithOptionalExtension } from './phone';

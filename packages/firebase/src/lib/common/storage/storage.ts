@@ -1,4 +1,4 @@
-import { toRelativeSlashPathStartType, SlashPath, FactoryWithRequiredInput } from '@dereekb/util';
+import { toRelativeSlashPathStartType, type SlashPath, type FactoryWithRequiredInput } from '@dereekb/util';
 
 /**
  * Storage bucket identifier.

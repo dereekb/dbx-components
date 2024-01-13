@@ -1,13 +1,13 @@
-import { DocumentSnapshot, FieldPath, Query as GoogleCloudQuery, Transaction as GoogleCloudTransaction } from '@google-cloud/firestore';
+import { type DocumentSnapshot, FieldPath, type Query as GoogleCloudQuery, type Transaction as GoogleCloudTransaction } from '@google-cloud/firestore';
 import {
-  Query,
+  type Query,
   FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE,
-  FullFirestoreQueryConstraintHandlersMapping,
+  type FullFirestoreQueryConstraintHandlersMapping,
   makeFirestoreQueryConstraintFunctionsDriver,
-  QuerySnapshot,
-  FirestoreQueryConstraintFunctionsDriver,
-  FirestoreQueryDriver,
+  type QuerySnapshot,
+  type FirestoreQueryConstraintFunctionsDriver,
+  type FirestoreQueryDriver,
   FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE,
@@ -17,7 +17,7 @@ import {
   FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE,
   streamFromOnSnapshot,
-  Transaction,
+  type Transaction,
   FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE

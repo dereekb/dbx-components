@@ -1,5 +1,5 @@
-import { Maybe } from '@dereekb/util';
-import { DateQueryBuilder, MakeFieldFilterInput } from './query.builder';
+import { type Maybe } from '@dereekb/util';
+import { type DateQueryBuilder, type MakeFieldFilterInput } from './query.builder';
 
 export interface TimeFieldsNameSet {
   start: string;

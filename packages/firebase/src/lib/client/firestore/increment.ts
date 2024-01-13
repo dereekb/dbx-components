@@ -1,6 +1,6 @@
 import { mapObjectMap } from '@dereekb/util';
-import { UpdateData, increment } from 'firebase/firestore';
-import { FirestoreAccessorIncrementUpdate } from '../../common/firestore/accessor/accessor';
+import { type UpdateData, increment } from 'firebase/firestore';
+import { type FirestoreAccessorIncrementUpdate } from '../../common/firestore/accessor/accessor';
 
 /**
  * Creates UpdateData corresponding to the input increment update.

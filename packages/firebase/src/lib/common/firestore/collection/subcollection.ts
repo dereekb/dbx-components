@@ -1,5 +1,5 @@
-import { FirestoreDocument } from '../accessor/document';
-import { FirestoreCollection, FirestoreCollectionConfig, makeFirestoreCollection } from './collection';
+import { type FirestoreDocument } from '../accessor/document';
+import { type FirestoreCollection, type FirestoreCollectionConfig, makeFirestoreCollection } from './collection';
 
 // MARK: Subcollection
 /**

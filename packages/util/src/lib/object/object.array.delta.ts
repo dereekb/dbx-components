@@ -1,9 +1,9 @@
-import { Maybe, MaybeMap } from '../value/maybe.type';
-import { Building } from '../value/build';
-import { ObjectFieldEqualityChecker } from './object.equal';
+import { type Maybe, type MaybeMap } from '../value/maybe.type';
+import { type Building } from '../value/build';
+import { type ObjectFieldEqualityChecker } from './object.equal';
 import { assignValuesToPOJOFunction } from './object.filter.pojo';
 import { objectHasKey } from './object';
-import { EmptyArray } from '../array/array';
+import { type EmptyArray } from '../array/array';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 /**

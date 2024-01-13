@@ -1,5 +1,5 @@
-import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
-import { DecisionFunctionFactory } from '../value/decision';
+import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
+import { type DecisionFunctionFactory } from '../value/decision';
 
 // MARK: Search Strings
 /**

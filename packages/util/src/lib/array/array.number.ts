@@ -1,4 +1,4 @@
-import { IndexRange } from '../value/indexed';
+import { type IndexRange } from '../value/indexed';
 
 export function reduceNumbersWithMax(array: number[], emptyArrayValue?: number): number | undefined {
   return reduceNumbersWithMaxFn(emptyArrayValue)(array);

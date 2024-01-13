@@ -1,4 +1,4 @@
-import { DescriptorAssertionOptions } from './assert';
+import { type DescriptorAssertionOptions } from './assert';
 import { PropertyDescriptorUtility } from './assertion';
 
 // MARK: Numbers

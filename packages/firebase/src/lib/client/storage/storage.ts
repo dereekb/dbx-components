@@ -1,4 +1,4 @@
-import { FirebaseStorageContextFactory, firebaseStorageContextFactory } from '../../common/storage/context';
+import { type FirebaseStorageContextFactory, firebaseStorageContextFactory } from '../../common/storage/context';
 import { firebaseStorageClientDrivers } from './driver';
 
 /**

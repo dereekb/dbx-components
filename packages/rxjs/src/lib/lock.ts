@@ -1,7 +1,7 @@
-import { ObservableOrValue, asObservable } from './rxjs/getter';
-import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, Observable, of, Subscription, BehaviorSubject } from 'rxjs';
+import { type ObservableOrValue, asObservable } from './rxjs/getter';
+import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, type Observable, of, type Subscription, BehaviorSubject } from 'rxjs';
 import { cleanup, combineLatestFromMapValuesObsFn, preventComplete } from './rxjs';
-import { Destroyable, Maybe, reduceBooleansWithOrFn } from '@dereekb/util';
+import { type Destroyable, type Maybe, reduceBooleansWithOrFn } from '@dereekb/util';
 import ms from 'ms';
 import { SubscriptionObject } from './subscription';
 

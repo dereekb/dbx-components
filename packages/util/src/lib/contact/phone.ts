@@ -1,5 +1,5 @@
 import { removeCharactersAfterFirstCharacterOccurenceFunction, splitStringAtFirstCharacterOccurenceFunction } from '../string/replace';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Phone number string input. No format specified.

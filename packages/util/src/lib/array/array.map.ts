@@ -1,5 +1,5 @@
-import { PrimativeKey, ReadKeyFunction } from '../key';
-import { Maybe } from '../value/maybe.type';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Maps the values of the input array to a Map. Can additionally specify a value function to map out the input value to another value for the map.

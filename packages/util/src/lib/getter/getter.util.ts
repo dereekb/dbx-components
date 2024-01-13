@@ -1,5 +1,5 @@
 import { randomNumberFactory } from '../number/random';
-import { Factory } from './getter';
+import { type Factory } from './getter';
 
 /**
  * Returns a random value.

@@ -1,6 +1,6 @@
-import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from '@google-cloud/firestore';
-import { from, Observable } from 'rxjs';
-import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter, FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { type DocumentReference, type WriteBatch as GoogleCloudWriteBatch, type DocumentSnapshot } from '@google-cloud/firestore';
+import { from, type Observable } from 'rxjs';
+import { type WithFieldValue, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams, type UpdateData, type DocumentData, type FirestoreDataConverter, type FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
 import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor

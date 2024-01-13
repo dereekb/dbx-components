@@ -1,5 +1,5 @@
-import { ReadableError } from '@dereekb/util';
-import { FirebaseErrorCode } from '../error';
+import { type ReadableError } from '@dereekb/util';
+import { type FirebaseErrorCode } from '../error';
 
 export interface FirebaseAuthError {
   code: FirebaseErrorCode;

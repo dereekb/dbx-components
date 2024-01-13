@@ -1,8 +1,8 @@
-import { DateRelativeState, FractionalHour, Minutes as UtilMinutes, minutesToFractionalHours } from '@dereekb/util';
+import { type DateRelativeState, type FractionalHour, type Minutes as UtilMinutes, minutesToFractionalHours } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 import { addMinutes } from 'date-fns';
-import { DateRange, dateRangeRelativeState } from './date.range';
+import { type DateRange, dateRangeRelativeState } from './date.range';
 
 export type Minutes = UtilMinutes; // TEMPORARY: weird issue with importing primative types with jest.
 

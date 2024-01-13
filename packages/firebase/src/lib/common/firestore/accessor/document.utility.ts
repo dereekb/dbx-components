@@ -1,7 +1,7 @@
-import { AsyncGetterOrValue, Maybe, performMakeLoop, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues } from '@dereekb/util';
-import { FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from '../collection';
-import { DocumentDataWithIdAndKey, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
-import { FirestoreDocumentData, FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
+import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues } from '@dereekb/util';
+import { type FirestoreModelId, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from '../collection';
+import { type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
+import { type FirestoreDocumentData, type FirestoreDocument, type FirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
   return makeWithFactory(() => documentAccessor.newDocument(), count);

@@ -1,5 +1,5 @@
-import { asPromise, Destroyable, Maybe, PromiseOrValue } from '@dereekb/util';
-import { finalize, MonoTypeOperatorFunction, Observable, of, scan, switchMap } from 'rxjs';
+import { asPromise, type Destroyable, type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { finalize, type MonoTypeOperatorFunction, type Observable, of, scan, switchMap } from 'rxjs';
 
 // MARK: Cleanup
 interface CleanupInternalState<T> {

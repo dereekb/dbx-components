@@ -1,5 +1,5 @@
-import { MapStringFunction, Maybe, splitCommaSeparatedString } from '@dereekb/util';
-import { TransformFnParams } from 'class-transformer';
+import { type MapStringFunction, type Maybe, splitCommaSeparatedString } from '@dereekb/util';
+import { type TransformFnParams } from 'class-transformer';
 
 // MARK: String
 export function transformStringToBoolean(defaultValue?: boolean | undefined): (params: TransformFnParams) => Maybe<boolean> {

@@ -1,10 +1,10 @@
-import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
-import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from '../types';
-import { asArray, Maybe, lastValue, mergeArraysIntoArray, ArrayOrValue } from '@dereekb/util';
-import { from, Observable, of, exhaustMap } from 'rxjs';
-import { FirestoreQueryDriverRef } from '../driver/query';
-import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
-import { QueryLikeReferenceRef } from '../reference';
+import { type PageLoadingState, ItemPageIterator, type ItemPageIterationInstance, type ItemPageIterationConfig, type ItemPageIteratorDelegate, type ItemPageIteratorRequest, type ItemPageIteratorResult, MappedPageItemIterationInstance, type ItemPageLimit } from '@dereekb/rxjs';
+import { type QueryDocumentSnapshotArray, type QuerySnapshot, type SnapshotListenOptions } from '../types';
+import { asArray, type Maybe, lastValue, mergeArraysIntoArray, type ArrayOrValue } from '@dereekb/util';
+import { from, type Observable, of, exhaustMap } from 'rxjs';
+import { type FirestoreQueryDriverRef } from '../driver/query';
+import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, type FirestoreQueryConstraint, limit, startAfter } from './constraint';
+import { type QueryLikeReferenceRef } from '../reference';
 
 export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
   /**

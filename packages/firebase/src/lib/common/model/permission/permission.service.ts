@@ -1,9 +1,9 @@
-import { FirestoreDocument } from './../../firestore';
-import { AbstractModelPermissionService, GrantedRoleMap, InContextModelPermissionService, InModelContextModelPermissionService, ModelPermissionService } from '@dereekb/model';
-import { Maybe, PromiseOrValue } from '@dereekb/util';
-import { FirebaseModelLoader, InModelContextFirebaseModelLoader } from '../model/model.loader';
-import { FirebaseModelContext } from '../context';
-import { FirebasePermissionServiceModel } from './permission';
+import { type FirestoreDocument } from './../../firestore';
+import { AbstractModelPermissionService, type GrantedRoleMap, type InContextModelPermissionService, type InModelContextModelPermissionService, type ModelPermissionService } from '@dereekb/model';
+import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type FirebaseModelLoader, type InModelContextFirebaseModelLoader } from '../model/model.loader';
+import { type FirebaseModelContext } from '../context';
+import { type FirebasePermissionServiceModel } from './permission';
 
 export type FirebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = ModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>>;
 

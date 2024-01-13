@@ -1,8 +1,8 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here. using unknown can have strange effects in usage of forwardFunction and type capture.
 
-import { Getter } from '../getter/getter';
-import { Maybe } from '../value/maybe.type';
+import { type Getter } from '../getter/getter';
+import { type Maybe } from '../value/maybe.type';
 
 export type ForwardFunction<I extends (...args: any[]) => O, O = unknown> = I;
 

@@ -1,8 +1,8 @@
-import { PrimativeKey, ReadKeyFunction } from '../key';
-import { ArrayOrValue } from '../array/array';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type ArrayOrValue } from '../array/array';
 import { build } from '../value/build';
-import { Maybe } from '../value/maybe.type';
-import { PromiseOrValue } from '../promise/promise.type';
+import { type Maybe } from '../value/maybe.type';
+import { type PromiseOrValue } from '../promise/promise.type';
 import { setKeysOnMap } from '../map/map';
 
 /**

@@ -1,6 +1,6 @@
-import { Filter, OptionalFilter } from '../filter';
-import { Page } from '../page';
-import { IterateFn, IteratePageFn, iterate } from '../iterate';
+import { type Filter, type OptionalFilter } from '../filter';
+import { type Page } from '../page';
+import { type IterateFn, type IteratePageFn, iterate } from '../iterate';
 
 /**
  * Represents a page number with a filter.

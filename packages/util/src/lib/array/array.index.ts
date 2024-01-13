@@ -1,5 +1,5 @@
-import { IndexNumber, IndexRef, IndexRangeInput, indexRange } from '../value/indexed';
-import { Maybe } from '../value/maybe.type';
+import { type IndexNumber, type IndexRef, type IndexRangeInput, indexRange } from '../value/indexed';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A set of number corresponding to items in an array.

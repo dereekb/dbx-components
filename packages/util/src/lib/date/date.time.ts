@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Represents a string for a time. This may be human-input, and

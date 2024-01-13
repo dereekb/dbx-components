@@ -1,4 +1,4 @@
-import { Getter } from './getter';
+import { type Getter } from './getter';
 
 /**
  * Type of the result of a Getter

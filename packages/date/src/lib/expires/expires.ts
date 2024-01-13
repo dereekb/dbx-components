@@ -1,5 +1,5 @@
 import { dateFromDateOrTimeNumber } from '../date/date.unix';
-import { DateOrUnixDateTimeNumber, Maybe, Milliseconds } from '@dereekb/util';
+import { type DateOrUnixDateTimeNumber, type Maybe, type Milliseconds } from '@dereekb/util';
 import { addMilliseconds, addMinutes, isPast } from 'date-fns';
 
 /**

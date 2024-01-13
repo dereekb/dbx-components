@@ -1,6 +1,6 @@
 import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, getDay } from 'date-fns';
-import { DateCellDurationSpan, dateCellTiming } from './date.cell';
+import { type DateCellDurationSpan, dateCellTiming } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
 import { yearMonthDayCodeFactory, yearMonthDayCode, yearMonthDayCodeDateFactory, yearMonthDayCodeGroupFactory, yearMonthDayCodeDay, yearMonthDayCodeMonth, yearMonthDayCodePairFromDate, yearMonthDayCodesForDateRangeFactory } from './date.day';
 

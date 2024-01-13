@@ -1,6 +1,6 @@
-import { ArrayOrValue, asArray } from '../array/array';
-import { Maybe } from '../value/maybe.type';
-import { MapSameFunction } from '../value/map';
+import { type ArrayOrValue, asArray } from '../array/array';
+import { type Maybe } from '../value/maybe.type';
+import { type MapSameFunction } from '../value/map';
 import { replaceCharacterAtIndexWith, splitStringAtIndex } from './char';
 
 export type ReplaceStringsFunction = MapSameFunction<string>;

@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 export type PromiseCallback = (err?: Maybe<Error>) => void;
 export type UsePromiseCallback = (cb: PromiseCallback) => void;

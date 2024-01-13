@@ -1,11 +1,11 @@
-import { GlobalOptions } from 'firebase-functions/v2/options';
+import { type GlobalOptions } from 'firebase-functions/v2/options';
 import { scheduler } from 'firebase-functions/v2';
-import { INestApplicationContext } from '@nestjs/common';
-import { MakeNestContext, NestApplicationPromiseGetter } from '../../nest.provider';
-import { NestApplicationScheduleConfiguredFunction, NestApplicationScheduleConfiguredFunctionFactory, OnScheduleConfig, OnScheduleWithNestApplication, OnScheduleWithNestApplicationRequest, OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
+import { type INestApplicationContext } from '@nestjs/common';
+import { type MakeNestContext, type NestApplicationPromiseGetter } from '../../nest.provider';
+import { type NestApplicationScheduleConfiguredFunction, type NestApplicationScheduleConfiguredFunctionFactory, type OnScheduleConfig, type OnScheduleWithNestApplication, type OnScheduleWithNestApplicationRequest, type OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
 import { cronExpressionRepeatingEveryNMinutes, mergeObjects } from '@dereekb/util';
-import { Buildable } from 'ts-essentials';
-import { ScheduleOptions } from 'firebase-functions/v2/scheduler';
+import { type Buildable } from 'ts-essentials';
+import { type ScheduleOptions } from 'firebase-functions/v2/scheduler';
 
 export type OnScheduleConfigWithGlobalOptions = OnScheduleConfig & GlobalOptions;
 

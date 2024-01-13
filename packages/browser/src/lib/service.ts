@@ -1,8 +1,8 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here. Proper typing with Window requires using the dynamic strings _windowKey and _callbackKey.
-import { Maybe, Destroyable } from '@dereekb/util';
+import { type Maybe, type Destroyable } from '@dereekb/util';
 import { filterMaybe, tapFirst } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject, switchMap, shareReplay, from, firstValueFrom } from 'rxjs';
+import { type Observable, BehaviorSubject, switchMap, shareReplay, from, firstValueFrom } from 'rxjs';
 
 export type ServiceInWindow<T> = Record<string, Maybe<T>>;
 export type ServiceCallbackInWindow = Record<string, () => void>;

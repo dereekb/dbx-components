@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from '@google-cloud/firestore';
-import { from, Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData, FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { type DocumentReference, type DocumentSnapshot, type Transaction as GoogleCloudTransaction, type SetOptions } from '@google-cloud/firestore';
+import { from, type Observable } from 'rxjs';
+import { type WithFieldValue, type UpdateData, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentUpdateParams, type FirestoreDataConverter, type DocumentData, type FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
 import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor

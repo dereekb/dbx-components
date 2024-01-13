@@ -1,7 +1,7 @@
-import { filterFalsyAndEmptyValues, ModelTypeString, splitJoinRemainder } from '@dereekb/util';
+import { filterFalsyAndEmptyValues, type ModelTypeString, splitJoinRemainder } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, IsNotEmpty, Matches, MaxLength, IsOptional } from 'class-validator';
-import { WebsiteLink, WebsiteLinkEncodedData, WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH, WEBSITE_LINK_TYPE_MAX_LENGTH, WEBSITE_LINK_TYPE_REGEX } from './link';
+import { type WebsiteLink, type WebsiteLinkEncodedData, WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH, WEBSITE_LINK_TYPE_MAX_LENGTH, WEBSITE_LINK_TYPE_REGEX } from './link';
 
 /**
  * Arbitrary file link type.

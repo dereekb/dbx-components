@@ -1,5 +1,5 @@
-import { ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult } from '../../common/development/function.schedule';
-import { FirebaseFunction } from './function';
+import { type ScheduledFunctionDevelopmentFirebaseFunctionParams, type ScheduledFunctionDevelopmentFirebaseFunctionResult } from '../../common/development/function.schedule';
+import { type FirebaseFunction } from './function';
 
 /**
  * The default functions key for the FirebaseDevelopmentFunctionTypeMap/Functions, used in an app's functions map.

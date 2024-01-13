@@ -1,5 +1,5 @@
 import { asGetter } from '@dereekb/util';
-import { getValueFromGetter, GetterOrValueWithInput, makeWithFactory, makeWithFactoryInput } from './getter';
+import { getValueFromGetter, type GetterOrValueWithInput, makeWithFactory, makeWithFactoryInput } from './getter';
 
 class TestClass {}
 

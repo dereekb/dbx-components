@@ -1,6 +1,6 @@
-import { Maybe } from '@dereekb/util';
-import { MapFunction } from './map';
-import { MappedUseFunction, mappedUseFunction, mappedUseAsyncFunction, MappedUseAsyncFunction, wrapUseFunction, wrapUseAsyncFunction } from './use';
+import { type Maybe } from '@dereekb/util';
+import { type MapFunction } from './map';
+import { type MappedUseFunction, mappedUseFunction, mappedUseAsyncFunction, type MappedUseAsyncFunction, wrapUseFunction, wrapUseAsyncFunction } from './use';
 
 describe('mappedUseFunction()', () => {
   const mapFn: MapFunction<number, string> = (number: number) => String(number);

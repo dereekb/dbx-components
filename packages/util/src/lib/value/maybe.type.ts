@@ -1,4 +1,4 @@
-import { NonNever } from 'ts-essentials';
+import { type NonNever } from 'ts-essentials';
 
 /**
  * A null/undefined value.

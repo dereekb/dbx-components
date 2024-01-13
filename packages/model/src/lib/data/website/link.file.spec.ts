@@ -1,4 +1,4 @@
-import { decodeWebsiteLinkEncodedDataToWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, WebsiteFileLink, websiteFileLinkToWebsiteLink, websiteLinkToWebsiteLinkFile, WEBSITE_FILE_LINK_WEBSITE_LINK_TYPE } from './link.file';
+import { decodeWebsiteLinkEncodedDataToWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, type WebsiteFileLink, websiteFileLinkToWebsiteLink, websiteLinkToWebsiteLinkFile, WEBSITE_FILE_LINK_WEBSITE_LINK_TYPE } from './link.file';
 
 const exampleWithAll: WebsiteFileLink = {
   type: 't',

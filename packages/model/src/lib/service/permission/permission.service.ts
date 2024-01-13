@@ -1,7 +1,7 @@
-import { PromiseOrValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
-import { ModelLoader } from '../loader/model.loader';
-import { contextGrantedModelRoles, ContextGrantedModelRoles, noAccessContextGrantedModelRoles } from './permission';
-import { GrantedRoleMap } from './role';
+import { type PromiseOrValue, type Maybe, type ModelKey, type ModelTypeString } from '@dereekb/util';
+import { type ModelLoader } from '../loader/model.loader';
+import { contextGrantedModelRoles, type ContextGrantedModelRoles, noAccessContextGrantedModelRoles } from './permission';
+import { type GrantedRoleMap } from './role';
 
 /**
  * Full model permission service that can read permissions for models by key or for an input model.

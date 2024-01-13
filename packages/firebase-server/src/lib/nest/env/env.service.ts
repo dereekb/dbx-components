@@ -1,6 +1,6 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { Injectable } from '@nestjs/common';
-import { FirebaseServerEnvService } from '../../env';
+import { type FirebaseServerEnvService } from '../../env';
 
 @Injectable()
 export class DefaultFirebaseServerEnvService extends ServerEnvironmentService implements FirebaseServerEnvService {

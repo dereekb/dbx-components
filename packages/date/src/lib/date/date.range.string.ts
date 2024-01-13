@@ -1,6 +1,6 @@
-import { ISO8601DayString, DateOrDayString } from '@dereekb/util';
+import { type ISO8601DayString, type DateOrDayString } from '@dereekb/util';
 import { toISO8601DayString, toJsDayDate } from './date.format';
-import { DateRange } from './date.range';
+import { type DateRange } from './date.range';
 
 // MARK: ISO8601DayStringRange
 export interface ISO8601DayStringStart {

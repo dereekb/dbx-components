@@ -1,4 +1,4 @@
-import { catchAllHandlerKey, Handler, makeHandler } from './handler';
+import { catchAllHandlerKey, type Handler, makeHandler } from './handler';
 
 describe('handler()', () => {
   let handler: Handler<number, string>;

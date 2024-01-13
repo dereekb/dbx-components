@@ -1,6 +1,6 @@
-import { PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
-import { IterableOrValue, useIterableOrValue } from '../iterable';
-import { Maybe } from '../value/maybe.type';
+import { type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
+import { type IterableOrValue, useIterableOrValue } from '../iterable';
+import { type Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
 
 /**

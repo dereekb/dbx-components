@@ -1,4 +1,4 @@
-import { FirebaseStorageAccessor, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorageContext, StoragePathInput } from '@dereekb/firebase';
+import { type FirebaseStorageAccessor, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorageContext, type StoragePathInput } from '@dereekb/firebase';
 
 // MARK: Service
 /**

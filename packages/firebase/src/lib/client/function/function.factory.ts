@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
-import { cachedGetter, ClassLikeType, Getter, mapObjectMap, Maybe } from '@dereekb/util';
-import { Functions, httpsCallable, HttpsCallableOptions } from 'firebase/functions';
-import { FirebaseFunctionMap, FirebaseFunctionMapFunction, FirebaseFunctionTypeMap } from './function';
+import { cachedGetter, type ClassLikeType, type Getter, mapObjectMap, type Maybe } from '@dereekb/util';
+import { type Functions, httpsCallable, type HttpsCallableOptions } from 'firebase/functions';
+import { type FirebaseFunctionMap, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeMap } from './function';
 import { directDataHttpsCallable } from './function.callable';
 
 // MARK: Functions Factory

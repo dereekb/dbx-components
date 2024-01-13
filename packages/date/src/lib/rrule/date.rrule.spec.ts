@@ -1,7 +1,7 @@
-import { CalendarDate, calendarDateFactory, calendarDateForDateDurationSpan, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
+import { type CalendarDate, calendarDateFactory, calendarDateForDateDurationSpan, type DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
 import { addMinutes, addDays, addHours } from 'date-fns';
-import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
-import { RRuleStringLineSet } from './date.rrule.parse';
+import { type DateRRuleInstance, DateRRuleUtility } from './date.rrule';
+import { type RRuleStringLineSet } from './date.rrule.parse';
 
 describe('DateRRuleUtility', () => {
   describe('DateRRuleInstance', () => {

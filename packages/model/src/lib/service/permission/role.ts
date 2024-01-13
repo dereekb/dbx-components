@@ -1,4 +1,4 @@
-import { ArrayOrValue, arrayToObject, Building, forEachKeyValue, IterableOrValue, iterableToArray, Maybe, SetIncludesMode } from '@dereekb/util';
+import { type ArrayOrValue, arrayToObject, type Building, forEachKeyValue, type IterableOrValue, iterableToArray, type Maybe, type SetIncludesMode } from '@dereekb/util';
 
 /**
  * A granted role for a model.

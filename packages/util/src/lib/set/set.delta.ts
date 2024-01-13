@@ -1,5 +1,5 @@
 import { forEachInIterable, iterableToMap } from '../iterable';
-import { PrimativeKey, ReadKeyFunction } from '../key';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
 import { addToSetCopy } from './set';
 
 /**

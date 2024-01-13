@@ -2,7 +2,7 @@ import { unique } from '@dereekb/util';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { arrayFactory } from '../array';
 import { randomNumberFactory } from '../number';
-import { idBatchFactory, IdBatchVerifier } from './id.batch';
+import { idBatchFactory, type IdBatchVerifier } from './id.batch';
 
 describe('idBatchFactory()', () => {
   const maxBatchSize = 10;

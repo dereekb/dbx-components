@@ -1,8 +1,8 @@
-import { chainMapSameFunctions, MapSameFunction } from '../value/map';
-import { asArray, ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
+import { chainMapSameFunctions, type MapSameFunction } from '../value/map';
+import { asArray, type ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from '../string/char';
-import { chainMapFunction, indexRange, IndexRangeInput, mapIdentityFunction, Maybe } from '../value';
-import { FactoryWithRequiredInput } from '../getter/getter';
+import { chainMapFunction, indexRange, type IndexRangeInput, mapIdentityFunction, type Maybe } from '../value';
+import { type FactoryWithRequiredInput } from '../getter/getter';
 import { sliceIndexRangeFunction } from '../array/array.index';
 import { replaceStringsFunction } from '../string/replace';
 

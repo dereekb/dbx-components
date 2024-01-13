@@ -1,9 +1,9 @@
 import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, addWeeks, getDay } from 'date-fns';
-import { dateCellTiming, DateCellDurationSpan } from './date.cell';
+import { dateCellTiming, type DateCellDurationSpan } from './date.cell';
 import { dateCellTimingExpansionFactory } from './date.cell.factory';
 import { dateTimezoneUtcNormal } from './date.timezone';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone, yearWeekCodePair, startOfWeekForYearWeekCode } from './date.week';
+import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, type YearWeekCode, type YearWeekCodeString, yearWeekCodeForDateRange, yearWeekCodeForDateRangeInTimezone, yearWeekCodePair, startOfWeekForYearWeekCode } from './date.week';
 
 describe('yearWeekCodeForDateRange()', () => {
   const week1StartDateInSystemTimezone = new Date('2021-12-26T00:00:00.000'); // date in current timezone

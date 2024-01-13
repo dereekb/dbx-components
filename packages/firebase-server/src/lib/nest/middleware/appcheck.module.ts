@@ -1,4 +1,4 @@
-import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
+import { Logger, type MiddlewareConsumer, Module } from '@nestjs/common';
 import { FirebaseAppCheckMiddleware } from './appcheck.middleware';
 
 /**

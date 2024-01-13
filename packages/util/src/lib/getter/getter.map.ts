@@ -1,5 +1,5 @@
-import { MapFunction } from '../value/map';
-import { Getter } from './getter';
+import { type MapFunction } from '../value/map';
+import { type Getter } from './getter';
 
 // MARK: Map
 export type MapGetterFactory<I, O> = (input: Getter<I>) => Getter<O>;

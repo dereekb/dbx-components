@@ -1,5 +1,5 @@
-import { Maybe } from '../value/maybe.type';
-import { FactoryWithInput, Getter } from './getter';
+import { type Maybe } from '../value/maybe.type';
+import { type FactoryWithInput, type Getter } from './getter';
 
 /**
  * Getter that returns a cached value.

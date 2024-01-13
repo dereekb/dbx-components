@@ -1,6 +1,6 @@
-import { GrantedRole } from '@dereekb/model';
-import { FirebaseAuthUserId } from '../../auth';
-import { FirestoreModelId, FirestoreModelKey } from './collection';
+import { type GrantedRole } from '@dereekb/model';
+import { type FirebaseAuthUserId } from '../../auth';
+import { type FirestoreModelId, type FirestoreModelKey } from './collection';
 
 // MARK: FirestoreModelKey
 export type FirestoreModelKeyMap<T> = {

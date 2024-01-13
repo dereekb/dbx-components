@@ -1,6 +1,6 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request } from 'firebase-functions/v2/https';
-import { Response } from 'express';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
+import { type Request } from 'firebase-functions/v2/https';
+import { type Response } from 'express';
 
 @Injectable()
 export class FirebaseRawBodyMiddleware implements NestMiddleware {

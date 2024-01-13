@@ -1,14 +1,14 @@
-import { UserRecord } from 'firebase-admin/lib/auth/user-record';
+import { type UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { onCallWithNestApplicationFactory } from './call';
-import { onEventWithNestApplicationFactory, NestApplicationEventHandler, OnEventWithNestApplicationBuilder } from './event';
+import { onEventWithNestApplicationFactory, type NestApplicationEventHandler, type OnEventWithNestApplicationBuilder } from './event';
 import * as functions from 'firebase-functions';
-import { NestApplicationFunctionFactory } from '../../nest.provider';
-import { OnCallWithNestApplication } from '../call';
-import { OnScheduleConfig, OnScheduleWithNestApplication } from '../schedule';
-import { NestApplicationScheduleCloudFunctionFactory, onScheduleWithNestApplicationFactory } from './schedule';
-import { WrappedScheduledFunction } from 'firebase-functions-test/lib/v1';
+import { type NestApplicationFunctionFactory } from '../../nest.provider';
+import { type OnCallWithNestApplication } from '../call';
+import { type OnScheduleConfig, type OnScheduleWithNestApplication } from '../schedule';
+import { type NestApplicationScheduleCloudFunctionFactory, onScheduleWithNestApplicationFactory } from './schedule';
+import { type WrappedScheduledFunction } from 'firebase-functions-test/lib/v1';
 
 @Injectable()
 export class TestInjectable {}

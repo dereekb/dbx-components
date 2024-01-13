@@ -1,6 +1,6 @@
-import { Maybe, TimezoneString } from '@dereekb/util';
+import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { baseDateToTargetDate } from '../date/date.timezone';
-import { DateRRuleParseUtility, RRuleExdateAttribute } from './date.rrule.parse';
+import { DateRRuleParseUtility, type RRuleExdateAttribute } from './date.rrule.parse';
 
 describe('DateRRuleParseUtility', () => {
   /**

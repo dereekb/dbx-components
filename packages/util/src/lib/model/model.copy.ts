@@ -1,5 +1,5 @@
 import { objectHasKey } from '../object';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 export type CopySelectModelFieldsConfig<T = unknown> = Partial<CopyModelFieldsConfig<T>>;
 

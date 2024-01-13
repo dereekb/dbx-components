@@ -1,9 +1,9 @@
-import { Configurable, PromiseOrValue } from '@dereekb/util';
-import { CallableRequest } from 'firebase-functions/lib/common/providers/https';
-import { NestApplicationContextRequest, NestContextCallableRequest, NestContextCallableRequestWithAuth } from './nest';
+import { type Configurable, type PromiseOrValue } from '@dereekb/util';
+import { type CallableRequest } from 'firebase-functions/lib/common/providers/https';
+import { type NestApplicationContextRequest, type NestContextCallableRequest, type NestContextCallableRequestWithAuth } from './nest';
 import { isContextWithAuthData } from '../../function/context';
 import { unauthenticatedContextHasNoUidError } from '../../function/error';
-import { MakeNestContext } from '../nest.provider';
+import { type MakeNestContext } from '../nest.provider';
 
 // MARK: Application
 export type OnCallWithNestApplicationRequest<I> = NestApplicationContextRequest<CallableRequest<I>>;

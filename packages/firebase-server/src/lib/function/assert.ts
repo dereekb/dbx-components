@@ -1,5 +1,5 @@
-import { DocumentDataWithIdAndKey, FirestoreDocument, FirestoreDocumentData, setIdAndKeyFromKeyIdRefOnDocumentData } from '@dereekb/firebase';
-import * as functions from 'firebase-functions';
+import { type DocumentDataWithIdAndKey, type FirestoreDocument, type FirestoreDocumentData, setIdAndKeyFromKeyIdRefOnDocumentData } from '@dereekb/firebase';
+import type * as functions from 'firebase-functions';
 import { isContextWithAuthData } from './context';
 import { modelNotAvailableError, unauthenticatedContextHasNoUidError } from './error';
 

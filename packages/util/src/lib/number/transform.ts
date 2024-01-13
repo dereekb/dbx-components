@@ -1,7 +1,7 @@
-import { chainMapSameFunctions, MapFunction } from '../value/map';
-import { Maybe } from '../value/maybe.type';
-import { boundNumberFunction, BoundNumberFunctionConfig } from './bound';
-import { cutValueToPrecisionFunction, NumberPrecision, roundNumberToStepFunction, RoundNumberToStepFunctionInput } from './round';
+import { chainMapSameFunctions, type MapFunction } from '../value/map';
+import { type Maybe } from '../value/maybe.type';
+import { boundNumberFunction, type BoundNumberFunctionConfig } from './bound';
+import { cutValueToPrecisionFunction, type NumberPrecision, roundNumberToStepFunction, type RoundNumberToStepFunctionInput } from './round';
 
 export type TransformNumberFunctionConfig<N extends number = number> = {
   /**

@@ -1,10 +1,10 @@
-import { LimitedFirestoreDocumentAccessorContextExtension } from './../accessor/document';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
-import { FirestoreDocument } from '../accessor/document';
-import { documentReferencesFromSnapshot, FirestoreExecutableQuery, FirestoreQueryFactory } from '../query';
-import { FirestoreQueryConstraint } from '../query/constraint';
-import { Transaction } from '../types';
-import { map, Observable } from 'rxjs';
+import { type LimitedFirestoreDocumentAccessorContextExtension } from './../accessor/document';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type FirestoreDocument } from '../accessor/document';
+import { documentReferencesFromSnapshot, type FirestoreExecutableQuery, type FirestoreQueryFactory } from '../query';
+import { type FirestoreQueryConstraint } from '../query/constraint';
+import { type Transaction } from '../types';
+import { map, type Observable } from 'rxjs';
 import { firestoreDocumentLoader } from '../accessor';
 
 export interface FirestoreCollectionExecutableDocumentQuery<T, D extends FirestoreDocument<T>> {

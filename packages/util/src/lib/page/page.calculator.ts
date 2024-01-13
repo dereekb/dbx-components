@@ -1,4 +1,4 @@
-import { Page } from './page';
+import { type Page } from './page';
 
 // MARK: PageCalculator
 export interface PageCalculatorConfig {

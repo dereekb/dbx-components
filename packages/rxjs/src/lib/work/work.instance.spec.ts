@@ -1,6 +1,6 @@
 import { SubscriptionObject } from './../subscription';
-import { beginLoading, errorResult, LoadingState, successResult } from '@dereekb/rxjs';
-import { Maybe, readableError } from '@dereekb/util';
+import { beginLoading, errorResult, type LoadingState, successResult } from '@dereekb/rxjs';
+import { type Maybe, readableError } from '@dereekb/util';
 import { filter, BehaviorSubject, first } from 'rxjs';
 import { WorkInstance } from './work.instance';
 

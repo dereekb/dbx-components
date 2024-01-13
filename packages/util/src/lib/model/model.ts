@@ -1,7 +1,7 @@
 import { symmetricDifferenceArray } from '../set/set';
-import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
-import { Maybe } from '../value/maybe.type';
-import { MapFunction } from '../value/map';
+import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
+import { type Maybe } from '../value/maybe.type';
+import { type MapFunction } from '../value/map';
 import { filterUniqueValues } from '../array/array.unique';
 
 /**

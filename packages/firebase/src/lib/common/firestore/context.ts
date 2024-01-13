@@ -1,9 +1,24 @@
-import { FirestoreDocument, SingleItemFirestoreCollectionDocumentIdentifierRef } from './accessor/document';
-import { makeFirestoreCollection, FirestoreCollection, FirestoreCollectionConfig, FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent, SingleItemFirestoreCollection, makeSingleItemFirestoreCollection, SingleItemFirestoreCollectionConfig, FirestoreCollectionGroup, makeFirestoreCollectionGroup, RootSingleItemFirestoreCollectionConfig, makeRootSingleItemFirestoreCollection, RootSingleItemFirestoreCollection } from './collection';
-import { FirestoreDrivers } from './driver/driver';
-import { WriteBatchFactoryReference, RunTransactionFactoryReference } from './driver';
-import { DocumentReference, CollectionReference, DocumentData, Firestore, CollectionGroup } from './types';
-import { QueryLikeReferenceRef } from './reference';
+import { type FirestoreDocument, type SingleItemFirestoreCollectionDocumentIdentifierRef } from './accessor/document';
+import {
+  makeFirestoreCollection,
+  type FirestoreCollection,
+  type FirestoreCollectionConfig,
+  type FirestoreCollectionWithParent,
+  type FirestoreCollectionWithParentConfig,
+  makeFirestoreCollectionWithParent,
+  type SingleItemFirestoreCollection,
+  makeSingleItemFirestoreCollection,
+  type SingleItemFirestoreCollectionConfig,
+  type FirestoreCollectionGroup,
+  makeFirestoreCollectionGroup,
+  type RootSingleItemFirestoreCollectionConfig,
+  makeRootSingleItemFirestoreCollection,
+  type RootSingleItemFirestoreCollection
+} from './collection';
+import { type FirestoreDrivers } from './driver/driver';
+import { type WriteBatchFactoryReference, type RunTransactionFactoryReference } from './driver';
+import { type DocumentReference, type CollectionReference, type DocumentData, type Firestore, type CollectionGroup } from './types';
+import { type QueryLikeReferenceRef } from './reference';
 
 /**
  * A @dereekb/firebase FirestoreContext. Wraps the main Firestore context and the drivers, as well as utility/convenience functions.

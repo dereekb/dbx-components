@@ -1,5 +1,5 @@
-import { map, Observable, combineLatest, of, OperatorFunction } from 'rxjs';
-import { allKeyValueTuples, Building, keyValueMapFactory, multiKeyValueMapFactory, PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '@dereekb/util';
+import { map, type Observable, combineLatest, of, type OperatorFunction } from 'rxjs';
+import { allKeyValueTuples, type Building, keyValueMapFactory, multiKeyValueMapFactory, type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction } from '@dereekb/util';
 import { asObservable } from './getter';
 
 /**

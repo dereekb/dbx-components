@@ -1,5 +1,5 @@
-import { SlashPath, slashPathFactory, SlashPathFolder } from '@dereekb/util';
-import { readFirestoreModelKey, ReadFirestoreModelKeyInput } from '../../firestore/collection/collection';
+import { type SlashPath, slashPathFactory, type SlashPathFolder } from '@dereekb/util';
+import { readFirestoreModelKey, type ReadFirestoreModelKeyInput } from '../../firestore/collection/collection';
 
 export const BASE_MODEL_STORAGE_FILE_PATH: SlashPathFolder = '/model/';
 

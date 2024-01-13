@@ -1,9 +1,9 @@
 import { setsAreEquivalent } from '../set/set';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 import { objectFieldEqualityChecker } from './object.equal';
 import { objectDeltaArrayCompressor } from './object.array.delta';
 import { objectHasKey, objectHasNoKeys } from './object';
-import { IndexRef } from '../value';
+import { type IndexRef } from '../value';
 import { range } from '../array/array.number';
 
 interface SimpleType {

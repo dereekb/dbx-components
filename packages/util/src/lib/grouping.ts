@@ -1,10 +1,10 @@
-import { PrimativeKey, ReadKeyFunction } from './key';
+import { type PrimativeKey, type ReadKeyFunction } from './key';
 import { mapToObject } from './object/object';
-import { IndexRef } from './value/indexed';
-import { Building } from './value/build';
-import { EqualityComparatorFunction } from './value/comparator';
-import { DecisionFunction } from './value/decision';
-import { Maybe } from './value/maybe.type';
+import { type IndexRef } from './value/indexed';
+import { type Building } from './value/build';
+import { type EqualityComparatorFunction } from './value/comparator';
+import { type DecisionFunction } from './value/decision';
+import { type Maybe } from './value/maybe.type';
 
 // MARK: Types
 export interface SeparateResult<T> {

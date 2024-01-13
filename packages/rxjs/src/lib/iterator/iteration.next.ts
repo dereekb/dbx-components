@@ -1,6 +1,6 @@
-import { map, first, Observable, combineLatest, shareReplay } from 'rxjs';
-import { ItemIteration, PageItemIteration } from './iteration';
-import { Maybe, performTaskLoop, reduceBooleansWithAndFn, GetterOrValue, asGetter, isMaybeNot } from '@dereekb/util';
+import { map, first, type Observable, combineLatest, shareReplay } from 'rxjs';
+import { type ItemIteration, type PageItemIteration } from './iteration';
+import { type Maybe, performTaskLoop, reduceBooleansWithAndFn, type GetterOrValue, asGetter, isMaybeNot } from '@dereekb/util';
 
 /**
  * Creates an observable from the input iteration that checks both the hasNext$ and canLoadMore$ states.

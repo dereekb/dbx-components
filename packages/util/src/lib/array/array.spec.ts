@@ -1,4 +1,4 @@
-import { mergeArraysIntoArray, range, flattenArray, Maybe } from '@dereekb/util';
+import { mergeArraysIntoArray, range, flattenArray, type Maybe } from '@dereekb/util';
 import { takeLast } from './array';
 
 describe('flattenArray', () => {

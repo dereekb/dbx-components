@@ -1,5 +1,5 @@
-import { SORT_VALUE_LESS_THAN, SORT_VALUE_GREATER_THAN, SORT_VALUE_EQUAL, compareFnOrder, SortingOrder, SortCompareFunction, copyArray } from '@dereekb/util';
-import { ReadDateFunction, ReadISO8601DateStringUTCFullFunction } from './date';
+import { SORT_VALUE_LESS_THAN, SORT_VALUE_GREATER_THAN, SORT_VALUE_EQUAL, compareFnOrder, type SortingOrder, type SortCompareFunction, copyArray } from '@dereekb/util';
+import { type ReadDateFunction, type ReadISO8601DateStringUTCFullFunction } from './date';
 
 /**
  * SortCompareFunction by Date

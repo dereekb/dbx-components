@@ -1,12 +1,12 @@
-import { E164PhoneNumber } from './phone';
+import { type E164PhoneNumber } from './phone';
 import { randomFromArrayFactory } from '../getter/getter.util';
-import { ArrayOrValue, asArray } from '../array/array';
-import { EmailAddressDomain } from './domain';
-import { EmailAddress } from './email';
-import { Factory } from '../getter';
+import { type ArrayOrValue, asArray } from '../array/array';
+import { type EmailAddressDomain } from './domain';
+import { type EmailAddress } from './email';
+import { type Factory } from '../getter';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { mergeObjects } from '../object/object.filter.pojo';
-import { incrementingNumberFactory, NumberFactory } from '../number/factory';
+import { incrementingNumberFactory, type NumberFactory } from '../number/factory';
 import { randomNumberFactory } from '../number/random';
 
 // MARK: Email

@@ -1,5 +1,5 @@
-import { GetterOrValue, GetterOrValueWithInput, FactoryWithRequiredInput, Maybe, getValueFromGetter, GetterDistinctValue } from '@dereekb/util';
-import { Observable, OperatorFunction, switchMap, of, isObservable, Subscription, Observer } from 'rxjs';
+import { type GetterOrValue, type GetterOrValueWithInput, type FactoryWithRequiredInput, type Maybe, getValueFromGetter, type GetterDistinctValue } from '@dereekb/util';
+import { type Observable, type OperatorFunction, switchMap, of, isObservable, type Subscription, type Observer } from 'rxjs';
 
 /**
  * A value that is either the value or an observable that returns the value.

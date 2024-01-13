@@ -1,16 +1,16 @@
-import { findValuesFrom, FindValuesFromInput } from '../set/set';
-import { ArrayOrValue, asArray, lastValue } from '../array/array';
+import { findValuesFrom, type FindValuesFromInput } from '../set/set';
+import { type ArrayOrValue, asArray, lastValue } from '../array/array';
 import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
-import { MinAndMaxFunction, minAndMaxFunction, MinAndMaxFunctionResult, reverseCompareFn, SortCompareFunction } from '../sort';
-import { FactoryWithRequiredInput } from '../getter/getter';
-import { Maybe } from './maybe.type';
+import { type MinAndMaxFunction, minAndMaxFunction, type MinAndMaxFunctionResult, reverseCompareFn, type SortCompareFunction } from '../sort';
+import { type FactoryWithRequiredInput } from '../getter/getter';
+import { type Maybe } from './maybe.type';
 import { separateValues } from '../grouping';
 import { readKeysToMap } from '../map/map.key';
 import { isSelectedDecisionFunctionFactory } from '../set/set.selection';
 import { iterableToArray } from '../iterable/iterable';
-import { Building } from './build';
-import { wrapNumberFunction, boundNumberFunction, WrapNumberFunction } from '../number';
+import { type Building } from './build';
+import { wrapNumberFunction, boundNumberFunction, type WrapNumberFunction } from '../number';
 import { range } from '../array/array.number';
 
 /**

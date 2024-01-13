@@ -1,4 +1,4 @@
-import { FirebaseStorageAccessorDriverRef } from './accessor';
+import { type FirebaseStorageAccessorDriverRef } from './accessor';
 
 export type FirebaseStorageDriverIdentifier = string;
 export type FirebaseStorageDriverType = 'production' | 'testing';

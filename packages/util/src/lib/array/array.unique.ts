@@ -1,6 +1,6 @@
 import { concatArrays, flattenArray, mergeArrays } from './array';
-import { PrimativeKey, ReadKeyFunction } from '../key';
-import { Maybe } from '../value/maybe.type';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type Maybe } from '../value/maybe.type';
 import { filterMaybeValues } from './array.value';
 import { addToSet, removeFromSet } from '../set/set';
 

@@ -1,5 +1,5 @@
-import { ArrayOrValue } from '../array/array';
-import { DecisionFunction } from '../value/decision';
+import { type ArrayOrValue } from '../array/array';
+import { type DecisionFunction } from '../value/decision';
 
 export interface FirstAndLastCharacterOccurrence {
   readonly first: number | -1;

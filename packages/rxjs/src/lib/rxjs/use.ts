@@ -1,4 +1,4 @@
-import { first, Observable } from 'rxjs';
+import { first, type Observable } from 'rxjs';
 
 /**
  * Convenience function to subscribe to the input observable and use the first value.

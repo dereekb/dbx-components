@@ -1,7 +1,7 @@
-import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { DecisionFunction, GetterOrValue, getValueFromGetter, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
-import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
-import { ObservableDecisionFunction } from './decision';
+import { combineLatest, filter, skipWhile, startWith, switchMap, type MonoTypeOperatorFunction, type Observable, of, type OperatorFunction, map, delay, EMPTY } from 'rxjs';
+import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe } from '@dereekb/util';
+import { asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter } from './getter';
+import { type ObservableDecisionFunction } from './decision';
 
 // MARK: Types
 export type IsCheckFunction<T = unknown> = (value: T) => Observable<boolean>;

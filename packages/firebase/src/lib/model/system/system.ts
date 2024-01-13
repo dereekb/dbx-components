@@ -1,11 +1,11 @@
-import { GrantedSysAdminRole } from '@dereekb/model';
+import { type GrantedSysAdminRole } from '@dereekb/model';
 import { AbstractFirestoreDocument } from '../../common/firestore/accessor/document';
-import { FirestoreCollection, firestoreModelIdentity } from '../../common/firestore/collection/collection';
-import { FirestoreContext } from '../../common/firestore/context';
+import { type FirestoreCollection, firestoreModelIdentity } from '../../common/firestore/collection/collection';
+import { type FirestoreContext } from '../../common/firestore/context';
 import { snapshotConverterFunctions } from '../../common/firestore/snapshot/snapshot';
-import { CollectionReference } from '../../common/firestore/types';
+import { type CollectionReference } from '../../common/firestore/types';
 import { firestorePassThroughField } from '../../common/firestore/snapshot/snapshot.field';
-import { mapObjectMap, ModelFieldMapFunctionsConfig, cachedGetter } from '@dereekb/util';
+import { mapObjectMap, type ModelFieldMapFunctionsConfig, cachedGetter } from '@dereekb/util';
 
 // MARK: Collection
 export abstract class SystemStateFirestoreCollections {

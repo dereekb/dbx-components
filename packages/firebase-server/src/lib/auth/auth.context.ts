@@ -1,6 +1,6 @@
-import { FirebaseAuthToken } from '@dereekb/firebase';
-import { AuthData } from 'firebase-functions/lib/common/providers/https';
-import * as admin from 'firebase-admin';
+import { type FirebaseAuthToken } from '@dereekb/firebase';
+import { type AuthData } from 'firebase-functions/lib/common/providers/https';
+import type * as admin from 'firebase-admin';
 
 export interface AuthDataRef {
   auth?: AuthData;

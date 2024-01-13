@@ -1,5 +1,5 @@
-import { of, timeout, tap, MonoTypeOperatorFunction, throwError, map, Observable, startWith } from 'rxjs';
-import { Getter, GetterOrValue, getValueFromGetter } from '@dereekb/util';
+import { of, timeout, tap, type MonoTypeOperatorFunction, throwError, map, type Observable, startWith } from 'rxjs';
+import { type Getter, type GetterOrValue, getValueFromGetter } from '@dereekb/util';
 import { filterMaybe } from './value';
 
 /**

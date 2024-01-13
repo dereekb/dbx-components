@@ -1,9 +1,9 @@
-import { switchMap, distinctUntilChanged, shareReplay, map, Observable, BehaviorSubject, of, combineLatest, EMPTY, filter, skip } from 'rxjs';
-import { FilterSource } from './filter';
+import { switchMap, distinctUntilChanged, shareReplay, map, type Observable, BehaviorSubject, of, combineLatest, EMPTY, filter, skip } from 'rxjs';
+import { type FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
-import { asObservable, ObservableOrValue } from '../rxjs/getter';
+import { asObservable, type ObservableOrValue } from '../rxjs/getter';
 import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
-import { Destroyable, Maybe } from '@dereekb/util';
+import { type Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '../subscription';
 
 /**

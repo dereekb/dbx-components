@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { ReadStoredData } from './storage';
+import { type ReadStoredData } from './storage';
 
 export class StoredDataError extends BaseError {
   constructor(message?: string) {

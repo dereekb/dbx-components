@@ -1,10 +1,10 @@
-import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
-import { TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE } from './iterator.page.spec';
+import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
+import { type TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE } from './iterator.page.spec';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { accumulatorFlattenPageListLoadingState, flattenAccumulatorResultItemArray } from './iteration.accumulator.rxjs';
 import { filter, first, skip } from 'rxjs';
-import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulator';
-import { PageItemIteration } from './iteration';
+import { itemAccumulator, type ItemAccumulatorInstance } from './iteration.accumulator';
+import { type PageItemIteration } from './iteration';
 import { loadingStateHasFinishedLoading } from '../loading';
 
 describe('iteration.rxjs', () => {

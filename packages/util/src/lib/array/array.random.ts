@@ -1,5 +1,5 @@
-import { Configurable } from '../type';
-import { IndexNumber } from '../value/index';
+import { type Configurable } from '../type';
+import { type IndexNumber } from '../value/index';
 
 /**
  * Returns a random value from the pre-configured values array.

@@ -1,6 +1,6 @@
-import { map, OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
-import { MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys, PrimativeKey } from '@dereekb/util';
-import { asObservable, ObservableOrValue } from './getter';
+import { map, type OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
+import { type MapKeysIntersectionObject, mapKeysIntersectionObjectToArray, mapsHaveSameKeys, type PrimativeKey } from '@dereekb/util';
+import { asObservable, type ObservableOrValue } from './getter';
 
 /**
  * OperatorFunction that pipes the input from the object with a keys observable to produce the result of mapKeysIntersectionObjectToArray.

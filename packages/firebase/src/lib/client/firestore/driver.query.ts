@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
-import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot, documentId } from 'firebase/firestore';
+import { type Observable } from 'rxjs';
+import { type ArrayOrValue, type Maybe } from '@dereekb/util';
+import { type DocumentSnapshot, getDocs, limit, query, type QueryConstraint, startAt, type Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot, documentId } from 'firebase/firestore';
 import {
   FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE,
@@ -8,7 +8,7 @@ import {
   FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE,
-  FullFirestoreQueryConstraintHandlersMapping,
+  type FullFirestoreQueryConstraintHandlersMapping,
   FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE,
@@ -18,8 +18,8 @@ import {
   FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE
 } from './../../common/firestore/query/constraint';
 import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
-import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from '../../common/firestore/driver/query';
-import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from '../../common/firestore/types';
+import { type FirestoreQueryConstraintFunctionsDriver, type FirestoreQueryDriver } from '../../common/firestore/driver/query';
+import { type Query, type QuerySnapshot, type SnapshotListenOptions, type Transaction } from '../../common/firestore/types';
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
 export interface FirebaseFirestoreQueryBuilder {

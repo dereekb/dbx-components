@@ -1,4 +1,4 @@
-import { FirestoreContextFactory, firestoreContextFactory } from '@dereekb/firebase';
+import { type FirestoreContextFactory, firestoreContextFactory } from '@dereekb/firebase';
 import { googleCloudFirestoreDrivers } from './driver';
 
 /**

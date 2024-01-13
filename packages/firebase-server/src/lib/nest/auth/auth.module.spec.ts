@@ -1,16 +1,16 @@
 import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '@dereekb/firebase';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { AuthData } from 'firebase-functions/lib/common/providers/https';
-import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
-import * as admin from 'firebase-admin';
+import { type AuthData } from 'firebase-functions/lib/common/providers/https';
+import { type DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
+import type * as admin from 'firebase-admin';
 import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.module';
 import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from '@dereekb/firebase-server/test';
-import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthUserContext } from '../../auth/auth.service';
-import { AuthClaims, AuthClaimsUpdate, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { CallableContextWithAuthData } from '../../function/context';
-import { NestContextCallableRequestWithAuth } from '../function/nest';
-import { AbstractFirebaseNestContext } from '../nest.provider';
+import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, AbstractFirebaseServerNewUserService, type FirebaseServerAuthNewUserSetupDetails, type FirebaseServerAuthUserContext } from '../../auth/auth.service';
+import { type AuthClaims, type AuthClaimsUpdate, authRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, type Maybe, objectHasNoKeys } from '@dereekb/util';
+import { type CallableContextWithAuthData } from '../../function/context';
+import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {

@@ -1,4 +1,4 @@
-import { FirebaseStorageDrivers } from '../../common/storage/driver/driver';
+import { type FirebaseStorageDrivers } from '../../common/storage/driver/driver';
 import { firebaseStorageClientAccessorDriver } from './driver.accessor';
 
 export type FirebaseStorageClientDrivers = FirebaseStorageDrivers;

@@ -1,4 +1,4 @@
-import { DATE_NOW_VALUE, DateNow, Maybe, FactoryWithInput, MapFunction, mapIdentityFunction } from '@dereekb/util';
+import { DATE_NOW_VALUE, type DateNow, type Maybe, type FactoryWithInput, type MapFunction, mapIdentityFunction } from '@dereekb/util';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
 
 export const DATE_TODAY_START_VALUE = 'today_start';

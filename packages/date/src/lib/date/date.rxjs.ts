@@ -1,7 +1,7 @@
-import { FactoryWithRequiredInput, IndexNumber, Maybe, Milliseconds, MS_IN_SECOND, protectedFactory } from '@dereekb/util';
-import { distinctUntilChanged, interval, map, Observable, SchedulerLike, startWith } from 'rxjs';
+import { type FactoryWithRequiredInput, type IndexNumber, type Maybe, type Milliseconds, MS_IN_SECOND, protectedFactory } from '@dereekb/util';
+import { distinctUntilChanged, interval, map, type Observable, type SchedulerLike, startWith } from 'rxjs';
 import { isSameDate } from './date';
-import { LogicalDateStringCode, logicalDateStringCodeDateFactory } from './date.logical';
+import { type LogicalDateStringCode, logicalDateStringCodeDateFactory } from './date.logical';
 
 export interface DateIntervalConfig {
   /**

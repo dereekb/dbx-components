@@ -1,10 +1,10 @@
 import { SubscriptionObject } from './../subscription';
-import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
+import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
 import { loadingStateHasFinishedLoading } from '../loading';
 import { filter, first, skip } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
-import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulator';
-import { TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
+import { itemAccumulator, type ItemAccumulatorInstance } from './iteration.accumulator';
+import { type TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 
 describe('ItemPageIterator', () => {
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;

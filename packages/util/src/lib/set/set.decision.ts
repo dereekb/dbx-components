@@ -1,5 +1,5 @@
-import { Building } from '../value/build';
-import { DecisionFunction } from './../value/decision';
+import { type Building } from '../value/build';
+import { type DecisionFunction } from './../value/decision';
 
 /**
  * DecisionFunction that checks whether or not the input is in the set, or the input's value is in the set.

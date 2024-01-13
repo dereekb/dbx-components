@@ -1,5 +1,5 @@
-import { MapFunction } from '../value/map';
-import { DecisionFunction } from '../value/decision';
+import { type MapFunction } from '../value/map';
+import { type DecisionFunction } from '../value/decision';
 import { copyArray } from './array';
 import { expandIndexSet, findBestIndexSetPair, findToIndexSet } from './array.index';
 import { forEachInIterable } from '../iterable/iterable';

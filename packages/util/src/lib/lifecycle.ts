@@ -1,4 +1,4 @@
-import { Maybe } from './value/maybe.type';
+import { type Maybe } from './value/maybe.type';
 
 /**
  * Object that must be "initialized".

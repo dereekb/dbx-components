@@ -1,7 +1,7 @@
 import { arrayDecision } from '../array/array.find';
-import { FieldOfType } from '../key';
-import { SetIncludesMode } from '../set/set.mode';
-import { KeyAsString } from '../type';
+import { type FieldOfType } from '../key';
+import { type SetIncludesMode } from '../set/set.mode';
+import { type KeyAsString } from '../type';
 
 export type EmptyObject = Record<string, never>;
 

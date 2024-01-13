@@ -1,4 +1,4 @@
-import { StorageDataStringType, StorageUploadOptions } from '../types';
+import { type StorageDataStringType, type StorageUploadOptions } from '../types';
 
 export function assertStorageUploadOptionsStringFormat(options?: StorageUploadOptions): StorageDataStringType {
   const stringFormat = options?.stringFormat;

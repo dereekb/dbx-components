@@ -1,5 +1,5 @@
-import { StringKeyPropertyKeys } from '@dereekb/util';
-import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, getFunctionType, HasThreeCharacters, HasThreeOrMoreCharacters, isClassLikeType, isObjectWithConstructor, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
+import { type StringKeyPropertyKeys } from '@dereekb/util';
+import { type AllCommaSeparatedKeysOfObject, type CommaSeparatedKeyCombinationsOfObject, getFunctionType, type HasThreeCharacters, type HasThreeOrMoreCharacters, isClassLikeType, isObjectWithConstructor, type IsSingleCharacter, type KeyAsString, type KeyCanBeString, type MergeReplace, type OrderedCommaSeparatedKeysOfObject, type Replace, type ReplaceType, type StringConcatenation, type StringKeyProperties } from './type';
 
 type TYPE_A = {
   aOnly: boolean;

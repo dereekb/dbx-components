@@ -8,7 +8,13 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": ["error", { "prefer": "type-imports", "fixStyle": "inline-type-imports" }],
+        "@typescript-eslint/consistent-type-exports": ["error", { "fixMixedExportsWithInlineTypeSpecifier": true }]
+      },
+      "parserOptions": {
+        "project": ["./packages/date/tsconfig.lib.json", "./packages/date/tsconfig.spec.json"]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],

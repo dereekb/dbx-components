@@ -1,4 +1,4 @@
-import { MaybeNot, Maybe, DateOrUnixDateTimeNumber, UnixDateTimeNumber } from '@dereekb/util';
+import { type MaybeNot, type Maybe, type DateOrUnixDateTimeNumber, type UnixDateTimeNumber } from '@dereekb/util';
 import { isDate } from 'date-fns';
 
 export function unixTimeNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<UnixDateTimeNumber> {

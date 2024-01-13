@@ -1,5 +1,5 @@
-import { Maybe, ServerError, ServerErrorResponse, ServerErrorResponseData } from '@dereekb/util';
-import { FirebaseError } from 'firebase/app';
+import { type Maybe, type ServerError, ServerErrorResponse, type ServerErrorResponseData } from '@dereekb/util';
+import { type FirebaseError } from 'firebase/app';
 
 export class FirebaseServerError<T extends ServerErrorResponseData = ServerErrorResponseData> extends ServerErrorResponse<T> {
   static fromFirebaseError(error: FirebaseError): FirebaseServerError {

@@ -1,9 +1,9 @@
-import { Maybe, SortCompareFunction, sortAscendingIndexNumberRefFunction, RequiredOnKeys, addToSet, ArrayOrValue, asArray, sumOfIntegersBetween, UniqueModel, IndexNumber, lastValue, FactoryWithRequiredInput, pushArrayItemsIntoArray, range, DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
+import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, addToSet, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
-import type { DateCellIndex, DateOrDateCellIndex } from './date.cell';
 import { DateCell, isValidDateCellIndex } from './date.cell';
-import { DateRange } from './date.range';
+import { type DateOrDateCellIndex, type DateCellIndex } from './date.cell';
+import { type DateRange } from './date.range';
 
 // MARK: DateCellRange
 /**

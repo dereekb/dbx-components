@@ -1,5 +1,5 @@
-import { PrimativeKey, ReadKeyFunction } from '../key';
-import { DecisionFunction } from '../value';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type DecisionFunction } from '../value';
 
 /**
  * Factory that creates a DecisionFunction using the input "selected" values. That function returns true if the value's key is considered to be included in the selected values.

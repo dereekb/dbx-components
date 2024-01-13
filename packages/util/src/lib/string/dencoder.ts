@@ -1,10 +1,10 @@
-import { Writable } from 'ts-essentials';
-import { PrimativeKey } from '../key';
-import { ArrayOrValue } from '../array/array';
+import { type Writable } from 'ts-essentials';
+import { type PrimativeKey } from '../key';
+import { type ArrayOrValue } from '../array/array';
 import { filterMaybeValues } from '../array/array.value';
-import { FactoryWithRequiredInput } from '../getter/getter';
+import { type FactoryWithRequiredInput } from '../getter/getter';
 import { forEachKeyValue, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Map object of PrimativeKey dencoder values, keyed by the encoded value.

@@ -1,4 +1,4 @@
-import { FirestoreDrivers } from '../../common/firestore/driver/driver';
+import { type FirestoreDrivers } from '../../common/firestore/driver/driver';
 import { firestoreClientAccessorDriver } from './driver.accessor';
 import { firebaseFirestoreQueryDriver } from './driver.query';
 

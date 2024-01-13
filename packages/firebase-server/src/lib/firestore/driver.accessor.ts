@@ -1,6 +1,6 @@
-import { FirestoreAccessorDriver, CollectionReference, Firestore, TransactionFunction, DocumentReference, TransactionFirestoreDocumentContextFactory, WriteBatchFirestoreDocumentContextFactory } from '@dereekb/firebase';
+import { type FirestoreAccessorDriver, type CollectionReference, type Firestore, type TransactionFunction, type DocumentReference, type TransactionFirestoreDocumentContextFactory, type WriteBatchFirestoreDocumentContextFactory } from '@dereekb/firebase';
 import { batch } from '@dereekb/util';
-import { CollectionGroup, CollectionReference as GoogleCloudCollectionReference, DocumentReference as GoogleCloudDocumentReference, Firestore as GoogleCloudFirestore } from '@google-cloud/firestore';
+import { type CollectionGroup, type CollectionReference as GoogleCloudCollectionReference, type DocumentReference as GoogleCloudDocumentReference, type Firestore as GoogleCloudFirestore } from '@google-cloud/firestore';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 import { defaultFirestoreDocumentContext } from './driver.accessor.default';
 import { transactionDocumentContext } from './driver.accessor.transaction';

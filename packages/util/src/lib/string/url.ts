@@ -1,13 +1,13 @@
-import { ArrayOrValue, asArray } from '../array/array';
-import { EmailAddress } from '../contact/email';
-import { E164PhoneNumberExtensionPair, E164PhoneNumberWithOptionalExtension, PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
-import { IndexRangeInput } from './../value/indexed';
+import { type ArrayOrValue, asArray } from '../array/array';
+import { type EmailAddress } from '../contact/email';
+import { type E164PhoneNumberExtensionPair, type E164PhoneNumberWithOptionalExtension, type PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
+import { type IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, isSlashPathFolder, mergeSlashPaths, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
-import { chainMapSameFunctions, MapFunction } from '../value/map';
-import { Maybe } from '../value/maybe.type';
+import { chainMapSameFunctions, type MapFunction } from '../value/map';
+import { type Maybe } from '../value/maybe.type';
 import { escapeStringForRegex, findAllCharacterOccurences, splitStringAtFirstCharacterOccurence } from './replace';
 import { splitJoinRemainder } from './string';
-import { TransformStringFunction } from './transform';
+import { type TransformStringFunction } from './transform';
 import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from './char';
 
 /**

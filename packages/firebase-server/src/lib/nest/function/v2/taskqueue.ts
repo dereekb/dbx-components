@@ -1,7 +1,7 @@
-import { PromiseOrValue } from '@dereekb/util';
-import { TaskQueueFunction, Request } from 'firebase-functions/v2/tasks';
-import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
-import { NestContextRequest } from '../nest';
+import { type PromiseOrValue } from '@dereekb/util';
+import { type TaskQueueFunction, type Request } from 'firebase-functions/v2/tasks';
+import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
+import { type NestContextRequest } from '../nest';
 
 export type TaskQueueNestContextRequest<N, I> = NestContextRequest<N, Request<I>>;
 

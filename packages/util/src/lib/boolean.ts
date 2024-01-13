@@ -1,4 +1,4 @@
-import { Factory } from './getter/getter';
+import { type Factory } from './getter/getter';
 
 // MARK: Reduce
 export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {

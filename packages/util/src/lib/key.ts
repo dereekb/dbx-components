@@ -1,8 +1,6 @@
-import { ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray } from './array/array';
-import { setContainsAllValues } from './set/set';
-import { EqualityComparatorFunction, safeEqualityComparatorFunction } from './value/comparator';
-import { MapFunction } from './value/map';
-import { Maybe } from './value/maybe.type';
+import { type ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray } from './array/array';
+import { type MapFunction } from './value/map';
+import { type Maybe } from './value/maybe.type';
 
 /**
  * A key made up of either a string or number value.

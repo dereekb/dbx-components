@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { BehaviorSubject } from 'rxjs';
 import { cleanup } from './lifecycle';
-import { promiseReference, PromiseReference } from '@dereekb/util';
+import { promiseReference, type PromiseReference } from '@dereekb/util';
 
 describe('cleanup()', () => {
   let sub: SubscriptionObject;

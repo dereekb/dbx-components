@@ -1,4 +1,4 @@
-import { OperatorFunction, identity, MonoTypeOperatorFunction, map } from 'rxjs';
+import { type OperatorFunction, identity, type MonoTypeOperatorFunction, map } from 'rxjs';
 import { onMatchDelta } from './delta';
 
 /**

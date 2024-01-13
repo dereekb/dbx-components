@@ -1,16 +1,16 @@
-import { ClassType, Getter, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
-import { DynamicModule, FactoryProvider, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
+import { type ClassType, type Getter, asGetter, makeGetter, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
+import { type DynamicModule, type FactoryProvider, type INestApplication, type INestApplicationContext, type NestApplicationOptions, type Provider, type Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
-import * as admin from 'firebase-admin';
+import type * as admin from 'firebase-admin';
 import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
-import { StorageBucketId } from '@dereekb/firebase';
+import { type StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
-import { ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 export interface NestServer {
   server: express.Express;

@@ -1,5 +1,5 @@
 import { setsAreEquivalent } from '../set/set';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 import { areEqualPOJOValues, objectFieldEqualityChecker } from './object.equal';
 
 describe('areEqualObjectValues', () => {

@@ -1,5 +1,5 @@
-import { DateRRule } from './date.rrule.extension';
-import { DateRRuleInstance, DateRRuleUtility } from '@dereekb/date';
+import { type DateRRule } from './date.rrule.extension';
+import { type DateRRuleInstance, DateRRuleUtility } from '@dereekb/date';
 
 describe('DateRRule', () => {
   const currentDate = new Date('2018-10-01T00:00:00.000Z');

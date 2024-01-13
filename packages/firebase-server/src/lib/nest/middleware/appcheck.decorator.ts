@@ -1,6 +1,6 @@
-import { Request } from 'express';
-import { AppCheckRequest } from './appcheck';
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { type Request } from 'express';
+import { type AppCheckRequest } from './appcheck';
+import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 
 /**
  * nestjs decorator that will instruct FirebaseAppCheckMiddleware to skip AppCheck for related requests.

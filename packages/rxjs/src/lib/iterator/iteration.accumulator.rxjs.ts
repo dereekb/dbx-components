@@ -1,8 +1,8 @@
 import { lastValue, flattenArray } from '@dereekb/util';
 import { filterMaybe, scanBuildArray } from '../rxjs';
-import { combineLatest, map, Observable, shareReplay, skipWhile } from 'rxjs';
-import { mapLoadingStateResults, mapLoadingStateValueFunction, PageListLoadingState } from '../loading';
-import { ItemAccumulator, ItemAccumulatorValuePair, PageItemAccumulator } from './iteration.accumulator';
+import { combineLatest, map, type Observable, shareReplay, skipWhile } from 'rxjs';
+import { mapLoadingStateResults, mapLoadingStateValueFunction, type PageListLoadingState } from '../loading';
+import { type ItemAccumulator, type ItemAccumulatorValuePair, type PageItemAccumulator } from './iteration.accumulator';
 
 /**
  * Used for ItemAccumulators that have an array of results returned per page instead of a single item.

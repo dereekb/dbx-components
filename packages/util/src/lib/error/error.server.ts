@@ -1,5 +1,5 @@
-import { Maybe } from '../value/maybe.type';
-import { ReadableError, ReadableDataError, StringErrorCode, CodedError } from './error';
+import { type Maybe } from '../value/maybe.type';
+import { type ReadableError, type ReadableDataError, type StringErrorCode, type CodedError } from './error';
 
 /**
  * The expected error object returned from the server.

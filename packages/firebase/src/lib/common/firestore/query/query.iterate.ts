@@ -1,8 +1,8 @@
-import { GetterOrValue, PromiseOrValue, IndexRef, Maybe, asGetter, lastValue, PerformAsyncTasksConfig, performAsyncTasks, batch, IndexNumber, PerformAsyncTasksResult } from '@dereekb/util';
-import { FirestoreDocument, FirestoreDocumentSnapshotDataPair, documentDataWithIdAndKey, LimitedFirestoreDocumentAccessor } from '../accessor';
-import { QueryDocumentSnapshot, QuerySnapshot, DocumentSnapshot } from '../types';
-import { FirestoreQueryConstraint, startAfter, limit } from './constraint';
-import { FirestoreQueryFactory } from './query';
+import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult } from '@dereekb/util';
+import { type FirestoreDocument, type FirestoreDocumentSnapshotDataPair, documentDataWithIdAndKey, type LimitedFirestoreDocumentAccessor } from '../accessor';
+import { type QueryDocumentSnapshot, type QuerySnapshot, type DocumentSnapshot } from '../types';
+import { type FirestoreQueryConstraint, startAfter, limit } from './constraint';
+import { type FirestoreQueryFactory } from './query';
 
 // MARK: Iterate Snapshot Pairs
 /**

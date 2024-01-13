@@ -3,7 +3,7 @@ import { Expose, plainToInstance, Type } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
 import { setMinutes, setHours, addSeconds } from 'date-fns';
 import { dateCellTiming, DateCellTiming, isValidDateCellTiming } from './date.cell';
-import { DateCellRange } from './date.cell.index';
+import { type DateCellRange } from './date.cell.index';
 import { IsValidDateCellRange, IsValidDateCellRangeSeries, IsValidDateCellTiming } from './date.cell.validator';
 
 class TestDateCellTimingModelClass {

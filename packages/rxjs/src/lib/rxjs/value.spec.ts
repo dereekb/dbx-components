@@ -1,5 +1,5 @@
-import { Maybe } from '@dereekb/util';
-import { of, Observable } from 'rxjs';
+import { type Maybe } from '@dereekb/util';
+import { of, type Observable } from 'rxjs';
 import { switchMapToDefault } from './value';
 
 describe('switchMapToDefault()', () => {

@@ -1,6 +1,6 @@
-import { PageNumber } from '@dereekb/util';
-import { map, Observable, OperatorFunction } from 'rxjs';
-import { ListLoadingState, PageLoadingState } from './loading.state';
+import { type PageNumber } from '@dereekb/util';
+import { map, type Observable, type OperatorFunction } from 'rxjs';
+import { type ListLoadingState, type PageLoadingState } from './loading.state';
 import { loadingStateFromObs } from './loading.state.rxjs';
 
 // TODO: breaking change refactor: Switch the names of these functions below, so the isListLoadingStateEmpty is the non-operator function.

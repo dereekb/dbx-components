@@ -20,9 +20,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "peerDependencies": {
-    "@firebase/firestore": "4.4.0",
     "@dereekb/util": "*",
-    "@firebase/storage": "0.12.0",
     "@dereekb/rxjs": "*",
     "@dereekb/model": "*",
     "@dereekb/date": "*",

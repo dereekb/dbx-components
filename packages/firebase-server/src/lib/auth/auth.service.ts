@@ -1,12 +1,12 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId, FirebaseAuthNewUserClaimsData, FirebaseAuthSetupPassword, FirebaseAuthResetUserPasswordClaimsData, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY } from '@dereekb/firebase';
-import { Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
-import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
-import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
+import type * as functions from 'firebase-functions';
+import type * as admin from 'firebase-admin';
+import { type FirebaseAuthContextInfo, type FirebaseAuthDetails, type FirebaseAuthUserId, type FirebaseAuthNewUserClaimsData, type FirebaseAuthSetupPassword, type FirebaseAuthResetUserPasswordClaimsData, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY } from '@dereekb/firebase';
+import { type Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, type AuthClaims, type AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, type ArrayOrValue, type AuthRole, forEachKeyValue, type ObjectMap, type AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, type AuthClaimsObject, type Maybe, AUTH_TOS_SIGNED_ROLE, type EmailAddress, type E164PhoneNumber, randomNumberFactory, type PasswordString } from '@dereekb/util';
+import { assertIsContextWithAuthData, type CallableContextWithAuthData } from '../function/context';
+import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
-import { AuthUserIdentifier } from '@dereekb/dbx-core';
+import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' }); // 6 digits
 

@@ -1,7 +1,7 @@
-import { FirebaseStorageContextFactory, firebaseStorageContextFactory } from '@dereekb/firebase';
+import { type FirebaseStorageContextFactory, firebaseStorageContextFactory } from '@dereekb/firebase';
 import { googleCloudFirebaseStorageDrivers } from './driver';
-import { Storage as FirebaseAdminStorage } from 'firebase-admin/lib/storage/storage';
-import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
+import { type Storage as FirebaseAdminStorage } from 'firebase-admin/lib/storage/storage';
+import { type Storage as GoogleCloudStorage } from '@google-cloud/storage';
 
 /**
  * Creates a FirestoreContextFactory that uses the @google-cloud/storage package.

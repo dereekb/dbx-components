@@ -1,9 +1,9 @@
-import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StorageListFilesOptions, StorageListFilesResult, StorageListItemResult } from '../../common/storage/driver/accessor';
-import { firebaseStorageFilePathFromStorageFilePath, StoragePath } from '../../common/storage/storage';
-import { FirebaseStorage, StorageClientUploadBytesInput, StorageDataString, StorageDeleteFileOptions, StorageUploadOptions } from '../../common/storage/types';
-import { ListResult, list, StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
+import { type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
+import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
+import { type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
+import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
-import { ErrorInput, errorMessageContainsString, Maybe } from '@dereekb/util';
+import { type ErrorInput, errorMessageContainsString, type Maybe } from '@dereekb/util';
 
 export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
   return errorMessageContainsString(input, 'storage/object-not-found');

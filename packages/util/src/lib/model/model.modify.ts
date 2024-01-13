@@ -1,8 +1,8 @@
-import { ArrayOrValue, asArray } from '../array/array';
+import { type ArrayOrValue, asArray } from '../array/array';
 import { filterMaybeValues } from '../array/array.value';
-import { Maybe, MaybeMap } from '../value/maybe.type';
-import { maybeMergeModifiers, ModifierFunction } from '../value/modifier';
-import { ModelConversionOptions, ModelMapFunction, ModelMapFunctions } from './model.conversion';
+import { type Maybe, type MaybeMap } from '../value/maybe.type';
+import { maybeMergeModifiers, type ModifierFunction } from '../value/modifier';
+import { type ModelConversionOptions, type ModelMapFunction, type ModelMapFunctions } from './model.conversion';
 
 export type ModelInputDataModifier<D extends object> = {
   modifyData: ModifierFunction<D>;

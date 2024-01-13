@@ -1,5 +1,5 @@
-import { NumberFactory } from './factory';
-import { roundingFunction, RoundingInput } from './round';
+import { type NumberFactory } from './factory';
+import { roundingFunction, type RoundingInput } from './round';
 
 /**
  * Factory that generates random numbers.

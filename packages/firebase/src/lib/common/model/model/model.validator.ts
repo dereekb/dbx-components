@@ -1,5 +1,5 @@
-import { ObjectWithConstructor } from '@dereekb/util';
-import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
+import { type ObjectWithConstructor } from '@dereekb/util';
+import { type ValidationArguments, type ValidationOptions, registerDecorator } from 'class-validator';
 import { isFirestoreModelId, isFirestoreModelKey } from '../../firestore/collection/collection';
 
 /**

@@ -1,6 +1,6 @@
-import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
-import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
-import { mapItemIteration, MappedItemIterationInstance } from '@dereekb/rxjs';
+import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
+import { type TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
+import { mapItemIteration, type MappedItemIterationInstance } from '@dereekb/rxjs';
 import { first } from 'rxjs';
 
 describe('iteration.mapped', () => {

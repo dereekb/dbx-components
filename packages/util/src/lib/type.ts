@@ -1,5 +1,5 @@
-import { Merge, NonNever, PickProperties, StrictOmit, UnionToIntersection, Writable } from 'ts-essentials';
-import { Maybe } from './value/maybe.type';
+import { type Merge, type NonNever, type PickProperties, type StrictOmit, type UnionToIntersection, type Writable } from 'ts-essentials';
+import { type Maybe } from './value/maybe.type';
 
 /**
  * Boolean, string or number value.
