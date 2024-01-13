@@ -3,10 +3,11 @@
   "version": "10.0.5",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "main": "./src/index.js",
-      "require": "./src/index.js",
-      "default": "./src/index.js"
+      "types": "./index.cjs.d.ts",
+      "main": "./index.cjs.js",
+      "module": "./index.esm.js",
+      "import": "./index.cjs.mjs",
+      "default": "./index.cjs.js"
     },
     "./test": {
       "types": "./test/index.d.ts",

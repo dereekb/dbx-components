@@ -23,14 +23,29 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/packages/firebase-server",
-        "tsConfig": "packages/firebase-server/tsconfig.lib.json",
-        "packageJson": "packages/firebase-server/package.json",
         "main": "packages/firebase-server/src/index.ts",
-        "assets": ["packages/firebase-server/*.md", "LICENSE"]
+        "tsConfig": "packages/firebase-server/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/firebase-server/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/firebase-server/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
       }
     },
     "lint": {

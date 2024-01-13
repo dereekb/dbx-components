@@ -1,4 +1,3 @@
-import { inAuthContext } from '@dereekb/firebase-server';
 import { OnCallDevelopmentParams, RUN_DEV_FUNCTION_APP_FUNCTION_KEY, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { CallableHttpFunction, RunnableHttpFunction } from '../../function/type';
 import { NestAppPromiseGetter } from '../app';
@@ -9,6 +8,7 @@ import { AbstractFirebaseNestContext } from '../nest.provider';
 import { onCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from './development.function';
 import { makeScheduledFunctionDevelopmentFunction } from './development.schedule.function';
 import { unavailableError } from '../../function/error';
+import { inAuthContext } from '../function/call';
 
 export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap> {
   readonly enabled: boolean;
