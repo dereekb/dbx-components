@@ -17,6 +17,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/rxjs",
         "outputPath": "dist/packages/rxjs",
         "main": "packages/rxjs/src/index.ts",
         "tsConfig": "packages/rxjs/tsconfig.lib.json",

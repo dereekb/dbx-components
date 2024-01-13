@@ -1,26 +1,24 @@
 {
   "name": "@dereekb/firebase-server",
   "version": "10.0.5",
+  "type": "commonjs",
   "exports": {
     ".": {
       "types": "./index.cjs.d.ts",
-      "main": "./index.cjs.js",
-      "module": "./index.esm.js",
-      "import": "./index.cjs.mjs",
+      "import": "./index.esm.js",
       "default": "./index.cjs.js"
     },
     "./test": {
-      "types": "./test/src/index.d.ts",
-      "main": "./test/src/index.js",
-      "require": "./test/src/index.js",
-      "default": "./test/src/index.js"
+      "types": "./test/index.cjs.d.ts",
+      "import": "./test/index.esm.js",
+      "default": "./test/index.cjs.js"
     },
     "./mailgun": {
-      "types": "./mailgun/src/index.d.ts",
-      "main": "./mailgun/src/index.js",
-      "require": "./mailgun/src/index.js",
-      "default": "./mailgun/src/index.js"
-    }
+      "types": "./mailgun/index.cjs.d.ts",
+      "import": "./mailgun/index.esm.js",
+      "default": "./mailgun/index.cjs.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

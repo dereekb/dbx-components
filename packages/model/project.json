@@ -17,6 +17,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/model",
         "outputPath": "dist/packages/model",
         "main": "packages/model/src/index.ts",
         "tsConfig": "packages/model/tsconfig.lib.json",

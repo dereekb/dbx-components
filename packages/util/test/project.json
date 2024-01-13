@@ -9,6 +9,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/util/test",
         "outputPath": "dist/packages/util/test",
         "main": "packages/util/test/src/index.ts",
         "tsConfig": "packages/util/test/tsconfig.lib.json",

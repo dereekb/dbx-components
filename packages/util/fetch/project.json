@@ -9,6 +9,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/util/fetch",
         "outputPath": "dist/packages/util/fetch",
         "main": "packages/util/fetch/src/index.ts",
         "tsConfig": "packages/util/fetch/tsconfig.lib.json",

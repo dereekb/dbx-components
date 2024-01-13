@@ -27,6 +27,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase-server",
         "outputPath": "dist/packages/firebase-server",
         "main": "packages/firebase-server/src/index.ts",
         "tsConfig": "packages/firebase-server/tsconfig.lib.json",
