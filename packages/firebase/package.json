@@ -1,24 +1,26 @@
 {
   "name": "@dereekb/firebase",
-  "version": "10.0.6",
-  "type": "module",
+  "version": "10.0.7",
   "exports": {
     ".": {
-      "types": "./index.cjs.d.ts",
-      "main": "./index.cjs.js",
-      "module": "./index.esm.js",
-      "import": "./index.cjs.mjs",
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js",
+        "import": "./index.mjs"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
       "default": "./index.cjs.js"
     },
     "./test": {
-      "types": "./test/index.d.ts",
-      "main": "./test/index.js",
-      "require": "./test/index.js",
-      "default": "./test/index.js"
+      "types": "./test/src/index.d.ts",
+      "main": "./test/src/index.js",
+      "require": "./test/src/index.js",
+      "default": "./test/src/index.js"
     }
   },
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
   "peerDependencies": {
     "@dereekb/util": "*",
     "@dereekb/rxjs": "*",

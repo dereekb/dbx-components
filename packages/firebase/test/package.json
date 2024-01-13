@@ -1,5 +1,11 @@
 {
   "name": "@dereekb/firebase/test",
-  "version": "10.0.6",
-  "type": "commonjs"
+  "version": "10.0.7",
+  "type": "commonjs",
+  "peerDependencies": {
+    "@dereekb/util": "*",
+    "@dereekb/firebase": "*",
+    "@dereekb/date": "*",
+    "@dereekb/rxjs": "*"
+  }
 }

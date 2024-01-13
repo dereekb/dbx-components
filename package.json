@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "10.0.6",
+  "version": "10.0.7",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -121,7 +121,6 @@
     "@types/mapbox-gl": "^2.7.5",
     "@types/mockdate": "^3.0.0",
     "@types/node": "~18.11.9",
-    "@types/node-fetch": "^2.6.2",
     "@types/segment-analytics": "^0.0.34",
     "@typescript-eslint/eslint-plugin": "5.62.0",
     "@typescript-eslint/parser": "5.62.0",

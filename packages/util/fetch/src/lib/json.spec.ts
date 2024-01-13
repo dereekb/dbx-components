@@ -1,5 +1,5 @@
-import { WebsiteDomain, WebsitePath } from '@dereekb/util';
-import { FetchService } from './fetch';
+import { type WebsiteDomain, type WebsitePath } from '@dereekb/util';
+import { type FetchService } from './fetch';
 import { fetchJsonFunction } from './json';
 import { nodeFetchService } from './provider';
 
