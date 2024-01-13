@@ -1,4 +1,4 @@
-import { MapFunction } from '../value/map';
+import { type MapFunction } from '../value/map';
 
 /**
  * An object with values of a specific type keyed by either string or number or symbols.

@@ -1,9 +1,9 @@
-import { Maybe, Destroyable } from '@dereekb/util';
-import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, Observable, of } from 'rxjs';
+import { type Maybe, type Destroyable } from '@dereekb/util';
+import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, type Observable, of } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
 import { filterMaybe } from '../rxjs/value';
-import { LoadingContext, LoadingContextEvent } from './loading.context';
-import { beginLoading, LoadingState } from './loading.state';
+import { type LoadingContext, type LoadingContextEvent } from './loading.context';
+import { beginLoading, type LoadingState } from './loading.state';
 
 export interface AbstractLoadingStateEvent<T = unknown> extends LoadingContextEvent {
   value?: Maybe<T>;

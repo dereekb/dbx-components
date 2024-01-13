@@ -1,4 +1,4 @@
-import { TransformAndValidateFunctionResult } from '@dereekb/model';
+import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 
 export type FirebaseFunctionCreateAction<P extends object, T, I = void> = I extends void ? TransformAndValidateFunctionResult<P, () => Promise<T>> : TransformAndValidateFunctionResult<P, (input: I) => Promise<T>>;
 export type AsyncFirebaseFunctionCreateAction<P extends object, T, I = void> = Promise<FirebaseFunctionCreateAction<P, T, I>>;

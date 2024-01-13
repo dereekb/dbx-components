@@ -1,5 +1,5 @@
-import { FilterWithoutPresetString, FilterWithPreset } from './filter';
-import { map, OperatorFunction } from 'rxjs';
+import { type FilterWithoutPresetString, type FilterWithPreset } from './filter';
+import { map, type OperatorFunction } from 'rxjs';
 
 export type MapFilterWithPresetFn<F extends FilterWithPreset> = (filter: F) => FilterWithoutPresetString<F>;
 

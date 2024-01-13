@@ -1,5 +1,5 @@
 import { hasValueOrNotEmpty, hasNonNullValue } from '../value/maybe';
-import { Maybe, MaybeNot } from '../value/maybe.type';
+import { type Maybe, type MaybeNot } from '../value/maybe.type';
 
 /**
  * Filters all maybe values from the input array. If a maybe value is input, returns an empty array.

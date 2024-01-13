@@ -13,13 +13,39 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/browser",
         "outputPath": "dist/packages/browser",
         "main": "packages/browser/src/index.ts",
         "tsConfig": "packages/browser/tsconfig.lib.json",
-        "assets": ["packages/browser/*.md", "LICENSE"]
+        "compiler": "babel",
+        "project": "packages/browser/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/browser/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
       }
     },
     "lint": {

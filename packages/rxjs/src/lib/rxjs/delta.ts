@@ -1,4 +1,4 @@
-import { filter, map, MonoTypeOperatorFunction, Observable, scan } from 'rxjs';
+import { filter, map, type MonoTypeOperatorFunction, type Observable, scan } from 'rxjs';
 
 /**
  * onDelta function configuration.

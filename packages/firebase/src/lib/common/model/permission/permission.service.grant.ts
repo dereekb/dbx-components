@@ -1,8 +1,8 @@
-import { FirestoreDocument } from './../../firestore/accessor/document';
-import { fullAccessRoleMap, GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
-import { AsyncDecisionFunction, AuthRole, Getter, GetterOrValue, Maybe, PromiseOrValue, setContainsAllValues, IterableOrValue, iterableToArray, getValueFromGetter } from '@dereekb/util';
-import { FirebaseModelContext } from '../context';
-import { UserRelated } from '../../../model/user';
+import { type FirestoreDocument } from './../../firestore/accessor/document';
+import { fullAccessRoleMap, type GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
+import { type AsyncDecisionFunction, type AuthRole, type Getter, type GetterOrValue, type Maybe, type PromiseOrValue, setContainsAllValues, type IterableOrValue, iterableToArray, getValueFromGetter } from '@dereekb/util';
+import { type FirebaseModelContext } from '../context';
+import { type UserRelated } from '../../../model/user';
 
 // MARK: Admin
 /**

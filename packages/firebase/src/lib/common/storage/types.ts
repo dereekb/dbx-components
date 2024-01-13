@@ -1,4 +1,4 @@
-import { ISO8601DateString } from '@dereekb/util';
+import { type ISO8601DateString } from '@dereekb/util';
 
 // MARK: Storage
 // These types are provided to avoid us from using the "any".

@@ -1,8 +1,8 @@
-import { CallableRequest } from 'firebase-functions/v2/https';
+import { type CallableRequest } from 'firebase-functions/v2/https';
 import { https } from 'firebase-functions/v2';
-import { CallableHttpFunction } from '../../../function/type';
-import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
-import { OnCallWithNestApplication, OnCallWithNestContext, setNestContextOnRequest } from '../call';
+import { type CallableHttpFunction } from '../../../function/type';
+import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
+import { type OnCallWithNestApplication, type OnCallWithNestContext, setNestContextOnRequest } from '../call';
 
 // NOTE: If you're looking for onRequest handling, that is usually handled by Nest and configured with the top-level onRequest by passing express. There is no factory method.
 

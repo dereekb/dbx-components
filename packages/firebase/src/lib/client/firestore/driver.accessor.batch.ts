@@ -1,5 +1,5 @@
-import { DocumentReference, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from 'firebase/firestore';
-import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
+import { type DocumentReference, type WriteBatch as FirebaseFirestoreWriteBatch, type UpdateData as FirestoreUpdateData } from 'firebase/firestore';
+import { type FirestoreDocumentContext, type UpdateData, type WithFieldValue, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
 // MARK: Accessor

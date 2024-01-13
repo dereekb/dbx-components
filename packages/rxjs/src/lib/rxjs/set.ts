@@ -1,5 +1,5 @@
-import { Maybe, setContainsAllValues, setContainsAnyValue, setContainsNoneOfValue, PrimativeKey, ReadValueFunction, hasSameValues, EqualityComparatorFunction, compareEqualityWithValueFromItemsFunction } from '@dereekb/util';
-import { distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from 'rxjs';
+import { type Maybe, setContainsAllValues, setContainsAnyValue, setContainsNoneOfValue, type PrimativeKey, type ReadValueFunction, hasSameValues, type EqualityComparatorFunction, compareEqualityWithValueFromItemsFunction } from '@dereekb/util';
+import { distinctUntilChanged, type MonoTypeOperatorFunction, type Observable, type OperatorFunction } from 'rxjs';
 import { combineLatestMapFrom } from './value';
 
 export function setContainsAllValuesFrom<T>(valuesObs: Observable<Maybe<Iterable<T>>>): OperatorFunction<Set<T>, boolean> {

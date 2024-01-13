@@ -1,9 +1,8 @@
-import { ISO8601DayString } from '@dereekb/util';
+import { parseISO8601DayStringToUTCDate, type ISO8601DayString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsEnum } from 'class-validator';
 import { daysToMinutes } from './date';
 import { DateDurationSpan } from './date.duration';
-import { parseISO8601DayStringToUTCDate } from './date.format';
 import { dateTimezoneUtcNormal } from './date.timezone';
 
 /**

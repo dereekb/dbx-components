@@ -1,7 +1,17 @@
 {
   "name": "@dereekb/date",
-  "version": "10.0.5",
-  "type": "commonjs",
+  "version": "10.0.6",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.cjs.d.ts",
+      "import": "./index.esm.js",
+      "default": "./index.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./index.cjs.d.ts",
+  "types": "./index.cjs.js",
   "peerDependencies": {
     "@dereekb/util": "*",
     "class-transformer": "^0.5.1",

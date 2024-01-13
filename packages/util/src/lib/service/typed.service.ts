@@ -1,4 +1,4 @@
-import { asGetter, Getter, GetterOrValue } from '../getter/getter';
+import { asGetter, type Getter, type GetterOrValue } from '../getter/getter';
 import { forEachKeyValue } from '../object/object.filter.tuple';
 
 /**

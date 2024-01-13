@@ -1,5 +1,5 @@
-import { FactoryWithInput, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
-import { DocumentReference, FirestoreDataConverter } from '../types';
+import { type FactoryWithInput, type FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
+import { type DocumentReference, type FirestoreDataConverter } from '../types';
 
 /**
  * Factory used to provide an FirestoreDataConverter based on the input reference.

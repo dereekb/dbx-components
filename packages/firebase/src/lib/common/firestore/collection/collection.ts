@@ -1,24 +1,24 @@
-import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, QueryLikeReferenceRef } from '../reference';
+import { type CollectionReferenceRef, type DocumentReferenceRef, type FirestoreContextReference, type QueryLikeReferenceRef } from '../reference';
 import {
-  FirestoreDocument,
-  FirestoreDocumentAccessorFactory,
-  FirestoreDocumentAccessorFactoryFunction,
-  FirestoreDocumentAccessorFactoryConfig,
+  type FirestoreDocument,
+  type FirestoreDocumentAccessorFactory,
+  type FirestoreDocumentAccessorFactoryFunction,
+  type FirestoreDocumentAccessorFactoryConfig,
   firestoreDocumentAccessorFactory,
-  FirestoreDocumentAccessorForTransactionFactory,
-  FirestoreDocumentAccessorForWriteBatchFactory,
+  type FirestoreDocumentAccessorForTransactionFactory,
+  type FirestoreDocumentAccessorForWriteBatchFactory,
   firestoreDocumentAccessorContextExtension,
-  LimitedFirestoreDocumentAccessorFactory,
-  LimitedFirestoreDocumentAccessorForTransactionFactory,
-  LimitedFirestoreDocumentAccessorForWriteBatchFactory,
-  LimitedFirestoreDocumentAccessor,
-  FirestoreDocumentAccessor
+  type LimitedFirestoreDocumentAccessorFactory,
+  type LimitedFirestoreDocumentAccessorForTransactionFactory,
+  type LimitedFirestoreDocumentAccessorForWriteBatchFactory,
+  type LimitedFirestoreDocumentAccessor,
+  type FirestoreDocumentAccessor
 } from '../accessor/document';
-import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
-import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
-import { FirestoreDrivers } from '../driver/driver';
-import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString, takeFront } from '@dereekb/util';
+import { type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
+import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
+import { type FirestoreDrivers } from '../driver/driver';
+import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
+import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.

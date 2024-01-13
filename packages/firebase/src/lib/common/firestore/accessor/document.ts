@@ -2,18 +2,18 @@
 // any is used with intent here, as the recursive AbstractFirestoreDocument requires its use to terminate.
 
 import { lazyFrom } from '@dereekb/rxjs';
-import { Observable } from 'rxjs';
-import { FirestoreAccessorDriverRef } from '../driver/accessor';
-import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
-import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter } from '../types';
-import { FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, FirestoreAccessorStreamMode, snapshotStreamDataForAccessor, snapshotStreamForAccessor } from './accessor';
-import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
-import { FirestoreDocumentContext } from './context';
-import { build, Building, Maybe } from '@dereekb/util';
-import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
-import { InterceptAccessorFactoryFunction } from './accessor.wrap';
+import { type Observable } from 'rxjs';
+import { type FirestoreAccessorDriverRef } from '../driver/accessor';
+import { type FirestoreCollectionNameRef, type FirestoreModelId, type FirestoreModelIdentityCollectionName, type FirestoreModelIdentityModelType, type FirestoreModelIdentityRef, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from './../collection/collection';
+import { type DocumentReference, type CollectionReference, type Transaction, type WriteBatch, type DocumentSnapshot, type SnapshotOptions, type WriteResult, type FirestoreDataConverter } from '../types';
+import { type FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, type FirestoreDocumentDataAccessor, type FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, type FirestoreAccessorStreamMode, snapshotStreamDataForAccessor, snapshotStreamForAccessor } from './accessor';
+import { type CollectionReferenceRef, type DocumentReferenceRef, type FirestoreContextReference, type FirestoreDataConverterRef } from '../reference';
+import { type FirestoreDocumentContext } from './context';
+import { build, type Building, type Maybe } from '@dereekb/util';
+import { type FirestoreModelTypeRef, type FirestoreModelIdentity, type FirestoreModelTypeModelIdentityRef } from '../collection/collection';
+import { type InterceptAccessorFactoryFunction } from './accessor.wrap';
 import { incrementUpdateWithAccessorFunction } from './increment';
-import { FirestoreDataConverterFactory, FirestoreDataConverterFactoryRef, InterceptFirestoreDataConverterFactory } from './converter';
+import { type FirestoreDataConverterFactory, type FirestoreDataConverterFactoryRef, type InterceptFirestoreDataConverterFactory } from './converter';
 
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;

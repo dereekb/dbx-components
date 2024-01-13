@@ -1,9 +1,9 @@
-import { ArrayOrValue, asArray, mergeModifiers, ModifierFunction, cachedGetter } from '@dereekb/util';
-import { UserRelated } from '../../../model/user';
-import { DocumentReferenceRef } from '../reference';
-import { SetOptionsMerge, SetOptionsMergeFields, DocumentData, PartialWithFieldValue, SetOptions, WithFieldValue } from '../types';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorCreateFunction, FirestoreDocumentDataAccessorSetFunction } from './accessor';
-import { AbstractFirestoreDocumentDataAccessorWrapper, interceptAccessorFactoryFunction, InterceptAccessorFactoryFunction } from './accessor.wrap';
+import { type ArrayOrValue, asArray, mergeModifiers, type ModifierFunction, cachedGetter } from '@dereekb/util';
+import { type UserRelated } from '../../../model/user';
+import { type DocumentReferenceRef } from '../reference';
+import { type SetOptionsMerge, type SetOptionsMergeFields, type DocumentData, type PartialWithFieldValue, type SetOptions, type WithFieldValue } from '../types';
+import { type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorCreateFunction, type FirestoreDocumentDataAccessorSetFunction } from './accessor';
+import { AbstractFirestoreDocumentDataAccessorWrapper, interceptAccessorFactoryFunction, type InterceptAccessorFactoryFunction } from './accessor.wrap';
 
 // MARK: Set Wrapper
 /**

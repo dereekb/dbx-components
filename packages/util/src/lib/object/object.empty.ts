@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 import { hasValueOrNotEmpty } from '../value/maybe';
 
 /**

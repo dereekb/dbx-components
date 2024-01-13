@@ -1,4 +1,4 @@
-import { AddressLineString, CityString, StateString, StateCodeString, ZipCodeString, UnitedStatesAddress, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
+import { type AddressLineString, type CityString, type StateString, type StateCodeString, type ZipCodeString, type UnitedStatesAddress, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 

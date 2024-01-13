@@ -1,4 +1,4 @@
-import { FirestoreContextFactory, firestoreContextFactory } from '../../common/firestore/context';
+import { type FirestoreContextFactory, firestoreContextFactory } from '../../common/firestore/context';
 import { firebaseFirestoreClientDrivers } from './driver';
 
 /**

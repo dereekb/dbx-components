@@ -1,5 +1,5 @@
-import { ArrayOrValue, forEachWithArray } from '../array';
-import { Maybe } from './maybe.type';
+import { type ArrayOrValue, forEachWithArray } from '../array';
+import { type Maybe } from './maybe.type';
 
 /**
  * Modifier key

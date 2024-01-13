@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
-import { asyncPusher, AsyncPusher, asyncPusherCache } from './rxjs.async';
+import { asyncPusher, type AsyncPusher, asyncPusherCache } from './rxjs.async';
 
 describe('async pusher', () => {
   let pusher: AsyncPusher<number>;

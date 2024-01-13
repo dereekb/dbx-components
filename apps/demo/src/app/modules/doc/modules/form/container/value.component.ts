@@ -32,7 +32,7 @@ import {
   numberSliderField
 } from '@dereekb/dbx-form';
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
-import { Maybe, TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
+import { type Maybe, type TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { BehaviorSubject, delay, of } from 'rxjs';
 import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate } from '@dereekb/date';
 

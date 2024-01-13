@@ -1,9 +1,9 @@
 import * as functions from 'firebase-functions';
-import { INestApplicationContext } from '@nestjs/common';
-import { MakeNestContext, NestApplicationPromiseGetter } from '../../nest.provider';
-import { NestApplicationScheduleConfiguredFunction, NestApplicationScheduleConfiguredFunctionFactory, OnScheduleConfig, OnScheduleWithNestApplication, OnScheduleWithNestApplicationRequest, OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
-import { cronExpressionRepeatingEveryNMinutes, CronExpression, mergeObjects } from '@dereekb/util';
-import { Buildable } from 'ts-essentials';
+import { type INestApplicationContext } from '@nestjs/common';
+import { type MakeNestContext, type NestApplicationPromiseGetter } from '../../nest.provider';
+import { type NestApplicationScheduleConfiguredFunction, type NestApplicationScheduleConfiguredFunctionFactory, type OnScheduleConfig, type OnScheduleWithNestApplication, type OnScheduleWithNestApplicationRequest, type OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
+import { cronExpressionRepeatingEveryNMinutes, type CronExpression, mergeObjects } from '@dereekb/util';
+import { type Buildable } from 'ts-essentials';
 
 export function makeOnScheduleWithNestApplicationRequest(nestApplication: INestApplicationContext, scheduleContext?: functions.EventContext): OnScheduleWithNestApplicationRequest<functions.EventContext> {
   return {

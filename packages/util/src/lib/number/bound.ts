@@ -1,5 +1,5 @@
-import { Writable } from 'ts-essentials';
-import { MapFunction } from '../value/map';
+import { type Writable } from 'ts-essentials';
+import { type MapFunction } from '../value/map';
 
 // MARK: Number
 export interface NumberBound<T extends number = number> {

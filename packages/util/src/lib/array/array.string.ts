@@ -1,11 +1,11 @@
 import { flattenArray } from './array';
 import { unique, filterUniqueValues } from './array.unique';
-import { ReadKeyFunction } from '../key';
+import { type ReadKeyFunction } from '../key';
 import { caseInsensitiveString } from '../string/string';
 import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
 import { mapIterable } from '../iterable/iterable.map';
-import { isMapIdentityFunction, mapArrayFunction, MapFunction, mapIdentityFunction } from '../value/map';
-import { stringToLowercaseFunction, stringToUppercaseFunction, stringTrimFunction, transformStringFunction, TransformStringFunctionConfig } from '../string/transform';
+import { isMapIdentityFunction, mapArrayFunction, type MapFunction, mapIdentityFunction } from '../value/map';
+import { stringToLowercaseFunction, stringToUppercaseFunction, stringTrimFunction, transformStringFunction, type TransformStringFunctionConfig } from '../string/transform';
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));

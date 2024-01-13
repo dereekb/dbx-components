@@ -1,4 +1,4 @@
-import { UnixDateTimeNumber } from '../date/date';
+import { type UnixDateTimeNumber } from '../date/date';
 
 export type StoredDataString = string;
 export type StoredDataStorageKey = string;

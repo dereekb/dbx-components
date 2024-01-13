@@ -1,6 +1,6 @@
-import { FirebaseContextGrantedModelRoles, FirebaseDoesNotExistErrorContextErrorFunction, FirebasePermissionErrorContext, FirebasePermissionErrorContextErrorFunction } from '@dereekb/firebase';
-import { ArrayOrValue } from '@dereekb/util';
-import { GrantedRole } from '@dereekb/model';
+import { type FirebaseContextGrantedModelRoles, type FirebaseDoesNotExistErrorContextErrorFunction, type FirebasePermissionErrorContext, type FirebasePermissionErrorContextErrorFunction } from '@dereekb/firebase';
+import { type ArrayOrValue } from '@dereekb/util';
+import { type GrantedRole } from '@dereekb/model';
 import { forbiddenError, modelNotAvailableError } from '../../function/error';
 
 export const nestFirebaseDoesNotExistError: FirebaseDoesNotExistErrorContextErrorFunction = (firebaseContextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>) => {

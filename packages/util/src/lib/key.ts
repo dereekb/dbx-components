@@ -1,8 +1,6 @@
-import { ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray } from './array/array';
-import { setContainsAllValues } from './set/set';
-import { EqualityComparatorFunction, safeEqualityComparatorFunction } from './value/comparator';
-import { MapFunction } from './value/map';
-import { Maybe } from './value/maybe.type';
+import { type ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray } from './array/array';
+import { type MapFunction } from './value/map';
+import { type Maybe } from './value/maybe.type';
 
 /**
  * A key made up of either a string or number value.
@@ -101,42 +99,4 @@ export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(re
  */
 export function readKeysSetFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): Set<K> {
   return readKeysSetFunction(readKey)(values);
-}
-
-/**
- * Creates a EqualityComparatorFunction that compares the two input values
- *
- * @param readKey
- * @returns
- */
-export function objectKeysEqualityComparatorFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): EqualityComparatorFunction<Maybe<T[]>> {
-  const readKeysSet = readKeysSetFunction(readKey);
-  const readKeysArray = readKeysFunction(readKey);
-
-  return safeEqualityComparatorFunction((a: T[], b: T[]) => {
-    if (a.length === b.length) {
-      if (a.length === 0) {
-        return true; // both the same/empty arrays
-      }
-
-      const aKeys = readKeysSet(a);
-      const bKeys = readKeysArray(b);
-
-      if (aKeys.size === bKeys.length) {
-        return setContainsAllValues(aKeys, bKeys);
-      }
-    }
-
-    return false;
-  });
-}
-
-/**
- * Creates a EqualityComparatorFunction that compares the two input values
- *
- * @param readKey
- * @returns
- */
-export function objectKeyEqualityComparatorFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): EqualityComparatorFunction<Maybe<T>> {
-  return safeEqualityComparatorFunction((a, b) => readKey(a) === readKey(b));
 }

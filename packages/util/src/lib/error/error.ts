@@ -1,6 +1,6 @@
 import { BaseError } from 'make-error';
 import { escapeStringForRegex } from '../string/replace';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Generic function that is meant to throw an error if the input is known. Returns void otherwise.

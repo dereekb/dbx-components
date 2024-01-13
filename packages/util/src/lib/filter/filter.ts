@@ -1,6 +1,6 @@
 import { filterMaybeValues } from '../array/array.value';
 import { invertBooleanReturnFunction } from '../function/function.boolean';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Contains a reference to a filter object.

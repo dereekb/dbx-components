@@ -1,6 +1,6 @@
 import { isEmptyIterable, isIterable } from '../iterable/iterable';
 import { objectHasNoKeys } from '../object/object';
-import { Maybe, MaybeNot, MaybeSo } from './maybe.type';
+import { type Maybe, type MaybeNot, type MaybeSo } from './maybe.type';
 
 /**
  * Returns true if the value is not null or undefined.

@@ -1,5 +1,5 @@
-import { Factory, FactoryWithIndex, FactoryWithRequiredInput, makeWithFactory, makeWithFactoryInput } from '../getter/getter';
-import { AsyncMapFunction } from '../value/map';
+import { type Factory, type FactoryWithIndex, type FactoryWithRequiredInput, makeWithFactory, makeWithFactoryInput } from '../getter/getter';
+import { type AsyncMapFunction } from '../value/map';
 
 /**
  * Factory that generates multiple values given a number of items to make.

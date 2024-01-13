@@ -1,4 +1,4 @@
-import { ModelTypeString } from '@dereekb/util';
+import { type ModelTypeString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
 

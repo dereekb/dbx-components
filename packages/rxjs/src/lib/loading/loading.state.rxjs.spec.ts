@@ -1,7 +1,7 @@
-import { Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util';
+import { type Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util';
 import { BehaviorSubject, map, of, first, switchMap, delay } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
-import { LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
+import { type LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
 import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
 
 jest.setTimeout(1000);

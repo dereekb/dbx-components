@@ -1,5 +1,5 @@
-import { FirestoreAccessorDriverRef } from './accessor';
-import { FirestoreQueryDriverRef } from './query';
+import { type FirestoreAccessorDriverRef } from './accessor';
+import { type FirestoreQueryDriverRef } from './query';
 
 export type FirestoreDriverIdentifier = string;
 export type FirestoreDriverType = 'production' | 'testing';

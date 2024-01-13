@@ -1,4 +1,4 @@
-import { primativeValuesDelta, SetDeltaChange, SetDeltaChangeKeys, setDeltaChangeKeys, SetDeltaChangePair, setDeltaFunction } from './set.delta';
+import { primativeValuesDelta, SetDeltaChange, type SetDeltaChangeKeys, setDeltaChangeKeys, type SetDeltaChangePair, setDeltaFunction } from './set.delta';
 
 interface TestValue {
   value: string;

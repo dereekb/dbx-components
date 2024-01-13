@@ -1,6 +1,6 @@
-import { ArrayOrValue, asArray } from '@dereekb/util';
-import { DocumentReferenceRef } from '../firestore/reference';
-import { FirestoreModelKey, FirestoreModelType, FirestoreModelTypeRef } from '../firestore/collection/collection';
+import { type ArrayOrValue, asArray } from '@dereekb/util';
+import { type DocumentReferenceRef } from '../firestore/reference';
+import { type FirestoreModelKey, type FirestoreModelType, type FirestoreModelTypeRef } from '../firestore/collection/collection';
 
 export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeRef {
   specifier?: string;

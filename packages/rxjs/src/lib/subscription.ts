@@ -1,5 +1,5 @@
-import { Subscription } from 'rxjs';
-import { ArrayOrValue, convertToArray, Destroyable, Maybe } from '@dereekb/util';
+import { type Subscription } from 'rxjs';
+import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe } from '@dereekb/util';
 
 /**
  * Destroyable object that wraps a subscription.

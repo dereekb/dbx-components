@@ -1,6 +1,6 @@
-import { Maybe, ReadableError } from '@dereekb/util';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { LoadingContext, LoadingContextEvent } from './loading.context';
+import { type Maybe, type ReadableError } from '@dereekb/util';
+import { BehaviorSubject, type Observable } from 'rxjs';
+import { type LoadingContext, type LoadingContextEvent } from './loading.context';
 
 /**
  * Simple LoadingContext implementation

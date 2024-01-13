@@ -1,5 +1,5 @@
-import { asGetter, GetterOrValue } from '../getter';
-import { UseAsync } from '../value';
+import { asGetter, type GetterOrValue } from '../getter';
+import { type UseAsync } from '../value';
 
 /**
  * Uses a cached promise value.

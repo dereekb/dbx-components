@@ -1,6 +1,6 @@
 import { asGetter } from '@dereekb/util';
 import { isDate } from 'date-fns';
-import { DocumentSnapshot } from '../types';
+import { type DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
 import { firestoreBoolean, firestoreDate, firestoreNumber, firestoreObjectArray, firestoreString, firestoreSubObject, firestoreUniqueStringArray } from './snapshot.field';
 

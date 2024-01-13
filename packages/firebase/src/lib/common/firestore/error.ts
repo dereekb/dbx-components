@@ -1,5 +1,5 @@
 import { objectHasNoKeys } from '@dereekb/util';
-import { UpdateData } from 'firebase/firestore';
+import { type UpdateData } from 'firebase/firestore';
 
 export function unsupportedFirestoreDriverFunctionError(message?: string) {
   throw new Error(message ?? 'This function is not supported by this Firestore driver.');

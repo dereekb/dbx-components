@@ -1,5 +1,5 @@
-import { FilterFunction, invertFilter } from '../filter/filter';
-import { KeyAsString } from '../type';
+import { type FilterFunction, invertFilter } from '../filter/filter';
+import { type KeyAsString } from '../type';
 import { hasValueOrNotEmpty, hasValueOrNotEmptyObject } from '../value/maybe';
 
 // MARK: For Each

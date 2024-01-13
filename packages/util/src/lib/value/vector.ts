@@ -1,4 +1,4 @@
-import { Maybe } from './maybe.type';
+import { type Maybe } from './maybe.type';
 
 export interface Vector {
   x: number;

@@ -1,8 +1,8 @@
-import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, GrantedReadRole, GrantedUpdateRole, WebsiteFileLink } from '@dereekb/model';
-import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet } from '@dereekb/util';
+import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, type GrantedReadRole, type GrantedUpdateRole, type WebsiteFileLink } from '@dereekb/model';
+import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet } from '@dereekb/util';
 import { isValid } from 'date-fns';
-import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
-import { DocumentSnapshot } from '../types';
+import { type FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
+import { type DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
 import {
   firestoreWebsiteFileLinkEncodedArray,
@@ -27,7 +27,7 @@ import {
   firestoreDencoderArray,
   firestoreModelKeyEncodedGrantedRoleMap,
   firestoreDencoderMap,
-  FirestoreEncodedObjectMapFieldValueType,
+  type FirestoreEncodedObjectMapFieldValueType,
   firestoreBitwiseObjectMap
 } from './snapshot.field';
 

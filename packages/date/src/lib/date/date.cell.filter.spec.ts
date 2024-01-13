@@ -1,5 +1,5 @@
 import { addDays, addMinutes } from 'date-fns';
-import { DateCellDurationSpan } from './date.cell';
+import { type DateCellDurationSpan } from './date.cell';
 import { dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasStartedFilterFunction, modifyDateCellsToFitRange, modifyDateCellsToFitRangeFunction } from './date.cell.filter';
 
 describe('dateCellDurationSpanHasNotStartedFilterFunction()', () => {

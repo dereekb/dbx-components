@@ -1,9 +1,9 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive TreeNode value requires its use to terminate.
 
-import { TreeNode } from './tree';
-import { ExpandTreeFunction, expandTrees } from './tree.expand';
-import { FlattenTreeFunction, flattenTrees } from './tree.flatten';
+import { type TreeNode } from './tree';
+import { type ExpandTreeFunction, expandTrees } from './tree.expand';
+import { type FlattenTreeFunction, flattenTrees } from './tree.flatten';
 
 /**
  * Function that expands the input values into a tree, and then flattens the tree to produce a single array of values of another type.

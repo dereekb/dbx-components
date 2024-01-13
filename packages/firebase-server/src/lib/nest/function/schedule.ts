@@ -1,6 +1,6 @@
-import { Configurable, Minutes, PromiseOrValue } from '@dereekb/util';
-import { MakeNestContext, NestApplicationFunctionFactory } from '../nest.provider';
-import { NestApplicationContextRequest, NestContextRequest } from './nest';
+import { type Configurable, type Minutes, type PromiseOrValue } from '@dereekb/util';
+import { type MakeNestContext, type NestApplicationFunctionFactory } from '../nest.provider';
+import { type NestApplicationContextRequest, type NestContextRequest } from './nest';
 
 export interface OnScheduleConfig {
   /**

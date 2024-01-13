@@ -1,8 +1,8 @@
-import { copyObject, CopyObjectFunction } from '../object/object';
-import { PromiseOrValue } from '../promise/promise.type';
-import { ClassType, isNonClassFunction } from '../type';
-import { MapFunction } from '../value/map';
-import { Maybe } from '../value/maybe.type';
+import { copyObject, type CopyObjectFunction } from '../object/object';
+import { type PromiseOrValue } from '../promise/promise.type';
+import { type ClassType, isNonClassFunction } from '../type';
+import { type MapFunction } from '../value/map';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Function that returns a value.

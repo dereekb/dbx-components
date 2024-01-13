@@ -1,8 +1,8 @@
 import * as functions from 'firebase-functions';
-import { INestApplicationContext } from '@nestjs/common';
-import { RunnableHttpFunction } from '../../../function/type';
-import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
-import { OnCallWithNestApplication, OnCallWithNestApplicationRequest, OnCallWithNestContext, setNestContextOnRequest } from '../call';
+import { type INestApplicationContext } from '@nestjs/common';
+import { type RunnableHttpFunction } from '../../../function/type';
+import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
+import { type OnCallWithNestApplication, type OnCallWithNestApplicationRequest, type OnCallWithNestContext, setNestContextOnRequest } from '../call';
 import { mapIdentityFunction } from '@dereekb/util';
 
 export function makeOnCallWithNestApplicationRequest<I>(nestApplication: INestApplicationContext, data: I, context: functions.https.CallableContext): OnCallWithNestApplicationRequest<I> {

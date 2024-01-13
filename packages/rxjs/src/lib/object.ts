@@ -1,5 +1,5 @@
 import { areEqualPOJOValues } from '@dereekb/util';
-import { distinctUntilChanged, filter, mergeMap, isObservable, MonoTypeOperatorFunction, Observable } from 'rxjs';
+import { distinctUntilChanged, filter, mergeMap, isObservable, type MonoTypeOperatorFunction, type Observable } from 'rxjs';
 
 /**
  * Equivalent to distinctUntilChanged() using isEqualObject()

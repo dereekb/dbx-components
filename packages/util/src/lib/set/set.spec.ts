@@ -1,4 +1,4 @@
-import { setIncludes, ReadKeyFunction, setsAreEquivalent, isEvenNumber, separateValuesToSets } from '@dereekb/util';
+import { setIncludes, type ReadKeyFunction, setsAreEquivalent, isEvenNumber, separateValuesToSets } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
 import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue, keepFromSetCopy } from './set';
 

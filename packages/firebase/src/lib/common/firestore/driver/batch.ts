@@ -1,5 +1,5 @@
-import { Factory } from '@dereekb/util';
-import { Firestore, WriteBatch } from '../types';
+import { type Factory } from '@dereekb/util';
+import { type Firestore, type WriteBatch } from '../types';
 
 /**
  * Factory for a WriteBatch.

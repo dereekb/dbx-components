@@ -1,6 +1,6 @@
-import { Observable } from 'rxjs';
-import { DocumentData, DocumentReference, DocumentSnapshot, FirestoreDataConverter, PartialWithFieldValue, SetOptions, UpdateData, WithFieldValue, WriteResult } from '../types';
-import { FirestoreAccessorIncrementUpdate, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams } from './accessor';
+import { type Observable } from 'rxjs';
+import { type DocumentData, type DocumentReference, type DocumentSnapshot, type FirestoreDataConverter, type PartialWithFieldValue, type SetOptions, type UpdateData, type WithFieldValue, type WriteResult } from '../types';
+import { type FirestoreAccessorIncrementUpdate, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams } from './accessor';
 
 // MARK: Abstract Wrapper
 /**

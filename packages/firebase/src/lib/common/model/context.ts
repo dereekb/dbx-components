@@ -1,5 +1,5 @@
-import { FirebaseAuthContext } from '../auth/auth.context';
-import { FirebasePermissionContext, FirebasePermissionErrorContext } from './permission';
+import { type FirebaseAuthContext } from '../auth/auth.context';
+import { type FirebasePermissionContext, type FirebasePermissionErrorContext } from './permission';
 
 /**
  * A base model context that contains info about what is current occuring.

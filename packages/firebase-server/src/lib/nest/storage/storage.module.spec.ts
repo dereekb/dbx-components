@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from '@dereekb/firebase-server/test';
 import { firebaseServerStorageModuleMetadata } from './storage.module';
 import { FirebaseServerStorageService } from '../../storage/storage.service';
-import { FirebaseStorageContext } from '@dereekb/firebase';
+import { type FirebaseStorageContext } from '@dereekb/firebase';
 
 class TestFirebaseServerStorageService extends FirebaseServerStorageService {}
 

@@ -1,10 +1,10 @@
-import { FirestoreDocument, firestoreDocumentAccessorContextExtension, LimitedFirestoreDocumentAccessorFactoryConfig, limitedFirestoreDocumentAccessorFactory, LimitedFirestoreDocumentAccessorFactoryFunction } from '../accessor/document';
-import { FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
-import { FirestoreContextReference } from '../reference';
-import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
-import { FirestoreDrivers } from '../driver/driver';
+import { type FirestoreDocument, firestoreDocumentAccessorContextExtension, type LimitedFirestoreDocumentAccessorFactoryConfig, limitedFirestoreDocumentAccessorFactory, type LimitedFirestoreDocumentAccessorFactoryFunction } from '../accessor/document';
+import { type FirestoreItemPageIterationBaseConfig, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
+import { type FirestoreContextReference } from '../reference';
+import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
+import { type FirestoreDrivers } from '../driver/driver';
 import { firestoreCollectionQueryFactory } from './collection.query';
-import { FirestoreCollectionLike } from './collection';
+import { type FirestoreCollectionLike } from './collection';
 
 /**
  * FirestoreCollection configuration

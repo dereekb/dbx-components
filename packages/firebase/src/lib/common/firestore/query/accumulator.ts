@@ -1,8 +1,8 @@
-import { itemAccumulator, ItemAccumulatorInstance, ItemAccumulatorMapFunction, PageItemIteration } from '@dereekb/rxjs';
-import { MapFunction, filterMaybeValues } from '@dereekb/util';
+import { itemAccumulator, type ItemAccumulatorInstance, type ItemAccumulatorMapFunction, type PageItemIteration } from '@dereekb/rxjs';
+import { type MapFunction, filterMaybeValues } from '@dereekb/util';
 import { documentDataFunction } from '../accessor';
-import { DocumentDataWithIdAndKey, QueryDocumentSnapshotArray } from '../types';
-import { FirestoreItemPageIterationInstance } from './iterator';
+import { type DocumentDataWithIdAndKey, type QueryDocumentSnapshotArray } from '../types';
+import { type FirestoreItemPageIterationInstance } from './iterator';
 
 export type MappedFirebaseQuerySnapshotAccumulator<O, T> = ItemAccumulatorInstance<O, QueryDocumentSnapshotArray<T>, PageItemIteration<QueryDocumentSnapshotArray<T>>>;
 export type FirebaseQuerySnapshotAccumulator<T> = MappedFirebaseQuerySnapshotAccumulator<QueryDocumentSnapshotArray<T>, T>;

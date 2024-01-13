@@ -1,6 +1,6 @@
-import { Observable, combineLatest, shareReplay, map, OperatorFunction, of } from 'rxjs';
-import { DocumentDataWithIdAndKey, DocumentSnapshot } from '../types';
-import { FirestoreDocument, FirestoreDocumentData } from './document';
+import { type Observable, combineLatest, shareReplay, map, type OperatorFunction, of } from 'rxjs';
+import { type DocumentDataWithIdAndKey, type DocumentSnapshot } from '../types';
+import { type FirestoreDocument, type FirestoreDocumentData } from './document';
 import { getDataFromDocumentSnapshots } from './document.utility';
 
 export function latestSnapshotsFromDocuments<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentSnapshot<FirestoreDocumentData<D>>[]> {

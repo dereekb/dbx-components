@@ -1,8 +1,8 @@
-import { PageLoadingState } from '../loading';
-import { Observable } from 'rxjs';
-import { ItemIteratorNextRequest, PageItemIteration } from './iteration';
-import { MappedItemIteration, MappedItemIterationInstance, MappedItemIterationInstanceMapConfig } from './iteration.mapped';
-import { Maybe } from '@dereekb/util';
+import { type PageLoadingState } from '../loading';
+import { type Observable } from 'rxjs';
+import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
+import { type MappedItemIteration, MappedItemIterationInstance, type MappedItemIterationInstanceMapConfig } from './iteration.mapped';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * MappedItemIteration for PageItemIteration

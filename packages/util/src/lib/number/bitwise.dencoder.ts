@@ -1,6 +1,6 @@
 // MARK: BitwiseSet
 
-import { MapFunction } from '../value';
+import { type MapFunction } from '../value';
 
 /**
  * A bitwise set is limited to 32 values, the numbers 0-31.

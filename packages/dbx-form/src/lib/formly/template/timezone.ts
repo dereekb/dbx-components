@@ -1,4 +1,4 @@
-import { TimezoneString } from '@dereekb/util';
+import { type TimezoneString } from '@dereekb/util';
 import { allTimezoneInfos, searchTimezoneInfos, TimezoneInfo, timezoneInfoForSystem } from '@dereekb/date';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable, of } from 'rxjs';

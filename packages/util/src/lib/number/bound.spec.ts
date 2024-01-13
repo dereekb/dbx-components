@@ -1,4 +1,4 @@
-import { NumberBound, isInNumberBoundFunction, wrapNumberFunction } from './bound';
+import { type NumberBound, isInNumberBoundFunction, wrapNumberFunction } from './bound';
 
 describe('isInBoundFunction()', () => {
   describe('function', () => {

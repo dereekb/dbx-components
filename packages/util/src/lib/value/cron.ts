@@ -1,5 +1,5 @@
-import { Hours, Minutes } from '../date/date';
-import { Maybe } from './maybe.type';
+import { type Hours, type Minutes } from '../date/date';
+import { type Maybe } from './maybe.type';
 
 /**
  * A cron schedule expression string

@@ -1,6 +1,6 @@
-import { PrimativeKey, ReadKeyFunction } from '../key';
-import { DecisionFunction } from '../value/decision';
-import { Maybe } from '../value/maybe.type';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type DecisionFunction } from '../value/decision';
+import { type Maybe } from '../value/maybe.type';
 
 // MARK: Types
 /**

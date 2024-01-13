@@ -1,4 +1,4 @@
-import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
+import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
 import { readKeysToMap, readMultipleKeysToMap } from './map.key';
 
 describe('readKeysToMap()', () => {

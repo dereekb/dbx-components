@@ -1,5 +1,5 @@
-import { MapFunction, MAP_IDENTITY } from '../value/map';
-import { Maybe } from '../value/maybe.type';
+import { type MapFunction, MAP_IDENTITY } from '../value/map';
+import { type Maybe } from '../value/maybe.type';
 
 export function stringTrimFunction(input: string): string {
   return input.trim();

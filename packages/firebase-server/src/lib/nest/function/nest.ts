@@ -1,6 +1,6 @@
-import { INestApplicationContext } from '@nestjs/common';
-import { CallableRequest } from 'firebase-functions/lib/common/providers/https';
-import { CallableContextWithAuthData } from '../../function/context';
+import { type INestApplicationContext } from '@nestjs/common';
+import { type CallableRequest } from 'firebase-functions/lib/common/providers/https';
+import { type CallableContextWithAuthData } from '../../function/context';
 
 export type NestApplicationContextRequest<R> = R & {
   readonly nestApplication: INestApplicationContext;

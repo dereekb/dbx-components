@@ -1,5 +1,5 @@
-import { ModelTypeString } from '../model/model';
-import { ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange, RelationKey, RelationModelType } from './relation';
+import { type ModelTypeString } from '../model/model';
+import { type ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange, type RelationKey, type RelationModelType } from './relation';
 
 class RelationTag {
   type: ModelTypeString;

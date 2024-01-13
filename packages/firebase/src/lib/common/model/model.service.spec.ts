@@ -1,11 +1,11 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { MockFirebaseContext, authorizedFirebaseFactory, MockItemCollectionFixture, testWithMockItemCollectionFixture, MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, mockFirebaseModelServices, MockItem, MockItemDocument, MockItemRoles } from '@dereekb/firebase/test';
-import { GrantedRoleMap, isNoAccessRoleMap } from '@dereekb/model';
-import { ArrayOrValue, UsePromiseFunction } from '@dereekb/util';
+import { type MockFirebaseContext, authorizedFirebaseFactory, type MockItemCollectionFixture, testWithMockItemCollectionFixture, MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, mockFirebaseModelServices, type MockItem, type MockItemDocument, type MockItemRoles } from '@dereekb/firebase/test';
+import { type GrantedRoleMap, isNoAccessRoleMap } from '@dereekb/model';
+import { type ArrayOrValue, type UsePromiseFunction } from '@dereekb/util';
 import { makeDocuments } from '../firestore';
-import { FirestoreDocumentAccessor } from '../firestore/accessor/document';
-import { firebaseModelsService, inContextFirebaseModelsServiceFactory, InModelContextFirebaseModelServiceFactory, selectFromFirebaseModelsService, useFirebaseModelsService } from './model.service';
-import { ContextGrantedModelRolesReader } from './permission/permission.service.role';
+import { type FirestoreDocumentAccessor } from '../firestore/accessor/document';
+import { firebaseModelsService, inContextFirebaseModelsServiceFactory, type InModelContextFirebaseModelServiceFactory, selectFromFirebaseModelsService, useFirebaseModelsService } from './model.service';
+import { type ContextGrantedModelRolesReader } from './permission/permission.service.role';
 
 describe('firebaseModelsService', () => {
   describe('with mockFirebaseModelServices', () => {

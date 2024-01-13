@@ -1,5 +1,5 @@
-import * as admin from 'firebase-admin';
-import { FactoryProvider, InjectionToken } from '@nestjs/common';
+import type * as admin from 'firebase-admin';
+import { type FactoryProvider, type InjectionToken } from '@nestjs/common';
 
 // MARK: Tokens
 /**

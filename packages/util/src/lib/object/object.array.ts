@@ -1,4 +1,4 @@
-import { ArrayOrValue, convertToArray, flattenArray } from '../array';
+import { type ArrayOrValue, convertToArray, flattenArray } from '../array';
 
 /**
  * Convenience function for objectMergeMatrix that returns a flat array.

@@ -1,6 +1,6 @@
-import { AsyncDecisionFunction } from '@dereekb/util';
+import { type AsyncDecisionFunction } from '@dereekb/util';
 import { FirebaseServerEnvService } from '../../env/env.service';
-import { NestAppPromiseGetter } from '../app';
+import { type NestAppPromiseGetter } from '../app';
 
 export function nestAppIsProductionEnvironment(nest: NestAppPromiseGetter): AsyncDecisionFunction<void> {
   return () => nest().then((x) => x.get(FirebaseServerEnvService).isProduction);

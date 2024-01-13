@@ -1,5 +1,5 @@
 import { filterEmptyValues } from '../array/array.value';
-import { Maybe } from './maybe.type';
+import { type Maybe } from './maybe.type';
 
 /**
  * City name

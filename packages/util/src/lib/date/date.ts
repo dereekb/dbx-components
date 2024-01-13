@@ -1,5 +1,5 @@
 import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A valid ISO8601 formatted date string.
@@ -131,6 +131,17 @@ export const ISO8601_DAY_STRING_REGEX = /^\d{4,}-\d{2}-\d{2}$/;
  * Regex for a string that starts as an ISO8601DayString.
  */
 export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
+
+/**
+ * Parses a ISO8601DayString to a Date.
+ *
+ * @param inputDateString
+ * @returns
+ */
+export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {
+  const [yearString, monthString, dateString] = inputDateString.split('-');
+  return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
+}
 
 /**
  * Returns true if the input date is strictly a

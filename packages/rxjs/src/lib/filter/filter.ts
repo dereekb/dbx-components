@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { type Observable } from 'rxjs';
 
 /**
  * Source that provides a filter observable.

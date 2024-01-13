@@ -1,8 +1,8 @@
-import { FieldPath, SnapshotListenOptions, Transaction } from './../types';
-import { Observable } from 'rxjs';
-import { Query, QuerySnapshot } from '../types';
-import { FirestoreQueryConstraint } from '../query/constraint';
-import { Maybe } from '@dereekb/util';
+import { type FieldPath, type SnapshotListenOptions, type Transaction } from './../types';
+import { type Observable } from 'rxjs';
+import { type Query, type QuerySnapshot } from '../types';
+import { type FirestoreQueryConstraint } from '../query/constraint';
+import { type Maybe } from '@dereekb/util';
 
 export type FirestoreQueryDriverQueryFunction = <T>(query: Query<T>, ...queryConstraints: FirestoreQueryConstraint[]) => Query<T>;
 export type FirestoreDocumentIdFieldPathAccessor = () => FieldPath;

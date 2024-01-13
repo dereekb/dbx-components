@@ -1,5 +1,5 @@
-import { AuthClaims, AuthClaimsObject, AuthRoleSet, mappedUseFunction, MappedUseFunction, Maybe, UseValue } from '@dereekb/util';
-import { FirebaseAuthToken, FirebaseAuthUserId } from './auth';
+import { type AuthClaims, type AuthClaimsObject, type AuthRoleSet, mappedUseFunction, type MappedUseFunction, type Maybe, type UseValue } from '@dereekb/util';
+import { type FirebaseAuthToken, type FirebaseAuthUserId } from './auth';
 
 /**
  * Provides a context containing FirebaseAuthContextInfo

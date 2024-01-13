@@ -1,6 +1,6 @@
 import { cutValueToPrecisionFunction } from '../number/round';
-import { Maybe } from '../value/maybe.type';
-import { Hours, Minutes, MINUTES_IN_HOUR } from './date';
+import { type Maybe } from '../value/maybe.type';
+import { type Hours, type Minutes, MINUTES_IN_HOUR } from './date';
 
 /**
  * A number that represents hours and rounded to the nearest minute.

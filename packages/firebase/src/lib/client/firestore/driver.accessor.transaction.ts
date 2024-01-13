@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, Transaction as FirebaseFirestoreTransaction, UpdateData, WithFieldValue } from 'firebase/firestore';
-import { from, Observable } from 'rxjs';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions, DocumentData, FirestoreDataConverter, assertFirestoreUpdateHasData, WriteResult, FirestoreAccessorIncrementUpdate } from '../../common/firestore';
+import { type DocumentReference, type DocumentSnapshot, type Transaction as FirebaseFirestoreTransaction, type UpdateData, type WithFieldValue } from 'firebase/firestore';
+import { from, type Observable } from 'rxjs';
+import { type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type SetOptions, type DocumentData, type FirestoreDataConverter, assertFirestoreUpdateHasData, type WriteResult, type FirestoreAccessorIncrementUpdate } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 import { firestoreClientIncrementUpdateToUpdateData } from './increment';
 

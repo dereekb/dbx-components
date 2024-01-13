@@ -1,5 +1,5 @@
-import { Maybe, searchStringFilterFunction, SearchStringFilterFunctionConfigInput } from '@dereekb/util';
-import { map, MonoTypeOperatorFunction, Observable, switchMap } from 'rxjs';
+import { type Maybe, searchStringFilterFunction, type SearchStringFilterFunctionConfigInput } from '@dereekb/util';
+import { map, type MonoTypeOperatorFunction, type Observable, switchMap } from 'rxjs';
 
 /**
  * filterWithSearchString() configuration

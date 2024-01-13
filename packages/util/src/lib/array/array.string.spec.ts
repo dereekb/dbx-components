@@ -1,4 +1,4 @@
-import { TransformStringFunction } from '../string/transform';
+import { type TransformStringFunction } from '../string/transform';
 import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, filterUniqueCaseInsensitiveStrings, filterUniqueTransform } from './array.string';
 
 describe('filterUniqueCaseInsensitiveStrings()', () => {

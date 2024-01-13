@@ -1,7 +1,7 @@
-import { Maybe } from '@dereekb/util';
-import { GrantedRole, ContextGrantedModelRoles } from '@dereekb/model';
-import { DocumentSnapshot, FirestoreDocument } from '../../firestore';
-import { FirebasePermissionErrorContext } from './permission.context';
+import { type Maybe } from '@dereekb/util';
+import { type GrantedRole, type ContextGrantedModelRoles } from '@dereekb/model';
+import { type DocumentSnapshot, type FirestoreDocument } from '../../firestore';
+import { type FirebasePermissionErrorContext } from './permission.context';
 
 export interface FirebasePermissionServiceModel<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly document: D;

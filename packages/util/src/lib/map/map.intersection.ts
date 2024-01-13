@@ -1,4 +1,4 @@
-import { ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
+import { type ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
 
 /**
  * Object used as a map of keys that will intersect with input keys.

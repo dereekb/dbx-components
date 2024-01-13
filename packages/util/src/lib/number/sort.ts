@@ -1,5 +1,5 @@
-import { SortCompareFunction } from '../sort';
-import { ReadNumberFunction } from './number';
+import { type SortCompareFunction } from '../sort';
+import { type ReadNumberFunction } from './number';
 
 /**
  * SortCompareFunction by string.

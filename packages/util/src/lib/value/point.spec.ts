@@ -1,5 +1,5 @@
 import { cutToPrecision } from '../number';
-import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, LatLngString, randomLatLngFactory, MAX_LATITUDE_VALUE, MIN_LATITUDE_VALUE, MAX_LONGITUDE_VALUE, MIN_LONGITUDE_VALUE, randomLatLngFromCenterFactory, LAT_LONG_1KM_PRECISION } from './point';
+import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, type LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, type LatLngString, randomLatLngFactory, MAX_LATITUDE_VALUE, MIN_LATITUDE_VALUE, MAX_LONGITUDE_VALUE, MIN_LONGITUDE_VALUE, randomLatLngFromCenterFactory, LAT_LONG_1KM_PRECISION } from './point';
 
 describe('isLatLngPoint()', () => {
   it('should return true for points.', () => {

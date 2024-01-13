@@ -1,5 +1,5 @@
 import { invertBooleanReturnFunction } from '../function/function.boolean';
-import { SetIncludesMode } from '../set/set.mode';
+import { type SetIncludesMode } from '../set/set.mode';
 
 /**
  * A decision function used by the array find function.

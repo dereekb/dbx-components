@@ -1,5 +1,5 @@
-import { ArrayOrValue, asArray } from './../array/array';
-import { Maybe } from '../value/maybe.type';
+import { type ArrayOrValue, asArray } from './../array/array';
+import { type Maybe } from '../value/maybe.type';
 import { joinStringsWithSpaces } from './string';
 
 /**

@@ -1,6 +1,6 @@
-import { Building } from '@dereekb/util';
-import { DateTimezoneUtcNormalFunctionInput, DateTimezoneUtcNormalInstance, transformDateRangeInTimezoneNormalFunction } from './date.timezone';
-import { DateRange, fitUTCDateRangeToDayPeriod } from './date.range';
+import { type Building } from '@dereekb/util';
+import { type DateTimezoneUtcNormalFunctionInput, type DateTimezoneUtcNormalInstance, transformDateRangeInTimezoneNormalFunction } from './date.timezone';
+import { type DateRange, fitUTCDateRangeToDayPeriod } from './date.range';
 
 /**
  * Modifies the input DateRange to fit within a 24 hour period.

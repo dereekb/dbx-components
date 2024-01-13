@@ -1,5 +1,5 @@
-import { objectKeyEqualityComparatorFunction, PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction, objectKeysEqualityComparatorFunction } from '@dereekb/util';
-import { distinctUntilChanged, MonoTypeOperatorFunction } from 'rxjs';
+import { objectKeyEqualityComparatorFunction, type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction, objectKeysEqualityComparatorFunction } from '@dereekb/util';
+import { distinctUntilChanged, type MonoTypeOperatorFunction } from 'rxjs';
 
 /**
  * distinctUntilChanged() that reads the unique identifiers from the input values and compares them for uniqueness.

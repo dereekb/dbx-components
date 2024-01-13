@@ -1,16 +1,16 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as there isn't enough typing information available when going from a parent of fields to the types of each child.
 
-import { asGetter, Getter, GetterOrValue } from '../getter/getter';
+import { asGetter, type Getter, type GetterOrValue } from '../getter/getter';
 import { findPOJOKeys } from '../object/object.filter.pojo';
 import { filterKeyValueTuples, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
-import { Maybe, MaybeSo } from '../value/maybe.type';
+import { type Maybe, type MaybeSo } from '../value/maybe.type';
 import { isMaybeSo } from '../value/maybe';
-import { ApplyMapFunctionWithOptions, MapFunction } from '../value/map';
-import { MergeReplace, ReplaceType } from '../type';
+import { type ApplyMapFunctionWithOptions, type MapFunction } from '../value/map';
+import { type MergeReplace, type ReplaceType } from '../type';
 import { mapObjectMap } from '../object';
-import { XOR } from 'ts-essentials';
-import { Building } from '../value/build';
+import { type XOR } from 'ts-essentials';
+import { type Building } from '../value/build';
 
 // MARK: Model
 /**

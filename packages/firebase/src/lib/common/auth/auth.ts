@@ -1,4 +1,4 @@
-import { ISO8601DateString, Maybe, PasswordString, PhoneNumber, WebsiteUrl } from '@dereekb/util';
+import { type ISO8601DateString, type Maybe, type PasswordString, type PhoneNumber, type WebsiteUrl } from '@dereekb/util';
 
 /**
  * Don't use passwords smaller tahn 6.

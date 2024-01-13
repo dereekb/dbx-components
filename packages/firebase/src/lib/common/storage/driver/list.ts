@@ -1,5 +1,5 @@
 import { cachedGetter } from '@dereekb/util';
-import { FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StorageListFileResult, StorageListFilesOptions, StorageListFilesResult, StorageListFolderResult, StorageListItemResult } from './accessor';
+import { type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFileResult, type StorageListFilesOptions, type StorageListFilesResult, type StorageListFolderResult, type StorageListItemResult } from './accessor';
 
 export interface StorageListFilesResultFactoryDelegate<S, R> {
   hasItems(result: R): boolean;

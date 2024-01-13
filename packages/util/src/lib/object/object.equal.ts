@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
-import { FieldOfType } from '../key';
-import { EqualityComparatorFunction } from '../value/comparator';
-import { Building } from '../value/build';
+import { type FieldOfType } from '../key';
+import { type EqualityComparatorFunction } from '../value/comparator';
+import { type Building } from '../value/build';
 
 /**
  * Performs a deep comparison to check if all values on the input filters are equal.

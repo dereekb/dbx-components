@@ -1,5 +1,5 @@
 import { DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO } from '@dereekb/nestjs';
-import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
+import { Logger, type MiddlewareConsumer, Module } from '@nestjs/common';
 import { FirebaseRawBodyMiddleware } from './rawbody.middleware';
 
 /**

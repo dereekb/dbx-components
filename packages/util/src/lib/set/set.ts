@@ -1,11 +1,11 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 import { flattenArray } from '../array/array';
-import { asIterable, IterableOrValue, iterableToArray, useIterableOrValue } from '../iterable/iterable';
+import { asIterable, type IterableOrValue, iterableToArray, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';
-import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
-import { SetIncludesMode } from './set.mode';
-import { DecisionFunction } from '../value/decision';
-import { MapFunction } from '../value/map';
+import { type PrimativeKey, type ReadKeyFunction, readKeysSetFrom } from '../key';
+import { type SetIncludesMode } from './set.mode';
+import { type DecisionFunction } from '../value/decision';
+import { type MapFunction } from '../value/map';
 
 export type AllOrNoneSelection = 'all' | 'none';
 

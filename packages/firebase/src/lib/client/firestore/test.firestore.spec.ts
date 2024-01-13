@@ -1,8 +1,8 @@
-import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore, writeBatch } from 'firebase/firestore';
-import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, mockItemIdentity, mockItemConverter } from '@dereekb/firebase/test';
-import { FirestoreDocumentContext, makeFirestoreCollection } from '../../common/firestore';
+import { type DocumentSnapshot, type DocumentReference, runTransaction, type Transaction, type Firestore, writeBatch } from 'firebase/firestore';
+import { type MockItem, mockItemCollectionReference, MockItemDocument, type MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, mockItemIdentity, mockItemConverter } from '@dereekb/firebase/test';
+import { type FirestoreDocumentContext, makeFirestoreCollection } from '../../common/firestore';
 import { transactionDocumentContext } from './driver.accessor.transaction';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { firebaseFirestoreClientDrivers } from './driver';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 

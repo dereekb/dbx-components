@@ -1,4 +1,4 @@
-import { Rectangle, rectangleOverlapsRectangle } from './vector';
+import { type Rectangle, rectangleOverlapsRectangle } from './vector';
 
 describe('rectangleOverlapsRectangle()', () => {
   it('it should return true if a rectangle is the same.', () => {

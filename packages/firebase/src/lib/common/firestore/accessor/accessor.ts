@@ -1,9 +1,9 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { filterUndefinedValues, KeyValueTransformMap, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData, FirestoreDataConverter } from '../types';
-import { from, map, Observable, OperatorFunction } from 'rxjs';
-import { DocumentReferenceRef } from '../reference';
-import { PickProperties } from 'ts-essentials';
+import { filterUndefinedValues, type KeyValueTransformMap, type Maybe, objectHasNoKeys } from '@dereekb/util';
+import { type WriteResult, type SnapshotOptions, type DocumentReference, type DocumentSnapshot, type UpdateData, type WithFieldValue, type PartialWithFieldValue, type SetOptions, type Precondition, type DocumentData, type FirestoreDataConverter } from '../types';
+import { from, map, type Observable, type OperatorFunction } from 'rxjs';
+import { type DocumentReferenceRef } from '../reference';
+import { type PickProperties } from 'ts-essentials';
 
 export interface FirestoreDocumentDeleteParams {
   precondition?: Precondition;

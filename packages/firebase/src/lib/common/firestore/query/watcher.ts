@@ -1,9 +1,9 @@
-import { groupValues, Building, build } from '@dereekb/util';
+import { groupValues, type Building, build } from '@dereekb/util';
 import { toExpires } from '@dereekb/date';
-import { map, Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
-import { DocumentChange, QuerySnapshot } from '../types';
-import { FirestoreItemPageIterationInstance, FirestoreItemPageQueryResult } from './iterator';
-import { ItemPageIteratorResult } from '@dereekb/rxjs';
+import { map, type Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
+import { type DocumentChange, type QuerySnapshot } from '../types';
+import { type FirestoreItemPageIterationInstance, type FirestoreItemPageQueryResult } from './iterator';
+import { type ItemPageIteratorResult } from '@dereekb/rxjs';
 
 export const DEFAULT_QUERY_CHANGE_WATCHER_DELAY = 0;
 

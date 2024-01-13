@@ -1,8 +1,8 @@
-import { ArrayOrValue, asArray } from './../array/array';
+import { type ArrayOrValue, asArray } from './../array/array';
 import { filterMaybeValues } from '../array/array.value';
-import { Maybe } from '../value/maybe.type';
-import { filterKeyValueTuplesFunction, FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, KeyValueTuple, KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
-import { cachedGetter, Getter } from '../getter';
+import { type Maybe } from '../value/maybe.type';
+import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
+import { cachedGetter, type Getter } from '../getter';
 import { copyObject } from './object';
 
 // MARK: Object Merging/Overriding

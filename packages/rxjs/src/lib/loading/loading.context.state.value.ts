@@ -1,8 +1,8 @@
-import { hasNonNullValue, Maybe } from '@dereekb/util';
-import { map, shareReplay, filter, Observable } from 'rxjs';
-import { LoadingContextEvent } from './loading.context';
-import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, LoadingStateContextInstanceInputConfig } from './loading.context.state';
-import { loadingStateIsLoading, LoadingState } from './loading.state';
+import { hasNonNullValue, type Maybe } from '@dereekb/util';
+import { map, shareReplay, filter, type Observable } from 'rxjs';
+import { type LoadingContextEvent } from './loading.context';
+import { type AbstractLoadingEventForLoadingPairConfig, type AbstractLoadingStateContext, AbstractLoadingStateContextInstance, type LoadingStateContextInstanceInputConfig } from './loading.context.state';
+import { loadingStateIsLoading, type LoadingState } from './loading.state';
 
 export interface LoadingStateContextEvent<T = unknown> extends LoadingContextEvent {
   value?: Maybe<T>;

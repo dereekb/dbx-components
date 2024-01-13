@@ -1,6 +1,6 @@
-import { ReadableError } from '../error';
+import { type ReadableError } from '../error';
 import { BaseError } from 'make-error';
-import { DescriptorAssertionOptions } from './assert';
+import { type DescriptorAssertionOptions } from './assert';
 
 export interface AssertionIssue {
   /**

@@ -1,7 +1,7 @@
-import { Functions } from 'firebase/functions';
+import { type Functions } from 'firebase/functions';
 import { firestoreModelIdentity } from '../../common/firestore/collection/collection';
-import { FirebaseFunctionTypeConfigMap } from './function.factory';
-import { ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory, ModelFirebaseReadFunction } from './model.function.factory';
+import { type FirebaseFunctionTypeConfigMap } from './function.factory';
+import { type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory, type ModelFirebaseReadFunction } from './model.function.factory';
 
 /**
  * This is our FirebaseFunctionTypeMap for Example. It defines all the functions that are available.

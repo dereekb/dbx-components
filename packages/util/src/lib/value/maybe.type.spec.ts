@@ -1,4 +1,4 @@
-import { Maybe, MaybeMap, MaybeNot } from './maybe.type';
+import { type Maybe, type MaybeMap, type MaybeNot } from './maybe.type';
 
 describe('MaybeMap', () => {
   it('should compile', () => {

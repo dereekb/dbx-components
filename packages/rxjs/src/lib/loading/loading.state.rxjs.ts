@@ -1,7 +1,7 @@
-import { DecisionFunction, Maybe, ReadableError, filterMaybeValues, EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
-import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
+import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeValues, type EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
+import { type MonoTypeOperatorFunction, type OperatorFunction, startWith, type Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, type ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
-import { successResult, LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType, errorResult, LoadingStateWithMaybeSoValue, loadingStatesHaveEquivalentMetadata } from './loading.state';
+import { successResult, type LoadingState, type PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, type LoadingStateWithValueType, errorResult, type LoadingStateWithMaybeSoValue, loadingStatesHaveEquivalentMetadata } from './loading.state';
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
 

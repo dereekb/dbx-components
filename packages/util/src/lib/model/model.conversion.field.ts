@@ -1,4 +1,4 @@
-import { ModelFieldMapFunctionsConfig } from './model.conversion';
+import { type ModelFieldMapFunctionsConfig } from './model.conversion';
 
 /**
  * Field conversion that copies the same value across.

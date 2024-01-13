@@ -1,6 +1,6 @@
-import { ModelFieldConversions, makeModelMapFunctions, Maybe, ModelConversionOptions, modifyModelMapFunctions, toModelFieldConversions } from '@dereekb/util';
-import { PartialWithFieldValue, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths } from '../types';
-import { FirestoreModelData, SnapshotConverterConfig, SnapshotConverterFromFunction, SnapshotConverterFunctions, SnapshotConverterToFunction } from './snapshot.type';
+import { type ModelFieldConversions, makeModelMapFunctions, type Maybe, type ModelConversionOptions, modifyModelMapFunctions, toModelFieldConversions } from '@dereekb/util';
+import { type PartialWithFieldValue, type SnapshotOptions, type SetOptions, type WithFieldValue, type DocumentSnapshot, type SetOptionsMerge, type SetOptionsMergeFields, asTopLevelFieldPaths } from '../types';
+import { type FirestoreModelData, type SnapshotConverterConfig, type SnapshotConverterFromFunction, type SnapshotConverterFunctions, type SnapshotConverterToFunction } from './snapshot.type';
 
 // MARK: Snapshots
 export function snapshotConverterFunctions<T extends object, O extends object = FirestoreModelData<T>>(config: SnapshotConverterConfig<T, O>): SnapshotConverterFunctions<T, O> {

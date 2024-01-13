@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
 import { RRule } from 'rrule';
 

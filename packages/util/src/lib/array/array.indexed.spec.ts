@@ -1,4 +1,4 @@
-import { IndexNumber, IndexRef } from '../value';
+import { type IndexNumber, type IndexRef } from '../value';
 import { getArrayNextIndex, indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory, findNext } from './array.indexed';
 import { range } from './array.number';
 

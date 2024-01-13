@@ -1,6 +1,6 @@
-import { incrementingNumberFactory, IncrementingNumberFactoryConfig } from '@dereekb/util';
-import { scan, Observable, OperatorFunction } from 'rxjs';
-import { factoryTimer, FactoryTimerConfig } from './factory';
+import { incrementingNumberFactory, type IncrementingNumberFactoryConfig } from '@dereekb/util';
+import { scan, type Observable, type OperatorFunction } from 'rxjs';
+import { factoryTimer, type FactoryTimerConfig } from './factory';
 
 /**
  * Similar to count(), but counts emissions as they occur using scan.

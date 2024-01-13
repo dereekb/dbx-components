@@ -1,7 +1,7 @@
-import { LoadingState, mapLoadingStateResults, MapLoadingStateResultsConfiguration, PageLoadingState } from '../loading';
-import { Destroyable } from '@dereekb/util';
-import { map, Observable, shareReplay } from 'rxjs';
-import { ItemIteration, ItemIteratorNextRequest } from './iteration';
+import { type LoadingState, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type PageLoadingState } from '../loading';
+import { type Destroyable } from '@dereekb/util';
+import { map, type Observable, shareReplay } from 'rxjs';
+import { type ItemIteration, type ItemIteratorNextRequest } from './iteration';
 
 /**
  * An object that maps loading states from one mapping to another.

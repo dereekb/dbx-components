@@ -1,5 +1,5 @@
-import { MapDescriptorAssertionOptions } from './assert';
-import { AssertionIssue, ASSERTION_HANDLER } from './assert.error';
+import { type MapDescriptorAssertionOptions } from './assert';
+import { type AssertionIssue, ASSERTION_HANDLER } from './assert.error';
 
 // MARK: Generic Assertions
 type SetAccessorFunction<T> = (value: T) => void;

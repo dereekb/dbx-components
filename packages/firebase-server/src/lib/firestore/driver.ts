@@ -1,4 +1,4 @@
-import { FirestoreDrivers } from '@dereekb/firebase';
+import { type FirestoreDrivers } from '@dereekb/firebase';
 import { googleCloudFirestoreAccessorDriver } from './driver.accessor';
 import { googleCloudFirestoreQueryDriver } from './driver.query';
 

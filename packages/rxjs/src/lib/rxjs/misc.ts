@@ -1,5 +1,5 @@
-import { RandomNumberFactoryConfig, randomNumberFactory, RandomNumberFactory } from '@dereekb/util';
-import { MonoTypeOperatorFunction, tap, delayWhen, timer, SchedulerLike, asyncScheduler } from 'rxjs';
+import { type RandomNumberFactoryConfig, randomNumberFactory, type RandomNumberFactory } from '@dereekb/util';
+import { type MonoTypeOperatorFunction, tap, delayWhen, timer, type SchedulerLike, asyncScheduler } from 'rxjs';
 
 /**
  * Used to log a message to the console.

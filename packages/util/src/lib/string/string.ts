@@ -1,5 +1,5 @@
-import { MapFunction } from '../value/map';
-import { Maybe } from '../value/maybe.type';
+import { type MapFunction } from '../value/map';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Converts a string to a value.

@@ -1,5 +1,5 @@
-import { filterUniqueFunction, FilterUniqueFunctionAdditionalKeysInput, PrimativeKey, ReadKeyFunction } from '@dereekb/util';
-import { map, MonoTypeOperatorFunction } from 'rxjs';
+import { filterUniqueFunction, type FilterUniqueFunctionAdditionalKeysInput, type PrimativeKey, type ReadKeyFunction } from '@dereekb/util';
+import { map, type MonoTypeOperatorFunction } from 'rxjs';
 
 /**
  * Convenience function for building an OperatorFunction that uses filterUniqueFunction().

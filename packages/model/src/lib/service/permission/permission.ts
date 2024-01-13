@@ -1,5 +1,5 @@
-import { Maybe } from '@dereekb/util';
-import { fullAccessRoleMap, GrantedRoleMap, noAccessRoleMap } from './role';
+import { type Maybe } from '@dereekb/util';
+import { fullAccessRoleMap, type GrantedRoleMap, noAccessRoleMap } from './role';
 
 /**
  * Object that contains granted roles, a model, and the context the roles were granted in.

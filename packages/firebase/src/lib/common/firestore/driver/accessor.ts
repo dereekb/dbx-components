@@ -1,10 +1,10 @@
-import { FirestoreCollectionName } from './../collection/collection';
-import { DocumentData, CollectionReference, CollectionGroup, DocumentReference, Firestore } from '../types';
-import { DefaultFirestoreDocumentContextFactory } from '../accessor/context.default';
-import { WriteBatchFirestoreDocumentContextFactory } from '../accessor/context.batch';
-import { TransactionFirestoreDocumentContextFactory } from '../accessor/context.transaction';
-import { FirestoreWriteBatchFactoryDriver } from './batch';
-import { FirestoreTransactionFactoryDriver } from './transaction';
+import { type FirestoreCollectionName } from './../collection/collection';
+import { type DocumentData, type CollectionReference, type CollectionGroup, type DocumentReference, type Firestore } from '../types';
+import { type DefaultFirestoreDocumentContextFactory } from '../accessor/context.default';
+import { type WriteBatchFirestoreDocumentContextFactory } from '../accessor/context.batch';
+import { type TransactionFirestoreDocumentContextFactory } from '../accessor/context.transaction';
+import { type FirestoreWriteBatchFactoryDriver } from './batch';
+import { type FirestoreTransactionFactoryDriver } from './transaction';
 
 export type FirestoreAccessorDriverCollectionGroupFunction = <T = DocumentData>(firestore: Firestore, collectionId: string) => CollectionGroup<T>;
 export type FirestoreAccessorDriverCollectionRefFunction = <T = DocumentData>(firestore: Firestore, path: string, ...pathSegments: string[]) => CollectionReference<T>;

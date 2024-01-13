@@ -1,9 +1,9 @@
-import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallDeleteModelParams, ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
+import { type PromiseOrValue, serverError } from '@dereekb/util';
+import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallDeleteModelParams, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
-import { NestContextCallableRequestWithAuth } from '../function/nest';
-import { OnCallWithAuthorizedNestContext } from '../function/call';
-import { AssertModelCrudRequestFunction } from './crud.assert.function';
+import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { type OnCallWithAuthorizedNestContext } from '../function/call';
+import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 
 // MARK: Function
 export type OnCallDeleteModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;

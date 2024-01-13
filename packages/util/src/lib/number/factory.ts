@@ -1,4 +1,4 @@
-import { asGetter, Factory, GetterOrValue } from '../getter/getter';
+import { asGetter, type Factory, type GetterOrValue } from '../getter/getter';
 
 export type NumberFactory = Factory<number>;
 

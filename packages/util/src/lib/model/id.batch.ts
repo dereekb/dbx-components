@@ -1,9 +1,9 @@
 import { mergeArraysIntoArray } from '../array/array';
-import { ArrayFactory, AsyncArrayFactory } from '../array/array.factory';
-import { FilterUniqueFunction } from '../array/array.unique';
-import { PrimativeKey } from '../key';
+import { type ArrayFactory, type AsyncArrayFactory } from '../array/array.factory';
+import { type FilterUniqueFunction } from '../array/array.unique';
+import { type PrimativeKey } from '../key';
 import { performBatchLoop } from '../promise/promise.loop';
-import { AsyncMapFunction, MapFunction } from '../value/map';
+import { type AsyncMapFunction, type MapFunction } from '../value/map';
 
 /**
  * Used to verify each id valid and available for use.

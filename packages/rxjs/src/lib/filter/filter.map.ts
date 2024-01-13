@@ -1,9 +1,9 @@
 import { filterMaybe } from '../rxjs/value';
-import { ObservableOrValue } from '../rxjs/getter';
+import { type ObservableOrValue } from '../rxjs/getter';
 import { FilterSourceInstance } from './filter.source';
-import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shareReplay, first, merge, Subscription, finalize } from 'rxjs';
-import { FilterSource, FilterSourceConnector } from './filter';
-import { Destroyable, IndexNumber, IndexRef, Maybe } from '@dereekb/util';
+import { BehaviorSubject, type Observable, switchMap, map, distinctUntilChanged, shareReplay, first, merge, type Subscription, finalize } from 'rxjs';
+import { type FilterSource, type FilterSourceConnector } from './filter';
+import { type Destroyable, type IndexNumber, type IndexRef, type Maybe } from '@dereekb/util';
 
 /**
  * Used to identify a specific filter.

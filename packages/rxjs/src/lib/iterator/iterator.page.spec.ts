@@ -1,7 +1,7 @@
-import { FIRST_PAGE, PageNumber, range } from '@dereekb/util';
-import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
+import { FIRST_PAGE, type PageNumber, range } from '@dereekb/util';
+import { ItemPageIterator, type ItemPageIteratorDelegate, type ItemPageIterationInstance, type ItemPageIteratorRequest, type ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
-import { skip, delay, filter, first, of, Observable, tap } from 'rxjs';
+import { skip, delay, filter, first, of, type Observable, tap } from 'rxjs';
 
 export interface TestPageIteratorFilter {
   end?: true;

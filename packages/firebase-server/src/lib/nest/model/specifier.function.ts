@@ -1,6 +1,6 @@
-import { ModelFirebaseCrudFunctionSpecifier, ModelFirebaseCrudFunctionSpecifierRef, MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } from '@dereekb/firebase';
-import { Maybe, objectToMap, PromiseOrValue, serverError } from '@dereekb/util';
-import { NestContextCallableRequestWithAuth } from '../function/nest';
+import { type ModelFirebaseCrudFunctionSpecifier, type ModelFirebaseCrudFunctionSpecifierRef, MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } from '@dereekb/firebase';
+import { type Maybe, objectToMap, type PromiseOrValue, serverError } from '@dereekb/util';
+import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { badRequestError } from '../../function';
 
 export type OnCallSpecifierHandlerNestContextRequest<N, I = unknown> = NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;

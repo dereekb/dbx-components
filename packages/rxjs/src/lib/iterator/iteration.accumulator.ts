@@ -1,9 +1,9 @@
 import { SubscriptionObject } from '../subscription';
-import { startWith, map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
+import { startWith, map, type Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
 import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue } from '../rxjs';
-import { MapFunctionOutputPair, lastValue, Destroyable, mapFunctionOutputPair, isMaybeSo, IndexRef } from '@dereekb/util';
-import { ItemIteration, PageItemIteration } from './iteration';
-import { LoadingState, loadingStateHasError, mapLoadingStateValueFunction, MapLoadingStateValueMapFunction } from '../loading';
+import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef } from '@dereekb/util';
+import { type ItemIteration, type PageItemIteration } from './iteration';
+import { type LoadingState, loadingStateHasError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
 
 export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O, I>;
 

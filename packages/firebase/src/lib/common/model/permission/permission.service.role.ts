@@ -1,9 +1,9 @@
-import { FirestoreDocument } from '../../firestore/accessor/document';
-import { GrantedRole, GrantedRoleMap, grantedRoleMapReader, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
-import { InModelContextFirebaseModelPermissionService } from './permission.service';
-import { SetIncludesMode, ArrayOrValue } from '@dereekb/util';
-import { FirebasePermissionErrorContext } from './permission.context';
-import { FirebaseContextGrantedModelRoles, FirebasePermissionServiceModel } from './permission';
+import { type FirestoreDocument } from '../../firestore/accessor/document';
+import { type GrantedRole, type GrantedRoleMap, grantedRoleMapReader, type GrantedRoleMapReader, type GrantedRoleTruthMap, type GrantedRoleTruthMapObject } from '@dereekb/model';
+import { type InModelContextFirebaseModelPermissionService } from './permission.service';
+import { type SetIncludesMode, type ArrayOrValue } from '@dereekb/util';
+import { type FirebasePermissionErrorContext } from './permission.context';
+import { type FirebaseContextGrantedModelRoles, type FirebasePermissionServiceModel } from './permission';
 
 export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends GrantedRoleMapReader<R>, FirebasePermissionServiceModel<T, D> {
   readonly roleMap: GrantedRoleMap<R>;

@@ -1,9 +1,9 @@
-import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelParams, OnCallCreateModelResult, ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
+import { type PromiseOrValue, serverError } from '@dereekb/util';
+import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallCreateModelParams, type OnCallCreateModelResult, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
-import { OnCallWithAuthorizedNestContext } from '../function/call';
-import { NestContextCallableRequestWithAuth } from '../function/nest';
-import { AssertModelCrudRequestFunction } from './crud.assert.function';
+import { type OnCallWithAuthorizedNestContext } from '../function/call';
+import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 
 // MARK: Function
 export type OnCallCreateModelFunction<N, I = unknown, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;

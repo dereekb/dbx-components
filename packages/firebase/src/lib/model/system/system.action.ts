@@ -1,5 +1,5 @@
-import { AsyncFirebaseFunctionCreateAction, AsyncFirebaseFunctionDeleteAction, AsyncFirebaseFunctionUpdateAction, FirebaseFunctionCreateAction, FirebaseFunctionDeleteAction, FirebaseFunctionUpdateAction } from '@dereekb/firebase';
-import { SystemStateDocument } from './system';
+import { type AsyncFirebaseFunctionCreateAction, type AsyncFirebaseFunctionDeleteAction, type AsyncFirebaseFunctionUpdateAction, type FirebaseFunctionCreateAction, type FirebaseFunctionDeleteAction, type FirebaseFunctionUpdateAction } from '@dereekb/firebase';
+import { type SystemStateDocument } from './system';
 
 export type SystemStateCreateAction<P extends object> = FirebaseFunctionCreateAction<P, SystemStateDocument>;
 export type AsyncSystemStateCreateAction<P extends object> = AsyncFirebaseFunctionCreateAction<P, SystemStateDocument>;

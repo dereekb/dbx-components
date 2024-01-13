@@ -1,4 +1,4 @@
-import { ModelKeyRef, UniqueModel } from '@dereekb/util';
+import { type ModelKeyRef, type UniqueModel } from '@dereekb/util';
 import { distinctUntilObjectKeyChange } from './key';
 
 /**

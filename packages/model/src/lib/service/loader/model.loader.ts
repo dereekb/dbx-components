@@ -1,4 +1,4 @@
-import { PromiseOrValue, Maybe, ModelKey } from '@dereekb/util';
+import { type PromiseOrValue, type Maybe, type ModelKey } from '@dereekb/util';
 
 /**
  * Interface used to load models given a key.

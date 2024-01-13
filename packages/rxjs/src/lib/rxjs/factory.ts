@@ -1,5 +1,5 @@
-import { FactoryWithInput } from '@dereekb/util';
-import { takeWhile, map, Observable, timer } from 'rxjs';
+import { type FactoryWithInput } from '@dereekb/util';
+import { takeWhile, map, type Observable, timer } from 'rxjs';
 
 /**
  * factoryTimer() configuration

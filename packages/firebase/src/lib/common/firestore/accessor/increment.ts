@@ -1,6 +1,6 @@
 import { filterFalsyAndEmptyValues, objectHasNoKeys } from '@dereekb/util';
-import { WriteResult } from '../types';
-import { FirestoreAccessorIncrementUpdate, FirestoreDocumentDataAccessor } from './accessor';
+import { type WriteResult } from '../types';
+import { type FirestoreAccessorIncrementUpdate, type FirestoreDocumentDataAccessor } from './accessor';
 
 export type IncrementUpdateWithAccessorFunction<T> = (data: FirestoreAccessorIncrementUpdate<T>) => Promise<WriteResult | void>;
 

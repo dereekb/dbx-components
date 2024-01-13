@@ -1,7 +1,7 @@
 import { invertBooleanReturnFunction } from '../function/function.boolean';
-import { FactoryWithRequiredInput } from '../getter/getter';
-import { MapFunction, AsyncMapFunction } from './map';
-import { Maybe } from './maybe.type';
+import { type FactoryWithRequiredInput } from '../getter/getter';
+import { type MapFunction, type AsyncMapFunction } from './map';
+import { type Maybe } from './maybe.type';
 
 /**
  * A map function that derives a boolean from the input.

@@ -1,8 +1,8 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive TreeNode value requires its use to terminate.
 
-import { TreeNode, TreeNodeWithoutChildren } from './tree';
-import { Maybe } from '../value/maybe.type';
+import { type TreeNode, type TreeNodeWithoutChildren } from './tree';
+import { type Maybe } from '../value/maybe.type';
 
 // MARK: Expand
 

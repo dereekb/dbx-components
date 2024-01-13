@@ -23,7 +23,7 @@ import {
   isValidDateCellRange,
   isValidDateCellRangeSeries,
   sortDateCellRanges,
-  UniqueDateCellRange
+  type UniqueDateCellRange
 } from './date.cell.index';
 
 describe('isDateCellRange()', () => {

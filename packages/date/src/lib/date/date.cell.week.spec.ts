@@ -1,4 +1,4 @@
-import { dateCellTiming, DateCellIndex } from './date.cell';
+import { dateCellTiming, type DateCellIndex } from './date.cell';
 import { systemNormalDateToBaseDate } from './date.timezone';
 import { dateCellDayOfWeekFactory, dateCellIndexYearWeekCodeFactory, dateCellIndexYearWeekCodeGroupFactory } from './date.cell.week';
 import { yearWeekCodeFromDate } from './date.week';

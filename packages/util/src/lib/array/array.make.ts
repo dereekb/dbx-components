@@ -1,5 +1,5 @@
-import { FactoryWithInput } from '../getter';
-import { randomNumberFactory, RandomNumberFactoryInput, RandomNumberFactory } from '../number/random';
+import { type FactoryWithInput } from '../getter';
+import { randomNumberFactory, type RandomNumberFactoryInput, type RandomNumberFactory } from '../number/random';
 import { arrayFactory } from './array.factory';
 
 // MARK: Make Array

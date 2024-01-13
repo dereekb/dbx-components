@@ -1,7 +1,7 @@
-import { AsyncGetterOrValue, GetterOrValue, getValueFromGetter } from '../getter';
-import { PromiseOrValue } from '../promise/promise.type';
-import { MapFunction } from './map';
-import { Maybe } from './maybe.type';
+import { type AsyncGetterOrValue, type GetterOrValue, getValueFromGetter } from '../getter';
+import { type PromiseOrValue } from '../promise/promise.type';
+import { type MapFunction } from './map';
+import { type Maybe } from './maybe.type';
 
 // MARK: Use
 /**

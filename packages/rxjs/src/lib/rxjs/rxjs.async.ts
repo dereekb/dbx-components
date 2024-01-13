@@ -1,5 +1,5 @@
-import { build, CachedFactoryWithInput, cachedGetter, Destroyable, Maybe } from '@dereekb/util';
-import { throttleTime, distinctUntilChanged, BehaviorSubject, Observable, Subject } from 'rxjs';
+import { build, type CachedFactoryWithInput, cachedGetter, type Destroyable, type Maybe } from '@dereekb/util';
+import { throttleTime, distinctUntilChanged, BehaviorSubject, type Observable, type Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
 import { skipFirstMaybe } from './value';
 

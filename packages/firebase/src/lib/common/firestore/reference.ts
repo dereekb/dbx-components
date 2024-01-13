@@ -1,5 +1,5 @@
-import { FirestoreContext } from './context';
-import { CollectionReference, DocumentReference, Firestore, FirestoreDataConverter, Query, Transaction } from './types';
+import { type FirestoreContext } from './context';
+import { type CollectionReference, type DocumentReference, type Firestore, type FirestoreDataConverter, type Query, type Transaction } from './types';
 
 /**
  * Contains a reference to a Query.

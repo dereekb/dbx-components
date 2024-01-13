@@ -1,6 +1,6 @@
-import { Functions } from 'firebase/functions';
-import { FirebaseFunctionMap, FirebaseFunctionMapFunction } from './function';
-import { FirebaseFunctionGetter, firebaseFunctionMapFactory, FirebaseFunctionsConfigMap, FirebaseFunctionTypeConfigMap, lazyFirebaseFunctionsFactory } from './function.factory';
+import { type Functions } from 'firebase/functions';
+import { type FirebaseFunctionMap, type FirebaseFunctionMapFunction } from './function';
+import { type FirebaseFunctionGetter, firebaseFunctionMapFactory, type FirebaseFunctionsConfigMap, type FirebaseFunctionTypeConfigMap, lazyFirebaseFunctionsFactory } from './function.factory';
 
 const functionFactoryTestModelFunctionA = 'a';
 const functionFactoryTestModelFunctionB = 'b';

@@ -1,5 +1,5 @@
-import { ThrowErrorFunction } from '@dereekb/util';
-import * as admin from 'firebase-admin';
+import { type ThrowErrorFunction } from '@dereekb/util';
+import type * as admin from 'firebase-admin';
 import { handleFirebaseError, preconditionConflictError } from './error';
 
 export const PHONE_NUMBER_ALREADY_EXISTS_ERROR_CODE = 'PHONE_NUMBER_ALREADY_EXISTS';

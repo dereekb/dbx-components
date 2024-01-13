@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional } from 'class-validator';
-import { FirestoreModelKeyRef } from '../../firestore/collection/collection';
+import { type FirestoreModelKeyRef } from '../../firestore/collection/collection';
 import { IsFirestoreModelId, IsFirestoreModelKey } from './model.validator';
 
 /**

@@ -1,6 +1,6 @@
-import { minAndMaxFunction, MinAndMaxFunctionResult, SortCompareFunction } from '../sort';
-import { MapFunction } from '../value/map';
-import { Maybe } from '../value/maybe.type';
+import { minAndMaxFunction, type MinAndMaxFunctionResult, type SortCompareFunction } from '../sort';
+import { type MapFunction } from '../value/map';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A string represented within a number.

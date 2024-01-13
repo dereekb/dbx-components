@@ -1,6 +1,6 @@
-import { FirebaseAuthError, FIREBASE_AUTH_USER_NOT_FOUND_ERROR } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
-import * as admin from 'firebase-admin';
+import { type FirebaseAuthError, FIREBASE_AUTH_USER_NOT_FOUND_ERROR } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import type * as admin from 'firebase-admin';
 
 /**
  * Awaits the load result from the input promise. If it encounters a FIREBASE_AUTH_USER_NOT_FOUND_ERROR, then returns undefined. Throws the error otherwise.

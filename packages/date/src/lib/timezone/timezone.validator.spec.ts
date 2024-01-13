@@ -1,4 +1,4 @@
-import { Maybe, TimezoneString } from '@dereekb/util';
+import { Maybe, type TimezoneString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
 import { IsKnownTimezone } from './timezone.validator';

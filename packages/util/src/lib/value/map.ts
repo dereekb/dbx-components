@@ -1,9 +1,9 @@
-import { asArray, ArrayOrValue } from '../array/array';
+import { asArray, type ArrayOrValue } from '../array/array';
 import { filterMaybeValues } from '../array/array.value';
-import { PromiseOrValue } from '../promise/promise.type';
+import { type PromiseOrValue } from '../promise/promise.type';
 import { build } from './build';
 import { isMaybeNot } from './maybe';
-import { Maybe, MaybeNot } from './maybe.type';
+import { type Maybe, type MaybeNot } from './maybe.type';
 
 /**
  * Converts one value to another.

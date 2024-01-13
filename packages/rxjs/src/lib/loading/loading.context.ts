@@ -1,5 +1,5 @@
-import { Observable } from 'rxjs';
-import { LoadingErrorPair } from './loading.state';
+import { type Observable } from 'rxjs';
+import { type LoadingErrorPair } from './loading.state';
 
 export interface LoadingContextEvent extends LoadingErrorPair {
   loading: boolean;

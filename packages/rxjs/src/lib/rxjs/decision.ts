@@ -1,5 +1,5 @@
-import { filterAndMapFunction, Milliseconds } from '@dereekb/util';
-import { combineLatest, map, MonoTypeOperatorFunction, Observable, of, switchMap, throttleTime } from 'rxjs';
+import { filterAndMapFunction, type Milliseconds } from '@dereekb/util';
+import { combineLatest, map, type MonoTypeOperatorFunction, type Observable, of, switchMap, throttleTime } from 'rxjs';
 
 /**
  * Decision-like that takes in a value and returns an Observable with a boolean.
