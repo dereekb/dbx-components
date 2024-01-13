@@ -5,19 +5,16 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
-        "importPath": "@dereekb/firebase/test",
         "outputPath": "dist/packages/firebase/test",
-        "main": "packages/firebase/test/src/index.ts",
         "tsConfig": "packages/firebase/test/tsconfig.lib.json",
-        "compiler": "babel",
-        "project": "packages/firebase/test/package.json",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true
-      }
+        "packageJson": "packages/firebase/test/package.json",
+        "main": "packages/firebase/test/src/index.ts",
+        "assets": ["packages/firebase/test/*.md"]
+      },
+      "dependsOn": []
     },
     "test": {
       "executor": "nx:run-commands",

@@ -34,7 +34,7 @@
         "compiler": "babel",
         "project": "packages/util/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": true,
+        "generateExportsField": false,
         "assets": [
           {
             "glob": "packages/util/README.md",

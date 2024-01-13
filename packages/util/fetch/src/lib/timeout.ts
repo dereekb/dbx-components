@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
+import { type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 
 export class FetchTimeoutError extends BaseError {
   constructor(readonly response: Response, readonly timeout: number) {

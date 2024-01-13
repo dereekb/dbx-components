@@ -5,19 +5,16 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
-        "importPath": "@dereekb/util/fetch",
         "outputPath": "dist/packages/util/fetch",
-        "main": "packages/util/fetch/src/index.ts",
         "tsConfig": "packages/util/fetch/tsconfig.lib.json",
-        "compiler": "babel",
-        "project": "packages/util/fetch/package.json",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true
-      }
+        "packageJson": "packages/util/fetch/package.json",
+        "main": "packages/util/fetch/src/index.ts",
+        "assets": ["packages/util/fetch/*.md"]
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/linter:eslint",

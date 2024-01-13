@@ -24,7 +24,7 @@
         "compiler": "babel",
         "project": "packages/rxjs/package.json",
         "format": ["esm", "cjs"],
-        "generateExportsField": true,
+        "generateExportsField": false,
         "assets": [
           {
             "glob": "packages/rxjs/README.md",

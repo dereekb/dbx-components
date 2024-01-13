@@ -1,5 +1,4 @@
-import { fetchService, FetchService } from './fetch';
-import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
+import { fetchService, type FetchService } from './fetch';
 
 export const nodeFetchService: FetchService = fetchService({
   makeFetch: fetch as any,

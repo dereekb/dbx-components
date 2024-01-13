@@ -1,5 +1,5 @@
-import { mapIdentityFunction, MapSameFunction } from '@dereekb/util';
-import { FetchMethod, ConfiguredFetch } from './fetch.type';
+import { mapIdentityFunction, type MapSameFunction } from '@dereekb/util';
+import { type FetchMethod, type ConfiguredFetch } from './fetch.type';
 import { fetchURL, FetchURLInput } from './url';
 
 export type FetchJsonBody = string | object;

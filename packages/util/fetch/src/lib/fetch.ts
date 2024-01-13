@@ -1,6 +1,6 @@
-import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingSlashes, WebsitePath, WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples } from '@dereekb/util';
+import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples } from '@dereekb/util';
 import { fetchOk } from './error';
-import { ConfiguredFetchWithTimeout, RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
+import { type ConfiguredFetchWithTimeout, type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
 
 /**
