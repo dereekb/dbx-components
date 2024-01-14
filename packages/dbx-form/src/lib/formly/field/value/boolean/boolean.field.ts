@@ -1,18 +1,20 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, propsAndConfigForFieldConfig, MaterialFormFieldConfig } from '../../field';
+import { AUTO_TOUCH_WRAPPER_KEY, STYLE_WRAPPER_KEY } from '../../wrapper/wrapper.key';
 
 export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig, MaterialFormFieldConfig {}
 
 export function toggleField(config: ToggleFieldConfig): FormlyFieldConfig {
   const { key, defaultValue, materialFormField } = config;
 
+  const classGetter = 'dbx-mat-form-toggle-field-wrapper';
   return formlyField({
     key,
     type: 'toggle',
-    wrappers: ['autotouch', 'form-field'], // NOTE: Must specify form-field if other wrapper specified, otherwise it will not be used.
+    wrappers: [AUTO_TOUCH_WRAPPER_KEY, STYLE_WRAPPER_KEY, 'form-field'], // NOTE: Must specify form-field if other wrapper specified, otherwise it will not be used.
     defaultValue: defaultValue ?? false,
     ...propsAndConfigForFieldConfig(config, {
-      // appearance: 'standard', // TODO: Standard no longer allowed.
+      classGetter,
       ...materialFormField
     })
   });
@@ -23,12 +25,14 @@ export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFie
 export function checkboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
   const { key, defaultValue, materialFormField } = config;
 
+  const classGetter = 'dbx-mat-form-checkbox-field-wrapper';
   return formlyField({
     key,
     type: 'checkbox',
+    wrappers: [STYLE_WRAPPER_KEY, 'form-field'],
     defaultValue: defaultValue ?? false,
     ...propsAndConfigForFieldConfig(config, {
-      // appearance: 'standard', // TODO: Standard no longer allowed.
+      classGetter,
       ...materialFormField
     })
   });

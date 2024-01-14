@@ -8,16 +8,7 @@ import { DbxFormInfoConfig } from './info.wrapper.component';
 import { DbxFormExpandWrapperConfig } from './expandable.wrapper.component';
 import { DbxFlexSize } from '@dereekb/dbx-web';
 import { DbxFormWorkingWrapperConfig } from './working.wrapper.component';
-
-export const AUTO_TOUCH_WRAPPER_KEY = 'autotouch';
-export const EXPANDABLE_WRAPPER_KEY = 'expandable';
-export const TOGGLE_WRAPPER_KEY = 'toggle';
-export const SECTION_WRAPPER_KEY = 'section';
-export const SUBSECTION_WRAPPER_KEY = 'subsection';
-export const INFO_WRAPPER_KEY = 'info';
-export const FLEX_WRAPPER_KEY = 'flex';
-export const STYLE_WRAPPER_KEY = 'style';
-export const WORKING_WRAPPER_KEY = 'working';
+import { AUTO_TOUCH_WRAPPER_KEY, EXPANDABLE_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, SECTION_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, INFO_WRAPPER_KEY, STYLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
 
 export type WrapperFormlyFieldConfig<P, C extends FormlyFieldConfig> = FormlyFieldConfig<P> & {
   wrappers: string[];
@@ -83,13 +74,14 @@ export function checkIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldConfig 
   }
 }
 
-export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig)[], { relative, breakpoint, size: defaultSize = 2 }: DbxFlexLayoutWrapperGroupFieldConfigDefaults = {}): FormlyFieldConfig<DbxFlexWrapperConfig> {
+export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig)[], { relative, breakpoint, breakToColumn, size: defaultSize = 2 }: DbxFlexLayoutWrapperGroupFieldConfigDefaults = {}): FormlyFieldConfig<DbxFlexWrapperConfig> {
   return {
     wrappers: ['flex'],
     fieldGroupClassName: 'dbx-flex-group',
     // fieldGroupClassName: 'field-layout-group',
     props: {
       breakpoint,
+      breakToColumn,
       relative
     },
     fieldGroup: fieldConfigs.map((inputConfig) => {

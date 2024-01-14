@@ -8,13 +8,31 @@ $anchor-list-item-muted-opacity: 74%;
 $anchor-list-item-parent-active-opacity: 90%;
 $anchor-list-item-active-opacity: 100%;
 
-$active-root-item-left-padding: 2px;
-$active-child-item-left-padding: 5px;
+$active-child-item-left-padding: 2px;
+
+$default-anchor-list-item-child-list-item-icon-size: 20px;
+$default-anchor-list-item-child-list-item-text-size: 14px;
 
 // MARK: Mixin
 @mixin core() {
   .dbx-anchor-list.mat-mdc-nav-list {
     padding-top: 0; // no padding
+    --parent-mdc-list-list-item-leading-icon-size: var(--mdc-list-list-item-leading-icon-size);
+
+    .mat-mdc-list-item .mat-icon.mat-mdc-list-item-icon {
+      font-size: var(--mdc-list-list-item-leading-icon-size);
+      padding-left: calc((var(--parent-mdc-list-list-item-leading-icon-size) - var(--mdc-list-list-item-leading-icon-size)) / 2); // align the icons
+    }
+
+    .dbx-anchor-list-child {
+      // text and icon size text is smaller
+      --mdc-list-list-item-leading-icon-size: var(--dbx-anchor-list-item-child-list-item-icon-size, #{$default-anchor-list-item-child-list-item-icon-size});
+      --mdc-list-list-item-label-text-size: var(--dbx-anchor-list-item-child-list-item-text-size, #{$default-anchor-list-item-child-list-item-text-size});
+
+      .mat-mdc-list-item .mdc-list-item__content {
+        padding-left: $active-child-item-left-padding;
+      }
+    }
 
     .mat-mdc-list-item {
       .mat-icon.mat-mdc-list-item-icon.mdc-list-item__start {
@@ -85,26 +103,6 @@ $active-child-item-left-padding: 5px;
 }
 
 @mixin typography($theme-config-or-typography-config) {
-  .dbx-anchor-list.mat-mdc-nav-list {
-    .mat-mdc-list-item .mat-mdc-list-item-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      padding: $active-root-item-left-padding;
-    }
-
-    // MARK: Anchor Tree
-    .dbx-anchor-list-child .mat-mdc-list-item {
-      font-size: 0.875em;
-
-      .mat-mdc-list-item-icon {
-        font-size: 22px;
-        width: 22px;
-        height: 22px;
-        padding: $active-child-item-left-padding;
-      }
-    }
-  }
 }
 
 @mixin theme($theme-config) {

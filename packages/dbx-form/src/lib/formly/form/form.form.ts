@@ -20,7 +20,10 @@ export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsCon
       label,
       placeholder,
       autocomplete: false,
-      materialFormField
+      materialFormField: {
+        ...materialFormField,
+        hideLabel: true
+      }
     })
   ];
 }

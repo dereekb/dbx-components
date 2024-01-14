@@ -104,7 +104,7 @@ export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFie
 
   return {
     key: undefined,
-    fieldGroup: [flexLayoutWrapper([startField, endField], { size: 1, relative: true })]
+    fieldGroup: [flexLayoutWrapper([startField, endField], { relative: true, breakToColumn: true, breakpoint: 'large' })]
   };
 }
 

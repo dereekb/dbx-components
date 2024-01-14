@@ -76,6 +76,20 @@ export class DocFormWrapperComponent {
     )
   ];
 
+  readonly flexThreeFieldBreakToColumn: FormlyFieldConfig[] = [
+    flexLayoutWrapper(
+      [
+        {
+          field: cityField(),
+          size: 4
+        },
+        stateField(),
+        zipCodeField()
+      ],
+      { breakpoint: 'large', breakToColumn: true, size: 1 }
+    )
+  ];
+
   readonly flexFiveField: FormlyFieldConfig[] = [flexLayoutWrapper([nameField(), cityField(), stateField(), zipCodeField(), countryField()], { breakpoint: 'large', size: 1, relative: true })];
 
   constructor(readonly matDialog: MatDialog) {}

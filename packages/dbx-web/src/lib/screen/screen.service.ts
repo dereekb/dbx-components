@@ -1,7 +1,7 @@
 import { Destroyable } from '@dereekb/util';
 import { MediaMatcher } from '@angular/cdk/layout';
-import { ObservableOrValue, asObservable, initialize } from '@dereekb/rxjs';
-import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest } from 'rxjs';
+import { ObservableOrValue, asObservable, initialize, tapLog } from '@dereekb/rxjs';
+import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest, catchError, of } from 'rxjs';
 import { ScreenMediaWidthType, ScreenMediaHeightType, screenMediaWidthTypeIsActive } from './screen';
 import { Injectable } from '@angular/core';
 

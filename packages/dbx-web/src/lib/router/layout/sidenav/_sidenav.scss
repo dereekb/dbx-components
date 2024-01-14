@@ -8,7 +8,10 @@ $width: 240px;
 $mobile-width: 80vw;
 $icon-only-width: 65px;
 $mat-mdc-list-item-height: 48px;
-$active-border-left-width: 2px;
+$mat-mdc-list-item-icon-padding: 16px;
+
+$default-active-border-left-width: 2px;
+
 $dbx-sidenav-nav-bottom-padding: 24px;
 $faded-text-transparent-color: 0.2;
 $active-background-transparent-color: 0.93;
@@ -22,8 +25,46 @@ $active-background-transparent-color: 0.93;
       width: $width;
 
       .mat-drawer-inner-container {
+        display: flex;
+        flex-direction: column;
         box-sizing: border-box;
         padding-bottom: 24px;
+      }
+
+      .dbx-anchor-list.mat-mdc-nav-list {
+        .mat-mdc-list-item {
+          height: $mat-mdc-list-item-height;
+
+          &.mdc-list-item--disabled {
+            user-select: none;
+          }
+        }
+
+        // directly active links have a side-
+        .dbx-anchor-active-eq,
+        .dbx-anchor-list-child .dbx-anchor-active {
+          .mat-mdc-list-item {
+            .mdc-list-item__content {
+              margin-left: calc(#{$mat-mdc-list-item-icon-padding} - var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}));
+            }
+
+            &.mdc-list-item--with-leading-icon {
+              .mdc-list-item__content {
+                margin-left: 0; // cancel padding since the icon will be padded instead.
+              }
+
+              .mat-mdc-list-item-icon {
+                // Offset the added border by clearing the default padding width (4px)
+                margin-left: calc(#{$mat-mdc-list-item-icon-padding} - var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}));
+              }
+            }
+          }
+        }
+
+        .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
+        .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
+          padding-left: calc(#{anchorlist.$active-child-item-left-padding} - var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}));
+        }
       }
     }
 
@@ -104,13 +145,28 @@ $active-background-transparent-color: 0.93;
         --mdc-list-list-item-supporting-text-color: #{$text-color};
         --mdc-list-list-item-leading-icon-color: #{$text-color};
 
+        --mdc-list-list-item-disabled-label-text-color: #{$text-color};
+        --mdc-list-list-item-disabled-leading-icon-color: #{$text-color};
+        --mdc-list-list-item-disabled-trailing-icon-color: #{$text-color};
+
+        --mdc-list-list-item-hover-state-layer-color: #{$text-color};
+        --mdc-list-list-item-focus-state-layer-color: #{$text-color};
+
         --mdc-list-list-item-hover-label-text-color: #{$text-faded-color};
         --mdc-list-list-item-hover-supporting-text-color: #{$text-faded-color};
         --mdc-list-list-item-hover-leading-icon-color: #{$text-faded-color};
 
-        .mat-mdc-list-item {
-          height: $mat-mdc-list-item-height;
-        }
+        /*
+        // TODO: add stylings if they're used in the nav list.
+
+        --mdc-list-list-item-trailing-supporting-text-color: rgba(0, 0, 0, 0.38);
+        --mdc-list-list-item-trailing-icon-color: rgba(0, 0, 0, 0.38);
+        --mdc-list-list-item-selected-trailing-icon-color: rgba(0, 0, 0, 0.38);
+        --mdc-list-list-item-hover-label-text-color: rgba(0, 0, 0, 0.87);
+        --mdc-list-list-item-hover-leading-icon-color: rgba(0, 0, 0, 0.38);
+        --mdc-list-list-item-hover-trailing-icon-color: rgba(0, 0, 0, 0.38);
+        --mdc-list-list-item-focus-label-text-color: rgba(0, 0, 0, 0.87);
+        */
 
         .dbx-anchor-active {
           .mat-mdc-list-item {
@@ -129,20 +185,16 @@ $active-background-transparent-color: 0.93;
         .dbx-anchor-active-eq,
         .dbx-anchor-list-child .dbx-anchor-active {
           .mat-mdc-list-item {
-            border-left: $active-border-left-width solid $active-icon-color;
+            border-left: var(--dbx-sidenav-active-child-item-border-left-width, #{$default-active-border-left-width}) solid $active-icon-color;
 
             .mat-mdc-list-item-icon {
               --mdc-list-list-item-leading-icon-color: #{$active-icon-color};
-
-              // Offset the added border by clearing the default padding width (4px)
-              padding-left: anchorlist.$active-root-item-left-padding - $active-border-left-width;
             }
           }
         }
 
         .dbx-anchor-list-child .dbx-anchor-active .mat-mdc-list-item,
         .dbx-anchor-list-child .dbx-anchor-active-eq .mat-mdc-list-item {
-          padding-left: anchorlist.$active-child-item-left-padding - $active-border-left-width;
           background: transparentize($color: $active-icon-color, $amount: $active-background-transparent-color);
         }
       }
