@@ -4,10 +4,46 @@
 
 // MARK: Mixin
 @mixin core() {
-  .mat-mdc-form-field.mat-mdc-form-field-type-toggle {
-    .mat-mdc-form-field-wrapper .mat-mdc-form-field-subscript-wrapper {
-      // margin on the checkbox field is unnecessary. By removing it, it becomes more in-line with the other fields.
-      margin-top: 0px;
+  .dbx-mat-form-checkbox-field-wrapper .mat-mdc-form-field-type-checkbox.mat-form-field-appearance-outline .mat-mdc-form-field-infix {
+    padding: 0;
+
+    .mat-mdc-checkbox {
+      display: block;
+
+      .mdc-form-field {
+        width: 100%;
+
+        .mdc-label {
+          user-select: none;
+          width: 100%;
+          min-height: 60px;
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 0;
+        }
+      }
+    }
+  }
+
+  .dbx-mat-form-toggle-field-wrapper .mat-mdc-form-field-type-toggle.mat-form-field-appearance-outline .mat-mdc-form-field-infix {
+    padding: 0;
+
+    .mat-mdc-slide-toggle {
+      display: block;
+
+      .mdc-form-field {
+        width: 100%;
+
+        .mdc-label {
+          user-select: none;
+          width: 100%;
+          min-height: 60px;
+          display: inline-flex;
+          align-items: center;
+          padding-top: 6px;
+          padding-bottom: 6px;
+        }
+      }
     }
   }
 }

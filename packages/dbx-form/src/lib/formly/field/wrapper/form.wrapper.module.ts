@@ -15,7 +15,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DbxSectionLayoutModule, DbxTextModule, DbxFlexLayoutModule, DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxFormStyleWrapperComponent } from './style.wrapper.component';
 import { DbxFormWorkingWrapperComponent } from './working.wrapper.component';
-import { AUTO_TOUCH_WRAPPER_KEY, EXPANDABLE_WRAPPER_KEY, FLEX_WRAPPER_KEY, INFO_WRAPPER_KEY, SECTION_WRAPPER_KEY, STYLE_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper';
+import { AUTO_TOUCH_WRAPPER_KEY, EXPANDABLE_WRAPPER_KEY, FLEX_WRAPPER_KEY, INFO_WRAPPER_KEY, SECTION_WRAPPER_KEY, STYLE_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
 
 @NgModule({
   imports: [

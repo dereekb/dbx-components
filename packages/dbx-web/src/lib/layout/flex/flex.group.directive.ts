@@ -12,11 +12,15 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxFlexGroup]',
   host: {
     '[class.dbx-flex-group]': 'content',
+    '[class.dbx-flex-group-break-to-column]': 'breakToColumn',
     '[class.dbx-flex-group-small]': 'small',
     '[class.dbx-flex-group-relative]': 'relative'
   }
 })
 export class DbxFlexGroupDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  @Input()
+  breakToColumn = false;
+
   @Input()
   content = true;
 
@@ -26,6 +30,7 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
   private _small = false;
 
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('tablet');
+
   readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint).pipe(
     map((x) => !x),
     distinctUntilChanged(),

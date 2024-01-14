@@ -50,6 +50,11 @@ $dbx-flex-group-columns-count: 6;
       }
     }
   }
+
+  .dbx-flex-group-break-to-column.dbx-flex-group-small > .dbx-flex-group,
+  .dbx-flex-group.dbx-flex-group-break-to-column.dbx-flex-group-small {
+    flex-direction: column;
+  }
 }
 
 @mixin color($theme-config) {
