@@ -34,6 +34,14 @@
       padding: 0;
 
       > .mat-mdc-form-field-flex {
+        .mdc-notched-outline__leading {
+          display: none;
+        }
+
+        .mdc-floating-label.mat-mdc-floating-label {
+          margin-left: -4px; // align with the input
+        }
+
         @include theming.hide-mdc-notched-outline-border;
       }
     }
@@ -41,7 +49,7 @@
 
   .dbx-section-page-header-search-bar-with-bottom-bar .mat-mdc-form-field > .mat-mdc-text-field-wrapper {
     > .mat-mdc-form-field-flex > .mdc-notched-outline {
-      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
       .mdc-notched-outline__trailing {
         border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
         border-radius: 0;
@@ -51,7 +59,7 @@
     &:hover,
     &.mdc-text-field--focused {
       > .mat-mdc-form-field-flex > .mdc-notched-outline {
-        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
         .mdc-notched-outline__trailing {
           border-bottom: var(--mdc-outlined-text-field-focus-outline-width) solid;
         }

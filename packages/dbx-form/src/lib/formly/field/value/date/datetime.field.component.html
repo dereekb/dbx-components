@@ -39,7 +39,7 @@
     <mat-label>{{ dateLabel }}</mat-label>
     <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
-    <button matPrefix class="mat-datepicker-button-highlight dbx-button-spacer" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
+    <button matPrefix class="dbx-datetime-row-button" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
       <mat-icon>calendar_today</mat-icon>
     </button>
     <span matTextSuffix *ngIf="!(showTimeInput$ | async)">
@@ -64,7 +64,7 @@
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
     <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
-    <button matPrefix class="mat-datepicker-button-highlight dbx-button-spacer" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
+    <button matPrefix class="dbx-datetime-row-button" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
       <mat-icon>timer</mat-icon>
     </button>
     <span matTextSuffix>

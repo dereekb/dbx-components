@@ -8,6 +8,12 @@ export class DocFormFormComponent {
   searchText = '';
 
   searchFormConfig: DbxFormSearchFormFieldsConfig = {
+    label: 'Search Label',
     placeholder: 'Search For Something Cool'
+  };
+
+  searchFormConfigWithoutLabel = {
+    ...this.searchFormConfig,
+    label: undefined
   };
 }
