@@ -48,6 +48,7 @@ $list-item-padded-min-height: 42px;
         letter-spacing: unset;
       }
 
+      &.mdc-list-item--with-leading-icon,
       &.mat-mdc-list-item-with-avatar {
         min-height: 56px;
 

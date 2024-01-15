@@ -12,7 +12,7 @@ export interface DbxFormSearchFormFieldsConfig extends MaterialFormFieldConfig {
 }
 
 export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsConfig>): FormlyFieldConfig[] {
-  const { label = ' ', placeholder = 'Search', materialFormField } = config || {};
+  const { label, placeholder = 'Search', materialFormField } = config || {};
 
   return [
     textField({
@@ -22,7 +22,7 @@ export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsCon
       autocomplete: false,
       materialFormField: {
         ...materialFormField,
-        hideLabel: true
+        hideLabel: !label
       }
     })
   ];

@@ -4,7 +4,7 @@
 
 // MARK: Variables
 $anchor-list-item-disabled-item-opacity: 45%;
-$anchor-list-item-muted-opacity: 74%;
+$anchor-list-item-muted-opacity: 92%;
 $anchor-list-item-parent-active-opacity: 90%;
 $anchor-list-item-active-opacity: 100%;
 
@@ -67,8 +67,11 @@ $default-anchor-list-item-child-list-item-text-size: 14px;
       opacity: #{$anchor-list-item-muted-opacity};
 
       &.mdc-list-item--disabled {
+        .mat-icon.mat-mdc-list-item-icon.mdc-list-item__start {
+          opacity: #{$anchor-list-item-disabled-item-opacity};
+        }
+
         opacity: #{$anchor-list-item-disabled-item-opacity};
-        // background: transparent;
       }
     }
 

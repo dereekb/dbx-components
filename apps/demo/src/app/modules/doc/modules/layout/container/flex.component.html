@@ -25,7 +25,7 @@
         <div class="dbx-primary-bg" [dbxFlexSize]="2">2</div>
         <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
       </div>
-      <h4>Can configure a width breakpoint to make the flex a column instead of a row.</h4>
+      <h4>Can configure a width breakpoint to make the flex wrap to the next rows instead.</h4>
       <p>Small</p>
       <div dbxFlexGroup breakpoint="small" class="text-center">
         <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
@@ -57,6 +57,35 @@
         <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
         <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
         <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <h4>With Break To Column Enabled</h4>
+      <p>Small</p>
+      <div dbxFlexGroup breakpoint="small" [breakToColumn]="true" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="2">2</div>
+      </div>
+      <p>Tablet</p>
+      <div dbxFlexGroup breakpoint="tablet" [breakToColumn]="true" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="2">2</div>
+      </div>
+      <p>Large</p>
+      <div dbxFlexGroup breakpoint="large" [breakToColumn]="true" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="2">2</div>
+      </div>
+      <p>Full</p>
+      <div dbxFlexGroup breakpoint="full" [breakToColumn]="true" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="2">2</div>
       </div>
       <h4>With Relative Enabled</h4>
       <div dbxFlexGroup [relative]="true" class="dbx-flex-group-relative text-center">

@@ -28,6 +28,11 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
         padding-bottom: 0;
       }
     }
+
+    .dbx-datetime-row-button.mat-mdc-icon-button.mdc-icon-button {
+      margin-left: 2px;
+      margin-top: 3px;
+    }
   }
 
   .dbx-datetime-field {
@@ -64,7 +69,6 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
   }
 
   .add-time-button-wrapper {
-    padding-left: 6px;
     margin: auto;
     margin-bottom: 4px;
     height: 100%;
