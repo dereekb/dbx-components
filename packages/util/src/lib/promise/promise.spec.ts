@@ -1,4 +1,5 @@
 import { range } from '../array/array.number';
+import { isEvenNumber } from '../number';
 import { performAsyncTasks, performTasksInParallel } from './promise';
 import { waitForMs } from './wait';
 
@@ -19,6 +20,49 @@ describe('performAsyncTasks()', () => {
     expect(result.failed.length).toBe(0);
 
     expect(tasksStarted).toBe(tasksToRun);
+  });
+
+  describe('nonConcurrentTaskKeyFactory', () => {
+    it('should perform the given tasks with respect to non-concurrency', async () => {
+      let tasksStarted = 0;
+
+      const tasksToRun = 4;
+      const input = range(0, tasksToRun);
+      const nonConcurrentTaskKeyFactory = (x: number) => (isEvenNumber(x) ? 'even' : 'odd') as 'even' | 'odd';
+
+      let wasRunningConcurrentTask = false;
+      let currentTaskKeys = new Set<'even' | 'odd'>();
+
+      const result = await performAsyncTasks(
+        input,
+        async (x) => {
+          tasksStarted += 1;
+
+          const key = nonConcurrentTaskKeyFactory(x);
+
+          // check if already running or not
+          if (currentTaskKeys.has(key)) {
+            wasRunningConcurrentTask = true;
+          } else {
+            currentTaskKeys.add(key);
+          }
+
+          await waitForMs(2);
+
+          currentTaskKeys.delete(key);
+        },
+        {
+          nonConcurrentTaskKeyFactory
+        }
+      );
+
+      expect(result.results.length).toBe(tasksToRun);
+      expect(result.succeded.length).toBe(tasksToRun);
+      expect(result.failed.length).toBe(0);
+      expect(wasRunningConcurrentTask).toBe(false);
+
+      expect(tasksStarted).toBe(tasksToRun);
+    });
   });
 
   it('should throw the first caught error.', (done) => {
@@ -168,6 +212,42 @@ describe('performTasksInParallelFunction()', () => {
     }).catch((e) => {
       expect(tasksStarted).toBe(tasksToRun);
       done();
+    });
+  });
+
+  describe('nonConcurrentTaskKeyFactory', () => {
+    it('should prevent tasks with the same key from running concurrently.', (done) => {
+      let tasksStarted = 0;
+
+      const tasksToRun = 8;
+      const input = range(0, tasksToRun);
+
+      let wasRunningConcurrentTask = false;
+      let currentTaskKeys = new Set<'even' | 'odd'>();
+
+      performTasksInParallel(input, {
+        maxParallelTasks: tasksToRun, // set to try to run then all in parallel
+        nonConcurrentTaskKeyFactory: (x) => (isEvenNumber(x) ? 'even' : 'odd') as 'even' | 'odd', // based on if they're even or odd
+        taskFactory: async (x, _, key) => {
+          tasksStarted += 1;
+
+          // check if already running or not
+          if (currentTaskKeys.has(key)) {
+            wasRunningConcurrentTask = true;
+          } else {
+            currentTaskKeys.add(key);
+          }
+
+          await waitForMs(10);
+
+          currentTaskKeys.delete(key);
+        },
+        waitBetweenTasks: 10
+      }).then(() => {
+        expect(tasksStarted).toBe(tasksToRun);
+        expect(wasRunningConcurrentTask).toBe(false);
+        done();
+      });
     });
   });
 

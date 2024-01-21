@@ -1,5 +1,9 @@
 import { range } from '../array/array.number';
 import { type Milliseconds } from '../date/date';
+import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { multiValueMapBuilder } from '../map';
+import { incrementingNumberFactory } from '../number';
+import { type StringFactory, stringFactoryFromFactory } from '../string/factory';
 import { type IndexNumber } from '../value';
 import { type Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
@@ -73,18 +77,19 @@ export interface PerformAsyncTaskConfig<I = unknown> {
   readonly beforeRetry?: (value: I, tryNumber?: number) => void | Promise<void>;
 }
 
-export interface PerformAsyncTasksConfig<I = unknown> extends PerformAsyncTaskConfig<I>, Omit<PerformTasksInParallelFunctionConfig<I>, 'taskFactory'> {}
+export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> extends PerformAsyncTaskConfig<I>, Omit<PerformTasksInParallelFunctionConfig<I, K>, 'taskFactory'> {}
 
 /**
  * Performs the input tasks, and will retry tasks if they fail, up to a certain point.
  *
  * This is useful for retrying sections that may experience optimistic concurrency collisions.
  */
-export async function performAsyncTasks<I, O = unknown>(input: I[], taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
-  const { sequential, maxParallelTasks, waitBetweenTasks } = config;
+export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I, K> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
+  const { sequential, maxParallelTasks, waitBetweenTasks, nonConcurrentTaskKeyFactory } = config;
   const taskResults: [I, O, boolean][] = [];
 
   await performTasksInParallelFunction({
+    nonConcurrentTaskKeyFactory,
     taskFactory: (value: I, i) =>
       _performAsyncTask(value, taskFn, config).then((x) => {
         taskResults[i] = x;
@@ -174,11 +179,22 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PromiseAsyncTaskFn<I, O
 }
 
 // MARK: Parallel
-export interface PerformTasksInParallelFunctionConfig<I> {
+/**
+ * Used as a key to identify the "group" that a task belongs to to prevent other concurrent tasks from that group from running in parallel when parallel execution is desired.
+ */
+export type PerformTasksInParallelTaskUniqueKey = string;
+
+export interface PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> {
   /**
    * Creates a promise from the input.
    */
-  readonly taskFactory: (input: I, value: IndexNumber) => Promise<void>;
+  readonly taskFactory: (input: I, value: IndexNumber, taskKey: K) => Promise<void>;
+  /**
+   * This function is used to uniquely identify tasks that may use the same resources to prevent such tasks from running concurrently.
+   *
+   * When in use the order is not guranteed.
+   */
+  readonly nonConcurrentTaskKeyFactory?: ReadKeyFunction<I, K>;
   /**
    * Whether or not tasks are performed sequentially or if tasks are all done in "parellel".
    *
@@ -209,7 +225,7 @@ export type PerformTasksInParallelFunction<I> = (input: I[]) => Promise<void>;
  * @param config
  * @returns
  */
-export function performTasksInParallel<I>(input: I[], config: PerformTasksInParallelFunctionConfig<I>): Promise<void> {
+export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], config: PerformTasksInParallelFunctionConfig<I, K>): Promise<void> {
   return performTasksInParallelFunction(config)(input);
 }
 
@@ -218,14 +234,15 @@ export function performTasksInParallel<I>(input: I[], config: PerformTasksInPara
  *
  * @param config
  */
-export function performTasksInParallelFunction<I>(config: PerformTasksInParallelFunctionConfig<I>): PerformTasksInParallelFunction<I> {
-  const { taskFactory, sequential, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
+export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
+  const defaultNonConcurrentTaskKeyFactory = stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
+  const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
   const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
 
-  if (!maxParallelTasks) {
-    // if the max number of parallel tasks is not defined, then run all tasks at once
+  if (!maxParallelTasks && !nonConcurrentTaskKeyFactory) {
+    // if the max number of parallel tasks is not defined, then run all tasks at once, unless there is a nonConcurrentTaskKeyFactory
     return async (input: I[]) => {
-      await Promise.all(input.map((value, i) => taskFactory(value, i)));
+      await Promise.all(input.map((value, i) => taskFactory(value, i, defaultNonConcurrentTaskKeyFactory())));
     };
   } else {
     return (input: I[]) => {
@@ -234,37 +251,84 @@ export function performTasksInParallelFunction<I>(config: PerformTasksInParallel
       }
 
       return new Promise(async (resolve, reject) => {
-        const maxPromisesToRunAtOneTime = Math.min(maxParallelTasks, input.length);
-        const endIndex = input.length;
+        const taskKeyFactory = nonConcurrentTaskKeyFactory ?? defaultNonConcurrentTaskKeyFactory;
+        const maxPromisesToRunAtOneTime = Math.min(maxParallelTasks ?? 100, input.length);
+        const incompleteTasks = input.map((x) => [x, taskKeyFactory(x)] as [I, K]).reverse(); // reverse to use push/pop
 
-        let i = 0;
+        let currentRunIndex = 0;
         let finishedParallels = 0;
         let hasEncounteredFailure = false;
 
+        /**
+         * Set of tasks keys that are currently running.
+         */
+        let currentParellelTaskKeys = new Set<K>();
+        const waitingConcurrentTasks = multiValueMapBuilder<typeof incompleteTasks[0], K>();
+
+        function getNextTask(): typeof incompleteTasks[0] | undefined {
+          let nextTask: typeof incompleteTasks[0] | undefined = undefined;
+
+          while (!nextTask) {
+            nextTask = incompleteTasks.pop();
+
+            if (nextTask) {
+              const key = nextTask[1];
+
+              if (currentParellelTaskKeys.has(key)) {
+                waitingConcurrentTasks.addTuples(key, nextTask); // wrap the tuple in an array to add it properly.
+                nextTask = undefined; // clear to continue loop
+              } else {
+                currentParellelTaskKeys.add(key); // add to the current task keys, exit loop
+                break;
+              }
+            } else {
+              break; // no tasks remaining, break.
+            }
+          }
+
+          return nextTask;
+        }
+
+        function onTaskCompleted(task: typeof incompleteTasks[0]): void {
+          const key = task[1];
+
+          currentParellelTaskKeys.delete(key);
+          const waitingForKey = waitingConcurrentTasks.get(key);
+
+          const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
+
+          if (nextWaitingTask) {
+            incompleteTasks.push(nextWaitingTask); // push to front for the next dispatch to take
+          }
+        }
+
         // start initial promises
         function dispatchNextPromise() {
-          const hasNext = i < endIndex;
+          // if a failure has been encountered then the promise has already been rejected.
+          if (!hasEncounteredFailure) {
+            const nextTask = getNextTask();
 
-          if (hasNext && !hasEncounteredFailure) {
-            const value = input[i];
-            const promise = taskFactory(value, i);
-            i += 1;
+            if (nextTask) {
+              const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
+              currentRunIndex += 1;
 
-            promise.then(
-              () => {
-                setTimeout(dispatchNextPromise, waitBetweenTasks);
-              },
-              (e) => {
-                hasEncounteredFailure = true;
-                reject(e);
+              promise.then(
+                () => {
+                  onTaskCompleted(nextTask);
+                  setTimeout(dispatchNextPromise, waitBetweenTasks);
+                },
+                (e) => {
+                  hasEncounteredFailure = true;
+                  reject(e);
+                }
+              );
+            } else {
+              finishedParallels += 1;
+
+              // only resolve after the last parallel is complete
+              if (finishedParallels === maxPromisesToRunAtOneTime) {
+                resolve();
               }
-            );
-          } else if (!hasNext) {
-            finishedParallels += 1;
-
-            // only resolve after the last parallel is complete
-            if (finishedParallels === maxPromisesToRunAtOneTime) {
-              resolve();
             }
           }
         }

@@ -1,5 +1,5 @@
 import { type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
-import { type IterableOrValue, useIterableOrValue } from '../iterable';
+import { type IterableOrValue, useIterableOrValue, wrapTuples } from '../iterable/iterable';
 import { type Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
 
@@ -83,8 +83,42 @@ export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> 
   map(): MultiValueMap<T, K>;
   entries(): [Maybe<K>, T[]][];
   tuples(): [Maybe<K>, T][];
-  delete(key: Maybe<K>): void;
+  /**
+   * Deletes all values from the map with the input key.
+   *
+   * Returns true if a value was deleted.
+   *
+   * @param key
+   */
+  delete(key: Maybe<K>): boolean;
+  /**
+   * Adds the input key/value pair to the map. Use for inserting all Tuple values.
+   *
+   * @param key
+   * @param value
+   */
+  addTuples(key: Maybe<K>, value: IterableOrValue<T>): void;
+  /**
+   * Adds the input key/value(s) pair to the map.
+   *
+   * Use the addTuple() function if adding a single tuple value to the array.
+   *
+   * @param key
+   * @param value
+   */
   add(key: Maybe<K>, value: IterableOrValue<T>): void;
+  /**
+   * Returns true if the map contains the input key.
+   *
+   * @param key
+   */
+  has(key: Maybe<K>): boolean;
+  /**
+   * Returns all current values for the input key. If no values are found,
+   *
+   * @param key
+   */
+  get(key: Maybe<K>): T[];
 }
 
 /**
@@ -95,22 +129,31 @@ export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> 
 export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>(): MultiValueMapBuilder<T, K> {
   const map = new Map<Maybe<K>, T[]>();
 
+  const add = (key: Maybe<K>, value: IterableOrValue<T>) => {
+    let array = map.get(key);
+
+    if (array == null) {
+      array = [];
+      map.set(key, array);
+    }
+
+    useIterableOrValue(value, (x) => (array as T[]).push(x));
+  };
+
   const builder: MultiValueMapBuilder<T, K> = {
     map: () => map,
     entries: () => mapToTuples(map),
     tuples: () => expandArrayMapTuples(map),
     delete: (key: Maybe<K>) => {
-      map.delete(key);
+      return map.delete(key);
     },
-    add: (key: Maybe<K>, value: IterableOrValue<T>) => {
-      let array = map.get(key);
-
-      if (array == null) {
-        array = [];
-        map.set(key, array);
-      }
-
-      useIterableOrValue(value, (x) => (array as T[]).push(x));
+    add,
+    addTuples: (key: Maybe<K>, value: IterableOrValue<T>) => add(key, wrapTuples(value)),
+    has: (key: Maybe<K>) => {
+      return map.has(key);
+    },
+    get: (key: Maybe<K>) => {
+      return map.get(key) ?? [];
     }
   };
 

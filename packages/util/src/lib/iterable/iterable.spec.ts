@@ -1,5 +1,5 @@
 import { makeWithFactory } from '../getter';
-import { isEmptyIterable, isIterable, useIterableOrValue } from './iterable';
+import { isEmptyIterable, isIterable, useIterableOrValue, wrapTuples } from './iterable';
 
 describe('isIterable()', () => {
   it('should return true for an array.', () => {
@@ -101,5 +101,62 @@ describe('useIterableOrValue()', () => {
     const value = 'test';
     useIterableOrValue(value, () => (count += 1), true);
     expect(count).toBe(value.length);
+  });
+});
+
+describe('wrapTuples()', () => {
+  it('should wrap the tuple value to an array.', () => {
+    const tuple = ['true', 'false'];
+
+    const result = wrapTuples(tuple);
+    expect(result[0]).toBe(tuple);
+  });
+
+  it('should return the array of tuples.', () => {
+    const tuple = [['true', 'false']];
+
+    const result = wrapTuples(tuple);
+    expect(result[0]).toBe(tuple[0]);
+  });
+
+  describe('tuples with array as first value.', () => {
+    it('should return the tuple if all of its values imply that it is an array of tuples.', () => {
+      const tuple = [
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3]
+      ];
+
+      const result = wrapTuples(tuple);
+      expect(result[0]).toBe(tuple[0]);
+    });
+
+    it('should return the tuple if it is wrapped within an array', () => {
+      const tuple = [
+        [1, 2, 3],
+        [1, 2, 3],
+        [1, 2, 3]
+      ];
+
+      const result = wrapTuples([tuple]);
+      expect(result[0]).toBe(tuple);
+    });
+
+    it('should wrap the tuple value to an array.', () => {
+      const tuple = [[1, 2, 3], 'true', 'false'];
+
+      const result = wrapTuples(tuple);
+      expect(result[0]).toBe(tuple);
+    });
+
+    it('should return the array of tuples.', () => {
+      const tupleA = [[1, 2, 3], 'true', 'false'];
+      const tupleB = [[1, 2, 5], 'false', 'false'];
+      const input = [tupleA, tupleB];
+
+      const result = wrapTuples(input);
+      expect(result[0]).toBe(tupleA);
+      expect(result[1]).toBe(tupleB);
+    });
   });
 });
