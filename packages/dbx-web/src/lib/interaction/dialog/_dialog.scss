@@ -1,7 +1,6 @@
 @use '../../style/theming';
 
 // MARK: Variables
-$min-dialog-width: 400px;
 $max-dialog-width: 90vw;
 $mat-dialog-close-icon-size: 48px;
 $mat-dialog-close-icon-half-size: $mat-dialog-close-icon-size / 2;
@@ -15,10 +14,6 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
   .dbx-dialog-content {
     display: block;
     padding: $mat-dialog-container-padding;
-
-    &.normal-dialog-content {
-      min-width: $min-dialog-width;
-    }
   }
 
   .mdc-dialog__container .dbx-dialog-content {

@@ -150,13 +150,28 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
           const { included: crudFunctionKeys, excluded: specifiedCrudFunctionKeys } = separateValues(config as string[], (x) => x.indexOf(':') === -1);
 
           const crudFunctions = new Set(crudFunctionKeys);
-          const specifierFunctions = new Map<string, string[]>(
-            specifiedCrudFunctionKeys.map((x) => {
-              const [crud, functionsSplit] = x.split(':', 2);
-              const functions = functionsSplit.split(MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER);
-              return [crud, functions];
-            })
-          );
+          const specifiedCrudFunctionTuples = specifiedCrudFunctionKeys.map((x) => {
+            const [crud, functionsSplit] = x.split(':', 2);
+            const functions = functionsSplit.split(MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER);
+            return [crud, functions] as [string, string[]];
+          });
+
+          // check that there isn't a repeat crud key configured, which disallowed configuration and would cause some functions to be ignored
+          const encounteredCruds = new Set<string>();
+
+          function assertCrudKeyNotEncountered(crud: string) {
+            if (encounteredCruds.has(crud)) {
+              throw new Error(`Cannot have multiple declarations of the same crud. Found repeat for crud: ${crud}`);
+            } else {
+              encounteredCruds.add(crud);
+            }
+          }
+
+          crudFunctions.forEach(assertCrudKeyNotEncountered);
+          specifiedCrudFunctionTuples.forEach(([crud]) => assertCrudKeyNotEncountered(crud));
+
+          // build and add the functions
+          const specifierFunctions = new Map<string, string[]>(specifiedCrudFunctionTuples);
 
           function addFunctions(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string): void {
             let crudFns: unknown;
