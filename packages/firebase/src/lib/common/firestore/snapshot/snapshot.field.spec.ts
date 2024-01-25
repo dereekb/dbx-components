@@ -16,6 +16,7 @@ import {
   firestoreUniqueKeyedArray,
   firestoreUniqueStringArray,
   firestoreNumber,
+  optionalFirestoreBoolean,
   firestoreSubObject,
   firestoreEncodedArray,
   firestoreString,
@@ -28,7 +29,10 @@ import {
   firestoreModelKeyEncodedGrantedRoleMap,
   firestoreDencoderMap,
   type FirestoreEncodedObjectMapFieldValueType,
-  firestoreBitwiseObjectMap
+  firestoreBitwiseObjectMap,
+  optionalFirestoreString,
+  optionalFirestoreEnum,
+  optionalFirestoreNumber
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -168,6 +172,58 @@ describe('firestoreNumber()', () => {
   });
 });
 
+describe('optionalFirestoreBoolean()', () => {
+  describe('dontStoreIfValue', () => {
+    const dontStoreIfValue = false;
+    const field = optionalFirestoreBoolean({ dontStoreIfValue });
+
+    it('should return null if the input value equals the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(false);
+      expect(result).toBe(null);
+    });
+
+    it('should return the boolean value if the input value does not equal the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(true);
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('dontStoreDefaultReturnValue', () => {
+    const defaultReadValue = false;
+    const field = optionalFirestoreBoolean({ defaultReadValue, dontStoreDefaultReturnValue: true });
+
+    it('should return null if the input value equals the defaultValue', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(defaultReadValue);
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('defaultReadValue', () => {
+    const defaultReadValue = false;
+    const field = optionalFirestoreBoolean({ defaultReadValue });
+
+    it('should return the default value if the input is undefined', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(undefined);
+      expect(result).toBe(defaultReadValue);
+    });
+
+    it('should return the default value if the input is null', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(null);
+      expect(result).toBe(defaultReadValue);
+    });
+  });
+});
+
 interface TestFirestoreString {
   value: string;
 }
@@ -205,6 +261,232 @@ describe('firestoreString()', () => {
 
         expect(result.value).toBe(defaultValue);
       });
+    });
+  });
+});
+
+describe('optionalFirestoreString()', () => {
+  describe('dontStoreIfValue', () => {
+    const dontStoreIfValue: string = 'a';
+    const field = optionalFirestoreString({ dontStoreIfValue });
+
+    it('should return null if the input value equals the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(dontStoreIfValue);
+      expect(result).toBe(null);
+    });
+
+    it('should return the value if the input value does not equal the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to('aaa');
+      expect(result).toBe('aaa');
+    });
+  });
+
+  describe('dontStoreDefaultReturnValue', () => {
+    const defaultReadValue: string = 'a';
+    const field = optionalFirestoreString({ defaultReadValue: defaultReadValue, dontStoreDefaultReturnValue: true });
+
+    it('should return null if the input value equals the defaultValue', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(defaultReadValue);
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('defaultValue', () => {
+    const defaultReadValue: string = 'a';
+    const field = optionalFirestoreString({ defaultReadValue: defaultReadValue });
+
+    it('should return the default value if the input is undefined', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(undefined);
+      expect(result).toBe(defaultReadValue);
+    });
+
+    it('should return the default value if the input is null', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(null);
+      expect(result).toBe(defaultReadValue);
+    });
+  });
+
+  describe('transform', () => {
+    describe('with dontStoreIfValue', () => {
+      describe('inline transform config', () => {
+        const dontStoreIfValue: string = 'a';
+        const field = optionalFirestoreString({ dontStoreIfValue, transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x.toUpperCase()) });
+
+        it('should return null if the input value equals the dontStoreIfValue value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const result = to(dontStoreIfValue);
+          expect(result).toBe(null);
+        });
+
+        it('should transform the value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const input = 'aaa';
+          const expected = input.toUpperCase();
+
+          const result = to(input);
+          expect(result).toBe(expected);
+        });
+      });
+
+      describe('transform config object', () => {
+        const dontStoreIfValue: string = 'a';
+        const field = optionalFirestoreString({ dontStoreIfValue, transform: { transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x.toUpperCase()) } });
+
+        it('should return null if the input value equals the dontStoreIfValue value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const result = to(dontStoreIfValue);
+          expect(result).toBe(null);
+        });
+
+        it('should transform the value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const input = 'aaa';
+          const expected = input.toUpperCase();
+
+          const result = to(input);
+          expect(result).toBe(expected);
+        });
+      });
+    });
+  });
+});
+
+describe('optionalFirestoreNumber()', () => {
+  describe('dontStoreIfValue', () => {
+    const dontStoreIfValue: number = 0;
+    const field = optionalFirestoreNumber({ dontStoreIfValue });
+
+    it('should return null if the input value equals the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(dontStoreIfValue);
+      expect(result).toBe(null);
+    });
+
+    it('should return the value if the input value does not equal the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(1);
+      expect(result).toBe(1);
+    });
+  });
+
+  describe('dontStoreDefaultReturnValue', () => {
+    const defaultReadValue: number = 0;
+    const field = optionalFirestoreNumber({ defaultReadValue: defaultReadValue, dontStoreDefaultReturnValue: true });
+
+    it('should return null if the input value equals the defaultValue', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(defaultReadValue);
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('defaultValue', () => {
+    const defaultReadValue: number = 0;
+    const field = optionalFirestoreNumber({ defaultReadValue: defaultReadValue });
+
+    it('should return the default value if the input is undefined', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(undefined);
+      expect(result).toBe(defaultReadValue);
+    });
+
+    it('should return the default value if the input is null', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(null);
+      expect(result).toBe(defaultReadValue);
+    });
+  });
+
+  describe('transform', () => {
+    describe('with dontStoreIfValue', () => {
+      describe('inline transform config', () => {
+        const dontStoreIfValue: number = 0;
+        const field = optionalFirestoreNumber({ dontStoreIfValue, transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x + 1) });
+
+        it('should return null if the input value equals the dontStoreIfValue value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const result = to(dontStoreIfValue);
+          expect(result).toBe(null);
+        });
+
+        it('should transform the value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const input = 1;
+          const expected = 1 + 1;
+
+          const result = to(input);
+          expect(result).toBe(expected);
+        });
+      });
+
+      describe('transform config object', () => {
+        const dontStoreIfValue: number = 0;
+        const field = optionalFirestoreNumber({ dontStoreIfValue, transform: { transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x + 1) } });
+
+        it('should return null if the input value equals the dontStoreIfValue value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const result = to(dontStoreIfValue);
+          expect(result).toBe(null);
+        });
+
+        it('should transform the value', () => {
+          const { from, to } = modelFieldMapFunctions(field);
+
+          const input = 1;
+          const expected = 1 + 1;
+
+          const result = to(input);
+          expect(result).toBe(expected);
+        });
+      });
+    });
+  });
+});
+
+enum TestEnum {
+  A = 'a',
+  B = 'b'
+}
+
+describe('optionalFirestoreEnum()', () => {
+  describe('dontStoreIfValue', () => {
+    const dontStoreIfValue: TestEnum = TestEnum.A;
+    const field = optionalFirestoreEnum<TestEnum>({ dontStoreIfValue });
+
+    it('should return null if the input value equals the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(dontStoreIfValue);
+      expect(result).toBe(null);
+    });
+
+    it('should return the value if the input value does not equal the dontStoreIfValue value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(TestEnum.B);
+      expect(result).toBe(TestEnum.B);
     });
   });
 });

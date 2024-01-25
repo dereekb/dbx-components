@@ -38,11 +38,17 @@ export interface TransformStringFunctionConfigRef<S extends string = string> {
 
 export type TransformStringFunction<S extends string = string> = MapFunction<S, S>;
 
-export function transformStringFunction<S extends string = string>(config: TransformStringFunctionConfig): TransformStringFunction<S> {
+export type TransformStringFunctionConfigInput<S extends string = string> = TransformStringFunctionConfig<S> | TransformStringFunction<S>;
+
+export function transformStringFunctionConfig<S extends string = string>(config?: TransformStringFunctionConfigInput<S>): Maybe<TransformStringFunctionConfig<S>> {
+  return config ? (typeof config === 'function' ? { transform: config } : (config as TransformStringFunctionConfig<S>)) : undefined;
+}
+
+export function transformStringFunction<S extends string = string>(config: TransformStringFunctionConfig<S>): TransformStringFunction<S> {
   let baseTransform: Maybe<TransformStringFunction>;
 
   if (config.transform) {
-    baseTransform = config.transform;
+    baseTransform = config.transform as unknown as TransformStringFunction;
   } else if (config.toUppercase) {
     baseTransform = stringToUppercaseFunction;
   } else if (config.toLowercase) {

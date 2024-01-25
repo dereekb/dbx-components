@@ -28,6 +28,12 @@ export interface TransformNumberFunctionConfigRef<N extends number = number> {
 
 export type TransformNumberFunction<N extends number = number> = MapFunction<N, N>;
 
+export type TransformNumberFunctionConfigInput<S extends number = number> = TransformNumberFunctionConfig<S> | TransformNumberFunction<S>;
+
+export function transformNumberFunctionConfig<S extends number = number>(config?: TransformNumberFunctionConfigInput<S>): Maybe<TransformNumberFunctionConfig<S>> {
+  return config ? (typeof config === 'function' ? { transform: config } : (config as TransformNumberFunctionConfig<S>)) : undefined;
+}
+
 export function transformNumberFunction<N extends number = number>(config: TransformNumberFunctionConfig<N>): TransformNumberFunction<N> {
   const transformFunctions: Maybe<TransformNumberFunction<N>>[] = [config.transform];
 
