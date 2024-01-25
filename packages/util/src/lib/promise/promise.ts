@@ -1,8 +1,10 @@
+import { asArray } from '../array/array';
 import { range } from '../array/array.number';
 import { type Milliseconds } from '../date/date';
-import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import { type PrimativeKey, type ReadOneOrMoreKeysFunction } from '../key';
 import { multiValueMapBuilder } from '../map';
 import { incrementingNumberFactory } from '../number';
+import { addToSet, containsAnyValueFromSet, setContainsAnyValue } from '../set';
 import { type StringFactory, stringFactoryFromFactory } from '../string/factory';
 import { type IndexNumber } from '../value';
 import { type Maybe } from '../value/maybe.type';
@@ -188,13 +190,13 @@ export interface PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey 
   /**
    * Creates a promise from the input.
    */
-  readonly taskFactory: (input: I, value: IndexNumber, taskKey: K) => Promise<void>;
+  readonly taskFactory: (input: I, value: IndexNumber, taskKeys: K[]) => Promise<void>;
   /**
    * This function is used to uniquely identify tasks that may use the same resources to prevent such tasks from running concurrently.
    *
    * When in use the order is not guranteed.
    */
-  readonly nonConcurrentTaskKeyFactory?: ReadKeyFunction<I, K>;
+  readonly nonConcurrentTaskKeyFactory?: ReadOneOrMoreKeysFunction<I, K>;
   /**
    * Whether or not tasks are performed sequentially or if tasks are all done in "parellel".
    *
@@ -253,7 +255,7 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
       return new Promise(async (resolve, reject) => {
         const taskKeyFactory = nonConcurrentTaskKeyFactory ?? defaultNonConcurrentTaskKeyFactory;
         const maxPromisesToRunAtOneTime = Math.min(maxParallelTasks ?? 100, input.length);
-        const incompleteTasks = input.map((x) => [x, taskKeyFactory(x)] as [I, K]).reverse(); // reverse to use push/pop
+        const incompleteTasks = input.map((x, i) => [x, asArray(taskKeyFactory(x)), i] as [I, K[], IndexNumber]).reverse(); // reverse to use push/pop
 
         let currentRunIndex = 0;
         let finishedParallels = 0;
@@ -263,6 +265,7 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
          * Set of tasks keys that are currently running.
          */
         let currentParellelTaskKeys = new Set<K>();
+        const visitedTaskIndexes = new Set<IndexNumber>();
         const waitingConcurrentTasks = multiValueMapBuilder<typeof incompleteTasks[0], K>();
 
         function getNextTask(): typeof incompleteTasks[0] | undefined {
@@ -271,35 +274,68 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
           while (!nextTask) {
             nextTask = incompleteTasks.pop();
 
-            if (nextTask) {
-              const key = nextTask[1];
+            if (nextTask != null) {
+              const nextTaskTuple = nextTask;
+              const nextTaskTupleIndex = nextTaskTuple[2];
 
-              if (currentParellelTaskKeys.has(key)) {
-                waitingConcurrentTasks.addTuples(key, nextTask); // wrap the tuple in an array to add it properly.
-                nextTask = undefined; // clear to continue loop
+              if (visitedTaskIndexes.has(nextTaskTupleIndex)) {
+                // already run. Ignore.
+                nextTask = undefined;
               } else {
-                currentParellelTaskKeys.add(key); // add to the current task keys, exit loop
-                break;
+                const keys = nextTaskTuple[1];
+                const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
+
+                if (keyOfTaskCurrentlyInUse) {
+                  keys.forEach((key) => waitingConcurrentTasks.addTuples(key, nextTaskTuple)); // add to each key as waiting
+                  nextTask = undefined; // clear to continue loop
+                } else {
+                  addToSet(currentParellelTaskKeys, keys); // add to the current task keys, exit loop
+                  break;
+                }
               }
             } else {
               break; // no tasks remaining, break.
             }
           }
 
+          if (nextTask) {
+            // mark to prevent running again/concurrent runs
+            visitedTaskIndexes.add(nextTask[2]);
+          }
+
           return nextTask;
         }
 
         function onTaskCompleted(task: typeof incompleteTasks[0]): void {
-          const key = task[1];
+          const keys = task[1];
+          const indexesPushed = new Set<IndexNumber>();
 
-          currentParellelTaskKeys.delete(key);
-          const waitingForKey = waitingConcurrentTasks.get(key);
+          keys.forEach((key) => {
+            // un-reserve the key from each parallel task
+            currentParellelTaskKeys.delete(key);
+            const waitingForKey = waitingConcurrentTasks.get(key);
 
-          const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
+            while (true) {
+              const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
 
-          if (nextWaitingTask) {
-            incompleteTasks.push(nextWaitingTask); // push to front for the next dispatch to take
-          }
+              if (nextWaitingTask) {
+                const nextWaitingTaskIndex = nextWaitingTask[2];
+
+                if (visitedTaskIndexes.has(nextWaitingTaskIndex) || indexesPushed.has(nextWaitingTaskIndex)) {
+                  // if the task has already been visited, then don't push back onto incomplete tasks.
+                  continue;
+                } else {
+                  // push to front for the next dispatch to take for this key
+                  incompleteTasks.push(nextWaitingTask);
+                  // mark to prevent pushing this one again since it will not get run
+                  indexesPushed.add(nextWaitingTaskIndex);
+                  break;
+                }
+              } else {
+                break;
+              }
+            }
+          });
         }
 
         // start initial promises
@@ -309,6 +345,7 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
             const nextTask = getNextTask();
 
             if (nextTask) {
+              // build/start promise
               const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
               currentRunIndex += 1;
 

@@ -55,7 +55,10 @@ import {
   type BitwiseObjectDencoder,
   type SortCompareFunctionRef,
   sortValuesFunctionOrMapIdentityWithSortRef,
-  sortAscendingIndexNumberRefFunction
+  sortAscendingIndexNumberRefFunction,
+  transformStringFunctionConfig,
+  type TransformNumberFunctionConfigInput,
+  type TransformStringFunctionConfigInput
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -131,7 +134,74 @@ export function firestorePassThroughField<T>(): ModelFieldMapFunctionsConfig<T, 
   return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<T, T>;
 }
 
-// TODO: Add a firestorePassThroughIgnore and default values. Prevents default values from being stored, and allows returning a set value if it is the default.
+export interface OptionalFirestoreFieldConfig<T> {
+  /**
+   * Defaults the dontStoreIfValue value to this value.
+   *
+   * This is ignored if no default value is set.
+   */
+  readonly dontStoreDefaultReturnValue?: boolean;
+  /**
+   * Removes the value from the object if the stored value would equal this value.
+   */
+  readonly dontStoreIfValue?: T;
+  /**
+   * Value to optionally return if there is no value in the database when reading from the database.
+   */
+  readonly defaultReadValue?: T;
+}
+
+export interface OptionalFirestoreFieldConfigWithTransform<T> extends OptionalFirestoreFieldConfig<T> {
+  /**
+   * (Optional) Function to transform the data before it is stored and after it is read.
+   *
+   * This is used as the default for transformToData, and transformToData.
+   */
+  readonly transformData?: MapFunction<T, T>;
+  /**
+   * (Optional) Function to transform the data after it is read from Firestore.
+   *
+   * Only transforms non-null/undefined values from the database.
+   *
+   * Overrides transformData.
+   */
+  readonly transformFromData?: MapFunction<T, T>;
+  /**
+   * (Optional) Transform function that is only used before the data is stored to Firestore.
+   *
+   * Is allowed to return null to clear the stored value.
+   *
+   * Overrides transformData.
+   */
+  readonly transformToData?: MapFunction<T, T | null>;
+}
+
+export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithTransform<T>): ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>> {
+  if (config) {
+    const { dontStoreDefaultReturnValue, defaultReadValue: defaultValue, dontStoreIfValue = dontStoreDefaultReturnValue && defaultValue != null ? defaultValue : undefined, transformData: inputTransformData, transformFromData, transformToData } = config ?? ({} as OptionalFirestoreBooleanFieldConfig);
+    const transformData = inputTransformData ?? passThrough;
+    const transformFrom = transformFromData ?? transformData;
+    const transformTo = transformToData ?? transformData;
+
+    return firestoreField<Maybe<T>, Maybe<T>>({
+      default: null,
+      fromData: defaultValue != null ? (x) => transformFrom(x == null ? defaultValue : x) : transformFrom != null ? (x) => (x != null ? transformFrom(x) : x) : passThrough,
+      toData:
+        dontStoreIfValue != null
+          ? (x: Maybe<T>) => {
+              if (x != null) {
+                const transformedValue = transformTo(x);
+                return transformedValue === dontStoreIfValue ? null : transformedValue;
+              } else {
+                return x;
+              }
+            }
+          : passThrough
+    });
+  } else {
+    return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
+  }
+}
 
 export type MapConfiguredFirestoreFieldConfigWithDefault<V, D = unknown> = Omit<FirestoreFieldConfigWithDefault<V, D>, 'fromData' | 'toData'>;
 export type MapConfiguredFirestoreFieldConfigWithDefaultData<V, D = unknown> = Omit<FirestoreFieldConfigWithDefaultData<V, D>, 'fromData' | 'toData'>;
@@ -140,16 +210,14 @@ export type MapConfiguredFirestoreFieldConfig<V, D = unknown> = MapConfiguredFir
 export type DefaultMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<FirestoreFieldConfigWithDefault<V, D>, 'fromData' | 'toData' | 'default'> & Partial<Pick<FirestoreFieldConfigWithDefault<V, D>, 'default'>>;
 export type OptionalMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<BaseFirestoreFieldConfig<V, D>, 'fromData' | 'toData' | 'defaultBeforeSave'>;
 
-export type FirestoreStringTransformOptions<S extends string = string> = TransformStringFunctionConfig | TransformStringFunction<S>;
-
 export interface FirestoreStringConfig<S extends string = string> extends DefaultMapConfiguredFirestoreFieldConfig<S, S> {
-  transform?: FirestoreStringTransformOptions;
+  transform?: TransformStringFunctionConfigInput<S>;
 }
 
 export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
 
 export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
-  const transform: Maybe<TransformStringFunctionConfig> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
+  const transform: Maybe<TransformStringFunctionConfig<S>> = transformStringFunctionConfig(config?.transform);
   const transformData = transform ? (transformStringFunction(transform) as MapFunction<S, S>) : passThrough;
 
   return firestoreField<S, S>({
@@ -160,16 +228,15 @@ export function firestoreString<S extends string = string>(config?: FirestoreStr
   });
 }
 
-export function optionalFirestoreString<S extends string = string>(config?: Omit<FirestoreStringConfig<S>, 'default'>) {
-  const transform: Maybe<TransformStringFunctionConfig> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
-  const transformData = transform ? (transformStringFunction(transform) as MapFunction<S, S>) : passThrough;
-  const transformMaybeData = (x: Maybe<S>) => (x == null ? x : transformData(x));
+export type OptionalFirestoreString<S extends string = string> = OptionalFirestoreFieldConfig<S> & Pick<FirestoreStringConfig<S>, 'transform'>;
 
-  return firestoreField<Maybe<S>, Maybe<S>>({
-    default: null,
+export function optionalFirestoreString<S extends string = string>(config?: OptionalFirestoreString<S>) {
+  const transform: Maybe<TransformStringFunctionConfig<S>> = transformStringFunctionConfig(config?.transform);
+  const transformData = transform ? (transformStringFunction(transform) as MapFunction<S, S>) : passThrough;
+
+  return optionalFirestoreField<S>({
     ...config,
-    fromData: transformMaybeData,
-    toData: transformMaybeData
+    transformData
   });
 }
 
@@ -183,8 +250,10 @@ export function firestoreEnum<S extends string | number>(config: FirestoreEnumCo
   });
 }
 
-export function optionalFirestoreEnum<S extends string | number>() {
-  return firestorePassThroughField<Maybe<S>>();
+export type OptionalFirestoreEnum<S extends string | number> = OptionalFirestoreFieldConfig<S>;
+
+export function optionalFirestoreEnum<S extends string | number>(config?: OptionalFirestoreEnum<S>) {
+  return optionalFirestoreField<S>(config);
 }
 
 export function firestoreUID() {
@@ -235,15 +304,15 @@ export function firestoreBoolean(config: FirestoreBooleanFieldConfig) {
   });
 }
 
-export function optionalFirestoreBoolean() {
-  return firestorePassThroughField<Maybe<boolean>>();
-}
+export type OptionalFirestoreBooleanFieldConfig = OptionalFirestoreFieldConfig<boolean>;
 
-export type FirestoreNumberTransformOptions<N extends number = number> = TransformNumberFunctionConfig<N> | TransformNumberFunction<N>;
+export function optionalFirestoreBoolean(config?: OptionalFirestoreBooleanFieldConfig) {
+  return optionalFirestoreField(config);
+}
 
 export interface FirestoreNumberConfig<N extends number = number> extends MapConfiguredFirestoreFieldConfigWithDefault<N, N> {
   saveDefault?: Maybe<boolean>;
-  transform?: FirestoreNumberTransformOptions<N>;
+  transform?: TransformNumberFunctionConfigInput<N>;
 }
 
 export function firestoreNumber<N extends number = number>(config: FirestoreNumberConfig<N>) {
@@ -258,16 +327,15 @@ export function firestoreNumber<N extends number = number>(config: FirestoreNumb
   });
 }
 
-export function optionalFirestoreNumber<N extends number = number>(config?: Omit<FirestoreNumberConfig<N>, 'default'>) {
+export type OptionalFirestoreNumberFieldConfig<N extends number = number> = OptionalFirestoreFieldConfig<N> & Pick<FirestoreNumberConfig<N>, 'transform'>;
+
+export function optionalFirestoreNumber<N extends number = number>(config?: OptionalFirestoreNumberFieldConfig<N>) {
   const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
   const transformData = transform ? (transformNumberFunction<N>(transform) as MapFunction<N, N>) : passThrough;
-  const transformMaybeData = (x: Maybe<N>) => (x == null ? x : transformData(x));
 
-  return firestoreField<Maybe<N>, Maybe<N>>({
-    default: null,
+  return optionalFirestoreField<N>({
     ...config,
-    fromData: transformMaybeData,
-    toData: transformMaybeData
+    transformData
   });
 }
 
@@ -925,3 +993,14 @@ export function firestoreBitwiseObjectMap<T extends object, K extends string = s
     decoder: dencoder
   });
 }
+
+// MARK: Compat
+/**
+ * @deprecated use TransformStringFunctionConfigInput instead.
+ */
+export type FirestoreStringTransformOptions<S extends string = string> = TransformStringFunctionConfigInput<S>;
+
+/**
+ * @deprecated use TransformNumberFunctionConfigInput instead.
+ */
+export type FirestoreNumberTransformOptions<N extends number = number> = TransformNumberFunctionConfigInput<N>;

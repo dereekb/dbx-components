@@ -18,6 +18,11 @@ export type FieldOfType<T> = keyof T;
 export type ReadKeyFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, Maybe<K>>;
 
 /**
+ * Reads one or more keys from the input object.
+ */
+export type ReadOneOrMoreKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, ArrayOrValue<K>>;
+
+/**
  * Reads multiple keys from the input object.
  */
 export type ReadMultipleKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, K[]>;

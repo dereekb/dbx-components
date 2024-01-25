@@ -109,6 +109,16 @@ export function parseJsDateString(input: ISO8601DateString | UTCDateString): May
 }
 
 /**
+ * Returns the earliest date from the input array.
+ */
+export function earliestDate(dates: Maybe<Date>[]): Maybe<Date>;
+export function earliestDate(dates: Maybe<Date>[], defaultDate: Date): Date;
+export function earliestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = undefined): Maybe<Date> {
+  const filtered: Date[] = filterMaybeValues(dates);
+  return filtered.length > 0 ? minDate(filtered) : defaultDate;
+}
+
+/**
  * Returns the latest date from the input array.
  */
 export function latestDate(dates: Maybe<Date>[]): Maybe<Date>;
