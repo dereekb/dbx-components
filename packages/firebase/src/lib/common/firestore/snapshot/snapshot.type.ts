@@ -67,3 +67,18 @@ export interface SnapshotConverterFunctions<T extends object, O extends object =
 export type SnapshotConverterFromFirestoreFunction<T extends object, O extends object = FirestoreModelData<T>> = (snapshot: DocumentSnapshot<O>, options?: SnapshotOptions) => T;
 export type SnapshotConverterFromFunction<T extends object, O extends object = FirestoreModelData<T>> = ApplyMapFunctionWithOptions<DocumentSnapshot<O>, T, SnapshotOptions>;
 export type SnapshotConverterToFunction<T extends object, O extends object = FirestoreModelData<T>> = ApplyMapFunctionWithOptions<T, O, SetOptions>;
+
+// MARK: Other Types
+/**
+ * A boolean that is only stored if it's value is true.
+ *
+ * Used with Firebase types to better indicate to the developer that this value is not stored to Firebase when true.
+ */
+export type SavedToFirestoreIfTrue = boolean;
+
+/**
+ * A boolean that is only stored if it's value is false.
+ *
+ * Used with Firebase types to better indicate to the developer that this value is not stored to Firebase when false.
+ */
+export type SavedToFirestoreIfFalse = boolean;
