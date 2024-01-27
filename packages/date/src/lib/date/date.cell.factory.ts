@@ -1,10 +1,103 @@
 import { parseISO8601DayStringToUTCDate, type Maybe, type ArrayOrValue, asArray, pushArrayItemsIntoArray, type FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, type IndexRange, HOURS_IN_DAY, range, type Configurable, type ISO8601DayString, isDate, type IndexNumber, type Minutes } from '@dereekb/util';
 import { addMinutes, isAfter, differenceInHours, addHours } from 'date-fns';
 import { guessCurrentTimezone } from './date';
-import { type DateCell, type DateCellIndex, type DateOrDateCellIndex, type DateCellTiming, type DateCellArrayRef, type DateCellArray, type DateCellTimingRangeInput, dateCellTiming, dateCellTimingStartPair, type DateCellCollection, type DateCellDurationSpan, type DateCellTimingStartsAt, type DateCellTimingEvent, type DateCellTimingStartsAtEndRange, calculateExpectedDateCellTimingDuration, dateCellTimingFinalStartsAtEvent, type FullDateCellTiming, dateCellTimingStart } from './date.cell';
+import {
+  type DateCell,
+  type DateCellIndex,
+  type DateOrDateCellIndex,
+  type DateCellTiming,
+  type DateCellArrayRef,
+  type DateCellArray,
+  type DateCellTimingRangeInput,
+  dateCellTiming,
+  dateCellTimingStartPair,
+  type DateCellCollection,
+  type DateCellDurationSpan,
+  type DateCellTimingStartsAt,
+  type DateCellTimingEvent,
+  type DateCellTimingStartsAtEndRange,
+  calculateExpectedDateCellTimingDuration,
+  dateCellTimingFinalStartsAtEvent,
+  type FullDateCellTiming,
+  dateCellTimingStart,
+  isDateCellTiming
+} from './date.cell';
 import { type DateCellRange, dateCellRangeHasRange, type DateCellRangeWithRange, type DateCellOrDateCellIndexOrDateCellRange, type DateOrDateRangeOrDateCellIndexOrDateCellRange, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
 import { type DateRange, type DateRangeStart, isDateRange, isDateRangeStart } from './date.range';
 import { copyHoursAndMinutesFromDateWithTimezoneNormal, type DateTimezoneConversionConfigUseSystemTimezone, type DateTimezoneUtcNormalInstance } from './date.timezone';
+
+/**
+ * Input for dateCellRange
+ */
+export interface DateCallIndexRangeFromDatesFactoryConfig {
+  /**
+   * Timing to use relative to the input.
+   */
+  readonly timing: DateCellTiming;
+  /**
+   * Whether or not to fit the returned range to the timing's range.
+   *
+   * Defaults to true.
+   */
+  readonly fitToTimingRange?: boolean;
+}
+
+/**
+ * DateCellRangeOfTimingFactory input
+ */
+export interface DateCellRangeOfTimingInput {
+  /**
+   * Start date or index
+   */
+  readonly i?: DateOrDateCellIndex;
+  /**
+   * End date or index
+   */
+  readonly to?: DateOrDateCellIndex;
+}
+
+/**
+ * Creates a DateCellRange from the input.
+ */
+export type DateCellRangeOfTimingFactory = (input: DateCellRangeOfTimingInput) => DateCellRange;
+
+/**
+ * Creates a DateCellRangeOfTimingFactory.
+ *
+ * @param config
+ * @returns
+ */
+export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDatesFactoryConfig): DateCellRangeOfTimingFactory {
+  const { timing, fitToTimingRange = true } = config;
+  const indexFactory = dateCellTimingRelativeIndexFactory(timing);
+  const minIndex = fitToTimingRange ? 0 : Number.MIN_SAFE_INTEGER;
+  const maxIndex = fitToTimingRange ? indexFactory(indexFactory._timing.end) : Number.MAX_SAFE_INTEGER;
+
+  return (input: DateCellRangeOfTimingInput): DateCellRange => {
+    const { i: start, to: end } = input;
+
+    const startIndex = indexFactory(start ?? 0);
+    const endIndex = indexFactory(end ?? new Date());
+
+    const i = Math.max(minIndex, startIndex);
+    const to = Math.min(maxIndex, endIndex);
+
+    return { i, to };
+  };
+}
+
+/**
+ * Creates a DateCellRange from the input.
+ *
+ * Convenience function for calling dateCellRangeOfTimingFactory() then passing the input.
+ *
+ * @param config
+ * @param input
+ * @returns
+ */
+export function dateCellRangeOfTiming(config: DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig, input: DateCellRangeOfTimingInput): DateCellRange {
+  return dateCellRangeOfTimingFactory(isDateCellTiming(config) ? { timing: config } : config)(input);
+}
 
 /**
  * IndexRange used with DateCells.
@@ -43,7 +136,7 @@ export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimin
     const limitMax = indexFactory(end) + 1;
 
     if (fitToTimingRange) {
-      minIndex = Math.min(limitMin, maxIndex);
+      minIndex = Math.max(limitMin, minIndex);
       maxIndex = Math.min(limitMax, maxIndex);
     } else {
       minIndex = limitMin;

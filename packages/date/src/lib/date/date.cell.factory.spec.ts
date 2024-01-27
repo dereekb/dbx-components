@@ -1,7 +1,23 @@
 import { parseISO8601DayStringToUTCDate, range, isOddNumber, type RangeInput, MS_IN_MINUTE, type TimezoneString, MINUTES_IN_HOUR, MS_IN_HOUR } from '@dereekb/util';
 import { addDays, addHours, addMilliseconds, addMinutes, differenceInMilliseconds, isBefore, setHours, setMinutes, startOfDay } from 'date-fns';
 import { shiftDateCellTimingToTimezoneFunction, type DateCell, type DateCellTiming, dateCellTiming, dateCellTimingStart, type DateCellTimingStartsAt, type FullDateCellTiming, isValidDateCellTiming, dateCellTimingFinalStartsAtEvent } from './date.cell';
-import { dateCellDayTimingInfoFactory, dateCellIndexRange, dateCellTimingExpansionFactory, dateCellTimingDateFactory, dateCellTimingFromDateCellTimingStartsAtEndRange, dateCellTimingRelativeIndexArrayFactory, dateCellTimingRelativeIndexFactory, dateCellTimingStartDateFactory, dateCellTimingStartsAtDateFactory, getRelativeIndexForDateCellTiming, isDateCellTimingRelativeIndexFactory, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingEndIndex } from './date.cell.factory';
+import {
+  dateCellDayTimingInfoFactory,
+  dateCellIndexRange,
+  dateCellTimingExpansionFactory,
+  dateCellTimingDateFactory,
+  dateCellTimingFromDateCellTimingStartsAtEndRange,
+  dateCellTimingRelativeIndexArrayFactory,
+  dateCellTimingRelativeIndexFactory,
+  dateCellTimingStartDateFactory,
+  dateCellTimingStartsAtDateFactory,
+  getRelativeIndexForDateCellTiming,
+  isDateCellTimingRelativeIndexFactory,
+  updateDateCellTimingWithDateCellTimingEvent,
+  dateCellTimingEndIndex,
+  dateCellRangeOfTimingFactory,
+  dateCellRangeOfTiming
+} from './date.cell.factory';
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { type DateCellRange, type DateCellRangeWithRange } from './date.cell.index';
 import { type DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
@@ -9,6 +25,63 @@ import { formatToISO8601DayString, parseISO8601DayStringToDate } from './date.fo
 import { type DateRange, isDateInDateRange } from './date.range';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 import { guessCurrentTimezone, requireCurrentTimezone } from './date';
+
+describe('dateCellRangeOfTimingFactory()', () => {
+  describe('function', () => {
+    const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
+    const days = 5;
+    const duration = 60;
+
+    const timing = dateCellTiming({ startsAt, duration }, days); // system timezone
+    const factory = dateCellRangeOfTimingFactory({ timing });
+
+    it('should return a DateCellRange that fits the range based on the input.', () => {
+      const result = factory({ i: -10, to: 10 });
+
+      expect(result.i).toBe(0);
+      expect(result.to).toBe(days - 1);
+    });
+
+    describe('fitToTimingRange=false', () => {
+      const factory = dateCellRangeOfTimingFactory({ timing, fitToTimingRange: false });
+
+      it('should return a DateCellRange that fits the range based on the input.', () => {
+        const result = factory({ i: -10, to: 10 });
+
+        expect(result.i).toBe(-10);
+        expect(result.to).toBe(10);
+      });
+    });
+  });
+});
+
+describe('dateCellRangeOfTiming()', () => {
+  const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
+  const days = 5;
+  const duration = 60;
+
+  const timing = dateCellTiming({ startsAt, duration }, days); // system timezone
+
+  describe('timing input', () => {
+    it('should return a DateCellRange that fits the range based on the input.', () => {
+      const result = dateCellRangeOfTiming(timing, { i: -10, to: 10 });
+
+      expect(result.i).toBe(0);
+      expect(result.to).toBe(days - 1);
+    });
+  });
+
+  describe('config input', () => {
+    describe('fitToTimingRange=false', () => {
+      it('should return a DateCellRange that fits the range based on the input.', () => {
+        const result = dateCellRangeOfTiming({ timing, fitToTimingRange: false }, { i: -10, to: 10 });
+
+        expect(result.i).toBe(-10);
+        expect(result.to).toBe(10);
+      });
+    });
+  });
+});
 
 /**
  * A DateCell with a string value.
