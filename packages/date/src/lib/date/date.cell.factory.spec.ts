@@ -52,6 +52,93 @@ describe('dateCellRangeOfTimingFactory()', () => {
         expect(result.to).toBe(10);
       });
     });
+
+    describe('limitToCompletedIndexes=true', () => {
+      // const factory = dateCellRangeOfTimingFactory({ timing, limitToCompletedIndexes: true });
+
+      function factoryWithNow(now: Date, fitToTimingRange = true) {
+        return dateCellRangeOfTimingFactory({ timing, fitToTimingRange, limitToCompletedIndexes: true, now });
+      }
+
+      describe('now is before the first startsAt', () => {
+        const expectedMaxIndex = -5;
+        const now = addDays(startsAt, expectedMaxIndex + 1);
+        const factory = factoryWithNow(now);
+
+        it('should limit the range to the timing and with items that are complete.', () => {
+          const i = -10;
+          const result = factory({ i, to: 10 });
+
+          expect(result.i).toBe(-1);
+          expect(result.to).toBe(-1); // 0 is not yet ended.
+        });
+
+        describe('fitToTimingRange=false', () => {
+          const factory = factoryWithNow(now, false);
+
+          it('should limit the range to items that are complete.', () => {
+            const i = -10;
+            const result = factory({ i, to: 10 });
+
+            expect(result.i).toBe(i);
+            expect(result.to).toBe(expectedMaxIndex); // not yet ended.
+          });
+        });
+      });
+
+      describe('now is after the startsAt time but before the first timings end', () => {
+        const expectedMaxIndex = -1;
+        const now = addMinutes(startsAt, 1); // 1 minute after starting
+        const factory = factoryWithNow(now);
+
+        it('should limit the range to the timing and with items that are complete.', () => {
+          const i = -10;
+          const result = factory({ i, to: 10 });
+
+          expect(result.i).toBe(expectedMaxIndex);
+          expect(result.to).toBe(expectedMaxIndex); // 0 is not yet ended.
+        });
+
+        describe('fitToTimingRange=false', () => {
+          const factory = factoryWithNow(now, false);
+
+          it('should limit the range to items that are complete.', () => {
+            const i = -10;
+            const result = factory({ i, to: 10 });
+
+            expect(result.i).toBe(i);
+            expect(result.to).toBe(expectedMaxIndex); // not yet ended.
+          });
+        });
+      });
+
+      describe('now is after the startsAt time and after the first timings end', () => {
+        const expectedCurrentIndex = 0;
+        const now = addMinutes(startsAt, duration + 1);
+
+        const factory = factoryWithNow(now);
+
+        it('should limit the range to items that are complete.', () => {
+          const i = -10;
+          const result = factory({ i, to: 10 });
+
+          expect(result.i).toBe(0);
+          expect(result.to).toBe(expectedCurrentIndex); // not yet ended.
+        });
+
+        describe('fitToTimingRange=false', () => {
+          const factory = factoryWithNow(now, false);
+
+          it('should limit the range to items that are complete.', () => {
+            const i = -10;
+            const result = factory({ i, to: 10 });
+
+            expect(result.i).toBe(i);
+            expect(result.to).toBe(expectedCurrentIndex); // not yet ended.
+          });
+        });
+      });
+    });
   });
 });
 

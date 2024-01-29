@@ -1,5 +1,5 @@
-import { parseISO8601DayStringToUTCDate, type Maybe, type ArrayOrValue, asArray, pushArrayItemsIntoArray, type FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, type IndexRange, HOURS_IN_DAY, range, type Configurable, type ISO8601DayString, isDate, type IndexNumber, type Minutes } from '@dereekb/util';
-import { addMinutes, isAfter, differenceInHours, addHours } from 'date-fns';
+import { parseISO8601DayStringToUTCDate, type Maybe, type ArrayOrValue, asArray, pushArrayItemsIntoArray, type FilterFunction, indexRangeCheckFunction, mergeFilterFunctions, type IndexRange, HOURS_IN_DAY, range, type Configurable, type ISO8601DayString, isDate, type IndexNumber, type Minutes, GetterOrValue, asGetter, Building } from '@dereekb/util';
+import { addMinutes, isAfter, differenceInHours, addHours, isBefore } from 'date-fns';
 import { guessCurrentTimezone } from './date';
 import {
   type DateCell,
@@ -40,6 +40,18 @@ export interface DateCallIndexRangeFromDatesFactoryConfig {
    * Defaults to true.
    */
   readonly fitToTimingRange?: boolean;
+  /**
+   * Only include the index if the timing is marked as complete for that index.
+   *
+   * If no indexes have been completed, the returned value range will be -1 to -1.
+   *
+   * Defaults to false.
+   */
+  readonly limitToCompletedIndexes?: boolean;
+  /**
+   * (Optional) now date/getter used to influence the limitToCompletedIndexes calculations.
+   */
+  readonly now?: GetterOrValue<Date>;
 }
 
 /**
@@ -49,11 +61,11 @@ export interface DateCellRangeOfTimingInput {
   /**
    * Start date or index
    */
-  readonly i?: DateOrDateCellIndex;
+  readonly i?: Maybe<DateOrDateCellIndex>;
   /**
    * End date or index
    */
-  readonly to?: DateOrDateCellIndex;
+  readonly to?: Maybe<DateOrDateCellIndex>;
 }
 
 /**
@@ -68,19 +80,63 @@ export type DateCellRangeOfTimingFactory = (input: DateCellRangeOfTimingInput) =
  * @returns
  */
 export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDatesFactoryConfig): DateCellRangeOfTimingFactory {
-  const { timing, fitToTimingRange = true } = config;
+  const { timing, fitToTimingRange = true, limitToCompletedIndexes: onlyIncludeIfComplete = false, now: inputNowGetter } = config;
+  const nowGetter = asGetter(inputNowGetter ?? (() => new Date()));
   const indexFactory = dateCellTimingRelativeIndexFactory(timing);
   const minIndex = fitToTimingRange ? 0 : Number.MIN_SAFE_INTEGER;
   const maxIndex = fitToTimingRange ? indexFactory(indexFactory._timing.end) : Number.MAX_SAFE_INTEGER;
+
+  let getCurrentMaxIndex: () => IndexNumber;
+
+  if (onlyIncludeIfComplete) {
+    const timingInfoFactory = dateCellDayTimingInfoFactory({ timing });
+    const endAtFactory = dateCellTimingEndDateFactory(timing);
+
+    let nextExpectedIndexChangeAt: Date;
+    let currentMaxDay: IndexNumber;
+
+    function refreshCurrentInfo() {
+      const now = nowGetter();
+      const currentInfo = timingInfoFactory(now, now);
+
+      if (fitToTimingRange && currentInfo.isComplete) {
+        // if the timing is complete relative to now, then update to prevent any further updates since the max will not change anymore
+        currentMaxDay = indexFactory(indexFactory._timing.end);
+        getCurrentMaxIndex = () => currentMaxDay;
+      } else {
+        const latestCompletedIndex = currentInfo.isInProgress ? currentInfo.currentIndex - 1 : currentInfo.currentIndex;
+
+        // calculate the next max change. It occurs whenever the current index ends
+        nextExpectedIndexChangeAt = endAtFactory(latestCompletedIndex + 1);
+        currentMaxDay = fitToTimingRange ? Math.max(latestCompletedIndex, -1) : latestCompletedIndex; // the currentIndex day is not yet complete.
+      }
+    }
+
+    refreshCurrentInfo();
+
+    getCurrentMaxIndex = () => {
+      const now = nowGetter();
+
+      if (!isBefore(now, nextExpectedIndexChangeAt)) {
+        // refresh since we're expecting the index change
+        refreshCurrentInfo();
+      }
+
+      return currentMaxDay;
+    };
+  } else {
+    getCurrentMaxIndex = () => maxIndex;
+  }
 
   return (input: DateCellRangeOfTimingInput): DateCellRange => {
     const { i: start, to: end } = input;
 
     const startIndex = indexFactory(start ?? 0);
-    const endIndex = indexFactory(end ?? new Date());
+    const endIndex = indexFactory(end ?? nowGetter());
+    const maxIndex = getCurrentMaxIndex();
 
-    const i = Math.max(minIndex, startIndex);
-    const to = Math.min(maxIndex, endIndex);
+    const to = Math.min(maxIndex, endIndex); // calculate to first to get the max value
+    const i = Math.min(Math.max(minIndex, startIndex), to); // i should never be greater than to
 
     return { i, to };
   };
@@ -339,21 +395,24 @@ export interface DateCellDayTimingInfo {
  *
  * Can optionally specify a now that is used for checking the inProgress functionality.
  */
-export type DateCellDayTimingInfoFactory = (date: DateOrDateCellIndex, now?: Date) => DateCellDayTimingInfo;
+export type DateCellDayTimingInfoFactory = ((date: DateOrDateCellIndex, now?: Date) => DateCellDayTimingInfo) & {
+  readonly _indexFactory: DateCellTimingRelativeIndexFactory;
+  readonly _startsAtFactory: DateCellTimingStartsAtDateFactory;
+};
 
 export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactoryConfig): DateCellDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
   const { duration } = timing;
   const indexRange = rangeLimit !== false ? dateCellIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
-  const dayIndexFactory = dateCellTimingRelativeIndexFactory(timing);
+  const indexFactory = dateCellTimingRelativeIndexFactory(timing);
   const dayFactory = dateCellTimingDateFactory(timing);
-  const startsAtFactory = dateCellTimingStartsAtDateFactory(dayIndexFactory);
+  const startsAtFactory = dateCellTimingStartsAtDateFactory(indexFactory);
 
-  return (input: DateOrDateCellIndex, inputNow?: Date) => {
+  const fn = ((input: DateOrDateCellIndex, inputNow?: Date) => {
     const date = typeof input === 'number' ? dayFactory(input) : input;
 
-    const dayIndex = dayIndexFactory(input);
+    const dayIndex = indexFactory(input);
     const isInRange = checkIsInRange(dayIndex);
 
     const now = inputNow ?? date;
@@ -382,9 +441,15 @@ export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactor
       startsAtOnDay,
       endsAtOnDay,
       nextIndexInRange,
-      isComplete
+      isComplete,
+      _indexRange: indexRange
     };
-  };
+  }) as Building<DateCellDayTimingInfoFactory>;
+
+  fn._indexFactory = indexFactory;
+  fn._startsAtFactory = startsAtFactory;
+
+  return fn as DateCellDayTimingInfoFactory;
 }
 
 /**
@@ -444,7 +509,7 @@ export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStart
 
       const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
       return daysOffset ? daysOffset : 0; // do not return -0
-    }) as Configurable<Partial<DateCellTimingRelativeIndexFactory<T>>>;
+    }) as Building<DateCellTimingRelativeIndexFactory<T>>;
     factory._timing = timing;
     factory._normalInstance = normalInstance;
     return factory as DateCellTimingRelativeIndexFactory<T>;
@@ -485,7 +550,7 @@ export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTiming
     });
 
     return result;
-  }) as Configurable<Partial<DateCellTimingRelativeIndexArrayFactory<T>>>;
+  }) as Building<DateCellTimingRelativeIndexArrayFactory<T>>;
   factory._indexFactory = indexFactory;
   return factory as DateCellTimingRelativeIndexArrayFactory<T>;
 }
@@ -536,7 +601,7 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
       const nowWithDateForIndex = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY); // add days to apply the correct offset to the target index
       return nowWithDateForIndex;
     }
-  }) as Configurable<Partial<DateCellTimingDateFactory>>;
+  }) as Building<DateCellTimingDateFactory>;
   factory._timing = timing;
   return factory as DateCellTimingDateFactory<T>;
 }
@@ -581,7 +646,7 @@ export function dateCellTimingStartDateFactory<T extends DateCellTimingStartsAt 
     const index = indexFactory(input); // get the index
     const startInUtc = addHours(utcStartDate, index * HOURS_IN_DAY);
     return normalInstance.targetDateToBaseDate(startInUtc);
-  }) as Configurable<Partial<DateCellTimingStartDateFactory>>;
+  }) as Building<DateCellTimingStartDateFactory>;
   factory._indexFactory = indexFactory;
   return factory as DateCellTimingStartDateFactory<T>;
 }
@@ -609,7 +674,7 @@ export function dateCellTimingStartsAtDateFactory<T extends DateCellTimingStarts
     const index = indexFactory(input); // get the index
     const startAtInUtc = addHours(utcStartsAtDate, index * HOURS_IN_DAY);
     return normalInstance.targetDateToBaseDate(startAtInUtc);
-  }) as Configurable<Partial<DateCellTimingStartsAtDateFactory>>;
+  }) as Building<DateCellTimingStartsAtDateFactory>;
   factory._indexFactory = indexFactory;
   return factory as DateCellTimingStartsAtDateFactory<T>;
 }
@@ -635,7 +700,7 @@ export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCell
   const factory = ((input: DateCellTimingRelativeIndexFactoryInput) => {
     const startsAt = startsAtDateFactory(input); // get the startsAt for that day
     return addMinutes(startsAt, duration); // add the duration
-  }) as Configurable<Partial<DateCellTimingEndDateFactory>>;
+  }) as Building<DateCellTimingEndDateFactory>;
   factory._startsAtDateFactory = startsAtDateFactory;
   return factory as DateCellTimingEndDateFactory<T>;
 }
