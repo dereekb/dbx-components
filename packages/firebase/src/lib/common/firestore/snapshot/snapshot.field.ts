@@ -250,9 +250,9 @@ export function firestoreEnum<S extends string | number>(config: FirestoreEnumCo
   });
 }
 
-export type OptionalFirestoreEnum<S extends string | number> = OptionalFirestoreFieldConfig<S>;
+export type OptionalFirestoreEnumConfig<S extends string | number> = OptionalFirestoreFieldConfig<S>;
 
-export function optionalFirestoreEnum<S extends string | number>(config?: OptionalFirestoreEnum<S>) {
+export function optionalFirestoreEnum<S extends string | number>(config?: OptionalFirestoreEnumConfig<S>) {
   return optionalFirestoreField<S>(config);
 }
 

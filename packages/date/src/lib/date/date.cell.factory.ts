@@ -71,7 +71,7 @@ export interface DateCellRangeOfTimingInput {
 /**
  * Creates a DateCellRange from the input.
  */
-export type DateCellRangeOfTimingFactory = (input: DateCellRangeOfTimingInput) => DateCellRange;
+export type DateCellRangeOfTimingFactory = (input?: Maybe<DateCellRangeOfTimingInput>) => DateCellRangeWithRange;
 
 /**
  * Creates a DateCellRangeOfTimingFactory.
@@ -128,8 +128,8 @@ export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDates
     getCurrentMaxIndex = () => maxIndex;
   }
 
-  return (input: DateCellRangeOfTimingInput): DateCellRange => {
-    const { i: start, to: end } = input;
+  return (input?: Maybe<DateCellRangeOfTimingInput>): DateCellRangeWithRange => {
+    const { i: start, to: end } = input ?? {};
 
     const startIndex = indexFactory(start ?? 0);
     const endIndex = indexFactory(end ?? nowGetter());
@@ -151,8 +151,24 @@ export function dateCellRangeOfTimingFactory(config: DateCallIndexRangeFromDates
  * @param input
  * @returns
  */
-export function dateCellRangeOfTiming(config: DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig, input: DateCellRangeOfTimingInput): DateCellRange {
+export function dateCellRangeOfTiming(config: DateCellTiming | DateCallIndexRangeFromDatesFactoryConfig, input?: Maybe<DateCellRangeOfTimingInput>): DateCellRangeWithRange {
   return dateCellRangeOfTimingFactory(isDateCellTiming(config) ? { timing: config } : config)(input);
+}
+
+export type DateCellTimingCompleteTimeRangeConfig = Pick<DateCallIndexRangeFromDatesFactoryConfig, 'now' | 'fitToTimingRange'>;
+
+/**
+ * Convenience function for dateCellRangeOfTiming() that returns the latest completed index.
+ *
+ * By default fitToTimingRange is true.
+ */
+export function dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?: DateCellTimingCompleteTimeRangeConfig): DateCellRangeWithRange {
+  return dateCellRangeOfTiming({
+    timing,
+    now: config?.now,
+    fitToTimingRange: config?.fitToTimingRange ?? true, // default to true
+    limitToCompletedIndexes: true
+  });
 }
 
 /**
