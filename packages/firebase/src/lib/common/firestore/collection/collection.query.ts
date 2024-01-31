@@ -10,7 +10,7 @@ import { firestoreDocumentLoader } from '../accessor';
 export interface FirestoreCollectionExecutableDocumentQuery<T, D extends FirestoreDocument<T>> {
   readonly baseQuery: FirestoreExecutableQuery<T>;
   /**
-   * Returns the first/single document.
+   * Limits the results to a single document, then returns that first/single document if it exists.
    */
   getFirstDoc(transaction?: Transaction): Promise<Maybe<D>>;
   /**

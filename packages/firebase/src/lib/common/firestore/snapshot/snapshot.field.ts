@@ -58,7 +58,10 @@ import {
   sortAscendingIndexNumberRefFunction,
   transformStringFunctionConfig,
   type TransformNumberFunctionConfigInput,
-  type TransformStringFunctionConfigInput
+  type TransformStringFunctionConfigInput,
+  DecisionFunction,
+  asGetter,
+  isMapIdentityFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -138,17 +141,26 @@ export interface OptionalFirestoreFieldConfig<T> {
   /**
    * Defaults the dontStoreIfValue value to this value.
    *
-   * This is ignored if no default value is set.
+   * This is ignored if defaultReadValue is not set or if dontStoreIf is provided.
    */
-  readonly dontStoreDefaultReturnValue?: boolean;
+  readonly dontStoreDefaultReadValue?: boolean;
   /**
-   * Removes the value from the object if the stored value would equal this value.
+   * Removes the value from the object if the decision returns true.
    */
-  readonly dontStoreIfValue?: T;
+  readonly dontStoreIf?: T | DecisionFunction<T>;
   /**
    * Value to optionally return if there is no value in the database when reading from the database.
+   *
+   * If using a getter the getter is invoked each time.
    */
-  readonly defaultReadValue?: T;
+  readonly defaultReadValue?: GetterOrValue<T>;
+  // MARK: Deprecated
+  /**
+   * Removes the value from the object if the stored value would equal this value.
+   *
+   * @deprecated use dontStoreIf instead.
+   */
+  readonly dontStoreIfValue?: T;
 }
 
 export interface OptionalFirestoreFieldConfigWithTransform<T> extends OptionalFirestoreFieldConfig<T> {
@@ -178,25 +190,65 @@ export interface OptionalFirestoreFieldConfigWithTransform<T> extends OptionalFi
 
 export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithTransform<T>): ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>> {
   if (config) {
-    const { dontStoreDefaultReturnValue, defaultReadValue: defaultValue, dontStoreIfValue = dontStoreDefaultReturnValue && defaultValue != null ? defaultValue : undefined, transformData: inputTransformData, transformFromData, transformToData } = config ?? ({} as OptionalFirestoreBooleanFieldConfig);
+    const { dontStoreDefaultReadValue, defaultReadValue: inputDefaultReadValue, dontStoreIfValue: inputDontStoreIfValue, dontStoreIf: inputDontStoreIf = inputDontStoreIfValue, transformData: inputTransformData, transformFromData, transformToData } = config ?? ({} as OptionalFirestoreBooleanFieldConfig);
+
     const transformData = inputTransformData ?? passThrough;
     const transformFrom = transformFromData ?? transformData;
     const transformTo = transformToData ?? transformData;
 
+    let loadDefaultReadValueFn: Maybe<Getter<T>>; // set if a default read value is provided
+
+    // setup fromData
+    let fromData: MapFunction<Maybe<T>, Maybe<T>>;
+
+    if (inputDefaultReadValue != null) {
+      if (typeof inputDefaultReadValue === 'function') {
+        loadDefaultReadValueFn = inputDefaultReadValue as Getter<T>;
+      } else {
+        loadDefaultReadValueFn = () => inputDefaultReadValue as T;
+      }
+
+      fromData = (x) => transformFrom(x == null ? (loadDefaultReadValueFn as Getter<T>)() : x);
+    } else if (transformFrom !== passThrough) {
+      fromData = (x) => (x != null ? transformFrom(x) : x);
+    } else {
+      fromData = passThrough;
+    }
+
+    // setup toData
+    let dontStoreIf: Maybe<DecisionFunction<T>>;
+
+    if (inputDontStoreIf != null) {
+      if (typeof inputDontStoreIf === 'function') {
+        dontStoreIf = inputDontStoreIf as DecisionFunction<T>;
+      } else {
+        dontStoreIf = (x) => inputDontStoreIf === x;
+      }
+    } else if (dontStoreDefaultReadValue && loadDefaultReadValueFn != null) {
+      dontStoreIf = (x) => x === (loadDefaultReadValueFn as Getter<T>)();
+    }
+
+    let toData: MapFunction<Maybe<T>, Maybe<T>>;
+
+    if (dontStoreIf != null) {
+      const dontStoreValue = dontStoreIf;
+
+      toData = (x: Maybe<T>) => {
+        if (x != null) {
+          const transformedValue = transformTo(x);
+          return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
+        } else {
+          return x;
+        }
+      };
+    } else {
+      toData = passThrough;
+    }
+
     return firestoreField<Maybe<T>, Maybe<T>>({
       default: null,
-      fromData: defaultValue != null ? (x) => transformFrom(x == null ? defaultValue : x) : transformFrom != null ? (x) => (x != null ? transformFrom(x) : x) : passThrough,
-      toData:
-        dontStoreIfValue != null
-          ? (x: Maybe<T>) => {
-              if (x != null) {
-                const transformedValue = transformTo(x);
-                return transformedValue === dontStoreIfValue ? null : transformedValue;
-              } else {
-                return x;
-              }
-            }
-          : passThrough
+      fromData,
+      toData
     });
   } else {
     return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
@@ -351,8 +403,41 @@ export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
   });
 }
 
-export function optionalFirestoreArray<T>() {
-  return firestorePassThroughField<Maybe<T[]>>();
+export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldConfig<T[]>, 'dontStoreIf' | 'dontStoreIfValue'> &
+  Pick<FirestoreArrayFieldConfig<T>, 'sortWith'> & {
+    /**
+     * Removes the value from the object if the decision returns true.
+     */
+    readonly dontStoreIf?: DecisionFunction<T[]>;
+    /**
+     * The array is not stored if it is empty.
+     *
+     * Defaults to false.
+     */
+    readonly dontStoreIfEmpty?: boolean;
+  };
+
+export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldConfig<T>) {
+  const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
+
+  const inputDontStoreIf = config?.dontStoreIf;
+  const shouldNotStoreIfEmpty = inputDontStoreIf != null ? config?.dontStoreIfEmpty === true : true;
+
+  let dontStoreIf: Maybe<DecisionFunction<T[]>>;
+
+  if (inputDontStoreIf != null) {
+    dontStoreIf = shouldNotStoreIfEmpty ? (x: T[]) => x.length === 0 || inputDontStoreIf(x) : inputDontStoreIf;
+  } else {
+    dontStoreIf = shouldNotStoreIfEmpty ? (x: T[]) => x.length === 0 : undefined;
+  }
+
+  const transformData = isMapIdentityFunction(sortFn) ? undefined : (x: T[]) => sortFn(x, true);
+
+  return optionalFirestoreField<T[]>({
+    ...config,
+    dontStoreIf,
+    transformData
+  });
 }
 
 export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey> = FirestoreArrayFieldConfig<T> &
@@ -361,7 +446,7 @@ export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extend
   };
 
 export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
-  const { filterUnique: filterUnique } = config;
+  const { filterUnique } = config;
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   return firestoreField<T[], T[]>({

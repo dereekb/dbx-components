@@ -32,7 +32,8 @@ import {
   firestoreBitwiseObjectMap,
   optionalFirestoreString,
   optionalFirestoreEnum,
-  optionalFirestoreNumber
+  optionalFirestoreNumber,
+  optionalFirestoreArray
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -173,18 +174,18 @@ describe('firestoreNumber()', () => {
 });
 
 describe('optionalFirestoreBoolean()', () => {
-  describe('dontStoreIfValue', () => {
-    const dontStoreIfValue = false;
-    const field = optionalFirestoreBoolean({ dontStoreIfValue });
+  describe('dontStoreIf', () => {
+    const dontStoreIf = false;
+    const field = optionalFirestoreBoolean({ dontStoreIf });
 
-    it('should return null if the input value equals the dontStoreIfValue value', () => {
+    it('should return null if the input value equals the dontStoreIf value', () => {
       const { from, to } = modelFieldMapFunctions(field);
 
       const result = to(false);
       expect(result).toBe(null);
     });
 
-    it('should return the boolean value if the input value does not equal the dontStoreIfValue value', () => {
+    it('should return the boolean value if the input value does not equal the dontStoreIf value', () => {
       const { from, to } = modelFieldMapFunctions(field);
 
       const result = to(true);
@@ -194,7 +195,7 @@ describe('optionalFirestoreBoolean()', () => {
 
   describe('dontStoreDefaultReturnValue', () => {
     const defaultReadValue = false;
-    const field = optionalFirestoreBoolean({ defaultReadValue, dontStoreDefaultReturnValue: true });
+    const field = optionalFirestoreBoolean({ defaultReadValue, dontStoreDefaultReadValue: true });
 
     it('should return null if the input value equals the defaultValue', () => {
       const { from, to } = modelFieldMapFunctions(field);
@@ -266,28 +267,49 @@ describe('firestoreString()', () => {
 });
 
 describe('optionalFirestoreString()', () => {
-  describe('dontStoreIfValue', () => {
-    const dontStoreIfValue: string = 'a';
-    const field = optionalFirestoreString({ dontStoreIfValue });
+  describe('dontStoreIf', () => {
+    const dontStoreIf: string = 'a';
 
-    it('should return null if the input value equals the dontStoreIfValue value', () => {
-      const { from, to } = modelFieldMapFunctions(field);
+    describe('value passed directly', () => {
+      const field = optionalFirestoreString({ dontStoreIf });
 
-      const result = to(dontStoreIfValue);
-      expect(result).toBe(null);
+      it('should return null if the input value equals the dontStoreIf value', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to(dontStoreIf);
+        expect(result).toBe(null);
+      });
+
+      it('should return the value if the input value does not equal the dontStoreIf value', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to('aaa');
+        expect(result).toBe('aaa');
+      });
     });
 
-    it('should return the value if the input value does not equal the dontStoreIfValue value', () => {
-      const { from, to } = modelFieldMapFunctions(field);
+    describe('decision function passed', () => {
+      const field = optionalFirestoreString({ dontStoreIf: (x) => x === dontStoreIf });
 
-      const result = to('aaa');
-      expect(result).toBe('aaa');
+      it('should return null if the input value equals the dontStoreIf value', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to(dontStoreIf);
+        expect(result).toBe(null);
+      });
+
+      it('should return the value if the input value does not equal the dontStoreIf value', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to('aaa');
+        expect(result).toBe('aaa');
+      });
     });
   });
 
   describe('dontStoreDefaultReturnValue', () => {
     const defaultReadValue: string = 'a';
-    const field = optionalFirestoreString({ defaultReadValue: defaultReadValue, dontStoreDefaultReturnValue: true });
+    const field = optionalFirestoreString({ defaultReadValue, dontStoreDefaultReadValue: true });
 
     it('should return null if the input value equals the defaultValue', () => {
       const { from, to } = modelFieldMapFunctions(field);
@@ -299,33 +321,54 @@ describe('optionalFirestoreString()', () => {
 
   describe('defaultValue', () => {
     const defaultReadValue: string = 'a';
-    const field = optionalFirestoreString({ defaultReadValue: defaultReadValue });
 
-    it('should return the default value if the input is undefined', () => {
-      const { from, to } = modelFieldMapFunctions(field);
+    describe('value passed directly', () => {
+      const field = optionalFirestoreString({ defaultReadValue });
 
-      const result = from(undefined);
-      expect(result).toBe(defaultReadValue);
+      it('should return the default value if the input is undefined', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = from(undefined);
+        expect(result).toBe(defaultReadValue);
+      });
+
+      it('should return the default value if the input is null', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = from(null);
+        expect(result).toBe(defaultReadValue);
+      });
     });
 
-    it('should return the default value if the input is null', () => {
-      const { from, to } = modelFieldMapFunctions(field);
+    describe('getter function passed', () => {
+      const field = optionalFirestoreString({ defaultReadValue: () => defaultReadValue });
 
-      const result = from(null);
-      expect(result).toBe(defaultReadValue);
+      it('should return the default value if the input is undefined', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = from(undefined);
+        expect(result).toBe(defaultReadValue);
+      });
+
+      it('should return the default value if the input is null', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = from(null);
+        expect(result).toBe(defaultReadValue);
+      });
     });
   });
 
   describe('transform', () => {
-    describe('with dontStoreIfValue', () => {
+    describe('with dontStoreIf', () => {
       describe('inline transform config', () => {
-        const dontStoreIfValue: string = 'a';
-        const field = optionalFirestoreString({ dontStoreIfValue, transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x.toUpperCase()) });
+        const dontStoreIf: string = 'a';
+        const field = optionalFirestoreString({ dontStoreIf, transform: (x) => (x === dontStoreIf ? dontStoreIf : x.toUpperCase()) });
 
-        it('should return null if the input value equals the dontStoreIfValue value', () => {
+        it('should return null if the input value equals the dontStoreIf value', () => {
           const { from, to } = modelFieldMapFunctions(field);
 
-          const result = to(dontStoreIfValue);
+          const result = to(dontStoreIf);
           expect(result).toBe(null);
         });
 
@@ -341,13 +384,13 @@ describe('optionalFirestoreString()', () => {
       });
 
       describe('transform config object', () => {
-        const dontStoreIfValue: string = 'a';
-        const field = optionalFirestoreString({ dontStoreIfValue, transform: { transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x.toUpperCase()) } });
+        const dontStoreIf: string = 'a';
+        const field = optionalFirestoreString({ dontStoreIf, transform: { transform: (x) => (x === dontStoreIf ? dontStoreIf : x.toUpperCase()) } });
 
-        it('should return null if the input value equals the dontStoreIfValue value', () => {
+        it('should return null if the input value equals the dontStoreIf value', () => {
           const { from, to } = modelFieldMapFunctions(field);
 
-          const result = to(dontStoreIfValue);
+          const result = to(dontStoreIf);
           expect(result).toBe(null);
         });
 
@@ -366,18 +409,18 @@ describe('optionalFirestoreString()', () => {
 });
 
 describe('optionalFirestoreNumber()', () => {
-  describe('dontStoreIfValue', () => {
-    const dontStoreIfValue: number = 0;
-    const field = optionalFirestoreNumber({ dontStoreIfValue });
+  describe('dontStoreIf', () => {
+    const dontStoreIf: number = 0;
+    const field = optionalFirestoreNumber({ dontStoreIf });
 
-    it('should return null if the input value equals the dontStoreIfValue value', () => {
+    it('should return null if the input value equals the dontStoreIf value', () => {
       const { from, to } = modelFieldMapFunctions(field);
 
-      const result = to(dontStoreIfValue);
+      const result = to(dontStoreIf);
       expect(result).toBe(null);
     });
 
-    it('should return the value if the input value does not equal the dontStoreIfValue value', () => {
+    it('should return the value if the input value does not equal the dontStoreIf value', () => {
       const { from, to } = modelFieldMapFunctions(field);
 
       const result = to(1);
@@ -387,7 +430,7 @@ describe('optionalFirestoreNumber()', () => {
 
   describe('dontStoreDefaultReturnValue', () => {
     const defaultReadValue: number = 0;
-    const field = optionalFirestoreNumber({ defaultReadValue: defaultReadValue, dontStoreDefaultReturnValue: true });
+    const field = optionalFirestoreNumber({ defaultReadValue, dontStoreDefaultReadValue: true });
 
     it('should return null if the input value equals the defaultValue', () => {
       const { from, to } = modelFieldMapFunctions(field);
@@ -399,7 +442,7 @@ describe('optionalFirestoreNumber()', () => {
 
   describe('defaultValue', () => {
     const defaultReadValue: number = 0;
-    const field = optionalFirestoreNumber({ defaultReadValue: defaultReadValue });
+    const field = optionalFirestoreNumber({ defaultReadValue });
 
     it('should return the default value if the input is undefined', () => {
       const { from, to } = modelFieldMapFunctions(field);
@@ -417,15 +460,15 @@ describe('optionalFirestoreNumber()', () => {
   });
 
   describe('transform', () => {
-    describe('with dontStoreIfValue', () => {
+    describe('with dontStoreIf', () => {
       describe('inline transform config', () => {
-        const dontStoreIfValue: number = 0;
-        const field = optionalFirestoreNumber({ dontStoreIfValue, transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x + 1) });
+        const dontStoreIf: number = 0;
+        const field = optionalFirestoreNumber({ dontStoreIf, transform: (x) => (x === dontStoreIf ? dontStoreIf : x + 1) });
 
-        it('should return null if the input value equals the dontStoreIfValue value', () => {
+        it('should return null if the input value equals the dontStoreIf value', () => {
           const { from, to } = modelFieldMapFunctions(field);
 
-          const result = to(dontStoreIfValue);
+          const result = to(dontStoreIf);
           expect(result).toBe(null);
         });
 
@@ -441,13 +484,13 @@ describe('optionalFirestoreNumber()', () => {
       });
 
       describe('transform config object', () => {
-        const dontStoreIfValue: number = 0;
-        const field = optionalFirestoreNumber({ dontStoreIfValue, transform: { transform: (x) => (x === dontStoreIfValue ? dontStoreIfValue : x + 1) } });
+        const dontStoreIf: number = 0;
+        const field = optionalFirestoreNumber({ dontStoreIf, transform: { transform: (x) => (x === dontStoreIf ? dontStoreIf : x + 1) } });
 
-        it('should return null if the input value equals the dontStoreIfValue value', () => {
+        it('should return null if the input value equals the dontStoreIf value', () => {
           const { from, to } = modelFieldMapFunctions(field);
 
-          const result = to(dontStoreIfValue);
+          const result = to(dontStoreIf);
           expect(result).toBe(null);
         });
 
@@ -465,24 +508,83 @@ describe('optionalFirestoreNumber()', () => {
   });
 });
 
+describe('optionalFirestoreArray()', () => {
+  it('dontStoreIfEmpty=true', () => {
+    const field = optionalFirestoreArray({ dontStoreIfEmpty: true });
+
+    it('should return null if the input value is an empty array', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to([]);
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('dontStoreIf is provided', () => {
+    const dontStoreIfIgnoreValue = 'a';
+    const dontStoreIf = (x: string[]) => x.length > 0 && x[0] === dontStoreIfIgnoreValue;
+    const field = optionalFirestoreArray<string>({ dontStoreIf });
+
+    it('should return the value if it does not match the dontStoreIf function', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(['b']);
+      expect(result).toBeDefined();
+      expect(result?.length).toBe(1);
+      expect(result![0]).toBe('b');
+    });
+
+    it('should return null if the input value matches the dontStoreIf function', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to([dontStoreIfIgnoreValue]);
+      expect(result).toBe(null);
+    });
+
+    it('should return the empty array value if it doesnt match the dontStoreIf function', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to([]);
+      expect(result).toBeDefined();
+      expect(result?.length).toBe(0);
+    });
+
+    describe('dontStoreIfEmpty=true', () => {
+      it('should return null if the input value matches the dontStoreIf function', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to([dontStoreIfIgnoreValue]);
+        expect(result).toBe(null);
+      });
+
+      it('should return null if the input value is an empty array', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to([]);
+        expect(result).toBe(null);
+      });
+    });
+  });
+});
+
 enum TestEnum {
   A = 'a',
   B = 'b'
 }
 
 describe('optionalFirestoreEnum()', () => {
-  describe('dontStoreIfValue', () => {
-    const dontStoreIfValue: TestEnum = TestEnum.A;
-    const field = optionalFirestoreEnum<TestEnum>({ dontStoreIfValue });
+  describe('dontStoreIf', () => {
+    const dontStoreIf: TestEnum = TestEnum.A;
+    const field = optionalFirestoreEnum<TestEnum>({ dontStoreIf });
 
-    it('should return null if the input value equals the dontStoreIfValue value', () => {
+    it('should return null if the input value equals the dontStoreIf value', () => {
       const { from, to } = modelFieldMapFunctions(field);
 
-      const result = to(dontStoreIfValue);
+      const result = to(dontStoreIf);
       expect(result).toBe(null);
     });
 
-    it('should return the value if the input value does not equal the dontStoreIfValue value', () => {
+    it('should return the value if the input value does not equal the dontStoreIf value', () => {
       const { from, to } = modelFieldMapFunctions(field);
 
       const result = to(TestEnum.B);

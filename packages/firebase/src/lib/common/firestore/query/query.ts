@@ -15,7 +15,7 @@ export interface FirestoreExecutableQueryGetDocsContext {
 export interface FirestoreExecutableQuery<T> {
   readonly query: Query<T>;
   /**
-   * Returns the first/single document.
+   * Limits the results to a single document, then returns that first/single document if it exists.
    */
   getFirstDoc(transaction?: Transaction): Promise<Maybe<QueryDocumentSnapshot<T>>>;
   /**
