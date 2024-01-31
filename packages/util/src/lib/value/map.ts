@@ -61,7 +61,7 @@ export function mapArrayFunction<I, O>(mapFunction: MapFunction<I, O>): MapArray
   return (input: I[]) => input.map(mapFunction);
 }
 
-export const MAP_IDENTITY = (input: unknown) => input;
+export const MAP_IDENTITY: <T>(input: T) => T = ((input: unknown) => input) as <T>(input: T) => T;
 
 export function mapIdentityFunction<T>(): MapFunction<T, T> {
   return MAP_IDENTITY as MapFunction<T, T>;
