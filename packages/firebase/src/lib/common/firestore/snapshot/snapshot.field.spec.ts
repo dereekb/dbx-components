@@ -1,5 +1,5 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, type GrantedReadRole, type GrantedUpdateRole, type WebsiteFileLink } from '@dereekb/model';
-import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet } from '@dereekb/util';
+import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { type FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { type DocumentSnapshot } from '../types';
@@ -509,7 +509,23 @@ describe('optionalFirestoreNumber()', () => {
 });
 
 describe('optionalFirestoreArray()', () => {
-  it('dontStoreIfEmpty=true', () => {
+  describe('filterUnique is provided', () => {
+    const field = optionalFirestoreArray<string>({ filterUnique: unique });
+
+    it('should return null if the input value is an empty array', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(['a', 'a', 'a']);
+      expect(result?.length).toBe(1);
+      expect(result![0]).toBe('a');
+
+      const resultFrom = from(['a', 'a', 'a']);
+      expect(resultFrom?.length).toBe(1);
+      expect(resultFrom![0]).toBe('a');
+    });
+  });
+
+  describe('dontStoreIfEmpty=true', () => {
     const field = optionalFirestoreArray({ dontStoreIfEmpty: true });
 
     it('should return null if the input value is an empty array', () => {
@@ -550,6 +566,8 @@ describe('optionalFirestoreArray()', () => {
     });
 
     describe('dontStoreIfEmpty=true', () => {
+      const field = optionalFirestoreArray<string>({ dontStoreIf, dontStoreIfEmpty: true });
+
       it('should return null if the input value matches the dontStoreIf function', () => {
         const { from, to } = modelFieldMapFunctions(field);
 

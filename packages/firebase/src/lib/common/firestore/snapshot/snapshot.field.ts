@@ -61,7 +61,11 @@ import {
   type TransformStringFunctionConfigInput,
   DecisionFunction,
   asGetter,
-  isMapIdentityFunction
+  isMapIdentityFunction,
+  mapIdentityFunction,
+  MAP_IDENTITY,
+  chainMapSameFunctions,
+  MapSameFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -236,13 +240,14 @@ export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigW
       toData = (x: Maybe<T>) => {
         if (x != null) {
           const transformedValue = transformTo(x);
-          return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
+          const finalValue = transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
+          return finalValue;
         } else {
           return x;
         }
       };
     } else {
-      toData = passThrough;
+      toData = (x: Maybe<T>) => (x != null ? transformTo(x) ?? null : x);
     }
 
     return firestoreField<Maybe<T>, Maybe<T>>({
@@ -403,8 +408,12 @@ export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
   });
 }
 
-export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldConfig<T[]>, 'dontStoreIf' | 'dontStoreIfValue'> &
+export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldConfigWithTransform<T[]>, 'dontStoreIf' | 'dontStoreIfValue' | 'transformFromData' | 'transformToData'> &
   Pick<FirestoreArrayFieldConfig<T>, 'sortWith'> & {
+    /**
+     * Filters the function uniquely. If true uses the unique function.
+     */
+    readonly filterUnique?: T extends PrimativeKey ? FilterUniqueFunction<T, T> : never;
     /**
      * Removes the value from the object if the decision returns true.
      */
@@ -421,17 +430,32 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   const inputDontStoreIf = config?.dontStoreIf;
-  const shouldNotStoreIfEmpty = inputDontStoreIf != null ? config?.dontStoreIfEmpty === true : true;
+  const shouldNotStoreIfEmpty = config?.dontStoreIfEmpty ?? false;
 
   let dontStoreIf: Maybe<DecisionFunction<T[]>>;
 
   if (inputDontStoreIf != null) {
     dontStoreIf = shouldNotStoreIfEmpty ? (x: T[]) => x.length === 0 || inputDontStoreIf(x) : inputDontStoreIf;
   } else {
-    dontStoreIf = shouldNotStoreIfEmpty ? (x: T[]) => x.length === 0 : undefined;
+    dontStoreIf = shouldNotStoreIfEmpty
+      ? (x: T[]) => {
+          return x.length === 0;
+        }
+      : undefined;
   }
 
-  const transformData = isMapIdentityFunction(sortFn) ? undefined : (x: T[]) => sortFn(x, true);
+  const inputFilterUnique = config?.filterUnique;
+  const filterUniqueValuesFn: Maybe<MapSameFunction<T[]>> =
+    inputFilterUnique != null
+      ? (x) => {
+          const result = inputFilterUnique(x);
+          return result;
+        }
+      : undefined;
+
+  const inputTransformData = config?.transformData;
+  const sortArrayFn = isMapIdentityFunction(sortFn) ? undefined : (x: T[]) => sortFn(x, true);
+  const transformData = chainMapSameFunctions([filterUniqueValuesFn, inputTransformData, sortArrayFn]);
 
   return optionalFirestoreField<T[]>({
     ...config,
