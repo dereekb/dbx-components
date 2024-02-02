@@ -403,7 +403,7 @@ git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install rxjs@^7.5.0 firebase@^10.5.0 firebase-admin@^11.4.1 firebase-functions@^4.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install rxjs@^7.5.0 firebase@^10.8.0 firebase-admin@^12.0.0 firebase-functions@^4.6.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
 
 # install mapbox dependencies
 npm install mapbox-gl ngx-mapbox-gl@^10.0.0 @ng-web-apis/geolocation @ng-web-apis/common
@@ -421,7 +421,7 @@ install_local_peer_deps() {
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing specific angular version"
 npm install -D @nx/angular@$NX_VERSION jest-preset-angular@13.1.4 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
-npm install @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.0.8 @uirouter/angular@^12.0.0 @angular/fire@^16.0.0 @ngbracket/ngx-layout@16.1.3 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
+npm install @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.0.8 @uirouter/angular@^12.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#269911244911ee51f8977ce2293f0ef9f219f94f @ngbracket/ngx-layout@16.1.3 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
@@ -445,7 +445,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@^12.0.0 @ngrx/store-devtools@16.3.0 @ngx-formly/schematics@6.2.2 @firebase/rules-unit-testing@^3.0.1 firebase-functions-test@^3.1.0 envfile env-cmd
+npm install -D firebase-tools@^13.1.0 @ngrx/store-devtools@16.3.0 @ngx-formly/schematics@6.2.2 @firebase/rules-unit-testing@^3.0.1 firebase-functions-test@^3.1.1 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
