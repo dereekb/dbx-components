@@ -47,9 +47,9 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 
   update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<void> {
     if (params?.precondition != null) {
-      this.batch.update(this.documentRef, data as FirebaseFirestore.UpdateData<T>, params?.precondition);
+      this.batch.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>, params?.precondition);
     } else {
-      this.batch.update(this.documentRef, data as FirebaseFirestore.UpdateData<T>);
+      this.batch.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>);
     }
 
     return Promise.resolve();
