@@ -1,7 +1,7 @@
 import { MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, SlashPathFolder, useCallback } from '@dereekb/util';
-import { FirebaseStorageAccessorFile, StorageRawDataString, StorageBase64DataString, FirebaseStorageAccessorFolder } from '@dereekb/firebase';
+import { FirebaseStorageAccessorFile, StorageRawDataString, StorageBase64DataString, FirebaseStorageAccessorFolder, storagePathFactory } from '@dereekb/firebase';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -14,14 +14,15 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       const doesNotExistFilePath = 'test.png';
       let doesNotExistFile: FirebaseStorageAccessorFile;
 
-      const existsFilePath = 'exists.txt';
+      const existsFilePath = 'test/exists.txt';
       const existsFileContent = 'Hello! \ud83d\ude0a';
+      const existsFileContentType = 'text/plain';
       let existsFile: FirebaseStorageAccessorFile;
 
       beforeEach(async () => {
         doesNotExistFile = f.storageContext.file(doesNotExistFilePath);
         existsFile = f.storageContext.file(existsFilePath);
-        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType });
       });
 
       describe('uploading', () => {
@@ -178,6 +179,13 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
         it('should return the metadata.', async () => {
           const result = await existsFile.getMetadata();
+
+          expect(result.bucket).toBe(existsFile.storagePath.bucketId);
+          expect(result.fullPath).toBe(existsFilePath);
+          expect(typeof result.size).toBe('number');
+          expect(result.size).toBeGreaterThan(0);
+          expect(result.contentType).toBe(existsFileContentType);
+
           expect(result).toBeDefined();
         });
       });

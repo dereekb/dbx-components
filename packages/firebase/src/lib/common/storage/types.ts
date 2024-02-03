@@ -153,15 +153,19 @@ export interface StorageUploadOptions {
 }
 
 /**
+ * Storage metadata for a Storage object.
  *
+ * This interface follows the Firebase Cloud Storage pattern more than the @google-cloud/storage pattern.
  */
-export type StorageMetadata = {
+export interface StorageMetadata {
   /**
    * The bucket this object is contained in.
    */
   bucket: string;
   /**
    * The full path of this object.
+   *
+   * For example, if a file is at the path '<bucket>/full/path/image.png', the pathString is 'full/path/image.png'.
    */
   fullPath: string;
   /**
@@ -219,7 +223,7 @@ export type StorageMetadata = {
    * Any user-specified custom metdata.
    */
   customMetadata?: StorageCustomMetadata | undefined;
-};
+}
 
 /**
  * Additional user-defined custom metadata.

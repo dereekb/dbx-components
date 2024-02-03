@@ -9,6 +9,8 @@ export type NumberString = string;
 
 /**
  * Number that represents a percent.
+ *
+ *  e.g. 5 = 0.05 = 5%
  */
 export type PercentNumber = number;
 

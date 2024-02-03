@@ -1,6 +1,6 @@
-import { type StorageUploadOptions, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorage, type StoragePath, assertStorageUploadOptionsStringFormat, type StorageDeleteFileOptions, type StorageListFilesOptions, storageListFilesResultFactory, type StorageListItemResult, type StorageListFilesResult, type StorageMetadata, type StorageBucketId } from '@dereekb/firebase';
+import { type StorageUploadOptions, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorage, type StoragePath, assertStorageUploadOptionsStringFormat, type StorageDeleteFileOptions, type StorageListFilesOptions, storageListFilesResultFactory, type StorageListItemResult, type StorageListFilesResult, type StorageMetadata, type StorageBucketId, StorageCustomMetadata } from '@dereekb/firebase';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
-import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions } from '@google-cloud/storage';
+import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, GetFilesResponse, FileMetadata } from '@google-cloud/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
@@ -12,6 +12,31 @@ export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudSto
 }
 
 export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile>;
+
+export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, metadata: FileMetadata): StorageMetadata {
+  const fullPath = file.name;
+  const generation = String(metadata.generation ?? file.generation);
+  const metageneration = String(metadata.metageneration);
+  const size = Number(metadata.size);
+
+  return {
+    bucket: file.bucket.name,
+    fullPath,
+    generation,
+    metageneration,
+    name: file.name,
+    size,
+    timeCreated: metadata.timeCreated as string,
+    updated: metadata.updated as string,
+    md5Hash: metadata.md5Hash,
+    cacheControl: metadata.cacheControl,
+    contentDisposition: metadata.contentDisposition,
+    contentEncoding: metadata.contentEncoding,
+    contentLanguage: metadata.contentLanguage,
+    contentType: metadata.contentType,
+    customMetadata: metadata.customMetadata as StorageCustomMetadata | undefined
+  };
+}
 
 export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFile {
   const file = googleCloudStorageFileForStorageFilePath(storage, storagePath);
@@ -49,7 +74,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     storagePath,
     exists: async () => file.exists().then((x) => x[0]),
     getDownloadUrl: async () => file.getMetadata().then((x) => file.publicUrl()),
-    getMetadata: () => file.getMetadata().then((x) => x[0]),
+    getMetadata: () => file.getMetadata().then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
     getBytes: (maxDownloadSizeBytes) => file.download(makeDownloadOptions(maxDownloadSizeBytes)).then((x) => x[0]),
     getStream: (maxDownloadSizeBytes) => file.createReadStream(makeDownloadOptions(maxDownloadSizeBytes)),
     upload: async (input, options) => {
@@ -145,32 +170,29 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
     storagePath,
     exists: async () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
     list: (options?: StorageListFilesOptions) => {
-      return new Promise((resolve, reject) => {
-        bucket.getFiles(
-          {
-            ...options,
-            delimiter: SLASH_PATH_SEPARATOR,
-            autoPaginate: false,
-            versions: false,
-            maxResults: options?.maxResults,
-            // includeTrailingDelimiter: true,
-            prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
-          },
-          (err: Error | null, files?: GoogleCloudFile[], nextQuery?: GetFilesOptions, apiResponse?: GoogleCloudStorageListApiResponse) => {
-            if (err) {
-              reject(err);
-            } else {
-              const result: GoogleCloudListResult = {
-                files: files as GoogleCloudFile[],
-                nextQuery,
-                apiResponse: apiResponse as object
-              };
+      return bucket
+        .getFiles({
+          ...options,
+          delimiter: SLASH_PATH_SEPARATOR,
+          autoPaginate: false,
+          versions: false,
+          maxResults: options?.maxResults,
+          // includeTrailingDelimiter: true,
+          prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
+        })
+        .then((x: GetFilesResponse) => {
+          const files = x[0];
+          const nextQuery = x[1];
+          const apiResponse = x[2];
 
-              resolve(googleCloudStorageListFilesResultFactory(storage, folder, options, result));
-            }
-          }
-        );
-      });
+          const result: GoogleCloudListResult = {
+            files: files as GoogleCloudFile[],
+            nextQuery,
+            apiResponse: apiResponse as object
+          };
+
+          return googleCloudStorageListFilesResultFactory(storage, folder, options, result);
+        });
     }
   };
 

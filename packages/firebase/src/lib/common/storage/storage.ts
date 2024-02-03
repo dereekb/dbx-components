@@ -23,6 +23,11 @@ export type StorageSlashPath = SlashPath;
  * A reference to a StorageSlashPath
  */
 export interface StorageSlashPathRef {
+  /**
+   * The full path/name of a file.
+   *
+   * For example, if a file is at the path '<bucket>/full/path/image.png', the pathString is 'full/path/image.png'.
+   */
   pathString: StorageSlashPath;
 }
 

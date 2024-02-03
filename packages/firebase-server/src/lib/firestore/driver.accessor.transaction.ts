@@ -47,9 +47,9 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<void> {
     if (params?.precondition) {
-      this.transaction.update(this.documentRef, data as FirebaseFirestore.UpdateData<T>, params?.precondition);
+      this.transaction.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>, params?.precondition);
     } else {
-      this.transaction.update(this.documentRef, data as FirebaseFirestore.UpdateData<T>);
+      this.transaction.update<T, DocumentData>(this.documentRef, data as FirebaseFirestore.UpdateData<DocumentData>);
     }
 
     return Promise.resolve();
