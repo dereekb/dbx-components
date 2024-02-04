@@ -225,6 +225,46 @@ describe('optionalFirestoreBoolean()', () => {
   });
 });
 
+describe('optionalFirestoreDate()', () => {
+  describe('dontStoreIf', () => {
+    const dontStoreIf = new Date(0);
+    const field = optionalFirestoreDate({ dontStoreIf });
+
+    it('should return null if the input value equals the dontStoreIf value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(dontStoreIf);
+      expect(result).toBe(null);
+    });
+
+    it('should return the value if the input value does not equal the dontStoreIf value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(new Date(1));
+      expect(result).toBe(1);
+    });
+  });
+
+  describe('defaultValue', () => {
+    const defaultReadValue = new Date(0).toISOString();
+    const field = optionalFirestoreDate({ defaultReadValue });
+
+    it('should return the default value if the input is undefined', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(undefined);
+      expect(result).toBe(defaultReadValue);
+    });
+
+    it('should return the default value if the input is null', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(null);
+      expect(result).toBe(defaultReadValue);
+    });
+  });
+});
+
 interface TestFirestoreString {
   value: string;
 }

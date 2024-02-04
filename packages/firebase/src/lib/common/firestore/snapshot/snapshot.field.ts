@@ -65,7 +65,8 @@ import {
   mapIdentityFunction,
   MAP_IDENTITY,
   chainMapSameFunctions,
-  MapSameFunction
+  MapSameFunction,
+  ISO8601DateString
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -141,23 +142,26 @@ export function firestorePassThroughField<T>(): ModelFieldMapFunctionsConfig<T, 
   return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<T, T>;
 }
 
-export interface OptionalFirestoreFieldConfig<T> {
+export interface OptionalFirestoreFieldConfig<V, D> {
+  /**
+   * Removes the value from the object if the decision returns true.
+   */
+  readonly dontStoreIf?: V | DecisionFunction<V>;
+  /**
+   * Database data value to optionally return if there is no value in the database when reading from the database.
+   *
+   * If using a getter the getter is invoked each time.
+   */
+  readonly defaultReadValue?: GetterOrValue<D>;
+}
+
+export interface OptionalOneTypeFirestoreFieldConfig<T> extends OptionalFirestoreFieldConfig<T, T> {
   /**
    * Defaults the dontStoreIfValue value to this value.
    *
    * This is ignored if defaultReadValue is not set or if dontStoreIf is provided.
    */
   readonly dontStoreDefaultReadValue?: boolean;
-  /**
-   * Removes the value from the object if the decision returns true.
-   */
-  readonly dontStoreIf?: T | DecisionFunction<T>;
-  /**
-   * Value to optionally return if there is no value in the database when reading from the database.
-   *
-   * If using a getter the getter is invoked each time.
-   */
-  readonly defaultReadValue?: GetterOrValue<T>;
   // MARK: Deprecated
   /**
    * Removes the value from the object if the stored value would equal this value.
@@ -167,13 +171,7 @@ export interface OptionalFirestoreFieldConfig<T> {
   readonly dontStoreIfValue?: T;
 }
 
-export interface OptionalFirestoreFieldConfigWithTransform<T> extends OptionalFirestoreFieldConfig<T> {
-  /**
-   * (Optional) Function to transform the data before it is stored and after it is read.
-   *
-   * This is used as the default for transformToData, and transformToData.
-   */
-  readonly transformData?: MapFunction<T, T>;
+export interface OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D> extends OptionalFirestoreFieldConfig<V, D> {
   /**
    * (Optional) Function to transform the data after it is read from Firestore.
    *
@@ -181,7 +179,7 @@ export interface OptionalFirestoreFieldConfigWithTransform<T> extends OptionalFi
    *
    * Overrides transformData.
    */
-  readonly transformFromData?: MapFunction<T, T>;
+  readonly transformFromData?: MapFunction<D, V>;
   /**
    * (Optional) Transform function that is only used before the data is stored to Firestore.
    *
@@ -189,74 +187,90 @@ export interface OptionalFirestoreFieldConfigWithTransform<T> extends OptionalFi
    *
    * Overrides transformData.
    */
-  readonly transformToData?: MapFunction<T, T | null>;
+  readonly transformToData?: MapFunction<V, D | null>;
 }
 
-export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithTransform<T>): ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>> {
+export interface OptionalFirestoreFieldConfigWithOneTypeTransform<T> extends OptionalFirestoreFieldConfigWithTwoTypeTransform<T, T>, OptionalOneTypeFirestoreFieldConfig<T> {
+  /**
+   * (Optional) Function to transform the data before it is stored and after it is read.
+   *
+   * This is used as the default for transformToData, and transformToData.
+   */
+  readonly transformData?: MapFunction<T, T>;
+}
+
+export function optionalFirestoreField<V, D>(config?: OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>): ModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
+export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigWithOneTypeTransform<T>): ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
+export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>> {
+  // NOTE: Typings for this function internally is weird due to the support for both the one and two type transforms.
+
   if (config) {
-    const { dontStoreDefaultReadValue, defaultReadValue: inputDefaultReadValue, dontStoreIfValue: inputDontStoreIfValue, dontStoreIf: inputDontStoreIf = inputDontStoreIfValue, transformData: inputTransformData, transformFromData, transformToData } = config ?? ({} as OptionalFirestoreBooleanFieldConfig);
+    const inputConfig = (config ?? {}) as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
+    const { dontStoreDefaultReadValue, dontStoreIfValue: inputDontStoreIfValue, transformData: inputTransformData } = inputConfig; // might be defined.
+    const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf = inputDontStoreIfValue, transformFromData, transformToData } = inputConfig as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
 
     const transformData = inputTransformData ?? passThrough;
-    const transformFrom = transformFromData ?? transformData;
-    const transformTo = transformToData ?? transformData;
+    const transformFrom = (transformFromData ?? transformData) as MapFunction<D, V>;
+    const transformTo = (transformToData ?? transformData) as MapFunction<V, D | null>;
 
-    let loadDefaultReadValueFn: Maybe<Getter<T>>; // set if a default read value is provided
+    let loadDefaultReadValueFn: Maybe<Getter<D>>; // set if a default read value is provided
 
     // setup fromData
-    let fromData: MapFunction<Maybe<T>, Maybe<T>>;
+    let fromData: MapFunction<Maybe<D>, Maybe<V>>;
 
     if (inputDefaultReadValue != null) {
       if (typeof inputDefaultReadValue === 'function') {
-        loadDefaultReadValueFn = inputDefaultReadValue as Getter<T>;
+        loadDefaultReadValueFn = inputDefaultReadValue as Getter<D>;
       } else {
-        loadDefaultReadValueFn = () => inputDefaultReadValue as T;
+        loadDefaultReadValueFn = () => inputDefaultReadValue as D;
       }
 
-      fromData = (x) => transformFrom(x == null ? (loadDefaultReadValueFn as Getter<T>)() : x);
+      fromData = (x) => transformFrom(x == null ? (loadDefaultReadValueFn as Getter<D>)() : x);
     } else if (transformFrom !== passThrough) {
-      fromData = (x) => (x != null ? transformFrom(x) : x);
+      fromData = ((x) => (x != null ? transformFrom(x) : x)) as MapFunction<Maybe<D>, Maybe<V>>;
     } else {
-      fromData = passThrough;
+      fromData = passThrough as MapFunction<Maybe<D>, Maybe<V>>;
     }
 
     // setup toData
-    let dontStoreIf: Maybe<DecisionFunction<T>>;
+    let dontStoreIf: Maybe<DecisionFunction<V>>;
 
     if (inputDontStoreIf != null) {
       if (typeof inputDontStoreIf === 'function') {
-        dontStoreIf = inputDontStoreIf as DecisionFunction<T>;
+        dontStoreIf = inputDontStoreIf as DecisionFunction<V>;
       } else {
         dontStoreIf = (x) => inputDontStoreIf === x;
       }
     } else if (dontStoreDefaultReadValue && loadDefaultReadValueFn != null) {
-      dontStoreIf = (x) => x === (loadDefaultReadValueFn as Getter<T>)();
+      // only applicable to one-type transforms.
+      dontStoreIf = (x) => x === ((loadDefaultReadValueFn as unknown as Getter<D>)() as unknown as V);
     }
 
-    let toData: MapFunction<Maybe<T>, Maybe<T>>;
+    let toData: MapFunction<Maybe<V>, Maybe<D>>;
 
     if (dontStoreIf != null) {
       const dontStoreValue = dontStoreIf;
 
-      toData = (x: Maybe<T>) => {
+      toData = ((x: Maybe<V>) => {
         if (x != null) {
-          const transformedValue = transformTo(x);
-          const finalValue = transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
+          const transformedValue = transformTo(x) as D | null;
+          const finalValue = transformedValue != null && !dontStoreValue(transformedValue as V) ? transformedValue : null;
           return finalValue;
         } else {
           return x;
         }
-      };
+      }) as MapFunction<Maybe<V>, Maybe<D>>;
     } else {
-      toData = (x: Maybe<T>) => (x != null ? transformTo(x) ?? null : x);
+      toData = ((x: Maybe<V>) => (x != null ? transformTo(x) ?? null : x)) as MapFunction<Maybe<V>, Maybe<D>>;
     }
 
-    return firestoreField<Maybe<T>, Maybe<T>>({
+    return firestoreField<Maybe<V>, Maybe<D>>({
       default: null,
       fromData,
       toData
     });
   } else {
-    return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<Maybe<T>, Maybe<T>>;
+    return FIRESTORE_PASSTHROUGH_FIELD as ModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
   }
 }
 
@@ -285,7 +299,7 @@ export function firestoreString<S extends string = string>(config?: FirestoreStr
   });
 }
 
-export type OptionalFirestoreString<S extends string = string> = OptionalFirestoreFieldConfig<S> & Pick<FirestoreStringConfig<S>, 'transform'>;
+export type OptionalFirestoreString<S extends string = string> = OptionalOneTypeFirestoreFieldConfig<S> & Pick<FirestoreStringConfig<S>, 'transform'>;
 
 export function optionalFirestoreString<S extends string = string>(config?: OptionalFirestoreString<S>) {
   const transform: Maybe<TransformStringFunctionConfig<S>> = transformStringFunctionConfig(config?.transform);
@@ -307,7 +321,7 @@ export function firestoreEnum<S extends string | number>(config: FirestoreEnumCo
   });
 }
 
-export type OptionalFirestoreEnumConfig<S extends string | number> = OptionalFirestoreFieldConfig<S>;
+export type OptionalFirestoreEnumConfig<S extends string | number> = OptionalOneTypeFirestoreFieldConfig<S>;
 
 export function optionalFirestoreEnum<S extends string | number>(config?: OptionalFirestoreEnumConfig<S>) {
   return optionalFirestoreField<S>(config);
@@ -331,21 +345,23 @@ export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<
 };
 
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
-  return firestoreField<Date, string>({
+  return firestoreField<Date, ISO8601DateString>({
     default: config.default ?? (() => new Date()),
     defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? formatToISO8601DateString : null),
-    fromData: (input: string) => toJsDate(input),
+    fromData: (input: ISO8601DateString) => toJsDate(input),
     toData: (input: Date) => toISODateString(input)
   });
 }
 
-export function optionalFirestoreDate() {
-  return firestoreField<Maybe<Date>, Maybe<string>>({
-    default: null,
-    fromData: (input: Maybe<string>) => {
-      return input != null ? toJsDate(input) : input;
+export type OptionalFirestoreDateFieldConfig = OptionalFirestoreFieldConfig<Date, ISO8601DateString>;
+
+export function optionalFirestoreDate(config?: OptionalFirestoreDateFieldConfig) {
+  return optionalFirestoreField<Date, ISO8601DateString>({
+    ...config,
+    transformFromData: (input: ISO8601DateString) => {
+      return toJsDate(input);
     },
-    toData: (input: Date) => {
+    transformToData: (input: Date) => {
       return toISODateString(input);
     }
   });
@@ -361,7 +377,7 @@ export function firestoreBoolean(config: FirestoreBooleanFieldConfig) {
   });
 }
 
-export type OptionalFirestoreBooleanFieldConfig = OptionalFirestoreFieldConfig<boolean>;
+export type OptionalFirestoreBooleanFieldConfig = OptionalOneTypeFirestoreFieldConfig<boolean>;
 
 export function optionalFirestoreBoolean(config?: OptionalFirestoreBooleanFieldConfig) {
   return optionalFirestoreField(config);
@@ -384,7 +400,7 @@ export function firestoreNumber<N extends number = number>(config: FirestoreNumb
   });
 }
 
-export type OptionalFirestoreNumberFieldConfig<N extends number = number> = OptionalFirestoreFieldConfig<N> & Pick<FirestoreNumberConfig<N>, 'transform'>;
+export type OptionalFirestoreNumberFieldConfig<N extends number = number> = OptionalOneTypeFirestoreFieldConfig<N> & Pick<FirestoreNumberConfig<N>, 'transform'>;
 
 export function optionalFirestoreNumber<N extends number = number>(config?: OptionalFirestoreNumberFieldConfig<N>) {
   const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
@@ -408,7 +424,7 @@ export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
   });
 }
 
-export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldConfigWithTransform<T[]>, 'dontStoreIf' | 'dontStoreIfValue' | 'transformFromData' | 'transformToData'> &
+export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldConfigWithOneTypeTransform<T[]>, 'dontStoreIf' | 'dontStoreIfValue' | 'transformFromData' | 'transformToData'> &
   Pick<FirestoreArrayFieldConfig<T>, 'sortWith'> & {
     /**
      * Filters the function uniquely. If true uses the unique function.
