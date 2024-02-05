@@ -15,7 +15,7 @@ echo running lint-fix before starting release
 # if has changes then create a commit for the lint fix
 if [[ `git status --porcelain` ]]; then
   echo lint-fix created changes. Comitting to git.
-  git commit --no-verify -m "build: lint fix"
+  git commit --no-verify -a -m "build: lint fix"
   git push origin develop
 fi
 

@@ -1,6 +1,6 @@
 import { UNKNOWN_WEBSITE_LINK_TYPE, type WebsiteLink, type GrantedRole, type WebsiteFileLink, type EncodedWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, decodeWebsiteLinkEncodedDataToWebsiteFileLink } from '@dereekb/model';
 import { type FirestoreModelKey } from '../collection/collection';
-import { type DateCellRange, type DateCellSchedule, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
+import { type DateCellRange, type DateCellSchedule, formatToISO8601DateString, toISODateString, toJsDate, isSameDate } from '@dereekb/date';
 import {
   type ModelFieldMapFunctionsConfig,
   type GetterOrValue,
@@ -61,7 +61,9 @@ import {
   isMapIdentityFunction,
   chainMapSameFunctions,
   type MapSameFunction,
-  type ISO8601DateString
+  type ISO8601DateString,
+  isDate,
+  isEqualToValueDecisionFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -140,8 +142,14 @@ export function firestorePassThroughField<T>(): ModelFieldMapFunctionsConfig<T, 
 export interface OptionalFirestoreFieldConfig<V, D> {
   /**
    * Removes the value from the object if the decision returns true.
+   *
+   * This occurs before the value is transformed.
    */
-  readonly dontStoreIf?: V | DecisionFunction<V>;
+  readonly dontStoreValueIf?: V | DecisionFunction<V>;
+  /**
+   * Removes the value from the object if the decision returns true.
+   */
+  readonly dontStoreIf?: D | DecisionFunction<D>;
   /**
    * Database data value to optionally return if there is no value in the database when reading from the database.
    *
@@ -201,12 +209,21 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMa
 
   if (config) {
     const inputConfig = (config ?? {}) as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
-    const { dontStoreDefaultReadValue, dontStoreIfValue: inputDontStoreIfValue, transformData: inputTransformData } = inputConfig; // might be defined.
+    const { dontStoreDefaultReadValue, dontStoreValueIf: inputDontStoreValueIf, dontStoreIfValue: inputDontStoreIfValue, transformData: inputTransformData } = inputConfig; // might be defined.
     const { defaultReadValue: inputDefaultReadValue, dontStoreIf: inputDontStoreIf = inputDontStoreIfValue, transformFromData, transformToData } = inputConfig as OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D>;
 
     const transformData = inputTransformData ?? passThrough;
     const transformFrom = (transformFromData ?? transformData) as MapFunction<D, V>;
-    const transformTo = (transformToData ?? transformData) as MapFunction<V, D | null>;
+    const baseTransformTo = (transformToData ?? transformData) as MapFunction<V, D | null>;
+
+    const dontStoreValueIf = inputDontStoreValueIf != null ? (isEqualToValueDecisionFunction(inputDontStoreValueIf) as Maybe<DecisionFunction<V>>) : null;
+    const transformTo =
+      dontStoreValueIf != null
+        ? (value: V) => {
+            const dontStoreCheck = dontStoreValueIf(value);
+            return dontStoreCheck ? null : baseTransformTo(value);
+          }
+        : baseTransformTo;
 
     let loadDefaultReadValueFn: Maybe<Getter<D>>; // set if a default read value is provided
 
@@ -228,17 +245,13 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMa
     }
 
     // setup toData
-    let dontStoreIf: Maybe<DecisionFunction<V>>;
+    let dontStoreIf: Maybe<DecisionFunction<D>>;
 
     if (inputDontStoreIf != null) {
-      if (typeof inputDontStoreIf === 'function') {
-        dontStoreIf = inputDontStoreIf as DecisionFunction<V>;
-      } else {
-        dontStoreIf = (x) => inputDontStoreIf === x;
-      }
+      dontStoreIf = isEqualToValueDecisionFunction(inputDontStoreIf as D | DecisionFunction<D>);
     } else if (dontStoreDefaultReadValue && loadDefaultReadValueFn != null) {
       // only applicable to one-type transforms.
-      dontStoreIf = (x) => x === ((loadDefaultReadValueFn as unknown as Getter<D>)() as unknown as V);
+      dontStoreIf = (x) => x === (loadDefaultReadValueFn as unknown as Getter<D>)();
     }
 
     let toData: MapFunction<Maybe<V>, Maybe<D>>;
@@ -249,7 +262,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMa
       toData = ((x: Maybe<V>) => {
         if (x != null) {
           const transformedValue = transformTo(x) as D | null;
-          const finalValue = transformedValue != null && !dontStoreValue(transformedValue as V) ? transformedValue : null;
+          const finalValue = transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
           return finalValue;
         } else {
           return x;
@@ -351,8 +364,17 @@ export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
 export type OptionalFirestoreDateFieldConfig = OptionalFirestoreFieldConfig<Date, ISO8601DateString>;
 
 export function optionalFirestoreDate(config?: OptionalFirestoreDateFieldConfig) {
+  const inputDontStoreValueIf = config?.dontStoreValueIf;
+  let dontStoreValueIf = inputDontStoreValueIf;
+
+  if (dontStoreValueIf != null && isDate(dontStoreValueIf)) {
+    const comparisonDate = dontStoreValueIf;
+    dontStoreValueIf = (x) => isSameDate(x, comparisonDate);
+  }
+
   return optionalFirestoreField<Date, ISO8601DateString>({
     ...config,
+    dontStoreValueIf,
     transformFromData: (input: ISO8601DateString) => {
       return toJsDate(input);
     },

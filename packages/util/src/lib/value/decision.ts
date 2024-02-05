@@ -40,3 +40,24 @@ export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean |
     return input;
   }
 }
+
+/**
+ * Creates a DecisionFunction from the input. If the input is not a function then that value is returned.
+ *
+ * If the input is
+ *
+ * @param equalityValue
+ * @returns
+ */
+export function isEqualToValueDecisionFunction<T>(equalityValue: T | DecisionFunction<T>): T extends DecisionFunction<T> ? T : DecisionFunction<T>;
+export function isEqualToValueDecisionFunction<T>(equalityValue: T | DecisionFunction<T>): DecisionFunction<T> {
+  let equalityValueCheckFunction: DecisionFunction<T>;
+
+  if (typeof equalityValue === 'function') {
+    equalityValueCheckFunction = equalityValue as DecisionFunction<T>;
+  } else {
+    equalityValueCheckFunction = (x) => equalityValue === x;
+  }
+
+  return equalityValueCheckFunction;
+}
