@@ -61,6 +61,12 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
             data = await itemDocument.snapshotData();
             expect(data?.number).toBe(update.number);
+
+            // increment again
+            await itemDocument.increment(update);
+
+            data = await itemDocument.snapshotData();
+            expect(data?.number).toBe(update.number * 2);
           });
 
           it(`should decrease the item's value`, async () => {
@@ -73,6 +79,12 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
             data = await itemDocument.snapshotData();
             expect(data?.number).toBe(update.number);
+
+            // increment again
+            await itemDocument.increment(update);
+
+            data = await itemDocument.snapshotData();
+            expect(data?.number).toBe(update.number * 2);
           });
 
           it(`should increase and decrease the item's value`, async () => {
@@ -88,6 +100,39 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
             data = await itemDocument.snapshotData();
             expect(data?.number).toBe(update.number + update2.number);
+          });
+
+          describe('in transaction', () => {
+            it(`should increase the item's value`, async () => {
+              const update = { number: 3 };
+
+              await f.parent.firestoreContext.runTransaction(async (transaction) => {
+                const itemDocumentInTransaction = await f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForId(itemDocument.id);
+                let data = await itemDocumentInTransaction.snapshotData();
+
+                expect(data?.number).toBe(undefined);
+
+                await itemDocumentInTransaction.increment(update);
+              });
+
+              const result = await itemDocument.snapshotData();
+              expect(result?.number).toBe(update.number);
+            });
+          });
+
+          describe('in write batch', () => {
+            it(`should increase the item's value`, async () => {
+              const update = { number: 3 };
+
+              const writeBatch = f.parent.firestoreContext.batch();
+
+              const itemDocumentForWriteBatch = await f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(itemDocument.id);
+              await itemDocumentForWriteBatch.increment(update);
+              await writeBatch.commit();
+
+              const result = await itemDocument.snapshotData();
+              expect(result?.number).toBe(update.number);
+            });
           });
         });
       });
@@ -215,6 +260,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             it('should update the item if it exist', async () => {
               await itemPrivateDataDocument.create({
                 createdAt: new Date(),
+                num: 0,
                 values: [],
                 settings: {
                   test: {
@@ -249,6 +295,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               await privateDataAccessor.set({
                 values: [],
+                num: 0,
                 createdAt: new Date(),
                 settings: {
                   test: {
@@ -264,7 +311,20 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
           describe('with item', () => {
             beforeEach(async () => {
-              await privateDataAccessor.set({ values: [], createdAt: new Date(), settings: {} });
+              await privateDataAccessor.set({ num: 0, values: [], createdAt: new Date(), settings: {} });
+            });
+
+            describe('increment()', () => {
+              it(`should increase the item's value`, async () => {
+                let data = await itemPrivateDataDocument.snapshotData();
+                expect(data?.num).toBe(0);
+
+                const update = { num: 3 };
+                await itemPrivateDataDocument.increment(update);
+
+                data = await itemPrivateDataDocument.snapshotData();
+                expect(data?.num).toBe(update.num);
+              });
             });
 
             describe('accessors', () => {

@@ -31,7 +31,7 @@ describe('performAsyncTasks()', () => {
       const nonConcurrentTaskKeyFactory = (x: number) => (isEvenNumber(x) ? 'even' : 'odd') as 'even' | 'odd';
 
       let wasRunningConcurrentTask = false;
-      let currentTaskKeys = new Set<'even' | 'odd'>();
+      const currentTaskKeys = new Set<'even' | 'odd'>();
 
       const result = await performAsyncTasks(
         input,
@@ -223,7 +223,7 @@ describe('performTasksInParallelFunction()', () => {
       const input = range(0, tasksToRun);
 
       let wasRunningConcurrentTask = false;
-      let currentTaskKeys = new Set<'even' | 'odd'>();
+      const currentTaskKeys = new Set<'even' | 'odd'>();
 
       performTasksInParallel(input, {
         maxParallelTasks: tasksToRun, // set to try to run then all in parallel
@@ -258,7 +258,7 @@ describe('performTasksInParallelFunction()', () => {
       const input = range(0, tasksToRun);
 
       let wasRunningConcurrentTask = false;
-      let currentTaskKeys = new Set<'even' | 'odd'>();
+      const currentTaskKeys = new Set<'even' | 'odd'>();
 
       performTasksInParallel(input, {
         maxParallelTasks: tasksToRun, // set to try to run then all in parallel
@@ -294,7 +294,7 @@ describe('performTasksInParallelFunction()', () => {
 
       let wasRunningConcurrentTask = false;
       const randomNumber = randomNumberFactory(5, 'floor');
-      let currentTaskKeys = new Set<0 | 1 | 2 | 3 | 4>();
+      const currentTaskKeys = new Set<0 | 1 | 2 | 3 | 4>();
 
       performTasksInParallel(input, {
         maxParallelTasks: tasksToRun, // set to try to run then all in parallel

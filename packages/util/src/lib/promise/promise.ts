@@ -4,7 +4,7 @@ import { type Milliseconds } from '../date/date';
 import { type PrimativeKey, type ReadOneOrMoreKeysFunction } from '../key';
 import { multiValueMapBuilder } from '../map';
 import { incrementingNumberFactory } from '../number';
-import { addToSet, containsAnyValueFromSet, setContainsAnyValue } from '../set';
+import { addToSet, setContainsAnyValue } from '../set';
 import { type StringFactory, stringFactoryFromFactory } from '../string/factory';
 import { type IndexNumber } from '../value';
 import { type Maybe } from '../value/maybe.type';
@@ -264,7 +264,7 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
         /**
          * Set of tasks keys that are currently running.
          */
-        let currentParellelTaskKeys = new Set<K>();
+        const currentParellelTaskKeys = new Set<K>();
         const visitedTaskIndexes = new Set<IndexNumber>();
         const waitingConcurrentTasks = multiValueMapBuilder<typeof incompleteTasks[0], K>();
 

@@ -29,7 +29,8 @@ import {
   SystemStateStoredData,
   SystemStateStoredDataConverterMap,
   SystemStateStoredDataFieldConverterConfig,
-  firestoreBitwiseObjectMap
+  firestoreBitwiseObjectMap,
+  firestoreNumber
 } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 
@@ -192,6 +193,7 @@ export type MockItemSettingsMap = Record<string, MockItemSettingsItem>;
  */
 export interface MockItemPrivate {
   comments?: Maybe<string>;
+  num: number;
   values: string[];
   settings: MockItemSettingsMap;
   createdAt: Date;
@@ -215,6 +217,7 @@ export type MockItemPrivateData = FirestoreModelData<MockItemPrivate, {}>;
  */
 export const mockItemPrivateConverter = snapshotConverterFunctions({
   fieldConversions: modelFieldConversions<MockItemPrivate, MockItemPrivateData>({
+    num: firestoreNumber({ default: 0, defaultBeforeSave: 0 }),
     comments: optionalFirestoreString(),
     values: firestoreUniqueStringArray(),
     settings: firestoreBitwiseObjectMap({

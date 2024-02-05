@@ -225,6 +225,47 @@ describe('optionalFirestoreBoolean()', () => {
   });
 });
 
+describe('optionalFirestoreDate()', () => {
+  describe('dontStoreValueIf', () => {
+    const dontStoreValueIf = new Date(0);
+    const field = optionalFirestoreDate({ dontStoreValueIf });
+
+    it('should return null if the input value equals the dontStoreValueIf value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = to(dontStoreValueIf);
+      expect(result).toBe(null);
+    });
+
+    it('should return the value if the input value does not equal the dontStoreValueIf value', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const expected = new Date(1);
+      const result = to(expected);
+      expect(result).toBe(expected.toISOString());
+    });
+  });
+
+  describe('defaultReadValue', () => {
+    const defaultReadValue = new Date(0).toISOString();
+    const field = optionalFirestoreDate({ defaultReadValue });
+
+    it('should return the default value if the input is undefined', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(undefined);
+      expect(result).toBeSameSecondAs(new Date(defaultReadValue));
+    });
+
+    it('should return the default value if the input is null', () => {
+      const { from, to } = modelFieldMapFunctions(field);
+
+      const result = from(null);
+      expect(result).toBeSameSecondAs(new Date(defaultReadValue));
+    });
+  });
+});
+
 interface TestFirestoreString {
   value: string;
 }
@@ -319,7 +360,7 @@ describe('optionalFirestoreString()', () => {
     });
   });
 
-  describe('defaultValue', () => {
+  describe('defaultReadValue', () => {
     const defaultReadValue: string = 'a';
 
     describe('value passed directly', () => {
@@ -440,7 +481,7 @@ describe('optionalFirestoreNumber()', () => {
     });
   });
 
-  describe('defaultValue', () => {
+  describe('defaultReadValue', () => {
     const defaultReadValue: number = 0;
     const field = optionalFirestoreNumber({ defaultReadValue });
 

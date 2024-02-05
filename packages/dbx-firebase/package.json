@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-firebase",
-  "version": "10.0.15",
+  "version": "10.0.16",
   "peerDependencies": {
     "@angular/core": "^16.2.12",
     "@dereekb/dbx-analytics": "*",
@@ -9,7 +9,7 @@
     "rxjs": "^7.5.0",
     "@angular/common": "^16.2.12",
     "firebase": "^10.5.0",
-    "@angular/fire": "^16.0.0",
+    "@angular/fire": "git+https://git@github.com/dereekb/angularfire#269911244911ee51f8977ce2293f0ef9f219f94f",
     "@dereekb/date": "*",
     "@dereekb/firebase": "*",
     "@dereekb/dbx-core": "*",

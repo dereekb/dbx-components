@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "10.0.15",
+  "version": "10.0.16",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -23,8 +23,8 @@
     "@angular/platform-browser": "^16.2.12",
     "@angular/platform-browser-dynamic": "^16.2.12",
     "@angular/router": "^16.2.12",
-    "@google-cloud/firestore": "^6.3.0",
-    "@google-cloud/pubsub": "^3.2.0",
+    "@google-cloud/firestore": "^7.0.0",
+    "@google-cloud/pubsub": "^4.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.0",

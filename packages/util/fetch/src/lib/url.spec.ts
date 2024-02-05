@@ -1,5 +1,5 @@
 import { objectToMap } from '@dereekb/util';
-import { fetchURL, FetchURLQueryKeyValueStringTuple, FetchURLQueryKeyValueTuple, isURL, isURLSearchParams } from './url';
+import { fetchURL, type FetchURLQueryKeyValueStringTuple, type FetchURLQueryKeyValueTuple, isURL, isURLSearchParams } from './url';
 
 const urlString = 'https://components.dereekb.com/';
 const url = new URL(urlString);
