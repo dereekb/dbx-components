@@ -1,5 +1,5 @@
 import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
-import { MultiValueMapBuilder, multiValueMapBuilder, readKeysToMap, readMultipleKeysToMap } from './map.key';
+import { type MultiValueMapBuilder, multiValueMapBuilder, readKeysToMap, readMultipleKeysToMap } from './map.key';
 
 describe('readKeysToMap()', () => {
   it('should create a map.', () => {
@@ -34,7 +34,7 @@ describe('readMultipleKeysToMap()', () => {
 describe('multiValueMapBuilder()', () => {
   describe('function', () => {
     describe('tuples', () => {
-      let builder: MultiValueMapBuilder<[number, number]> = multiValueMapBuilder();
+      const builder: MultiValueMapBuilder<[number, number]> = multiValueMapBuilder();
 
       describe('addTuples()', () => {
         it('should add the tuple to the map', () => {

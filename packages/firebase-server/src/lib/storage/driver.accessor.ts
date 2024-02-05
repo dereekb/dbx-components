@@ -1,6 +1,6 @@
-import { type StorageUploadOptions, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorage, type StoragePath, assertStorageUploadOptionsStringFormat, type StorageDeleteFileOptions, type StorageListFilesOptions, storageListFilesResultFactory, type StorageListItemResult, type StorageListFilesResult, type StorageMetadata, type StorageBucketId, StorageCustomMetadata } from '@dereekb/firebase';
+import { type StorageUploadOptions, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorage, type StoragePath, assertStorageUploadOptionsStringFormat, type StorageDeleteFileOptions, type StorageListFilesOptions, storageListFilesResultFactory, type StorageListItemResult, type StorageListFilesResult, type StorageMetadata, type StorageBucketId, type StorageCustomMetadata } from '@dereekb/firebase';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
-import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, GetFilesResponse, FileMetadata } from '@google-cloud/storage';
+import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata } from '@google-cloud/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {

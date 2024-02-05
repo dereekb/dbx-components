@@ -1,4 +1,4 @@
-import { Factory, FactoryWithRequiredInput } from '../getter';
+import { type Factory, type FactoryWithRequiredInput } from '../getter';
 
 export type StringFactory<K extends string = string> = Factory<K>;
 

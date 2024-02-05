@@ -34,13 +34,11 @@ import {
   transformStringFunction,
   latLngStringFunction,
   type LatLngPrecision,
-  type TransformStringFunction,
   type LatLngString,
   asObjectCopyFactory,
   modelFieldMapFunctions,
   type TimezoneString,
   assignValuesToPOJOFunction,
-  type TransformNumberFunction,
   transformNumberFunction,
   type TransformNumberFunctionConfig,
   type PrimativeKeyStringDencoderFunction,
@@ -59,14 +57,11 @@ import {
   transformStringFunctionConfig,
   type TransformNumberFunctionConfigInput,
   type TransformStringFunctionConfigInput,
-  DecisionFunction,
-  asGetter,
+  type DecisionFunction,
   isMapIdentityFunction,
-  mapIdentityFunction,
-  MAP_IDENTITY,
   chainMapSameFunctions,
-  MapSameFunction,
-  ISO8601DateString
+  type MapSameFunction,
+  type ISO8601DateString
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
