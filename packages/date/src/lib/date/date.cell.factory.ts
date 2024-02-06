@@ -172,6 +172,18 @@ export function dateCellTimingCompletedTimeRange(timing: DateCellTiming, config?
 }
 
 /**
+ * Returns the latest completed index for a DateCellTiming.
+ *
+ * Returns -1 if no days have been completed.
+ *
+ * @param timing
+ * @param now
+ */
+export function dateCellTimingLatestCompletedIndex(timing: DateCellTiming, now?: Date): IndexNumber {
+  return dateCellTimingCompletedTimeRange(timing, { now }).to;
+}
+
+/**
  * IndexRange used with DateCells.
  *
  * It has an exclusive max range. It is similar to a DateCellRange.
