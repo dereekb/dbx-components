@@ -71,9 +71,19 @@ export function offset(offset: number): FirestoreQueryConstraint<OffsetQueryCons
 export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
 
 /**
+ * All Firestore value comparison operators.
+ */
+export type WhereFilterOpValue = '<' | '<=' | '==' | '>=' | '>' | '!=';
+
+/**
+ * All Firestore array comparison operators.
+ */
+export type WhereFilterOpArrayValue = 'array-contains' | 'array-contains-any' | 'in' | 'not-in';
+
+/**
  * https://firebase.google.com/docs/firestore/query-data/queries#query_operators
  */
-export type WhereFilterOp = '<' | '<=' | '==' | '>=' | '>' | '!=' | 'array-contains' | 'array-contains-any' | 'in' | 'not-in';
+export type WhereFilterOp = WhereFilterOpValue | WhereFilterOpArrayValue;
 
 /**
  * Maximum number of arguments allowed with the "in" and "array-contains"/"array-contains-any" operators.
