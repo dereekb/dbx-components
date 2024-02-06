@@ -159,8 +159,73 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 constraintsFactory: [] // no constraints
               });
 
+              expect(result.totalCheckpoints).toBeGreaterThan(1); // multiple batches
               expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
               expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+
+            describe('batchSize=null', () => {
+              it('should iterate with a single batch', async () => {
+                const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+                const result = await iterateFirestoreDocumentSnapshotPairs({
+                  batchSize: null, // batching disabled
+                  iterateSnapshotPair: async (x) => {
+                    expect(x.data).toBeDefined();
+                    expect(x.snapshot).toBeDefined();
+                    expect(x.document).toBeDefined();
+
+                    const key = x.document.key;
+
+                    if (mockUserItemsVisited.has(key)) {
+                      throw new Error('encountered repeat key');
+                    } else {
+                      mockUserItemsVisited.add(key);
+                    }
+                  },
+                  documentAccessor,
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(result.totalCheckpoints).toBe(1); // single batch
+                expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+                expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              });
+            });
+
+            describe('batchSizeForSnapshots: () => null', () => {
+              it('should iterate with a single batch', async () => {
+                const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+                const result = await iterateFirestoreDocumentSnapshotPairs({
+                  batchSizeForSnapshots: () => null,
+                  iterateSnapshotPair: async (x) => {
+                    expect(x.data).toBeDefined();
+                    expect(x.snapshot).toBeDefined();
+                    expect(x.document).toBeDefined();
+
+                    const key = x.document.key;
+
+                    if (mockUserItemsVisited.has(key)) {
+                      throw new Error('encountered repeat key');
+                    } else {
+                      mockUserItemsVisited.add(key);
+                    }
+                  },
+                  documentAccessor,
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(result.totalCheckpoints).toBe(1); // single batch
+                expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+                expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              });
             });
           });
 
