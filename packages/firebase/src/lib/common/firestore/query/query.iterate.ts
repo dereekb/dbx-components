@@ -55,7 +55,7 @@ export interface IterateFirestoreDocumentSnapshotsConfig<T, R> extends Omit<Iter
   /**
    * (Optional) Additional config for the snapshot's PerformAsyncTasks call. By default user the performTasksConfig value.
    */
-  readonly snapshotsPerformTasksConfig?: Partial<PerformAsyncTasksConfig>;
+  readonly snapshotsPerformTasksConfig?: Partial<PerformAsyncTasksConfig<QueryDocumentSnapshot<T>>>;
 }
 
 export type IterateFirestoreDocumentSnapshotsResult<T, R> = PerformAsyncTasksResult<QueryDocumentSnapshot<T>, R>;
@@ -73,7 +73,7 @@ export async function iterateFirestoreDocumentSnapshots<T, R>(config: IterateFir
     iterateSnapshotBatch: async (docSnapshots) => {
       const performTasksResult = await performAsyncTasks(docSnapshots, iterateSnapshot, {
         sequential: true, // sequential by default
-        ...(snapshotsPerformTasksConfig ?? performTasksConfig)
+        ...(snapshotsPerformTasksConfig ?? { ...performTasksConfig, nonConcurrentTaskKeyFactory: undefined, beforeRetry: undefined }) // don't pass the nonConcurrentTaskKeyFactory
       });
 
       return performTasksResult;
@@ -165,7 +165,7 @@ export interface IterateFirestoreDocumentSnapshotBatchesConfig<T, R> extends Omi
    * - throwError = true
    * - sequential = true
    */
-  readonly performTasksConfig?: Partial<PerformAsyncTasksConfig>;
+  readonly performTasksConfig?: Partial<PerformAsyncTasksConfig<QueryDocumentSnapshot<T>[]>>;
 }
 
 /**
