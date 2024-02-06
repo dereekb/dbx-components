@@ -1,4 +1,4 @@
-import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult } from '@dereekb/util';
+import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput } from '@dereekb/util';
 import { type FirestoreDocument, type FirestoreDocumentSnapshotDataPair, documentDataWithIdAndKey, type LimitedFirestoreDocumentAccessor } from '../accessor';
 import { type QueryDocumentSnapshot, type QuerySnapshot, type DocumentSnapshot } from '../types';
 import { type FirestoreQueryConstraint, startAfter, limit } from './constraint';
@@ -55,7 +55,7 @@ export interface IterateFirestoreDocumentSnapshotsConfig<T, R> extends Omit<Iter
   /**
    * (Optional) Additional config for the snapshot's PerformAsyncTasks call. By default user the performTasksConfig value.
    */
-  readonly snapshotsPerformTasksConfig?: Partial<PerformAsyncTasksConfig>;
+  readonly snapshotsPerformTasksConfig?: Partial<PerformAsyncTasksConfig<QueryDocumentSnapshot<T>>>;
 }
 
 export type IterateFirestoreDocumentSnapshotsResult<T, R> = PerformAsyncTasksResult<QueryDocumentSnapshot<T>, R>;
@@ -73,7 +73,7 @@ export async function iterateFirestoreDocumentSnapshots<T, R>(config: IterateFir
     iterateSnapshotBatch: async (docSnapshots) => {
       const performTasksResult = await performAsyncTasks(docSnapshots, iterateSnapshot, {
         sequential: true, // sequential by default
-        ...(snapshotsPerformTasksConfig ?? performTasksConfig)
+        ...(snapshotsPerformTasksConfig ?? { ...performTasksConfig, nonConcurrentTaskKeyFactory: undefined, beforeRetry: undefined }) // don't pass the nonConcurrentTaskKeyFactory
       });
 
       return performTasksResult;
@@ -151,10 +151,20 @@ export interface IterateFirestoreDocumentSnapshotBatchesResult<T, R> extends Ind
 export interface IterateFirestoreDocumentSnapshotBatchesConfig<T, R> extends Omit<IterateFirestoreDocumentSnapshotCheckpointsConfig<T, IterateFirestoreDocumentSnapshotBatchesResult<T, R>>, 'iterateCheckpoint'> {
   /**
    * Max number of documents per batch. Defaults to 25.
+   *
+   * If null is then all snapshots will be processed in a single batch.
    */
   readonly batchSize?: Maybe<number>;
   /**
+   * Determines the custom batch size for the input.
+   *
+   * If the factory returns returned null then all snapshots will be processed in a single batch.
+   */
+  readonly batchSizeForSnapshots?: Maybe<FactoryWithRequiredInput<number | null, QueryDocumentSnapshot<T>[]>>;
+  /**
    * The iterate function per each snapshot.
+   *
+   * The batch will have atleast one item in it.
    */
   iterateSnapshotBatch(snapshotBatch: QueryDocumentSnapshot<T>[], batchIndex: number): Promise<R>;
   /**
@@ -165,7 +175,7 @@ export interface IterateFirestoreDocumentSnapshotBatchesConfig<T, R> extends Omi
    * - throwError = true
    * - sequential = true
    */
-  readonly performTasksConfig?: Partial<PerformAsyncTasksConfig>;
+  readonly performTasksConfig?: Partial<PerformAsyncTasksConfig<QueryDocumentSnapshot<T>[]>>;
 }
 
 /**
@@ -182,21 +192,27 @@ export const DEFAULT_ITERATE_FIRESTORE_DOCUMENT_SNAPSHOT_BATCHES_BATCH_SIZE = 25
  * @returns
  */
 export async function iterateFirestoreDocumentSnapshotBatches<T, R>(config: IterateFirestoreDocumentSnapshotBatchesConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
-  const { iterateSnapshotBatch, performTasksConfig, batchSize: inputBatchSize } = config;
-  const batchSize = inputBatchSize ?? DEFAULT_ITERATE_FIRESTORE_DOCUMENT_SNAPSHOT_BATCHES_BATCH_SIZE;
+  const { iterateSnapshotBatch, batchSizeForSnapshots: inputBatchSizeForSnapshots, performTasksConfig, batchSize: inputBatchSize } = config;
+  const batchSize = inputBatchSize === null ? null : inputBatchSize ?? DEFAULT_ITERATE_FIRESTORE_DOCUMENT_SNAPSHOT_BATCHES_BATCH_SIZE;
+  const batchSizeForSnapshots = inputBatchSizeForSnapshots ?? (() => batchSize);
 
   return iterateFirestoreDocumentSnapshotCheckpoints({
     ...config,
     iterateCheckpoint: async (docSnapshots) => {
-      const batches = batch(docSnapshots, batchSize);
-      let i = 0;
+      if (docSnapshots.length > 0) {
+        const batchSizeForSnapshotsResult = await batchSizeForSnapshots(docSnapshots);
+        const batches = batchSizeForSnapshotsResult === null ? [docSnapshots] : batch(docSnapshots, batchSizeForSnapshotsResult);
+        let i = 0;
 
-      const performTasksResult = await performAsyncTasks(batches, (x) => iterateSnapshotBatch(x, i++), {
-        sequential: true, // sequential by default
-        ...performTasksConfig
-      });
+        const performTasksResult = await performAsyncTasks(batches, (x) => iterateSnapshotBatch(x, i++), {
+          sequential: true, // sequential by default
+          ...performTasksConfig
+        });
 
-      return performTasksResult.results.map(([snapshots, result], i) => ({ snapshots, result, i }));
+        return performTasksResult.results.map(([snapshots, result], i) => ({ snapshots, result, i }));
+      } else {
+        return [];
+      }
     }
   });
 }

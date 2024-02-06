@@ -245,6 +245,49 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
               expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
             });
+
+            describe('batchSize=null', () => {
+              it('should iterate with a single batch', async () => {
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+                const batchSize = null;
+
+                const result = await iterateFirestoreDocumentSnapshotBatches({
+                  batchSize, // use specific batch size
+                  iterateSnapshotBatch: async (x) => {
+                    expect(x.length).toBe(allMockUserItems.length);
+                  },
+                  useCheckpointResult: async (x) => {
+                    x.docSnapshots.forEach((y) => mockUserItemsVisited.add(y.ref.path));
+                  },
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+                expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              });
+            });
+
+            describe('batchSizeForSnapshots: () => null', () => {
+              it('should iterate with a single batch', async () => {
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+                const result = await iterateFirestoreDocumentSnapshotBatches({
+                  batchSizeForSnapshots: () => null,
+                  iterateSnapshotBatch: async (x) => {
+                    expect(x.length).toBe(allMockUserItems.length);
+                  },
+                  useCheckpointResult: async (x) => {
+                    x.docSnapshots.forEach((y) => mockUserItemsVisited.add(y.ref.path));
+                  },
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+                expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              });
+            });
           });
         });
       });

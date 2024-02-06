@@ -16,7 +16,8 @@ import {
   updateDateCellTimingWithDateCellTimingEvent,
   dateCellTimingEndIndex,
   dateCellRangeOfTimingFactory,
-  dateCellRangeOfTiming
+  dateCellRangeOfTiming,
+  dateCellTimingLatestCompletedIndex
 } from './date.cell.factory';
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { type DateCellRange, type DateCellRangeWithRange } from './date.cell.index';
@@ -167,6 +168,24 @@ describe('dateCellRangeOfTiming()', () => {
         expect(result.to).toBe(10);
       });
     });
+  });
+});
+
+describe('dateCellTimingLatestCompletedIndex()', () => {
+  const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
+  const days = 5;
+  const duration = 60;
+
+  const timing = dateCellTiming({ startsAt, duration }, days); // system timezone
+
+  it('should return the expected index', () => {
+    const result = dateCellTimingLatestCompletedIndex(timing, startsAt);
+    expect(result).toBe(-1);
+  });
+
+  it('should return -1 if no indexes are complete yet.', () => {
+    const result = dateCellTimingLatestCompletedIndex(timing, startsAt);
+    expect(result).toBe(-1);
   });
 });
 
