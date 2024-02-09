@@ -27,7 +27,8 @@ import {
   iterateFirestoreDocumentSnapshotPairs,
   iterateFirestoreDocumentSnapshotBatches,
   iterateFirestoreDocumentSnapshotPairBatches,
-  iterateFirestoreDocumentSnapshots
+  iterateFirestoreDocumentSnapshots,
+  whereDateIsOnOrBeforeWithSort
 } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
@@ -842,6 +843,34 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
              * Since we choose to store dates as strings, we can compare ranges of dates.
              */
             describe('Searching Date Strings', () => {
+              describe('whereDateIsAfterWithSort()', () => {
+                it('should return models with dates after the input.', async () => {
+                  const startHoursLater = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrAfterWithSort<MockItem>('date', start)).getDocs();
+
+                  expect(result.docs.length).toBe(startHoursLater);
+
+                  // ascending order by default
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                  expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
+                });
+
+                it('should return models with dates after the input in descending order.', async () => {
+                  const startHoursLater = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrAfterWithSort<MockItem>('date', start, 'desc')).getDocs();
+
+                  expect(result.docs.length).toBe(startHoursLater);
+
+                  // check descending order
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                });
+              });
+
               describe('whereDateIsBeforeWithSort()', () => {
                 it('should return models with dates before the input.', async () => {
                   const startHoursLater = 2;
@@ -871,7 +900,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               });
 
               describe('whereDateIsOnOrAfterWithSort()', () => {
-                it('should return models with dates before the input.', async () => {
+                it('should return models with dates after the input.', async () => {
                   const startHoursLater = 2;
 
                   const start = addHours(startDate, startHoursLater);
@@ -885,7 +914,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
                 });
 
-                it('should return models with dates before the input in descending order.', async () => {
+                it('should return models with dates after the input in descending order.', async () => {
                   const startHoursLater = 2;
 
                   const start = addHours(startDate, startHoursLater);
@@ -897,6 +926,36 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   expect(result.docs[0].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
                   expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
                   expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 0).toISOString());
+                });
+              });
+
+              describe('whereDateIsOnOrBeforeWithSort()', () => {
+                it('should return models with dates before the input.', async () => {
+                  const startHoursLater = 2;
+
+                  const endDate = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrBeforeWithSort<MockItem>('date', endDate)).getDocs();
+
+                  expect(result.docs.length).toBe(3);
+
+                  // descending order by default
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, 0).toISOString());
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, -1).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(endDate, -2).toISOString());
+                });
+
+                it('should return models with dates before the input in ascending order.', async () => {
+                  const startHoursLater = 2;
+
+                  const endDate = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrBeforeWithSort<MockItem>('date', endDate, 'asc')).getDocs();
+
+                  expect(result.docs.length).toBe(3);
+
+                  // check ascending order
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, -2).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(endDate, -1).toISOString());
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, 0).toISOString());
                 });
               });
 

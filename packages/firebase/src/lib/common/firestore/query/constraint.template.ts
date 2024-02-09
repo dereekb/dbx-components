@@ -131,6 +131,62 @@ export function whereDateIsOnOrAfterWithSort<T = object>(fieldPath: FieldPathOrS
 }
 
 /**
+ * Searches dates that are on or before the input date. If no date is input, uses now.
+ *
+ * @param field
+ * @param date
+ * @param sortDirection
+ */
+export function whereDateIsOnOrBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
+export function whereDateIsOnOrBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
+export function whereDateIsOnOrBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint {
+  return where(fieldPath as FieldPathOrStringPath, '<=', date.toISOString());
+}
+
+/**
+ * Searches dates that are on or before the input date. If no date is input, uses now.
+ *
+ * Sorts in descending order by default.
+ *
+ * @param field
+ * @param date
+ * @param sortDirection
+ */
+export function whereDateIsOnOrBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsOnOrBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsOnOrBeforeWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'desc'), whereDateIsOnOrBefore(fieldPath as FieldPathOrStringPath, date)];
+}
+
+/**
+ * Searches dates that are on or after the input date. If no date is input, uses now.
+ *
+ * @param field
+ * @param date
+ * @param sortDirection
+ */
+export function whereDateIsAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
+export function whereDateIsAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
+export function whereDateIsAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint {
+  return where(fieldPath as FieldPathOrStringPath, '>', date.toISOString());
+}
+
+/**
+ * Searches dates that are on or after the input date. If no date is input, uses now.
+ *
+ * Sorts in ascending order by default.
+ *
+ * @param field
+ * @param date
+ * @param sortDirection
+ */
+export function whereDateIsAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsAfterWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'asc'), whereDateIsAfter(fieldPath as FieldPathOrStringPath, date)];
+}
+
+/**
  * Searches dates that are on or after the input date. If no date is input, uses now.
  *
  * @param field
@@ -146,7 +202,7 @@ export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf
 /**
  * Searches dates that are on or after the input date. If no date is input, uses now.
  *
- * Sorts in ascending order by default.
+ * Sorts in descending order by default.
  *
  * @param field
  * @param date
