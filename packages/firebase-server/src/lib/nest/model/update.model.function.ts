@@ -31,7 +31,7 @@ export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCal
 
     if (updateFn) {
       const specifier = request.data.specifier;
-      preAssert({ crud: 'update', request, modelType, specifier });
+      preAssert({ call: 'update', crud: 'update', request, modelType, specifier });
       return updateFn({
         ...request,
         specifier,

@@ -31,7 +31,7 @@ export function onCallReadModel<N>(map: OnCallReadModelMap<N>, config: OnCallRea
 
     if (readFn) {
       const specifier = request.data.specifier;
-      preAssert({ crud: 'read', request, modelType, specifier });
+      preAssert({ call: 'read', crud: 'read', request, modelType, specifier });
       return readFn({
         ...request,
         specifier,

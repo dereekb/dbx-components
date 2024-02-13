@@ -1,11 +1,11 @@
-import { demoCreateModel } from './../model/crud.functions';
+import { demoCallModel } from './../model/crud.functions';
 import { CreateGuestbookParams, guestbookIdentity } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { OnCallCreateModelResult, onCallTypedModelParams } from '@dereekb/firebase';
+import { OnCallCreateModelResult, onCallCreateModelParams } from '@dereekb/firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCloudFunctionTest('createGuestbook', { f, fns: { demoCreateModel } }, ({ demoCreateModelCloudFn }) => {
+  describeCloudFunctionTest('createGuestbook', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it('should create a guestbook.', async () => {
         const name = 'testName';
@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           name
         };
 
-        const result: OnCallCreateModelResult = await u.callCloudFunction(demoCreateModelCloudFn, onCallTypedModelParams(guestbookIdentity, params));
+        const result: OnCallCreateModelResult = await u.callCloudFunction(demoCallModelCloudFn, onCallCreateModelParams(guestbookIdentity, params));
 
         expect(result).toBeDefined();
         expect(result.modelKeys).toBeDefined();

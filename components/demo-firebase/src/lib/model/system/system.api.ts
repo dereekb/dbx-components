@@ -1,4 +1,4 @@
-import { FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap, SystemStateTypes, ModelFirebaseFunctionMap, ModelFirebaseCrudFunction, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap, SystemStateTypes, ModelFirebaseFunctionMap, ModelFirebaseCrudFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { Expose } from 'class-transformer';
 import { IsString } from 'class-validator';
 
@@ -39,4 +39,4 @@ export abstract class SystemStateFunctions implements ModelFirebaseFunctionMap<S
   };
 }
 
-export const systemStateFunctionMap = modelFirebaseFunctionMapFactory(systemStateFunctionTypeConfigMap, systemStateModelCrudFunctionsConfig);
+export const systemStateFunctionMap = callModelFirebaseFunctionMapFactory(systemStateFunctionTypeConfigMap, systemStateModelCrudFunctionsConfig);

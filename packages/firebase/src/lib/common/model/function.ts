@@ -1,63 +1,121 @@
-import { type ArrayOrValue, asArray } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Building } from '@dereekb/util';
 import { type DocumentReferenceRef } from '../firestore/reference';
 import { type FirestoreModelKey, type FirestoreModelType, type FirestoreModelTypeRef } from '../firestore/collection/collection';
 
+/**
+ * Set of known call types. The basic CRUD functions.
+ */
+export type KnownOnCallFunctionType = 'create' | 'read' | 'update' | 'delete';
+
+/**
+ * A call function type specifier.
+ */
+export type OnCallFunctionType = KnownOnCallFunctionType | string;
+
 export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeRef {
-  specifier?: string;
-  data: T;
+  /**
+   * Call type. Should typically be defined.
+   */
+  readonly call?: OnCallFunctionType;
+  /**
+   * Call sub-function specifier.
+   */
+  readonly specifier?: string;
+  /**
+   * Call data
+   */
+  readonly data: T;
 }
 
 /**
+ *
+ */
+export type OnCallTypeModelParamsFunction = <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => OnCallTypedModelParams<T>;
+
+/**
+ * Creates a OnCallTypedModelParamsFunction
+ *
+ * @param call
+ * @returns
+ */
+export function onCallTypedModelParamsFunction(call?: string): OnCallTypeModelParamsFunction {
+  return <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => {
+    const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
+
+    if (!modelType) {
+      throw new Error('modelType is required.');
+    }
+
+    const result: OnCallTypedModelParams<T> = {
+      call,
+      modelType,
+      data
+    };
+
+    if (specifier != null) {
+      (result as Building<OnCallCreateModelParams<T>>).specifier = specifier;
+    }
+
+    return result;
+  };
+}
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'create'
+ */
+export const onCallCreateModelParams = onCallTypedModelParamsFunction('create');
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'read'
+ */
+export const onCallReadModelParams = onCallTypedModelParamsFunction('read');
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'update'
+ */
+export const onCallUpdateModelParams = onCallTypedModelParamsFunction('update');
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'delete'
+ */
+export const onCallDeleteModelParams = onCallTypedModelParamsFunction('delete');
+
+/**
  * Creates a OnCallTypedModelParams
+ *
+ * @deprecated use onCallTypedModelParamsFunction instead.
  *
  * @param modelType
  * @param data
  * @returns
  */
-export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string): OnCallTypedModelParams<T> {
-  const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
-
-  if (!modelType) {
-    throw new Error('modelType is required.');
-  }
-
-  const result: OnCallTypedModelParams<T> = {
-    modelType,
-    data
-  };
-
-  if (specifier != null) {
-    result.specifier = specifier;
-  }
-
-  return result;
+export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string, call?: string): OnCallTypedModelParams<T> {
+  return onCallTypedModelParamsFunction(call)(modelTypeInput, data, specifier);
 }
 
 /**
- * Key used on the front-end and backend that refers to a specific function for creating models.
+ * Key used on the front-end and backend that refers to the call function.
  */
-export const CREATE_MODEL_APP_FUNCTION_KEY = 'createModel';
+export const CALL_MODEL_APP_FUNCTION_KEY = 'callModel';
 
+/**
+ * OnCallTypedModelParams for Create calls.
+ */
 export type OnCallCreateModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 /**
- * Key used on the front-end and backend that refers to a specific function for reading models.
+ * OnCallTypedModelParams for Read calls.
  */
-export const READ_MODEL_APP_FUNCTION_KEY = 'readModel';
-
 export type OnCallReadModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 /**
- * Key used on the front-end and backend that refers to a specific function for updating models.
+ * OnCallTypedModelParams for Update calls.
  */
-export const UPDATE_MODEL_APP_FUNCTION_KEY = 'updateModel';
-
 export type OnCallUpdateModelParams<T = unknown> = OnCallTypedModelParams<T>;
-/**
- * Key used on the front-end and backend that refers to a specific function for deleting models.
- */
-export const DELETE_MODEL_APP_FUNCTION_KEY = 'deleteModel';
 
+/**
+ * OnCallTypedModelParams for Delete calls.
+ */
 export type OnCallDeleteModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 // MARK: Result
@@ -77,3 +135,32 @@ export function onCallCreateModelResult(modelKeys: ArrayOrValue<FirestoreModelKe
     modelKeys: asArray(modelKeys)
   };
 }
+
+// MARK: Compat
+/**
+ * Key used on the front-end and backend that refers to a specific function for creating models.
+ *
+ * @deprecated Replaced by the callModel function.
+ */
+export const CREATE_MODEL_APP_FUNCTION_KEY = 'createModel';
+
+/**
+ * Key used on the front-end and backend that refers to a specific function for reading models.
+ *
+ * @deprecated Replaced by the callModel function.
+ */
+export const READ_MODEL_APP_FUNCTION_KEY = 'readModel';
+
+/**
+ * Key used on the front-end and backend that refers to a specific function for updating models.
+ *
+ * @deprecated Replaced by the callModel function.
+ */
+export const UPDATE_MODEL_APP_FUNCTION_KEY = 'updateModel';
+
+/**
+ * Key used on the front-end and backend that refers to a specific function for deleting models.
+ *
+ * @deprecated Replaced by the callModel function.
+ */
+export const DELETE_MODEL_APP_FUNCTION_KEY = 'deleteModel';
