@@ -31,7 +31,7 @@ export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>, config: OnCal
 
     if (deleteFn) {
       const specifier = request.data.specifier;
-      preAssert({ crud: 'delete', request, modelType, specifier });
+      preAssert({ call: 'delete', crud: 'delete', request, modelType, specifier });
       return deleteFn({
         ...request,
         specifier,

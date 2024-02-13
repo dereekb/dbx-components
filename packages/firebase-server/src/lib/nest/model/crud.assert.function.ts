@@ -1,11 +1,16 @@
 import { type Maybe } from '@dereekb/util';
 import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { OnCallFunctionType } from '@dereekb/firebase';
 
 export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
-  request: NestContextCallableRequestWithAuth<N, I>;
-  crud: 'create' | 'read' | 'update' | 'delete';
-  modelType: string;
-  specifier: Maybe<string>;
+  readonly request: NestContextCallableRequestWithAuth<N, I>;
+  /**
+   * @deprecated use call instead.
+   */
+  readonly crud: 'call' | 'create' | 'read' | 'update' | 'delete';
+  readonly call: OnCallFunctionType;
+  readonly modelType: string;
+  readonly specifier: Maybe<string>;
 }
 
 /**

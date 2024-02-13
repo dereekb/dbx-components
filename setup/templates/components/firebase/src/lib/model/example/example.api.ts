@@ -1,6 +1,6 @@
 import { ExampleTypes } from './example';
 import { Expose } from "class-transformer";
-import { ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap } from "@dereekb/firebase";
+import { ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap } from "@dereekb/firebase";
 import { IsNotEmpty, IsString, MaxLength } from "class-validator";
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
@@ -32,7 +32,7 @@ export type ExampleModelCrudFunctionsConfig = {
 
 export const exampleModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ExampleModelCrudFunctionsConfig, ExampleTypes> = {};
 
-export const exampleFunctionMap = modelFirebaseFunctionMapFactory(exampleFunctionTypeConfigMap, exampleModelCrudFunctionsConfig);
+export const exampleFunctionMap = callModelFirebaseFunctionMapFactory(exampleFunctionTypeConfigMap, exampleModelCrudFunctionsConfig);
 
 export abstract class ExampleFunctions implements ModelFirebaseFunctionMap<ExampleFunctionTypeMap, ExampleModelCrudFunctionsConfig> {
   abstract [exampleSetUsernameKey]: FirebaseFunctionMapFunction<ExampleFunctionTypeMap, "exampleSetUsername">;

@@ -8,7 +8,7 @@ import { type FirestoreModelIdentity, type FirestoreModelTypes } from '../../com
 import { type FirebaseFunctionTypeMap, type FirebaseFunctionMap, type FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { type FirebaseFunctionTypeConfigMap, firebaseFunctionMapFactory } from './function.factory';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, type OnCallCreateModelResult, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, onCallTypedModelParams } from '../../common/model/function';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, type OnCallCreateModelResult, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, onCallTypedModelParams, CALL_MODEL_APP_FUNCTION_KEY, OnCallFunctionType } from '../../common/model/function';
 
 /**
  * Used to specify which function to direct requests to.
@@ -109,6 +109,116 @@ export type ModelFirebaseFunctionMap<M extends FirebaseFunctionTypeMap, C extend
  */
 export type ModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap> = (functionsInstance: Functions) => ModelFirebaseFunctionMap<M, U>;
 
+/**
+ * Creates a ModelFirebaseFunctionMapFactory for the input config that targets the "callModel" Firebase function.
+ *
+ * @param configMap
+ * @param crudConfigMap
+ * @returns
+ */
+export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>, crudConfigMap: ModelFirebaseCrudFunctionConfigMap<U, FirestoreModelIdentity>): ModelFirebaseFunctionMapFactory<M, U> {
+  const functionFactory = firebaseFunctionMapFactory(configMap);
+
+  return (functionsInstance: Functions) => {
+    const functionMap: FirebaseFunctionMap<M> = functionFactory(functionsInstance);
+
+    const _callFn = cachedGetter(() => httpsCallable(functionsInstance, CALL_MODEL_APP_FUNCTION_KEY));
+
+    function makeCallFunction(call: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifier?: string) {
+      return mapHttpsCallable(fn(), { mapInput: (data) => onCallTypedModelParams(modelType, data, specifier, call) }, true);
+    }
+
+    function makeCallSpecifiers(call: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifierKeys: string[]): { [key: string]: HttpsCallable<unknown, unknown> } {
+      const modelTypeSuffix = capitalizeFirstLetter(modelType);
+      const specifiers: Record<string, HttpsCallable<unknown, unknown>> = {};
+
+      specifierKeys.forEach((inputSpecifier) => {
+        const specifier = inputSpecifier === MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT ? '' : inputSpecifier;
+        const specifierFn = makeCallFunction(call, fn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
+
+        const fullSpecifierName = `${call}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;
+        specifiers[fullSpecifierName] = specifierFn;
+
+        const shortSpecifierName = lowercaseFirstLetter(specifier) || call;
+        specifiers[shortSpecifierName] = specifierFn;
+      });
+
+      return specifiers;
+    }
+
+    const result = build<ModelFirebaseFunctionMap<M, U>>({
+      base: functionMap as unknown as ModelFirebaseFunctionMap<M, U>,
+      build: (x) => {
+        Object.entries(crudConfigMap).forEach(([modelType, config]) => {
+          const modelTypeSuffix = capitalizeFirstLetter(modelType);
+          const { included: crudFunctionKeys, excluded: specifiedCallFunctionKeys } = separateValues(config as string[], (x) => x.indexOf(':') === -1);
+
+          const crudFunctions = new Set(crudFunctionKeys);
+          const specifiedCallFunctionTuples = specifiedCallFunctionKeys.map((x) => {
+            const [crud, functionsSplit] = x.split(':', 2);
+            const functions = functionsSplit.split(MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER);
+            return [crud, functions] as [string, string[]];
+          });
+
+          // check that there isn't a repeat crud key configured, which disallowed configuration and would cause some functions to be ignored
+          const encounteredCalls = new Set<string>();
+
+          function assertCallKeyNotEncountered(crud: string) {
+            if (encounteredCalls.has(crud)) {
+              throw new Error(`Cannot have multiple declarations of the same crud. Found repeat for crud: ${crud}`);
+            } else {
+              encounteredCalls.add(crud);
+            }
+          }
+
+          crudFunctions.forEach(assertCallKeyNotEncountered);
+          specifiedCallFunctionTuples.forEach(([crud]) => assertCallKeyNotEncountered(crud));
+
+          // build and add the functions
+          const specifierFunctions = new Map<string, string[]>(specifiedCallFunctionTuples);
+
+          function addCallFunctions(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string): void {
+            let crudFns: unknown;
+
+            if (crudFunctions.has(crud)) {
+              crudFns = makeCallFunction(crud, fn, modelType);
+            } else if (specifierFunctions.has(crud)) {
+              crudFns = makeCallSpecifiers(crud, fn, modelType, specifierFunctions.get(crud) as string[]);
+            }
+
+            if (crudFns) {
+              (modelTypeCalls as any)[`${crud}${modelTypeSuffix}`] = crudFns;
+            }
+          }
+
+          const modelTypeCalls = {};
+
+          // add functions for each call type
+          addCallFunctions('create', _callFn, modelType);
+          addCallFunctions('read', _callFn, modelType);
+          addCallFunctions('update', _callFn, modelType);
+          addCallFunctions('delete', _callFn, modelType);
+
+          // tslint:disable-next-line
+          (x as any)[modelType] = modelTypeCalls;
+        });
+      }
+    });
+
+    return result;
+  };
+}
+
+// MARK: Compat
+/**
+ * @deprecated move to using callModelFirebaseFunctionMapFactory instead and the call configuration in general.
+ *
+ * This will be removed in the next release.
+ *
+ * @param configMap
+ * @param crudConfigMap
+ * @returns
+ */
 export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>, crudConfigMap: ModelFirebaseCrudFunctionConfigMap<U, FirestoreModelIdentity>): ModelFirebaseFunctionMapFactory<M, U> {
   const functionFactory = firebaseFunctionMapFactory(configMap);
 

@@ -31,7 +31,7 @@ export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCal
 
     if (createFn) {
       const specifier = request.data.specifier;
-      preAssert({ crud: 'create', request, modelType, specifier });
+      preAssert({ call: 'create', crud: 'create', request, modelType, specifier });
       return createFn({
         ...request,
         specifier,
