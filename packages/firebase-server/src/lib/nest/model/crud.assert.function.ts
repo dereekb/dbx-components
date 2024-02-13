@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type NestContextCallableRequestWithAuth } from '../function/nest';
-import { OnCallFunctionType } from '@dereekb/firebase';
+import { type OnCallFunctionType } from '@dereekb/firebase';
 
 export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
   readonly request: NestContextCallableRequestWithAuth<N, I>;

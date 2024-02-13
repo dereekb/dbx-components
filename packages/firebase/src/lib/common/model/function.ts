@@ -1,4 +1,4 @@
-import { type ArrayOrValue, asArray, Building } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Building } from '@dereekb/util';
 import { type DocumentReferenceRef } from '../firestore/reference';
 import { type FirestoreModelKey, type FirestoreModelType, type FirestoreModelTypeRef } from '../firestore/collection/collection';
 

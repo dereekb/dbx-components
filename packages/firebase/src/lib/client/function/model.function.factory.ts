@@ -8,7 +8,7 @@ import { type FirestoreModelIdentity, type FirestoreModelTypes } from '../../com
 import { type FirebaseFunctionTypeMap, type FirebaseFunctionMap, type FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { type FirebaseFunctionTypeConfigMap, firebaseFunctionMapFactory } from './function.factory';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, type OnCallCreateModelResult, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, onCallTypedModelParams, CALL_MODEL_APP_FUNCTION_KEY, OnCallFunctionType } from '../../common/model/function';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, type OnCallCreateModelResult, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, onCallTypedModelParams, CALL_MODEL_APP_FUNCTION_KEY } from '../../common/model/function';
 
 /**
  * Used to specify which function to direct requests to.

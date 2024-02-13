@@ -3,7 +3,7 @@ import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { firestoreModelKey, onCallTypedModelParams, onCallUpdateModelParams } from '@dereekb/firebase';
+import { firestoreModelKey, onCallUpdateModelParams } from '@dereekb/firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 /**
