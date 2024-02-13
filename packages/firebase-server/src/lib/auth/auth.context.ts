@@ -10,6 +10,7 @@ export function firebaseAuthTokenFromDecodedIdToken(token: admin.auth.DecodedIdT
   return {
     email: token.email,
     emailVerified: token.email_verified,
-    phoneNumber: token.phone_number
+    phoneNumber: token.phone_number,
+    lastSignInTime: new Date(token.auth_time).toISOString()
   };
 }
