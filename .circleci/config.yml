@@ -92,6 +92,11 @@ jobs:
   # Runs tests for the projects that require the firebase emulators.
   test-with-node-firebase:
     <<: *defaults
+    environment:
+      # https://github.com/firebase/firebase-tools/issues/6765
+      GCE_METADATA_HOST: 0.0.0.0
+      DETECT_GCP_RETRIES: 0
+      METADATA_SERVER_DETECTION: none
     steps:
       - checkout
       - attach_workspace:

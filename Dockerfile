@@ -1,5 +1,5 @@
 # NOTE: Be careful updating this file, as it is used by the setup script.
-FROM node:18.19-bullseye
+FROM node:18.19-bookworm
 
 # Set the working directory in the container to /code
 WORKDIR /code
@@ -14,8 +14,8 @@ ENV CYPRESS_INSTALL_BINARY=0
 VOLUME ["/code"]
 
 # Install Java for the Emulators
-# Install entr for file watching, as the 
-RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless entr lsof
+# Install entr for file watching
+RUN apt-get update -y && apt-get install -y curl default-jre entr lsof
 
 # Copy package.json and package-lock.json to code
 COPY ./package.json .
