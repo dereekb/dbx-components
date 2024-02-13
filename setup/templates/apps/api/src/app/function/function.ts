@@ -1,6 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
-import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleWithNestApplicationFactory, onScheduleWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap,OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleWithNestApplicationFactory, onScheduleWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
 
@@ -45,6 +45,9 @@ export const taskqueueEventWithAPP_CODE_PREFIXNestContext = taskQueueFunctionHan
 // MARK: CRUD Functions
 export type APP_CODE_PREFIXCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallCreateModelMap = OnCallCreateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
+
+export type APP_CODE_PREFIXReadModelFunction<I, O = void> = OnCallReadModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXOnCallReadModelMap = OnCallReadModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
 
 export type APP_CODE_PREFIXUpdateModelFunction<I, O = void> = OnCallUpdateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallUpdateModelMap = OnCallUpdateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;

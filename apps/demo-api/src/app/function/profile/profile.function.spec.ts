@@ -1,9 +1,9 @@
-import { demoUpdateModel } from '../model/crud.functions';
+import { demoCallModel } from '../model/crud.functions';
 import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { firestoreModelKey, onCallTypedModelParams } from '@dereekb/firebase';
+import { firestoreModelKey, onCallTypedModelParams, onCallUpdateModelParams } from '@dereekb/firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 /**
@@ -61,7 +61,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   });
 
   // describe tests for updateProfile
-  describeCloudFunctionTest('updateProfile', { f, fn: demoUpdateModel }, (updateProfileCloudFn) => {
+  describeCloudFunctionTest('updateProfile', { f, fn: demoCallModel }, (callProfileCloudFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it(`should update the target user's profile.`, async () => {
         const bio = 'test bio';
@@ -70,7 +70,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           key: firestoreModelKey(profileIdentity, u.uid)
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity, data));
+        await u.callCloudFunction(callProfileCloudFn, onCallUpdateModelParams(profileIdentity, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);
@@ -82,7 +82,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           bio
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity, data));
+        await u.callCloudFunction(callProfileCloudFn, onCallUpdateModelParams(profileIdentity, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);

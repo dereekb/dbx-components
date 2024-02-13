@@ -28,30 +28,69 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeR
 }
 
 /**
+ *
+ */
+export type OnCallTypeModelParamsFunction = <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => OnCallTypedModelParams<T>;
+
+/**
+ * Creates a OnCallTypedModelParamsFunction
+ *
+ * @param call
+ * @returns
+ */
+export function onCallTypedModelParamsFunction(call?: string): OnCallTypeModelParamsFunction {
+  return <T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string) => {
+    const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
+
+    if (!modelType) {
+      throw new Error('modelType is required.');
+    }
+
+    const result: OnCallTypedModelParams<T> = {
+      call,
+      modelType,
+      data
+    };
+
+    if (specifier != null) {
+      (result as Building<OnCallCreateModelParams<T>>).specifier = specifier;
+    }
+
+    return result;
+  };
+}
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'create'
+ */
+export const onCallCreateModelParams = onCallTypedModelParamsFunction('create');
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'read'
+ */
+export const onCallReadModelParams = onCallTypedModelParamsFunction('read');
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'update'
+ */
+export const onCallUpdateModelParams = onCallTypedModelParamsFunction('update');
+
+/**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'delete'
+ */
+export const onCallDeleteModelParams = onCallTypedModelParamsFunction('delete');
+
+/**
  * Creates a OnCallTypedModelParams
+ *
+ * @deprecated use onCallTypedModelParamsFunction instead.
  *
  * @param modelType
  * @param data
  * @returns
  */
 export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string, call?: string): OnCallTypedModelParams<T> {
-  const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
-
-  if (!modelType) {
-    throw new Error('modelType is required.');
-  }
-
-  const result: OnCallTypedModelParams<T> = {
-    call,
-    modelType,
-    data
-  };
-
-  if (specifier != null) {
-    (result as Building<OnCallCreateModelParams<T>>).specifier = specifier;
-  }
-
-  return result;
+  return onCallTypedModelParamsFunction(call)(modelTypeInput, data, specifier);
 }
 
 /**

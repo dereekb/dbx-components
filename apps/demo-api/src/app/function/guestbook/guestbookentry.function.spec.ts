@@ -1,12 +1,12 @@
-import { demoUpdateModel } from '../model/crud.functions';
 import { GuestbookEntry, guestbookEntryIdentity, UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { onCallTypedModelParams } from '@dereekb/firebase';
+import { onCallUpdateModelParams } from '@dereekb/firebase';
+import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCloudFunctionTest('updateGuestbookEntry', { f, fn: demoUpdateModel }, (updateGuestbookEntryCloudFn) => {
+  describeCloudFunctionTest('updateGuestbookEntry', { f, fn: demoCallModel }, (callGuestbookEntryCloudFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       demoGuestbookContext({ f, published: true }, (g) => {
         describe('guestbook is active', () => {
@@ -27,7 +27,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity, params));
+            await u.callCloudFunction(callGuestbookEntryCloudFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);
@@ -85,7 +85,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   published: true
                 };
 
-                await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity, params));
+                await u.callCloudFunction(callGuestbookEntryCloudFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
 
                 exists = await userGuestbookEntry.accessor.exists();
                 expect(exists).toBe(true);
