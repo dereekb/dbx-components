@@ -74,7 +74,7 @@ Update the @dereekb dependencies to v10. There may be other dependencies that yo
 Node16 needs to be replaced with Node18. Here are some of the files that need to be updated:
 
 - `.circleci/config.yml`: Update the orbs ( -> `circleci/node@5.1.1`, `nrwl/nx@1.6.2`) and image ( -> `cimg/node:18.19`). 
-- `Dockerfile`: Update from FROM line to be `FROM node:18.19-bullseye`
+- `Dockerfile`: Update from FROM line to be `FROM node:18.19-bookworm`. Replace `openjdk-11-jre-headless` with `default-jre` as the previous one is no longer available by that name.
 - `firebase.json`: Need to update functions to use nodejs18. Update engine to be 18.
 
 Don't forget to use `./reset.sh` to rebuild the docker image before using.
