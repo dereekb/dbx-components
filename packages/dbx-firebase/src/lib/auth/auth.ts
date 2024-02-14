@@ -4,7 +4,13 @@ import { ISO8601DateString, Maybe } from '@dereekb/util';
 import { User, UserInfo } from 'firebase/auth';
 
 export type AuthUserInfo = Omit<UserInfo, 'providerId'> & {
+  /**
+   * The creation time of the user's account.
+   */
   creationTime?: Maybe<ISO8601DateString>;
+  /**
+   * The last time the user signed in and recieved a refresh token.
+   */
   lastSignInTime?: Maybe<ISO8601DateString>;
 };
 

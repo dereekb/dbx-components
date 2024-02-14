@@ -28,8 +28,20 @@ export interface FirebaseAuthToken {
   email?: Maybe<string>;
   emailVerified?: Maybe<boolean>;
   phoneNumber?: Maybe<PhoneNumber>;
+  /**
+   * The date the user was created.
+   */
   creationTime?: Maybe<ISO8601DateString>;
+  /**
+   * The last time the user signed in.
+   *
+   * This is not necessarily the last time they used the app, just the last time the auth system gave them a refresh token.
+   */
   lastSignInTime?: Maybe<ISO8601DateString>;
+  /**
+   * The last time the user refreshed their token. The best indicator of recent activity.
+   */
+  lastRefreshTime?: Maybe<ISO8601DateString>;
 }
 
 export interface FirebaseAuthDetails extends FirebaseAuthToken, FirebaseAuthUserIdRef {
