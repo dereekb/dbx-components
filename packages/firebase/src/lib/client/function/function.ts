@@ -17,14 +17,14 @@ export type FirebaseFunction<I = unknown, O = unknown> = (input: I) => Promise<O
  * Type with keys corresponding to functions on the corresponding server for a client.
  */
 export type FirebaseFunctionTypeMap = {
-  [key: FirebaseFunctionKey]: FirebaseFunctionType;
+  readonly [key: FirebaseFunctionKey]: FirebaseFunctionType;
 };
 
 /**
  * A FirebaseFunction map. Its types are relative to a FirebaseFunctionTypeMap.
  */
 export type FirebaseFunctionMap<M extends FirebaseFunctionTypeMap> = {
-  [K in keyof M]: FirebaseFunctionMapFunction<M, K>;
+  readonly [K in keyof M]: FirebaseFunctionMapFunction<M, K>;
 };
 
 /**

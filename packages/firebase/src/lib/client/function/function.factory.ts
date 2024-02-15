@@ -8,11 +8,11 @@ import { directDataHttpsCallable } from './function.callable';
 
 // MARK: Functions Factory
 export interface FirebaseFunctionTypeConfig {
-  options?: HttpsCallableOptions;
+  readonly options?: HttpsCallableOptions;
 }
 
 export type FirebaseFunctionTypeConfigMap<M extends FirebaseFunctionTypeMap> = {
-  [K in keyof M]: Maybe<FirebaseFunctionTypeConfig>;
+  readonly [K in keyof M]: Maybe<FirebaseFunctionTypeConfig>;
 };
 
 /**
@@ -46,11 +46,11 @@ export type FirebaseFunctionGetter<T> = Getter<T> & { _type: ClassLikeType<T>; _
  * Map of all firebase functions in the app.
  */
 export type FirebaseFunctionsMap = {
-  [key: FirebaseFunctionMapKey]: FirebaseFunctionTypeMap;
+  readonly [key: FirebaseFunctionMapKey]: FirebaseFunctionTypeMap;
 };
 
 export type FirebaseFunctionsConfigMap<M extends FirebaseFunctionsMap> = {
-  [K in keyof M]: FirebaseFunctionsConfigMapEntry<M[K]>;
+  readonly [K in keyof M]: FirebaseFunctionsConfigMapEntry<M[K]>;
 };
 
 export type FirebaseFunctionsConfigMapEntry<M extends FirebaseFunctionTypeMap> = [ClassLikeType, FirebaseFunctionMapFactory<M>];
@@ -64,7 +64,7 @@ export type LazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap> = (func
  * Map of FirebaseFunctionGetter values that are lazy-loaded via the getter.
  */
 export type LazyFirebaseFunctions<M extends FirebaseFunctionsMap> = {
-  [K in keyof M]: FirebaseFunctionGetter<FirebaseFunctionMap<M[K]>>;
+  readonly [K in keyof M]: FirebaseFunctionGetter<FirebaseFunctionMap<M[K]>>;
 };
 
 export function lazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap, C extends FirebaseFunctionsConfigMap<M> = FirebaseFunctionsConfigMap<M>>(configMap: C): LazyFirebaseFunctionsFactory<M> {

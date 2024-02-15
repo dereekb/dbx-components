@@ -23,8 +23,8 @@ import { type Query, type QuerySnapshot, type SnapshotListenOptions, type Transa
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
 export interface FirebaseFirestoreQueryBuilder {
-  query: Query;
-  constraints: QueryConstraint[];
+  readonly query: Query;
+  readonly constraints: QueryConstraint[];
 }
 
 export function addConstraintToBuilder(builder: FirebaseFirestoreQueryBuilder, constraint: ArrayOrValue<QueryConstraint>): FirebaseFirestoreQueryBuilder {

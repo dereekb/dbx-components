@@ -116,23 +116,23 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
 export type GoogleCloudStorageAccessorFolder = FirebaseStorageAccessorFolder<GoogleCloudFile>;
 
 export interface GoogleCloudListResult {
-  files: GoogleCloudFile[];
-  nextQuery?: GetFilesOptions;
-  apiResponse: GoogleCloudStorageListApiResponse;
+  readonly files: GoogleCloudFile[];
+  readonly nextQuery?: GetFilesOptions;
+  readonly apiResponse: GoogleCloudStorageListApiResponse;
 }
 
 export interface GoogleCloudStorageListApiResponse {
-  prefixes?: SlashPathFolder[];
-  items?: GoogleCloudStorageListApiResponseItem[];
+  readonly prefixes?: SlashPathFolder[];
+  readonly items?: GoogleCloudStorageListApiResponseItem[];
 }
 
 export interface GoogleCloudStorageListApiResponseItem extends Pick<StorageMetadata, 'size' | 'generation' | 'metageneration' | 'contentDisposition' | 'contentType' | 'timeCreated' | 'updated' | 'contentEncoding' | 'md5Hash' | 'cacheControl'> {
-  kind: '#storage#object';
+  readonly kind: '#storage#object';
   /**
    * For the api response, the name is actually the full path in the bucket.
    */
-  name: string;
-  bucket: StorageBucketId;
+  readonly name: string;
+  readonly bucket: StorageBucketId;
 }
 
 export const googleCloudStorageListFilesResultFactory = storageListFilesResultFactory({

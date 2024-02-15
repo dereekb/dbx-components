@@ -8,8 +8,8 @@ export type FirestoreQueryConstraintType = string;
  * A constraint. Used by drivers to apply native firebase query constraints.
  */
 export interface FirestoreQueryConstraint<T = unknown> {
-  type: FirestoreQueryConstraintType;
-  data: T;
+  readonly type: FirestoreQueryConstraintType;
+  readonly data: T;
 }
 
 export function firestoreQueryConstraint<T = unknown>(type: string, data: T): FirestoreQueryConstraint<T> {
@@ -27,7 +27,7 @@ export function firestoreQueryConstraintFactory(type: string): <T = unknown>(dat
 export const FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE = 'limit';
 
 export interface LimitQueryConstraintData {
-  limit: number;
+  readonly limit: number;
 }
 
 /**
@@ -44,7 +44,7 @@ export function limit(limit: number): FirestoreQueryConstraint<LimitQueryConstra
 export const FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = 'limit_to_last';
 
 export interface LimitToLastQueryConstraintData {
-  limit: number;
+  readonly limit: number;
 }
 
 /**
@@ -91,9 +91,9 @@ export type WhereFilterOp = WhereFilterOpValue | WhereFilterOpArrayValue;
 export const FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT = 10;
 
 export interface WhereQueryConstraintData {
-  fieldPath: string | FieldPath;
-  opStr: WhereFilterOp;
-  value: unknown;
+  readonly fieldPath: string | FieldPath;
+  readonly opStr: WhereFilterOp;
+  readonly value: unknown;
 }
 
 /**
@@ -143,8 +143,8 @@ export const FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE = 'order_by';
 export type OrderByDirection = SortingOrder;
 
 export interface OrderByQueryConstraintData {
-  fieldPath: FieldPathOrStringPath;
-  directionStr?: OrderByDirection;
+  readonly fieldPath: FieldPathOrStringPath;
+  readonly directionStr?: OrderByDirection;
 }
 
 export function orderBy<T>(fieldPath: StringKeyPropertyKeys<T>, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData>;
@@ -177,7 +177,7 @@ export function startAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): Firest
 export const FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE = 'start_at_path';
 
 export interface StartAtValueQueryConstraintData {
-  fieldValues: unknown[];
+  readonly fieldValues: unknown[];
 }
 
 export function startAtValue(...fieldValues: unknown[]): FirestoreQueryConstraint<StartAtValueQueryConstraintData> {
@@ -188,7 +188,7 @@ export function startAtValue(...fieldValues: unknown[]): FirestoreQueryConstrain
 export const FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE = 'start_after';
 
 export interface StartAfterQueryConstraintData<T = DocumentData> {
-  snapshot: DocumentSnapshot<T>;
+  readonly snapshot: DocumentSnapshot<T>;
 }
 
 export function startAfter<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<StartAfterQueryConstraintData<T>> {
@@ -199,14 +199,14 @@ export function startAfter<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fir
 export const FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE = 'end_at';
 
 export interface EndAtQueryConstraintData<T = DocumentData> {
-  snapshot: DocumentSnapshot<T>;
+  readonly snapshot: DocumentSnapshot<T>;
 }
 
 // MARK: End At Value
 export const FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE = 'end_at_path';
 
 export interface EndAtValueQueryConstraintData {
-  fieldValues: unknown[];
+  readonly fieldValues: unknown[];
 }
 
 export function endAtValue(...fieldValues: unknown[]): FirestoreQueryConstraint<EndAtValueQueryConstraintData> {
@@ -226,7 +226,7 @@ export function endAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): Firestor
 export const FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE = 'end_before';
 
 export interface EndBeforeQueryConstraintData<T = DocumentData> {
-  snapshot: DocumentSnapshot<T>;
+  readonly snapshot: DocumentSnapshot<T>;
 }
 
 /**
@@ -246,7 +246,7 @@ export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: 
 
 export type FirestoreQueryConstraintHandlerMap<B> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>;
+  readonly [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>;
 };
 
 /**

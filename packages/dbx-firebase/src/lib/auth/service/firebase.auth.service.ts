@@ -16,7 +16,7 @@ export type AuthUserStateObsFunction = (dbxFirebaseAuthService: DbxFirebaseAuthS
 
 // MARK: Delegate
 export abstract class DbxFirebaseAuthServiceDelegate {
-  fullControlOfAuthUserState?: boolean = false;
+  readonly fullControlOfAuthUserState?: boolean = false;
   abstract authUserStateObs: AuthUserStateObsFunction;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
   abstract isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean>;

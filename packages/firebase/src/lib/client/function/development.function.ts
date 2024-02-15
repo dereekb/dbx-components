@@ -10,7 +10,7 @@ export const FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY = 'developmentFunctions';
  * Base map of all development functions enabled by the server.
  */
 export type FirebaseDevelopmentFunctionTypeMap = {
-  scheduledFunction: [ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult];
+  readonly scheduledFunction: [ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult];
 };
 
 /**
@@ -19,5 +19,5 @@ export type FirebaseDevelopmentFunctionTypeMap = {
  * Is used by dbx-firebase
  */
 export abstract class FirebaseDevelopmentFunctions {
-  abstract scheduledFunction: FirebaseFunction<ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult>;
+  abstract readonly scheduledFunction: FirebaseFunction<ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult>;
 }

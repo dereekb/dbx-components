@@ -11,8 +11,8 @@ export type OnCallSpecifierHandlerConfig<N> = {
   /**
    * The default handler function.
    */
-  _?: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
-  [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
+  readonly _?: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
+  readonly [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
 };
 
 export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallSpecifierHandlerFunction<N, I, O> {

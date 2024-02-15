@@ -128,10 +128,10 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
 }
 
 export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>> = Omit<UseFirebaseModelsServiceSelection<Y, T>, 'type' | 'context'> & {
-  request: AuthDataRef;
-  buildFn?: BuildFunction<C>;
+  readonly request: AuthDataRef;
+  readonly buildFn?: BuildFunction<C>;
 };
 
 export type UseModelInput<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>, O> = UseModelInputForRolesReader<C, Y, T> & {
-  use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O>;
+  readonly use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O>;
 };

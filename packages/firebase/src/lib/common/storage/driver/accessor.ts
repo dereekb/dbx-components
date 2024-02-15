@@ -76,12 +76,12 @@ export interface StorageListFilesOptions {
    * If set, limits the total number of `prefixes` and `items` to return.
    * The default and maximum maxResults is 1000.
    */
-  maxResults?: number;
+  readonly maxResults?: number;
   /**
    * The `nextPageToken` from a previous call to `list()`. If provided,
    * listing is resumed from the previous position.
    */
-  pageToken?: string;
+  readonly pageToken?: string;
 }
 
 export interface StorageListItemResult extends StoragePathRef {
@@ -113,15 +113,15 @@ export interface StorageListFilesResult<R = unknown> {
   /**
    * The raw result.
    */
-  raw: R;
+  readonly raw: R;
   /**
    * Options used to retrieve the result.
    */
-  options: StorageListFilesOptions | undefined;
+  readonly options: StorageListFilesOptions | undefined;
   /**
    * Whether or not there are more results available.
    */
-  hasNext: boolean;
+  readonly hasNext: boolean;
   /**
    * Returns true if any files or folders exist in the results.
    */

@@ -19,7 +19,7 @@ export type ModelFirebaseCrudFunctionSpecifier = string;
  * Provides a reference to a ModelFirebaseCrudFunctionSpecifier if available.
  */
 export type ModelFirebaseCrudFunctionSpecifierRef = {
-  specifier?: ModelFirebaseCrudFunctionSpecifier;
+  readonly specifier?: ModelFirebaseCrudFunctionSpecifier;
 };
 
 export type ModelFirebaseCrudFunction<I, O = void> = FirebaseFunction<I, O>;
@@ -40,19 +40,19 @@ export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | numbe
 // TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is...
 
 export type ModelFirebaseCrudFunctionCreateTypeConfig = {
-  create: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+  readonly create: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export type ModelFirebaseCrudFunctionReadTypeConfig = {
-  read: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+  readonly read: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export type ModelFirebaseCrudFunctionUpdateTypeConfig = {
-  update: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+  readonly update: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
-  delete: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+  readonly delete: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT = '_';

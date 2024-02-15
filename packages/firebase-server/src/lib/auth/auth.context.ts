@@ -3,7 +3,7 @@ import { type AuthData } from 'firebase-functions/lib/common/providers/https';
 import type * as admin from 'firebase-admin';
 
 export interface AuthDataRef {
-  auth?: AuthData;
+  readonly auth?: AuthData;
 }
 
 export function firebaseAuthTokenFromDecodedIdToken(token: admin.auth.DecodedIdToken): FirebaseAuthToken {

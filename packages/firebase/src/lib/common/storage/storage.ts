@@ -11,7 +11,7 @@ export type StorageBucketId = string;
  * A reference to a StorageBucketId
  */
 export interface StorageBucketIdRef {
-  bucketId: StorageBucketId;
+  readonly bucketId: StorageBucketId;
 }
 
 /**
@@ -28,7 +28,7 @@ export interface StorageSlashPathRef {
    *
    * For example, if a file is at the path '<bucket>/full/path/image.png', the pathString is 'full/path/image.png'.
    */
-  pathString: StorageSlashPath;
+  readonly pathString: StorageSlashPath;
 }
 
 /**
@@ -54,7 +54,7 @@ export interface StoragePathFactoryConfig extends StorageBucketIdRef {
    *
    * False by default.
    */
-  replaceBucket?: boolean;
+  readonly replaceBucket?: boolean;
 }
 
 /**
@@ -86,7 +86,7 @@ export function storagePathFactory(config: StoragePathFactoryConfig): StoragePat
  * A reference to a StoragePath
  */
 export interface StoragePathRef {
-  storagePath: StoragePath;
+  readonly storagePath: StoragePath;
 }
 
 // MARK: Utilities

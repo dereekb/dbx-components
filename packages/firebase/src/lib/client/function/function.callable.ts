@@ -7,8 +7,8 @@ import { type HttpsCallable, type HttpsCallableResult } from 'firebase/functions
 import { FirebaseServerError } from './error';
 
 export interface MapHttpsCallable<I, O, A, B> {
-  mapInput?: FactoryWithInput<PromiseOrValue<A>, Maybe<I>>;
-  mapOutput?: FactoryWithInput<PromiseOrValue<O>, Maybe<B>>;
+  readonly mapInput?: FactoryWithInput<PromiseOrValue<A>, Maybe<I>>;
+  readonly mapOutput?: FactoryWithInput<PromiseOrValue<O>, Maybe<B>>;
 }
 
 /**

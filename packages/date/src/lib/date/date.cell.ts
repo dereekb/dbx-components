@@ -11,6 +11,10 @@ import { fitDateRangeToDayPeriod } from './date.range.timezone';
 
 /**
  * Index from 0 of which day this block represents.
+ *
+ * It is easiest to think of DateCellIndexes as days on a calendar. An index of 0 means the entire first day for that timezone.
+ *
+ * It is not the time from the startsAt time to the endsAt time for a period.
  */
 export type DateCellIndex = number;
 

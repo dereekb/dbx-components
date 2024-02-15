@@ -7,11 +7,11 @@ export type AuthUserInfo = Omit<UserInfo, 'providerId'> & {
   /**
    * The creation time of the user's account.
    */
-  creationTime?: Maybe<ISO8601DateString>;
+  readonly creationTime?: Maybe<ISO8601DateString>;
   /**
    * The last time the user signed in and recieved a refresh token.
    */
-  lastSignInTime?: Maybe<ISO8601DateString>;
+  readonly lastSignInTime?: Maybe<ISO8601DateString>;
 };
 
 export function authUserInfoFromAuthUser(user: User): AuthUserInfo {

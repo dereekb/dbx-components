@@ -8,41 +8,41 @@ export interface OnScheduleConfig {
    *
    * Used by v1 and v2.
    */
-  cron?: Minutes | string;
+  readonly cron?: Minutes | string;
   /**
    * Scheduled time configuration in an english format.
    *
    * Used by v2.
    */
-  schedule?: string;
+  readonly schedule?: string;
   /**
    * Optional timezone to specify.
    */
-  timezone?: string;
+  readonly timezone?: string;
   /**
    * The number of retry attempts for a failed run.
    */
-  retryCount?: number;
+  readonly retryCount?: number;
   /**
    * The time limit for retrying.
    */
-  maxRetrySeconds?: number;
+  readonly maxRetrySeconds?: number;
   /**
    * The minimum time to wait before retying.
    */
-  minBackoffSeconds?: number;
+  readonly minBackoffSeconds?: number;
   /**
    * The maximum time to wait before retrying.
    */
-  maxBackoffSeconds?: number;
+  readonly maxBackoffSeconds?: number;
   /**
    * The time between will double max doublings times.
    */
-  maxDoublings?: number;
+  readonly maxDoublings?: number;
 }
 
 export interface OnScheduleRequest<S> {
-  scheduleContext?: S;
+  readonly scheduleContext?: S;
 }
 
 // MARK: Application

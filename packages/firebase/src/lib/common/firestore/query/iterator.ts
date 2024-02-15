@@ -10,11 +10,11 @@ export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
   /**
    * Overrides the default limit, if applicable.
    */
-  limit?: Maybe<number>;
+  readonly limit?: Maybe<number>;
   /**
    * Constraints to query on.
    */
-  constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
+  readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
 export interface FirestoreItemPageIterationBaseConfig<T> extends QueryLikeReferenceRef<T>, FirestoreQueryDriverRef, ItemPageLimit {
@@ -23,7 +23,7 @@ export interface FirestoreItemPageIterationBaseConfig<T> extends QueryLikeRefere
    *
    * Defaults to 50
    */
-  itemsPerPage?: number;
+  readonly itemsPerPage?: number;
 }
 
 export interface FirestoreItemPageIterationConfig<T> extends FirestoreItemPageIterationBaseConfig<T>, ItemPageIterationConfig<FirestoreItemPageIteratorFilter> {}
