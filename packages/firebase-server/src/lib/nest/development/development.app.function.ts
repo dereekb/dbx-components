@@ -9,7 +9,7 @@ import { onCallDevelopmentFunction, type OnCallDevelopmentFunctionMap } from './
 import { makeScheduledFunctionDevelopmentFunction } from './development.schedule.function';
 import { unavailableError } from '../../function/error';
 import { inAuthContext } from '../function/call';
-import { Building } from '@dereekb/util';
+import { type Building } from '@dereekb/util';
 
 export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap> {
   readonly enabled: boolean;

@@ -3,7 +3,7 @@ import { scheduler } from 'firebase-functions/v2';
 import { type INestApplicationContext } from '@nestjs/common';
 import { type MakeNestContext, type NestApplicationPromiseGetter } from '../../nest.provider';
 import { type NestApplicationScheduleConfiguredFunction, type NestApplicationScheduleConfiguredFunctionFactory, type OnScheduleConfig, type OnScheduleWithNestApplication, type OnScheduleWithNestApplicationRequest, type OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
-import { Building, cronExpressionRepeatingEveryNMinutes, mergeObjects } from '@dereekb/util';
+import { type Building, cronExpressionRepeatingEveryNMinutes, mergeObjects } from '@dereekb/util';
 import { type Buildable } from 'ts-essentials';
 import { type ScheduleOptions } from 'firebase-functions/v2/scheduler';
 
