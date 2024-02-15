@@ -6,11 +6,11 @@ import { type DocumentReferenceRef } from '../reference';
 import { type PickProperties } from 'ts-essentials';
 
 export interface FirestoreDocumentDeleteParams {
-  precondition?: Precondition;
+  readonly precondition?: Precondition;
 }
 
 export interface FirestoreDocumentUpdateParams {
-  precondition?: Precondition;
+  readonly precondition?: Precondition;
 }
 
 /**

@@ -2,9 +2,9 @@ import { type ReadableError } from '@dereekb/util';
 import { type FirebaseErrorCode } from '../error';
 
 export interface FirebaseAuthError {
-  code: FirebaseErrorCode;
-  name: string;
-  customData: unknown;
+  readonly code: FirebaseErrorCode;
+  readonly name: string;
+  readonly customData: unknown;
 }
 
 export const FIREBASE_AUTH_USER_NOT_FOUND_ERROR = 'auth/user-not-found';

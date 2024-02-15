@@ -14,7 +14,7 @@ export interface ModelStorageSlashPathFactoryConfig {
    *
    * This value is merged with the BASE_MODEL_STORAGE_FILE_PATH (/model/) base path configured for all ModelStorageSlashPathFactory values
    */
-  basePath?: string;
+  readonly basePath?: string;
 }
 
 /**

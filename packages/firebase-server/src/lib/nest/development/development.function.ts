@@ -9,11 +9,11 @@ import { type AssertDevelopmentRequestFunction } from './development.assert.func
 export type OnCallDevelopmentFunction<N, I = unknown, O = unknown> = (request: NestContextCallableRequest<N, I> & DevelopmentFirebaseFunctionSpecifierRef) => PromiseOrValue<O>;
 
 export type OnCallDevelopmentFunctionMap<N> = {
-  [key: string]: OnCallDevelopmentFunction<N, any, any>;
+  readonly [key: string]: OnCallDevelopmentFunction<N, any, any>;
 };
 
 export interface OnCallDevelopmentConfig<N> {
-  preAssert?: AssertDevelopmentRequestFunction<N, OnCallDevelopmentParams>;
+  readonly preAssert?: AssertDevelopmentRequestFunction<N, OnCallDevelopmentParams>;
 }
 
 /**

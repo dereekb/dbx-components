@@ -9,11 +9,11 @@ import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 export type OnCallDeleteModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;
 
 export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelTypes<T>]?: OnCallDeleteModelFunction<N, any, any>;
+  readonly [K in FirestoreModelTypes<T>]?: OnCallDeleteModelFunction<N, any, any>;
 };
 
 export interface OnCallDeleteModelConfig<N> {
-  preAssert?: AssertModelCrudRequestFunction<N, OnCallDeleteModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallDeleteModelParams>;
 }
 
 /**

@@ -9,11 +9,11 @@ import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 export type OnCallReadModelFunction<N, I = unknown, O = unknown> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;
 
 export type OnCallReadModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelTypes<T>]?: OnCallReadModelFunction<N, any, any>;
+  readonly [K in FirestoreModelTypes<T>]?: OnCallReadModelFunction<N, any, any>;
 };
 
 export interface OnCallReadModelConfig<N> {
-  preAssert?: AssertModelCrudRequestFunction<N, OnCallReadModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallReadModelParams>;
 }
 
 /**

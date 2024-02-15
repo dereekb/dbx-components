@@ -6,13 +6,13 @@ import { defaultFirestoreDocumentContext } from './driver.accessor.default';
 import { transactionDocumentContext } from './driver.accessor.transaction';
 
 interface DocRefForPathInput {
-  doc: (path: string) => DocumentReference;
+  readonly doc: (path: string) => DocumentReference;
 }
 interface CollectionRefForPathInput {
-  collection: (path: string) => CollectionReference;
+  readonly collection: (path: string) => CollectionReference;
 }
 interface DocRefSource {
-  doc: (path: string) => CollectionReference & CollectionRefForPathInput;
+  readonly doc: (path: string) => CollectionReference & CollectionRefForPathInput;
 }
 
 export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: string, pathSegments?: string[]): CollectionReference<T> {

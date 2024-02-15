@@ -10,7 +10,7 @@ export type FirestoreDataConverterFactory<T> = FactoryWithInput<FirestoreDataCon
  * Ref to a FirestoreDataConverterFactory.
  */
 export interface FirestoreDataConverterFactoryRef<T> {
-  converterFactory: FirestoreDataConverterFactory<T>;
+  readonly converterFactory: FirestoreDataConverterFactory<T>;
 }
 
 /**

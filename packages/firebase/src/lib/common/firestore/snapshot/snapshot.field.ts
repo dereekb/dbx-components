@@ -290,7 +290,7 @@ export type DefaultMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<Fire
 export type OptionalMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<BaseFirestoreFieldConfig<V, D>, 'fromData' | 'toData' | 'defaultBeforeSave'>;
 
 export interface FirestoreStringConfig<S extends string = string> extends DefaultMapConfiguredFirestoreFieldConfig<S, S> {
-  transform?: TransformStringFunctionConfigInput<S>;
+  readonly transform?: TransformStringFunctionConfigInput<S>;
 }
 
 export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
@@ -349,7 +349,7 @@ export const firestoreModelKeyString = firestoreString();
 export const firestoreModelIdString = firestoreString();
 
 export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<Date, string> & {
-  saveDefaultAsNow?: boolean;
+  readonly saveDefaultAsNow?: boolean;
 };
 
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
@@ -401,8 +401,8 @@ export function optionalFirestoreBoolean(config?: OptionalFirestoreBooleanFieldC
 }
 
 export interface FirestoreNumberConfig<N extends number = number> extends MapConfiguredFirestoreFieldConfigWithDefault<N, N> {
-  saveDefault?: Maybe<boolean>;
-  transform?: TransformNumberFunctionConfigInput<N>;
+  readonly saveDefault?: Maybe<boolean>;
+  readonly transform?: TransformNumberFunctionConfigInput<N>;
 }
 
 export function firestoreNumber<N extends number = number>(config: FirestoreNumberConfig<N>) {
@@ -862,11 +862,11 @@ export type FirestoreSubObjectFieldConfig<T extends object, O extends object = F
    *
    * Is false by default.
    */
-  saveDefaultObject?: boolean;
+  readonly saveDefaultObject?: boolean;
   /**
    * The fields to use for conversion.
    */
-  objectField: ToModelMapFunctionsInput<T, O>;
+  readonly objectField: ToModelMapFunctionsInput<T, O>;
 };
 
 export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extends object = FirestoreModelData<T>> = FirestoreModelFieldMapFunctionsConfig<T, O> & ModelMapFunctionsRef<T, O>;
@@ -1095,7 +1095,7 @@ export const firestoreMapZoomLevel = firestoreNumber<ZoomLevel>({ default: 5, tr
 
 // MARK: Bitwise
 export interface FirestoreBitwiseSetConfig<D extends number = number> extends DefaultMapConfiguredFirestoreFieldConfig<Set<D>, BitwiseEncodedSet> {
-  maxIndex?: number;
+  readonly maxIndex?: number;
 }
 
 export function firestoreBitwiseSet<D extends number = number>(config: FirestoreBitwiseSetConfig<D>) {
@@ -1109,7 +1109,7 @@ export function firestoreBitwiseSet<D extends number = number>(config: Firestore
 }
 
 export interface FirestoreBitwiseSetMapConfig<D extends number = number, K extends string = string> extends Omit<FirestoreEncodedObjectMapFieldConfig<Set<D>, BitwiseEncodedSet, K>, 'encoder' | 'decoder'> {
-  maxIndex?: number;
+  readonly maxIndex?: number;
 }
 
 export function firestoreBitwiseSetMap<D extends number = number, K extends string = string>(config: FirestoreBitwiseSetMapConfig<D, K>) {
@@ -1123,7 +1123,7 @@ export function firestoreBitwiseSetMap<D extends number = number, K extends stri
 }
 
 export interface FirestoreBitwiseObjectMapConfig<T extends object, K extends string = string> extends Omit<FirestoreEncodedObjectMapFieldConfig<T, BitwiseEncodedSet, K>, 'encoder' | 'decoder'> {
-  dencoder: BitwiseObjectDencoder<T>;
+  readonly dencoder: BitwiseObjectDencoder<T>;
 }
 
 export function firestoreBitwiseObjectMap<T extends object, K extends string = string>(config: FirestoreBitwiseObjectMapConfig<T, K>) {

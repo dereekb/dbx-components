@@ -7,7 +7,7 @@ export type FirebaseModelLoaderContext = FirebaseTransactionContext;
 export type FirebaseModelGetFirestoreCollectionFunction<C extends FirebaseModelLoaderContext, T, D extends FirestoreDocument<T>> = (context: C) => FirestoreCollectionLike<T, D>;
 
 export interface FirebaseModelCollectionLoader<C extends FirebaseModelLoaderContext, T, D extends FirestoreDocument<T>> {
-  getFirestoreCollection: FirebaseModelGetFirestoreCollectionFunction<C, T, D>;
+  readonly getFirestoreCollection: FirebaseModelGetFirestoreCollectionFunction<C, T, D>;
 }
 
 export interface FirebaseModelLoader<C extends FirebaseModelLoaderContext, T, D extends FirestoreDocument<T>> extends ModelLoader<C, D> {
@@ -42,7 +42,7 @@ export function firebaseModelLoader<C extends FirebaseModelLoaderContext, T, D e
 
 // MARK: In Context
 export interface InContextFirebaseModelCollectionLoader<T, D extends FirestoreDocument<T>> {
-  getFirestoreCollection: Getter<FirestoreCollectionLike<T, D>>;
+  readonly getFirestoreCollection: Getter<FirestoreCollectionLike<T, D>>;
 }
 
 export interface InContextFirebaseModelLoader<T, D extends FirestoreDocument<T>> extends InContextModelLoader<D> {

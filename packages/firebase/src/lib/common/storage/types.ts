@@ -6,17 +6,17 @@ export type FirebaseStorageLikeStorage = {
   /**
    * The maximum time to retry uploads in milliseconds.
    */
-  maxUploadRetryTime: number;
+  readonly maxUploadRetryTime: number;
   /**
    * The maximum time to retry operations other than uploads or downloads in
    * milliseconds.
    */
-  maxOperationRetryTime: number;
+  readonly maxOperationRetryTime: number;
 };
 
 export type GoogleCloudLikeStorage = {
-  baseUrl: string;
-  projectId: string;
+  readonly baseUrl: string;
+  readonly projectId: string;
 };
 
 /**
@@ -137,19 +137,19 @@ export type StorageClientUploadResult = unknown;
 export type StorageUploadResult = StorageClientUploadResult | unknown;
 
 export interface StorageUploadOptions {
-  resumable?: boolean;
+  readonly resumable?: boolean;
   /**
    * String format to handle the upload as. Required if the input is a string.
    */
-  stringFormat?: StorageDataStringType;
+  readonly stringFormat?: StorageDataStringType;
   /**
    * ContentType for the upload.
    */
-  contentType?: string;
+  readonly contentType?: string;
   /**
    * other metadata to attach to the file.
    */
-  metadata?: StorageMetadata;
+  readonly metadata?: StorageMetadata;
 }
 
 /**
@@ -161,80 +161,80 @@ export interface StorageMetadata {
   /**
    * The bucket this object is contained in.
    */
-  bucket: string;
+  readonly bucket: string;
   /**
    * The full path of this object.
    *
    * For example, if a file is at the path '<bucket>/full/path/image.png', the pathString is 'full/path/image.png'.
    */
-  fullPath: string;
+  readonly fullPath: string;
   /**
    * The object's generation.
    * {@link https://cloud.google.com/storage/docs/metadata#generation-number}
    */
-  generation: string;
+  readonly generation: string;
   /**
    * The object's metageneration.
    * {@link https://cloud.google.com/storage/docs/metadata#generation-number}
    */
-  metageneration: string;
+  readonly metageneration: string;
   /**
    * The short name of this object, which is the last component of the full path.
    * For example, if fullPath is 'full/path/image.png', name is 'image.png'.
    */
-  name: string;
+  readonly name: string;
   /**
    * The size of this object, in bytes.
    */
-  size: number;
+  readonly size: number;
   /**
    * A date string representing when this object was created.
    */
-  timeCreated: ISO8601DateString;
+  readonly timeCreated: ISO8601DateString;
   /**
    * A date string representing when this object was last updated.
    */
-  updated: ISO8601DateString;
+  readonly updated: ISO8601DateString;
   /**
    * A Base64-encoded MD5 hash of the object being uploaded.
    */
-  md5Hash?: string | undefined;
+  readonly md5Hash?: string | undefined;
   /**
    * Served as the 'Cache-Control' header on object download.
    */
-  cacheControl?: string | undefined;
+  readonly cacheControl?: string | undefined;
   /**
    * Served as the 'Content-Disposition' header on object download.
    */
-  contentDisposition?: string | undefined;
+  readonly contentDisposition?: string | undefined;
   /**
    * Served as the 'Content-Encoding' header on object download.
    */
-  contentEncoding?: string | undefined;
+  readonly contentEncoding?: string | undefined;
   /**
    * Served as the 'Content-Language' header on object download.
    */
-  contentLanguage?: string | undefined;
+  readonly contentLanguage?: string | undefined;
   /**
    * Served as the 'Content-Type' header on object download.
    */
-  contentType?: string | undefined;
+  readonly contentType?: string | undefined;
   /**
    * Any user-specified custom metdata.
    */
-  customMetadata?: StorageCustomMetadata | undefined;
+  readonly customMetadata?: StorageCustomMetadata | undefined;
 }
 
 /**
  * Additional user-defined custom metadata.
  */
 export type StorageCustomMetadata = {
-  [key: string]: string;
+  readonly [key: string]: string;
 };
 
 export interface StorageDeleteFileOptions {
   /**
    * Ignores errors related to the file not existing.
    */
-  ignoreNotFound?: boolean;
+  readonly ignoreNotFound?: boolean;
 }

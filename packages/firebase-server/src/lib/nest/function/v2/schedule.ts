@@ -3,7 +3,7 @@ import { scheduler } from 'firebase-functions/v2';
 import { type INestApplicationContext } from '@nestjs/common';
 import { type MakeNestContext, type NestApplicationPromiseGetter } from '../../nest.provider';
 import { type NestApplicationScheduleConfiguredFunction, type NestApplicationScheduleConfiguredFunctionFactory, type OnScheduleConfig, type OnScheduleWithNestApplication, type OnScheduleWithNestApplicationRequest, type OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
-import { cronExpressionRepeatingEveryNMinutes, mergeObjects } from '@dereekb/util';
+import { type Building, cronExpressionRepeatingEveryNMinutes, mergeObjects } from '@dereekb/util';
 import { type Buildable } from 'ts-essentials';
 import { type ScheduleOptions } from 'firebase-functions/v2/scheduler';
 
@@ -32,7 +32,7 @@ export type OnScheduleHandlerWithNestApplicationFactory = (schedule: OnScheduleC
  */
 export function onScheduleHandlerWithNestApplicationFactory(baseSchedule?: OnScheduleConfig): OnScheduleHandlerWithNestApplicationFactory {
   return <I, O>(inputSchedule: OnScheduleConfig, fn: OnScheduleWithNestApplication<scheduler.ScheduledEvent>) => {
-    const schedule = mergeObjects<OnScheduleConfig>([baseSchedule, inputSchedule]) as OnScheduleConfig;
+    const schedule = mergeObjects<OnScheduleConfig>([baseSchedule, inputSchedule]) as Building<OnScheduleConfig>;
 
     if (!schedule.schedule) {
       if (schedule.cron) {

@@ -781,7 +781,8 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
       displayName: record.displayName,
       photoURL: record.photoURL,
       creationTime: record.metadata.creationTime ? new Date(record.metadata.creationTime).toISOString() : undefined,
-      lastSignInTime: record.metadata.lastSignInTime ? new Date(record.metadata.lastSignInTime).toISOString() : undefined
+      lastSignInTime: record.metadata.lastSignInTime ? new Date(record.metadata.lastSignInTime).toISOString() : undefined,
+      lastRefreshTime: record.metadata.lastRefreshTime ? new Date(record.metadata.lastRefreshTime).toISOString() : undefined
     };
   }
 }

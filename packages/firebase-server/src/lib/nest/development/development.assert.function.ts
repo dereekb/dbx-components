@@ -1,8 +1,8 @@
 import { type NestContextCallableRequest } from '../function/nest';
 
 export interface AssertDevelopmentRequestFunctionContext<N, I = unknown> {
-  request: NestContextCallableRequest<N, I>;
-  specifier: string;
+  readonly request: NestContextCallableRequest<N, I>;
+  readonly specifier: string;
 }
 
 /**
