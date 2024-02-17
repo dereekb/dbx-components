@@ -53,15 +53,20 @@ export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: Ge
     return page + 1 < maxLimit;
   }
 
-  return new Promise((resolve) => {
-    iteration.latestLoadedPage$.pipe(first()).subscribe((firstLatestPage: number) => {
-      const promise: Promise<number> = performTaskLoop<number>({
-        initValue: firstLatestPage,
-        checkContinue: (latestPage: number) => checkPageLimit(latestPage),
-        next: async () => await iteration.nextPage()
-      });
+  return new Promise((resolve, reject) => {
+    iteration.latestLoadedPage$.pipe(first()).subscribe({
+      next: (firstLatestPage: number) => {
+        const promise: Promise<number> = performTaskLoop<number>({
+          initValue: firstLatestPage,
+          checkContinue: (latestPage: number) => checkPageLimit(latestPage),
+          next: async () => await iteration.nextPage()
+        });
 
-      resolve(promise);
+        resolve(promise);
+      },
+      error: (error) => {
+        reject(error);
+      }
     });
   });
 }

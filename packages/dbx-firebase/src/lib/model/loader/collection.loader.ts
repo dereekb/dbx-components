@@ -1,6 +1,6 @@
-import { DocumentDataWithIdAndKey, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
-import { PageListLoadingState } from '@dereekb/rxjs';
-import { Maybe, ArrayOrValue } from '@dereekb/util';
+import { DocumentDataWithIdAndKey, FirebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { ItemAccumulatorNextPageUntilResultsCountResult, PageListLoadingState } from '@dereekb/rxjs';
+import { Maybe, ArrayOrValue, PageNumber } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
 export interface DbxFirebaseCollectionLoaderAccessor<T = unknown> {
@@ -44,4 +44,30 @@ export interface DbxFirebaseCollectionLoader<T = unknown> extends DbxFirebaseCol
    * Loads more items.
    */
   next(): void;
+
+  // MARK: Utility Functions
+  /**
+   * Returns an observable that loads up to the given page then emits the page number.
+   *
+   * @param page Page number to load to.
+   */
+  loadToPage(page: PageNumber): Observable<PageNumber>;
+
+  /**
+   * Loads results until all results have been loaded or the max page limit is reached.
+   */
+  loadAllResults(): Observable<PageNumber>;
+}
+
+// MARK: Accumulator
+export interface DbxFirebaseCollectionLoaderAccessorWithAccumulator<T = unknown> extends DbxFirebaseCollectionLoaderAccessor<T> {
+  readonly snapshotAccumulator$: Observable<FirebaseQuerySnapshotAccumulator<T>>;
+  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
+}
+
+export interface DbxFirebaseCollectionLoaderWithAccumulator<T = unknown> extends DbxFirebaseCollectionLoader<T>, DbxFirebaseCollectionLoaderAccessorWithAccumulator<T> {
+  /**
+   * Loads pages until the number of results has been reached, then emits the total number of results.
+   */
+  loadPagesUntilResultsCount(maxResultsCount: number, countFunction?: FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction<T>): Observable<ItemAccumulatorNextPageUntilResultsCountResult>;
 }

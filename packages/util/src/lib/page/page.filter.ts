@@ -1,5 +1,5 @@
 import { type Filter, type OptionalFilter } from '../filter';
-import { type Page } from '../page';
+import { type PageNumber, type Page } from '../page';
 import { type IterateFn, type IteratePageFn, iterate } from '../iterate';
 
 /**
@@ -32,7 +32,7 @@ export interface FilteredPageIterateFn<T> {
  * @param request
  * @returns
  */
-export function filteredPage<F = unknown>(page: number, request?: Filter<F>): FilteredPage<F> {
+export function filteredPage<F = unknown>(page: PageNumber, request?: Filter<F>): FilteredPage<F> {
   return {
     page,
     filter: request?.filter ? { ...request.filter } : undefined

@@ -4,7 +4,6 @@
 
 module.exports = {
   displayName: 'firebase-server-mailgun',
-  maxConcurrency: 1,
   maxWorkers: 1,
   coverageDirectory: '../../../coverage/packages/firebase-server/mailgun',
   preset: '../../../jest.preset.ts'

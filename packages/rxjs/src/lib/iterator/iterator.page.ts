@@ -363,7 +363,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
     shareReplay(1)
   );
 
-  readonly numberOfPagesLoaded$: Observable<PageNumber> = this.latestLoadedPage$.pipe(
+  readonly numberOfPagesLoaded$: Observable<number> = this.latestLoadedPage$.pipe(
     map((x) => x + 1),
     shareReplay(1)
   );

@@ -1,4 +1,4 @@
-import { asArray } from '../array/array';
+import { type ArrayOrValue, asArray } from '../array/array';
 import { range } from '../array/array.number';
 import { type Milliseconds } from '../date/date';
 import { type PrimativeKey, type ReadOneOrMoreKeysFunction } from '../key';
@@ -9,6 +9,9 @@ import { type StringFactory, stringFactoryFromFactory } from '../string/factory'
 import { type IndexNumber } from '../value';
 import { type Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
+import { asPromise, type PromiseOrValue } from './promise.type';
+import { terminatingFactoryFromArray } from '../array/array.factory';
+import { type PromiseReference, promiseReference } from './promise.ref';
 
 export type RunAsyncTaskForValueConfig<T = unknown> = Omit<PerformAsyncTaskConfig<T>, 'throwError'>;
 
@@ -186,7 +189,56 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PromiseAsyncTaskFn<I, O
  */
 export type PerformTasksInParallelTaskUniqueKey = string;
 
-export interface PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> {
+export type PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> = Omit<PerformTasksFromFactoryInParallelFunctionConfig<I, K>, 'waitBetweenTaskInputRequests'>
+
+/**
+ * Function that awaits a promise generated from each of the input values.
+ *
+ * Will throw an error if any error is encountered as soon as it is encountered. No further tasks will be dispatched, but tasks that have already been dispatched will continue to run.
+ */
+export type PerformTasksInParallelFunction<I> = (input: I[]) => Promise<void>;
+
+/**
+ * Convenience function for calling performTasksInParallelFunction() with the given input.
+ *
+ * @param input
+ * @param config
+ * @returns
+ */
+export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], config: PerformTasksInParallelFunctionConfig<I, K>): Promise<void> {
+  return performTasksInParallelFunction(config)(input);
+}
+
+/**
+ * Creates a function that performs tasks in parallel.
+ *
+ * @param config
+ */
+export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
+  const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
+  const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
+
+  if (!maxParallelTasks && !nonConcurrentTaskKeyFactory) {
+    const defaultNonConcurrentTaskKeyFactory = stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
+
+    // if the max number of parallel tasks is not defined, then run all tasks at once, unless there is a nonConcurrentTaskKeyFactory
+    return async (input: I[]) => {
+      await Promise.all(input.map((value, i) => taskFactory(value, i, defaultNonConcurrentTaskKeyFactory())));
+    };
+  } else {
+    const performTasks = performTasksFromFactoryInParallelFunction(config);
+
+    return async (input: I[]) => {
+      const taskInputFactory = terminatingFactoryFromArray(
+        [input], // all in a single task array to run concurrently
+        null
+      );
+      return performTasks(taskInputFactory);
+    };
+  }
+}
+
+export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> {
   /**
    * Creates a promise from the input.
    */
@@ -211,170 +263,230 @@ export interface PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey 
    * Optional amount of time to wait between each task.
    */
   readonly waitBetweenTasks?: Milliseconds;
+  /**
+   * Optional amount of time to wait between each task input request.
+   */
+  readonly waitBetweenTaskInputRequests?: Milliseconds;
+  /**
+   * Whether or not to wait for all tasks to complete before returning.
+   */
+  // readonly waitForTaskArrayToComplete?: boolean; // TODO: implement
 }
 
+export type PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I> = () => PromiseOrValue<ArrayOrValue<I> | null>;
+
 /**
- * Function that awaits a promise generate from each of the input values.
+ * Function that awaits all promises generated from the task factory until the factory returns null.
+ *
+ * If an array is pushed then the task factory will begin (but not necessarily complete) all those tasks before pulling the next set of tasks.
  *
  * Will throw an error if any error is encountered as soon as it is encountered. No further tasks will be dispatched, but tasks that have already been dispatched will continue to run.
  */
-export type PerformTasksInParallelFunction<I> = (input: I[]) => Promise<void>;
+export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I>) => Promise<void>;
 
 /**
- * Convenience function for calling performTasksInParallelFunction() with the given input.
- *
- * @param input
- * @param config
- * @returns
- */
-export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], config: PerformTasksInParallelFunctionConfig<I, K>): Promise<void> {
-  return performTasksInParallelFunction(config)(input);
-}
-
-/**
- * Creates a function that performs tasks in parallel.
+ * Creates a function that performs tasks from the task factory in parallel.
  *
  * @param config
  */
-export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
+export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
   const defaultNonConcurrentTaskKeyFactory = stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
-  const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
+  const { taskFactory, sequential, waitBetweenTaskInputRequests, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
   const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
+  const maxPromisesToRunAtOneTime = Math.max(1, maxParallelTasks ?? 1);
 
-  if (!maxParallelTasks && !nonConcurrentTaskKeyFactory) {
-    // if the max number of parallel tasks is not defined, then run all tasks at once, unless there is a nonConcurrentTaskKeyFactory
-    return async (input: I[]) => {
-      await Promise.all(input.map((value, i) => taskFactory(value, i, defaultNonConcurrentTaskKeyFactory())));
-    };
-  } else {
-    return (input: I[]) => {
-      if (input.length === 0) {
-        return Promise.resolve();
-      }
+  return (taskInputFactory: PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I>) => {
+    return new Promise(async (resolve, reject) => {
+      const taskKeyFactory = nonConcurrentTaskKeyFactory ?? defaultNonConcurrentTaskKeyFactory;
 
-      return new Promise(async (resolve, reject) => {
-        const taskKeyFactory = nonConcurrentTaskKeyFactory ?? defaultNonConcurrentTaskKeyFactory;
-        const maxPromisesToRunAtOneTime = Math.min(maxParallelTasks ?? 100, input.length);
-        const incompleteTasks = input.map((x, i) => [x, asArray(taskKeyFactory(x)), i] as [I, K[], IndexNumber]).reverse(); // reverse to use push/pop
+      let incompleteTasks: Readonly<[I, K[], IndexNumber]>[] = [];
 
-        let currentRunIndex = 0;
-        let finishedParallels = 0;
-        let hasEncounteredFailure = false;
+      type NextIncompleteTask = typeof incompleteTasks[0] | undefined;
 
-        /**
-         * Set of tasks keys that are currently running.
-         */
-        const currentParellelTaskKeys = new Set<K>();
-        const visitedTaskIndexes = new Set<IndexNumber>();
-        const waitingConcurrentTasks = multiValueMapBuilder<typeof incompleteTasks[0], K>();
+      let baseI = 0;
+      let isOutOfTasks = false;
+      let isFulfillingTask = false;
+      const requestTasksQueue: [IndexNumber, PromiseReference<NextIncompleteTask>][] = [];
 
-        function getNextTask(): typeof incompleteTasks[0] | undefined {
-          let nextTask: typeof incompleteTasks[0] | undefined = undefined;
+      async function fulfillRequestMoreTasks(parallelIndex: IndexNumber, promiseReference: PromiseReference<NextIncompleteTask>) {
+        if (incompleteTasks.length === 0) {
+          isFulfillingTask = true;
 
-          while (!nextTask) {
-            nextTask = incompleteTasks.pop();
+          const newTasks = await asPromise(taskInputFactory());
 
-            if (nextTask != null) {
-              const nextTaskTuple = nextTask;
-              const nextTaskTupleIndex = nextTaskTuple[2];
+          if (newTasks === null) {
+            isOutOfTasks = true;
+          } else {
+            const newTaskEntries = asArray(newTasks)
+              .map((x, i) => [x, asArray(taskKeyFactory(x)), baseI + i] as const)
+              .reverse(); // reverse to use push/pop
 
-              if (visitedTaskIndexes.has(nextTaskTupleIndex)) {
-                // already run. Ignore.
-                nextTask = undefined;
-              } else {
-                const keys = nextTaskTuple[1];
-                const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
-
-                if (keyOfTaskCurrentlyInUse) {
-                  keys.forEach((key) => waitingConcurrentTasks.addTuples(key, nextTaskTuple)); // add to each key as waiting
-                  nextTask = undefined; // clear to continue loop
-                } else {
-                  addToSet(currentParellelTaskKeys, keys); // add to the current task keys, exit loop
-                  break;
-                }
-              }
-            } else {
-              break; // no tasks remaining, break.
-            }
+            baseI += newTaskEntries.length;
+            incompleteTasks = [...newTaskEntries, ...incompleteTasks]; // new tasks go to the front of the stack
           }
-
-          if (nextTask) {
-            // mark to prevent running again/concurrent runs
-            visitedTaskIndexes.add(nextTask[2]);
-          }
-
-          return nextTask;
         }
 
-        function onTaskCompleted(task: typeof incompleteTasks[0]): void {
-          const keys = task[1];
-          const indexesPushed = new Set<IndexNumber>();
+        const nextTask = incompleteTasks.pop();
+        promiseReference.resolve(nextTask); // resolve that promise
 
-          keys.forEach((key) => {
-            // un-reserve the key from each parallel task
-            currentParellelTaskKeys.delete(key);
-            const waitingForKey = waitingConcurrentTasks.get(key);
+        isFulfillingTask = false;
 
-            while (true) {
-              const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
+        // wait before popping off the next task in the queue, if applicable
+        if (waitBetweenTaskInputRequests) {
+          await waitForMs(waitBetweenTaskInputRequests);
+        }
 
-              if (nextWaitingTask) {
-                const nextWaitingTaskIndex = nextWaitingTask[2];
+        if (!isFulfillingTask && requestTasksQueue.length) {
+          const nextItemInQueue = requestTasksQueue.pop();
 
-                if (visitedTaskIndexes.has(nextWaitingTaskIndex) || indexesPushed.has(nextWaitingTaskIndex)) {
-                  // if the task has already been visited, then don't push back onto incomplete tasks.
-                  continue;
-                } else {
-                  // push to front for the next dispatch to take for this key
-                  incompleteTasks.push(nextWaitingTask);
-                  // mark to prevent pushing this one again since it will not get run
-                  indexesPushed.add(nextWaitingTaskIndex);
-                  break;
-                }
+          if (nextItemInQueue) {
+            fulfillRequestMoreTasks(nextItemInQueue[0], nextItemInQueue[1]);
+          } else {
+          }
+        }
+      }
+
+      async function requestMoreTasks(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
+        if (isOutOfTasks) {
+          return;
+        } else {
+          const promiseRef = promiseReference<NextIncompleteTask>();
+
+          if (isFulfillingTask) {
+            requestTasksQueue.push([parallelIndex, promiseRef]);
+
+            const waited = await promiseRef.promise;
+            return waited;
+          } else {
+            fulfillRequestMoreTasks(parallelIndex, promiseRef);
+          }
+
+          return promiseRef.promise;
+        }
+      }
+
+      let currentRunIndex = 0;
+      let finishedParallels = 0;
+      let hasEncounteredFailure = false;
+
+      /**
+       * Set of tasks keys that are currently running.
+       */
+      const currentParellelTaskKeys = new Set<K>();
+      const visitedTaskIndexes = new Set<IndexNumber>();
+      const waitingConcurrentTasks = multiValueMapBuilder<typeof incompleteTasks[0], K>();
+
+      async function getNextTask(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
+        let nextTask: NextIncompleteTask = undefined;
+
+        while (!nextTask) {
+          // request more tasks if the tasks list is empty
+          if (!isOutOfTasks && incompleteTasks.length === 0) {
+            nextTask = await requestMoreTasks(parallelIndex);
+          }
+
+          nextTask = nextTask ?? incompleteTasks.pop();
+
+          if (nextTask != null) {
+            const nextTaskTuple = nextTask;
+            const nextTaskTupleIndex = nextTaskTuple[2];
+
+            if (visitedTaskIndexes.has(nextTaskTupleIndex)) {
+              // already run. Ignore.
+              nextTask = undefined;
+            } else {
+              const keys = nextTaskTuple[1];
+              const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
+
+              if (keyOfTaskCurrentlyInUse) {
+                keys.forEach((key) => waitingConcurrentTasks.addTuples(key, nextTaskTuple)); // add to each key as waiting
+                nextTask = undefined; // clear to continue loop
               } else {
+                addToSet(currentParellelTaskKeys, keys); // add to the current task keys, exit loop
                 break;
               }
             }
-          });
-        }
-
-        // start initial promises
-        function dispatchNextPromise() {
-          // if a failure has been encountered then the promise has already been rejected.
-          if (!hasEncounteredFailure) {
-            const nextTask = getNextTask();
-
-            if (nextTask) {
-              // build/start promise
-              const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
-              currentRunIndex += 1;
-
-              promise.then(
-                () => {
-                  onTaskCompleted(nextTask);
-                  setTimeout(dispatchNextPromise, waitBetweenTasks);
-                },
-                (e) => {
-                  hasEncounteredFailure = true;
-                  reject(e);
-                }
-              );
-            } else {
-              finishedParallels += 1;
-
-              // only resolve after the last parallel is complete
-              if (finishedParallels === maxPromisesToRunAtOneTime) {
-                resolve();
-              }
-            }
+          } else {
+            break; // no tasks remaining, break.
           }
         }
 
-        // run the initial promises
-        range(0, maxPromisesToRunAtOneTime).forEach(() => {
-          dispatchNextPromise();
+        if (nextTask) {
+          // mark to prevent running again/concurrent runs
+          visitedTaskIndexes.add(nextTask[2]);
+        }
+
+        return nextTask;
+      }
+
+      function onTaskCompleted(task: typeof incompleteTasks[0], parallelIndex: IndexNumber): void {
+        const keys = task[1];
+        const indexesPushed = new Set<IndexNumber>();
+
+        keys.forEach((key) => {
+          // un-reserve the key from each parallel task
+          currentParellelTaskKeys.delete(key);
+          const waitingForKey = waitingConcurrentTasks.get(key);
+
+          while (true) {
+            const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
+
+            if (nextWaitingTask) {
+              const nextWaitingTaskIndex = nextWaitingTask[2];
+
+              if (visitedTaskIndexes.has(nextWaitingTaskIndex) || indexesPushed.has(nextWaitingTaskIndex)) {
+                // if the task has already been visited, then don't push back onto incomplete tasks.
+                continue;
+              } else {
+                // push to front for the next dispatch to take for this key
+                incompleteTasks.push(nextWaitingTask);
+                // mark to prevent pushing this one again since it will not get run
+                indexesPushed.add(nextWaitingTaskIndex);
+                break;
+              }
+            } else {
+              break;
+            }
+          }
         });
+      }
+
+      // start initial promises
+      async function dispatchNextPromise(parallelIndex: IndexNumber) {
+        // if a failure has been encountered then the promise has already been rejected.
+        if (!hasEncounteredFailure) {
+          const nextTask = await getNextTask(parallelIndex);
+
+          if (nextTask) {
+            // build/start promise
+            const promise = taskFactory(nextTask[0], currentRunIndex, nextTask[1]);
+            currentRunIndex += 1;
+
+            promise.then(
+              () => {
+                onTaskCompleted(nextTask, parallelIndex);
+                setTimeout(() => dispatchNextPromise(parallelIndex), waitBetweenTasks);
+              },
+              (e) => {
+                hasEncounteredFailure = true;
+                reject(e);
+              }
+            );
+          } else {
+            finishedParallels += 1;
+
+            // only resolve after the last parallel is complete
+            if (finishedParallels === maxPromisesToRunAtOneTime) {
+              resolve();
+            }
+          }
+        }
+      }
+
+      // run the initial promises
+      range(0, maxPromisesToRunAtOneTime).forEach((parallelIndex) => {
+        dispatchNextPromise(parallelIndex);
       });
-    };
-  }
+    });
+  };
 }

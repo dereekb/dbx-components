@@ -226,6 +226,16 @@ export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (val
   return array;
 }
 
+/**
+ * Counts all the values in a nested array.
+ *
+ * @param array
+ * @returns
+ */
+export function countAllInNestedArray<T>(array: T[][]): number {
+  return array.reduce((acc, curr) => acc + curr.length, 0);
+}
+
 // MARK: Compat
 /**
  * @deprecated Use mergeArraysIntoArray() instead. Will be removed in v10.1.

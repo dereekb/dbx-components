@@ -16,7 +16,22 @@ export interface ItemIteratorNextRequest {
 }
 
 export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingState<V>> extends Destroyable {
+  /**
+   * Whether or not there are more items to be loaded.
+   *
+   * This emits every time a page has finished loading.
+   *
+   * This will not return false when the max page limit has been reached.
+   */
   readonly hasNext$: Observable<boolean>;
+
+  /**
+   * Whether or not more items can be loaded.
+   *
+   * Similar to hasNext$ but does not emit until the value changes.
+   *
+   * This returns false if the max page limit has been reached.
+   */
   readonly canLoadMore$: Observable<boolean>;
 
   /**
@@ -58,7 +73,7 @@ export interface PageItemIteration<V = unknown, L extends PageLoadingState<V> = 
   /**
    * Attempts to loads the next page of results and returns a promise.
    *
-   * The promise will return when the next action has completed.
+   * The promise will return when the next action has completed, and returns the page number of the loaded page.
    *
    * If the page result ends in an error, this promise will throw that error.
    *

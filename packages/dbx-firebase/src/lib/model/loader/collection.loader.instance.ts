@@ -1,8 +1,8 @@
-import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
+import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, ItemAccumulatorNextPageUntilResultsCountFunction, itemAccumulatorNextPageUntilResultsCount, iteratorNextPageUntilPage, iteratorNextPageUntilMaxPageLoadLimit, pageItemAccumulatorCurrentPage, ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
-import { DocumentDataWithIdAndKey, DocumentReference, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirebaseQuerySnapshotAccumulator, firebaseQuerySnapshotAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
-import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
-import { DbxFirebaseCollectionLoader, DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
+import { DocumentDataWithIdAndKey, DocumentReference, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, firebaseQuerySnapshotAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { ArrayOrValue, Destroyable, GetterOrValue, Initialized, Maybe, PageNumber, countAllInNestedArray } from '@dereekb/util';
+import { DbxFirebaseCollectionLoaderAccessor, DbxFirebaseCollectionLoaderWithAccumulator } from './collection.loader';
 
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   collection?: Maybe<FirestoreCollectionLike<T, D>>;
@@ -16,7 +16,7 @@ export type DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocume
 /**
  * DbxFirebaseModelLoader implementation within an instance.
  */
-export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoader<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
+export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoaderWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
   protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollectionLike<T, D>>>(this._initConfig?.collection);
 
   protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(this._initConfig?.maxPages);
@@ -78,6 +78,11 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.firestoreIteration$.pipe(
     map((x) => firebaseQueryItemAccumulator<T>(x)),
     cleanupDestroyable(),
+    shareReplay(1)
+  );
+
+  readonly accumulatorPage$: Observable<PageNumber> = this.accumulator$.pipe(
+    switchMap((x) => pageItemAccumulatorCurrentPage(x)),
     shareReplay(1)
   );
 
@@ -202,6 +207,27 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
 
   setCollection(firestoreCollection: Maybe<FirestoreCollectionLike<T, D>>) {
     this.collection = firestoreCollection;
+  }
+
+  loadPagesUntilResultsCount(maxResultsLimit: GetterOrValue<number>, countResultsFunction?: FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction<T> | undefined): Observable<ItemAccumulatorNextPageUntilResultsCountResult> {
+    const defaultFn: ItemAccumulatorNextPageUntilResultsCountFunction<DocumentDataWithIdAndKey<T>[]> = countAllInNestedArray;
+    return this.accumulator$.pipe(
+      switchMap((accumulator) =>
+        itemAccumulatorNextPageUntilResultsCount({
+          accumulator,
+          maxResultsLimit,
+          countResultsFunction: countResultsFunction ?? defaultFn
+        })
+      )
+    );
+  }
+
+  loadToPage(page: PageNumber): Observable<PageNumber> {
+    return this.accumulator$.pipe(switchMap((accumulator) => iteratorNextPageUntilPage(accumulator.itemIteration, page)));
+  }
+
+  loadAllResults(): Observable<PageNumber> {
+    return this.accumulator$.pipe(switchMap((accumulator) => iteratorNextPageUntilMaxPageLoadLimit(accumulator.itemIteration)));
   }
 }
 

@@ -248,6 +248,40 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
             });
 
+            describe('maxParallelCheckpoints>1', () => {
+              it('should process the checkpoints in parallel.', async () => {
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+                const batchSize = 1;
+                const maxParallelCheckpoints = 4;
+
+                let currentRunningTasks = 0;
+                let maxRunningTasks = 0;
+
+                const result = await iterateFirestoreDocumentSnapshotBatches({
+                  batchSize, // use specific batch size
+                  limitPerCheckpoint: 1,
+                  maxParallelCheckpoints, // do four checkpoints in parallel
+                  iterateSnapshotBatch: async (x, batchIndex) => {
+                    currentRunningTasks += 1;
+
+                    await waitForMs(1000);
+                    maxRunningTasks = Math.max(maxRunningTasks, currentRunningTasks);
+
+                    currentRunningTasks -= 1;
+                  },
+                  useCheckpointResult: async (x) => {
+                    x.docSnapshots.forEach((y) => mockUserItemsVisited.add(y.ref.path));
+                  },
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(maxRunningTasks).toBe(maxParallelCheckpoints);
+                expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+                expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              });
+            });
+
             describe('batchSize=null', () => {
               it('should iterate with a single batch', async () => {
                 const mockUserItemsVisited = new Set<MockItemUserKey>();

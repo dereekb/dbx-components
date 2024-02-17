@@ -43,14 +43,14 @@ This library has a working demo frontend and backend attached to it.
 There are two development servers: the Angular context, and the Firebase emulator context.
 
 ### Angular
-The angular development server can run directly on your machine. Run `./server-web.sh` to start the angular development server and start the demo in your browser.
+The angular development server can run directly on your machine. Run `./serve-web.sh` to start the angular development server and start the demo in your browser.
 
 It will talk with the firebase development server by default.
 
 ### Firebase Emulator
 The firebase emulator is run within a docker container. This is to allow consistent configuration described in the Dockerfile.
 
-Run `./server-web.sh` to start the firebase development server.
+Run `./serve-server.sh` to start the firebase development server.
 
 ### Development Server Notes
 - `demo-api`'s `watch-emulators` nx target uses [entr](http://eradman.com/entrproject/) to watch for changes in the demo-api's dist directory and restart the emulators automatically. The firebase emulator suite does not support hot-reload of functions.

@@ -1,7 +1,7 @@
 import { SubscriptionObject } from '../subscription';
-import { startWith, map, type Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
+import { startWith, map, type Observable, shareReplay, skipWhile, distinctUntilChanged, filter, first, firstValueFrom, switchMap, from } from 'rxjs';
 import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue } from '../rxjs';
-import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef } from '@dereekb/util';
+import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef, type GetterOrValue, asGetter, performTaskLoop, type MapFunction, type PromiseOrValue, asPromise, type PageNumber, type Page } from '@dereekb/util';
 import { type ItemIteration, type PageItemIteration } from './iteration';
 import { type LoadingState, loadingStateHasError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
 
@@ -164,4 +164,70 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
   }
 
   return new ItemAccumulatorInstance<O, I, N>(itemIteration, mapItem);
+}
+
+// MARK: Utility
+export type ItemAccumulatorNextPageUntilResultsCountFunction<O> = MapFunction<O[], PromiseOrValue<number>>;
+
+export interface ItemAccumulatorNextPageUntilResultsCountConfig<O> {
+  readonly accumulator: ItemAccumulator<O, any, PageItemIteration<any>>;
+  readonly maxResultsLimit: GetterOrValue<number>;
+  readonly countResultsFunction: ItemAccumulatorNextPageUntilResultsCountFunction<O>;
+}
+
+export interface ItemAccumulatorNextPageUntilResultsCountResult extends Page {
+  readonly resultsCount: number;
+}
+
+/**
+ * Automatically calls next on the accumulator's page item iteration up to the target number of results. Returns the total number of items loaded.
+ *
+ * The promise will reject with an error if an error is encountered.
+ *
+ * @param iteration
+ * @param maxResultsLimit
+ * @returns
+ */
+export function itemAccumulatorNextPageUntilResultsCount<O>(config: ItemAccumulatorNextPageUntilResultsCountConfig<O>): Promise<ItemAccumulatorNextPageUntilResultsCountResult> {
+  const { accumulator, maxResultsLimit, countResultsFunction: countResults } = config;
+  const getMaxResultsLimit = asGetter(maxResultsLimit);
+
+  async function checkResultsLimit() {
+    const allItems = await firstValueFrom(accumulator.allItems$);
+    const currentCount = await countResults(allItems);
+    const maxResultsLimit = getMaxResultsLimit();
+    return {
+      shouldContinue: currentCount < maxResultsLimit,
+      currentCount
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+    accumulator.allItems$
+      .pipe(
+        first(),
+        switchMap((allItems) => from(asPromise(countResults(allItems))))
+      )
+      .subscribe({
+        next: async (currentResultsCount: number) => {
+          const page = await performTaskLoop<PageNumber>({
+            initValue: currentResultsCount,
+            checkContinue: async () => {
+              const result = await checkResultsLimit();
+              currentResultsCount = result.currentCount;
+              return result.shouldContinue;
+            },
+            next: async () => await accumulator.itemIteration.nextPage()
+          });
+
+          resolve({
+            page,
+            resultsCount: currentResultsCount
+          });
+        },
+        error: (error) => {
+          reject(error);
+        }
+      });
+  });
 }

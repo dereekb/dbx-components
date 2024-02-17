@@ -4,7 +4,6 @@
 
 module.exports = {
   displayName: 'firebase-server-test',
-  maxConcurrency: 1,
   maxWorkers: 1,
   coverageDirectory: '../../../coverage/packages/firebase-server/test',
   preset: '../../../jest.preset.ts'
