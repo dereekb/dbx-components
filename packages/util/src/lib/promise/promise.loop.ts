@@ -1,15 +1,16 @@
 import { batchCalc, type BatchCount, itemCountForBatchIndex } from '../grouping';
 import { type Maybe } from '../value/maybe.type';
+import { PromiseOrValue } from './promise.type';
 
 export interface PerformTaskLoopConfig<O> {
   next: (i: number, prev: Maybe<O>) => Promise<O>;
-  checkContinue: (prev: Maybe<O>, i: number) => boolean;
+  checkContinue: (prev: Maybe<O>, i: number) => PromiseOrValue<boolean>;
 }
 
 export interface PerformTaskLoopWithInitConfig<O> {
   initValue: O;
   next: (i: number, prev: O) => Promise<O>;
-  checkContinue: (prev: O, i: number) => boolean;
+  checkContinue: (prev: O, i: number) => PromiseOrValue<boolean>;
 }
 
 // MARK: Loop
@@ -20,7 +21,7 @@ export function performTaskLoop(config: PerformTaskLoopConfig<void>): Promise<vo
 export async function performTaskLoop<O>(config: PerformTaskLoopWithInitConfig<O> | PerformTaskLoopConfig<O>): Promise<O> {
   let result: O;
   const initValue = (config as PerformTaskLoopWithInitConfig<O>).initValue;
-  const startLoop = initValue == null || config.checkContinue(initValue, -1);
+  const startLoop = initValue == null || (await config.checkContinue(initValue, -1));
 
   if (startLoop) {
     let i = 0;
@@ -30,7 +31,7 @@ export async function performTaskLoop<O>(config: PerformTaskLoopWithInitConfig<O
     do {
       prevValue = await config.next(i, prevValue);
       i += 1;
-      check = config.checkContinue(prevValue, i);
+      check = await config.checkContinue(prevValue, i);
     } while (check);
 
     result = prevValue;
