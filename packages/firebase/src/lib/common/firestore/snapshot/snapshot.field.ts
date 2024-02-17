@@ -63,7 +63,9 @@ import {
   type MapSameFunction,
   type ISO8601DateString,
   isDate,
-  isEqualToValueDecisionFunction
+  isEqualToValueDecisionFunction,
+  filterNullAndUndefinedValues,
+  ModelMapToFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -840,7 +842,15 @@ export function firestoreObjectArray<T extends object, O extends object = Firest
   const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
-  const { from, to } = toModelMapFunctions<T, O>(objectField);
+  const { from, to: baseTo } = toModelMapFunctions<T, O>(objectField);
+
+  const to: ModelMapToFunction<T, O> = (x) => {
+    // remove null/undefined values from each field when converting to in order to mirror firestore usage (undefined is treated like null)
+    const base = baseTo(x);
+    const filtered = filterNullAndUndefinedValues(base) as O;
+    return filtered;
+  };
+
   return firestoreField<T[], O[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,

@@ -1031,7 +1031,15 @@ export interface TestFirestoreSubObjectParentWithArray {
 export interface TestFirestoreSubObject {
   date: Date;
   uniqueStringArray: string[];
+  optionalStringField?: Maybe<string>;
 }
+
+export const testFirestoreSubObjectDefaultsConverter = snapshotConverterFunctions<TestFirestoreSubObject>({
+  fields: {
+    ...testSnapshotDefaultsFields,
+    optionalStringField: optionalFirestoreString()
+  }
+});
 
 describe('firestoreObjectArray()', () => {
   it('should allowed firestoreField', () => {
@@ -1247,14 +1255,14 @@ describe('firestoreSubObject()', () => {
   };
 
   const testFirestoreSubObjectField = firestoreSubObject<TestFirestoreSubObject>({
-    objectField: testSnapshotDefaultsConverter
+    objectField: testFirestoreSubObjectDefaultsConverter
   });
 
   describe('with firestoreObjectArray', () => {
     const testFirestoreSubObjectParentWithArrayConverter = snapshotConverterFunctions<TestFirestoreSubObjectParentWithArray>({
       fields: {
         objects: firestoreObjectArray<TestFirestoreSubObject>({
-          objectField: testSnapshotDefaultsConverter
+          objectField: testFirestoreSubObjectDefaultsConverter
         })
       }
     });
@@ -1281,8 +1289,10 @@ describe('firestoreSubObject()', () => {
       expect(data.objects.length).toBe(parent.objects.length);
       expect(data.objects[0].date).toBeDefined();
       expect(data.objects[0].uniqueStringArray).toBeDefined();
+      expect(data.objects[0].optionalStringField).not.toBeDefined();
       expect(data.objects[1].date).toBeDefined();
       expect(data.objects[1].uniqueStringArray).toBeDefined();
+      expect(data.objects[1].optionalStringField).not.toBeDefined();
 
       const result = testFirestoreSubObjectParentWithArrayConverter.mapFunctions.from(data);
 
@@ -1294,11 +1304,13 @@ describe('firestoreSubObject()', () => {
       expect(result.objects[0].uniqueStringArray).toBeDefined();
       expect(result.objects[0].uniqueStringArray).toContain(testObject.uniqueStringArray[0]);
       expect(result.objects[0].uniqueStringArray).toContain(testObject.uniqueStringArray[1]);
+      expect(result.objects[0].optionalStringField).not.toBeDefined();
       expect(result.objects[1].date).toBeDefined();
       expect(result.objects[1].date).toBeSameSecondAs(testObject.date);
       expect(result.objects[1].uniqueStringArray).toBeDefined();
       expect(result.objects[1].uniqueStringArray).toContain(testObject.uniqueStringArray[0]);
       expect(result.objects[1].uniqueStringArray).toContain(testObject.uniqueStringArray[1]);
+      expect(result.objects[0].optionalStringField).not.toBeDefined();
     });
   });
 
@@ -1321,6 +1333,7 @@ describe('firestoreSubObject()', () => {
       expect(result.object.date).toBeDefined();
       expect(result.object.uniqueStringArray).toBeDefined();
       expect(result.object.uniqueStringArray.length).toBe(0);
+      expect(result.object.optionalStringField).not.toBeDefined();
     });
 
     it('should convert an object and back.', () => {
@@ -1330,6 +1343,7 @@ describe('firestoreSubObject()', () => {
       expect(data.object).toBeDefined();
       expect(data.object.date).toBeDefined();
       expect(data.object.uniqueStringArray).toBeDefined();
+      expect(data.object.optionalStringField).not.toBeDefined();
 
       const result = testFirestoreSubObjectParentConverter.mapFunctions.from(data);
 
@@ -1340,6 +1354,7 @@ describe('firestoreSubObject()', () => {
       expect(result.object.uniqueStringArray).toBeDefined();
       expect(result.object.uniqueStringArray).toContain(testObject.uniqueStringArray[0]);
       expect(result.object.uniqueStringArray).toContain(testObject.uniqueStringArray[1]);
+      expect(result.object.optionalStringField).not.toBeDefined();
     });
 
     describe('with saveDefaultObject unset', () => {
@@ -1369,6 +1384,7 @@ describe('firestoreSubObject()', () => {
         expect(result.object).toBeDefined();
         expect(result.object.date).toBeDefined();
         expect(result.object.uniqueStringArray).toBeDefined();
+        expect(result.object.optionalStringField).toBeUndefined();
       });
     });
   });
