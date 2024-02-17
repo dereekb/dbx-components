@@ -1,6 +1,6 @@
 import { range } from '../array/array.number';
 import { isEvenNumber, randomNumberFactory } from '../number';
-import { performAsyncTasks, performTasksInParallel } from './promise';
+import { performAsyncTasks, performTasksFromFactoryInParallelFunction, performTasksInParallel } from './promise';
 import { waitForMs } from './wait';
 
 describe('performAsyncTasks()', () => {
@@ -491,6 +491,97 @@ describe('performTasksInParallelFunction()', () => {
           done();
         });
       });
+    });
+  });
+});
+
+describe('performTasksFromFactoryInParallelFunction()', () => {
+  describe('maxParallelTasks===0', () => {
+    it('should not run multiple tasks in parallel', async () => {
+      const maxParallelTasks = 0;
+      const expectedMaxParallelTasks = 1;
+      const totalTasks = 6;
+
+      let currentRunningTasks = 0;
+      let maxRunningTasks = 0;
+
+      const performTaskFn = performTasksFromFactoryInParallelFunction({
+        maxParallelTasks,
+        taskFactory: async (value: number) => {
+          currentRunningTasks += 1;
+
+          await waitForMs(100);
+          maxRunningTasks = Math.max(maxRunningTasks, currentRunningTasks);
+
+          currentRunningTasks -= 1;
+        }
+      });
+
+      let currentIndex = 0;
+      let hasReachedEnd = false;
+
+      async function taskInputFactory() {
+        if (hasReachedEnd) {
+          return null; // issue no more tasks
+        }
+
+        const i = currentIndex;
+        currentIndex += 1; // increase our current index
+
+        if (currentIndex >= totalTasks) {
+          hasReachedEnd = true;
+        }
+
+        return i;
+      }
+
+      await performTaskFn(taskInputFactory);
+
+      expect(maxRunningTasks).toBe(expectedMaxParallelTasks);
+    });
+  });
+
+  describe('maxParallelTasks>1', () => {
+    it('should run multiple tasks in parallel', async () => {
+      const maxParallelTasks = 3;
+      const totalTasks = 6;
+
+      let currentRunningTasks = 0;
+      let maxRunningTasks = 0;
+
+      const performTaskFn = performTasksFromFactoryInParallelFunction({
+        maxParallelTasks,
+        taskFactory: async (value: number) => {
+          currentRunningTasks += 1;
+
+          await waitForMs(100);
+          maxRunningTasks = Math.max(maxRunningTasks, currentRunningTasks);
+
+          currentRunningTasks -= 1;
+        }
+      });
+
+      let currentIndex = 0;
+      let hasReachedEnd = false;
+
+      async function taskInputFactory() {
+        if (hasReachedEnd) {
+          return null; // issue no more tasks
+        }
+
+        const i = currentIndex;
+        currentIndex += 1; // increase our current index
+
+        if (currentIndex >= totalTasks) {
+          hasReachedEnd = true;
+        }
+
+        return i;
+      }
+
+      await performTaskFn(taskInputFactory);
+
+      expect(maxRunningTasks).toBe(maxParallelTasks);
     });
   });
 });
