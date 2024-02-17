@@ -214,14 +214,17 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
         if (addContactInfo) {
           email = AUTHORIZED_USER_RANDOM_EMAIL_FACTORY();
           phoneNumber = AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY();
+        } else {
+          email = details?.email;
+          phoneNumber = (details?.phoneNumber as E164PhoneNumber) ?? undefined;
         }
 
         const userRecord = await auth.createUser({
           uid,
           displayName: 'Test Person',
+          ...details,
           email,
           phoneNumber,
-          ...details,
           ...inputUser
         });
 

@@ -1,4 +1,4 @@
-import { type Page } from './page';
+import { type PageNumber, type Page } from './page';
 
 // MARK: PageCalculator
 export interface PageCalculatorConfig {
@@ -34,7 +34,7 @@ export class PageCalculator {
     return this.calc(page?.page);
   }
 
-  calc(page: number = 0) {
+  calc(page: PageNumber = 0) {
     return {
       [this.limitKey]: this.pageSize,
       [this.skipKey]: this.calcSkip(page)
@@ -45,7 +45,7 @@ export class PageCalculator {
     return this.calcSkip(page?.page);
   }
 
-  calcSkip(page: number = 0) {
+  calcSkip(page: PageNumber = 0) {
     return (page ?? 0) * this.pageSize;
   }
 }

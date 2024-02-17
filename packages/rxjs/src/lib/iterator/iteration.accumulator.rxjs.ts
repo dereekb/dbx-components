@@ -65,3 +65,13 @@ export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulat
     shareReplay(1)
   );
 }
+
+/**
+ * Returns the latest loaded page number from the input PageItemAccumulator.
+ *
+ * @param pageItemAccumulator
+ * @returns
+ */
+export function pageItemAccumulatorCurrentPage(pageItemAccumulator: PageItemAccumulator<any, any>): Observable<number> {
+  return pageItemAccumulator.itemIteration.latestLoadedPage$;
+}

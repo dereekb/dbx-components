@@ -39,8 +39,16 @@ export function makeTestPageIteratorDelegate<T>(makeResultsFn: (page: PageNumber
   };
 }
 
-export const TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE = 10;
+/**
+ * Returns a number each time equivalent to the page being loaded.
+ */
 export const TEST_PAGE_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = makeTestPageIteratorDelegate((page) => page);
+
+export const TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE = 10;
+
+/**
+ * Loads an array of numbers each time
+ */
 export const TEST_PAGE_ARRAY_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number[], TestPageIteratorFilter> = makeTestPageIteratorDelegate((page) => {
   const start = page * TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE;
   const end = start + TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE;

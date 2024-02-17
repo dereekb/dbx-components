@@ -1,4 +1,4 @@
-import { itemAccumulator, type ItemAccumulatorInstance, type ItemAccumulatorMapFunction, type PageItemIteration } from '@dereekb/rxjs';
+import { itemAccumulator, type ItemAccumulatorNextPageUntilResultsCountFunction, type ItemAccumulatorInstance, type ItemAccumulatorMapFunction, type PageItemIteration } from '@dereekb/rxjs';
 import { type MapFunction, filterMaybeValues } from '@dereekb/util';
 import { documentDataFunction } from '../accessor';
 import { type DocumentDataWithIdAndKey, type QueryDocumentSnapshotArray } from '../types';
@@ -11,6 +11,8 @@ export type FirebaseQuerySnapshotAccumulator<T> = MappedFirebaseQuerySnapshotAcc
  * Mapped accumulator for QueryDocumentSnapshotArray values that returns the DocumentDataWithId values for the items returned in the query.
  */
 export type FirebaseQueryItemAccumulator<T> = MappedFirebaseQuerySnapshotAccumulator<DocumentDataWithIdAndKey<T>[], T>;
+
+export type FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction<T> = ItemAccumulatorNextPageUntilResultsCountFunction<DocumentDataWithIdAndKey<T>[]>;
 
 /**
  * Wrapper for itemAccumulator that has typings for a FirestoreItemPageIterationInstance. Can optionally map the snapshots to another type.

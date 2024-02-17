@@ -1,24 +1,28 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, Subscription, exhaustMap, first, map, switchMap, tap } from 'rxjs';
-import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, DocumentDataWithIdAndKey, DocumentReference } from '@dereekb/firebase';
-import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe } from '@dereekb/rxjs';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, DocumentDataWithIdAndKey, DocumentReference, FirebaseQuerySnapshotAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction } from '@dereekb/firebase';
+import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe, ItemAccumulatorNextPageUntilResultsCountFunction, ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
+import { ArrayOrValue, Maybe, PageNumber } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../../loader/collection.loader.instance';
-import { DbxFirebaseCollectionLoaderAccessor } from '../../loader/collection.loader';
+import { DbxFirebaseCollectionLoaderAccessorWithAccumulator } from '../../loader/collection.loader';
 
-export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessor<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
+export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessorWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
   readonly firestoreCollection$: Observable<Maybe<FirestoreCollectionLike<T, D>>>;
   readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>>;
 
-  readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
-  readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>>;
-  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
-  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>>;
-
   readonly hasDocuments$: Observable<boolean>;
+  /**
+   * Returns all document references loaded by the accumulator.
+   */
   readonly allDocumentRefs$: Observable<DocumentReference<T>[]>;
+  /**
+   * Returns all documents loaded by the accomulator.
+   */
   readonly allDocuments$: Observable<D[]>;
+  /**
+   * Returns all documents data loaded by the accumulator.
+   */
   readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]>;
 
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
@@ -105,8 +109,9 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>> = this.loader$.pipe(switchMap((x) => x.constraints$));
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.loader$.pipe(switchMap((x) => x.firestoreIteration$));
   readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>> = this.loader$.pipe(switchMap((x) => x.queryChangeWatcher$));
-  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = this.loader$.pipe(switchMap((x) => x.pageLoadingState$));
+  readonly snapshotAccumulator$: Observable<FirebaseQuerySnapshotAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.snapshotAccumulator$));
+  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));
 
   readonly hasDocuments$: Observable<boolean> = this.loader$.pipe(switchMap((x) => x.hasDocuments$));
   readonly allDocumentRefs$: Observable<DocumentReference<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentRefs$));
@@ -114,4 +119,16 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentData$));
 
   readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollectionLike<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
+
+  loadToPage(page: PageNumber): Observable<PageNumber> {
+    return this.loader$.pipe(switchMap((x) => x.loadToPage(page)));
+  }
+
+  loadPagesUntilResultsCount(maxResultsCount: number, countFunction?: FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction<T> | undefined): Observable<ItemAccumulatorNextPageUntilResultsCountResult> {
+    return this.loader$.pipe(switchMap((x) => x.loadPagesUntilResultsCount(maxResultsCount, countFunction)));
+  }
+
+  loadAllResults(): Observable<PageNumber> {
+    return this.loader$.pipe(switchMap((x) => x.loadAllResults()));
+  }
 }
