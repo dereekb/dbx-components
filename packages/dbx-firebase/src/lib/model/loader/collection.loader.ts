@@ -1,5 +1,5 @@
 import { DocumentDataWithIdAndKey, FirebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
-import { ItemAccumulatorNextPageUntilResultsCountFunction, ItemAccumulatorNextPageUntilResultsCountResult, PageListLoadingState } from '@dereekb/rxjs';
+import { ItemAccumulatorNextPageUntilResultsCountResult, PageListLoadingState } from '@dereekb/rxjs';
 import { Maybe, ArrayOrValue, PageNumber } from '@dereekb/util';
 import { Observable } from 'rxjs';
 

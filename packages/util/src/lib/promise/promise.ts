@@ -1,4 +1,4 @@
-import { type ArrayOrValue, asArray, pushArrayItemsIntoArray } from '../array/array';
+import { type ArrayOrValue, asArray } from '../array/array';
 import { range } from '../array/array.number';
 import { type Milliseconds } from '../date/date';
 import { type PrimativeKey, type ReadOneOrMoreKeysFunction } from '../key';
@@ -11,7 +11,7 @@ import { type Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
 import { asPromise, type PromiseOrValue } from './promise.type';
 import { terminatingFactoryFromArray } from '../array/array.factory';
-import { PromiseReference, promiseReference } from './promise.ref';
+import { type PromiseReference, promiseReference } from './promise.ref';
 
 export type RunAsyncTaskForValueConfig<T = unknown> = Omit<PerformAsyncTaskConfig<T>, 'throwError'>;
 
@@ -189,7 +189,7 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PromiseAsyncTaskFn<I, O
  */
 export type PerformTasksInParallelTaskUniqueKey = string;
 
-export interface PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> extends Omit<PerformTasksFromFactoryInParallelFunctionConfig<I, K>, 'waitBetweenTaskInputRequests'> {}
+export type PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> = Omit<PerformTasksFromFactoryInParallelFunctionConfig<I, K>, 'waitBetweenTaskInputRequests'>
 
 /**
  * Function that awaits a promise generated from each of the input values.
@@ -306,7 +306,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       let baseI = 0;
       let isOutOfTasks = false;
       let isFulfillingTask = false;
-      let requestTasksQueue: [IndexNumber, PromiseReference<NextIncompleteTask>][] = [];
+      const requestTasksQueue: [IndexNumber, PromiseReference<NextIncompleteTask>][] = [];
 
       async function fulfillRequestMoreTasks(parallelIndex: IndexNumber, promiseReference: PromiseReference<NextIncompleteTask>) {
         if (incompleteTasks.length === 0) {

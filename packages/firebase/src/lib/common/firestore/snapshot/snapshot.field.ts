@@ -65,7 +65,7 @@ import {
   isDate,
   isEqualToValueDecisionFunction,
   filterNullAndUndefinedValues,
-  ModelMapToFunction
+  type ModelMapToFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';

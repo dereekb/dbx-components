@@ -1343,7 +1343,7 @@ describe('firestoreSubObject()', () => {
       expect(data.object).toBeDefined();
       expect(data.object.date).toBeDefined();
       expect(data.object.uniqueStringArray).toBeDefined();
-      expect(data.object.optionalStringField).not.toBeDefined();
+      expect(data.object.optionalStringField).toBeNull(); // sub object should not strip out null
 
       const result = testFirestoreSubObjectParentConverter.mapFunctions.from(data);
 

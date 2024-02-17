@@ -2,7 +2,7 @@ import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, Subscr
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
 import { DocumentDataWithIdAndKey, DocumentReference, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, firebaseQuerySnapshotAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, GetterOrValue, Initialized, Maybe, PageNumber, countAllInNestedArray } from '@dereekb/util';
-import { DbxFirebaseCollectionLoader, DbxFirebaseCollectionLoaderAccessor, DbxFirebaseCollectionLoaderWithAccumulator } from './collection.loader';
+import { DbxFirebaseCollectionLoaderAccessor, DbxFirebaseCollectionLoaderWithAccumulator } from './collection.loader';
 
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   collection?: Maybe<FirestoreCollectionLike<T, D>>;

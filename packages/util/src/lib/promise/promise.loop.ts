@@ -1,6 +1,6 @@
 import { batchCalc, type BatchCount, itemCountForBatchIndex } from '../grouping';
 import { type Maybe } from '../value/maybe.type';
-import { PromiseOrValue } from './promise.type';
+import { type PromiseOrValue } from './promise.type';
 
 export interface PerformTaskLoopConfig<O> {
   next: (i: number, prev: Maybe<O>) => Promise<O>;

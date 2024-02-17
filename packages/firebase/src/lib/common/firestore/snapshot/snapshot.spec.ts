@@ -166,7 +166,7 @@ describe('snapshotConverterFunctions()', () => {
 
         expect(result.defaultDate).toBeNull();
         expect(typeof first.date).toBe('string');
-        expect(first.uniqueStringArray).toBeNull();
+        expect(first.uniqueStringArray).not.toBeDefined();
       });
     });
   });

@@ -5,7 +5,7 @@ import { filter, first, skip } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { itemAccumulator, itemAccumulatorNextPageUntilResultsCount, type ItemAccumulatorInstance } from './iteration.accumulator';
 import { type TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ITERATOR_DELEGATE, TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE } from './iterator.page.spec';
-import { PromiseOrValue, countAllInNestedArray } from '@dereekb/util';
+import { countAllInNestedArray } from '@dereekb/util';
 
 describe('ItemPageIterator', () => {
   describe('ItemAccumulatorInstance', () => {
