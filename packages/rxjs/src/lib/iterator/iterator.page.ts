@@ -1,7 +1,7 @@
 import { filterMaybe } from '../rxjs';
 import { type PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, startWithBeginLoading } from '../loading';
 import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot } from '@dereekb/util';
-import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay, finalize, defaultIfEmpty } from 'rxjs';
+import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay, defaultIfEmpty } from 'rxjs';
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
