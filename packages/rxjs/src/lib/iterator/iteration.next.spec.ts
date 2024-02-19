@@ -1,7 +1,7 @@
 import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
 import { type TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 import { iteratorNextPageUntilMaxPageLoadLimit, iteratorNextPageUntilPage } from './iteration.next';
-import { first } from 'rxjs';
+import { first, map } from 'rxjs';
 
 describe('iteration.next', () => {
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
@@ -16,7 +16,37 @@ describe('iteration.next', () => {
     instance.destroy();
   });
 
-  describe('nextUntilPage()', () => {
+  describe('iteratorNextPageUntilPage()', () => {
+    it('should exit once no more items can be loaded and it is before the target max.', (done) => {
+      instance.destroy();
+
+      iterator = new ItemPageIterator({
+        loadItemsForPage: (x) => {
+          return TEST_PAGE_ITERATOR_DELEGATE.loadItemsForPage(x).pipe(map((x) => ({ ...x, end: true })));
+        }
+      });
+
+      instance = iterator.instance({});
+
+      const testMaxPagesToLoad = 100;
+      const expectedFinalPage = 0;
+      instance.maxPageLoadLimit = testMaxPagesToLoad;
+
+      iteratorNextPageUntilPage(instance, 10).then((page) => {
+        expect(page).toBe(expectedFinalPage);
+
+        instance.numberOfPagesLoaded$.pipe(first()).subscribe((pagesLoaded) => {
+          expect(pagesLoaded).toBe(expectedFinalPage + 1);
+
+          instance.hasNextAndCanLoadMore$.pipe(first()).subscribe((hasNextAndCanLoadMore) => {
+            expect(hasNextAndCanLoadMore).toBe(false);
+
+            done();
+          });
+        });
+      });
+    });
+
     it('should call next up until the given page is reached.', (done) => {
       const targetPagesToLoad = 10;
 
@@ -69,7 +99,7 @@ describe('iteration.next', () => {
     });
   });
 
-  describe('iteratorNextPageUntilLimit()', () => {
+  describe('iteratorNextPageUntilMaxPageLoadLimit()', () => {
     it(`should call next up until the iterator's limit is reached.`, (done) => {
       const testMaxPagesToLoad = 15;
       instance.maxPageLoadLimit = testMaxPagesToLoad;

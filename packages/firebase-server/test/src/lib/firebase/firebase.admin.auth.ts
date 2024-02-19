@@ -205,6 +205,8 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
       initInstance: async () => {
         const uid = inputUser?.uid || makeUid();
         const { details, claims, addContactInfo: userDetailsAddContactInfo } = { ...makeUserDetails(uid, params), ...params.template };
+        const { phoneNumber: detailsPhoneNumber, email: detailsEmail } = details ?? {}; // keep details if provided
+
         const addContactInfo = inputAddContactInfo || userDetailsAddContactInfo;
         const auth = f.instance.auth;
 
@@ -212,11 +214,11 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
         let phoneNumber: E164PhoneNumber | undefined;
 
         if (addContactInfo) {
-          email = AUTHORIZED_USER_RANDOM_EMAIL_FACTORY();
-          phoneNumber = AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY();
+          email = detailsEmail ?? AUTHORIZED_USER_RANDOM_EMAIL_FACTORY();
+          phoneNumber = (detailsPhoneNumber as E164PhoneNumber) ?? AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY();
         } else {
-          email = details?.email;
-          phoneNumber = (details?.phoneNumber as E164PhoneNumber) ?? undefined;
+          email = detailsEmail;
+          phoneNumber = (detailsPhoneNumber as E164PhoneNumber) ?? undefined;
         }
 
         const userRecord = await auth.createUser({
