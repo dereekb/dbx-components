@@ -1,6 +1,6 @@
-import { map, first, type Observable, combineLatest, shareReplay } from 'rxjs';
+import { first, type Observable, shareReplay, firstValueFrom, switchMap, of } from 'rxjs';
 import { type ItemIteration, type PageItemIteration } from './iteration';
-import { type Maybe, performTaskLoop, reduceBooleansWithAndFn, type GetterOrValue, asGetter, isMaybeNot } from '@dereekb/util';
+import { type Maybe, performTaskLoop, type GetterOrValue, asGetter, isMaybeNot, type PageNumber } from '@dereekb/util';
 
 /**
  * Creates an observable from the input iteration that checks both the hasNext$ and canLoadMore$ states.
@@ -9,7 +9,16 @@ import { type Maybe, performTaskLoop, reduceBooleansWithAndFn, type GetterOrValu
  * @returns
  */
 export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
-  return combineLatest([iteration.hasNext$, iteration.canLoadMore$]).pipe(map(reduceBooleansWithAndFn(true)), shareReplay(1));
+  return iteration.canLoadMore$.pipe(
+    switchMap((canLoadMore) => {
+      if (canLoadMore) {
+        return iteration.hasNext$;
+      } else {
+        return of(false);
+      }
+    }),
+    shareReplay(1)
+  );
 }
 
 /**
@@ -44,10 +53,10 @@ export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteratio
  * @param page
  * @returns
  */
-export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: GetterOrValue<number>): Promise<number> {
+export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: GetterOrValue<number>): Promise<PageNumber> {
   const getPageLimit = asGetter(page);
 
-  function checkPageLimit(page: number): boolean {
+  function checkPageLimit(page: PageNumber): boolean {
     const pageLimit = getPageLimit();
     const maxLimit = Math.min(pageLimit, iteration.maxPageLoadLimit ?? Number.MAX_SAFE_INTEGER);
     return page + 1 < maxLimit;
@@ -55,10 +64,10 @@ export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: Ge
 
   return new Promise((resolve, reject) => {
     iteration.latestLoadedPage$.pipe(first()).subscribe({
-      next: (firstLatestPage: number) => {
-        const promise: Promise<number> = performTaskLoop<number>({
+      next: (firstLatestPage: PageNumber) => {
+        const promise: Promise<PageNumber> = performTaskLoop<PageNumber>({
           initValue: firstLatestPage,
-          checkContinue: (latestPage: number) => checkPageLimit(latestPage),
+          checkContinue: async (latestPage: PageNumber) => firstValueFrom(iterationHasNextAndCanLoadMore(iteration)).then((canLoadMore) => canLoadMore && checkPageLimit(latestPage)),
           next: async () => await iteration.nextPage()
         });
 

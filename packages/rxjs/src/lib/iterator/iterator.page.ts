@@ -1,7 +1,7 @@
 import { filterMaybe } from '../rxjs';
 import { type PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, startWithBeginLoading } from '../loading';
 import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot } from '@dereekb/util';
-import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay } from 'rxjs';
+import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay, defaultIfEmpty } from 'rxjs';
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
@@ -335,10 +335,11 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   }
 
   nextPage(request: ItemIteratorNextRequest = {}): Promise<number> {
-    return new Promise<number>((resolve, reject) => {
+    return new Promise<number>(async (resolve, reject) => {
       this._nextFinished$
         .pipe(
           exhaustMap(() => this.latestPageResultState$),
+          defaultIfEmpty({ error: undefined, page: -1 }),
           first()
         )
         .subscribe({
@@ -348,6 +349,9 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
             } else {
               resolve(latestState.page);
             }
+          },
+          error: (error) => {
+            reject(error);
           }
         });
 
@@ -365,6 +369,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
   readonly numberOfPagesLoaded$: Observable<number> = this.latestLoadedPage$.pipe(
     map((x) => x + 1),
+    defaultIfEmpty(0),
     shareReplay(1)
   );
 
@@ -374,6 +379,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    */
   readonly hasNext$: Observable<boolean> = this.hasReachedEndResult$.pipe(
     map((x) => !x),
+    defaultIfEmpty(false),
     shareReplay(1)
   );
 

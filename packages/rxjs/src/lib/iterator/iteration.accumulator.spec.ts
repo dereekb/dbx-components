@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
 import { loadingStateHasFinishedLoading } from '../loading';
-import { filter, first, skip } from 'rxjs';
+import { filter, first, map, skip } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { itemAccumulator, itemAccumulatorNextPageUntilResultsCount, type ItemAccumulatorInstance } from './iteration.accumulator';
 import { type TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ITERATOR_DELEGATE, TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE } from './iterator.page.spec';
@@ -438,6 +438,63 @@ describe('ItemPageIterator', () => {
         });
 
         describe('itemAccumulatorNextPageUntilResultsCount()', () => {
+          it('should exit if the accumulator item instance is destroyed', (done) => {
+            itemAccumulatorNextPageUntilResultsCount({
+              accumulator,
+              maxResultsLimit: 10,
+              countResultsFunction: function (input: number[][]): number {
+                const count = countAllInNestedArray(input);
+                return count;
+              }
+            })
+              .catch((error) => {
+                expect(error).toBeDefined();
+                done();
+              })
+              .then((result) => {
+                done();
+              });
+
+            instance.destroy(); // destroy
+          });
+
+          it('should exit once no more items can be loaded and it is before the target max items', (done) => {
+            instance.destroy();
+            accumulator.destroy();
+
+            iterator = new ItemPageIterator({
+              loadItemsForPage: (x) => {
+                // exit on first page
+                return TEST_PAGE_ARRAY_ITERATOR_DELEGATE.loadItemsForPage(x).pipe(map((x) => ({ ...x, end: true })));
+              }
+            });
+
+            instance = iterator.instance({});
+            accumulator = itemAccumulator(instance);
+
+            const expectedNumberOfPageLoads = 1;
+            const expectedFinalPageNumber = expectedNumberOfPageLoads - 1;
+
+            instance.maxPageLoadLimit = 1000;
+
+            itemAccumulatorNextPageUntilResultsCount({
+              accumulator,
+              maxResultsLimit: 1000,
+              countResultsFunction: function (input: number[][]): number {
+                const count = countAllInNestedArray(input);
+                return count;
+              }
+            }).then((result) => {
+              const { page: resultPage } = result;
+              expect(resultPage).toBe(expectedFinalPageNumber);
+
+              instance.numberOfPagesLoaded$.pipe(first()).subscribe((page) => {
+                expect(page).toBe(expectedNumberOfPageLoads);
+                done();
+              });
+            });
+          });
+
           it(`should call next up until the input item limit is reached, then return the number of results`, (done) => {
             const maxResultsLimit = 77;
             const expectedNumberOfPageLoads = Math.ceil(maxResultsLimit / TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE);

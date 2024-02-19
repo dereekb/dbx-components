@@ -1,9 +1,10 @@
 import { SubscriptionObject } from '../subscription';
 import { startWith, map, type Observable, shareReplay, skipWhile, distinctUntilChanged, filter, first, firstValueFrom, switchMap, from } from 'rxjs';
-import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue } from '../rxjs';
+import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue, timeoutStartWith } from '../rxjs';
 import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef, type GetterOrValue, asGetter, performTaskLoop, type MapFunction, type PromiseOrValue, asPromise, type PageNumber, type Page } from '@dereekb/util';
 import { type ItemIteration, type PageItemIteration } from './iteration';
 import { type LoadingState, loadingStateHasError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
+import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
 export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O, I>;
 
@@ -191,39 +192,52 @@ export interface ItemAccumulatorNextPageUntilResultsCountResult extends Page {
 export function itemAccumulatorNextPageUntilResultsCount<O>(config: ItemAccumulatorNextPageUntilResultsCountConfig<O>): Promise<ItemAccumulatorNextPageUntilResultsCountResult> {
   const { accumulator, maxResultsLimit, countResultsFunction: countResults } = config;
   const getMaxResultsLimit = asGetter(maxResultsLimit);
+  const canLoadMoreObs = iterationHasNextAndCanLoadMore(accumulator.itemIteration).pipe(
+    timeoutStartWith(false, 100), // TODO: This can fail to emit anything if the iterator has been destroyed
+    shareReplay(1)
+  );
 
   async function checkResultsLimit() {
-    const allItems = await firstValueFrom(accumulator.allItems$);
+    const allItems = await firstValueFrom(accumulator.currentAllItems$);
+    const canLoadMore = await firstValueFrom(canLoadMoreObs);
+
     const currentCount = await countResults(allItems);
     const maxResultsLimit = getMaxResultsLimit();
+    const shouldContinue = canLoadMore && currentCount < maxResultsLimit;
+
     return {
-      shouldContinue: currentCount < maxResultsLimit,
+      shouldContinue,
       currentCount
     };
   }
 
   return new Promise((resolve, reject) => {
-    accumulator.allItems$
+    accumulator.currentAllItems$
       .pipe(
         first(),
         switchMap((allItems) => from(asPromise(countResults(allItems))))
       )
       .subscribe({
         next: async (currentResultsCount: number) => {
-          const page = await performTaskLoop<PageNumber>({
+          performTaskLoop<PageNumber>({
             initValue: currentResultsCount,
-            checkContinue: async () => {
+            checkContinue: async (x, i) => {
               const result = await checkResultsLimit();
               currentResultsCount = result.currentCount;
               return result.shouldContinue;
             },
-            next: async () => await accumulator.itemIteration.nextPage()
-          });
-
-          resolve({
-            page,
-            resultsCount: currentResultsCount
-          });
+            next: async () => accumulator.itemIteration.nextPage()
+          })
+            .then((page) => {
+              resolve({
+                page,
+                resultsCount: currentResultsCount
+              });
+            })
+            .catch((error) => {
+              reject(error);
+              throw error;
+            });
         },
         error: (error) => {
           reject(error);
