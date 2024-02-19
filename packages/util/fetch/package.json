@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util/fetch",
-  "version": "10.0.21",
+  "version": "10.0.22",
   "type": "commonjs",
   "peerDependencies": {
     "@dereekb/util": "*"
