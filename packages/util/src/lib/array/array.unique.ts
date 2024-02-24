@@ -3,6 +3,9 @@ import { type PrimativeKey, type ReadKeyFunction } from '../key';
 import { type Maybe } from '../value/maybe.type';
 import { filterMaybeValues } from './array.value';
 import { addToSet, removeFromSet } from '../set/set';
+import { MAP_IDENTITY } from '../value/map';
+import { Building } from '../value/build';
+import { type DecisionFunction } from '../value/decision';
 
 export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {
   return unique(concatArrays(...arrays));
@@ -95,4 +98,45 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
 
 export function filterUniqueValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
   return filterUniqueFunction(readKey, additionalKeys)(values);
+}
+
+// MARK: Factory
+/**
+ * Function that returns true for a value the first time that value's key is visited. Will return false for all visits after that.
+ */
+export type AllowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey> = DecisionFunction<T> & {
+  /**
+   * ReadKey function
+   */
+  readonly _readKey: ReadKeyFunction<T, K>;
+  /**
+   * Set of all visited keys used to return false if a key is visited again.
+   */
+  readonly _visitedKeys: Set<Maybe<K>>;
+};
+
+/**
+ * Creates a new AllowValueOnceFilter.
+ */
+export function allowValueOnceFilter<T extends PrimativeKey = PrimativeKey>(): AllowValueOnceFilter<T, T>;
+export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(readKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K>;
+export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(inputReadKey?: ReadKeyFunction<T, K>): AllowValueOnceFilter<T, K> {
+  const visitedKeys = new Set<Maybe<K>>();
+  const readKey = inputReadKey || (MAP_IDENTITY as ReadKeyFunction<T, K>);
+
+  const fn = ((x: T) => {
+    const key: Maybe<K> = readKey(x);
+
+    if (!visitedKeys.has(key)) {
+      visitedKeys.add(key);
+      return true;
+    }
+
+    return false;
+  }) as Building<AllowValueOnceFilter<T, K>>;
+
+  fn._readKey = readKey;
+  fn._visitedKeys = visitedKeys;
+
+  return fn as AllowValueOnceFilter<T, K>;
 }

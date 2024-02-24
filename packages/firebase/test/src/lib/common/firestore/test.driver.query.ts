@@ -138,6 +138,10 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
               const result = await iterateFirestoreDocumentSnapshotPairs({
                 batchSize,
+                handleRepeatCursor: false, // exit immediately if the cursor is visited again
+                filterCheckpointSnapshots: async (x) => {
+                  return x;
+                },
                 iterateSnapshotPair: async (x) => {
                   expect(x.data).toBeDefined();
                   expect(x.snapshot).toBeDefined();
