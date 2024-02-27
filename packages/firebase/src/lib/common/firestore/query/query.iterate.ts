@@ -1,8 +1,10 @@
-import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds } from '@dereekb/util';
+import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds, mapIdentityFunction, type AllowValueOnceFilter, allowValueOnceFilter } from '@dereekb/util';
 import { type FirestoreDocument, type FirestoreDocumentSnapshotDataPair, documentDataWithIdAndKey, type LimitedFirestoreDocumentAccessor } from '../accessor';
 import { type QueryDocumentSnapshot, type QuerySnapshot, type DocumentSnapshot } from '../types';
 import { type FirestoreQueryConstraint, startAfter, limit } from './constraint';
 import { type FirestoreQueryFactory } from './query';
+import { type FirestoreModelKey } from '../collection/collection';
+import { readFirestoreModelKeyFromDocumentSnapshot } from './query.util';
 
 // MARK: Iterate Snapshot Pairs
 /**
@@ -248,10 +250,28 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
   readonly maxParallelCheckpoints?: number;
   /**
    * The amount of time to add as a delay between beginning a new checkpoint.
-   * 
+   *
    * If in parallel this is the minimum amount of time to wait before starting a new checkpoint.
    */
   readonly waitBetweenCheckpoints?: Milliseconds;
+  /**
+   * Configuration to use when a repeat cursor is visited (potentially indicative of an infinite query loop).
+   *
+   * Can be configured with false to exit the iteration immediately and return, or can use a function to decide if the iteration should continue.
+   *
+   * If false is returned the cursor is discarded and the loop will end.
+   */
+  readonly handleRepeatCursor?: Maybe<false | ((cursor: QueryDocumentSnapshot<T>) => Promise<boolean>)>;
+  /**
+   * Filter function that can be used to filter out snapshots.
+   *
+   * If all snapshots are filtered out the the iteration will continue with final item of the snapshot regardless of filtering. The filtering does not impact the continuation decision.
+   * Use the handleRepeatCursor to properly exit the loop in unwanted repeat cursor cases.
+   *
+   * @param snapshot
+   * @returns
+   */
+  filterCheckpointSnapshots?(snapshot: QueryDocumentSnapshot<T>[]): PromiseOrValue<QueryDocumentSnapshot<T>[]>;
   /**
    * The iterate function per each snapshot.
    */
@@ -270,15 +290,21 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsIterationResult<T, R
   /**
    * The cursor document used in this query.
    */
-  readonly cursorDocument?: Maybe<DocumentSnapshot<T>>;
+  readonly cursorDocument?: Maybe<QueryDocumentSnapshot<T>>;
   /**
    * Results returned from each checkpoint.
    */
   readonly results: R[];
   /**
-   * All document snapshots in this checkpoint.
+   * All non-filtered document snapshots in this checkpoint.
+   *
+   * If filterCheckpointSnapshot is configured, this does not include the filtered snapshots.
    */
   readonly docSnapshots: QueryDocumentSnapshot<T>[];
+  /**
+   * The query snapshot for this checkpoint.
+   */
+  readonly docQuerySnapshot: QuerySnapshot<T>;
 }
 
 export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
@@ -299,17 +325,20 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
  * @returns
  */
 export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
-  const { iterateCheckpoint, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint, totalSnapshotsLimit = Number.MAX_SAFE_INTEGER } = config;
+  const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint, totalSnapshotsLimit = Number.MAX_SAFE_INTEGER } = config;
   const constraintsInputIsFactory = typeof inputConstraintsFactory === 'function';
   const constraintsFactory = constraintsInputIsFactory && inputDynamicConstraints !== false ? inputConstraintsFactory : asGetter(getValueFromGetter(inputConstraintsFactory));
 
   let currentIndex = 0;
   let hasReachedEnd = false;
   let totalSnapshotsVisited: number = 0;
-  let cursorDocument: Maybe<DocumentSnapshot<T>>;
+  let cursorDocument: Maybe<QueryDocumentSnapshot<T>>;
+
+  const visitedCursorPaths = new Set<FirestoreModelKey>();
+  const handleRepeatCursor = typeof inputHandleRepeatCursor === 'function' ? inputHandleRepeatCursor : () => inputHandleRepeatCursor;
+  const filterCheckpointSnapshot = inputFilterCheckpointSnapshot ?? mapIdentityFunction();
 
   async function taskInputFactory() {
-
     // Perform another query, then pass the results to the task factory.
     if (hasReachedEnd) {
       return null; // issue no more tasks
@@ -330,8 +359,28 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
     const docQuerySnapshot = await query.getDocs();
     const docSnapshots = docQuerySnapshot.docs;
 
-    cursorDocument = lastValue(docSnapshots); // set the next cursor document
+    // check for repeat cursor
+    const nextCursorDocument: Maybe<QueryDocumentSnapshot<T>> = lastValue(docSnapshots);
 
+    if (nextCursorDocument != null) {
+      const cursorPath = readFirestoreModelKeyFromDocumentSnapshot(nextCursorDocument);
+
+      if (visitedCursorPaths.has(cursorPath)) {
+        const shouldContinue = await handleRepeatCursor(nextCursorDocument);
+
+        if (shouldContinue === false) {
+          cursorDocument = null;
+          hasReachedEnd = true;
+          return null; // exit immediately
+        }
+      } else {
+        visitedCursorPaths.add(cursorPath);
+      }
+    }
+
+    cursorDocument = nextCursorDocument; // set the next cursor document
+
+    // update state
     const newSnapshotsVisited = docSnapshots.length;
     totalSnapshotsVisited += newSnapshotsVisited;
 
@@ -352,13 +401,14 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
     maxParallelTasks: maxParallelCheckpoints,
     waitBetweenTasks: waitBetweenCheckpoints,
     taskFactory: async ({ i, docQuerySnapshot }: { i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> }) => {
-      const docSnapshots = docQuerySnapshot.docs;
+      const docSnapshots = await filterCheckpointSnapshot(docQuerySnapshot.docs);
       const results = await iterateCheckpoint(docSnapshots, docQuerySnapshot);
       const checkpointResults: IterateFirestoreDocumentSnapshotCheckpointsIterationResult<T, R> = {
         i,
         cursorDocument,
         results,
-        docSnapshots
+        docSnapshots,
+        docQuerySnapshot
       };
 
       await useCheckpointResult?.(checkpointResults);
@@ -373,4 +423,9 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
   };
 
   return result;
+}
+
+// MARK: Utility
+export function allowDocumentSnapshotWithPathOnceFilter<T extends DocumentSnapshot>(): AllowValueOnceFilter<T, FirestoreModelKey> {
+  return allowValueOnceFilter(readFirestoreModelKeyFromDocumentSnapshot);
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "10.0.22",
+  "version": "10.0.23",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

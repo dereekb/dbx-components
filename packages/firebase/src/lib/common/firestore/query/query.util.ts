@@ -1,4 +1,5 @@
-import { type DocumentReference, type QuerySnapshot } from './../types';
+import { type FirestoreModelKey } from '../collection';
+import { type DocumentReference, type QuerySnapshot, type DocumentSnapshot } from './../types';
 import { Observable } from 'rxjs';
 
 // MARK: OnSnapshot
@@ -29,4 +30,15 @@ export function streamFromOnSnapshot<O>(callOnSnapshot: (params: StreamDocsWithO
 
 export function documentReferencesFromSnapshot<T>(snapshots: QuerySnapshot<T>): DocumentReference<T>[] {
   return snapshots.docs.map((x) => x.ref);
+}
+
+// MARK: Utility
+/**
+ * Reads the FirestoreModelKey from the query document snapshot.
+ *
+ * @param snapshot
+ * @returns
+ */
+export function readFirestoreModelKeyFromDocumentSnapshot(snapshot: DocumentSnapshot<any>): FirestoreModelKey {
+  return snapshot.ref.path;
 }
