@@ -4,7 +4,7 @@ import { type Maybe } from '../value/maybe.type';
 import { filterMaybeValues } from './array.value';
 import { addToSet, removeFromSet } from '../set/set';
 import { MAP_IDENTITY } from '../value/map';
-import { Building } from '../value/build';
+import { type Building } from '../value/build';
 import { type DecisionFunction } from '../value/decision';
 
 export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {

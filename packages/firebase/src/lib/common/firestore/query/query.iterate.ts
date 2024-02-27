@@ -360,7 +360,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
     const docSnapshots = docQuerySnapshot.docs;
 
     // check for repeat cursor
-    let nextCursorDocument: Maybe<QueryDocumentSnapshot<T>> = lastValue(docSnapshots);
+    const nextCursorDocument: Maybe<QueryDocumentSnapshot<T>> = lastValue(docSnapshots);
 
     if (nextCursorDocument != null) {
       const cursorPath = readFirestoreModelKeyFromDocumentSnapshot(nextCursorDocument);
