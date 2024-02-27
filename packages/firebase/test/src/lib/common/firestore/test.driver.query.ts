@@ -14,6 +14,7 @@ import {
   endBefore,
   makeDocuments,
   FirestoreQueryFactoryFunction,
+  FirestoreCollectionQueryFactoryFunction,
   startAtValue,
   endAtValue,
   whereDocumentId,
@@ -29,7 +30,8 @@ import {
   iterateFirestoreDocumentSnapshotPairBatches,
   iterateFirestoreDocumentSnapshots,
   whereDateIsOnOrBeforeWithSort,
-  whereDateIsAfterWithSort
+  whereDateIsAfterWithSort,
+  FirestoreDocumentSnapshotDataPair
 } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
@@ -56,6 +58,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         init: (i) => {
           return {
             value: `${i}`,
+            number: i,
             date: addHours(startDate, i),
             tags: [`${i}`, `${isEvenNumber(i) ? EVEN_TAG : ODD_TAG}`],
             test: true
@@ -550,6 +553,278 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               });
             });
           });
+        });
+      });
+    });
+
+    describe('queryDocument', () => {
+      let queryDocument: FirestoreCollectionQueryFactoryFunction<MockItem, MockItemDocument>;
+
+      beforeEach(async () => {
+        queryDocument = f.instance.firestoreCollection.queryDocument;
+      });
+
+      describe('filter()', () => {
+        it('should apply the filter to the query', async () => {
+          const results = (await queryDocument().filter(where<MockItem>('tags', 'array-contains', EVEN_TAG)).getDocSnapshotDataPairs()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>[];
+
+          expect(results).toBeDefined();
+
+          results.forEach((result) => {
+            expect(result.data).toBeDefined();
+            expect(result.data?.tags).toContain(EVEN_TAG);
+            expect(result.document).toBeDefined();
+            expect(result.document instanceof MockItemDocument).toBe(true);
+            expect(result.snapshot).toBeDefined();
+            expect(result.snapshot.data()).toBeDefined();
+            expect(result.snapshot.ref).toBeDefined();
+            expect(result.snapshot.id).toBe(result.document.id);
+          });
+        });
+
+        it('should add more filters to the existing query', async () => {
+          const results = (await queryDocument().filter(where<MockItem>('tags', 'array-contains', EVEN_TAG)).filter(where<MockItem>('number', '>=', 4)).getDocSnapshotDataPairs()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>[];
+
+          expect(results).toBeDefined();
+          expect(results.length).toBe(1);
+
+          results.forEach((result) => {
+            expect(result.data).toBeDefined();
+            expect(result.data?.tags).toContain(EVEN_TAG);
+            expect(result.data?.number).toBeGreaterThan(4);
+            expect(result.document).toBeDefined();
+            expect(result.document instanceof MockItemDocument).toBe(true);
+            expect(result.snapshot).toBeDefined();
+            expect(result.snapshot.data()).toBeDefined();
+            expect(result.snapshot.ref).toBeDefined();
+            expect(result.snapshot.id).toBe(result.document.id);
+          });
+        });
+      });
+
+      describe('getFirstDocSnapshotDataPair()', () => {
+        it('should return undefined if the query contains nothing', async () => {
+          const result = (await queryDocument(where<MockItem>('value', '==', '_DOES_NOT_EXIST_')).getFirstDocSnapshotDataPair()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>;
+          expect(result).not.toBeDefined();
+        });
+
+        it('should return the first doc that matches if it exists', async () => {
+          const result = (await queryDocument().getFirstDocSnapshotDataPair()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>;
+
+          expect(result).toBeDefined();
+          expect(result.data).toBeDefined();
+          expect(result.document).toBeDefined();
+          expect(result.document instanceof MockItemDocument).toBe(true);
+          expect(result.snapshot).toBeDefined();
+          expect(result.snapshot.data()).toBeDefined();
+          expect(result.snapshot.ref).toBeDefined();
+          expect(result.snapshot.id).toBe(result.document.id);
+        });
+      });
+
+      describe('getDocSnapshotDataPairs()', () => {
+        it('should return an empty array if the query returns nothing', async () => {
+          const result = await queryDocument(where<MockItem>('value', '==', '_DOES_NOT_EXIST_')).getDocSnapshotDataPairs();
+          expect(result).toBeDefined();
+          expect(result.length).toBe(0);
+        });
+
+        it('should return the matching results', async () => {
+          const results = await queryDocument().getDocSnapshotDataPairs();
+
+          expect(results).toBeDefined();
+          expect(results.length).toBeGreaterThan(0);
+
+          results.forEach((result) => {
+            expect(result).toBeDefined();
+            expect(result.data).toBeDefined();
+            expect(result.document).toBeDefined();
+            expect(result.document instanceof MockItemDocument).toBe(true);
+            expect(result.snapshot).toBeDefined();
+            expect(result.snapshot.data()).toBeDefined();
+            expect(result.snapshot.ref).toBeDefined();
+            expect(result.snapshot.id).toBe(result.document.id);
+          });
+        });
+      });
+
+      describe('streamDocs()', () => {
+        let sub: SubscriptionObject;
+
+        beforeEach(() => {
+          sub = new SubscriptionObject();
+        });
+
+        afterEach(() => {
+          sub.destroy();
+        });
+
+        it('should emit when the query results update (an item is added).', (done) => {
+          const itemsToAdd = 1;
+
+          let addCompleted = false;
+          let addSeen = false;
+
+          function tryComplete() {
+            if (addSeen && addCompleted) {
+              done();
+            }
+          }
+
+          sub.subscription = queryDocument()
+            .streamDocs()
+            .pipe(filter((documents) => documents.length > items.length))
+            .subscribe((documents) => {
+              addSeen = true;
+              expect(documents.length).toBe(items.length + itemsToAdd);
+              tryComplete();
+            });
+
+          // add one item
+          waitForMs(10).then(() =>
+            makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+              count: itemsToAdd,
+              init: (i) => {
+                return {
+                  value: `${i + items.length}`,
+                  test: true
+                };
+              }
+            }).then(() => {
+              addCompleted = true;
+              tryComplete();
+            })
+          );
+        });
+
+        it('should emit when the query results update (an item is removed).', (done) => {
+          const itemsToRemove = 1;
+
+          let deleteCompleted = false;
+          let deleteSeen = false;
+
+          function tryComplete() {
+            if (deleteSeen && deleteCompleted) {
+              done();
+            }
+          }
+
+          sub.subscription = queryDocument()
+            .streamDocs()
+            .pipe(skip(1))
+            .subscribe((documents) => {
+              deleteSeen = true;
+              expect(documents.length).toBe(items.length - itemsToRemove);
+              tryComplete();
+            });
+
+          waitForMs(10).then(() =>
+            items[0].exists().then((exists) => {
+              expect(exists).toBe(true);
+
+              // remove one item
+              return items[0].accessor.delete().then(() => {
+                deleteCompleted = true;
+                tryComplete();
+              });
+            })
+          );
+        });
+      });
+
+      describe('streamDocSnapshotDataPairs()', () => {
+        let sub: SubscriptionObject;
+
+        beforeEach(() => {
+          sub = new SubscriptionObject();
+        });
+
+        afterEach(() => {
+          sub.destroy();
+        });
+
+        it('should emit when the query results update (an item is added).', (done) => {
+          const itemsToAdd = 1;
+
+          let addCompleted = false;
+          let addSeen = false;
+
+          function tryComplete() {
+            if (addSeen && addCompleted) {
+              done();
+            }
+          }
+
+          sub.subscription = queryDocument()
+            .streamDocSnapshotDataPairs()
+            .pipe(filter((documents) => documents.length > items.length))
+            .subscribe((documents) => {
+              addSeen = true;
+              expect(documents.length).toBe(items.length + itemsToAdd);
+
+              documents.forEach((x) => {
+                // validate each document returned
+                expect(x.data).toBeDefined();
+                expect(x.document).toBeDefined();
+                expect(x.document instanceof MockItemDocument).toBe(true);
+                expect(x.snapshot).toBeDefined();
+                expect(x.snapshot.data()).toBeDefined();
+                expect(x.snapshot.ref).toBeDefined();
+                expect(x.snapshot.id).toBe(x.document.id);
+              });
+
+              tryComplete();
+            });
+
+          // add one item
+          waitForMs(10).then(() =>
+            makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+              count: itemsToAdd,
+              init: (i) => {
+                return {
+                  value: `${i + items.length}`,
+                  test: true
+                };
+              }
+            }).then(() => {
+              addCompleted = true;
+              tryComplete();
+            })
+          );
+        });
+
+        it('should emit when the query results update (an item is removed).', (done) => {
+          const itemsToRemove = 1;
+
+          let deleteCompleted = false;
+          let deleteSeen = false;
+
+          function tryComplete() {
+            if (deleteSeen && deleteCompleted) {
+              done();
+            }
+          }
+
+          sub.subscription = queryDocument()
+            .streamDocs()
+            .pipe(skip(1))
+            .subscribe((documents) => {
+              deleteSeen = true;
+              expect(documents.length).toBe(items.length - itemsToRemove);
+              tryComplete();
+            });
+
+          waitForMs(10).then(() =>
+            items[0].exists().then((exists) => {
+              expect(exists).toBe(true);
+
+              // remove one item
+              return items[0].accessor.delete().then(() => {
+                deleteCompleted = true;
+                tryComplete();
+              });
+            })
+          );
         });
       });
     });
