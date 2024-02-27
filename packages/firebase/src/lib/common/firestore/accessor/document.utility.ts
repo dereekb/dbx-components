@@ -1,6 +1,6 @@
 import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues } from '@dereekb/util';
 import { type FirestoreModelId, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from '../collection';
-import { type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
+import { type QueryDocumentSnapshot, type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
 import { type FirestoreDocumentData, type FirestoreDocument, type FirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
@@ -154,6 +154,36 @@ export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(acces
   return (references: DocumentReference<T>[], transaction?: Transaction) => {
     const accessor = transaction ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
     return loadDocumentsForDocumentReferences(accessor, references);
+  };
+}
+
+/**
+ * Used for loading documents for the input references.
+ */
+export type FirestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>> = (snapshots: QueryDocumentSnapshot<T>[], transaction?: Transaction) => FirestoreDocumentSnapshotDataPair<D>[];
+
+/**
+ * Used to make a FirestoreQueryDocumentSnapshotPairsLoader.
+ *
+ * @param accessorContext
+ * @returns
+ */
+export function firestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreQueryDocumentSnapshotPairsLoader<T, D> {
+  return (snapshots: QueryDocumentSnapshot<T>[], transaction?: Transaction) => {
+    const accessor = transaction ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
+
+    return snapshots.map((snapshot) => {
+      const data = documentDataWithIdAndKey(snapshot) as Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>;
+      const document = accessor.loadDocument(snapshot.ref);
+
+      const pair: FirestoreDocumentSnapshotDataPair<D> = {
+        data,
+        snapshot: snapshot as DocumentSnapshot<FirestoreDocumentData<D>>,
+        document
+      };
+
+      return pair;
+    });
   };
 }
 
