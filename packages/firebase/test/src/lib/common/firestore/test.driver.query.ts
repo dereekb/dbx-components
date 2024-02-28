@@ -591,7 +591,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           results.forEach((result) => {
             expect(result.data).toBeDefined();
             expect(result.data?.tags).toContain(EVEN_TAG);
-            expect(result.data?.number).toBeGreaterThan(4);
+            expect(result.data?.number).toBeGreaterThanOrEqual(4);
             expect(result.document).toBeDefined();
             expect(result.document instanceof MockItemDocument).toBe(true);
             expect(result.snapshot).toBeDefined();

@@ -28,6 +28,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Structure',
     detail: 'structure',
     ref: 'doc.extension.structure'
+  },
+  {
+    icon: 'download',
+    title: 'Download',
+    detail: 'download',
+    ref: 'doc.extension.download'
   }
 ];
 

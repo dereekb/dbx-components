@@ -17,7 +17,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
         <mat-progress-bar *ngSwitchCase="true" [mode]="bmode" [color]="color" [bufferValue]="bufferValue" [value]="value" style="margin: auto;"></mat-progress-bar>
         <mat-progress-spinner *ngSwitchDefault [diameter]="diameter || 96" [mode]="smode" [color]="color" [value]="value" style="margin: auto;"></mat-progress-spinner>
       </ng-container>
-      <div *ngIf="text" class="hint">{{ text }}</div>
+      <div *ngIf="text" class="dbx-loading-progress-hint dbx-hint dbx-small" [ngClass]="{ 'text-center': !linear }">{{ text }}</div>
     </div>
   `
 })

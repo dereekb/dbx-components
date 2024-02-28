@@ -1,4 +1,5 @@
-import { Directive } from '@angular/core';
+import { Directive, Input } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Component used to wrap content in a pit with a label.
@@ -6,7 +7,11 @@ import { Directive } from '@angular/core';
 @Directive({
   selector: 'dbx-content-pit, [dbxContentPit]',
   host: {
-    class: 'd-block dbx-content-pit'
+    class: 'd-block dbx-content-pit',
+    '[class.dbx-content-pit-scrollable]': 'scrollable'
   }
 })
-export class DbxContentPitDirective {}
+export class DbxContentPitDirective {
+  @Input()
+  scrollable?: Maybe<boolean>;
+}

@@ -6,6 +6,7 @@ import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DocExtensionTableComponent } from './container/table.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
+import { DocExtensionDownloadComponent } from './container/download.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -50,6 +51,12 @@ export const docExtensionStructureState: Ng2StateDeclaration = {
   component: DocExtensionStructureComponent
 };
 
+export const docExtensionDownloadState: Ng2StateDeclaration = {
+  url: '/download',
+  name: 'doc.extension.download',
+  component: DocExtensionDownloadComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -58,5 +65,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionWidgetState,
   docExtensionMapboxState,
   docExtensionTableState,
-  docExtensionStructureState
+  docExtensionStructureState,
+  docExtensionDownloadState
 ];
