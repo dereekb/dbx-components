@@ -1,4 +1,4 @@
-import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues } from '@dereekb/util';
+import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues, Building } from '@dereekb/util';
 import { type FirestoreModelId, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from '../collection';
 import { type QueryDocumentSnapshot, type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
 import { type FirestoreDocumentData, type FirestoreDocument, type FirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessorContextExtension } from './document';
@@ -64,11 +64,15 @@ export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(docum
   return runAsyncTasksForValues(documents, getDocumentSnapshotPair);
 }
 
-export type FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> = {
+export interface FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> {
   readonly document: D;
   readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
   readonly data: Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>;
-};
+}
+
+export interface FirestoreDocumentSnapshotDataPairWithData<D extends FirestoreDocument<any>> extends Omit<FirestoreDocumentSnapshotDataPair<D>, 'data'> {
+  readonly data: DocumentDataWithIdAndKey<FirestoreDocumentData<D>>;
+}
 
 export function getDocumentSnapshotDataPair<D extends FirestoreDocument<any>>(document: D): Promise<FirestoreDocumentSnapshotDataPair<D>> {
   return document.accessor.get().then((snapshot) => ({ document, snapshot, data: documentDataWithIdAndKey(snapshot) }));
@@ -100,6 +104,11 @@ export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(docum
   return getDocumentSnapshots<D>(documents).then((x: DocumentSnapshot<any>[]) => getDataFromDocumentSnapshots<FirestoreDocumentData<D>>(x, withId));
 }
 
+/**
+ * Returns the data from all input snapshots. Snapshots without data are filtered out.
+ *
+ * @param snapshots
+ */
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[]): DocumentDataWithIdAndKey<T>[];
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: true): DocumentDataWithIdAndKey<T>[];
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: false): T[];
@@ -158,9 +167,58 @@ export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(acces
 }
 
 /**
- * Used for loading documents for the input references.
+ * Used for loading documents for the input snapshots.
  */
-export type FirestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>> = (snapshots: QueryDocumentSnapshot<T>[], transaction?: Transaction) => FirestoreDocumentSnapshotDataPair<D>[];
+export type FirestoreDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>> = (snapshots: DocumentSnapshot<T>[], transaction?: Transaction) => FirestoreDocumentSnapshotDataPair<D>[];
+
+/**
+ * Used for loading documents for the input query snapshots. Query snapshots always contain data.
+ */
+export type FirestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>> = (snapshots: QueryDocumentSnapshot<T>[], transaction?: Transaction) => FirestoreDocumentSnapshotDataPairWithData<D>[];
+
+/**
+ * Used to make a FirestoreDocumentSnapshotPairsLoader.
+ *
+ * @param accessorContext
+ * @returns
+ */
+export function firestoreDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentSnapshotPairsLoader<T, D> & FirestoreQueryDocumentSnapshotPairsLoader<T, D> {
+  return (snapshots: QueryDocumentSnapshot<T>[] | DocumentSnapshot<T>[], transaction?: Transaction) => {
+    const accessor = transaction ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
+    const instance = firestoreDocumentSnapshotPairsLoaderInstance(accessor);
+    return snapshots.map(instance) as FirestoreDocumentSnapshotDataPairWithData<D>[];
+  };
+}
+
+/**
+ * Used for loading a FirestoreDocumentSnapshotDataPair for the input snapshot. The accessor is already available given the context.
+ */
+export type FirestoreDocumentSnapshotPairsLoaderInstance<T, D extends FirestoreDocument<T>> = (((snapshot: QueryDocumentSnapshot<T>) => FirestoreDocumentSnapshotDataPairWithData<D>) & ((snapshots: DocumentSnapshot<T>) => FirestoreDocumentSnapshotDataPair<D>)) & {
+  readonly _accessor: LimitedFirestoreDocumentAccessor<T, D>;
+};
+
+/**
+ * Used to make a FirestoreDocumentSnapshotPairsLoader.
+ *
+ * @param accessorContext
+ * @returns
+ */
+export function firestoreDocumentSnapshotPairsLoaderInstance<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>): FirestoreDocumentSnapshotPairsLoaderInstance<T, D> {
+  const fn = ((snapshot: QueryDocumentSnapshot<T> | DocumentSnapshot<T>) => {
+    const data = documentDataWithIdAndKey(snapshot) as DocumentDataWithIdAndKey<FirestoreDocumentData<D>>;
+    const document = accessor.loadDocument(snapshot.ref);
+
+    const pair: FirestoreDocumentSnapshotDataPair<D> | FirestoreDocumentSnapshotDataPairWithData<D> = {
+      data,
+      snapshot: snapshot as DocumentSnapshot<FirestoreDocumentData<D>>,
+      document
+    };
+
+    return pair;
+  }) as Building<FirestoreDocumentSnapshotPairsLoaderInstance<T, D>>;
+  fn._accessor = accessor;
+  return fn as FirestoreDocumentSnapshotPairsLoaderInstance<T, D>;
+}
 
 /**
  * Used to make a FirestoreQueryDocumentSnapshotPairsLoader.
@@ -168,24 +226,7 @@ export type FirestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocu
  * @param accessorContext
  * @returns
  */
-export function firestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreQueryDocumentSnapshotPairsLoader<T, D> {
-  return (snapshots: QueryDocumentSnapshot<T>[], transaction?: Transaction) => {
-    const accessor = transaction ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
-
-    return snapshots.map((snapshot) => {
-      const data = documentDataWithIdAndKey(snapshot) as Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>;
-      const document = accessor.loadDocument(snapshot.ref);
-
-      const pair: FirestoreDocumentSnapshotDataPair<D> = {
-        data,
-        snapshot: snapshot as DocumentSnapshot<FirestoreDocumentData<D>>,
-        document
-      };
-
-      return pair;
-    });
-  };
-}
+export const firestoreQueryDocumentSnapshotPairsLoader: <T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>) => FirestoreQueryDocumentSnapshotPairsLoader<T, D> = firestoreDocumentSnapshotPairsLoader;
 
 /**
  * Creates the document data from the snapshot.
@@ -193,6 +234,9 @@ export function firestoreQueryDocumentSnapshotPairsLoader<T, D extends Firestore
  * @param snapshot
  * @returns
  */
+export function documentData<T>(snapshot: QueryDocumentSnapshot<T>): DocumentDataWithIdAndKey<T>;
+export function documentData<T>(snapshot: QueryDocumentSnapshot<T>, withId: true): DocumentDataWithIdAndKey<T>;
+export function documentData<T>(snapshot: QueryDocumentSnapshot<T>, withId: false): T;
 export function documentData<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: true): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: false): Maybe<T>;
@@ -204,14 +248,14 @@ export function documentData<T>(snapshot: DocumentSnapshot<T>, withId = false): 
   }
 }
 
-export type DocumentDataFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<T>;
-export type DocumentDataWithIdAndKeyFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<DocumentDataWithIdAndKey<T>>;
+export type DocumentDataFunction<T> = ((snapshot: QueryDocumentSnapshot<T>) => T) & ((snapshot: DocumentSnapshot<T>) => Maybe<T>);
+export type DocumentDataWithIdAndKeyFunction<T> = ((snapshot: QueryDocumentSnapshot<T>) => DocumentDataWithIdAndKey<T>) & ((snapshot: DocumentSnapshot<T>) => Maybe<DocumentDataWithIdAndKey<T>>);
 
 export function documentDataFunction<T>(withId: true): DocumentDataWithIdAndKeyFunction<T>;
 export function documentDataFunction<T>(withId: false): DocumentDataFunction<T>;
 export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T>;
 export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T> {
-  return withId ? documentDataWithIdAndKey : (snapshot) => snapshot.data();
+  return withId ? documentDataWithIdAndKey : (((snapshot) => snapshot.data()) as DocumentDataFunction<T>);
 }
 
 /**
@@ -220,6 +264,8 @@ export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndK
  * @param snapshot
  * @returns
  */
+export function documentDataWithIdAndKey<T>(snapshot: QueryDocumentSnapshot<T>): DocumentDataWithIdAndKey<T>;
+export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>> {
   const data = snapshot.data() as DocumentDataWithIdAndKey<T>;
 

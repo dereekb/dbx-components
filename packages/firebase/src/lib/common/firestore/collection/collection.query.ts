@@ -5,7 +5,7 @@ import { documentReferencesFromSnapshot, type FirestoreExecutableQuery, type Fir
 import { type FirestoreQueryConstraint } from '../query/constraint';
 import { type Transaction } from '../types';
 import { map, type Observable } from 'rxjs';
-import { type FirestoreDocumentSnapshotDataPair, firestoreDocumentLoader, firestoreQueryDocumentSnapshotPairsLoader } from '../accessor';
+import { type FirestoreDocumentSnapshotDataPair, firestoreDocumentLoader, firestoreQueryDocumentSnapshotPairsLoader, FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
 
 export interface FirestoreCollectionExecutableDocumentQuery<T, D extends FirestoreDocument<T>> {
   readonly baseQuery: FirestoreExecutableQuery<T>;
@@ -16,7 +16,7 @@ export interface FirestoreCollectionExecutableDocumentQuery<T, D extends Firesto
   /**
    * Limits the results to a single document, then returns that first/single FirestoreDocumentSnapshotDataPair for the document if it exists.
    */
-  getFirstDocSnapshotDataPair(transaction?: Transaction): Promise<Maybe<FirestoreDocumentSnapshotDataPair<D>>>;
+  getFirstDocSnapshotDataPair(transaction?: Transaction): Promise<Maybe<FirestoreDocumentSnapshotDataPairWithData<D>>>;
   /**
    * Returns the results in a Promise.
    */
@@ -24,7 +24,7 @@ export interface FirestoreCollectionExecutableDocumentQuery<T, D extends Firesto
   /**
    * Returns the FirestoreDocumentSnapshotDataPairs results in a Promise.
    */
-  getDocSnapshotDataPairs(transaction?: Transaction): Promise<FirestoreDocumentSnapshotDataPair<D>[]>;
+  getDocSnapshotDataPairs(transaction?: Transaction): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]>;
   /**
    * Streams the results as an Observable.
    */
@@ -32,7 +32,7 @@ export interface FirestoreCollectionExecutableDocumentQuery<T, D extends Firesto
   /**
    * Streams the FirestoreDocumentSnapshotDataPair results as an Observable.
    */
-  streamDocSnapshotDataPairs(): Observable<FirestoreDocumentSnapshotDataPair<D>[]>;
+  streamDocSnapshotDataPairs(): Observable<FirestoreDocumentSnapshotDataPairWithData<D>[]>;
   /**
    * Extend this query by adding additional filters.
    *

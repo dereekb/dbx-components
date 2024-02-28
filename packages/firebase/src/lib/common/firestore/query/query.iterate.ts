@@ -1,5 +1,5 @@
 import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds, mapIdentityFunction, type AllowValueOnceFilter, allowValueOnceFilter } from '@dereekb/util';
-import { type FirestoreDocument, type FirestoreDocumentSnapshotDataPair, documentDataWithIdAndKey, type LimitedFirestoreDocumentAccessor } from '../accessor';
+import { type FirestoreDocument, type LimitedFirestoreDocumentAccessor, firestoreDocumentSnapshotPairsLoaderInstance, type FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
 import { type QueryDocumentSnapshot, type QuerySnapshot, type DocumentSnapshot } from '../types';
 import { type FirestoreQueryConstraint, startAfter, limit } from './constraint';
 import { type FirestoreQueryFactory } from './query';
@@ -18,28 +18,23 @@ export interface IterateFirestoreDocumentSnapshotPairsConfig<T, R, D extends Fir
   /**
    * The iterate function per each snapshot.
    */
-  iterateSnapshotPair(snapshot: FirestoreDocumentSnapshotDataPair<D>): Promise<R>;
+  iterateSnapshotPair(snapshot: FirestoreDocumentSnapshotDataPairWithData<D>): Promise<R>;
 }
 
 /**
- * Iterates through the results of a Firestore query by each FirestoreDocumentSnapshotDataPair.
+ * Iterates through the results of a Firestore query by each FirestoreDocumentSnapshotDataPairWithData.
  *
  * @param config
  * @returns
  */
 export async function iterateFirestoreDocumentSnapshotPairs<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: IterateFirestoreDocumentSnapshotPairsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshotPair, documentAccessor } = config;
+  const loadPairForSnapshot = firestoreDocumentSnapshotPairsLoaderInstance<T, D>(documentAccessor as LimitedFirestoreDocumentAccessor<T, D>);
+
   return iterateFirestoreDocumentSnapshots({
     ...config,
     iterateSnapshot: async (snapshot) => {
-      const document = documentAccessor.loadDocument(snapshot.ref) as D;
-      const data = documentDataWithIdAndKey(snapshot);
-      const pair = {
-        document,
-        snapshot,
-        data
-      };
-
+      const pair = loadPairForSnapshot(snapshot);
       return iterateSnapshotPair(pair);
     }
   });
@@ -96,7 +91,7 @@ export interface IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R, D exten
   /**
    * The iterate function per each snapshot batch.
    */
-  iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPair<D>[]): Promise<R>;
+  iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[]): Promise<R>;
 }
 
 /**
@@ -107,22 +102,13 @@ export interface IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R, D exten
  */
 export async function iterateFirestoreDocumentSnapshotPairBatches<T, R, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
   const { iterateSnapshotPairsBatch, documentAccessor } = config;
+  const loadPairForSnapshot = firestoreDocumentSnapshotPairsLoaderInstance<T, D>(documentAccessor as LimitedFirestoreDocumentAccessor<T, D>);
+
   return iterateFirestoreDocumentSnapshotBatches({
     ...config,
     maxParallelCheckpoints: 1,
     iterateSnapshotBatch: async (snapshots) => {
-      const pairs = snapshots.map((snapshot) => {
-        const document = documentAccessor.loadDocument(snapshot.ref) as D;
-        const data = documentDataWithIdAndKey(snapshot);
-        const pair = {
-          document,
-          snapshot,
-          data
-        };
-
-        return pair;
-      });
-
+      const pairs = snapshots.map(loadPairForSnapshot) as FirestoreDocumentSnapshotDataPairWithData<D>[];
       return iterateSnapshotPairsBatch(pairs);
     }
   });
