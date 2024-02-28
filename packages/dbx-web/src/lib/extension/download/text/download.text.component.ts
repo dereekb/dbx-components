@@ -1,8 +1,8 @@
-import { Component, Directive, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AbstractSubscriptionDirective, HandleActionFunction } from '@dereekb/dbx-core';
-import { LoadingState, filterMaybe, loadingStateContext, loadingStateIsLoading, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
-import { MS_IN_MINUTE, MS_IN_SECOND, Maybe } from '@dereekb/util';
+import { LoadingState, filterMaybe, loadingStateContext, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { MS_IN_SECOND, Maybe } from '@dereekb/util';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, first, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { DownloadTextContent } from './download.text';

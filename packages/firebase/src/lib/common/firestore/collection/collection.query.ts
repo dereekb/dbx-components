@@ -5,7 +5,7 @@ import { documentReferencesFromSnapshot, type FirestoreExecutableQuery, type Fir
 import { type FirestoreQueryConstraint } from '../query/constraint';
 import { type Transaction } from '../types';
 import { map, type Observable } from 'rxjs';
-import { type FirestoreDocumentSnapshotDataPair, firestoreDocumentLoader, firestoreQueryDocumentSnapshotPairsLoader, FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
+import { firestoreDocumentLoader, firestoreQueryDocumentSnapshotPairsLoader, type FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
 
 export interface FirestoreCollectionExecutableDocumentQuery<T, D extends FirestoreDocument<T>> {
   readonly baseQuery: FirestoreExecutableQuery<T>;

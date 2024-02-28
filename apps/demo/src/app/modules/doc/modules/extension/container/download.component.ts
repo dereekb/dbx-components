@@ -1,7 +1,6 @@
-import { DownloadTextContent, TextChip } from '@dereekb/dbx-web';
+import { DownloadTextContent } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
-import { incrementingNumberFactory, randomNumberFactory, randomPhoneNumberFactory, range } from '@dereekb/util';
-import { MAKE_RANDOM_STRING_VALUES } from '../../form/container/selection.component';
+import { randomNumberFactory, randomPhoneNumberFactory, range } from '@dereekb/util';
 import { Observable, delay, map, of } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 
@@ -46,7 +45,7 @@ export class DocExtensionDownloadComponent {
   readonly jsonContent$: Observable<DownloadTextContent> = of(createRandomData()).pipe(
     delay(3000),
     map((x) => {
-      const content = JSON.stringify(x);
+      const content = JSON.stringify(x, undefined, 3);
       return {
         content,
         name: 'xyz.json',
