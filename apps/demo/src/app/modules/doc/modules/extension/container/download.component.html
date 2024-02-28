@@ -1,0 +1,14 @@
+<dbx-content-container>
+  <doc-feature-layout header="Download" hint="Various download-related classes and components.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-download-text-view" hint="View that provides buttons for copying or downloading content to a file.">
+      <h3>CSV Example</h3>
+      <dbx-download-text-view [content]="csvContent"></dbx-download-text-view>
+      <h3>JSON Example</h3>
+      <p>The component can also accept loadingStates and will display a loading bar or spinner.</p>
+      <dbx-download-text-view loadingText="Loading Json..." [contentState]="jsonContentState$ | async"></dbx-download-text-view>
+      <p>Linear example</p>
+      <dbx-download-text-view loadingText="Loading Json..." [linear]="true" [contentState]="jsonContentState$ | async"></dbx-download-text-view>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

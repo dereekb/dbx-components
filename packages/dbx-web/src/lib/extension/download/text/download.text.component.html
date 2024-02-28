@@ -1,0 +1,18 @@
+<div class="dbx-download-text-view">
+  <dbx-loading [context]="context" [linear]="linear" [text]="loadingText">
+    <ng-container *ngTemplateOutlet="contentView"></ng-container>
+  </dbx-loading>
+</div>
+
+<!-- Template -->
+<ng-template #contentView>
+  <div class="dbx-download-text-view-content">
+    <div *ngIf="showTitle" class="dbx-download-text-view-content-title dbx-mb2 mat-subtitle-2">{{ fileName$ | async }}</div>
+    <div *ngIf="showPreview" class="dbx-download-text-preview dbx-json dbx-content-pit dbx-content-pit-scrollable dbx-mb3">{{ contentData$ | async }}</div>
+    <div class="dbx-download-text-view-actions">
+      <dbx-button dbxAction dbxActionValue [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <a #downloadButton [href]="fileUrl$ | async" [attr.download]="fileName$ | async"><dbx-button icon="download" text="Download" [raised]="true" [working]="!(downloadReady$ | async)" [disabled]="!(downloadReady$ | async)"></dbx-button></a>
+    </div>
+  </div>
+</ng-template>

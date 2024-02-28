@@ -52,6 +52,12 @@ $scroll-content-bottom-padding: 42px;
     opacity: 0.66; // increase opacity slightly to make it easier to read against background
   }
 
+  .dbx-content-pit-scrollable {
+    max-height: 140px; // TODO: Allow configuring height
+    max-width: 100%;
+    overflow-y: scroll;
+  }
+
   .dbx-content-end {
     margin-bottom: $content-end-margin;
   }

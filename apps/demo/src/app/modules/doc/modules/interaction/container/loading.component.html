@@ -12,6 +12,12 @@
       <dbx-loading [loading]="true" [linear]="true" color="accent"></dbx-loading>
       <p>color=warn</p>
       <dbx-loading [loading]="true" [linear]="true" color="warn"></dbx-loading>
+      <h3>Text</h3>
+      <p>Both presentations can have custom text to show while loading.</p>
+      <h3>Default</h3>
+      <dbx-loading [loading]="true" text="Loading in a circle!"></dbx-loading>
+      <h3>Linear</h3>
+      <dbx-loading [loading]="true" text="Loading in a line!" [linear]="true"></dbx-loading>
       <h3>Padding</h3>
       <span style="padding-bottom: 12px">The loading bar can be configured to provide padding to prevent content from jumping around when loading begins/ends. Useful in cases where the loading bar doesn't control any content but removing it would push the content upward to fill the empty space.</span>
       <dbx-loading [loading]="loading$ | async" [linear]="true" [padding]="true"></dbx-loading>
