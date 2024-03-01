@@ -1,12 +1,13 @@
-import { Maybe, NamedUniqueModel } from '@dereekb/util';
+import { CssClass, CssClassesArray, Maybe, NamedUniqueModel, UniqueModel } from '@dereekb/util';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Provider, Type, forwardRef } from '@angular/core';
+import { ObservableOrValue } from '@dereekb/rxjs';
 
 /**
  * A group of DbxValueListItem values, grouped by common data, name, and id.
  */
-export interface DbxValueListItemGroup<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> extends Omit<DbxValueListItem<any>, 'itemValue'>, Readonly<Required<NamedUniqueModel>> {
+export interface DbxValueListItemGroup<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> extends Omit<DbxValueListItem<any>, 'itemValue' | 'icon'>, Readonly<Required<UniqueModel>> {
   readonly data: G;
   readonly items: DbxValueListItemConfig<T, I>[];
   /**
@@ -21,18 +22,21 @@ export interface DbxValueListItemGroup<G, T, I extends DbxValueListItem<T>, H = 
    * Whether or not to show the group's items. Defaults to true.
    */
   readonly showGroupItems?: boolean;
+  /**
+   * Custom CSS classes to apply to all groups.
+   */
+  readonly cssClasses?: CssClassesArray;
 }
 
 /**
  * Function that generates an array of DbxValueListItemGroup values from a list of items.
  */
-export type DbxValueListViewGroupValuesFunction<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> = (items: DbxValueListItemConfig<T, I>[]) => DbxValueListItemGroup<G, T, I, H, F>[];
+export type DbxValueListViewGroupValuesFunction<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> = (items: DbxValueListItemConfig<T, I>[]) => ObservableOrValue<DbxValueListItemGroup<G, T, I, H, F>[]>;
 
 export const defaultDbxValueListViewGroupValuesFunction = <T, I extends DbxValueListItem<T>>(items: DbxValueListItemConfig<T, I>[]) => {
   const data = {};
   const result: DbxValueListItemGroup<unknown, T, I> = {
-    id: '0',
-    name: '',
+    id: '_',
     data,
     items
   };

@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, Optional, TrackByFunction } from '@angular/core';
-import { shareReplay, map, Observable, BehaviorSubject } from 'rxjs';
+import { shareReplay, map, Observable, BehaviorSubject, switchMap } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { AnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
-import { Maybe } from '@dereekb/util';
+import { Maybe, SpaceSeparatedCssClasses, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './list.view.value.group';
+import { asObservable } from '@dereekb/rxjs';
 
 export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   emitAllClicks?: boolean;
@@ -48,8 +49,9 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I>;
 
   private _items = new BehaviorSubject<Maybe<DbxValueListItemConfig<T, I>[]>>(undefined);
-  readonly groups$ = this._items.pipe(
-    map((items) => this._dbxListGroupDelegate.groupValues(items ?? [])),
+
+  readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = this._items.pipe(
+    switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
     shareReplay(1)
   );
 
@@ -123,12 +125,18 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
     </div>
   `,
   host: {
-    class: 'dbx-list-view-group'
+    class: 'dbx-list-view-group',
+    '[class]': 'cssClasses'
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   private _group: Maybe<DbxValueListItemGroup<G, T, I>>;
+  private _cssClasses: Maybe<SpaceSeparatedCssClasses>;
+
+  get cssClasses() {
+    return this._cssClasses;
+  }
 
   get items(): Maybe<DbxValueListItemConfig<T, I>[]> {
     return this._group?.items;
@@ -157,6 +165,7 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
 
   set group(group: Maybe<DbxValueListItemGroup<G, T, I>>) {
     this._group = group;
+    this._cssClasses = spaceSeparatedCssClasses(group?.cssClasses);
     this.cdRef.markForCheck();
   }
 

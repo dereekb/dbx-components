@@ -2,6 +2,7 @@
   <dbx-content>
     <doc-feature-layout header="List" hint="Lists are used to display items vertically.">
       <!-- Examples -->
+
       <doc-feature-example header="dbx-selection-list-view" hint="One of the primary components when building a list view using dbx-components.">
         <p>To simplify declaration of selection lists, you can use dbx-selection-list-view, which will inject your configured item components within a mat-selection-list view and handle the the proper events.</p>
         <p>This pattern allows for a lot of flexibility and lets the developer focus on the item component without having to worry about the selection elements.</p>
@@ -78,6 +79,12 @@
       <doc-feature-example header="dbxListItemDisableRippleModifier" hint="Used to disable ripples conditionally on a per-item basis using a function.">
         <div style="height: 200px">
           <doc-complex-item-list [dbxListItemModifier] [dbxListItemDisableRippleModifier]="disableAllRipples" [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
+        </div>
+      </doc-feature-example>
+
+      <doc-feature-example header="dbxListTitleGroup" hint="Basic DbxListTitleGroupDirective that allows you to group items by a value. The presentation by default is only a title and hint text.">
+        <div style="height: 200px">
+          <doc-complex-item-list selectionMode="view" [dbxListTitleGroup]="dbxListTitleGroupDelegate" [state$]="stateWithAnchors$"></doc-complex-item-list>
         </div>
       </doc-feature-example>
 

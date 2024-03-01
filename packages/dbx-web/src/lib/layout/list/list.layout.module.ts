@@ -16,12 +16,32 @@ import { DbxListItemDisableRippleModifierDirective } from './list.view.value.mod
 import { DbxValueListGridViewContentComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent } from './list.grid.view.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxListItemIsSelectedModifierDirective } from './list.view.value.modifier.selection.directive';
+import { DbxListTitleGroupDirective, DbxListTitleGroupHeaderComponent } from './list.view.value.group.title.directive';
 
-const declarations = [DbxListComponent, DbxListInternalContentDirective, DbxListEmptyContentComponent, DbxValueListViewComponent, DbxValueListViewContentComponent, DbxValueListViewContentGroupComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent, DbxValueListGridViewContentComponent, DbxSelectionValueListViewComponent, DbxSelectionValueListViewContentComponent, DbxValueListItemModifierDirective, DbxListItemDisableRippleModifierDirective, DbxListItemIsSelectedModifierDirective];
+const privateDeclarations = [DbxListInternalContentDirective];
+
+const declarations = [
+  // directives
+  DbxListComponent,
+  DbxListEmptyContentComponent,
+  DbxValueListViewComponent,
+  DbxValueListViewContentComponent,
+  DbxValueListViewContentGroupComponent,
+  DbxValueListGridSizeDirective,
+  DbxValueListGridViewComponent,
+  DbxValueListGridViewContentComponent,
+  DbxListTitleGroupDirective,
+  DbxListTitleGroupHeaderComponent,
+  DbxSelectionValueListViewComponent,
+  DbxSelectionValueListViewContentComponent,
+  DbxValueListItemModifierDirective,
+  DbxListItemDisableRippleModifierDirective,
+  DbxListItemIsSelectedModifierDirective
+];
 
 @NgModule({
   imports: [CommonModule, MatRippleModule, FlexLayoutModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatListModule, MatIconModule],
-  declarations,
+  declarations: [...declarations, ...privateDeclarations],
   exports: declarations
 })
 export class DbxListLayoutModule {}

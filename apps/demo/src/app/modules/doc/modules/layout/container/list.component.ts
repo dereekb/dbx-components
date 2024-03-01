@@ -1,11 +1,12 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
+import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListTitleGroupTitleDelegate } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, takeFront } from '@dereekb/util';
+import { pascalCase } from 'change-case';
 
 @Component({
   templateUrl: './list.component.html'
@@ -129,6 +130,34 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly customGridSize: Partial<DbxValueListGridItemViewGridSizeConfig> = {
     columns: 'repeat(auto-fill, minmax(200px, 1fr))',
     gap: '25px'
+  };
+
+  readonly dbxListTitleGroupDelegate: DbxListTitleGroupTitleDelegate<CustomDocValue, 'click' | 'ref' | 'url' | 'plain' | 'none'> = {
+    groupValueForItem: (item) => {
+      const anchor = item.anchor;
+      if (anchor) {
+        if (anchor.url) {
+          return 'url';
+        } else if (anchor.ref) {
+          return 'ref';
+        } else if (anchor.onClick) {
+          return 'click';
+        } else {
+          return 'plain';
+        }
+      }
+
+      return 'none';
+    },
+    dataForGroupValue: (value, items) => ({
+      title: pascalCase(value) + ' Group',
+      icon: 'group_work',
+      value,
+      hint: `This is the subtitle text/"hint" for this (${value}) group. It can be configured as needed.`
+    }),
+    sortGroupsByData: (a, b) => {
+      return a.value.localeCompare(b.value);
+    }
   };
 
   constructor(readonly cdRef: ChangeDetectorRef) {}

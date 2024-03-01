@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
@@ -63,6 +66,19 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  .dbx-list-view-group {
+    .dbx-list-view-group-header {
+      z-index: 100;
+      position: sticky;
+      top: 0;
+
+      .dbx-list-two-line-item {
+        padding: 2px 0;
+        margin-right: 2px;
+      }
+    }
+  }
+
   .dbx-list-view-item {
     dbx-injection {
       width: 100%;
@@ -79,6 +95,11 @@ $list-item-padded-min-height: 42px;
     display: flex;
     flex-direction: row;
     align-items: center;
+
+    .item-icon {
+      padding: 0 16px;
+      margin-right: 4px;
+    }
 
     .item-left {
       display: flex;
@@ -119,6 +140,25 @@ $list-item-padded-min-height: 42px;
 }
 
 @mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+  $cdk-background-color: theming.get-color-from-palette($background, 'background');
+  $cdk-text-color: theming.get-color-from-palette($foreground, 'text');
+
+  .dbx-list-view-group-header {
+    color: var(--mdc-list-list-item-label-text-color);
+    background: var(--mat-sidenav-content-background-color);
+
+    .item-details {
+      color: var(--mdc-list-list-item-supporting-text-color);
+    }
+
+    --mat-divider-width: 2px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--mat-divider-color);
+    border-bottom-width: var(--mat-divider-width);
+  }
 }
 
 @mixin typography($theme-config-or-typography-config) {
