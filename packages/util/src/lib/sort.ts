@@ -1,5 +1,5 @@
 import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
-import { mapIdentityFunction, type MapSameFunction } from './value/map';
+import { MapFunction, mapIdentityFunction, type MapSameFunction } from './value/map';
 import { type Maybe, type MaybeMap } from './value/maybe.type';
 
 export type SortingOrder = 'asc' | 'desc';
@@ -63,6 +63,21 @@ export function reverseCompareFn<T>(compareFn: SortCompareFunction<T>): SortComp
  */
 export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFunction<T>, order: SortingOrder = 'asc'): SortCompareFunction<T> {
   return order === 'asc' ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
+}
+
+/**
+ * Creates a new SortCompareFunction that can sort values of one type mapped to another type and sorted with a different sort function.
+ *
+ * @param mapValue
+ * @param sortValuesFunction
+ * @returns
+ */
+export function compareWithMappedValuesFunction<T, V>(mapValue: MapFunction<T, V>, comparesFunction: SortCompareFunction<V>): SortCompareFunction<T> {
+  return (a, b) => {
+    const vA = mapValue(a);
+    const vB = mapValue(b);
+    return comparesFunction(vA, vB);
+  };
 }
 
 /**

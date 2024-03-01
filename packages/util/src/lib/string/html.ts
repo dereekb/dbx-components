@@ -13,12 +13,17 @@ export type CssClass = string;
 export type SpaceSeparatedCssClasses = string;
 
 /**
+ * One or more arrays of one or more CSS classes/arrays of classes.
+ */
+export type CssClassesArray = ArrayOrValue<ArrayOrValue<SpaceSeparatedCssClasses>>;
+
+/**
  * Joins together various array of classes and only keeps the unique values.
  *
  * @param cssClasses
  * @returns
  */
-export function spaceSeparatedCssClasses(cssClasses: Maybe<ArrayOrValue<ArrayOrValue<SpaceSeparatedCssClasses>>>): SpaceSeparatedCssClasses {
+export function spaceSeparatedCssClasses(cssClasses: Maybe<CssClassesArray>): SpaceSeparatedCssClasses {
   let result: SpaceSeparatedCssClasses = '';
 
   if (cssClasses) {
@@ -35,7 +40,7 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<ArrayOrValue<ArrayOrV
  * @param cssClasses
  * @returns
  */
-export function cssClassesSet(cssClasses: Maybe<ArrayOrValue<ArrayOrValue<SpaceSeparatedCssClasses>>>): Set<CssClass> {
+export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass> {
   let result: Set<CssClass>;
 
   if (cssClasses) {

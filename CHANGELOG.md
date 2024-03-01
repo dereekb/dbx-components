@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [10.1.0](https://github.com/dereekb/dbx-components/compare/v10.0.24-dev...v10.1.0) (2024-03-01)
+
+
+### Features
+
+* added dbxListTitleGroup for list views ([356b94b](https://github.com/dereekb/dbx-components/commit/356b94b963ef290820915c25562323b27b3449b1))
+
+
+
 ## [10.0.24](https://github.com/dereekb/dbx-components/compare/v10.0.23-dev...v10.0.24) (2024-02-28)
 
 

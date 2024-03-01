@@ -1,11 +1,12 @@
 import { Observable, map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { Component, EventEmitter, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Optional } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
 import { DbxListSelectionMode, DbxListView, ListSelectionState, ListSelectionStateItem } from './list.view';
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe } from '@dereekb/util';
-import { DbxValueListItemViewComponent } from './list.view.value.component';
+import { DbxValueListViewContentComponent } from './list.view.value.component';
+import { DbxValueListViewGroupDelegate } from './list.view.value.group';
 
 export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   readonly multiple?: boolean;
@@ -54,17 +55,18 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
   `,
   host: {
     class: 'dbx-list-view dbx-selection-list-view'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxSelectionValueListItemViewComponent<T> extends DbxValueListItemViewComponent<T> {
+export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   @Input()
   multiple?: Maybe<boolean>;
 
   @Input()
   selectionMode: Maybe<DbxListSelectionMode>;
 
-  constructor(dbxListView: DbxListView<T>) {
-    super(dbxListView);
+  constructor(dbxListView: DbxListView<T>, @Optional() @Inject(DbxValueListViewGroupDelegate) inputDbxListGroupDelegate: Maybe<DbxValueListViewGroupDelegate<any, T, I>>) {
+    super(dbxListView, inputDbxListGroupDelegate);
 
     if (!dbxListView.selectionChange) {
       throw new Error('Parent dbxListView to DbxSelectionValueListViewComponent has no selectionChange emitter.');
