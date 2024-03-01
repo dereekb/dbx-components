@@ -1,9 +1,9 @@
-import { Component, Directive, Input, OnDestroy, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, Optional } from '@angular/core';
 import { shareReplay, map, BehaviorSubject, combineLatest, of, Observable } from 'rxjs';
 import { DbxValueListItem } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe, mergeObjects } from '@dereekb/util';
-import { DbxValueListItemViewComponent, DbxValueListViewConfig } from './list.view.value.component';
+import { DbxValueListViewContentComponent, DbxValueListViewConfig } from './list.view.value.component';
 import { DbxListView } from './list.view';
 
 export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
@@ -86,9 +86,10 @@ export class DbxValueListGridSizeDirective implements OnDestroy {
   `,
   host: {
     class: 'dbx-list-grid-view'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxValueListGridItemViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListItemViewComponent<T, I> implements OnDestroy {
+export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> implements OnDestroy {
   private _defaultGrid = new BehaviorSubject<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>(undefined);
 
   readonly grid$: Observable<DbxValueListGridItemViewGridSizeConfig> = combineLatest([this._defaultGrid, this._gridSizeOverride?.gridSize$ ?? of(undefined)]).pipe(
@@ -103,7 +104,7 @@ export class DbxValueListGridItemViewComponent<T, I extends DbxValueListItem<T> 
   readonly columns$ = this.grid$.pipe(map((x) => x.columns));
 
   constructor(dbxListView: DbxListView<T>, @Optional() private _gridSizeOverride?: DbxValueListGridSizeDirective) {
-    super(dbxListView);
+    super(dbxListView, undefined);
   }
 
   @Input()
@@ -111,7 +112,8 @@ export class DbxValueListGridItemViewComponent<T, I extends DbxValueListItem<T> 
     this._defaultGrid.next(grid);
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     this._defaultGrid.complete();
   }
 }
