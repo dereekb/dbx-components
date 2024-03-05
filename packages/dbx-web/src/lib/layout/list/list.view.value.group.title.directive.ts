@@ -1,8 +1,8 @@
-import { Directive, Input, Type, InjectionToken, Component, ChangeDetectionStrategy, Inject } from '@angular/core';
+import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, Inject } from '@angular/core';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { BehaviorSubject, map } from 'rxjs';
-import { Building, Maybe, PrimativeKey, SortCompareFunction, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
+import { Building, Maybe, PrimativeKey, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
 import { DbxListTitleGroupData, DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
 
 export const DBX_LIST_TITLE_GROUP_DATA = new InjectionToken<unknown>('DbxListTitleGroupData');

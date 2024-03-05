@@ -1,4 +1,4 @@
-import { type DateRelativeState, type FractionalHour, type Minutes as UtilMinutes, minutesToFractionalHours, Maybe, safeCompareEquality } from '@dereekb/util';
+import { type DateRelativeState, type FractionalHour, type Minutes as UtilMinutes, minutesToFractionalHours, type Maybe, safeCompareEquality } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
 import { addMinutes } from 'date-fns';
