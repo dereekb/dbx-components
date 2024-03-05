@@ -3,9 +3,6 @@
 @use 'sass:color';
 @use '../../style/theming';
 
-$dbx-ok-color-var: --dbx-ok-color;
-$dbx-success-color-var: --dbx-success-color;
-
 // Sections
 @mixin core() {
   .dbx-spacer,
@@ -96,113 +93,85 @@ $dbx-success-color-var: --dbx-success-color;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
-
-  $primary: map.get($color-config, 'primary');
-  $accent: map.get($color-config, 'accent');
-  $warn: map.get($color-config, 'warn');
-  $background: map.get($color-config, 'background');
-  $foreground: map.get($color-config, 'foreground');
-
-  $primary-color: theming.get-color-from-palette($primary, 500);
-  $primary-color-contrast: theming.get-color-from-palette($primary, '500-contrast');
-
-  $accent-color: theming.get-color-from-palette($accent, 500);
-  $accent-color-contrast: theming.get-color-from-palette($accent, '500-contrast');
-
-  $warn-color: theming.get-color-from-palette($warn, 500);
-  $warn-color-contrast: theming.get-color-from-palette($warn, '500-contrast');
-
-  $grey-color: theming.get-color-from-palette($foreground, 'text');
-  $grey-color-bg: theming.get-color-from-palette($background, 'disabled-button');
-
-  $disabled-color: theming.get-color-from-palette($foreground, 'disabled-text');
-  $disabled-color-bg: theming.get-color-from-palette($background, 'disabled-button');
-
-  $background-text-color: theming.get-color-from-palette($foreground, 'text');
-  $background-color: theming.get-color-from-palette($background, 'background');
-
-  // todo: consider adding color customization or setting as a variable
-  $ok-color: color.scale(blue, $lightness: 30%);
-  $success-color: green;
-  $notice-color: #f28600;
-
   .dbx-primary {
-    color: $primary-color;
+    color: theming.$dbx-primary-color;
   }
 
   .dbx-primary-bg {
-    background: $primary-color;
-    color: $primary-color-contrast;
+    background: theming.$dbx-primary-color;
+    color: theming.$dbx-primary-color-contrast;
   }
 
   .dbx-accent {
-    color: $accent-color;
+    color: theming.$dbx-accent-color;
   }
 
   .dbx-accent-bg {
-    background: $accent-color;
-    color: $accent-color-contrast;
+    background: theming.$dbx-accent-color;
+    color: theming.$dbx-accent-color-contrast;
   }
 
   .dbx-warn {
-    color: $warn-color;
+    color: theming.$dbx-warn-color;
   }
 
   .dbx-warn-bg {
-    background: $warn-color;
-    color: $warn-color-contrast;
+    background: theming.$dbx-warn-color;
+    color: theming.$dbx-warn-color-contrast;
   }
 
   .dbx-notice {
-    color: $notice-color;
+    color: theming.$dbx-notice-color;
   }
 
   .dbx-notice-bg {
-    background: $notice-color;
-    color: $warn-color-contrast;
+    background: theming.$dbx-notice-color;
+    color: theming.$dbx-notice-color-contrast;
   }
 
   .dbx-success {
-    color: $success-color;
+    color: theming.$dbx-success-color;
   }
 
   .dbx-success-bg {
-    background: $success-color;
-    color: $warn-color-contrast;
+    background: theming.$dbx-success-color;
+    color: theming.$dbx-success-color-contrast;
   }
 
   .dbx-ok {
-    color: $ok-color;
+    color: theming.$dbx-ok-color;
   }
 
   .dbx-ok-bg {
-    background: $ok-color;
-    color: $warn-color-contrast;
+    background: theming.$dbx-ok-color;
+    color: theming.$dbx-ok-color-contrast;
   }
 
   .dbx-grey {
-    color: $grey-color;
+    color: theming.$dbx-grey-color;
   }
 
   .dbx-grey-bg {
-    color: $grey-color;
-    background: $grey-color-bg;
+    background: theming.$dbx-grey-color-contrast; // intentionally use the contrast for the bg
+    color: theming.$dbx-grey-color;
   }
 
   .dbx-disabled {
-    color: $disabled-color;
+    color: theming.$dbx-disabled-color;
   }
 
   .dbx-disabled-bg {
-    color: $disabled-color;
-    background: $disabled-color-bg;
+    background: theming.$dbx-disabled-color-contrast; // intentionally use the contrast for the bg
+    color: theming.$dbx-disabled-color;
   }
 
-  .dbx-bg,
+  .dbx-bg {
+    color: theming.$dbx-disabled-color;
+  }
+
   .dbx-background {
-    color: $background-text-color;
-    background: $background-color;
+    background: theming.$dbx-bg-color-contrast;
+    color: theming.$dbx-bg-color;
   }
 }
 

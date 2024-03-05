@@ -66,13 +66,6 @@ $big-button-height: 46px; // 33% bigger
 }
 
 @mixin color($theme-config) {
-  // NOTE: Keep sync'd with _style.scss colors
-  $color-config: theming.get-color-config($theme-config);
-
-  $background: map.get($color-config, 'background');
-  $grey-color-bg: theming.get-color-from-palette($background, 'disabled-button');
-  $disabled-color-bg: theming.get-color-from-palette($background, 'disabled-button');
-
   .dbx-icon-button > .mat-mdc-button {
     background: inherit;
 
@@ -89,7 +82,7 @@ $big-button-height: 46px; // 33% bigger
     background: none;
 
     > .mat-mdc-button {
-      background: $grey-color-bg;
+      background: #{theming.$dbx-grey-color-contrast};
     }
   }
 
@@ -97,7 +90,28 @@ $big-button-height: 46px; // 33% bigger
     background: none;
 
     > .mat-mdc-button {
-      background: $disabled-color-bg;
+      background: #{theming.$dbx-disabled-color-contrast};
+    }
+  }
+
+  // dbx-theme colors
+  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main {
+    .dbx-base-button.mat-mdc-unelevated-button.mat-#{$color} {
+      --mdc-filled-button-container-color: #{map.get($colorConfig, 'color')};
+      --mdc-filled-button-label-text-color: #{map.get($colorConfig, 'contrast')};
+    }
+
+    .dbx-base-button.mat-mdc-outlined-button.mat-#{$color} {
+      --mdc-outlined-button-label-text-color: #{map.get($colorConfig, 'color')};
+    }
+
+    .dbx-base-button.mat-mdc-raised-button.mat-#{$color} {
+      --mdc-protected-button-container-color: #{map.get($colorConfig, 'color')};
+      --mdc-protected-button-label-text-color: #{map.get($colorConfig, 'contrast')};
+    }
+
+    .dbx-base-button.mat-mdc-button.mat-#{$color} {
+      --mdc-text-button-label-text-color: #{map.get($colorConfig, 'color')};
     }
   }
 }

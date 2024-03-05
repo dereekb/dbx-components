@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, Directive } from '@angular/core';
 
-@Component({
+/**
+ * @deprecated Compat: Remove in future version.
+ */
+@Directive({
   selector: 'dbx-warn',
-  template: `
-    <ng-content></ng-content>
-  `,
   host: {
     class: 'dbx-warn'
   }

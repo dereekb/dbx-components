@@ -5,6 +5,7 @@ import { ProgressBarMode } from '@angular/material/progress-bar';
 import { LoadingContext } from '@dereekb/rxjs';
 import { ErrorInput, Maybe } from '@dereekb/util';
 import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
+import { DbxThemeColor } from '../layout/style/style';
 
 export interface DbxLoadingComponentState {
   loading: boolean;
@@ -70,7 +71,7 @@ export class DbxLoadingComponent implements OnDestroy {
   mode: ProgressBarMode = 'indeterminate';
 
   @Input()
-  color: ThemePalette = 'primary';
+  color: ThemePalette | DbxThemeColor = 'primary';
 
   @Input()
   diameter?: Maybe<number>;

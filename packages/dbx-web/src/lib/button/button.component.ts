@@ -3,6 +3,7 @@ import { ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxProgressButtonOptions } from './progress/button.progress.config';
+import { DbxThemeColor } from '../layout/style/style';
 
 export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
 
@@ -89,7 +90,10 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   }
 
   @Input()
-  public color: ThemePalette = undefined;
+  public color: ThemePalette | DbxThemeColor = undefined;
+
+  @Input()
+  public spinnerColor: ThemePalette | DbxThemeColor = undefined;
 
   @Input()
   public customButtonColor: Maybe<string>;
@@ -138,7 +142,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       flat: this.flat,
       iconOnly: this.iconOnly,
       mode: 'indeterminate',
-      spinnerColor: this.color === 'primary' ? 'accent' : 'primary',
+      spinnerColor: this.spinnerColor ?? this.color,
       customSpinnerColor,
       disabled
     };

@@ -4,14 +4,57 @@
     <doc-feature-example header="dbx-loading" hint="Component that displays a loading indicator.">
       <p>dbx-loading is typically used in conjunction with a LoadingContext, which streams LoadingContextEvents signifying the current loading state.</p>
       <p>There are two presentations:</p>
-      <h3>Default</h3>
-      <dbx-loading [loading]="true"></dbx-loading>
+      <h3>Default (w/ {{ diameter }}px diameter)</h3>
+      <p>The diameter can be customized on the component.</p>
+      <dbx-label-block>
+        <dbx-loading [diameter]="diameter" [loading]="true"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=accent">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="accent"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=warn">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="warn"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=notice">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="notice"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=ok">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="ok"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=success">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="success"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=grey">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="grey"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=disabled">
+        <dbx-loading [diameter]="diameter" [loading]="true" color="disabled"></dbx-loading>
+      </dbx-label-block>
       <h3>Linear</h3>
-      <dbx-loading [loading]="true" [linear]="true"></dbx-loading>
-      <p>color=accent</p>
-      <dbx-loading [loading]="true" [linear]="true" color="accent"></dbx-loading>
-      <p>color=warn</p>
-      <dbx-loading [loading]="true" [linear]="true" color="warn"></dbx-loading>
+      <dbx-label-block>
+        <dbx-loading [loading]="true" [linear]="true"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=accent">
+        <dbx-loading [loading]="true" [linear]="true" color="accent"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=warn">
+        <dbx-loading [loading]="true" [linear]="true" color="warn"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=notice">
+        <dbx-loading [loading]="true" [linear]="true" color="notice"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=ok">
+        <dbx-loading [loading]="true" [linear]="true" color="ok"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=success">
+        <dbx-loading [loading]="true" [linear]="true" color="success"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=grey">
+        <dbx-loading [loading]="true" [linear]="true" color="grey"></dbx-loading>
+      </dbx-label-block>
+      <dbx-label-block header="color=disabled">
+        <dbx-loading [loading]="true" [linear]="true" color="disabled"></dbx-loading>
+      </dbx-label-block>
       <h3>Text</h3>
       <p>Both presentations can have custom text to show while loading.</p>
       <h3>Default</h3>
