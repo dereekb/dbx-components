@@ -1,4 +1,6 @@
 @use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
 @use './variables';
 
 // convenience
@@ -69,6 +71,10 @@
 }
 
 // layout
+$default-ok-color: color.scale(blue, $lightness: 30%);
+$default-success-color: green;
+$default-notice-color: #f28600;
+
 @function define-dbx-layout-config($input-dbx-theme-layout-config: null) {
   $dbx-layout-config: (
     // banner
@@ -98,7 +104,11 @@
     'padding-5': 24px,
     // initial padding-5
     // layout
-    'two-column-left-width': 320px
+    'two-column-left-width': 320px,
+    // colors - NOTE: other colors come from Angular Material
+    'success-color': $default-success-color,
+    'ok-color': $default-ok-color,
+    'notice-color': $default-notice-color
   );
 
   @if ($input-dbx-theme-layout-config != null) {
@@ -146,6 +156,18 @@
 
 @function get-dbx-two-column-left-width($theme-config) {
   @return get-dbx-layout-config-var($theme-config, 'two-column-left-width');
+}
+
+@function get-dbx-success-color($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'success-color');
+}
+
+@function get-dbx-ok-color($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'ok-color');
+}
+
+@function get-dbx-notice-color($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'notice-color');
 }
 
 // extension

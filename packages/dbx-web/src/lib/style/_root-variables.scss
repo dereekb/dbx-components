@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
 @use './theming';
 
 // Includes all theming config
@@ -31,5 +34,69 @@
       height: theming.$app-height;
       overflow: hidden;
     }
+  }
+}
+
+/**
+  Only used by themes
+*/
+@mixin root-theme-color-variables($root-selector, $theme-config) {
+  #{$root-selector} {
+    $color-config: theming.get-color-config($theme-config);
+
+    $primary: map.get($color-config, 'primary');
+    $accent: map.get($color-config, 'accent');
+    $warn: map.get($color-config, 'warn');
+    $background: map.get($color-config, 'background');
+    $foreground: map.get($color-config, 'foreground');
+
+    $primary-color: theming.get-color-from-palette($primary, 500);
+    $primary-color-contrast: theming.get-color-from-palette($primary, '500-contrast');
+
+    $accent-color: theming.get-color-from-palette($accent, 500);
+    $accent-color-contrast: theming.get-color-from-palette($accent, '500-contrast');
+
+    $warn-color: theming.get-color-from-palette($warn, 500);
+    $warn-color-contrast: theming.get-color-from-palette($warn, '500-contrast');
+
+    $grey-color: theming.get-color-from-palette($foreground, 'text');
+    $grey-color-contrast: theming.get-color-from-palette($background, 'disabled-button');
+
+    $disabled-color: theming.get-color-from-palette($foreground, 'disabled-text');
+    $disabled-color-contrast: theming.get-color-from-palette($background, 'disabled-button');
+
+    $background-color: theming.get-color-from-palette($foreground, 'text');
+    $background-color-contrast: theming.get-color-from-palette($background, 'background');
+
+    $notice-color: theming.get-dbx-notice-color($theme-config);
+    $success-color: theming.get-dbx-success-color($theme-config);
+    $ok-color: theming.get-dbx-ok-color($theme-config);
+
+    #{theming.$dbx-primary-color-var}: $primary-color;
+    #{theming.$dbx-primary-color-contrast-var}: $primary-color-contrast;
+
+    #{theming.$dbx-accent-color-var}: $accent-color;
+    #{theming.$dbx-accent-color-contrast-var}: $accent-color-contrast;
+
+    #{theming.$dbx-warn-color-var}: $warn-color;
+    #{theming.$dbx-warn-color-contrast-var}: $warn-color-contrast;
+
+    #{theming.$dbx-notice-color-var}: theming.get-dbx-notice-color($theme-config);
+    #{theming.$dbx-notice-color-contrast-var}: var(--dbx-warn-color-contrast);
+
+    #{theming.$dbx-success-color-var}: theming.get-dbx-success-color($theme-config);
+    #{theming.$dbx-success-color-contrast-var}: var(--dbx-warn-color-contrast);
+
+    #{theming.$dbx-ok-color-var}: theming.get-dbx-ok-color($theme-config);
+    #{theming.$dbx-ok-color-contrast-var}: var(--dbx-warn-color-contrast);
+
+    #{theming.$dbx-grey-color-var}: $grey-color;
+    #{theming.$dbx-grey-color-contrast-var}: $grey-color-contrast;
+
+    #{theming.$dbx-disabled-color-var}: $disabled-color;
+    #{theming.$dbx-disabled-color-contrast-var}: $disabled-color-contrast;
+
+    #{theming.$dbx-bg-color-var}: $background-color;
+    #{theming.$dbx-bg-color-contrast-var}: $background-color-contrast;
   }
 }

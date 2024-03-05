@@ -1,5 +1,5 @@
 import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
-import { MapFunction, mapIdentityFunction, type MapSameFunction } from './value/map';
+import { type MapFunction, mapIdentityFunction, type MapSameFunction } from './value/map';
 import { type Maybe, type MaybeMap } from './value/maybe.type';
 
 export type SortingOrder = 'asc' | 'desc';

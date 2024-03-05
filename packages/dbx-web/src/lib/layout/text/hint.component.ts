@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
+import { Directive } from '@angular/core';
 
-@Component({
+/**
+ * @deprecated Compat: Remove in future version.
+ */
+@Directive({
   selector: 'dbx-hint',
-  template: `
-    <ng-content></ng-content>
-  `,
   host: {
     class: 'dbx-hint'
   }

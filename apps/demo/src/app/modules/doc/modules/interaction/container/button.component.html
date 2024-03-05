@@ -31,9 +31,186 @@
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-button icon="settings" [iconOnly]="true" [working]="true"></dbx-button>
 
-      <h4>With Colors</h4>
-      <dbx-button icon="settings" color="primary" text="Test Button"></dbx-button>
-      <dbx-button icon="settings" color="accent" text="Test Button"></dbx-button>
+      <h4>With Colors (and spinning/working)</h4>
+      <div class="dbx-pb2">
+        <dbx-button icon="settings" [color] text="Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="primary" text="Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="accent" text="Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="warn" text="Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [raised]="true" icon="settings" text="Raised Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="primary" text="Raised Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="accent" text="Raised Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="warn" text="Raised Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [working]="true" [raised]="true" icon="settings" text="Raised Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="primary" text="Raised Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="accent" text="Raised Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="warn" text="Raised Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [raised]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [stroked]="true" icon="settings" text="Stroked Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="primary" text="Stroked Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="accent" text="Stroked Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="warn" text="Stroked Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [stroked]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [working]="true" [stroked]="true" icon="settings" text="Stroked Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="primary" text="Stroked Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="accent" text="Stroked Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="warn" text="Stroked Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [stroked]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [flat]="true" icon="settings" text="Flat Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="primary" text="Flat Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="accent" text="Flat Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="warn" text="Flat Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [flat]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [working]="true" [flat]="true" icon="settings" text="Flat Default Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="primary" text="Flat Primary Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="accent" text="Flat Accent Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="warn" text="Flat Warn Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [flat]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [iconOnly]="true" icon="settings"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="primary"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="accent"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="warn"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [iconOnly]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
+
+      <div class="dbx-pb2">
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="primary"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="accent"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="warn"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="notice" text="Notice Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="success" text="Success Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="ok" text="Ok Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" icon="settings" color="grey" text="Grey Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" [iconOnly]="true" [disabled]="true" icon="settings" text="Disabled Button"></dbx-button>
+      </div>
 
       <h4>Full Width</h4>
       <p class="dbx-hint dbx-small">Full width can be added by using the .dbx-w100 or .dbx-button-wide css class</p>
@@ -155,6 +332,8 @@
       <dbx-bar-button (btnClick)="clickBar3()" [options]="barButtonOptions2"></dbx-bar-button>
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-bar-button (btnClick)="clickBar4()" [options]="barButtonOptions3"></dbx-bar-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-bar-button (btnClick)="clickBar5()" [options]="barButtonOptions4"></dbx-bar-button>
     </doc-feature-example>
 
     <doc-feature-example header="CSS" hint="CSS classes that provide styling support for buttons.">

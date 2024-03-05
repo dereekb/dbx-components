@@ -5,6 +5,7 @@ import { ProgressBarMode } from '@angular/material/progress-bar';
 import { ErrorInput, Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { DbxThemeColor } from '../layout/style/style';
 
 /**
  * DbxBasicLoadingComponent loading state.
@@ -65,7 +66,7 @@ export class DbxBasicLoadingComponent implements OnDestroy {
   mode: ProgressBarMode | ProgressSpinnerMode = 'indeterminate';
 
   @Input()
-  color: ThemePalette = 'primary';
+  color: ThemePalette | DbxThemeColor = 'primary';
 
   @Input()
   text?: Maybe<string>;

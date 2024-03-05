@@ -2,14 +2,15 @@ import { InjectionToken } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { Maybe } from '@dereekb/util';
+import { DbxThemeColor } from '../../layout/style/style';
 
 export interface DbxProgressButtonOptions {
   working?: boolean;
   text?: string;
   spinnerText?: string;
-  buttonColor?: ThemePalette;
-  spinnerColor?: ThemePalette;
-  barColor?: ThemePalette;
+  buttonColor?: ThemePalette | DbxThemeColor;
+  spinnerColor?: ThemePalette | DbxThemeColor;
+  barColor?: ThemePalette | DbxThemeColor;
   raised?: boolean;
   stroked?: boolean;
   flat?: boolean;
@@ -36,7 +37,7 @@ export interface DbxProgressButtonOptions {
 }
 
 export interface DbxProgressButtonIcon {
-  color?: ThemePalette;
+  color?: ThemePalette | DbxThemeColor;
   fontIcon?: string;
   fontSet?: string;
   inline?: boolean;

@@ -21,6 +21,26 @@ $padding-5-var: --dbx-padding-5;
 
 $two-column-left-width-var: --dbx-two-column-left-width;
 
+$dbx-primary-color-var: --dbx-primary-color;
+$dbx-accent-color-var: --dbx-accent-color;
+$dbx-warn-color-var: --dbx-warn-color;
+$dbx-notice-color-var: --dbx-notice-color;
+$dbx-success-color-var: --dbx-success-color;
+$dbx-ok-color-var: --dbx-ok-color;
+$dbx-grey-color-var: --dbx-grey-color;
+$dbx-disabled-color-var: --dbx-disabled-color;
+$dbx-bg-color-var: --dbx-bg-color;
+
+$dbx-primary-color-contrast-var: --dbx-primary-color-contrast;
+$dbx-accent-color-contrast-var: --dbx-accent-color-contrast;
+$dbx-warn-color-contrast-var: --dbx-warn-color-contrast;
+$dbx-notice-color-contrast-var: --dbx-notice-color-contrast;
+$dbx-success-color-contrast-var: --dbx-success-color-contrast;
+$dbx-ok-color-contrast-var: --dbx-ok-color-contrast;
+$dbx-grey-color-contrast-var: --dbx-grey-color-contrast;
+$dbx-disabled-color-contrast-var: --dbx-disabled-color-contrast;
+$dbx-bg-color-contrast-var: --dbx-bg-color-contrast;
+
 // vars
 $vh100: var($vh100-var);
 
@@ -54,3 +74,72 @@ $padding-map: (
 );
 
 $two-column-left-width: var($two-column-left-width-var);
+
+$dbx-primary-color: var($dbx-primary-color-var);
+$dbx-accent-color: var($dbx-accent-color-var);
+$dbx-warn-color: var($dbx-warn-color-var);
+$dbx-notice-color: var($dbx-notice-color-var);
+$dbx-success-color: var($dbx-success-color-var);
+$dbx-ok-color: var($dbx-ok-color-var);
+$dbx-grey-color: var($dbx-grey-color-var);
+$dbx-disabled-color: var($dbx-disabled-color-var);
+$dbx-bg-color: var($dbx-bg-color-var);
+
+$dbx-primary-color-contrast: var($dbx-primary-color-contrast-var);
+$dbx-accent-color-contrast: var($dbx-accent-color-contrast-var);
+$dbx-warn-color-contrast: var($dbx-warn-color-contrast-var);
+$dbx-notice-color-contrast: var($dbx-notice-color-contrast-var);
+$dbx-success-color-contrast: var($dbx-success-color-contrast-var);
+$dbx-ok-color-contrast: var($dbx-ok-color-contrast-var);
+$dbx-grey-color-contrast: var($dbx-grey-color-contrast-var);
+$dbx-disabled-color-contrast: var($dbx-disabled-color-contrast-var);
+$dbx-bg-color-contrast: var($dbx-bg-color-contrast-var);
+
+$dbx-theme-colors-main: (
+  'primary': (
+    'color': $dbx-primary-color,
+    'contrast': $dbx-primary-color-contrast
+  ),
+  'accent': (
+    'color': $dbx-accent-color,
+    'contrast': $dbx-accent-color-contrast
+  ),
+  'warn': (
+    'color': $dbx-warn-color,
+    'contrast': $dbx-warn-color-contrast
+  )
+);
+
+$dbx-theme-extra-colors-main: (
+  'notice': (
+    'color': $dbx-notice-color,
+    'contrast': $dbx-notice-color-contrast
+  ),
+  'success': (
+    'color': $dbx-success-color,
+    'contrast': $dbx-success-color-contrast
+  ),
+  'ok': (
+    'color': $dbx-ok-color,
+    'contrast': $dbx-ok-color-contrast
+  ),
+  'grey': (
+    'color': $dbx-grey-color-contrast,
+    'contrast': $dbx-grey-color
+  )
+);
+
+$dbx-theme-colors-main-and-extra: map.merge($dbx-theme-colors-main, $dbx-theme-extra-colors-main);
+
+$dbx-theme-extra-colors-secondary: (
+  'disabled': (
+    'color': $dbx-disabled-color-contrast,
+    'contrast': $dbx-disabled-color
+  ),
+  'bg': (
+    'color': $dbx-bg-color-contrast,
+    'contrast': $dbx-bg-color
+  )
+);
+
+$dbx-theme-extra-colors-main-and-secondary: map.merge($dbx-theme-extra-colors-main, $dbx-theme-extra-colors-secondary);

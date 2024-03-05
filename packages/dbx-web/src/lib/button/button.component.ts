@@ -1,14 +1,20 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxProgressButtonOptions } from './progress/button.progress.config';
+import { DbxThemeColor } from '../layout/style/style';
 
+export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
+
+/**
+ * @deprecated use DbxButtonType instead.
+ */
 export enum DbxButtonDisplayType {
-  RAISED,
-  STROKED,
-  FLAT,
-  ICON_ONLY
+  RAISED = 'raised',
+  STROKED = 'stroked',
+  FLAT = 'flag',
+  ICON_ONLY = 'icon'
 }
 
 /**
@@ -21,58 +27,73 @@ export enum DbxButtonDisplayType {
       <ng-content></ng-content>
     </dbx-spinner-button>
   `,
-  providers: provideDbxButton(DbxButtonComponent)
+  providers: provideDbxButton(DbxButtonComponent),
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
   @Input()
-  type?: DbxButtonDisplayType;
+  type?: DbxButtonType;
+
+  @Input()
+  get basic(): boolean {
+    return !this.type || this.type === 'basic';
+  }
+
+  set basic(basic: boolean) {
+    if (basic) {
+      this.type = 'basic';
+    }
+  }
 
   @Input()
   get raised(): boolean {
-    return this.type === DbxButtonDisplayType.RAISED;
+    return this.type === 'raised';
   }
 
   set raised(raised: boolean) {
     if (raised) {
-      this.type = DbxButtonDisplayType.RAISED;
+      this.type = 'raised';
     }
   }
 
   @Input()
   get stroked(): boolean {
-    return this.type === DbxButtonDisplayType.STROKED;
+    return this.type === 'stroked';
   }
 
   set stroked(stroked: boolean) {
     if (stroked) {
-      this.type = DbxButtonDisplayType.STROKED;
+      this.type = 'stroked';
     }
   }
 
   @Input()
   get flat(): boolean {
-    return this.type === DbxButtonDisplayType.FLAT;
+    return this.type === 'flat';
   }
 
   set flat(flat: boolean) {
     if (flat) {
-      this.type = DbxButtonDisplayType.FLAT;
+      this.type = 'flat';
     }
   }
 
   @Input()
   get iconOnly(): boolean {
-    return this.type === DbxButtonDisplayType.ICON_ONLY;
+    return this.type === 'icon';
   }
 
   set iconOnly(iconOnly: boolean) {
     if (iconOnly) {
-      this.type = DbxButtonDisplayType.ICON_ONLY;
+      this.type = 'icon';
     }
   }
 
   @Input()
-  public color: ThemePalette = 'primary';
+  public color: ThemePalette | DbxThemeColor = undefined;
+
+  @Input()
+  public spinnerColor: ThemePalette | DbxThemeColor = undefined;
 
   @Input()
   public customButtonColor: Maybe<string>;
@@ -121,7 +142,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       flat: this.flat,
       iconOnly: this.iconOnly,
       mode: 'indeterminate',
-      spinnerColor: this.color === 'primary' ? 'accent' : 'primary',
+      spinnerColor: this.spinnerColor ?? this.color,
       customSpinnerColor,
       disabled
     };

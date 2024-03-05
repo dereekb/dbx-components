@@ -209,6 +209,19 @@ export class DocInteractionButtonComponent {
     disabled: false
   };
 
+  barButtonOptions4: DbxProgressButtonOptions = {
+    working: false,
+    text: 'Flat Button',
+    buttonColor: 'ok',
+    barColor: 'success',
+    raised: false,
+    stroked: false,
+    flat: true,
+    mode: 'indeterminate',
+    value: 0,
+    disabled: false
+  };
+
   clickSpin1 = this.activateAndDeactivate('spinnerButtonOptions');
   clickSpin2 = this.activateAndDeactivate('spinnerButtonOptions1');
   clickSpin3 = this.activateAndDeactivate('spinnerButtonOptions2');
@@ -227,4 +240,5 @@ export class DocInteractionButtonComponent {
   clickBar2 = this.activateAndDeactivate('barButtonOptions1');
   clickBar3 = this.activateAndDeactivate('barButtonOptions2');
   clickBar4 = this.activateAndDeactivate('barButtonOptions3');
+  clickBar5 = this.activateAndDeactivate('barButtonOptions4');
 }

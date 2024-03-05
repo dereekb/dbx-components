@@ -1,4 +1,4 @@
-<button class="dbx-spinner-button" #button mat-button [type]="options.type" [color]="options.buttonColor" [ngClass]="buttonCss$ | async" [ngStyle]="options.customStyle!" [disabled]="options.working || options.disabled">
+<button class="dbx-base-button dbx-spinner-button" #button mat-button [type]="options.type" [color]="options.buttonColor" [ngClass]="buttonCss$ | async" [ngStyle]="options.customStyle!" [disabled]="options.working || options.disabled">
   <ng-container *ngIf="showText">
     <ng-container *ngIf="options.buttonIcon">
       <mat-icon class="mat-button-icon" [class.is-mat-icon]="!options.buttonIcon.fontSet" [class.working]="options.working && !options.disabled" [ngClass]="options.buttonIcon.customClass!" [fontSet]="options.buttonIcon.fontSet!" [fontIcon]="options.buttonIcon.fontIcon!" [color]="options.buttonIcon.color!" [svgIcon]="options.buttonIcon.svgIcon!">

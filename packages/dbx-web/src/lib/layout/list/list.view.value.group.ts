@@ -1,4 +1,4 @@
-import { CssClass, CssClassesArray, Maybe, NamedUniqueModel, UniqueModel } from '@dereekb/util';
+import { CssClassesArray, Maybe, UniqueModel } from '@dereekb/util';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Provider, Type, forwardRef } from '@angular/core';

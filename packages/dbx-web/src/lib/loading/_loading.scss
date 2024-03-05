@@ -17,6 +17,15 @@ $linear-line-height: 4px;
 }
 
 @mixin color($theme-config) {
+  @each $color, $colorConfig in theming.$dbx-theme-extra-colors-main-and-secondary {
+    .mat-mdc-progress-spinner.mat-#{$color} {
+      --mdc-circular-progress-active-indicator-color: #{map.get($colorConfig, 'color')};
+    }
+
+    .mat-mdc-progress-bar.mat-#{$color} {
+      --mdc-linear-progress-active-indicator-color: #{map.get($colorConfig, 'color')};
+    }
+  }
 }
 
 @mixin typography($theme-config-or-typography-config) {

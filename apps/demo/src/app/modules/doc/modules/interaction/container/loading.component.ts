@@ -8,6 +8,8 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
   templateUrl: './loading.component.html'
 })
 export class DocInteractionLoadingComponent {
+  readonly diameter = 32;
+
   readonly loading$ = interval(1000, undefined).pipe(
     map((x) => Boolean(x % 2)),
     shareReplay(1)

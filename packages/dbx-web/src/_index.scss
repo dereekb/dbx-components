@@ -26,4 +26,5 @@
   }
 
   @include dbx-variables.root-variables($root-selector, $theme-config);
+  @include dbx-variables.root-theme-color-variables($root-selector, $theme-config);
 }
