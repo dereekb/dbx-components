@@ -16,6 +16,7 @@ export * from './rxjs';
 export * from './rxjs.unique';
 export * from './rxjs.async';
 export * from './rxjs.map';
+export * from './rxjs.error';
 export * from './set';
 export * from './string';
 export * from './use';
