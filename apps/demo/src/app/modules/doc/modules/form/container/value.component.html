@@ -1,5 +1,5 @@
 <dbx-content-container>
-  <doc-feature-layout header="Values Fields" hint="">
+  <doc-feature-layout header="Value Fields" hint="">
     <!-- Examples -->
     <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">
       <h4>Phone Number Only</h4>
@@ -22,23 +22,6 @@
     </doc-feature-example>
     <doc-feature-example header="latLngTextField()" hint="Used to configure a latLng value.">
       <doc-form-example-form [dbxFormlyFields]="latLngTextField"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="dateTimeField()" hint="Used to configure a date input field.">
-      <p>The date input is used to select a single day, or a single date/time.</p>
-      <p>Values that are input/set are considered in the input, and also exported in the same timezone.</p>
-      <doc-form-example-form [dbxFormlyFields]="dateTimeFields" [dbxFormSource]="dateValues$"></doc-form-example-form>
-      <p>Timezone Change Tester</p>
-      <doc-form-example-form (dbxFormValueChange)="onTimezoneChange($event)" [dbxFormSource]="{ timezone: 'UTC' }" [config]="timezoneSelectionField"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="fixedDateRangeField()" hint="An inline calendar date range picker that makes it easy to select a custom date range.">
-      <p>Uses the DateRange and related utilities to generate a custom date range.</p>
-      <doc-form-example-form [dbxFormlyFields]="fixedDateRangeFields" [dbxFormSource]="fixedDateRangeValue$"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="dateRangeField()" hint="Combines two dateTimeFields().">
-      <doc-form-example-form [dbxFormlyFields]="dateRangeFields"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="dateTimeRangeField()" hint="Combines two dateTimeFields() configured for picking a time range.">
-      <doc-form-example-form [dbxFormlyFields]="dateTimeRangeFields" [dbxFormSource]="dateTimeRangeValues$"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="toggleField()" hint="">
       <doc-form-example-form [dbxFormlyFields]="toggleField"></doc-form-example-form>
