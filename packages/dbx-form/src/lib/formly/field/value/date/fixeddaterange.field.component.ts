@@ -1,5 +1,5 @@
 import { type Maybe, type DecisionFunction, type Milliseconds, type TimezoneString, type DateMonth, type DayOfMonth, type YearNumber, isMonthDaySlashDate, MS_IN_MINUTE } from '@dereekb/util';
-import { guessCurrentTimezone, DateTimezoneUtcNormalInstance, dateTimeMinuteDecisionFunction, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance } from '@dereekb/date';
+import { guessCurrentTimezone, DateTimezoneUtcNormalInstance, dateTimeMinuteDecisionFunction, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer } from 'rxjs';
 import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild, forwardRef } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
@@ -473,7 +473,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     distinctUntilChanged(),
     map((x) => {
       if (x) {
-        const filter = dateTimeMinuteDecisionFunction(x);
+        const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
         return (x: Date | null) => (x != null ? filter(x) : true);
       } else {
         return () => true;

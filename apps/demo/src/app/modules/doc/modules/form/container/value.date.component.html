@@ -7,6 +7,9 @@
       <doc-form-example-form [dbxFormlyFields]="dateTimeFields" [dbxFormSource]="dateValues$"></doc-form-example-form>
       <p>Timezone Change Tester</p>
       <doc-form-example-form (dbxFormValueChange)="onTimezoneChange($event)" [dbxFormSource]="{ timezone: 'UTC' }" [config]="timezoneSelectionField"></doc-form-example-form>
+
+      <p>Date Async Source Tester</p>
+      <doc-form-example-form (dbxFormValueChange)="onAsyncDateValueChange($event)" [config]="asyncTimeFormConfig$ | async" [dbxFormSource]="asyncTimeFormTemplate$" dbxFormSourceMode="always"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="fixedDateRangeField()" hint="An inline calendar date range picker that makes it easy to select a custom date range.">
       <p>Uses the DateRange and related utilities to generate a custom date range.</p>

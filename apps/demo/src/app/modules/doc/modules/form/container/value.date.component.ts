@@ -1,40 +1,11 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import {
-  addressField,
-  addressListField,
-  cityField,
-  countryField,
-  emailField,
-  phoneField,
-  nameField,
-  phoneAndLabelSectionField,
-  wrappedPhoneAndLabelField,
-  repeatArrayField,
-  stateField,
-  textAreaField,
-  textField,
-  zipCodeField,
-  phoneListField,
-  dateTimeField,
-  DbxDateTimeFieldTimeMode,
-  toggleField,
-  checkboxField,
-  numberField,
-  latLngTextField,
-  DbxDateTimeValueMode,
-  dateRangeField,
-  dollarAmountField,
-  DbxDateTimePickerConfiguration,
-  dateTimeRangeField,
-  timezoneStringField,
-  fixedDateRangeField,
-  numberSliderField
-} from '@dereekb/dbx-form';
+import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField } from '@dereekb/dbx-form';
 import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
-import { type Maybe, type TimezoneString, addSuffixFunction, randomBoolean } from '@dereekb/util';
-import { BehaviorSubject, delay, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate } from '@dereekb/date';
+import { type Maybe, type TimezoneString } from '@dereekb/util';
+import { BehaviorSubject, Observable, delay, map, of } from 'rxjs';
+import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate } from '@dereekb/date';
+import { tapLog } from '@dereekb/rxjs';
 
 @Component({
   templateUrl: './value.date.component.html'
@@ -318,4 +289,51 @@ export function schoolInfoJobSettingsEndTimeField() {
       }
     })
   ];
+
+  private _newDateValue = new BehaviorSubject<Maybe<Date>>(undefined);
+  private baseDate$ = of(new Date()).pipe(delay(100));
+
+  onAsyncDateValueChange(value: Maybe<{ date: Maybe<Date> }>): void {
+    if (value?.date && !isSameDate(this._newDateValue.value, value.date)) {
+      this._newDateValue.next(value.date);
+    }
+  }
+
+  readonly asyncTimeFormConfig$: Observable<FormlyFieldConfig[]> = of([
+    dateTimeField({
+      label: 'Async Configured Date',
+      key: 'date',
+      timezone: this.timezone$,
+      timeDate: this.baseDate$,
+      pickerConfig: this.baseDate$.pipe(
+        map((x) => {
+          const config: DbxDateTimePickerConfiguration = {
+            limits: {
+              min: addHours(x, -24),
+              max: addHours(x, 24)
+            }
+          };
+
+          return config;
+        })
+      )
+    })
+  ]).pipe(delay(1000)); // add an artificial delay
+
+  readonly asyncTimeFormTemplate$ = this._newDateValue.pipe(
+    map((date) => {
+      date = roundDownToMinute(date ?? new Date());
+
+      if (date) {
+        return { date };
+      } else {
+        return { date: new Date() };
+      }
+    })
+  );
+
+  ngOnDestroy(): void {
+    this._timezone.complete();
+    this._newDateValue.complete();
+  }
 }
