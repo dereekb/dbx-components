@@ -11,6 +11,7 @@ import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
 import { DocFormExpressionComponent } from './container/expression.component';
 import { DocFormFormComponent } from './container/form.component';
+import { DocFormDateValueComponent } from './container/value.date.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/form',
@@ -29,6 +30,12 @@ export const docFormValueState: Ng2StateDeclaration = {
   url: '/value',
   name: 'doc.form.value',
   component: DocFormValueComponent
+};
+
+export const docFormDateValueState: Ng2StateDeclaration = {
+  url: '/date',
+  name: 'doc.form.date',
+  component: DocFormDateValueComponent
 };
 
 export const docFormChecklistState: Ng2StateDeclaration = {
@@ -90,6 +97,7 @@ export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
   docFormValueState,
+  docFormDateValueState,
   docFormChecklistState,
   docFormComponentState,
   docFormExpressionState,

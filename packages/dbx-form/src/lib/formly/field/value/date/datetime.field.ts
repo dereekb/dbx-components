@@ -7,7 +7,7 @@ import { Maybe } from '@dereekb/util';
 import { DbxFixedDateRangeFieldProps } from './fixeddaterange.field.component';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldProps, MaterialFormFieldConfig {}
-export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate'>;
+export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate' | 'timeOnly'>;
 
 export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePickerConfiguration> = () =>
   of({

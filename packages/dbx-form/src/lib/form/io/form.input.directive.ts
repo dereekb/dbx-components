@@ -1,9 +1,9 @@
-import { distinctUntilChanged, filter, map, switchMap, combineLatest, BehaviorSubject, Observable, EMPTY, exhaustMap, takeUntil, Subject, tap, shareReplay } from 'rxjs';
+import { distinctUntilChanged, filter, map, switchMap, combineLatest, BehaviorSubject, Observable, EMPTY, exhaustMap, takeUntil, Subject, tap, shareReplay, throttleTime } from 'rxjs';
 import { Directive, Host, Input, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFormState, DbxFormStateRef, DbxMutableForm } from '../form';
 import { Maybe } from '@dereekb/util';
-import { asObservable, ObservableOrValue, cleanup } from '@dereekb/rxjs';
+import { asObservable, ObservableOrValue, cleanup, errorOnEmissionsInPeriod } from '@dereekb/rxjs';
 
 export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: ObservableOrValue<T>, mode$: Observable<DbxFormSourceDirectiveMode>): Observable<T> {
   return dbxFormSourceObservableFromStream(form.stream$, inputObs, mode$);
@@ -64,7 +64,22 @@ export function dbxFormSourceObservableFromStream<T>(stream$: Observable<DbxForm
             if (initializing) {
               return EMPTY;
             } else {
-              return value$;
+              let valueObs = value$;
+
+              if (mode === 'always') {
+                valueObs = valueObs.pipe(
+                  throttleTime(10, undefined, { leading: true, trailing: true }),
+                  errorOnEmissionsInPeriod({
+                    period: 1000,
+                    maxEmissionsPerPeriod: 50,
+                    onError: () => {
+                      console.error('dbxFormSourceObservableFromStream: Error thrown due to too many emissions. There may be an unintentional loop being triggered by dbxFormSource. Typically this can occur in cases where the dbxFormSource directive is used at the same time as dbxFormValueChange directive and the same value is being pushed.');
+                    }
+                  })
+                );
+              }
+
+              return valueObs;
             }
           })
         );
@@ -77,9 +92,10 @@ export function dbxFormSourceObservableFromStream<T>(stream$: Observable<DbxForm
  * DbxFormSourceDirective modes that define when to copy data from the source.
  *
  * - reset: only copy data when the form is reset.
- * - always: always copy data when the data observable emits a value.
+ * - always: always copy data when the data observable emits a value. Has a throttle of 20ms to prevent too many emissions. If emissions occur in a manner that appears to be a loop (more than 30 emissions in 1 second), then an error is thrown and warning printed to the console.
+ * - every: equal to always, but has no throttle or error message warning.
  */
-export type DbxFormSourceDirectiveMode = 'reset' | 'always';
+export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
 
 /**
  * Used with a FormComponent to set the value based on the input value.

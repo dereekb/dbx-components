@@ -1,5 +1,5 @@
 import { type Minutes, type DecisionFunction } from '@dereekb/util';
-import { addMinutes, isAfter, isBefore } from 'date-fns';
+import { addMinutes, endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import { roundDownToMinute } from './date';
 import { roundDateTimeDownToSteps, type StepRoundDateTimeDown } from './date.round';
 import { dateCellScheduleDateFilter, type DateCellScheduleDateFilter, type DateCellScheduleDateFilterConfig } from './date.cell.schedule';
@@ -233,4 +233,21 @@ export class DateTimeMinuteInstance {
 export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): DecisionFunction<Date> {
   const instance = new DateTimeMinuteInstance(config, null);
   return (date: Date) => instance.isValid(date);
+}
+
+/**
+ * Similar to dateTimeMinuteDecisionFunction(), but compares the first and last instant of the input day.
+ *
+ * @param config
+ * @param startAndEndOfDayMustBeValue Whether or not the start of the day and end of the day must be valid to be considered valid. Defaults to false.
+ * @returns
+ */
+export function dateTimeMinuteWholeDayDecisionFunction(config: DateTimeMinuteConfig, startAndEndOfDayMustBeValue = false): DecisionFunction<Date> {
+  const instance = new DateTimeMinuteInstance(config, null);
+
+  if (startAndEndOfDayMustBeValue) {
+    return (date: Date) => instance.isValid(startOfDay(date)) && instance.isValid(endOfDay(date));
+  } else {
+    return (date: Date) => instance.isValid(startOfDay(date)) || instance.isValid(endOfDay(date));
+  }
 }

@@ -1,4 +1,4 @@
-import { parse, differenceInMinutes, isValid, addHours, startOfDay } from 'date-fns';
+import { parse, differenceInMinutes, isValid as isValidDate, addHours, startOfDay } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { isLogicalDateStringCode, type LogicalDateStringCode, type Maybe, type ReadableTimeString, TimeAM, type TimezoneString, UTC_TIMEZONE_STRING, dateFromLogicalDate } from '@dereekb/util';
 import { type LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
@@ -28,7 +28,7 @@ export interface ParseTimeString extends DateTimezoneConversionConfig {
   /**
    * Reference date to parse from.
    */
-  date?: Date;
+  readonly date?: Date;
 }
 
 export interface DateFromTimestringResult {
@@ -150,7 +150,7 @@ export class DateTimeUtilityInstance {
       for (let i = 0; i < formats.length; i += 1) {
         systemParsedDateTime = parse(input, formats[i], relativeDate);
 
-        if (isValid(systemParsedDateTime)) {
+        if (isValidDate(systemParsedDateTime)) {
           valid = true;
           break; // Use time.
         }
@@ -213,7 +213,7 @@ export class DateTimeUtilityInstance {
           systemParsedDateTime = addHours(systemParsedDateTime, 12);
         }
 
-        valid = isValid(systemParsedDateTime);
+        valid = isValidDate(systemParsedDateTime);
       }
     }
 
@@ -228,7 +228,7 @@ export class DateTimeUtilityInstance {
 
     if (isLogicalDateStringCode(input)) {
       systemParsedDateTime = dateFromLogicalDate(input);
-      valid = isValid(systemParsedDateTime);
+      valid = isValidDate(systemParsedDateTime);
     } else {
       parseTimeString();
     }
@@ -248,11 +248,13 @@ export class DateTimeUtilityInstance {
       // console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
     }
 
-    return {
+    const output: DateFromTimestringResult | ValidDateFromTimestringResult = {
       raw,
       result,
       valid
     };
+
+    return output;
   }
 
   private _normalizeInstanceForConfig(config: DateTimezoneConversionConfig): DateTimezoneUtcNormalInstance {

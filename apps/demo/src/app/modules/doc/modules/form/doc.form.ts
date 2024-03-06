@@ -18,6 +18,12 @@ export const DOC_FORM_ROUTES = [
     ref: 'doc.form.value'
   },
   {
+    icon: 'event',
+    title: 'Date Fields',
+    detail: 'date value form fields',
+    ref: 'doc.form.date'
+  },
+  {
     icon: 'highlight_alt',
     title: 'Selection Fields',
     detail: 'selection form fields',
