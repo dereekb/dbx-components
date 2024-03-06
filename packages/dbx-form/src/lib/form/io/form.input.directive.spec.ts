@@ -231,7 +231,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
             })
           ),
           values,
-          preventComplete(of('always'))
+          preventComplete(of('every'))
         );
 
         subscriptionObject.subscription = obs$.pipe(testTimeout()).subscribe({
@@ -253,7 +253,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
             })
           ),
           values,
-          preventComplete(of('always'))
+          preventComplete(of('every'))
         );
 
         const valuesCount = 3;

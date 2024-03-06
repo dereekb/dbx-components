@@ -1,6 +1,5 @@
 import { waitForMs } from '../promise';
 import { timePeriodCounter } from './time';
-import { Day, daysOfWeekArray, daysOfWeekNameFunction, daysOfWeekNameMap, getDayOffset, getNextDay, getPreviousDay } from './week';
 
 describe('timePeriodCounter()', () => {
   it('should create a new counter.', () => {

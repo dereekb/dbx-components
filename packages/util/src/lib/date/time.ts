@@ -1,4 +1,4 @@
-import { Building } from '../value/build';
+import { type Building } from '../value/build';
 import { type Maybe } from '../value/maybe.type';
 import { type Milliseconds } from './date';
 
@@ -29,7 +29,7 @@ export function timePeriodCounter(timePeriodLength: number, lastTimePeriodStart?
     return fn._nextTimePeriodEnd;
   }
 
-  let fn = (() => {
+  const fn = (() => {
     const now = new Date();
 
     if (now > (fn._nextTimePeriodEnd as Date)) {

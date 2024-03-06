@@ -1,5 +1,5 @@
-import { Factory, Maybe, Milliseconds, timePeriodCounter } from '@dereekb/util';
-import { MonoTypeOperatorFunction, Observable, map, of, switchMap } from 'rxjs';
+import { type Factory, type Milliseconds, timePeriodCounter } from '@dereekb/util';
+import { type MonoTypeOperatorFunction, type Observable, map, of, switchMap } from 'rxjs';
 
 export interface ErrorOnEmissionsInPeriodConfig<T> {
   /**
