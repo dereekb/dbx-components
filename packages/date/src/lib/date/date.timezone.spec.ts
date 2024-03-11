@@ -1,5 +1,5 @@
 import { isStartOfDayInUTC, requireCurrentTimezone } from '@dereekb/date';
-import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay } from 'date-fns';
+import { addHours, hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay, addSeconds, millisecondsToHours } from 'date-fns';
 import { type ISO8601DayString, type Milliseconds } from '@dereekb/util';
 import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, systemDateTimezoneUtcNormal, transformDateRangeToTimezoneFunction } from './date.timezone';
 import MockDate from 'mockdate';
@@ -113,11 +113,78 @@ describe('DateTimezoneUtcNormalInstance', () => {
         });
       }
     });
+
+    describe('march 2024 timezone scenario', () => {
+      describe('march 10 2024', () => {
+        describe('America/Chicago', () => {
+          describe('midnight', () => {
+            const expectedStartOfDay = new Date('2024-03-10T06:00:00.000Z');
+            const expectedStartOfDayInUtc = new Date('2024-03-10T00:00:00.000Z');
+
+            it('should calculate the proper start of day', () => {
+              const timezoneInstance = dateTimezoneUtcNormal({ timezone: 'America/Chicago' });
+              const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone('2024-03-10');
+              expect(startOfTodayInTimezone).toBeSameSecondAs(expectedStartOfDay);
+
+              const startOfDateInUTC = timezoneInstance.startOfDayInBaseDate('2024-03-10');
+              expect(startOfDateInUTC).toBeSameSecondAs(expectedStartOfDayInUtc);
+
+              const offset = timezoneInstance.getOffsetInHours(startOfTodayInTimezone, 'baseDateToTargetDate');
+              expect(offset).toBe(-6); // GMT-6 since it is not past 2AM yet
+
+              const convertedToBaseDate = timezoneInstance.baseDateToTargetDate(startOfTodayInTimezone);
+              expect(convertedToBaseDate).toBeSameSecondAs(expectedStartOfDayInUtc);
+            });
+          });
+
+          describe('one second before 3AM', () => {
+            const expected2AMLocal = new Date('2024-03-10T07:59:59.000Z');
+            const expected2AMInUtc = new Date('2024-03-10T01:59:59.000Z');
+
+            it('should calculate the two AM conversion properly', () => {
+              const timezoneInstance = dateTimezoneUtcNormal({ timezone: 'America/Chicago' });
+              const twoAMTodayInTimezone = addSeconds(addHours(timezoneInstance.startOfDayInTargetTimezone('2024-03-10'), 2), -1);
+              expect(twoAMTodayInTimezone).toBeSameSecondAs(expected2AMLocal);
+
+              const twoAMInUTC = addSeconds(addHours(timezoneInstance.startOfDayInBaseDate('2024-03-10'), 2), -1);
+              expect(twoAMInUTC).toBeSameSecondAs(expected2AMInUtc);
+
+              const offset = timezoneInstance.getOffsetInHours(twoAMTodayInTimezone, 'baseDateToTargetDate');
+              expect(offset).toBe(-6); // GMT-6 since it is not past 2AM yet
+
+              const convertedToBaseDate = timezoneInstance.baseDateToTargetDate(twoAMTodayInTimezone);
+              expect(convertedToBaseDate).toBeSameSecondAs(expected2AMInUtc);
+            });
+          });
+
+          describe('two AM', () => {
+            const expected2AMLocal = new Date('2024-03-10T08:00:00.000Z');
+            const expected2AMInUtc = new Date('2024-03-10T02:00:00.000Z');
+            const twoAMIsActuallyThreeAMInUtc = new Date('2024-03-10T03:00:00.000Z');
+
+            it('should calculate two AM properly but convert it to 3AM when using the time conversion', () => {
+              const timezoneInstance = dateTimezoneUtcNormal({ timezone: 'America/Chicago' });
+              const twoAMTodayInTimezone = addHours(timezoneInstance.startOfDayInTargetTimezone('2024-03-10'), 2);
+              expect(twoAMTodayInTimezone).toBeSameSecondAs(expected2AMLocal);
+
+              const twoAMInUTC = addHours(timezoneInstance.startOfDayInBaseDate('2024-03-10'), 2);
+              expect(twoAMInUTC).toBeSameSecondAs(expected2AMInUtc);
+
+              const offset = timezoneInstance.getOffsetInHours(twoAMTodayInTimezone, 'baseDateToTargetDate');
+              expect(offset).toBe(-5); // GMT-5 since it is now past 2AM...
+
+              const convertedToBaseDate = timezoneInstance.baseDateToTargetDate(twoAMTodayInTimezone);
+              expect(convertedToBaseDate).toBeSameSecondAs(twoAMIsActuallyThreeAMInUtc);
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('config with timezoneOffset', () => {
     function describeTestsForUtcOffset(utcOffset: number) {
-      describe(`timezoneOffset equal to UTC${utcOffset}`, () => {
+      describe(`timezoneOffset = UTC ${utcOffset}`, () => {
         const utcBaseDate = new Date('2022-02-11T00:00:00Z'); // date in utc
         const systemTimezoneOffset = getCurrentSystemOffsetInMs(utcBaseDate);
         const targetTimezoneOffset = hoursToMilliseconds(utcOffset);
@@ -132,6 +199,12 @@ describe('DateTimezoneUtcNormalInstance', () => {
           });
 
           // console.log('X: ', utcOffset, systemTimezoneOffset, targetTimezoneOffset, millisecondsToHours(systemAndTargetTimezoneOffset), utcBaseDate, normalDate, systemDate);
+        });
+
+        it('should return the configured offset.', () => {
+          expect(instance.config.useSystemTimezone).toBeUndefined();
+          expect(instance.config.timezone).toBeUndefined();
+          expect(instance.config.timezoneOffset).toBe(targetTimezoneOffset);
         });
 
         describe('normalDateToBaseDate()', () => {
