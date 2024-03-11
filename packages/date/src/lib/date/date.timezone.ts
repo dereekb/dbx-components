@@ -1,4 +1,4 @@
-import { addMilliseconds, addMinutes, millisecondsToHours, minutesToHours, startOfDay } from 'date-fns';
+import { addMilliseconds, addMinutes, millisecondsToHours, minutesToHours, startOfDay, set as setDate } from 'date-fns';
 import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, Hours } from '@dereekb/util';
 import { getTimezoneOffset, utcToZonedTime, format as formatDate } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
@@ -136,8 +136,11 @@ export function calculateTimezoneOffset(timezone: TimezoneString, date: Date) {
 
   // WORKAROUND: This is the current workaround. Performance hit seems negligible for all UI use cases.
   const zoneDate = utcToZonedTime(date, timezone);
-  const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm:ss');
-  const tzOffset = new Date(zoneDateStr + 'Z').getTime() - date.getTime();
+  const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm'); // ignore seconds, etc.
+  const zoneDateTime = new Date(zoneDateStr + 'Z').getTime();
+  const inputTime = setDate(date, { seconds: 0, milliseconds: 0 }).getTime();
+  const tzOffset = zoneDateTime - inputTime;
+
   return tzOffset;
 }
 
@@ -284,8 +287,8 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     this.config = config;
     const hasConversion = !config.noConversion;
 
-    function calculateOffset(date: Date, fn = getOffsetInMsFn as GetOffsetForDateFunction) {
-      const offset = fn(date);
+    function calculateOffset(date: Date) {
+      const offset = (getOffsetInMsFn as GetOffsetForDateFunction)(date);
       return offset;
     }
 
