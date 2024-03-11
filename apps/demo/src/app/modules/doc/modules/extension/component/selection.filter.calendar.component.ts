@@ -1,7 +1,7 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
-import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayString, readDaysOfWeekNames } from '@dereekb/date';
+import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
@@ -81,7 +81,7 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   }
 
   setFirstEightSelectionWithDays() {
-    const dayStrings = range(0, 8).map((x) => formatToISO8601DayString(addDays(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER.startsAt as Date, x)));
+    const dayStrings = range(0, 8).map((x) => formatToISO8601DayStringForSystem(addDays(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER.startsAt as Date, x)));
     this.dbxCalendarScheduleSelectionStore.setSelectedIndexes(dayStrings);
   }
 

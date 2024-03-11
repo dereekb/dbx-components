@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { formatToDayRangeString, formatToISO8601DayString } from '@dereekb/date';
+import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
@@ -30,7 +30,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
         if (filter.date) {
           result = {
             icon: 'event',
-            text: formatToISO8601DayString(filter.date)
+            text: formatToISO8601DayStringForSystem(filter.date)
           };
         } else {
           result = {
@@ -58,7 +58,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
           } else {
             result = {
               icon: 'event',
-              text: formatToISO8601DayString(filter.date)
+              text: formatToISO8601DayStringForSystem(filter.date)
             };
           }
         } else {

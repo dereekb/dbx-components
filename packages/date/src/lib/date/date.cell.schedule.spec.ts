@@ -27,7 +27,7 @@ import {
   isFullDateCellScheduleDateRange
 } from './date.cell.schedule';
 import { addDays, addHours, addMinutes, differenceInDays, differenceInMinutes, startOfHour } from 'date-fns';
-import { Day, range, UTC_TIMEZONE_STRING, lastValue, type TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY } from '@dereekb/util';
+import { Day, range, UTC_TIMEZONE_STRING, lastValue, type TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY, type ISO8601DayString } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString, dateTimezoneUtcNormal } from './date.timezone';
 import { dateCellIndexRange } from './date.cell.factory';
@@ -445,6 +445,7 @@ describe('expandDateCellScheduleFactory()', () => {
             const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
 
             expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
+            expect(timing.end).toBeSameSecondAs(addMinutes(startOfTodayInTimezone, timing.duration));
 
             const expandedDayZero = expandedDays[0];
             expect(expandedDayZero.i).toBe(0);
@@ -459,6 +460,93 @@ describe('expandDateCellScheduleFactory()', () => {
       describeTestsForTimezone('America/New_York');
       describeTestsForTimezone('America/Chicago');
       describeTestsForTimezone('Pacific/Fiji');
+    });
+
+    describe('scenarios', () => {
+      describe('march 10 2024', () => {
+        const date: ISO8601DayString = '2024-03-10';
+
+        describe('America/Chicago explicitly', () => {
+          const timezone = 'America/Chicago';
+          const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+          const startOfTodayInTimezone = new Date('2024-03-10T06:00:00.000Z'); // Midnight
+          const duration = 120; // 2 hours
+          const expectedEndTimeInTimezone = new Date('2024-03-11T07:00:00.000Z'); // 2AM
+
+          describe('one day long', () => {
+            it(`should expand the first and second day properly to the expected time and duration`, () => {
+              const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration }, 2, timezone); // 1 day
+
+              const schedule: DateCellSchedule = { w: '89' };
+              const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 2 });
+
+              expect(timing.duration).toBe(duration);
+              expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
+              expect(timing.end).toBeSameSecondAs(expectedEndTimeInTimezone); // one day and the duration later
+
+              const expandedDayZero = expandedDays[0];
+              expect(expandedDayZero.i).toBe(0);
+              expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+            });
+          });
+        });
+
+        function describeTestsForTimezone(timezone: TimezoneString, daylightSavings = true) {
+          describe(`${timezone}`, () => {
+            function describeTestForDuration(duration: number) {
+              const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+              const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone(date);
+
+              describe('one day long', () => {
+                it(`should expand the first day properly ${timezone} with duration ${duration}`, () => {
+                  const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration }, 1, timezone); // 1 day
+
+                  const schedule: DateCellSchedule = { w: '89' };
+                  const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
+
+                  expect(timing.duration).toBe(duration);
+                  expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
+                  expect(timing.end).toBeSameSecondAs(addMinutes(startOfTodayInTimezone, timing.duration));
+
+                  const expandedDayZero = expandedDays[0];
+                  expect(expandedDayZero.i).toBe(0);
+                  expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+                });
+              });
+
+              describe('two days long', () => {
+                it(`should expand the first and second day properly ${timezone} with duration ${duration}`, () => {
+                  const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration }, 2, timezone); // 2 days
+
+                  const schedule: DateCellSchedule = { w: '89' };
+                  const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 2 });
+
+                  expect(timing.duration).toBe(duration);
+                  expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
+                  expect(timing.end).toBeSameSecondAs(addHours(addMinutes(startOfTodayInTimezone, timing.duration), 24 - (daylightSavings ? 1 : 0))); // one day (taking DST into account) and the duration later
+
+                  const expandedDayZero = expandedDays[0];
+                  expect(expandedDayZero.i).toBe(0);
+                  expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+                });
+              });
+            }
+
+            describeTestForDuration(60);
+            describeTestForDuration(120);
+            describeTestForDuration(240);
+          });
+        }
+
+        describeTestsForTimezone('America/Denver');
+        describeTestsForTimezone('America/Los_Angeles');
+        describeTestsForTimezone('America/New_York');
+        describeTestsForTimezone('America/Chicago');
+
+        // test non-dst times
+        describeTestsForTimezone('UTC', false);
+        describeTestsForTimezone('Pacific/Fiji', false);
+      });
     });
   });
 });

@@ -236,6 +236,13 @@ export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, roundD
 }
 
 /**
+ * Creates a new date using UTC and copies the hours/minutes from the input date using the UTC values to the target date.
+ */
+export function copyHoursAndMinutesFromUTCDate(target: Date, fromDate: Date, roundDownToMinute?: boolean): Date {
+  return new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth(), target.getUTCDate(), fromDate.getUTCHours(), fromDate.getUTCMinutes(), roundDownToMinute ? 0 : fromDate.getUTCSeconds(), roundDownToMinute ? 0 : fromDate.getUTCMilliseconds()));
+}
+
+/**
  * Creates a new date and copies the hours/minutes from the input onto the target date, if provided. Defaults to now/today otherwise.
  *
  * Also rounds the seconds and milliseconds.
@@ -345,4 +352,14 @@ export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T
  */
 export function isStartOfDayInUTC(date: Date): boolean {
   return date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
+}
+
+/**
+ * Returns true if the input date is at midnight for the system.
+ *
+ * @param date
+ * @returns
+ */
+export function isStartOfDayForSystem(date: Date): boolean {
+  return date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0 && date.getMilliseconds() === 0;
 }

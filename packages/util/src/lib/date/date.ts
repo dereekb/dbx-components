@@ -133,6 +133,29 @@ export const ISO8601_DAY_STRING_REGEX = /^\d{4,}-\d{2}-\d{2}$/;
 export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
 
 /**
+ * Returns the start of the input date's UTC time in UTC.
+ *
+ * I.E. 2022-01-02T04:00:00.000Z in GMT-6 returns 2022-01-02
+ *
+ * @param date
+ * @returns
+ */
+export function startOfDayForUTCDateInUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+/**
+ * Returns the system's date in UTC.
+ *
+ * I.E. 2022-01-02T04:00:00.000Z in GMT-6 (10PM Jan 1st CST) returns 2022-01-01
+ *
+ * @param date
+ * @returns
+ */
+export function startOfDayForSystemDateInUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+}
+
+/**
  * Parses a ISO8601DayString to a Date.
  *
  * @param inputDateString

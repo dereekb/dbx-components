@@ -57,5 +57,39 @@
         <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
       </dbx-subsection>
     </doc-feature-example>
+    <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
+      <dbx-subsection header="With DateSchedule Filter" hint="A dbx-schedule-selection-calendar can be limited to a specific filter range. An initial selection of 'all' is also applied to this example.">
+        <doc-extension-calendar-schedule-with-filter-example></doc-extension-calendar-schedule-with-filter-example>
+      </dbx-subsection>
+      <dbx-subsection header="Single Index Selection" hint="The calendar can be set to only allow selecting a single day at a time.">
+        <doc-extension-calendar-schedule-example selectionMode="single" [config]="singleSelectionConfig"></doc-extension-calendar-schedule-example>
+      </dbx-subsection>
+      <dbx-subsection header="The Default" hint="This is the base selection calendar with no configuration. Also displayed below are the individual components.">
+        <doc-extension-calendar-schedule-example></doc-extension-calendar-schedule-example>
+      </dbx-subsection>
+      <dbx-subsection header=".dbx-schedule-selection-calendar-compact, .dbx-schedule-selection-calendar-compact-icons" hint="Optional css classes to apply that reduces the vertical size of all the squares in the calendar. Custom icon content is shown only when using .dbx-schedule-selection-calendar-compact-icons.">
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
+        <h3>Other Customization</h3>
+        <p>Can customize the calendar days of the month more directly. It is configured to be readonly when red and hides the modify buttons when readonly. Shows .dbx-schedule-selection-calendar-compact-icons usage.</p>
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
+      </dbx-subsection>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
+      <dbx-subsection header="With DateSchedule Filter" hint="A dbx-schedule-selection-calendar can be limited to a specific filter range. An initial selection of 'all' is also applied to this example.">
+        <doc-extension-calendar-schedule-with-filter-example></doc-extension-calendar-schedule-with-filter-example>
+      </dbx-subsection>
+      <dbx-subsection header="Single Index Selection" hint="The calendar can be set to only allow selecting a single day at a time.">
+        <doc-extension-calendar-schedule-example selectionMode="single" [config]="singleSelectionConfig"></doc-extension-calendar-schedule-example>
+      </dbx-subsection>
+      <dbx-subsection header="The Default" hint="This is the base selection calendar with no configuration. Also displayed below are the individual components.">
+        <doc-extension-calendar-schedule-example></doc-extension-calendar-schedule-example>
+      </dbx-subsection>
+      <dbx-subsection header=".dbx-schedule-selection-calendar-compact, .dbx-schedule-selection-calendar-compact-icons" hint="Optional css classes to apply that reduces the vertical size of all the squares in the calendar. Custom icon content is shown only when using .dbx-schedule-selection-calendar-compact-icons.">
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
+        <h3>Other Customization</h3>
+        <p>Can customize the calendar days of the month more directly. It is configured to be readonly when red and hides the modify buttons when readonly. Shows .dbx-schedule-selection-calendar-compact-icons usage.</p>
+        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
+      </dbx-subsection>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

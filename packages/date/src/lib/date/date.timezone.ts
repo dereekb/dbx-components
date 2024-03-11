@@ -1,6 +1,6 @@
-import { addMilliseconds, addMinutes, minutesToHours, startOfDay } from 'date-fns';
-import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building } from '@dereekb/util';
-import { getTimezoneOffset } from 'date-fns-tz';
+import { addMilliseconds, addMinutes, minutesToHours, startOfDay, set as setDate } from 'date-fns';
+import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours } from '@dereekb/util';
+import { utcToZonedTime, format as formatDate } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
 import { type DateRange, type TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 
@@ -115,6 +115,33 @@ export function getCurrentSystemOffsetInHours(date: Date): number {
  */
 export function getCurrentSystemOffsetInMinutes(date: Date): number {
   return -date.getTimezoneOffset();
+}
+
+/**
+ * Returns the timezone offset in milliseconds.
+ *
+ * I.E. GMT-5 = -5 hours (in milliseconds)
+ *
+ * @param timezone
+ * @param date
+ * @returns
+ */
+export function calculateTimezoneOffset(timezone: TimezoneString, date: Date) {
+  /*
+  // BUG: There is a bug with getTimezoneOffset where the offset is not calculated properly for the first 2 hours after the DST change.
+  // https://github.com/marnusw/date-fns-tz/issues/227
+  
+  const tzOffset = getTimezoneOffset(timezone, date);
+  */
+
+  // WORKAROUND: This is the current workaround. Performance hit seems negligible for all UI use cases.
+  const zoneDate = utcToZonedTime(date, timezone);
+  const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm'); // ignore seconds, etc.
+  const zoneDateTime = new Date(zoneDateStr + 'Z').getTime();
+  const inputTime = setDate(date, { seconds: 0, milliseconds: 0 }).getTime();
+  const tzOffset = zoneDateTime - inputTime;
+
+  return tzOffset;
 }
 
 export type DateTimezoneConversionTarget = 'target' | 'base' | 'system';
@@ -240,10 +267,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     let getOffsetInMsFn: Maybe<GetOffsetForDateFunction>;
 
     function useTimezone(timezone: TimezoneString) {
-      getOffsetInMsFn = (date) => {
-        const tzOffset = getTimezoneOffset(timezone, date);
-        return tzOffset;
-      };
+      getOffsetInMsFn = (date) => calculateTimezoneOffset(timezone, date);
     }
 
     if (config == null || typeof config === 'string') {
@@ -263,8 +287,8 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     this.config = config;
     const hasConversion = !config.noConversion;
 
-    function calculateOffset(date: Date, fn = getOffsetInMsFn as GetOffsetForDateFunction) {
-      const offset = fn(date);
+    function calculateOffset(date: Date) {
+      const offset = (getOffsetInMsFn as GetOffsetForDateFunction)(date);
       return offset;
     }
 
@@ -304,8 +328,6 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
             default:
               throw new Error(`unexpected offset target "${target}"`);
           }
-
-          // console.log('Offset: ', { date: x, target, offset, offsetInHours: millisecondsToHours(offset) });
 
           return offset;
         }
@@ -364,6 +386,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
   getOffset(date: Date, transform: DateTimezoneUtcNormalInstanceTransformType): Milliseconds {
     return this[`${transform}Offset`](date);
+  }
+
+  getOffsetInHours(date: Date, transform: DateTimezoneUtcNormalInstanceTransformType): Hours {
+    return this.getOffset(date, transform) / MS_IN_HOUR;
   }
 
   offsetFunction(transform: DateTimezoneUtcNormalInstanceTransformType): MapFunction<Date, Milliseconds> {

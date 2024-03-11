@@ -22,7 +22,7 @@ import {
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { type DateCellRange, type DateCellRangeWithRange } from './date.cell.index';
 import { type DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
-import { formatToISO8601DayString, parseISO8601DayStringToDate } from './date.format';
+import { formatToISO8601DayStringForSystem, parseISO8601DayStringToDate } from './date.format';
 import { type DateRange, isDateInDateRange } from './date.range';
 import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 import { guessCurrentTimezone, requireCurrentTimezone } from './date';
@@ -541,7 +541,7 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
       const fn = dateCellTimingRelativeIndexFactory(timing);
 
       it('should return the expected indexes for the first day relative to the UTC timezone', () => {
-        const dayString = formatToISO8601DayString(start);
+        const dayString = formatToISO8601DayStringForSystem(start);
 
         const result1day = fn(dayString);
         const result1date = fn(timing.startsAt); // input the system time
@@ -557,7 +557,7 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
       const fn = dateCellTimingRelativeIndexFactory(timing);
 
       it('should return the expected indexes for the first day relative to the Denver timezone', () => {
-        const dayString = formatToISO8601DayString(start);
+        const dayString = formatToISO8601DayStringForSystem(start);
         const result1day = fn(dayString);
         const resulttimingstart = fn(timing.start);
 
@@ -629,7 +629,7 @@ describe('dateCellTimingRelativeIndexFactory()', () => {
             const factory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
             const result = factory(dstDay);
 
-            expect(formatToISO8601DayString(dstDay)).toBe('2023-03-13');
+            expect(formatToISO8601DayStringForSystem(dstDay)).toBe('2023-03-13');
             expect(result).toBe(2); // 2 days later
           });
         });
@@ -1178,7 +1178,7 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
       function describeTestsForTimezone(timezone: TimezoneString) {
         const timezoneInstance = dateTimezoneUtcNormal({ timezone });
         const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone();
-        const startOfTodayInTimezoneB = timezoneInstance.targetDateToBaseDate(parseISO8601DayStringToUTCDate(formatToISO8601DayString()));
+        const startOfTodayInTimezoneB = timezoneInstance.targetDateToBaseDate(parseISO8601DayStringToUTCDate(formatToISO8601DayStringForSystem()));
         const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration: 60 }, 1, timezone); // 1 day
 
         describe(`${timezone}`, () => {

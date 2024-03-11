@@ -65,6 +65,7 @@ describe('DateCellTiming', () => {
 describe('dateCellTiming()', () => {
   const systemTimezone = guessCurrentTimezone();
   const startsAt = setMinutes(setHours(systemNormalDateToBaseDate(new Date()), 12), 0); // keep seconds to show rounding
+
   const start = systemNormalDateToBaseDate(startOfDay(startsAt));
   const days = 5;
   const minutes = 60;
@@ -103,6 +104,7 @@ describe('dateCellTiming()', () => {
 
       it('should create a timing for a specific time that last 5 days', () => {
         const result = dateCellTiming({ startsAt, duration: minutes }, days);
+
         expect(result).toBeDefined();
         expect(result.start).toBeSameMinuteAs(startOfDay(startsAt));
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
@@ -175,6 +177,7 @@ describe('dateCellTiming()', () => {
       it('should create a timing for a specific time that last 5 days using a DateRangeDayDistanceInput', () => {
         const dateRangeInput: DateRangeInput = { date: startOfDay(startsAt), distance: days };
         const result = dateCellTiming({ startsAt, duration: minutes }, dateRangeInput);
+
         expect(result).toBeDefined();
         expect(result.start).toBeSameMinuteAs(startOfDay(startsAt));
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
@@ -188,12 +191,13 @@ describe('dateCellTiming()', () => {
   describe('scenarios', () => {
     describe('Jan 2nd 2022', () => {
       const duration = 60;
+      const totalDays = 7;
       const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
-      const endsAtDate = addDays(startsAt, 6); // Saturday
+      const endsAtDate = addDays(startsAt, totalDays - 1); // Saturday
       const expectedEndsAt = addMinutes(endsAtDate, duration);
 
       it('should generate the correct timing when inputting the number of days.', () => {
-        const weekTiming = dateCellTiming({ startsAt, duration }, 7); // Sunday-Saturday
+        const weekTiming = dateCellTiming({ startsAt, duration }, totalDays); // Sunday-Saturday
 
         expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
         expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
@@ -202,7 +206,7 @@ describe('dateCellTiming()', () => {
       });
 
       it('should generate the correct timing when inputting the distance of days.', () => {
-        const weekTiming = dateCellTiming({ startsAt, duration }, { distance: 7 }); // Sunday-Saturday
+        const weekTiming = dateCellTiming({ startsAt, duration }, { distance: totalDays }); // Sunday-Saturday
 
         expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
         expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);

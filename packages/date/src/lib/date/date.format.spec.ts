@@ -1,7 +1,7 @@
 import { isISO8601DateString, isISO8601DayString } from '@dereekb/util';
 import { addDays, addHours, addMinutes, isValid } from 'date-fns';
 import { type DateRange, formatDateRangeDistance } from '@dereekb/date';
-import { formatDateRangeFunction, formatToDayRangeString, formatToShortDateString, parseISO8601DayStringToDate } from './date.format';
+import { formatDateRangeFunction, formatToDayRangeString, formatToISO8601DayStringForUTC, formatToShortDateString, parseISO8601DayStringToDate } from './date.format';
 
 describe('formatDateRangeFunction', () => {
   describe('function', () => {
@@ -215,5 +215,18 @@ describe('formatToDayRangeString()', () => {
   it('should format a single Date', () => {
     const result = formatToDayRangeString(start);
     expect(result).toBe(formatToShortDateString(start));
+  });
+});
+
+describe('formatToISO8601DayStringForUTC()', () => {
+  describe('scenario', () => {
+    describe('march 10 2024', () => {
+      it('should format the UTC midnight date to 2024-03-10', () => {
+        const expectedResult = '2024-03-10';
+        const date = new Date('2024-03-10T00:00:00.000Z');
+        const result = formatToISO8601DayStringForUTC(date);
+        expect(result).toBe(expectedResult);
+      });
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
-import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayString } from '@dereekb/date';
+import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
 import { beginLoadingPage, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
 import { range } from '@dereekb/util';
@@ -60,7 +60,7 @@ export class DocExtensionTableComponent implements OnDestroy {
   readonly exampleDataDelegate: DbxTableContextDataDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     loadData: (input) => {
       const allDays = expandDaysForDateRange(dateRange({ ...input }));
-      const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayString(x), meta: x }));
+      const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayStringForSystem(x), meta: x }));
       const items: ExampleTableData[] = [...this.exampleTableData];
       const items$: Observable<PageListLoadingState<ExampleTableData>> = of(successPageResult(0, items));
 
@@ -83,7 +83,7 @@ export class DocExtensionTableComponent implements OnDestroy {
   readonly exampleLoadingDataDelegate: DbxTableContextDataDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     loadData: (input) => {
       const allDays = expandDaysForDateRange(dateRange({ ...input }));
-      const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayString(x), meta: x }));
+      const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayStringForSystem(x), meta: x }));
       const items$: Observable<PageListLoadingState<ExampleTableData>> = this.exampleTableDataItems
         .pipe(
           skip(1),
