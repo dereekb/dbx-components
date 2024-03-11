@@ -222,17 +222,33 @@ export function formatToISO8601DateString(date: Date = new Date()): ISO8601DaySt
 }
 
 /**
- * Converts the input Date or ISO8601DayString to an ISO8601DayString.
+ * Converts the input Date or ISO8601DayString to an ISO8601DayString using the system's date (not UTC date).
+ *
+ * Use formatToISO8601DayStringForUTC() for using the UTC date.
  *
  * @param dateOrString
  * @returns
  */
-export function toISO8601DayString(dateOrString: DateOrDayString): ISO8601DayString {
-  return isDate(dateOrString) ? formatToISO8601DayString(dateOrString) : dateOrString;
+export function toISO8601DayStringForSystem(dateOrString: DateOrDayString): ISO8601DayString {
+  return isDate(dateOrString) ? formatToISO8601DayStringForSystem(dateOrString) : dateOrString;
 }
 
-export function formatToISO8601DayString(date: Date = new Date()): ISO8601DayString {
+export function formatToISO8601DayStringForSystem(date: Date = new Date()): ISO8601DayString {
   return format(date, 'yyyy-MM-dd');
+}
+
+/**
+ * Converts the input Date or ISO8601DayString to an ISO8601DayString using the UTC date.
+ *
+ * @param dateOrString
+ * @returns
+ */
+export function toISO8601DayStringForUTC(dateOrString: DateOrDayString): ISO8601DayString {
+  return isDate(dateOrString) ? formatToISO8601DayStringForUTC(dateOrString) : dateOrString;
+}
+
+export function formatToISO8601DayStringForUTC(date: Date = new Date()): ISO8601DayString {
+  return `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1).toString().padStart(2, '0')}-${date.getUTCDate().toString().padStart(2, '0')}`;
 }
 
 export const dateShortDateStringFormat = 'MM/dd/yyyy';
@@ -323,3 +339,14 @@ export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO860
   const result = parse(dayString, format, new Date());
   return startOfDay(result);
 }
+
+// MARK: Compat
+/**
+ * @deprecated use toISO8601DayStringForSystem instead for clarity. Will be removed in the future.
+ */
+export const toISO8601DayString = toISO8601DayStringForSystem;
+
+/**
+ * @deprecated use formatToISO8601DayStringForSystem instead for clarity. Will be removed in the future.
+ */
+export const formatToISO8601DayString = formatToISO8601DayStringForSystem;

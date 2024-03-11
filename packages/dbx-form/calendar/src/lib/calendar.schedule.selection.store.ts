@@ -32,7 +32,7 @@ import {
   expandDateCellScheduleRange,
   DateCell,
   DateCellDurationSpan,
-  formatToISO8601DayString,
+  formatToISO8601DayStringForSystem,
   DateCellTimingRelativeIndexFactoryInput,
   dateCellScheduleDayCodesAreSetsEquivalent,
   simplifyDateCellScheduleDayCodes,
@@ -448,7 +448,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly selectionValueSelectedDates$: Observable<Set<ISO8601DayString>> = this.currentSelectionValueDateCellTimingDateFactory$.pipe(
     switchMap((dateFactory) => {
-      return dateFactory ? this.selectionValueSelectedIndexes$.pipe(map((x) => mapValuesToSet(x, (y) => formatToISO8601DayString(dateFactory(y))))) : of(new Set<ISO8601DayString>());
+      return dateFactory ? this.selectionValueSelectedIndexes$.pipe(map((x) => mapValuesToSet(x, (y) => formatToISO8601DayStringForSystem(dateFactory(y))))) : of(new Set<ISO8601DayString>());
     }),
     shareReplay(1)
   );

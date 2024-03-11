@@ -1,4 +1,4 @@
-import { DateTimezoneUtcNormalInstance, parseISO8601DayStringToDate, toJsDate, formatToISO8601DayString, formatToISO8601DateString, isSameDateHoursAndMinutes, DateRangeWithDateOrStringValue } from '@dereekb/date';
+import { DateTimezoneUtcNormalInstance, parseISO8601DayStringToDate, toJsDate, formatToISO8601DayStringForSystem, formatToISO8601DateString, isSameDateHoursAndMinutes, DateRangeWithDateOrStringValue } from '@dereekb/date';
 import { ISO8601DayString, Maybe } from '@dereekb/util';
 
 export enum DbxDateTimeValueMode {
@@ -51,7 +51,7 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
 
   switch (mode) {
     case DbxDateTimeValueMode.DAY_STRING:
-      factory = (x) => (x != null ? formatToISO8601DayString(x) : x);
+      factory = (x) => (x != null ? formatToISO8601DayStringForSystem(x) : x);
       useTimezoneInstance = false; // day strings do not use timezones
       break;
     case DbxDateTimeValueMode.DATE_STRING:

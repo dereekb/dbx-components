@@ -1,5 +1,5 @@
 import { type ISO8601DayString, type DateOrDayString } from '@dereekb/util';
-import { toISO8601DayString, toJsDayDate } from './date.format';
+import { toISO8601DayStringForSystem, toJsDayDate } from './date.format';
 import { type DateRange } from './date.range';
 
 // MARK: ISO8601DayStringRange
@@ -29,7 +29,7 @@ export function dateOrDayStringRangeToDateRange(range: DateOrDayStringRange): Da
 
 export function dateOrDayStringRangeToISO8601DayStringRange(range: DateOrDayStringRange): ISO8601DayStringRange {
   return {
-    start: toISO8601DayString(range.start),
-    end: toISO8601DayString(range.end)
+    start: toISO8601DayStringForSystem(range.start),
+    end: toISO8601DayStringForSystem(range.end)
   };
 }

@@ -3,7 +3,7 @@ import { addHours, hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, 
 import { type ISO8601DayString, type Milliseconds } from '@dereekb/util';
 import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, systemDateTimezoneUtcNormal, transformDateRangeToTimezoneFunction } from './date.timezone';
 import MockDate from 'mockdate';
-import { formatToISO8601DayString } from './date.format';
+import { formatToISO8601DayStringForSystem } from './date.format';
 
 beforeEach(() => {
   MockDate.reset();
@@ -320,7 +320,7 @@ describe('startOfDayInTimezoneDayStringFactory()', () => {
 
       it('should return the start of the day date in UTC.', () => {
         const systemStart = instance.systemDateToBaseDate(utcStart); // convert to the system start time to make sure we format it to the proper day string
-        const inputDayString = formatToISO8601DayString(systemStart); // format to ensure that the same day is being passed
+        const inputDayString = formatToISO8601DayStringForSystem(systemStart); // format to ensure that the same day is being passed
 
         expect(expectedDay).toBe(inputDayString);
         expect(systemStart).toBeSameSecondAs(startOfDay(systemStart));
@@ -344,7 +344,7 @@ describe('startOfDayInTimezoneDayStringFactory()', () => {
       const expectedStart = instance.targetDateToBaseDate(utcStart);
 
       it('should return the start of the day date in America/Denver.', () => {
-        const inputDayString = formatToISO8601DayString(systemStart); // format to ensure that the same day is being passed
+        const inputDayString = formatToISO8601DayStringForSystem(systemStart); // format to ensure that the same day is being passed
         expect(expectedDay).toBe(inputDayString);
         expect(systemStart).toBeSameSecondAs(startOfDay(systemStart));
 
@@ -367,7 +367,7 @@ describe('startOfDayInTimezoneDayStringFactory()', () => {
       const expectedStart = instance.targetDateToBaseDate(utcStart);
 
       it('should return the start of the day date in America/New_York.', () => {
-        const inputDayString = formatToISO8601DayString(systemStart); // format to ensure that the same day is being passed
+        const inputDayString = formatToISO8601DayStringForSystem(systemStart); // format to ensure that the same day is being passed
         expect(expectedDay).toBe(inputDayString);
         expect(systemStart).toBeSameSecondAs(startOfDay(systemStart));
 

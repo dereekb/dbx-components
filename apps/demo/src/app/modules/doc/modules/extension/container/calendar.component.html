@@ -5,24 +5,6 @@
       <p>All style colors are used as css variables, allowing for easy overwriting of values.</p>
     </doc-feature-derived>
     <!-- Examples -->
-    <doc-feature-example header="dbx-calendar" hint="Used to render a calendar. Uses a DbxCalendarStore.">
-      <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
-      <p>Picked Date: {{ date$ | async | date }}</p>
-      <p>Clicked Event: {{ event | json }}</p>
-    </doc-feature-example>
-    <doc-feature-example header="dbx-calendar in restricted two-column" hint="Example showing a calendar in a two-column view with a set height.">
-      <button (click)="showRight = !showRight" mat-raised-button color="accent">Toggle Right</button>
-      <dbx-two-column dbxTwoColumnContext [reverseSizing]="true" [dbxTwoColumnFullLeft]="true" [showRight]="showRight" style="height: 400px">
-        <dbx-two-block class="dbx-content-scroll-lock" left>
-          <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
-        </dbx-two-block>
-        <dbx-two-column-right right header="Right Side Header">
-          <div style="height: 100%">
-            <p>Clicked Event: {{ event | json }}</p>
-          </div>
-        </dbx-two-column-right>
-      </dbx-two-column>
-    </doc-feature-example>
     <doc-feature-example header="dateCellScheduleRangeField()" hint="A field used for building a schedule.">
       <doc-form-example-form [dbxFormlyFields]="dateCellScheduleRangeFields" [dbxFormSource]="defaultDateCellScheduleRangeFieldValue$"></doc-form-example-form>
       <h3>Timezone Tester</h3>
@@ -39,23 +21,6 @@
         <i>DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CLOSE_CONFIG_TOKEN</i>
         to provide a custom close config.
       </p>
-    </doc-feature-example>
-    <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
-      <dbx-subsection header="With DateSchedule Filter" hint="A dbx-schedule-selection-calendar can be limited to a specific filter range. An initial selection of 'all' is also applied to this example.">
-        <doc-extension-calendar-schedule-with-filter-example></doc-extension-calendar-schedule-with-filter-example>
-      </dbx-subsection>
-      <dbx-subsection header="Single Index Selection" hint="The calendar can be set to only allow selecting a single day at a time.">
-        <doc-extension-calendar-schedule-example selectionMode="single" [config]="singleSelectionConfig"></doc-extension-calendar-schedule-example>
-      </dbx-subsection>
-      <dbx-subsection header="The Default" hint="This is the base selection calendar with no configuration. Also displayed below are the individual components.">
-        <doc-extension-calendar-schedule-example></doc-extension-calendar-schedule-example>
-      </dbx-subsection>
-      <dbx-subsection header=".dbx-schedule-selection-calendar-compact, .dbx-schedule-selection-calendar-compact-icons" hint="Optional css classes to apply that reduces the vertical size of all the squares in the calendar. Custom icon content is shown only when using .dbx-schedule-selection-calendar-compact-icons.">
-        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact"></doc-extension-calendar-schedule-example>
-        <h3>Other Customization</h3>
-        <p>Can customize the calendar days of the month more directly. It is configured to be readonly when red and hides the modify buttons when readonly. Shows .dbx-schedule-selection-calendar-compact-icons usage.</p>
-        <doc-extension-calendar-schedule-example class="dbx-schedule-selection-calendar-compact-icons" [config]="scheduleConfig$ | async"></doc-extension-calendar-schedule-example>
-      </dbx-subsection>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

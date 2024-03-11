@@ -58,24 +58,6 @@ export class DocExtensionCalendarComponent implements OnInit {
 
   readonly dateCellScheduleRangeFields = [
     dateScheduleRangeField({
-      key: 'futureDateSchedule',
-      required: false,
-      label: 'Future Dates',
-      outputTimezone: this.timezone$,
-      defaultScheduleDays: expandDateCellScheduleDayCodes('89'),
-      minMaxDateRange: {
-        start: startOfDay(new Date())
-      },
-      description: 'Simple date schedule that requires picking dates in the future.'
-    }),
-    dateScheduleRangeField({
-      key: 'dateSchedule',
-      required: true,
-      label: 'Custom Label',
-      outputTimezone: this.timezone$,
-      description: 'Input field used for picking a DateCellScheduleRange value.'
-    }),
-    dateScheduleRangeField({
       outputTimezone: this.timezone$,
       key: 'dateScheduleWithFilter',
       required: true,
@@ -92,55 +74,6 @@ export class DocExtensionCalendarComponent implements OnInit {
           closeText: 'Save Changes',
           buttonColor: 'primary'
         }
-      }
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithMinMaxDateRange',
-      required: true,
-      description: 'Date schedule with a min and max date range applied to it and all days selected.',
-      minMaxDateRange: of({ start: addDays(new Date(), -25), end: addDays(new Date(), 25) }),
-      computeSelectionResultRelativeToFilter: true,
-      initialSelectionState: 'all'
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithFilterAndExclusions',
-      required: true,
-      description: 'Date schedule with a filter applied to it and additional exclusions.',
-      filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
-      computeSelectionResultRelativeToFilter: true,
-      exclusions: [0, 2, 4],
-      initialSelectionState: 'all'
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithTimingFilterAndMinDateRange',
-      required: true,
-      description: 'Date schedule with a filter and an explicit min date to be 4 days from now',
-      filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
-      minMaxDateRange: { start: addDays(new Date(), 4) },
-      computeSelectionResultRelativeToFilter: true,
-      initialSelectionState: 'all'
-    }),
-    dateScheduleRangeField({
-      key: 'dateScheduleForUtcTimezone',
-      required: true,
-      description: 'Date schedule for the UTC timezone.',
-      outputTimezone: 'UTC'
-    }),
-    dateScheduleRangeField({
-      key: 'dateScheduleForUtcTimezoneWithFilter',
-      required: true,
-      description: 'Date schedule for the timezone with filter. The timezone from the filter is ignored and overridden by the output timezone.',
-      outputTimezone: 'UTC',
-      filter: {
-        //
-        ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-        startsAt: startOfDay(new Date()),
-        end: addDays(new Date(), 3),
-        w: '89',
-        ex: []
       }
     })
   ];
