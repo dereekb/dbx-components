@@ -27,7 +27,7 @@ import {
   isFullDateCellScheduleDateRange
 } from './date.cell.schedule';
 import { addDays, addHours, addMinutes, differenceInDays, differenceInMinutes, startOfHour } from 'date-fns';
-import { Day, range, UTC_TIMEZONE_STRING, lastValue, type TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY, ISO8601DayString } from '@dereekb/util';
+import { Day, range, UTC_TIMEZONE_STRING, lastValue, type TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY, type ISO8601DayString } from '@dereekb/util';
 import { durationSpanToDateRange } from './date.duration';
 import { systemNormalDateToBaseDate, startOfDayInTimezoneFromISO8601DayString, dateTimezoneUtcNormal } from './date.timezone';
 import { dateCellIndexRange } from './date.cell.factory';
