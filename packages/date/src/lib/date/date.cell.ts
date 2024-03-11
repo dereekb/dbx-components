@@ -1,13 +1,14 @@
-import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC } from '@dereekb/util';
 import { dateRange, type DateRange, type DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay } from 'date-fns';
-import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate, requireCurrentTimezone } from './date';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay, addHours } from 'date-fns';
+import { copyHoursAndMinutesFromDate, roundDownToMinute, isSameDate, isDate, requireCurrentTimezone, copyHoursAndMinutesFromUTCDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { type DateTimezoneUtcNormalFunctionInput, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 import { IsDate, IsNumber, IsString, Min } from 'class-validator';
 import { IsKnownTimezone } from '../timezone/timezone.validator';
 import { fitDateRangeToDayPeriod } from './date.range.timezone';
+import { formatToISO8601DayStringForSystem, formatToISO8601DayStringForUTC } from './date.format';
 
 /**
  * Index from 0 of which day this block represents.
@@ -187,7 +188,7 @@ export type DateCellDurationSpan<B extends DateCell = DateCell> = DateDurationSp
 /**
  * The DateRange input for dateCellTiming()
  */
-export type DateCellTimingRangeInput = Pick<DateRangeDayDistanceInput, 'distance'> | DateRange | number;
+export type DateCellTimingRangeInput = DateRangeDayDistanceInput | DateRange | number;
 
 /**
  * Can use any timezone instance that has a timezone configured, or is using the
@@ -286,7 +287,7 @@ export function isValidDateCellTimingStartDate(date: Date): boolean {
  *
  * The start date from the inputDate is considered to to have the offset noted in DateCell, and will be retained.
  */
-export function dateCellTiming(durationInput: DateDurationSpan, inputRange: DateCellTimingRangeInput, timezoneInput?: DateCellTimingTimezoneInput): FullDateCellTiming {
+export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: DateCellTimingRangeInput, timezoneInput?: DateCellTimingTimezoneInput): FullDateCellTiming {
   const { duration } = durationInput;
 
   if (duration > MINUTES_IN_DAY) {
@@ -298,56 +299,66 @@ export function dateCellTiming(durationInput: DateDurationSpan, inputRange: Date
 
   const { startsAt: inputStartsAt } = durationInput;
 
-  // it is important that startsAt is evaluated the system time normal, as addDays/addMinutes and related functionality rely on the system timezone.
-  let startsAtInSystemTimezone = normalInstance ? normalInstance.systemDateToTargetDate(inputStartsAt) : inputStartsAt;
+  // it is important that startsAt is evaluated the base time normal so we can avoid daylight savings issues
+  let startsAtInUtc = normalInstance.baseDateToTargetDate(inputStartsAt);
 
-  let numberOfBlockedDays: number;
+  let numberOfDayBlocks: number;
 
-  let inputDate: Date | undefined;
-  let range: DateRange;
+  let hasRangeFromInput = false;
+  let rangeInUtc: DateRange;
 
-  if (typeof inputRange === 'number') {
+  function createRangeWithStart(dateInUtc: Date) {
+    const startOfDateInUtc = startOfDayForUTCDateInUTC(dateInUtc);
+
+    return {
+      start: startOfDateInUtc,
+      end: addMinutes(addHours(startOfDateInUtc, 24), -1)
+    };
+  }
+
+  if (typeof rangeInput === 'number') {
     // input range is a number of days
-    numberOfBlockedDays = inputRange - 1;
-    range = dateRange({ type: DateRangeType.DAY, date: startsAtInSystemTimezone });
-  } else if (isDateRange(inputRange)) {
-    // input range is a DateRange
-    range = inputRange;
-    inputDate = inputRange.start;
+    numberOfDayBlocks = rangeInput - 1;
+    rangeInUtc = createRangeWithStart(startsAtInUtc);
+  } else if (!isDateRange(rangeInput)) {
+    // inputRange is a distance
+    numberOfDayBlocks = rangeInput.distance - 1;
 
-    if (!isValidDateCellTimingStartDate(inputRange.start)) {
+    const startDateInUtc = rangeInput.date ? normalInstance.baseDateToSystemDate(rangeInput.date) : startsAtInUtc;
+    rangeInUtc = createRangeWithStart(startDateInUtc);
+    hasRangeFromInput = true;
+  } else {
+    // input range is a DateRange
+    if (!isValidDateCellTimingStartDate(rangeInput.start)) {
       throw new Error('Invalid dateCellTiming start date passed to dateCellTiming() via inputRange.');
     }
 
-    numberOfBlockedDays = differenceInDays(inputRange.end, inputRange.start); // min of 1 day
-  } else {
-    // input range is a Date
-    inputDate = startsAtInSystemTimezone;
-    numberOfBlockedDays = inputRange.distance - 1;
-    range = dateRange({ type: DateRangeType.DAY, date: inputDate }, true);
+    rangeInUtc = normalInstance.transformDateRangeToTimezoneFunction('baseDateToSystemDate')(rangeInput);
+    numberOfDayBlocks = differenceInDays(rangeInput.end, rangeInput.start); // min of 1 day. Uses system time as-is
+    hasRangeFromInput = true;
   }
 
-  if (inputDate != null) {
+  if (hasRangeFromInput) {
     // input date takes priority, so move the startsAt's date to be on the same date.
-    startsAtInSystemTimezone = copyHoursAndMinutesFromDate(range.start, startsAtInSystemTimezone, true);
-
-    const startedBeforeRange = isBefore(startsAtInSystemTimezone, range.start);
+    startsAtInUtc = copyHoursAndMinutesFromUTCDate(rangeInUtc.start, startsAtInUtc, true);
+    const startedBeforeRange = isBefore(startsAtInUtc, rangeInUtc.start);
 
     if (startedBeforeRange) {
-      startsAtInSystemTimezone = addDays(startsAtInSystemTimezone, 1); // starts 24 hours later
-      numberOfBlockedDays = Math.max(numberOfBlockedDays - 1, 0); // reduce number of applied days by 1, to a min of 0
+      startsAtInUtc = addHours(startsAtInUtc, 24); // starts 24 hours later
+      numberOfDayBlocks = Math.max(numberOfDayBlocks - 1, 0); // reduce number of applied days by 1, to a min of 0
     }
   } else {
-    startsAtInSystemTimezone = roundDownToMinute(startsAtInSystemTimezone); // clear seconds and milliseconds from startsAt
+    startsAtInUtc = roundDownToMinute(startsAtInUtc); // clear seconds and milliseconds from startsAt
   }
 
-  const lastStartsAtInSystemTimezone = addDays(startsAtInSystemTimezone, numberOfBlockedDays); // use addDays so the system (if it experiences daylight savings) can change for daylight savings
+  const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24); // use addDays so the system (if it experiences daylight savings) can account for change for daylight savings
 
   // calculate end to be the ending date/time of the final duration span
-  const end: Date = normalInstance.targetDateToSystemDate(addMinutes(lastStartsAtInSystemTimezone, duration));
+  const end: Date = addMinutes(normalInstance.targetDateToBaseDate(lastStartsAtInBaseTimezone), duration);
 
-  const start = normalInstance.targetDateToSystemDate(startOfDay(startsAtInSystemTimezone));
-  const startsAt = normalInstance.targetDateToSystemDate(startsAtInSystemTimezone);
+  const utcDay = formatToISO8601DayStringForUTC(startsAtInUtc);
+  const start = normalInstance.startOfDayInTargetTimezone(utcDay);
+  const startsAt = normalInstance.targetDateToBaseDate(startsAtInUtc);
 
   return {
     start,
