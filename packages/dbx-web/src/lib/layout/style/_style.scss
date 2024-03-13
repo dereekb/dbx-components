@@ -165,11 +165,8 @@
     color: theming.$dbx-disabled-color;
   }
 
+  .dbx-background,  // COMPAT: Remove dbx-background later
   .dbx-bg {
-    color: theming.$dbx-disabled-color;
-  }
-
-  .dbx-background {
     background: theming.$dbx-bg-color-contrast;
     color: theming.$dbx-bg-color;
   }

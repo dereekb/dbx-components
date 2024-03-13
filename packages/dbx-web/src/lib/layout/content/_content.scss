@@ -178,11 +178,6 @@ $scroll-content-bottom-padding: 42px;
   $accent-color: theming.get-color-from-palette($accent, 500);
   $warn-color: theming.get-color-from-palette($warn, 500);
 
-  .dbx-background {
-    color: $content-color;
-    background: $content-background;
-  }
-
   .dbx-content-pit {
     background: $content-border-background;
   }
