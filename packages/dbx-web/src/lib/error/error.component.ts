@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { Maybe, ErrorInput, toReadableError, ReadableError, ReadableErrorWithCode, isDefaultReadableError } from '@dereekb/util';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableError } from '@dereekb/util';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxErrorPopoverComponent } from './error.popover.component';
 import { BehaviorSubject, map, shareReplay } from 'rxjs';
