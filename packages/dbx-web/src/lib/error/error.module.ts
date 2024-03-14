@@ -12,12 +12,14 @@ import { DbxErrorWidgetViewComponent } from './error.widget.component';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 import { DbxTextModule } from '../layout/text/text.module';
+import { DbxErrorViewComponent } from './error.view.component';
 
 const declarations = [
   //
   DbxReadableErrorComponent,
   DbxLoadingErrorDirective,
   DbxActionErrorDirective,
+  DbxErrorViewComponent,
   DbxErrorPopoverComponent,
   DbxErrorDetailsComponent,
   DbxErrorWidgetViewComponent,

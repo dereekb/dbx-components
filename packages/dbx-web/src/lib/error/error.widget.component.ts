@@ -13,7 +13,7 @@ import { DbxErrorWidgetService } from './error.widget.service';
     <dbx-injection [config]="config$ | async"></dbx-injection>
   `,
   host: {
-    class: 'error-dbx-widget-view'
+    class: 'dbx-error-widget-view'
   }
 })
 export class DbxErrorWidgetViewComponent implements OnDestroy {
@@ -24,13 +24,18 @@ export class DbxErrorWidgetViewComponent implements OnDestroy {
       let config: Maybe<DbxInjectionComponentConfig>;
 
       if (error != null) {
-        const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code) ?? this.dbxErrorWidgetService.getDefaultErrorWidgetEntry();
+        const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code);
 
-        if (entry) {
-          config = {
-            componentClass: entry.componentClass,
-            data: error
-          };
+        if (entry != null) {
+          const defaultEntry = this.dbxErrorWidgetService.getDefaultErrorWidgetEntry();
+          const componentClass = entry.widgetComponentClass ?? defaultEntry?.widgetComponentClass;
+
+          if (componentClass != null) {
+            config = {
+              componentClass,
+              data: error
+            };
+          }
         }
       }
 

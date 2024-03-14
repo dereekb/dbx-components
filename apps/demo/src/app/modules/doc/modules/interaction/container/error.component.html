@@ -5,13 +5,20 @@
       <dbx-error [error]="readableErrorWithoutCode"></dbx-error>
       <dbx-error [error]="readableError"></dbx-error>
       <dbx-error [error]="longerReadableError"></dbx-error>
-      <dbx-error [error]="customTestError"></dbx-error>
+      <dbx-error [error]="customInlineTestError"></dbx-error>
+      <dbx-error [error]="customWidgetTestError"></dbx-error>
       <dbx-error [error]="blankReadableError"></dbx-error>
     </doc-feature-example>
     <doc-feature-example header="dbx-error-details" hint="Component that is used by the error popover. Displays all information about an error.">
       <dbx-error-details [error]="longerReadableError"></dbx-error-details>
-      <h4>Custom Widget</h4>
-      <dbx-error-details [error]="customTestError"></dbx-error-details>
+      <h4>Custom Widgets</h4>
+      <p>Using the widget extension and dbxErrorWidgetService you can register custom errors widgets to display for given errors.</p>
+      <dbx-error-details [error]="customWidgetTestError"></dbx-error-details>
+      <p>The presentation of an error shown by dbx-error can also be customized by registering an error code with an errorComponentClass provided.</p>
+      <dbx-error [error]="customInlineTestError"></dbx-error>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-error-view" hint="The base error view component that can be used to show an error message and provide access to the clicked button.">
+      <dbx-error-view icon="person" message="An expected test error has occured for this view!"></dbx-error-view>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

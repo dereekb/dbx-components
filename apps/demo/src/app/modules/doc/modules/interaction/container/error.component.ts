@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { readableError, ReadableError, serverError } from '@dereekb/util';
 import { LOREM } from '../../shared/lorem';
-import { CUSTOM_TEST_ERROR_CODE } from '../component/error.widget.component';
+import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
+import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE } from '../component/error.custom.inline.widget.component';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
@@ -27,8 +28,14 @@ export class DocInteractionErrorComponent {
     }
   });
 
-  readonly customTestError: ReadableError = serverError({
-    code: CUSTOM_TEST_ERROR_CODE,
+  readonly customInlineTestError: ReadableError = serverError({
+    code: CUSTOM_DBX_ERROR_TEST_ERROR_CODE,
+    message: 'This error has a custom dbx-error presentation/widget associated with it.',
+    status: 200
+  });
+
+  readonly customWidgetTestError: ReadableError = serverError({
+    code: CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE,
     message: 'This error has a custom widget associated with it.',
     status: 200
   });

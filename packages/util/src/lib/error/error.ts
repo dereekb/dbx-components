@@ -18,18 +18,18 @@ export const DEFAULT_READABLE_ERROR_CODE = 'ERROR';
  * An error that is identified by a unique code.
  */
 export interface CodedError {
-  code: StringErrorCode;
+  readonly code: StringErrorCode;
   /**
    * The original error, if available.
    */
-  _error?: unknown;
+  readonly _error?: unknown;
 }
 
 /**
  * An error with a human-readable message.
  */
 export interface ReadableError extends Partial<CodedError> {
-  message?: Maybe<string>;
+  readonly message?: Maybe<string>;
 }
 
 export function isDefaultReadableError(error: Maybe<ReadableError | StringErrorCode>) {
@@ -47,7 +47,7 @@ export function readableError(code: StringErrorCode, message?: string): Readable
 }
 
 export interface ReadableDataError<T = unknown> extends ReadableError {
-  data?: T;
+  readonly data?: T;
 }
 
 export interface ErrorWrapper {
@@ -62,6 +62,8 @@ export type ErrorInput = ErrorWrapper | CodedError | ReadableError | ReadableDat
  * @param inputError
  * @returns
  */
+export function toReadableError(inputError: ErrorInput): CodedError | ReadableErrorWithCode;
+export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableErrorWithCode>;
 export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableErrorWithCode> {
   let error: Maybe<ReadableErrorWithCode>;
 
