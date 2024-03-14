@@ -13,7 +13,6 @@ $big-button-height: 46px; // 33% bigger
   .dbx-button-big {
     .mdc-button.mat-mdc-button {
       height: $big-button-height;
-      line-height: $big-button-height;
     }
   }
 
@@ -35,6 +34,16 @@ $big-button-height: 46px; // 33% bigger
   .dbx-icon-button .mat-mdc-button .mdc-button__label {
     display: flex;
     align-items: center;
+  }
+
+  .dbx-button-text-option-button {
+    .dbx-button {
+      margin-bottom: 6px;
+    }
+
+    .dbx-base-button .mdc-button__label {
+      padding: 8px 0;
+    }
   }
 
   .dbx-grow-button {

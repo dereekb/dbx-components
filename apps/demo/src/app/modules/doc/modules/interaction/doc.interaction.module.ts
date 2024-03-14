@@ -1,4 +1,4 @@
-import { CUSTOM_TEST_ERROR_CODE, DocInteractionCustomErrorWidgetComponent } from './component/error.widget.component';
+import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE, DocInteractionCustomErrorWidgetComponent } from './component/error.custom.widget.component';
 import { DocInteractionExamplePopupContentComponent } from './component/interaction.popup.content.component';
 import { DocInteractionExamplePopupComponent } from './component/interaction.popup.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './component/filter.preset.component';
@@ -28,6 +28,7 @@ import { DocInteractionTestDateFilterPopoverButtonComponent } from './component/
 import { DocInteractionTestDateFilterPresetFilterComponent } from './component/filter.date.preset.component';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
 import { DocInteractionLoadingComponent } from './container/loading.component';
+import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidgetComponent } from './component/error.custom.inline.widget.component';
 
 @NgModule({
   imports: [
@@ -52,6 +53,7 @@ import { DocInteractionLoadingComponent } from './container/loading.component';
     DocInteractionExamplePopoverContentComponent,
     DocInteractionExamplePopupComponent,
     DocInteractionExamplePopupContentComponent,
+    DocInteractionCustomInlineErrorWidgetComponent,
     DocInteractionCustomErrorWidgetComponent,
     // container
     DocInteractionLayoutComponent,
@@ -69,8 +71,13 @@ import { DocInteractionLoadingComponent } from './container/loading.component';
 export class DocInteractionModule {
   constructor(readonly dbxErrorWidgetService: DbxErrorWidgetService) {
     this.dbxErrorWidgetService.register({
-      code: CUSTOM_TEST_ERROR_CODE,
-      componentClass: DocInteractionCustomErrorWidgetComponent
+      code: CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE,
+      widgetComponentClass: DocInteractionCustomErrorWidgetComponent
+    });
+
+    this.dbxErrorWidgetService.register({
+      code: CUSTOM_DBX_ERROR_TEST_ERROR_CODE,
+      errorComponentClass: DocInteractionCustomInlineErrorWidgetComponent
     });
   }
 }
