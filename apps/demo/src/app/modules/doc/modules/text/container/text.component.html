@@ -28,6 +28,7 @@
         </p>
       </div>
       <div>
+        <h4>Small</h4>
         <p>
           <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="primary">Primary</dbx-chip>
           <dbx-chip class="dbx-chip-spacer" [small]="true" dbxColor="accent">Accent</dbx-chip>
@@ -41,6 +42,7 @@
         </p>
       </div>
       <div>
+        <h4>Small Block</h4>
         <p>
           <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="primary">Primary</dbx-chip>
           <dbx-chip class="dbx-chip-spacer" [block]="true" [small]="true" dbxColor="accent">Accent</dbx-chip>
@@ -54,8 +56,17 @@
         </p>
       </div>
       <div>
+        <h4>Line Layout</h4>
         <p>
           <dbx-chip dbxColor="primary">State</dbx-chip>
+          <dbx-button-spacer></dbx-button-spacer>
+          <span>Example Line Item With Chip</span>
+        </p>
+      </div>
+      <div>
+        <h4>Line Layout With Small Chip Text</h4>
+        <p>
+          <dbx-chip class="dbx-chip-small-text" dbxColor="primary">State</dbx-chip>
           <dbx-button-spacer></dbx-button-spacer>
           <span>Example Line Item With Chip</span>
         </p>
@@ -122,6 +133,12 @@
     </doc-feature-example>
     <doc-feature-example header=".dbx-form-description" hint="Slightly differs from dbx-label.">
       <p class="dbx-form-description">{{ lorem }}</p>
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-u">
+      <p class="dbx-u">Underlined text.</p>
+    </doc-feature-example>
+    <doc-feature-example header=".text-left">
+      <p class="text-left">Text left aligned.</p>
     </doc-feature-example>
     <h4>Color Classes (css classes)</h4>
     <doc-feature-example header=".dbx-primary, .dbx-primary-bg">

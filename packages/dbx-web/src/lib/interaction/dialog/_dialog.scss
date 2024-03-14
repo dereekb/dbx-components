@@ -16,6 +16,10 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
     padding: $mat-dialog-container-padding;
   }
 
+  .dbx-dialog-content.normal-dialog-content {
+    min-width: unset;
+  }
+
   .mdc-dialog__container .dbx-dialog-content {
     &.wide-dialog-content {
       width: $max-dialog-width;

@@ -36,6 +36,16 @@ $big-button-height: 46px; // 33% bigger
     align-items: center;
   }
 
+  .dbx-button-text-option-button {
+    .dbx-button {
+      margin-bottom: 6px;
+    }
+
+    .dbx-base-button .mdc-button__label {
+      padding: 8px 0;
+    }
+  }
+
   .dbx-grow-button {
     width: 100%;
 

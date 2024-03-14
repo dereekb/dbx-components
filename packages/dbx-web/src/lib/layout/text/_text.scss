@@ -29,9 +29,23 @@ $dbx-detail-block-content-offset: 30px;
     text-align: center;
   }
 
+  .dbx-u {
+    text-decoration: underline;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+
   .dbx-json,
   .prettyjson {
     white-space: pre-wrap !important;
+  }
+
+  .dbx-iframe {
+    height: 100%;
+    width: 100%;
+    border: none;
   }
 
   .dbx-label-block {
@@ -45,7 +59,7 @@ $dbx-detail-block-content-offset: 30px;
 
     .mat-icon {
       padding-right: 6px;
-      flex-shrink: 0; // do not shrink
+      flex-shrink: 0; // do not allow shrinking
     }
 
     .dbx-anchor-a {
@@ -128,6 +142,12 @@ $dbx-detail-block-content-offset: 30px;
     font-size: 12px;
     padding: 2px 8px;
     min-height: 20px;
+  }
+
+  .dbx-chip-small-text .dbx-chip,
+  .dbx-chip-small-text.dbx-chip,
+  .dbx-chip-small-text.dbx-chip.dbx-chip-small {
+    font-size: 10px;
   }
 
   .dbx-chip.dbx-chip-block {
