@@ -51,7 +51,7 @@ export interface ReadableDataError<T = unknown> extends ReadableError {
 }
 
 export interface ErrorWrapper {
-  data: ReadableError | CodedError;
+  readonly data: ReadableError | CodedError;
 }
 
 export type ErrorInput = ErrorWrapper | CodedError | ReadableError | ReadableDataError;
