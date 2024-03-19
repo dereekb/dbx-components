@@ -1,4 +1,4 @@
-import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, Inject } from '@angular/core';
+import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, Inject, StaticProvider } from '@angular/core';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { BehaviorSubject, map } from 'rxjs';
@@ -28,24 +28,26 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
           const cssClassesForAllGroups = inputCssClasses ?? [];
 
           const componentClass = delegate.headerComponentClass ?? DbxListTitleGroupHeaderComponent;
+          const { dataForGroupValue, footerComponentClass } = delegate;
+
           groups = Array.from(groupsValuesMap.entries()).map(([value, items]) => {
-            const data = delegate.dataForGroupValue(value as O, items);
+            const data = dataForGroupValue(value as O, items);
             (data as Building<D>).value = value as O;
             const cssClasses = data.cssClasses ? [...cssClassesForAllGroups, ...data.cssClasses] : cssClassesForAllGroups;
+
+            const providers: StaticProvider[] = [
+              {
+                provide: DBX_LIST_TITLE_GROUP_DATA,
+                useValue: data
+              }
+            ];
 
             const group: DbxValueListItemGroup<D, T, I> = {
               id: String(value),
               data,
               items,
-              headerConfig: {
-                componentClass,
-                providers: [
-                  {
-                    provide: DBX_LIST_TITLE_GROUP_DATA,
-                    useValue: data
-                  }
-                ]
-              },
+              headerConfig: { componentClass, providers },
+              footerConfig: footerComponentClass ? { componentClass: footerComponentClass, providers } : undefined,
               cssClasses
             };
 
