@@ -19,52 +19,36 @@ import {
   DbxActionSuccessHandlerDirective,
   DbxActionIsWorkingDirective,
   DbxActionDisabledOnSuccessDirective,
-  DbxActionPreSuccessDirective
+  DbxActionPreSuccessDirective,
+  DbxActionHandlerValueDirective
 } from './directive';
+
+const declarations = [
+  DbxActionDirective,
+  DbxActionContextMapDirective,
+  DbxActionFromMapDirective,
+  DbxActionMapSourceDirective,
+  DbxActionMapWorkingDisableDirective,
+  DbxActionSourceDirective,
+  DbxActionHandlerDirective,
+  DbxActionHandlerValueDirective,
+  DbxActionDisabledDirective,
+  DbxActionDisabledOnSuccessDirective,
+  DbxActionEnforceModifiedDirective,
+  DbxActionAutoTriggerDirective,
+  dbxActionValueStreamDirective,
+  DbxActionAutoModifyDirective,
+  DbxActionValueDirective,
+  DbxActionContextLoggerDirective,
+  DbxActionPreSuccessDirective,
+  DbxActionHasSuccessDirective,
+  DbxActionSuccessHandlerDirective,
+  DbxActionIsWorkingDirective
+];
 
 @NgModule({
   imports: [CommonModule],
-  declarations: [
-    DbxActionDirective,
-    DbxActionContextMapDirective,
-    DbxActionFromMapDirective,
-    DbxActionMapSourceDirective,
-    DbxActionMapWorkingDisableDirective,
-    DbxActionSourceDirective,
-    DbxActionHandlerDirective,
-    DbxActionDisabledDirective,
-    DbxActionDisabledOnSuccessDirective,
-    DbxActionEnforceModifiedDirective,
-    DbxActionAutoTriggerDirective,
-    dbxActionValueStreamDirective,
-    DbxActionAutoModifyDirective,
-    DbxActionValueDirective,
-    DbxActionContextLoggerDirective,
-    DbxActionPreSuccessDirective,
-    DbxActionHasSuccessDirective,
-    DbxActionSuccessHandlerDirective,
-    DbxActionIsWorkingDirective
-  ],
-  exports: [
-    DbxActionDirective,
-    DbxActionContextMapDirective,
-    DbxActionFromMapDirective,
-    DbxActionMapSourceDirective,
-    DbxActionMapWorkingDisableDirective,
-    DbxActionSourceDirective,
-    DbxActionHandlerDirective,
-    DbxActionDisabledDirective,
-    DbxActionDisabledOnSuccessDirective,
-    DbxActionEnforceModifiedDirective,
-    DbxActionAutoTriggerDirective,
-    dbxActionValueStreamDirective,
-    DbxActionAutoModifyDirective,
-    DbxActionValueDirective,
-    DbxActionContextLoggerDirective,
-    DbxActionPreSuccessDirective,
-    DbxActionHasSuccessDirective,
-    DbxActionSuccessHandlerDirective,
-    DbxActionIsWorkingDirective
-  ]
+  declarations,
+  exports: declarations
 })
 export class DbxCoreActionModule {}

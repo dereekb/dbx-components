@@ -1,8 +1,8 @@
-import { map, shareReplay, switchMap, tap, BehaviorSubject } from 'rxjs';
+import { map, shareReplay, switchMap, tap, BehaviorSubject, combineLatest } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { DbxActionWorkInstanceDelegate, HandleActionWithFunctionOrContext } from '../../action.handler';
-import { Maybe, Destroyable, Initialized } from '@dereekb/util';
-import { filterMaybe, SubscriptionObject, workFactory } from '@dereekb/rxjs';
+import { DbxActionWorkInstanceDelegate } from '../../action.handler';
+import { Maybe, Destroyable, Initialized, GetterOrValue, asGetter, FactoryWithInput } from '@dereekb/util';
+import { filterMaybe, SubscriptionObject, Work, workFactory } from '@dereekb/rxjs';
 
 export const DBX_ACTION_HANDLER_LOCK_KEY = 'dbxActionHandler';
 
@@ -11,15 +11,43 @@ export const DBX_ACTION_HANDLER_LOCK_KEY = 'dbxActionHandler';
  */
 export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initialized, Destroyable {
   private _sub = new SubscriptionObject();
-  private _handlerFunction = new BehaviorSubject<Maybe<HandleActionWithFunctionOrContext<T, O>>>(undefined);
-  readonly handlerFunction$ = this._handlerFunction.pipe(filterMaybe(), shareReplay(1));
+  private _handlerFunction = new BehaviorSubject<Maybe<Work<T, O>>>(undefined);
+  private _handlerValue = new BehaviorSubject<Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>>(undefined);
 
-  get handlerFunction(): Maybe<HandleActionWithFunctionOrContext<T, O>> {
+  readonly handlerFunction$ = combineLatest([this._handlerValue, this._handlerFunction]).pipe(
+    map(([handlerValue, handlerFunction]) => {
+      let work: Maybe<Work<T, O>>;
+
+      if (handlerFunction != null) {
+        work = handlerFunction;
+      } else if (handlerValue !== undefined) {
+        const getter = asGetter(handlerValue) as FactoryWithInput<O, T>;
+
+        work = (x, c) => {
+          c.performTaskWithReturnValue(() => getter(x));
+        };
+      }
+
+      return work;
+    }),
+    filterMaybe(),
+    shareReplay(1)
+  );
+
+  get handlerFunction(): Maybe<Work<T, O>> {
     return this._handlerFunction.value;
   }
 
-  set handlerFunction(handlerFunction: Maybe<HandleActionWithFunctionOrContext<T, O>>) {
+  set handlerFunction(handlerFunction: Maybe<Work<T, O>>) {
     this._handlerFunction.next(handlerFunction);
+  }
+
+  get handlerValue(): Maybe<GetterOrValue<O> | FactoryWithInput<O, T>> {
+    return this._handlerValue.value;
+  }
+
+  set handlerValue(handlerValue: Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>) {
+    this._handlerValue.next(handlerValue);
   }
 
   private _delegate = new DbxActionWorkInstanceDelegate<T, O>(this.source);

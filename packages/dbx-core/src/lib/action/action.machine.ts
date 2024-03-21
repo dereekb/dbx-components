@@ -1,10 +1,10 @@
 import { DbxActionContextSourceReference } from './action.reference';
 import { delay, first } from 'rxjs';
 import { ActionContextStoreSource } from './action.store.source';
-import { DbxActionWorkInstanceDelegate, HandleActionFunction } from './action.handler';
+import { DbxActionWorkInstanceDelegate } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
 import { Destroyable, Maybe } from '@dereekb/util';
-import { SubscriptionObject, workFactory } from '@dereekb/rxjs';
+import { SubscriptionObject, Work, workFactory } from '@dereekb/rxjs';
 import { Injectable, OnDestroy } from '@angular/core';
 
 /**
@@ -20,7 +20,7 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
    *
    * If false, will not subscribe/handle valueReady$ events.
    */
-  handleValueReady: HandleActionFunction<T, O> | false;
+  handleValueReady: Work<T, O> | false;
   /**
    * Optional function to execute after the action has succeeded.
    */
@@ -44,7 +44,7 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
     if (config.handleValueReady !== false) {
       this._handleValueReadySub.subscription = this.sourceInstance.valueReady$.subscribe((value) => {
         const doWork = workFactory({
-          work: config.handleValueReady as HandleActionFunction<T, O>,
+          work: config.handleValueReady as Work<T, O>,
           delegate: new DbxActionWorkInstanceDelegate<T, O>(this.sourceInstance)
         });
 

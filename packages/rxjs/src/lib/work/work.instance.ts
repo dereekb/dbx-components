@@ -127,6 +127,23 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   }
 
   /**
+   * Performs a synchronous task that returns the value to resolve.
+   *
+   * If an error is thrown, the error is forwarded to the reject function.
+   *
+   * @param fn
+   */
+  performTaskWithReturnValue(fn: () => O): void {
+    try {
+      const result = fn();
+      this.success(result);
+    } catch (e) {
+      this.reject(e as ErrorInput);
+      throw e;
+    }
+  }
+
+  /**
    * Begins working using a promise.
    */
   startWorkingWithPromise(promise: Promise<O>): void {
