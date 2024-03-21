@@ -92,7 +92,7 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
 @Component({
   selector: 'dbx-list-title-group-header',
   template: `
-    <div class="dbx-list-item-padded dbx-list-two-line-item">
+    <div class="dbx-list-item-padded dbx-list-two-line-item" [ngClass]="{ 'dbx-list-two-line-item-with-icon': icon }">
       <mat-icon class="item-icon" *ngIf="icon">{{ icon }}</mat-icon>
       <div class="item-left">
         <div class="mat-subtitle-2">{{ title }}</div>
