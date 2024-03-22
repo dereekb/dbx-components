@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
-import { readableError, ReadableError, serverError } from '@dereekb/util';
+import { Maybe, randomNumber, readableError, ReadableError, serverError } from '@dereekb/util';
 import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE } from '../component/error.custom.inline.widget.component';
+import { DbxErrorSnackbarService } from '@dereekb/dbx-web';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
@@ -39,4 +40,35 @@ export class DocInteractionErrorComponent {
     message: 'This error has a custom widget associated with it.',
     status: 200
   });
+
+  constructor(readonly dbxErrorSnackbarService: DbxErrorSnackbarService) {}
+
+  showErrorSnackbar(errorNumber?: Maybe<number>) {
+    if (errorNumber == null) {
+      errorNumber = randomNumber(6, 'floor');
+    }
+
+    let error: ReadableError;
+
+    switch (errorNumber) {
+      case 1:
+        error = this.customInlineTestError;
+        break;
+      case 2:
+        error = this.customWidgetTestError;
+        break;
+      case 3:
+        error = this.longerReadableError;
+        break;
+      case 4:
+        error = this.readableErrorWithoutCode;
+        break;
+      case 0:
+      default:
+        error = this.readableError;
+        break;
+    }
+
+    this.dbxErrorSnackbarService.showSnackbarError(error, { duration: 3000 });
+  }
 }

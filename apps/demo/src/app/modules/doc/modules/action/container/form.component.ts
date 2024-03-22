@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { HandleActionFunction } from '@dereekb/dbx-core';
+import { WorkUsingObservable } from '@dereekb/rxjs';
 import { IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
@@ -29,7 +29,7 @@ export class DocActionFormComponent {
     return of(isFriday(value.date));
   };
 
-  readonly handleFormAction: HandleActionFunction<DocActionFormExampleValue> = () => {
+  readonly handleFormAction: WorkUsingObservable<DocActionFormExampleValue> = () => {
     return of(true).pipe(delay(1000));
   };
 }

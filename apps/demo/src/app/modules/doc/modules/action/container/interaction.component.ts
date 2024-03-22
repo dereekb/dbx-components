@@ -1,12 +1,13 @@
 import { MatDialog } from '@angular/material/dialog';
 import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig } from '@dereekb/dbx-web';
 import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
-import { DbxActionContextMachine, HandleActionFunction, safeDetectChanges } from '@dereekb/dbx-core';
+import { DbxActionContextMachine, safeDetectChanges } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
 import { DbxActionAnalyticsConfig, DbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { Maybe, ReadableError } from '@dereekb/util';
+import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 
 @Component({
   templateUrl: './interaction.component.html'
@@ -47,8 +48,13 @@ export class DocActionInteractionComponent implements OnDestroy {
     this._value.complete();
   }
 
-  readonly handleAction: HandleActionFunction = () => {
+  readonly handleAction: WorkUsingObservable = () => {
     return of(true).pipe(delay(1000));
+  };
+
+  readonly handleActionWithError: WorkUsingContext = (_, x) => {
+    const error = new Error('This is a simple example error.');
+    x.reject(error);
   };
 
   onActionSuccess = (value: any) => {

@@ -1,8 +1,7 @@
 import { type ObservableOrValue, asObservable } from './rxjs/getter';
 import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, type Observable, of, type Subscription, BehaviorSubject } from 'rxjs';
 import { cleanup, combineLatestFromMapValuesObsFn, preventComplete } from './rxjs';
-import { type Destroyable, type Maybe, reduceBooleansWithOrFn } from '@dereekb/util';
-import ms from 'ms';
+import { type Destroyable, type Maybe, reduceBooleansWithOrFn, MS_IN_SECOND } from '@dereekb/util';
 import { SubscriptionObject } from './subscription';
 
 export type LockKey = string;
@@ -36,7 +35,7 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
  * Executes the input function when the lockSet is set unlocked, or the timeout is reached.
  */
 export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayTime }: OnLockSetUnlockedConfig): Subscription {
-  const timeoutTime = inputTimeout ?? ms('50s');
+  const timeoutTime = inputTimeout ?? MS_IN_SECOND * 50;
   return lockSet.isUnlocked$
     .pipe(
       filter((x) => x),

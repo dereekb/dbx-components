@@ -1,4 +1,4 @@
-import { HandleActionWithContext } from '@dereekb/dbx-core';
+import { WorkUsingContext } from '@dereekb/rxjs';
 import { Component, OnInit } from '@angular/core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { randomNumber } from '@dereekb/util';
@@ -21,11 +21,11 @@ export class DemoSetupDevelopmentWidgetComponent implements OnInit {
     this.profileDocumentStore.setId(this.auth.uid$);
   }
 
-  readonly handleCreateGuestbook: HandleActionWithContext = (value, context) => {
+  readonly handleCreateGuestbook: WorkUsingContext = (value, context) => {
     context.startWorkingWithLoadingStateObservable(this.guestbookDocumentStore.createGuestbook({ name: `My New Guestbook ${randomNumber(999)}`, published: true }));
   };
 
-  readonly handleCreateTwentyGuestbooks: HandleActionWithContext = (value, context) => {
+  readonly handleCreateTwentyGuestbooks: WorkUsingContext = (value, context) => {
     context.startWorking();
 
     for (let i = 0; i < 20; i += 1) {

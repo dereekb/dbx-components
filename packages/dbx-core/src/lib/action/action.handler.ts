@@ -24,7 +24,7 @@ export class DbxActionWorkInstanceDelegate<T = unknown, O = unknown> implements 
 
 // MARK: Compat
 /**
- * @deprecated use Worker instead.
+ * @deprecated use Work instead.
  */
 export type HandleActionWithFunctionOrContext<T = unknown, O = unknown> = Work<T, O>;
 
@@ -36,4 +36,4 @@ export type HandleActionFunction<T = unknown, O = unknown> = WorkUsingObservable
 /**
  * @deprecated use WorkUsingContext instead.
  */
-export type HandleActionWithContext<T = unknown, O = unknown> = WorkUsingContext<T, O>;
+export type HandleActionUsingContext<T = unknown, O = unknown> = WorkUsingContext<T, O>;

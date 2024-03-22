@@ -3,6 +3,7 @@ import { Maybe, filterMaybeValues, mapIterable, StringErrorCode } from '@dereekb
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 
 export const DEFAULT_ERROR_WIDGET_CODE = 'DEFAULT_ERROR_WIDGET';
+export const UNKNOWN_ERROR_WIDGET_CODE = 'UNKNOWN_ERROR_WIDGET';
 
 export interface DbxErrorWidgetEntry {
   /**
@@ -37,6 +38,13 @@ export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntr
 
 /**
  * Service used to register error widgets.
+ *
+ * It has two default widgets:
+ *
+ * - default: used in cases where an error has been registered by its error code
+ * - unknown: used in cases where an error has an error code that has not been registered
+ *
+ * By default the DbxErrorDefaultErrorWidgetComponent is registered to both the default and unknown error entries.
  */
 @Injectable({
   providedIn: 'root'
@@ -45,7 +53,9 @@ export class DbxErrorWidgetService {
   private _entries = new Map<StringErrorCode, DbxErrorWidgetEntry>();
 
   constructor() {
-    this.registerDefaultEntry({ widgetComponentClass: DbxErrorDefaultErrorWidgetComponent });
+    const defaultEntry = { widgetComponentClass: DbxErrorDefaultErrorWidgetComponent };
+    this.registerDefaultEntry(defaultEntry);
+    this.registerUnknownEntry(defaultEntry);
   }
 
   registerDefaultEntry(entry: Omit<DbxErrorWidgetEntry, 'errorComponentClass' | 'code'>) {
@@ -53,6 +63,14 @@ export class DbxErrorWidgetService {
       ...entry,
       errorComponentClass: null, // errorComponentClass is not allowed nor used for the default entry
       code: DEFAULT_ERROR_WIDGET_CODE
+    });
+  }
+
+  registerUnknownEntry(entry: Omit<DbxErrorWidgetEntry, 'errorComponentClass' | 'code'>) {
+    return this.register({
+      ...entry,
+      errorComponentClass: null, // errorComponentClass is not allowed nor used for the unknown entry
+      code: UNKNOWN_ERROR_WIDGET_CODE
     });
   }
 
@@ -75,6 +93,10 @@ export class DbxErrorWidgetService {
 
   getDefaultErrorWidgetEntry(): Maybe<DbxErrorWidgetEntry> {
     return this.getErrorWidgetEntry(DEFAULT_ERROR_WIDGET_CODE);
+  }
+
+  getUnknownErrorWidgetEntry(): Maybe<DbxErrorWidgetEntry> {
+    return this.getErrorWidgetEntry(UNKNOWN_ERROR_WIDGET_CODE);
   }
 
   getErrorWidgetEntry(code: StringErrorCode): Maybe<DbxErrorWidgetEntry> {

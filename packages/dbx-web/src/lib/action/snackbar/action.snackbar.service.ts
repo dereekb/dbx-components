@@ -2,14 +2,13 @@ import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
 import { Inject, Injectable, InjectionToken, Optional, Type } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
-import { Milliseconds, Maybe, mergeObjects } from '@dereekb/util';
+import { Milliseconds, Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarType } from './action.snackbar';
 import { DbxActionSnackbarGeneratorInput, DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from './action.snackbar.generator';
-import ms from 'ms';
 
 export const DBX_ACTION_SNACKBAR_SERVICE_CONFIG = new InjectionToken('DbxActionSnackbarServiceConfig');
 
-export const DEFAULT_SNACKBAR_DIRECTIVE_DURATION = ms('4s');
+export const DEFAULT_SNACKBAR_DIRECTIVE_DURATION = MS_IN_SECOND * 4;
 
 export interface DbxActionSnackbarEventMakeConfig {
   [key: string]: DbxMakeActionSnackbarGeneratorConfiguration;

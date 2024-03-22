@@ -8,6 +8,11 @@
       <dbx-error [error]="customInlineTestError"></dbx-error>
       <dbx-error [error]="customWidgetTestError"></dbx-error>
       <dbx-error [error]="blankReadableError"></dbx-error>
+      <h4>[iconOnly]</h4>
+      <p>dbx-error can also be simplified to showing an icon-only mode. This is useful for cases where screen space is limited. All errors, including those with custom inline error components, are reduced to only the icon.</p>
+      <dbx-error [error]="readableErrorWithoutCode" [iconOnly]="true"></dbx-error>
+      <dbx-error [error]="readableError" [iconOnly]="true"></dbx-error>
+      <dbx-error [error]="customInlineTestError" [iconOnly]="true"></dbx-error>
     </doc-feature-example>
     <doc-feature-example header="dbx-error-details" hint="Component that is used by the error popover. Displays all information about an error.">
       <dbx-error-details [error]="longerReadableError"></dbx-error-details>
@@ -19,6 +24,18 @@
     </doc-feature-example>
     <doc-feature-example header="dbx-error-view" hint="The base error view component that can be used to show an error message and provide access to the clicked button.">
       <dbx-error-view icon="person" message="An expected test error has occured for this view!"></dbx-error-view>
+    </doc-feature-example>
+    <doc-feature-example header="Error Snackbar" hint="The error snackbar can be used in cases where screen space is limited and the error should be shown in a snackbar. The snackbar does not close while the error popover is open/active.">
+      <p>The following errors are configured to only stay for 3 seconds.</p>
+      <div>
+        <dbx-button [raised]="true" color="warn" text="Custom Inline Error" (buttonClick)="showErrorSnackbar(1)"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" color="warn" text="Custom Widget Test" (buttonClick)="showErrorSnackbar(2)"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" color="warn" text="Long Error" (buttonClick)="showErrorSnackbar(3)"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [raised]="true" color="warn" text="Random Error" (buttonClick)="showErrorSnackbar()"></dbx-button>
+      </div>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

@@ -13,13 +13,17 @@ import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 import { DbxTextModule } from '../layout/text/text.module';
 import { DbxErrorViewComponent } from './error.view.component';
+import { DbxErrorSnackbarComponent } from './error.snackbar.component';
+import { DbxActionSnackbarErrorDirective } from './error.snackbar.action.directive';
 
 const declarations = [
   //
   DbxReadableErrorComponent,
   DbxLoadingErrorDirective,
   DbxActionErrorDirective,
+  DbxActionSnackbarErrorDirective,
   DbxErrorViewComponent,
+  DbxErrorSnackbarComponent,
   DbxErrorPopoverComponent,
   DbxErrorDetailsComponent,
   DbxErrorWidgetViewComponent,

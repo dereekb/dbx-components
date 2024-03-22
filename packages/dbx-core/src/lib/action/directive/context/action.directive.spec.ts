@@ -6,7 +6,7 @@ import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { HandleActionFunction } from '../../action.handler';
+import { WorkUsingObservable } from '../../action.handler';
 
 describe('DbxActionDirective', () => {
   beforeEach(async () => {
@@ -112,5 +112,5 @@ class TestActionContextDirectiveComponent {
   handlerDirective?: DbxActionHandlerDirective<number, number>;
 
   @Input()
-  handlerFunction?: HandleActionFunction<number, number>;
+  handlerFunction?: WorkUsingObservable<number, number>;
 }

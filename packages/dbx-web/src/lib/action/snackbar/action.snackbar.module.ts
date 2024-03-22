@@ -7,9 +7,11 @@ import { DbxActionSnackbarDirective } from './action.snackbar.directive';
 import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
+const declarations = [DbxActionSnackbarComponent, DbxActionSnackbarDirective];
+
 @NgModule({
   imports: [CommonModule, DbxStyleLayoutModule, DbxCoreActionModule, DbxPromptModule, DbxButtonModule],
-  declarations: [DbxActionSnackbarComponent, DbxActionSnackbarDirective],
-  exports: [DbxActionSnackbarComponent, DbxActionSnackbarDirective]
+  declarations,
+  exports: declarations
 })
 export class DbxActionSnackbarModule {}

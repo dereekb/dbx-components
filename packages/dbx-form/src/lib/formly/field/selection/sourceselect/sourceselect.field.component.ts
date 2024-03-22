@@ -1,7 +1,7 @@
 import { filterMaybe, LoadingState, loadingStateHasValue, loadingStateIsLoading, LoadingStateWithMaybeSoValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState } from '@dereekb/rxjs';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, Observable, combineLatest, of } from 'rxjs';
-import { HandleActionWithContext } from '@dereekb/dbx-core';
+import { WorkUsingContext } from '@dereekb/rxjs';
 import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
 import { FieldType, FormlyFieldProps } from '@ngx-formly/material/form-field';
 import { FieldTypeConfig } from '@ngx-formly/core';
@@ -435,7 +435,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     this.context.destroy();
   }
 
-  readonly handleSelectOptions: HandleActionWithContext<unknown> = (_, context) => {
+  readonly handleSelectOptions: WorkUsingContext<unknown> = (_, context) => {
     const { openSource } = this;
 
     if (openSource) {
