@@ -2,7 +2,6 @@
   button {
     min-height: 36px;
     height: unset; // allow height to expand
-
     outline: none;
 
     &.working {
@@ -19,6 +18,7 @@
       // icon button fixes
       min-width: unset;
       --mdc-icon-button-icon-size: unset;
+      border-radius: 50%; // sometimes the css order seems to be different, causing the button to lose its radius
     }
 
     &.fullWidth {

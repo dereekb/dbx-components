@@ -6,7 +6,7 @@ import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { WorkUsingObservable } from '../../action.handler';
+import { WorkUsingObservable } from '@dereekb/rxjs';
 
 describe('DbxActionDirective', () => {
   beforeEach(async () => {

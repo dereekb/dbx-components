@@ -34,6 +34,13 @@ export function isValidDateCellIndex(input: DateCellIndex): boolean {
 export type DateOrDateCellIndex = Date | DateCellIndex;
 
 /**
+ * A date and the relative date index.
+ */
+export interface DateCellIndexDatePair extends Readonly<IndexRef> {
+  readonly date: Date;
+}
+
+/**
  * A duration-span block.
  */
 export interface DateCell extends IndexRef {

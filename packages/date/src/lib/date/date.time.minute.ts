@@ -1,8 +1,8 @@
-import { type Minutes, type DecisionFunction } from '@dereekb/util';
-import { addMinutes, endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
+import { type Minutes, type DecisionFunction, DateRelativeDirection, Days, Maybe } from '@dereekb/util';
+import { addMinutes, differenceInDays, differenceInMonths, endOfDay, isAfter, isBefore, startOfDay } from 'date-fns';
 import { roundDownToMinute } from './date';
 import { roundDateTimeDownToSteps, type StepRoundDateTimeDown } from './date.round';
-import { dateCellScheduleDateFilter, type DateCellScheduleDateFilter, type DateCellScheduleDateFilterConfig } from './date.cell.schedule';
+import { dateCellScheduleDateFilter, findNextDateInDateCellScheduleFilter, type DateCellScheduleDateFilter, type DateCellScheduleDateFilterConfig, DateCellScheduleDateFilterInput } from './date.cell.schedule';
 import { type LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 import { dateFromLogicalDate } from './date.logical';
 
@@ -10,29 +10,29 @@ export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
   /**
    * Default date to consider.
    */
-  date?: Date;
+  readonly date?: Date;
   /**
    * Number of minutes each "step" is.
    */
-  step?: Minutes;
+  readonly step?: Minutes;
   /**
    * Additional behavior
    */
-  behavior?: {
+  readonly behavior?: {
     /**
      * Whether or not to set the date to the min if the steps go above it.
      */
-    capToMinLimit?: boolean;
+    readonly capToMinLimit?: boolean;
 
     /**
      * Whether or not to set the date to the max if the steps go above it.
      */
-    capToMaxLimit?: boolean;
+    readonly capToMaxLimit?: boolean;
   };
   /**
    * Schedule to filter the days to.
    */
-  schedule?: DateCellScheduleDateFilterConfig;
+  readonly schedule?: DateCellScheduleDateFilterConfig;
 }
 
 /**
@@ -42,36 +42,36 @@ export interface DateTimeMinuteDateStatus {
   /**
    * If the date is at the minimum value.
    */
-  isAfterMinimum: boolean;
+  readonly isAfterMinimum: boolean;
 
   /**
    * If thte date is at the maximum value.
    */
-  isBeforeMaximum: boolean;
+  readonly isBeforeMaximum: boolean;
 
   /**
    * If the date is in the future.
    */
-  inFuture: boolean;
+  readonly inFuture: boolean;
 
   /**
    * If the date is in the future at the minimum number of future minutes requested.
    */
-  inFutureMinutes: boolean;
+  readonly inFutureMinutes: boolean;
 
   /**
    * If the date is in the past.
    */
-  inPast: boolean;
+  readonly inPast: boolean;
 
   /**
    * If the date is on a schedule day.
    */
-  isInSchedule: boolean;
+  readonly isInSchedule: boolean;
 }
 
 export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
-  roundToBound?: boolean;
+  readonly roundToBound?: boolean;
 }
 
 /**
@@ -83,13 +83,13 @@ export class DateTimeMinuteInstance {
   private _date: Date;
   private _step: Minutes;
   private _limit: LimitDateTimeInstance;
-  private _dateFilter: DateCellScheduleDateFilter;
+  private _dateFilter: Maybe<DateCellScheduleDateFilter>;
 
   constructor(readonly config: DateTimeMinuteConfig = {}, dateOverride?: Date | null) {
     this._date = (dateOverride == undefined ? config.date : dateOverride) || new Date();
     this._step = config.step ?? 1;
     this._limit = new LimitDateTimeInstance(config);
-    this._dateFilter = config.schedule ? dateCellScheduleDateFilter(config.schedule) : () => true;
+    this._dateFilter = config.schedule ? dateCellScheduleDateFilter(config.schedule) : undefined;
   }
 
   get date(): Date {
@@ -166,7 +166,7 @@ export class DateTimeMinuteInstance {
     }
 
     // Schedule
-    isInSchedule = this._dateFilter(date);
+    isInSchedule = this._dateFilter ? this._dateFilter(date) : true; // default
 
     return {
       isBeforeMaximum,
@@ -191,8 +191,83 @@ export class DateTimeMinuteInstance {
     return date;
   }
 
-  clamp(date = this.date): Date {
+  clamp(date = this.date, maxClampDistance?: Days): Date {
+    return this.clampToSchedule(this.clampToLimit(date), maxClampDistance);
+  }
+
+  clampToLimit(date = this.date): Date {
     return this._limit.clamp(date);
+  }
+
+  clampToSchedule(date = this.date, maxClampDistance: Days = 370): Date {
+    let nextAvailableDate: Maybe<Date>;
+
+    if (this._dateFilter != null) {
+      const maxLimitedDateRange = this._limit.dateRange();
+
+      if (this._dateFilter(date)) {
+        nextAvailableDate = date;
+      } else {
+        const maxPastDistance = Math.min(maxClampDistance, maxLimitedDateRange.start ? Math.abs(differenceInDays(date, maxLimitedDateRange.start)) : maxClampDistance); // max future
+        const maxFutureDistance = Math.min(maxClampDistance, maxLimitedDateRange.end ? Math.abs(differenceInDays(date, maxLimitedDateRange.end)) : maxClampDistance); // max future
+
+        const nextFutureDate = findNextDateInDateCellScheduleFilter({
+          date,
+          filter: this._dateFilter,
+          direction: 'future',
+          maxDistance: maxFutureDistance,
+          excludeInputDate: true
+        });
+
+        if (nextFutureDate != null) {
+          nextAvailableDate = nextFutureDate.date;
+        } else {
+          // check the past date clamp
+          const previousPastDate = findNextDateInDateCellScheduleFilter({
+            date,
+            filter: this._dateFilter,
+            direction: 'past',
+            maxDistance: maxPastDistance,
+            excludeInputDate: true
+          });
+
+          if (previousPastDate != null) {
+            nextAvailableDate = previousPastDate.date;
+          }
+        }
+
+        // set a default from the given input if applicable
+        if (nextAvailableDate == null) {
+          nextAvailableDate = this.clampToLimit(date);
+        }
+      }
+    }
+
+    return nextAvailableDate ?? date;
+  }
+
+  findNextAvailableDayInSchedule(date: DateCellScheduleDateFilterInput, direction: DateRelativeDirection, maxDistance: Days = 370): Maybe<Date> {
+    let nextAvailableDate: Maybe<Date>;
+
+    if (this._dateFilter) {
+      const result = findNextDateInDateCellScheduleFilter({
+        date,
+        filter: this._dateFilter,
+        direction,
+        maxDistance: maxDistance,
+        excludeInputDate: true
+      });
+
+      if (result != null) {
+        nextAvailableDate = result.date;
+      }
+    }
+
+    return nextAvailableDate;
+  }
+
+  isInSchedule(date: DateCellScheduleDateFilterInput) {
+    return this._dateFilter ? this._dateFilter(date) : true;
   }
 
   protected _takeBoundedDate(date = this.date): Date {

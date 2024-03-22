@@ -1,11 +1,11 @@
 import { type DateRange } from '@dereekb/date';
-import { type StringOrder, type Maybe, pushArrayItemsIntoArray, firstValueFromIterable, type DayOfWeek, addToSet, range, type DecisionFunction, type FilterFunction, type IndexRange, invertFilter, enabledDaysFromDaysOfWeek, type EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, type ArrayOrValue, forEachInIterable, mergeFilterFunctions, type TimezoneString, type TimezoneStringRef, type Building, sortNumbersAscendingFunction } from '@dereekb/util';
+import { type StringOrder, type Maybe, pushArrayItemsIntoArray, firstValueFromIterable, type DayOfWeek, addToSet, range, type DecisionFunction, type FilterFunction, type IndexRange, invertFilter, enabledDaysFromDaysOfWeek, type EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, type ArrayOrValue, forEachInIterable, mergeFilterFunctions, type TimezoneString, type TimezoneStringRef, type Building, sortNumbersAscendingFunction, Days, DateRelativeDirection } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes } from 'date-fns';
 import { isDate, requireCurrentTimezone } from './date';
-import { calculateExpectedDateCellTimingDurationPair, type DateCell, type DateCellDurationSpan, type DateCellIndex, type DateCellTiming, type DateCellTimingDateRange, type DateCellTimingStartsAtEndRange, type FullDateCellTiming, isSameFullDateCellTiming, type DateCellTimingEventStartsAt, isFullDateCellTiming, type DateCellTimingTimezoneInput, dateCellTimingTimezoneNormalInstance } from './date.cell';
-import { type DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, type DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingStartsAtDateFactory } from './date.cell.factory';
+import { calculateExpectedDateCellTimingDurationPair, type DateCell, type DateCellDurationSpan, type DateCellIndex, type DateCellTiming, type DateCellTimingDateRange, type DateCellTimingStartsAtEndRange, type FullDateCellTiming, isSameFullDateCellTiming, type DateCellTimingEventStartsAt, isFullDateCellTiming, type DateCellTimingTimezoneInput, dateCellTimingTimezoneNormalInstance, DateCellIndexDatePair } from './date.cell';
+import { type DateCellTimingRelativeIndexFactoryInput, dateCellTimingRelativeIndexFactory, type DateCellTimingExpansionFactory, dateCellTimingExpansionFactory, dateCellIndexRange, updateDateCellTimingWithDateCellTimingEvent, dateCellTimingStartsAtDateFactory, DateCellTimingRelativeIndexFactory, dateCellTimingDateFactory } from './date.cell.factory';
 import { dateCellDurationSpanHasNotStartedFilterFunction, dateCellDurationSpanHasNotEndedFilterFunction, dateCellDurationSpanHasEndedFilterFunction, dateCellDurationSpanHasStartedFilterFunction } from './date.cell.filter';
 import { type DateCellRangeOrDateRange, type DateCellRange, type DateCellRangeWithRange, groupToDateCellRanges } from './date.cell.index';
 import { dateCellDayOfWeekFactory } from './date.cell.week';
@@ -684,7 +684,9 @@ export type DateCellScheduleDateFilterInput = DateCellTimingRelativeIndexFactory
 /**
  * Returns true if the date falls within the schedule.
  */
-export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFilterInput>;
+export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFilterInput> & {
+  readonly _dateCellTimingRelativeIndexFactory: DateCellTimingRelativeIndexFactory;
+};
 
 /**
  * dateCellScheduleDateFilter() configuration.
@@ -693,11 +695,11 @@ export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Part
   /**
    * The min/max date range for the filter.
    */
-  minMaxDateRange?: Maybe<Partial<DateCellRangeOrDateRange>>;
+  readonly minMaxDateRange?: Maybe<Partial<DateCellRangeOrDateRange>>;
   /**
    * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.
    */
-  setStartAsMinDate?: boolean;
+  readonly setStartAsMinDate?: boolean;
 }
 
 export function copyDateCellScheduleDateFilterConfig(inputFilter: DateCellScheduleDateFilterConfig): DateCellScheduleDateFilterConfig {
@@ -734,7 +736,7 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   const startsAtInSystem: Date = normalInstance.systemDateToTargetDate(startsAt); // convert to the system date
   const firstDateDay = getDay(startsAtInSystem) as DayOfWeek;
   const dayForIndex = dateCellDayOfWeekFactory(firstDateDay);
-  const dateIndexForDate = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
+  const _dateCellTimingRelativeIndexFactory = dateCellTimingRelativeIndexFactory({ startsAt, timezone });
 
   let end: Maybe<Date>;
 
@@ -745,26 +747,74 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   }
 
   const indexFloor = setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
-  const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, dateIndexForDate(minMaxDateRange.start)) : indexFloor; // start date should be the min inde
-  const maxAllowedIndex = end != null ? dateIndexForDate(end) : minMaxDateRange?.end != null ? dateIndexForDate(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
+  const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, _dateCellTimingRelativeIndexFactory(minMaxDateRange.start)) : indexFloor; // start date should be the min inde
+  const maxAllowedIndex = end != null ? _dateCellTimingRelativeIndexFactory(end) : minMaxDateRange?.end != null ? _dateCellTimingRelativeIndexFactory(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
 
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
 
-  return (input: DateCellScheduleDateFilterInput) => {
+  const fn = ((input: DateCellScheduleDateFilterInput) => {
     let i: DateCellIndex;
     let day: DayOfWeek;
 
     if (typeof input === 'number') {
       i = input;
     } else {
-      i = dateIndexForDate(input);
+      i = _dateCellTimingRelativeIndexFactory(input);
     }
 
     day = dayForIndex(i);
     const result = (i >= minAllowedIndex && i <= maxAllowedIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
     return result;
-  };
+  }) as Building<DateCellScheduleDateFilter>;
+
+  fn._dateCellTimingRelativeIndexFactory = _dateCellTimingRelativeIndexFactory;
+
+  return fn as DateCellScheduleDateFilter;
+}
+
+export interface FindNextDateInDateCellScheduleFilterInput {
+  readonly date: DateCellScheduleDateFilterInput;
+  readonly filter: DateCellScheduleDateFilter;
+  readonly direction: DateRelativeDirection;
+  readonly maxDistance: Days;
+  /**
+   * Whether or not to exclude the input date. False by default.
+   */
+  readonly excludeInputDate?: boolean;
+}
+
+/**
+ * Passes a number of day values until it reaches an open day on a schedule. There's a maximum distance it searches in a direction before returning null.
+ *
+ * @param date
+ * @param filter
+ * @param maxDistance
+ */
+export function findNextDateInDateCellScheduleFilter(config: FindNextDateInDateCellScheduleFilterInput): Maybe<DateCellIndexDatePair> {
+  const { date, filter, direction, maxDistance, excludeInputDate } = config;
+  const { _dateCellTimingRelativeIndexFactory } = filter;
+
+  const firstDateIndex = _dateCellTimingRelativeIndexFactory(date);
+  const offsetDelta = direction === 'past' ? -1 : 1;
+
+  let nextDatePair: Maybe<DateCellIndexDatePair>;
+
+  for (let offset = excludeInputDate ? 1 : 0; offset < maxDistance; offset += 1) {
+    const i = firstDateIndex + offset * offsetDelta;
+
+    if (filter(i)) {
+      const dateFactory = dateCellTimingDateFactory(_dateCellTimingRelativeIndexFactory._timing);
+
+      nextDatePair = {
+        i,
+        date: dateFactory(i, isDate(date) ? date : undefined) // pass back the "now" time
+      };
+      break;
+    }
+  }
+
+  return nextDatePair;
 }
 
 // MARK: DateCellScheduleDateCellTimingFilter
