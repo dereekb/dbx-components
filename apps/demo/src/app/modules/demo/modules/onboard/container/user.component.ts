@@ -1,5 +1,6 @@
 import { OnInit, Component } from '@angular/core';
-import { DbxActionSuccessHandlerFunction, DbxRouterService, HandleActionWithContext } from '@dereekb/dbx-core';
+import { DbxActionSuccessHandlerFunction, DbxRouterService } from '@dereekb/dbx-core';
+import { WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { ProfileDocumentStore } from '@dereekb/demo-components';
 
@@ -23,7 +24,7 @@ export class DemoOnboardUserComponent implements OnInit {
     this.profileDocumentStore.setId(this.auth.userIdentifier$);
   }
 
-  readonly handleCompleteOnboarding: HandleActionWithContext = (value, context) => {
+  readonly handleCompleteOnboarding: WorkUsingContext = (value, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.finishOnboarding({}));
   };
 

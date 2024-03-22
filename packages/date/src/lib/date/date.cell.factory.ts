@@ -598,7 +598,7 @@ export function getRelativeIndexForDateCellTiming(timing: DateCellTimingStartsAt
  *
  * Returns a date with the hours and minutes for "now" for the given date returned if an index is input.
  */
-export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateOrDateCellIndex) => Date) & {
+export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt> = ((input: DateOrDateCellIndex, now?: Date) => Date) & {
   readonly _timing: T;
 };
 
@@ -613,11 +613,11 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
   const utcStartDate = normalInstance.baseDateToTargetDate(start);
   const startUtcHours = start.getUTCHours();
 
-  const factory = ((input: DateOrDateCellIndex) => {
+  const factory = ((input: DateOrDateCellIndex, inputNow?: Date) => {
     if (isDate(input)) {
       return input;
     } else {
-      const now = new Date();
+      const now = inputNow ?? new Date();
       const nowHours = now.getUTCHours();
       const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
 

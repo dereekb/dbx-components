@@ -48,7 +48,7 @@ import {
   SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE
 } from '@dereekb/date';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValueFromIterable, isIterable, removeFromSet } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, ISO8601DayString, mapValuesToSet, isInAllowedDaysOfWeekSet, Building, firstValueFromIterable, isIterable, removeFromSet, Configurable } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { startOfDay, endOfDay, isBefore } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, switchMap, tap, first, combineLatestWith, of } from 'rxjs';
@@ -623,7 +623,7 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
 
   // create the filter using inputFilter, exclusions, and minMaxDateRange
   if (inputFilter || exclusions?.length || minMaxDateRange) {
-    let enabledFilter: DateCellScheduleDateFilterConfig;
+    let enabledFilter: Configurable<DateCellScheduleDateFilterConfig>;
     let filterStart: Maybe<Date> = null; // the start date that will be used/set on the filter.
 
     if (inputFilter) {

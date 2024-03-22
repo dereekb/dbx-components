@@ -151,7 +151,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
     },
     dataForGroupValue: (value, items) => ({
       title: pascalCase(value) + ' Group',
-      icon: 'group_work',
+      icon: value !== 'plain' ? 'group_work' : undefined,
       value,
       hint: `This is the subtitle text/"hint" for this (${value}) group. It can be configured as needed.`
     }),

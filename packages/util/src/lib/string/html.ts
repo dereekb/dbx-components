@@ -1,6 +1,7 @@
 import { type ArrayOrValue, asArray } from './../array/array';
 import { type Maybe } from '../value/maybe.type';
 import { joinStringsWithSpaces } from './string';
+import { iterableToArray } from '../iterable';
 
 /**
  * Represents a single CSS class
@@ -44,7 +45,7 @@ export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass>
   let result: Set<CssClass>;
 
   if (cssClasses) {
-    const arrayOfClasses = asArray(cssClasses);
+    const arrayOfClasses = iterableToArray(cssClasses, false);
     const arrayOfAllClassValues = arrayOfClasses
       .map((x) =>
         asArray(x)

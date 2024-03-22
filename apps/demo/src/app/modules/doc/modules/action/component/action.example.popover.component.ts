@@ -2,7 +2,7 @@ import { DocActionFormExampleValue } from './action.example.form.component';
 import { Component, ElementRef } from '@angular/core';
 import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { HandleActionFunction } from '@dereekb/dbx-core';
+import { WorkUsingObservable } from '@dereekb/rxjs';
 import { of } from 'rxjs';
 
 export const DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY = 'popover';
@@ -33,7 +33,7 @@ export class DocActionExamplePopoverComponent extends AbstractPopoverDirective<D
     });
   }
 
-  handleSubmitForm: HandleActionFunction<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
+  handleSubmitForm: WorkUsingObservable<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     this.returnAndClose(value);
     return of(true);
   };

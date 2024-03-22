@@ -1,5 +1,6 @@
 import { DbxFirebaseEmailRecoveryFormValue } from './login.email.recovery.form.component';
-import { HandleActionFunction, DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerFunction, HandleActionWithContext } from '@dereekb/dbx-core';
+import { DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
+import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap, BehaviorSubject } from 'rxjs';
 import { Component, EventEmitter, OnDestroy, Inject } from '@angular/core';
@@ -70,7 +71,7 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
     return this.config.loginMode === 'register' ? 'Register' : 'Log In';
   }
 
-  readonly handleLoginAction: HandleActionFunction<DbxFirebaseEmailFormValue> = (value: DbxFirebaseEmailFormValue) => {
+  readonly handleLoginAction: WorkUsingObservable<DbxFirebaseEmailFormValue> = (value: DbxFirebaseEmailFormValue) => {
     this.emailFormValue = value;
     this.recoveryFormValue = { email: value.username }; // cache value for recovery
 
@@ -96,7 +97,7 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
     this._emailMode.next('recover');
   }
 
-  readonly handleRecoveryAction: HandleActionWithContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
+  readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
     this.recoveryFormValue = value;
     this.emailFormValue = { username: value.email, password: '' };
     context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email));

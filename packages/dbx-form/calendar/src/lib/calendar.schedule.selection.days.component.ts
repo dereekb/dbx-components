@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
-import { HandleActionFunction } from '@dereekb/dbx-core';
+import { WorkUsingObservable , IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { IsModifiedFunction } from '@dereekb/rxjs';
 import { map, shareReplay, Observable, of } from 'rxjs';
 import { DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -30,7 +29,7 @@ export class DbxScheduleSelectionCalendarDateDaysComponent {
 
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
-  readonly updateScheduleDays: HandleActionFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value) => {
+  readonly updateScheduleDays: WorkUsingObservable<DbxScheduleSelectionCalendarDateDaysFormValue> = (value) => {
     this.dbxCalendarScheduleSelectionStore.setScheduleDays(new Set(dateCellScheduleDayCodesFromEnabledDays(value)));
     return of(true);
   };

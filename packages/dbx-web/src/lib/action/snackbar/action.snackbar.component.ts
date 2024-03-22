@@ -2,10 +2,9 @@ import { OnInit, Component, Inject, OnDestroy, AfterViewInit } from '@angular/co
 import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
 import { distinctUntilChanged, Observable, shareReplay, BehaviorSubject, switchMap, startWith, Subject, of, filter, map } from 'rxjs';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
-import { Maybe } from '@dereekb/util';
+import { MS_IN_SECOND, Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
 import { DbxActionContextSourceReference, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import ms from 'ms';
 
 /**
  * Component for a snackbar that contains an action.
@@ -72,7 +71,7 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
     return this.data.action;
   }
 
-  constructor(readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>, @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig) {
+  constructor(readonly snackbarRef: MatSnackBarRef<DbxActionSnackbarComponent>, @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig) {
     super();
     this.button = this.data.action?.button ?? this.data.button;
     this._actionRef.next(this.data.action?.reference);
@@ -102,15 +101,15 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
     if (this.hasAction) {
       setTimeout(() => {
         this._durationTimeout.next();
-      }, this.action?.duration ?? ms('10s'));
+      }, this.action?.duration ?? MS_IN_SECOND * 10);
     }
   }
 
   dismissAfterActionCompletes = (): void => {
-    this.snackbar._dismissAfter(ms('3s'));
+    this.snackbarRef._dismissAfter(MS_IN_SECOND * 3);
   };
 
   dismiss = (): void => {
-    this.snackbar.dismiss();
+    this.snackbarRef.dismiss();
   };
 }

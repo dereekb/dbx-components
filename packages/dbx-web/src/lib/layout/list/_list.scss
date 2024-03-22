@@ -72,9 +72,8 @@ $list-item-padded-min-height: 42px;
       position: sticky;
       top: 0;
 
-      .dbx-list-two-line-item {
-        padding: 2px 0;
-        margin-right: 2px;
+      .dbx-list-two-line-item .dbx-list-two-line-item-with-icon {
+        padding: 2px 0; // override the padding when there is an icon
       }
     }
   }

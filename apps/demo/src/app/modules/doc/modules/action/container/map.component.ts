@@ -1,9 +1,8 @@
 import { BehaviorSubject, delay, of, tap } from 'rxjs';
 import { DocActionFormExampleValue } from './../component/action.example.form.component';
 import { Component, OnDestroy } from '@angular/core';
-import { HandleActionFunction } from '@dereekb/dbx-core';
-import ms from 'ms';
-import { Maybe } from '@dereekb/util';
+import { WorkUsingObservable } from '@dereekb/rxjs';
+import { MS_IN_SECOND, Maybe } from '@dereekb/util';
 
 @Component({
   templateUrl: './map.component.html'
@@ -15,7 +14,7 @@ export class DocActionMapComponent implements OnDestroy {
   });
 
   readonly value$ = this._value.asObservable();
-  readonly saveThrottleTime = ms('2s');
+  readonly saveThrottleTime = MS_IN_SECOND * 2;
 
   constructor() {}
 
@@ -23,16 +22,16 @@ export class DocActionMapComponent implements OnDestroy {
     this._value.complete();
   }
 
-  handleSaveDraft: HandleActionFunction<DocActionFormExampleValue, any> = (value: DocActionFormExampleValue) => {
+  handleSaveDraft: WorkUsingObservable<DocActionFormExampleValue, any> = (value: DocActionFormExampleValue) => {
     return of(value).pipe(
-      delay(ms('1s')),
+      delay(MS_IN_SECOND),
       tap(() => {
         this._value.next(value);
       })
     );
   };
 
-  handleSendDraft: HandleActionFunction<DocActionFormExampleValue, any> = (value: DocActionFormExampleValue) => {
-    return of(value).pipe(delay(ms('1s')));
+  handleSendDraft: WorkUsingObservable<DocActionFormExampleValue, any> = (value: DocActionFormExampleValue) => {
+    return of(value).pipe(delay(MS_IN_SECOND));
   };
 }

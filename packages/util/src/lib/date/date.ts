@@ -2,6 +2,11 @@ import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
 import { type Maybe } from '../value/maybe.type';
 
 /**
+ * The past or future direction.
+ */
+export type DateRelativeDirection = 'past' | 'future';
+
+/**
  * A valid ISO8601 formatted date string.
  *
  * I.E. "2020-04-30T00:00:00.000Z"
@@ -286,7 +291,7 @@ export type YearNumber = number;
 /**
  * Current state of the date relative to another date.
  */
-export type DateRelativeState = 'past' | 'present' | 'future';
+export type DateRelativeState = DateRelativeDirection | 'present';
 
 /**
  * Returns true if the value is a date.

@@ -470,7 +470,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly config$ = combineLatest([this._config.pipe(switchMapMaybeObs()), this.syncConfigBeforeValue$, this.syncConfigAfterValue$]).pipe(
+  readonly dateTimePickerConfig$: Observable<Maybe<DbxDateTimePickerConfiguration>> = combineLatest([this._config.pipe(switchMapMaybeObs()), this.syncConfigBeforeValue$, this.syncConfigAfterValue$]).pipe(
     map(([x, dateInputMin, dateInputMax]) => {
       let result: Maybe<DbxDateTimePickerConfiguration> = x;
 
@@ -495,18 +495,19 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly dateInputMin$: Observable<Date | null> = this.config$.pipe(
+  readonly dateInputMin$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
     map((x) => (x?.limits?.min ?? null) as Date | null),
     distinctUntilChanged<Date | null>(isSameDate),
     shareReplay(1)
   );
-  readonly dateInputMax$: Observable<Date | null> = this.config$.pipe(
+
+  readonly dateInputMax$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
     map((x) => (x?.limits?.max ?? null) as Date | null),
     distinctUntilChanged<Date | null>(isSameDate),
     shareReplay(1)
   );
 
-  readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.config$.pipe(
+  readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.dateTimePickerConfig$.pipe(
     distinctUntilChanged(),
     map((x) => {
       if (x) {
@@ -521,7 +522,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
 
-  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.config$]).pipe(
+  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.dateTimePickerConfig$]).pipe(
     throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
     distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
@@ -758,10 +759,21 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     }
 
     if (direction !== 0) {
-      this.date$.pipe(first()).subscribe((date) => {
-        const newDate = addDays(date, offset * direction);
-        this.setDateInputValue(newDate);
-      });
+      combineLatest([this.date$, this.dateTimePickerConfig$])
+        .pipe(first())
+        .subscribe(([date, config]) => {
+          const newDate = startOfDay(addDays(date, offset * direction));
+          const instance = new DateTimeMinuteInstance({
+            date: newDate,
+            ...config
+          });
+
+          const nextDate = instance.isInSchedule(newDate) ? newDate : instance.findNextAvailableDayInSchedule(newDate, direction === 1 ? 'future' : 'past');
+
+          if (nextDate != null) {
+            this.setDateInputValue(instance.clampToLimit(nextDate));
+          }
+        });
     }
   }
 

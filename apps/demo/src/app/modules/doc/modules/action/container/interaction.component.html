@@ -25,6 +25,19 @@
       </dbx-action-example-tools>
     </doc-feature-example>
 
+    <doc-feature-example header="dbxActionError" hint="Combined with a dbx-error view to show any errors that pop up.">
+      <dbx-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleActionWithError">
+        <dbx-button dbxActionButton text="Trigger Error"></dbx-button>
+        <dbx-error dbxActionError></dbx-error>
+      </dbx-action-example-tools>
+      <h3>Small Error Example</h3>
+      <p>The dbx-error can be configured to be in icon-only mode. This is useful in cases where screen space is limited.</p>
+      <dbx-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleActionWithError">
+        <dbx-button dbxActionButton text="Trigger Error"></dbx-button>
+        <dbx-error [iconOnly]="true" dbxActionError></dbx-error>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
     <h3>Snackbar</h3>
     <doc-feature-example header="dbxActionSnackbar" hint="Used to show a snackbar depending on the state of an action context.">
       <p>There are a number of different built-in premade types available, such as "save", "delete", etc.</p>
@@ -37,6 +50,16 @@
       <p>Undo Value: {{ undoValue }}</p>
       <dbx-action-example-tools dbxAction dbxActionSnackbar dbxActionSnackbarDefault="do" [dbxActionHandler]="handleAction" [dbxActionSnackbarUndo]="getUndoAction" [dbxActionValueStream]="value$">
         <dbx-button dbxActionButton text="Do Action With Undo"></dbx-button>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionSnackbarError" hint="Used to display the action error in the snackbar.">
+      <dbx-action-example-tools dbxAction dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleActionWithError">
+        <dbx-button dbxActionButton text="Trigger Error"></dbx-button>
+      </dbx-action-example-tools>
+      <p>The input is used to pass configuration or the duration to show the error. The following is configured to show for 2 seconds.</p>
+      <dbx-action-example-tools dbxAction dbxActionValue [dbxActionSnackbarError]="2000" [dbxActionHandler]="handleActionWithError">
+        <dbx-button dbxActionButton text="Trigger Error"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
 

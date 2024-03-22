@@ -45,6 +45,10 @@ export interface DbxListTitleGroupTitleDelegate<T, O extends PrimativeKey, D ext
    */
   readonly headerComponentClass?: Type<unknown>;
   /**
+   * Custom footer component class to inject, if applicable.
+   */
+  readonly footerComponentClass?: Type<unknown>;
+  /**
    * (Optional) CSS classes to apply to the group.
    */
   readonly cssClasses?: CssClassesArray;

@@ -57,8 +57,16 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
     this._instance.trigger();
   }
 
-  public readyValue(value: T): void {
+  public readyValue(value: T | Observable<T>): void {
     this._instance.readyValue(value);
+  }
+
+  /**
+   * Triggers the context and then readies the value.
+   * @param value
+   */
+  public triggerWithValue(value: T | Observable<T>): void {
+    this._instance.triggerWithValue(value);
   }
 
   public reset(): void {

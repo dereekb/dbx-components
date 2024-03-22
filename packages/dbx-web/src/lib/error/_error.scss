@@ -2,6 +2,7 @@
 
 // MARK: Variables
 $error-padding: 8px;
+$error-message-button-margin: 12px;
 
 // MARK: Mixin
 @mixin core() {
@@ -12,7 +13,7 @@ $error-padding: 8px;
     align-items: center;
 
     .dbx-error-message {
-      margin-left: 12px;
+      margin-left: $error-message-button-margin;
     }
   }
 
@@ -20,9 +21,34 @@ $error-padding: 8px;
     overflow: hidden;
     box-sizing: border-box;
   }
+
+  .dbx-error-snackbar {
+    .mdc-snackbar__label {
+      padding-left: 8px;
+      padding-right: 0;
+    }
+
+    .dbx-error-snackbar-content-button {
+      margin-left: $error-message-button-margin;
+    }
+
+    .dbx-error-snackbar-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+  }
 }
 
 @mixin color($theme-config) {
+  .mat-mdc-snack-bar-container.dbx-error-snackbar {
+    --mdc-snackbar-container-color: var(--dbx-warn-color);
+    --mdc-snackbar-supporting-text-color: var(--dbx-warn-color-contrast);
+
+    .dbx-error-snackbar-content .dbx-warn {
+      color: var(--mdc-snackbar-supporting-text-color);
+    }
+  }
 }
 
 @mixin typography($theme-config-or-typography-config) {

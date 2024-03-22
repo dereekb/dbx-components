@@ -36,6 +36,15 @@ export class DbxErrorWidgetViewComponent implements OnDestroy {
               data: error
             };
           }
+        } else {
+          const unknownEntry = this.dbxErrorWidgetService.getUnknownErrorWidgetEntry();
+
+          if (unknownEntry?.widgetComponentClass != null) {
+            config = {
+              componentClass: unknownEntry?.widgetComponentClass,
+              data: error
+            };
+          }
         }
       }
 

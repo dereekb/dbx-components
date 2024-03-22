@@ -1,0 +1,7 @@
+<div class="dbx-error-snackbar-content">
+  <dbx-error [error]="error" (popoverOpen)="errorPopoverOpen($event)"></dbx-error>
+  <div class="dbx-spacer"></div>
+  <button class="dbx-error-snackbar-content-button" mat-icon-button aria-label="dismiss error" (click)="dismiss()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>

@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ReadableError, ServerError, ServerErrorResponse, ServerErrorResponseData, UnauthorizedServerErrorResponse, build } from '@dereekb/util';
+import { ReadableError, ServerError, ServerErrorResponse, UnauthorizedServerErrorResponse, build } from '@dereekb/util';
 
 /**
  * Converts the error response to a POJO.
@@ -34,7 +34,7 @@ export function convertToServerErrorResponse(error: HttpErrorResponse | object):
   let result: ServerErrorResponse | undefined;
 
   if (error instanceof HttpErrorResponse) {
-    const { status, error: data }: { status: number; error: ServerErrorResponseData } = error;
+    const { status, error: data }: { status: number; error: ServerError } = error;
 
     const code = data.code;
     const message = data.message ?? error.statusText;

@@ -1,8 +1,8 @@
-import { ClickableAnchor, DbxAuthService, HandleActionWithContext } from '@dereekb/dbx-core';
+import { ClickableAnchor, DbxAuthService } from '@dereekb/dbx-core';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DbxWidgetDataPair, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
-import { filterMaybe, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
+import { WorkUsingContext, filterMaybe, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { first, BehaviorSubject, distinctUntilChanged, map, shareReplay, combineLatest, Observable } from 'rxjs';
 import { DbxFirebaseDevelopmentWidgetService } from './development.widget.service';
@@ -80,7 +80,7 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
     this._activeEntrySelector.complete();
   }
 
-  readonly handleFormUpdate: HandleActionWithContext<DbxFirebaseDevelopmentPopupContentFormValue, void> = (value, context) => {
+  readonly handleFormUpdate: WorkUsingContext<DbxFirebaseDevelopmentPopupContentFormValue, void> = (value, context) => {
     this._activeEntrySelector.next(value.specifier);
     context.success();
   };

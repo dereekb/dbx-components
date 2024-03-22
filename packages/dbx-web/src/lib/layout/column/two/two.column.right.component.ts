@@ -18,6 +18,9 @@ import { Maybe } from '@dereekb/util';
 })
 export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
   @Input()
+  full: boolean = false;
+
+  @Input()
   header?: Maybe<string>;
 
   @Input()

@@ -3,7 +3,7 @@ import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemC
 import { from, of } from 'rxjs';
 import { ScheduledFunctionDevelopmentFirebaseFunctionListEntry } from '@dereekb/firebase';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
-import { HandleActionWithContext } from '@dereekb/dbx-core';
+import { WorkUsingContext } from '@dereekb/rxjs';
 
 export type ScheduledFunctionDevelopmentFirebaseFunctionListEntryWithSelection = DbxValueAsListItem<ScheduledFunctionDevelopmentFirebaseFunctionListEntry>;
 
@@ -50,7 +50,7 @@ export class DbxFirebaseDevelopmentSchedulerListViewItemComponent extends Abstra
     super(item);
   }
 
-  readonly handleRun: HandleActionWithContext<unknown, unknown> = (value, context) => {
+  readonly handleRun: WorkUsingContext<unknown, unknown> = (value, context) => {
     context.startWorkingWithObservable(from(this.dbxFirebaseDevelopmentSchedulerService.runScheduledFunction(this.name)));
   };
 }
