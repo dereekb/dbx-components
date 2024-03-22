@@ -1,7 +1,6 @@
 import { OnDestroy, OnInit, Component } from '@angular/core';
-import { WorkUsingContext } from '@dereekb/rxjs';
+import { WorkUsingContext , IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
-import { IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { first, map } from 'rxjs';
 import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from '@dereekb/demo-components';
 

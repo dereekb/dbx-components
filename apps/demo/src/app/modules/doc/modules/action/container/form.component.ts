@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-import { WorkUsingObservable } from '@dereekb/rxjs';
-import { IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
+import { WorkUsingObservable , IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
 import { DocActionFormExampleValue } from '../component/action.example.form.component';

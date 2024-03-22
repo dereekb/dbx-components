@@ -1,5 +1,5 @@
-import { Injectable, Type } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import { Injectable } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ErrorInput, Maybe } from '@dereekb/util';
 import { DbxErrorSnackbarComponent, DbxErrorSnackbarConfig } from './error.snackbar.component';
 

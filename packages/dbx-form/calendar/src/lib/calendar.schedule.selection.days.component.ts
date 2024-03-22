@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
-import { WorkUsingObservable } from '@dereekb/rxjs';
+import { WorkUsingObservable , IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { IsModifiedFunction } from '@dereekb/rxjs';
 import { map, shareReplay, Observable, of } from 'rxjs';
 import { DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';

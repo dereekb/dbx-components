@@ -10,7 +10,6 @@
     "@dereekb/dbx-core": "*",
     "@dereekb/util": "*",
     "rxjs": "^7.5.0",
-    "ms": "^3.0.0-canary.1",
     "@uirouter/core": "^6.0.8",
     "@ngrx/store": "^16.0.0",
     "@ngrx/effects": "^16.0.0",

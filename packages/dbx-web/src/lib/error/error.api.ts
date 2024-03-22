@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ReadableError, ServerError, ServerErrorResponse, ServerErrorResponseData, UnauthorizedServerErrorResponse, build } from '@dereekb/util';
+import { ReadableError, ServerError, ServerErrorResponse, UnauthorizedServerErrorResponse, build } from '@dereekb/util';
 
 /**
  * Converts the error response to a POJO.
