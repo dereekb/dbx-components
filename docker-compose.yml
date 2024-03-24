@@ -17,10 +17,8 @@ services:
     command: npx nx run demo-api:serve
     tty: true
     environment:
-      # disable GCE Metadata retrieval
+      # disable GCE Metadata retrieval.
       # https://github.com/firebase/firebase-tools/issues/6765
-      - GCE_METADATA_HOST=0.0.0.0
-      - DETECT_GCP_RETRIES=0
       - METADATA_SERVER_DETECTION=none
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components
