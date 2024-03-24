@@ -36,4 +36,4 @@ export type HandleActionFunction<T = unknown, O = unknown> = WorkUsingObservable
 /**
  * @deprecated use WorkUsingContext instead.
  */
-export type HandleActionUsingContext<T = unknown, O = unknown> = WorkUsingContext<T, O>;
+export type HandleActionWithContext<T = unknown, O = unknown> = WorkUsingContext<T, O>;
