@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [10.1.6](https://github.com/dereekb/dbx-components/compare/v10.1.5-dev...v10.1.6) (2024-03-26)
+
+
+### Bug Fixes
+
+* fix unintentional deprecated variable renaming ([5f28f51](https://github.com/dereekb/dbx-components/commit/5f28f51ed569a16f277daa779157e4c64554180e))
+
+
+
 ## [10.1.5](https://github.com/dereekb/dbx-components/compare/v10.1.4-dev...v10.1.5) (2024-03-22)
 
 
