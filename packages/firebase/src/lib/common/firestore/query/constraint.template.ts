@@ -79,6 +79,31 @@ export function whereStringValueHasPrefix<T = object>(orderByFieldPath: FieldPat
  * @param range
  * @param sortDirection
  */
+export function filterWithDateRange<T>(field: StringKeyPropertyKeys<T>, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function filterWithDateRange(field: FieldPathOrStringPath, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function filterWithDateRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  const { start, end } = dateRange;
+
+  if (start && end) {
+    return whereDateIsBetween(fieldPath as FieldPathOrStringPath, { start, end }, sortDirection);
+  } else if (start) {
+    return whereDateIsOnOrAfterWithSort(fieldPath as FieldPathOrStringPath, start, sortDirection);
+  } else if (end) {
+    return whereDateIsOnOrBeforeWithSort(fieldPath as FieldPathOrStringPath, end, sortDirection);
+  } else {
+    return [];
+  }
+}
+
+/**
+ * Searches dates that follow between the dates derived from the input. Excludes the end date.
+ *
+ * Sorts in ascending order by default.
+ *
+ * @param field
+ * @param range
+ * @param sortDirection
+ */
 export function whereDateIsInRange<T>(field: StringKeyPropertyKeys<T>, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsInRange(field: FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {

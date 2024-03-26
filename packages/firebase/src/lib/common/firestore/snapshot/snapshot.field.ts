@@ -448,7 +448,7 @@ export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldCo
     /**
      * Filters the function uniquely. If true uses the unique function.
      */
-    readonly filterUnique?: T extends PrimativeKey ? FilterUniqueFunction<T, T> : never;
+    readonly filterUnique?: T extends PrimativeKey ? FilterUniqueFunction<T, T> | true : never;
     /**
      * Removes the value from the object if the decision returns true.
      */
@@ -479,7 +479,7 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
       : undefined;
   }
 
-  const inputFilterUnique = config?.filterUnique;
+  const inputFilterUnique = config?.filterUnique === true ? (unique as FilterUniqueFunction<T, any>) : (config?.filterUnique as FilterUniqueFunction<T, any>);
   const filterUniqueValuesFn: Maybe<MapSameFunction<T[]>> =
     inputFilterUnique != null
       ? (x) => {
@@ -501,11 +501,12 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
 
 export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey> = FirestoreArrayFieldConfig<T> &
   Partial<SortCompareFunctionRef<T>> & {
-    readonly filterUnique: FilterUniqueFunction<T, K>;
+    readonly filterUnique: FilterUniqueFunction<T, K> | true;
   };
 
 export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
-  const { filterUnique } = config;
+  const { filterUnique: inputFilterUnique } = config;
+  const filterUnique = inputFilterUnique === true ? (unique as FilterUniqueFunction<T, any>) : inputFilterUnique;
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   return firestoreField<T[], T[]>({

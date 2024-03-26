@@ -1,5 +1,30 @@
 import { type DateRange } from '@dereekb/date';
-import { type StringOrder, type Maybe, pushArrayItemsIntoArray, firstValueFromIterable, type DayOfWeek, addToSet, range, type DecisionFunction, type FilterFunction, type IndexRange, invertFilter, enabledDaysFromDaysOfWeek, type EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, type ArrayOrValue, forEachInIterable, mergeFilterFunctions, type TimezoneString, type TimezoneStringRef, type Building, sortNumbersAscendingFunction, type Days, type DateRelativeDirection } from '@dereekb/util';
+import {
+  type StringOrder,
+  type Maybe,
+  pushArrayItemsIntoArray,
+  firstValueFromIterable,
+  type DayOfWeek,
+  addToSet,
+  range,
+  type DecisionFunction,
+  type FilterFunction,
+  type IndexRange,
+  invertFilter,
+  enabledDaysFromDaysOfWeek,
+  type EnabledDays,
+  daysOfWeekFromEnabledDays,
+  iterablesAreSetEquivalent,
+  type ArrayOrValue,
+  forEachInIterable,
+  mergeFilterFunctions,
+  type TimezoneString,
+  type TimezoneStringRef,
+  type Building,
+  sortNumbersAscendingFunction,
+  type Days,
+  type DateRelativeDirection
+} from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay, addMinutes } from 'date-fns';
@@ -843,11 +868,11 @@ export interface DateCellScheduleDateCellTimingFilterConfig {
    */
   now?: Date;
   /**
-   * (Optional) filters in blocks that have not yet started. Can be combined with the other filters.
+   * (Optional) filters in blocks that have started. Can be combined with the other filters.
    */
   onlyBlocksThatHaveStarted?: boolean;
   /**
-   * (Optional) filters in blocks that have not yet ended. Can be combined with the other filters.
+   * (Optional) filters in blocks that have ended. Can be combined with the other filters.
    */
   onlyBlocksThatHaveEnded?: boolean;
   /**

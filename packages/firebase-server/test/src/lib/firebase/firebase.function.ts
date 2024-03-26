@@ -29,15 +29,17 @@ export interface FirebaseAdminCloudFunctionWrapper {
 }
 
 export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): FirebaseAdminCloudFunctionWrapper {
+  const wrapV1CloudFunction: FirebaseAdminCloudFunctionWrapper['wrapV1CloudFunction'] = (x) => {
+    return instance.wrap(x);
+  };
+
   const wrapper: FirebaseAdminCloudFunctionWrapper = {
-    wrapV1CloudFunction(x) {
-      return instance.wrap(x);
-    },
+    wrapV1CloudFunction,
     wrapV2CloudFunction(x) {
       return instance.wrap(x);
     },
     wrapV2CallableRequest(x) {
-      const wrappedCloudFunction = this.wrapV1CloudFunction(x);
+      const wrappedCloudFunction = wrapV1CloudFunction(x);
 
       return (data, context) =>
         wrappedCloudFunction({

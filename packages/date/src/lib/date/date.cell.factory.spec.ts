@@ -17,7 +17,8 @@ import {
   dateCellTimingEndIndex,
   dateCellRangeOfTimingFactory,
   dateCellRangeOfTiming,
-  dateCellTimingLatestCompletedIndex
+  dateCellTimingLatestCompletedIndex,
+  dateCellTimingEndDateFactory
 } from './date.cell.factory';
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { type DateCellRange, type DateCellRangeWithRange } from './date.cell.index';
@@ -178,14 +179,45 @@ describe('dateCellTimingLatestCompletedIndex()', () => {
 
   const timing = dateCellTiming({ startsAt, duration }, days); // system timezone
 
-  it('should return the expected index', () => {
-    const result = dateCellTimingLatestCompletedIndex(timing, startsAt);
-    expect(result).toBe(-1);
+  it('should return the expected latest completed index at the endsAt time for the first completed index.', () => {
+    const endsAt = addMinutes(startsAt, duration);
+
+    const result = dateCellTimingLatestCompletedIndex(timing, endsAt);
+    expect(result).toBe(0);
   });
 
   it('should return -1 if no indexes are complete yet.', () => {
     const result = dateCellTimingLatestCompletedIndex(timing, startsAt);
     expect(result).toBe(-1);
+  });
+
+  describe('scenarios', () => {
+    describe('march 26 2024 timing', () => {
+      // in this scenario the end time goes to the next day on the calendar
+
+      const timing = {
+        startsAt: new Date('2024-03-18T00:00:00.000Z'),
+        end: new Date('2024-04-03T09:00:00.000Z'),
+        timezone: 'America/Chicago',
+        duration: 540
+      };
+
+      it('should return the expected latest completed index', () => {
+        const now = new Date('2024-03-26T06:01:35.668Z'); // before the end of the 8th date
+        const expectedNowIndex = 9;
+
+        const currentIndex = dateCellTimingRelativeIndexFactory(timing)(now);
+        expect(currentIndex).toBe(expectedNowIndex);
+
+        const endDateFactory = dateCellTimingEndDateFactory(timing);
+
+        const result = dateCellTimingLatestCompletedIndex(timing, now);
+        expect(result).toBe(7);
+
+        const expectedEndDateForLatestCompletedIndex = endDateFactory(result);
+        expect(expectedEndDateForLatestCompletedIndex).toBeBefore(now);
+      });
+    });
   });
 });
 
@@ -807,6 +839,30 @@ describe('dateCellDayTimingInfoFactory()', () => {
   });
 
   describe('scenarios', () => {
+    describe('march 26 2024 timing', () => {
+      // in this scenario the end time goes to the next day on the calendar
+
+      const timing = {
+        startsAt: new Date('2024-03-18T00:00:00.000Z'),
+        end: new Date('2024-04-03T09:00:00.000Z'),
+        timezone: 'America/Chicago',
+        duration: 540
+      };
+
+      it('should return in progress if the previous day index is still running', () => {
+        const now = new Date('2024-03-26T06:01:35.668Z'); // before the end of the 8th date
+        const expectedNowIndex = 9;
+
+        const infoFactory = dateCellDayTimingInfoFactory({ timing });
+        const info = infoFactory(now, now);
+
+        expect(info.isInProgress).toBe(true);
+        expect(info.currentIndex).toBe(expectedNowIndex - 1);
+        expect(info.isInProgressForDayIndex).toBe(false);
+        expect(info.dayIndex).toBe(expectedNowIndex);
+      });
+    });
+
     describe('expandDateCellSchedule() comparison', () => {
       describe('America/New_York timezone past days', () => {
         const timezone = 'America/New_York';

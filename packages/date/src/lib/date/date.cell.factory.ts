@@ -361,59 +361,65 @@ export interface DateCellDayTimingInfo {
   /**
    * Input date or calculated date if provided a dayIndex.
    */
-  date: Date;
+  readonly date: Date;
   /**
    * Index for the day for the input date.
    */
-  dayIndex: DateCellIndex;
+  readonly dayIndex: DateCellIndex;
   /**
    * Index for the previous index/current index depending on the TimingInfo's daily execution.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex.
    */
-  currentIndex: DateCellIndex;
+  readonly currentIndex: DateCellIndex;
   /**
    * Index for the next execution. Does not check if it is in range.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex + 1.
    */
-  nextIndex: DateCellIndex;
+  readonly nextIndex: DateCellIndex;
   /**
    * Index for the next execution, if in the range, otherwise undefined.
    *
    * If the index is currently in progress given the timing, this will return the dayIndex + 1.
    */
-  nextIndexInRange: Maybe<DateCellIndex>;
+  readonly nextIndexInRange: Maybe<DateCellIndex>;
   /**
    * Whether or not there are any inProgress or upcoming executions.
    *
    * True if nextIndexInRange is undefined and isInProgress is false.
    */
-  isComplete: boolean;
+  readonly isComplete: boolean;
   /**
    * Whether or not today's timing has already occured in it's entirety.
    */
-  hasOccuredToday: boolean;
+  readonly hasOccuredToday: boolean;
   /**
-   * Whether or not today's timing is currently in progress.
+   * Whether or not a timing is currently in progress.
+   *
+   * This can be true when isInProgressForDayIndex is false for cases where the timing starts at the previous day index and rolls on over into the next day.
    */
-  isInProgress: boolean;
+  readonly isInProgress: boolean;
+  /**
+   * Whether or not today's timing is currently in progress for the input dayIndex.
+   */
+  readonly isInProgressForDayIndex: boolean;
   /**
    * Whether or not the block is within the configured range.
    */
-  isInRange: boolean;
+  readonly isInRange: boolean;
   /**
    * Time the timing starts on the input day.
    */
-  startsAtOnDay: Date;
+  readonly startsAtOnDay: Date;
   /**
    * Time the timing ends on the input day.
    */
-  endsAtOnDay: Date;
+  readonly endsAtOnDay: Date;
   /**
    * "now" value used for considering current progress.
    */
-  now: Date;
+  readonly now: Date;
 }
 
 /**
@@ -448,10 +454,26 @@ export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactor
     const endsAtOnDay = addMinutes(startsAtOnDay, duration);
     const potentiallyInProgress = !isAfter(startsAtOnDay, now); // is potentially in progress if the now is equal-to or after the start time.
 
-    const isInProgress = potentiallyInProgress && !isAfter(now, endsAtOnDay);
-    const hasOccuredToday = potentiallyInProgress && !isInProgress;
+    const isInProgressForDayIndex = potentiallyInProgress && !isAfter(now, endsAtOnDay);
+    const hasOccuredToday = potentiallyInProgress && !isInProgressForDayIndex;
 
-    const currentIndex: DateCellIndex = isInProgress || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
+    const currentIndex: DateCellIndex = isInProgressForDayIndex || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
+
+    let isInProgress: boolean = false;
+
+    if (isInProgressForDayIndex) {
+      isInProgress = true;
+    } else if (currentIndex < dayIndex) {
+      const expectedStartForCurrentIndex = startsAtFactory(currentIndex);
+
+      if (!isBefore(now, expectedStartForCurrentIndex)) {
+        // if now is after the expected start time, then check that the end time hasn't occured yet.
+
+        const expectedEndTime = addMinutes(expectedStartForCurrentIndex, duration);
+        isInProgress = !isAfter(now, expectedEndTime);
+      }
+    }
+
     const nextIndex: DateCellIndex = currentIndex + 1;
     const nextIndexInRange: Maybe<DateCellIndex> = checkIsInRange(nextIndex) ? nextIndex : undefined;
 
@@ -465,6 +487,7 @@ export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactor
       nextIndex,
       hasOccuredToday,
       isInProgress,
+      isInProgressForDayIndex,
       isInRange,
       startsAtOnDay,
       endsAtOnDay,
