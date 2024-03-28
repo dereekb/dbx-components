@@ -1,6 +1,6 @@
 import { flattenArray } from '@dereekb/util';
-import { QueryDocumentSnapshot, QuerySnapshot } from '../types';
-import { IterateFirestoreDocumentSnapshotCheckpointsConfig, IterateFirestoreDocumentSnapshotCheckpointsResult, IterateFirestoreDocumentSnapshotPairBatchesConfig, iterateFirestoreDocumentSnapshotCheckpoints, iterateFirestoreDocumentSnapshotPairBatches } from './query.iterate';
+import { type QueryDocumentSnapshot, type QuerySnapshot } from '../types';
+import { type IterateFirestoreDocumentSnapshotCheckpointsConfig, type IterateFirestoreDocumentSnapshotCheckpointsResult, type IterateFirestoreDocumentSnapshotPairBatchesConfig, iterateFirestoreDocumentSnapshotCheckpoints, iterateFirestoreDocumentSnapshotPairBatches } from './query.iterate';
 import { type FirestoreDocument } from '../accessor/document';
 import { type FirestoreDocumentSnapshotDataPairWithData } from '../accessor/document.utility';
 
