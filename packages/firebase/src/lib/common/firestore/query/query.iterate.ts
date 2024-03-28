@@ -221,15 +221,19 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    */
   readonly dynamicConstraints?: boolean;
   /**
-   * Convenience paramenter to add a limit constraint to the query.
+   * Convenience paramenter to add a maximum limit constraint to the query.
+   *
+   * The actual limit passed to the query will be calculated between this value, the totalSnapshotsLimit value, and the remaining number of snapshots to load.
+   *
+   * A limit of 0 is NOT considered as unlimited and will cause the function to end immediately.
    */
-  readonly limitPerCheckpoint?: number;
+  readonly limitPerCheckpoint?: Maybe<number>;
   /**
    * The total number of snapshots allowed.
    *
    * Ends on the checkpoint that reaches this limit.
    */
-  readonly totalSnapshotsLimit?: number;
+  readonly totalSnapshotsLimit?: Maybe<number>;
   /**
    * The number of max parallel checkpoints to run.
    *
@@ -317,9 +321,15 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
  * @returns
  */
 export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
-  const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint, totalSnapshotsLimit = Number.MAX_SAFE_INTEGER } = config;
+  const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint: inputLimitPerCheckpoint, totalSnapshotsLimit: inputTotalSnapshotsLimit } = config;
   const constraintsInputIsFactory = typeof inputConstraintsFactory === 'function';
   const constraintsFactory = constraintsInputIsFactory && inputDynamicConstraints !== false ? inputConstraintsFactory : asGetter(getValueFromGetter(inputConstraintsFactory));
+
+  /**
+   * Default to the input total snapshots limit if no limit is provided, otherwise there will be no limit.
+   */
+  const limitPerCheckpoint = inputLimitPerCheckpoint ?? inputTotalSnapshotsLimit;
+  const totalSnapshotsLimit = inputTotalSnapshotsLimit ?? Number.MAX_SAFE_INTEGER;
 
   let currentIndex = 0;
   let hasReachedEnd = false;
@@ -344,8 +354,19 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
       constraints.push(startAfterFilter);
     }
 
-    if (limitPerCheckpoint) {
-      constraints.push(limit(limitPerCheckpoint));
+    if (limitPerCheckpoint != null) {
+      const totalPossibleNumberOfItemsLeftToLoad = Math.max(0, totalSnapshotsLimit - totalSnapshotsVisited);
+      const nextLimit = Math.min(limitPerCheckpoint, totalPossibleNumberOfItemsLeftToLoad);
+
+      if (nextLimit === 0) {
+        // we're at the end
+        cursorDocument = null;
+        hasReachedEnd = true;
+        totalSnapshotsLimitReached = true; // should have already been reached, but flag again just incase
+        return null; // exit immediately
+      } else {
+        constraints.push(limit(nextLimit));
+      }
     }
 
     const query = queryFactory.query(constraints);

@@ -8,7 +8,7 @@ import { type FirestoreDocumentSnapshotDataPairWithData } from '../accessor/docu
 /**
  * Configuration for loadAllFirestoreDocumentSnapshot()
  */
-export interface LoadAllFirestoreDocumentSnapshotPairsConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Pick<IterateFirestoreDocumentSnapshotPairBatchesConfig<T, unknown, D>, 'documentAccessor' | 'queryFactory' | 'constraintsFactory' | 'dynamicConstraints' | 'totalSnapshotsLimit' | 'handleRepeatCursor' | 'filterCheckpointSnapshots'> {
+export interface LoadAllFirestoreDocumentSnapshotPairsConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Pick<IterateFirestoreDocumentSnapshotPairBatchesConfig<T, unknown, D>, 'documentAccessor' | 'queryFactory' | 'constraintsFactory' | 'dynamicConstraints' | 'totalSnapshotsLimit' | 'handleRepeatCursor' | 'filterCheckpointSnapshots' | 'limitPerCheckpoint'> {
   /**
    * Optional iterate function. Returns no value.
    */
@@ -20,10 +20,9 @@ export interface LoadAllFirestoreDocumentSnapshotPairsResult<T, D extends Firest
 }
 
 export async function loadAllFirestoreDocumentSnapshotPairs<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LoadAllFirestoreDocumentSnapshotPairsConfig<T, D>): Promise<LoadAllFirestoreDocumentSnapshotPairsResult<T, D>> {
-  const { documentAccessor, queryFactory, constraintsFactory, dynamicConstraints, totalSnapshotsLimit, handleRepeatCursor, filterCheckpointSnapshots, iterateSnapshotPairsBatch: optionalIterateSnapshotPairsBatch } = config;
+  const { documentAccessor, queryFactory, constraintsFactory, dynamicConstraints, totalSnapshotsLimit, limitPerCheckpoint, handleRepeatCursor, filterCheckpointSnapshots, iterateSnapshotPairsBatch: optionalIterateSnapshotPairsBatch } = config;
 
   const allDocumentGroups: FirestoreDocumentSnapshotDataPairWithData<D>[][] = [];
-
   const { totalCheckpoints, totalSnapshotsVisited, totalSnapshotsLimitReached } = await iterateFirestoreDocumentSnapshotPairBatches({
     documentAccessor,
     queryFactory,
@@ -32,6 +31,7 @@ export async function loadAllFirestoreDocumentSnapshotPairs<T, D extends Firesto
     totalSnapshotsLimit,
     handleRepeatCursor,
     filterCheckpointSnapshots,
+    limitPerCheckpoint,
     maxParallelCheckpoints: 1, // run serially since we want the results in order
     iterateSnapshotPairsBatch: async (snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[], batchIndex: number) => {
       allDocumentGroups.push(snapshotDataPairs);
@@ -55,7 +55,7 @@ export async function loadAllFirestoreDocumentSnapshotPairs<T, D extends Firesto
 /**
  * Configuration for loadAllFirestoreDocumentSnapshot()
  */
-export interface LoadAllFirestoreDocumentSnapshotsConfig<T> extends Pick<IterateFirestoreDocumentSnapshotCheckpointsConfig<T, unknown>, 'queryFactory' | 'constraintsFactory' | 'dynamicConstraints' | 'totalSnapshotsLimit' | 'handleRepeatCursor' | 'filterCheckpointSnapshots'> {
+export interface LoadAllFirestoreDocumentSnapshotsConfig<T> extends Pick<IterateFirestoreDocumentSnapshotCheckpointsConfig<T, unknown>, 'queryFactory' | 'constraintsFactory' | 'dynamicConstraints' | 'totalSnapshotsLimit' | 'handleRepeatCursor' | 'filterCheckpointSnapshots' | 'limitPerCheckpoint'> {
   /**
    * Optional iterate function. Returns no value.
    *
@@ -76,7 +76,7 @@ export interface LoadAllFirestoreDocumentSnapshotsResult<T> extends Pick<Iterate
  * @returns
  */
 export async function loadAllFirestoreDocumentSnapshot<T>(config: LoadAllFirestoreDocumentSnapshotsConfig<T>): Promise<LoadAllFirestoreDocumentSnapshotsResult<T>> {
-  const { queryFactory, constraintsFactory, dynamicConstraints, totalSnapshotsLimit, handleRepeatCursor, filterCheckpointSnapshots, iterateSnapshotsForCheckpoint } = config;
+  const { queryFactory, constraintsFactory, dynamicConstraints, totalSnapshotsLimit, limitPerCheckpoint, handleRepeatCursor, filterCheckpointSnapshots, iterateSnapshotsForCheckpoint } = config;
 
   const allDocumentGroups: QueryDocumentSnapshot<T>[][] = [];
 
@@ -87,12 +87,15 @@ export async function loadAllFirestoreDocumentSnapshot<T>(config: LoadAllFiresto
     totalSnapshotsLimit,
     handleRepeatCursor,
     filterCheckpointSnapshots,
+    limitPerCheckpoint,
     maxParallelCheckpoints: 1, // run serially since we want the results in order
     iterateCheckpoint: async (snapshots: QueryDocumentSnapshot<T>[], query: QuerySnapshot<T>) => {
-      allDocumentGroups.push(snapshots); // add to snapshots array
+      if (snapshots.length) {
+        allDocumentGroups.push(snapshots); // add to snapshots array
 
-      if (iterateSnapshotsForCheckpoint) {
-        await iterateSnapshotsForCheckpoint(snapshots, query);
+        if (iterateSnapshotsForCheckpoint) {
+          await iterateSnapshotsForCheckpoint(snapshots, query);
+        }
       }
 
       return []; // return nothing
