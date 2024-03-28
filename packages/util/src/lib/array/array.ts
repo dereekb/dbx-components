@@ -85,7 +85,10 @@ export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
  * @returns
  */
 export function flattenArray<T>(array: Maybe<T[]>[]): T[] {
-  return (array.filter((x) => Boolean(x)) as T[][]).flat(1);
+  const filteredValues: T[][] = array.filter((x) => Boolean(x)) as T[][];
+
+  // concat with spread is faster than a depth-one flat
+  return ([] as T[]).concat(...filteredValues);
 }
 
 /**

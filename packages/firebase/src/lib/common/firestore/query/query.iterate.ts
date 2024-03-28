@@ -91,7 +91,7 @@ export interface IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R, D exten
   /**
    * The iterate function per each snapshot batch.
    */
-  iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[]): Promise<R>;
+  iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[], batchIndex: number): Promise<R>;
 }
 
 /**
@@ -107,9 +107,9 @@ export async function iterateFirestoreDocumentSnapshotPairBatches<T, R, D extend
   return iterateFirestoreDocumentSnapshotBatches({
     ...config,
     maxParallelCheckpoints: 1,
-    iterateSnapshotBatch: async (snapshots) => {
+    iterateSnapshotBatch: async (snapshots, batchIndex) => {
       const pairs = snapshots.map(loadPairForSnapshot) as FirestoreDocumentSnapshotDataPairWithData<D>[];
-      return iterateSnapshotPairsBatch(pairs);
+      return iterateSnapshotPairsBatch(pairs, batchIndex);
     }
   });
 }
@@ -225,7 +225,9 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    */
   readonly limitPerCheckpoint?: number;
   /**
-   * The total number of snapshots allowed. Ends on the checkpoint that
+   * The total number of snapshots allowed.
+   *
+   * Ends on the checkpoint that reaches this limit.
    */
   readonly totalSnapshotsLimit?: number;
   /**
@@ -261,7 +263,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
   /**
    * The iterate function per each snapshot.
    */
-  iterateCheckpoint(snapshot: QueryDocumentSnapshot<T>[], query: QuerySnapshot<T>): Promise<R[]>;
+  iterateCheckpoint(snapshots: QueryDocumentSnapshot<T>[], query: QuerySnapshot<T>): Promise<R[]>;
   /**
    * (Optional) Called at the end of each checkpoint.
    */
@@ -302,6 +304,10 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
    * The total number of snapshots that were visited.
    */
   readonly totalSnapshotsVisited: number;
+  /**
+   * Whether or not the total snapshots limit was reached.
+   */
+  readonly totalSnapshotsLimitReached: boolean;
 }
 
 /**
@@ -317,6 +323,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
   let currentIndex = 0;
   let hasReachedEnd = false;
+  let totalSnapshotsLimitReached = false;
   let totalSnapshotsVisited: number = 0;
   let cursorDocument: Maybe<QueryDocumentSnapshot<T>>;
 
@@ -372,6 +379,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
     if (!cursorDocument || totalSnapshotsVisited > totalSnapshotsLimit) {
       hasReachedEnd = true; // mark as having reached the end
+      totalSnapshotsLimitReached = true; // mark as having reached the limit
     }
 
     const i = currentIndex;
@@ -405,7 +413,8 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
   const result: IterateFirestoreDocumentSnapshotCheckpointsResult = {
     totalCheckpoints: currentIndex,
-    totalSnapshotsVisited
+    totalSnapshotsVisited,
+    totalSnapshotsLimitReached
   };
 
   return result;

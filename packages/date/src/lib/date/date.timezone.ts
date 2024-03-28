@@ -561,11 +561,11 @@ export function targetDateToBaseDate(date: Date, timezone: Maybe<TimezoneString>
   return new DateTimezoneUtcNormalInstance(timezone).targetDateToBaseDate(date);
 }
 
-export function systemBaseDateToNormalDate(date: Date): Date {
+export function systemBaseDateToNormalDate(date: Date): BaseDateAsUTC {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.baseDateToTargetDate(date);
 }
 
-export function systemNormalDateToBaseDate(date: Date): Date {
+export function systemNormalDateToBaseDate(date: BaseDateAsUTC): Date {
   return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDate(date);
 }
 

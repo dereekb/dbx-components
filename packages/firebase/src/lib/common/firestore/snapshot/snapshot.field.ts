@@ -556,6 +556,15 @@ export function firestoreUniqueStringArray<S extends string = string>(config?: F
 export const firestoreModelKeyArrayField = firestoreUniqueStringArray<FirestoreModelKey>({});
 export const firestoreModelIdArrayField = firestoreModelKeyArrayField;
 
+export type FirestoreUniqueNumberArrayFieldConfig<S extends number = number> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'filterUnique'>;
+
+export function firestoreUniqueNumberArray<S extends number = number>(config?: FirestoreUniqueNumberArrayFieldConfig<S>) {
+  return firestoreUniqueArray<S, S>({
+    ...config,
+    filterUnique: unique
+  });
+}
+
 export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> &
   Partial<SortCompareFunctionRef<T>> & {
     readonly convert: {
