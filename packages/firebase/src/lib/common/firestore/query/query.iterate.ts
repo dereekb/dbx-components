@@ -91,7 +91,7 @@ export interface IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R, D exten
   /**
    * The iterate function per each snapshot batch.
    */
-  iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[]): Promise<R>;
+  iterateSnapshotPairsBatch(snapshotDataPairs: FirestoreDocumentSnapshotDataPairWithData<D>[], batchIndex: number): Promise<R>;
 }
 
 /**
@@ -107,9 +107,9 @@ export async function iterateFirestoreDocumentSnapshotPairBatches<T, R, D extend
   return iterateFirestoreDocumentSnapshotBatches({
     ...config,
     maxParallelCheckpoints: 1,
-    iterateSnapshotBatch: async (snapshots) => {
+    iterateSnapshotBatch: async (snapshots, batchIndex) => {
       const pairs = snapshots.map(loadPairForSnapshot) as FirestoreDocumentSnapshotDataPairWithData<D>[];
-      return iterateSnapshotPairsBatch(pairs);
+      return iterateSnapshotPairsBatch(pairs, batchIndex);
     }
   });
 }
@@ -221,13 +221,19 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    */
   readonly dynamicConstraints?: boolean;
   /**
-   * Convenience paramenter to add a limit constraint to the query.
+   * Convenience paramenter to add a maximum limit constraint to the query.
+   *
+   * The actual limit passed to the query will be calculated between this value, the totalSnapshotsLimit value, and the remaining number of snapshots to load.
+   *
+   * A limit of 0 is NOT considered as unlimited and will cause the function to end immediately.
    */
-  readonly limitPerCheckpoint?: number;
+  readonly limitPerCheckpoint?: Maybe<number>;
   /**
-   * The total number of snapshots allowed. Ends on the checkpoint that
+   * The total number of snapshots allowed.
+   *
+   * Ends on the checkpoint that reaches this limit.
    */
-  readonly totalSnapshotsLimit?: number;
+  readonly totalSnapshotsLimit?: Maybe<number>;
   /**
    * The number of max parallel checkpoints to run.
    *
@@ -261,7 +267,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
   /**
    * The iterate function per each snapshot.
    */
-  iterateCheckpoint(snapshot: QueryDocumentSnapshot<T>[], query: QuerySnapshot<T>): Promise<R[]>;
+  iterateCheckpoint(snapshots: QueryDocumentSnapshot<T>[], query: QuerySnapshot<T>): Promise<R[]>;
   /**
    * (Optional) Called at the end of each checkpoint.
    */
@@ -302,6 +308,10 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
    * The total number of snapshots that were visited.
    */
   readonly totalSnapshotsVisited: number;
+  /**
+   * Whether or not the total snapshots limit was reached.
+   */
+  readonly totalSnapshotsLimitReached: boolean;
 }
 
 /**
@@ -311,12 +321,19 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
  * @returns
  */
 export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R>): Promise<IterateFirestoreDocumentSnapshotCheckpointsResult> {
-  const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint, totalSnapshotsLimit = Number.MAX_SAFE_INTEGER } = config;
+  const { iterateCheckpoint, filterCheckpointSnapshots: inputFilterCheckpointSnapshot, handleRepeatCursor: inputHandleRepeatCursor, waitBetweenCheckpoints, useCheckpointResult, constraintsFactory: inputConstraintsFactory, dynamicConstraints: inputDynamicConstraints, queryFactory, maxParallelCheckpoints = 1, limitPerCheckpoint: inputLimitPerCheckpoint, totalSnapshotsLimit: inputTotalSnapshotsLimit } = config;
   const constraintsInputIsFactory = typeof inputConstraintsFactory === 'function';
   const constraintsFactory = constraintsInputIsFactory && inputDynamicConstraints !== false ? inputConstraintsFactory : asGetter(getValueFromGetter(inputConstraintsFactory));
 
+  /**
+   * Default to the input total snapshots limit if no limit is provided, otherwise there will be no limit.
+   */
+  const limitPerCheckpoint = inputLimitPerCheckpoint ?? inputTotalSnapshotsLimit;
+  const totalSnapshotsLimit = inputTotalSnapshotsLimit ?? Number.MAX_SAFE_INTEGER;
+
   let currentIndex = 0;
   let hasReachedEnd = false;
+  let totalSnapshotsLimitReached = false;
   let totalSnapshotsVisited: number = 0;
   let cursorDocument: Maybe<QueryDocumentSnapshot<T>>;
 
@@ -337,8 +354,19 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
       constraints.push(startAfterFilter);
     }
 
-    if (limitPerCheckpoint) {
-      constraints.push(limit(limitPerCheckpoint));
+    if (limitPerCheckpoint != null) {
+      const totalPossibleNumberOfItemsLeftToLoad = Math.max(0, totalSnapshotsLimit - totalSnapshotsVisited);
+      const nextLimit = Math.min(limitPerCheckpoint, totalPossibleNumberOfItemsLeftToLoad);
+
+      if (nextLimit === 0) {
+        // we're at the end
+        cursorDocument = null;
+        hasReachedEnd = true;
+        totalSnapshotsLimitReached = true; // should have already been reached, but flag again just incase
+        return null; // exit immediately
+      } else {
+        constraints.push(limit(nextLimit));
+      }
     }
 
     const query = queryFactory.query(constraints);
@@ -372,6 +400,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
     if (!cursorDocument || totalSnapshotsVisited > totalSnapshotsLimit) {
       hasReachedEnd = true; // mark as having reached the end
+      totalSnapshotsLimitReached = true; // mark as having reached the limit
     }
 
     const i = currentIndex;
@@ -405,7 +434,8 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
   const result: IterateFirestoreDocumentSnapshotCheckpointsResult = {
     totalCheckpoints: currentIndex,
-    totalSnapshotsVisited
+    totalSnapshotsVisited,
+    totalSnapshotsLimitReached
   };
 
   return result;

@@ -31,7 +31,9 @@ import {
   iterateFirestoreDocumentSnapshots,
   whereDateIsOnOrBeforeWithSort,
   whereDateIsAfterWithSort,
-  FirestoreDocumentSnapshotDataPair
+  FirestoreDocumentSnapshotDataPair,
+  loadAllFirestoreDocumentSnapshotPairs,
+  loadAllFirestoreDocumentSnapshot
 } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
@@ -131,6 +133,62 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
       });
 
       describe('utils', () => {
+        describe('iterate load firestore utilities', () => {
+          describe('loadAllFirestoreDocumentSnapshotPairs()', () => {
+            it('should iterate batches of snapshot pairs.', async () => {
+              const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+              const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+              const result = await loadAllFirestoreDocumentSnapshotPairs({
+                documentAccessor,
+                iterateSnapshotPairsBatch: async (x) => {
+                  x.forEach((y) => mockUserItemsVisited.add(y.document.key));
+
+                  const pair = x[0];
+                  expect(pair.data).toBeDefined();
+                  expect(pair.snapshot).toBeDefined();
+                  expect(pair.document).toBeDefined();
+                },
+                queryFactory: f.instance.mockItemUserCollectionGroup,
+                constraintsFactory: [] // no constraints
+              });
+
+              expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              expect(result.snapshotPairs.length).toBe(allMockUserItems.length);
+
+              expect(result.snapshotPairs[0].data).toBeDefined();
+              expect(result.snapshotPairs[0].document).toBeDefined();
+              expect(result.snapshotPairs[0].snapshot).toBeDefined();
+            });
+          });
+
+          describe('loadAllFirestoreDocumentSnapshot()', () => {
+            it('should iterate batches of snapshot pairs.', async () => {
+              const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+              const result = await loadAllFirestoreDocumentSnapshot({
+                iterateSnapshotsForCheckpoint: async (x) => {
+                  x.forEach((y) => mockUserItemsVisited.add(y.ref.path));
+
+                  const snapshot = x[0];
+                  expect(snapshot.ref).toBeDefined();
+                  expect(snapshot.data()).toBeDefined();
+                },
+                queryFactory: f.instance.mockItemUserCollectionGroup,
+                constraintsFactory: [] // no constraints
+              });
+
+              expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+              expect(result.snapshots.length).toBe(allMockUserItems.length);
+
+              expect(result.snapshots[0].ref).toBeDefined();
+              expect(result.snapshots[0].data()).toBeDefined();
+            });
+          });
+        });
+
         describe('iterate firestore utilities', () => {
           describe('iterateFirestoreDocumentSnapshotPairs()', () => {
             it('should iterate across all mock users by each snapshot pair.', async () => {
@@ -253,6 +311,27 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
               expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
               expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+
+            describe('limitPerCheckpoint', () => {
+              describe('limitPerCheckpoint = 0', () => {
+                it('should not iterate any batches', async () => {
+                  const result = await iterateFirestoreDocumentSnapshotBatches({
+                    limitPerCheckpoint: 0,
+                    iterateSnapshotBatch: async (x) => {
+                      expect(x.length).toBe(0);
+                    },
+                    useCheckpointResult: async (x) => {
+                      expect(x.docSnapshots.length).toBe(0);
+                    },
+                    queryFactory: f.instance.mockItemUserCollectionGroup,
+                    constraintsFactory: [] // no constraints
+                  });
+
+                  expect(result.totalSnapshotsVisited).toBe(0);
+                  expect(result.totalSnapshotsLimitReached).toBe(true);
+                });
+              });
             });
 
             describe('maxParallelCheckpoints>1', () => {
