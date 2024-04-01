@@ -12,7 +12,7 @@ import { iterableToArray } from '../iterable/iterable';
 import { type Building } from './build';
 import { wrapNumberFunction, boundNumberFunction, type WrapNumberFunction } from '../number';
 import { range } from '../array/array.number';
-import { FilterUniqueFunction, filterUniqueFunction, FilterUniqueFunctionExcludeKeysInput } from '../array/array.unique';
+import { filterUniqueFunction, type FilterUniqueFunctionExcludeKeysInput } from '../array/array.unique';
 
 /**
  * A number that denotes which index an item is at.

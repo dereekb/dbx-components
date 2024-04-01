@@ -66,8 +66,6 @@ import {
   isEqualToValueDecisionFunction,
   filterNullAndUndefinedValues,
   type ModelMapToFunction,
-  ModelMapFromFunction,
-  mapIdentityFunction,
   MAP_IDENTITY
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';

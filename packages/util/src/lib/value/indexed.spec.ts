@@ -180,7 +180,7 @@ describe('findBestIndexMatchFunction()', () => {
 
 describe('filterUniqueByIndex', () => {
   it('should filter the input items uniquely by their index.', () => {
-    let items = range(0, 5).map((i) => ({ i }));
+    const items = range(0, 5).map((i) => ({ i }));
     const input = [...items, ...items];
 
     const result = filterUniqueByIndex(input);
