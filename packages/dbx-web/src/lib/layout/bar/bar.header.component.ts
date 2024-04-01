@@ -11,6 +11,7 @@ import { DbxBarColor } from './bar';
     <dbx-bar [color]="color">
       <mat-icon class="button-spacer" *ngIf="icon">{{ icon }}</mat-icon>
       <span *ngIf="text">{{ text }}</span>
+      <ng-content></ng-content>
     </dbx-bar>
   `,
   host: {
