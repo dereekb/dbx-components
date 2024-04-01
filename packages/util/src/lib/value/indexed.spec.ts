@@ -1,5 +1,5 @@
 import { range } from '../array/array.number';
-import { computeNextFreeIndexFunction, findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, type IndexRange, indexRangeOverlapsIndexRangeFunction, type IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, minAndMaxIndexFunction, minAndMaxIndexItemsFunction, sortAscendingIndexNumberRefFunction, stepsFromIndexFunction, wrapIndexRangeFunction } from './indexed';
+import { computeNextFreeIndexFunction, findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, type IndexRange, indexRangeOverlapsIndexRangeFunction, type IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, minAndMaxIndexFunction, minAndMaxIndexItemsFunction, sortAscendingIndexNumberRefFunction, stepsFromIndexFunction, wrapIndexRangeFunction, filterUniqueByIndex } from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {
@@ -175,6 +175,22 @@ describe('findBestIndexMatchFunction()', () => {
     expect(fn({ i: 16 })).toBe(options[3]);
     expect(fn({ i: 21 })).toBe(options[4]);
     expect(fn({ i: 200 })).toBe(options[4]);
+  });
+});
+
+describe('filterUniqueByIndex', () => {
+  it('should filter the input items uniquely by their index.', () => {
+    let items = range(0, 5).map((i) => ({ i }));
+    const input = [...items, ...items];
+
+    const result = filterUniqueByIndex(input);
+
+    expect(result).toHaveLength(items.length);
+    expect(result[0].i).toBe(items[0].i);
+    expect(result[1].i).toBe(items[1].i);
+    expect(result[2].i).toBe(items[2].i);
+    expect(result[3].i).toBe(items[3].i);
+    expect(result[4].i).toBe(items[4].i);
   });
 });
 
