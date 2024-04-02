@@ -4,7 +4,9 @@ import { type Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
 
 /**
- * Creates a map by reading keys from the input values. Values without a key are ignored.
+ * Creates a map by reading keys from the input values.
+ *
+ * Values without a key (null/undefined) are ignored.
  */
 export type KeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey> = (values: T[]) => Map<K, T>;
 

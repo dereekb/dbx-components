@@ -12,6 +12,7 @@ import { iterableToArray } from '../iterable/iterable';
 import { type Building } from './build';
 import { wrapNumberFunction, boundNumberFunction, type WrapNumberFunction } from '../number';
 import { range } from '../array/array.number';
+import { filterUniqueFunction, type FilterUniqueFunctionExcludeKeysInput } from '../array/array.unique';
 
 /**
  * A number that denotes which index an item is at.
@@ -26,6 +27,16 @@ export interface IndexRef {
    * Item's index number
    */
   i: IndexNumber;
+}
+
+/**
+ * Convenience function for calling readKeysToMap() and keying the values by their index number.
+ *
+ * @param items
+ * @returns
+ */
+export function indexRefMap<T extends IndexRef>(items: T[]): Map<IndexNumber, T> {
+  return readKeysToMap(items, (item) => item.i);
 }
 
 /**
@@ -293,6 +304,13 @@ export function findBestIndexMatch<T extends IndexRef>(input: T[], i: IndexNumbe
 export function safeFindBestIndexMatch<T extends IndexRef>(input: Maybe<T[]>, i: IndexNumber): Maybe<T> {
   return input != null && input.length > 0 ? findBestIndexMatch(input, i) : undefined;
 }
+
+/**
+ * Creates a FilterUniqueFunction that filters by the input value's index.
+ *
+ * @param readIndex
+ */
+export const filterUniqueByIndex = filterUniqueFunction(readIndexNumber) as <T>(input: T[], exclude?: FilterUniqueFunctionExcludeKeysInput<T, IndexNumber>) => T[];
 
 // MARK: IndexRange
 /**

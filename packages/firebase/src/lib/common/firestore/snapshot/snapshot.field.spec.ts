@@ -1,5 +1,5 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, type GrantedReadRole, type GrantedUpdateRole, type WebsiteFileLink } from '@dereekb/model';
-import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique } from '@dereekb/util';
+import { type LatLngString, asGetter, type ISO8601DateString, type Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, type PrimativeKeyDencoderValueMap, bitwiseObjectDencoder, encodeBitwiseSet, unique, type IndexRef, filterUniqueByIndex } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { type FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { type DocumentSnapshot } from '../types';
@@ -106,12 +106,13 @@ describe('firestoreField()', () => {
   });
 });
 
-export interface TestSnapshotDefaults {
+export interface TestSnapshotDefaults extends IndexRef {
   date: Date;
   uniqueStringArray: string[];
 }
 
 export const testSnapshotDefaultsFields = {
+  i: firestoreNumber<number>({ default: 0 }),
   date: firestoreDate({ saveDefaultAsNow: true }),
   uniqueStringArray: firestoreUniqueStringArray()
 };
@@ -1028,7 +1029,7 @@ export interface TestFirestoreSubObjectParentWithArray {
   objects: TestFirestoreSubObject[];
 }
 
-export interface TestFirestoreSubObject {
+export interface TestFirestoreSubObject extends IndexRef {
   date: Date;
   uniqueStringArray: string[];
   optionalStringField?: Maybe<string>;
@@ -1037,28 +1038,47 @@ export interface TestFirestoreSubObject {
 export const testFirestoreSubObjectDefaultsConverter = snapshotConverterFunctions<TestFirestoreSubObject>({
   fields: {
     ...testSnapshotDefaultsFields,
+    i: firestoreNumber({ default: 0, saveDefault: true }),
     optionalStringField: optionalFirestoreString()
   }
 });
 
 describe('firestoreObjectArray()', () => {
-  it('should allowed firestoreField', () => {
-    const fieldConfig = firestoreField<TestFirestoreSubObject, TestFirestoreSubObject>({
-      default: {
-        date: new Date(),
-        uniqueStringArray: []
-      },
-      fromData: passThrough,
-      toData: passThrough
-    });
+  const fieldConfig = firestoreField<TestFirestoreSubObject, TestFirestoreSubObject>({
+    default: {
+      i: 0,
+      date: new Date(),
+      uniqueStringArray: []
+    },
+    fromData: passThrough,
+    toData: passThrough
+  });
 
+  it('should allowed firestoreField', () => {
     const array = firestoreObjectArray<TestFirestoreSubObject, TestFirestoreSubObject>({
       firestoreField: fieldConfig
     });
 
-    const result = array.from.convert([{ date: new Date(), uniqueStringArray: [] }]);
+    const result = array.from.convert([{ date: new Date(), uniqueStringArray: [], i: 0 }]);
     expect(result).toBeDefined();
     expect(result.length).toBe(1);
+  });
+
+  describe('with filterUnique', () => {
+    it('should filter out unique values using the configured function', () => {
+      const array = firestoreObjectArray<TestFirestoreSubObject, TestFirestoreSubObject>({
+        filterUnique: filterUniqueByIndex,
+        firestoreField: fieldConfig
+      });
+
+      const result = array.from.convert([
+        { date: new Date(), uniqueStringArray: ['a'], i: 0 },
+        { date: new Date(), uniqueStringArray: [], i: 0 }
+      ]);
+      expect(result).toBeDefined();
+      expect(result.length).toBe(1);
+      expect(result[0].uniqueStringArray.length).toBe(1);
+    });
   });
 });
 
@@ -1250,6 +1270,7 @@ describe('firestoreBitwiseObjectMap()', () => {
 
 describe('firestoreSubObject()', () => {
   const testObject = {
+    i: 0,
     date: new Date(),
     uniqueStringArray: ['a', 'b']
   };
