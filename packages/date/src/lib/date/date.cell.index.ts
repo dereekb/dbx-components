@@ -1,4 +1,4 @@
-import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, addToSet, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
+import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, addToSet, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap, EqualityComparatorFunction } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 import { DateCell, isValidDateCellIndex } from './date.cell';
@@ -661,8 +661,9 @@ export function groupUniqueDateCells<B extends DateCellRange | UniqueDateCell>(i
  * Determines how to "fill" a DateRange when an empty range is detected.
  * - extend: extends the previous block to fill the range.
  * - fill: creates a new value using a factory.
+ * - empty: skips the space
  */
-export type ExpandUniqueDateCellsFillOption = 'extend' | 'fill';
+export type ExpandUniqueDateCellsFillOption = 'extend' | 'fill' | 'empty';
 
 /**
  * Determines how overwrite block values that are completely overlapping eachother.
@@ -758,7 +759,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
     let i = 0;
     let latestTo: number = startAtIndex - 1;
 
-    function addBlockWithRange(inputBlock: B, i: number, inputTo: number = i) {
+    function addBlockWithRange(inputBlock: B | null, i: number, inputTo: number = i) {
       // Add in any necessary gap block first
       const gapSizeBetweenBlocks = i - (latestTo + 1);
 
@@ -770,13 +771,17 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
 
       const to = Math.min(inputTo, maxAllowedIndex) || 0;
 
-      const block: B = {
-        ...inputBlock,
-        i,
-        to
-      };
+      let block: B | null = null;
 
-      blocks.push(block);
+      if (inputBlock != null) {
+        block = {
+          ...inputBlock,
+          i,
+          to
+        };
+
+        blocks.push(block);
+      }
 
       latestTo = to;
 
@@ -801,8 +806,10 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
 
         const block: B = fillFactory(dateCellRange);
         addBlockWithRange(block, i, to ?? i);
+      } else if (fill === 'empty') {
+        // do not fill with anything
       } else if (blocks.length > 0) {
-        // do not extend if no blocks have been pushed.
+        // only extend if one or more blocks have been pushed
         const blockToExtend = lastValue(blocks);
         (blockToExtend as DateCellRange).to = inputTo;
       }
