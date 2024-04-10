@@ -355,6 +355,17 @@ export function isStartOfDayInUTC(date: Date): boolean {
 }
 
 /**
+ * Returns true if the input date is the last millisecond.
+ *
+ * @param date
+ * @param minutesOnly if true, only considers the hour and minute
+ * @returns
+ */
+export function isEndOfDayInUTC(date: Date, minutesOnly: boolean = false): boolean {
+  return date.getUTCHours() === 23 && date.getUTCMinutes() === 59 && (minutesOnly || (date.getUTCSeconds() === 59 && date.getUTCMilliseconds() === 999));
+}
+
+/**
  * Returns true if the input date is at midnight for the system.
  *
  * @param date

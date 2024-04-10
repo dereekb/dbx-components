@@ -1,5 +1,5 @@
-import { isStartOfDayInUTC, requireCurrentTimezone } from '@dereekb/date';
-import { addHours, hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay, addSeconds } from 'date-fns';
+import { isEndOfDayInUTC, isStartOfDayInUTC, requireCurrentTimezone } from '@dereekb/date';
+import { addHours, hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, startOfDay, addSeconds, endOfDay } from 'date-fns';
 import { type ISO8601DayString, type Milliseconds } from '@dereekb/util';
 import { DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, getCurrentSystemOffsetInMs, startOfDayInTimezoneDayStringFactory, copyHoursAndMinutesFromDateWithTimezoneNormal, systemDateTimezoneUtcNormal, transformDateRangeToTimezoneFunction } from './date.timezone';
 import MockDate from 'mockdate';
@@ -46,12 +46,42 @@ describe('DateTimezoneUtcNormalInstance', () => {
   });
 
   describe('startOfDayInBaseDate()', () => {
-    it('should return a date in UTC', () => {
+    it('should return the midnight of the date in UTC', () => {
       const date = new Date();
       const instance = dateTimezoneUtcNormal({ useSystemTimezone: true });
 
       const result = instance.startOfDayInBaseDate(date);
       expect(isStartOfDayInUTC(result)).toBe(true);
+    });
+  });
+
+  describe('endOfDayInBaseDate()', () => {
+    it('should return the last millisecond of the date in UTC', () => {
+      const date = new Date();
+      const instance = dateTimezoneUtcNormal({ useSystemTimezone: true });
+
+      const result = instance.startOfDayInBaseDate(date);
+      expect(isEndOfDayInUTC(result)).toBe(true);
+    });
+  });
+
+  describe('startOfDayInSystemDate()', () => {
+    it('should return the midnight of the date for the system', () => {
+      const date = new Date();
+      const instance = dateTimezoneUtcNormal({ useSystemTimezone: true });
+
+      const result = instance.startOfDayInSystemDate(date);
+      expect(result).toBeSameSecondAs(startOfDay(result));
+    });
+  });
+
+  describe('endOfDayInSystemDate()', () => {
+    it('should return the last millisecond of the date for the system', () => {
+      const date = new Date();
+      const instance = dateTimezoneUtcNormal({ useSystemTimezone: true });
+
+      const result = instance.endOfDayInSystemDate(date);
+      expect(result).toBeSameSecondAs(endOfDay(result));
     });
   });
 

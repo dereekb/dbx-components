@@ -1,4 +1,4 @@
-import { addMilliseconds, addMinutes, minutesToHours, startOfDay, set as setDate } from 'date-fns';
+import { addMilliseconds, addMinutes, minutesToHours, startOfDay, set as setDate, endOfDay } from 'date-fns';
 import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours } from '@dereekb/util';
 import { utcToZonedTime, format as formatDate } from 'date-fns-tz';
 import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
@@ -449,7 +449,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
    *
    * @param date
    */
-  startOfDayInBaseDate(date?: Date | ISO8601DayString) {
+  startOfDayInBaseDate(date?: Date | ISO8601DayString): BaseDateAsUTC {
     if (typeof date === 'string') {
       return parseISO8601DayStringToUTCDate(date);
     } else {
@@ -459,18 +459,40 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   }
 
   /**
+   * End of the given day in UTC.
+   *
+   * @param date
+   * @returns
+   */
+  endOfDayInBaseDate(date?: Date | ISO8601DayString): BaseDateAsUTC {
+    const result = this.startOfDayInBaseDate(date);
+    result.setUTCHours(23, 59, 59, 999);
+    return result;
+  }
+
+  /**
    * Start of the given day for the system.
    *
    * @param date
    * @returns
    */
-  startOfDayInSystemDate(date?: Date | ISO8601DayString) {
+  startOfDayInSystemDate(date?: Date | ISO8601DayString): Date {
     if (typeof date === 'string') {
       const utcDate = parseISO8601DayStringToUTCDate(date);
       return this.systemDateToBaseDate(utcDate);
     } else {
       return startOfDay(date ?? new Date());
     }
+  }
+
+  /**
+   * End of the given day for the system.
+   *
+   * @param date
+   * @returns
+   */
+  endOfDayInSystemDate(date?: Date | ISO8601DayString): Date {
+    return endOfDay(this.startOfDayInSystemDate(date));
   }
 
   /**
