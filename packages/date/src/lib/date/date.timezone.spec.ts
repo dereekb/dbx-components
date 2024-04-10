@@ -60,7 +60,7 @@ describe('DateTimezoneUtcNormalInstance', () => {
       const date = new Date();
       const instance = dateTimezoneUtcNormal({ useSystemTimezone: true });
 
-      const result = instance.startOfDayInBaseDate(date);
+      const result = instance.endOfDayInBaseDate(date);
       expect(isEndOfDayInUTC(result)).toBe(true);
     });
   });
