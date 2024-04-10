@@ -1105,6 +1105,92 @@ describe('expandUniqueDateCellsFunction', () => {
           });
         });
       });
+
+      describe('empty', () => {
+        const emptyOptionExpandBlocks = expandUniqueDateCellsFunction<UniqueDataDateCell>({ fillOption: 'empty' });
+
+        it('should not extend the first block to stretch to the start', () => {
+          const result = emptyOptionExpandBlocks(blocksWithStartGap);
+
+          expect(result.discarded.length).toBe(0);
+          expect(result.blocks.length).toBe(blocksWithStartGap.length);
+          expect(result.blocks[0].i).toBe(blocksWithStartGap[0].i);
+          expect(result.blocks[0].to).toBe(blocksWithStartGap[0].to);
+        });
+
+        it('should not fill the middle gaps', () => {
+          const result = emptyOptionExpandBlocks(blocksWithMiddleGap);
+
+          expect(result.discarded.length).toBe(0);
+          expect(result.blocks.length).toBe(blocksWithMiddleGap.length);
+          expect(result.blocks[0].i).toBe(blocksWithMiddleGap[0].i);
+          expect(result.blocks[0].to).toBe(blocksWithMiddleGap[0].to);
+          expect(result.blocks[1].i).toBe(blocksWithMiddleGap[1].i);
+          expect(result.blocks[1].to).toBe(blocksWithMiddleGap[1].to);
+        });
+
+        it('should not extend the end gap as there is no known end', () => {
+          const result = emptyOptionExpandBlocks(blocksWithEndGap);
+
+          expect(result.discarded.length).toBe(0);
+          expect(result.blocks.length).toBe(blocksWithEndGap.length);
+          expect(result.blocks[0].i).toBe(blocksWithEndGap[0].i);
+          expect(result.blocks[0].to).toBe(blocksWithEndGap[0].to);
+        });
+
+        describe('with endAtIndex', () => {
+          const emptyOptionWithEndIndexExpandBlocks = expandUniqueDateCellsFunction<UniqueDataDateCell>({ endAtIndex, fillOption: 'empty' });
+
+          describe('block that starts after the endAtIndex', () => {
+            it('should filter that block out and return nothing.', () => {
+              const result = emptyOptionWithEndIndexExpandBlocks(blocksAfterEndAtIndex);
+
+              expect(result.discarded.length).toBe(1);
+              expect(result.blocks.length).toBe(0);
+            });
+          });
+
+          it('should not expand anything (empty expansion)', () => {
+            const result = emptyOptionWithEndIndexExpandBlocks(blocksWithEndGap);
+
+            expect(result.discarded.length).toBe(0);
+            expect(result.blocks.length).toBe(blocksWithEndGap.length);
+            expect(result.blocks[0].i).toBe(blocksWithEndGap[0].i);
+            expect(result.blocks[0].to).toBe(blocksWithEndGap[0].to);
+          });
+        });
+
+        describe('with startAt and endAt index', () => {
+          const emptyOptionWithStartAndEndIndexExpandBlocks = expandUniqueDateCellsFunction<UniqueDataDateCell>({ startAtIndex, endAtIndex, fillOption: 'empty' });
+
+          describe('block that starts after the endAtIndex', () => {
+            it('should filter that block out and return nothing.', () => {
+              const result = emptyOptionWithStartAndEndIndexExpandBlocks(blocksAfterEndAtIndex);
+
+              expect(result.discarded.length).toBe(1);
+              expect(result.blocks.length).toBe(0);
+            });
+          });
+
+          describe('block that ends before the startAtIndex', () => {
+            it('should filter that block out and return nothing.', () => {
+              const result = emptyOptionWithStartAndEndIndexExpandBlocks(blocksBeforeStartAtIndex);
+
+              expect(result.discarded.length).toBe(1);
+              expect(result.blocks.length).toBe(0);
+            });
+          });
+
+          describe('no blocks as input', () => {
+            it('should return no blocks', () => {
+              const result = emptyOptionWithStartAndEndIndexExpandBlocks(noBlocks);
+
+              expect(result.discarded.length).toBe(0);
+              expect(result.blocks.length).toBe(0);
+            });
+          });
+        });
+      });
     });
 
     describe('scenarios', () => {

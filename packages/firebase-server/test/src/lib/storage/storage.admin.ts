@@ -10,7 +10,7 @@ export type GoogleFirebaseStorageTestContextFactory = JestTestContextFactory<Goo
  * Host of localhost, port 9906
  */
 export const adminFirebaseStorageFactory: GoogleFirebaseStorageTestContextFactory = googleCloudTestFirebaseStorageBuilder({
-  host: 'localhost',
+  host: '0.0.0.0',
   port: 9906
 });
 

@@ -27,7 +27,7 @@ export interface YearMonthDayCodePair {
 }
 
 /**
- * Returns the YearNumber for the YearWeekCode.
+ * Returns the YearNumber for the YearMonthDayCode.
  *
  * @param yearMonthDayCode
  * @returns
@@ -37,7 +37,7 @@ export function yearMonthDayCodeYear(yearMonthDayCode: YearMonthDayCode): YearNu
 }
 
 /**
- * Returns the MonthOfYear for the YearWeekCode.
+ * Returns the MonthOfYear for the YearMonthDayCode.
  *
  * @param yearMonthDayCode
  * @returns
@@ -47,7 +47,7 @@ export function yearMonthDayCodeMonth(yearMonthDayCode: YearMonthDayCode): Month
 }
 
 /**
- * Returns the DayOfMonth for the YearWeekCode.
+ * Returns the DayOfMonth for the YearMonthDayCode.
  *
  * @param yearMonthDayCode
  * @returns
