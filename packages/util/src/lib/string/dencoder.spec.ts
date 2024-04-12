@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX, NUMBER_STRING_DENCODER_64_DIGITS, NumberStringDencoder, numberStringDencoder, primativeKeyDencoder, primativeKeyDencoderMap, primativeKeyStringDencoder } from './dencoder';
+import { NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX, NUMBER_STRING_DENCODER_64_DIGITS, type NumberStringDencoder, numberStringDencoder, primativeKeyDencoder, primativeKeyDencoderMap, primativeKeyStringDencoder } from './dencoder';
 
 enum TestEncodedValuesShort {
   TEST_A = 'a',

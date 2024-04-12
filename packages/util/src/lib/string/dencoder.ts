@@ -5,7 +5,6 @@ import { filterMaybeValues } from '../array/array.value';
 import { type FactoryWithRequiredInput } from '../getter/getter';
 import { forEachKeyValue, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { type Maybe } from '../value/maybe.type';
-import { arrayToObject } from '../array';
 import { stringCharactersToIndexRecord } from './char';
 
 /**
@@ -268,7 +267,7 @@ export function numberStringDencoder(config: NumberStringDencoderConfig): Number
 
   function encodeNumber(number: NumberStringDencoderNumber): NumberStringDencoderString {
     let result = '';
-    let isNegativeNumber = number < 0;
+    const isNegativeNumber = number < 0;
 
     if (isNegativeNumber) {
       number = -number;

@@ -1,9 +1,9 @@
-import { Factory, GetterOrValue } from '../getter/getter';
+import { type Factory } from '../getter/getter';
 import { incrementingNumberFactory } from '../number/factory';
-import { NUMBER_STRING_DENCODER_64, NumberStringDencoderString, NumberStringDencoder, numberStringDencoderEncodedStringValueFunction, numberStringDencoderDecodedNumberValueFunction, NumberStringDencoderNumber } from '../string/dencoder';
+import { NUMBER_STRING_DENCODER_64, type NumberStringDencoderString, type NumberStringDencoder, numberStringDencoderDecodedNumberValueFunction, type NumberStringDencoderNumber } from '../string/dencoder';
 import { mapIdentityFunction } from '../value';
-import { IndexNumber } from '../value/indexed';
-import { Maybe } from '../value/maybe.type';
+import { type IndexNumber } from '../value/indexed';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A factory for generating a unique model identifier.
