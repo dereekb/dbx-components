@@ -139,3 +139,22 @@ export const UTF_8_START_CHARACTER = '\u0000';
  * https://firebase.google.com/docs/database/rest/retrieve-data#range-queries
  */
 export const UTF_PRIVATE_USAGE_AREA_START = '\uf8ff';
+
+/**
+ * Takes in a string and returns a Record that has the index value mapped to the property of the character.
+ *
+ * The latest character index is used in collision cases.
+ *
+ * @param chars
+ * @returns
+ */
+export function stringCharactersToIndexRecord(chars: string): Record<string, number> {
+  const record: Record<string, number> = {} as Record<string, number>;
+
+  for (let i = 0; i < chars.length; i += 1) {
+    const char = chars[i];
+    record[char] = i;
+  }
+
+  return record;
+}

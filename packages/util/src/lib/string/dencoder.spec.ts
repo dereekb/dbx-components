@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { primativeKeyDencoder, primativeKeyDencoderMap, primativeKeyStringDencoder } from './dencoder';
+import { NUMBER_TO_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX, NUMBER_TO_STRING_DENCODER_64_DIGITS, NumberStringDencoder, numberStringDencoder, primativeKeyDencoder, primativeKeyDencoderMap, primativeKeyStringDencoder } from './dencoder';
 
 enum TestEncodedValuesShort {
   TEST_A = 'a',
@@ -169,6 +169,102 @@ describe('primativeKeyStringDencoder()', () => {
         expect(decoded).toContain(input[0]);
         expect(decoded).toContain(input[1]);
       });
+    });
+  });
+});
+
+describe('numberStringDencoder()', () => {
+  it('should create a dencoder', () => {
+    const result = numberStringDencoder({ digits: NUMBER_TO_STRING_DENCODER_64_DIGITS });
+    expect(result).toBeDefined();
+  });
+
+  describe('functions', () => {
+    function describePositiveNumberConversions(instance: NumberStringDencoder) {
+      it('should encode the number to a string', () => {
+        const result = instance.encodeNumber(0);
+        expect(result).toBe('0');
+      });
+
+      it('should decode the string to the corresponding number', () => {
+        const result = instance.decodeNumber('0');
+        expect(result).toBe(0);
+      });
+
+      it('should encode 31 to the corresponding string', () => {
+        const result = instance.encodeNumber(32 - 1);
+        expect(result).toBe(instance.digits[32 - 1]);
+      });
+
+      it('should decode the 31 string to the corresponding 31', () => {
+        const result = instance.decodeNumber(instance.digits[32 - 1]);
+        expect(result).toBe(32 - 1);
+      });
+
+      it('should encode 63 to the corresponding string', () => {
+        const result = instance.encodeNumber(64 - 1);
+        expect(result).toBe(instance.digits[64 - 1]);
+      });
+
+      it('should decode the 63 string to the corresponding 63', () => {
+        const result = instance.decodeNumber(instance.digits[64 - 1]);
+        expect(result).toBe(64 - 1);
+      });
+
+      it('should encode 4096 to the corresponding string', () => {
+        const result = instance.encodeNumber(4096);
+        expect(result).toBe('100');
+      });
+
+      it('should decode the 4096 string to the corresponding 63', () => {
+        const result = instance.decodeNumber('100');
+        expect(result).toBe(4096);
+      });
+
+      it('should decode the 0000 string to the corresponding 0', () => {
+        const result = instance.decodeNumber('0000');
+        expect(result).toBe(0);
+      });
+
+      it('should decode the 00002 string to the corresponding 2', () => {
+        const result = instance.decodeNumber('00002');
+        expect(result).toBe(2);
+      });
+    }
+
+    function describeNegativeNumberConversions(instance: NumberStringDencoder) {
+      it('should encode the number to a string', () => {
+        const result = instance.encodeNumber(-1);
+        expect(result).toBe(`${instance.negativePrefix}1`);
+      });
+
+      it('should decode the string to the corresponding number', () => {
+        const result = instance.decodeNumber(`${instance.negativePrefix}1`);
+        expect(result).toBe(-1);
+      });
+
+      it('should encode -4096 to the corresponding string', () => {
+        const result = instance.encodeNumber(-4096);
+        expect(result).toBe(`${instance.negativePrefix}100`);
+      });
+
+      it('should decode the -4096 string to the corresponding -4096', () => {
+        const result = instance.decodeNumber(`${instance.negativePrefix}100`);
+        expect(result).toBe(-4096);
+      });
+    }
+
+    describe('with negative prefix', () => {
+      const instance = numberStringDencoder({ negativePrefix: NUMBER_TO_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX, digits: NUMBER_TO_STRING_DENCODER_64_DIGITS });
+
+      describePositiveNumberConversions(instance);
+      describeNegativeNumberConversions(instance);
+    });
+
+    describe('no negative prefix', () => {
+      const instance = numberStringDencoder({ digits: NUMBER_TO_STRING_DENCODER_64_DIGITS });
+
+      describePositiveNumberConversions(instance);
     });
   });
 });
