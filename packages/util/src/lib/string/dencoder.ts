@@ -5,6 +5,7 @@ import { filterMaybeValues } from '../array/array.value';
 import { type FactoryWithRequiredInput } from '../getter/getter';
 import { forEachKeyValue, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { type Maybe } from '../value/maybe.type';
+import { stringCharactersToIndexRecord } from './char';
 
 /**
  * Map object of PrimativeKey dencoder values, keyed by the encoded value.
@@ -172,3 +173,177 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
     }
   };
 }
+
+// MARK: NumberString
+/**
+ * An encodable number. This is typically a positive integer value.
+ */
+export type NumberStringDencoderNumber = number;
+
+/**
+ * A number-encoded string. Little-Endian. Should Decode to the same value each time.
+ */
+export type NumberStringDencoderString = string;
+
+/**
+ * Digits used when encoding/decoding a value.
+ *
+ * The number of digits/characters must be a factor of 2. I.E. 8, 16, 32, 64
+ */
+export type NumberStringDencoderDigits = string;
+
+/**
+ * The number of "bits" given by the NumberStringDencoderDigits.
+ */
+export type NumberStringDencoderBitDepth = 2 | 4 | 8 | 16 | 32 | 64;
+
+/**
+ * Default 64 NumberStringDencoderDigits value.
+ */
+export const NUMBER_STRING_DENCODER_64_DIGITS: NumberStringDencoderDigits = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_';
+
+/**
+ * The default negative prefix for negative numbers.
+ */
+export const NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX = '!';
+
+/**
+ * The NumberString dencoder type
+ * - positive_integer: can only encode/decode positive integers
+ * - integer: can only encode/decode integers
+ * - positive_decimal: can encoded/decode positive decimals
+ * - decimal: can encoded/decode decimals
+ */
+export type NumberStringDencoderType = 'positive_integer' | 'integer' | 'positive_decimal' | 'decimal';
+
+/**
+ * A NumberString dencoder.
+ *
+ * Can encode/decode a number from the input string.
+ */
+export interface NumberStringDencoder {
+  readonly type: NumberStringDencoderType;
+  readonly digits: NumberStringDencoderDigits;
+  readonly bitDepth: NumberStringDencoderBitDepth;
+  readonly negativePrefix?: Maybe<string>;
+  /**
+   * Encodes the input number to the corresponding NumberStringDencoderString.
+   *
+   * @param number
+   */
+  encodeNumber(number: NumberStringDencoderNumber): NumberStringDencoderString;
+  /**
+   * Decodes the input number to the corresponding NumberStringDencoderNumber.
+   *
+   * @param encodedNumber
+   */
+  decodeNumber(encodedNumber: NumberStringDencoderString): NumberStringDencoderNumber;
+}
+
+export interface NumberStringDencoderConfig {
+  /**
+   * Optional negative prefix character. Should not be in the digits.
+   */
+  readonly negativePrefix?: Maybe<string>;
+  readonly digits: NumberStringDencoderDigits;
+}
+
+/**
+ * Creates an integer-type NumberStringDencoder.
+ *
+ * If the config does not include a negative prefix, any negative number will be treated like a positive number.
+ *
+ * @param config
+ * @returns
+ */
+export function numberStringDencoder(config: NumberStringDencoderConfig): NumberStringDencoder {
+  const { negativePrefix, digits } = config;
+  const type = negativePrefix ? 'integer' : 'positive_integer';
+
+  const log2OfDigits = Math.min(6, Math.floor(Math.log2(digits.length))); // essentially the number of bits. Floor to round. Max of 6=64bits
+  const bitDepth = Math.pow(2, log2OfDigits) as NumberStringDencoderBitDepth;
+  const bitMask = bitDepth - 1;
+  const digitsLookup = stringCharactersToIndexRecord(digits);
+
+  function encodeNumber(number: NumberStringDencoderNumber): NumberStringDencoderString {
+    let result = '';
+    const isNegativeNumber = number < 0;
+
+    if (isNegativeNumber) {
+      number = -number;
+    }
+
+    do {
+      const index = number & bitMask;
+      result = digits[index] + result; // Little-endian
+      number >>>= log2OfDigits;
+    } while (number !== 0);
+
+    if (isNegativeNumber && negativePrefix) {
+      result = negativePrefix + result;
+    }
+
+    return result;
+  }
+
+  function decodeNumber(encodedNumber: NumberStringDencoderString): NumberStringDencoderNumber {
+    let isNegativeNumber = false;
+
+    if (encodedNumber[0] === negativePrefix) {
+      isNegativeNumber = true;
+    }
+
+    const startAtIndex = isNegativeNumber ? 1 : 0;
+
+    let result = 0;
+
+    for (let i = startAtIndex; i < encodedNumber.length; i += 1) {
+      result = (result << log2OfDigits) + digitsLookup[encodedNumber[i]];
+    }
+
+    if (isNegativeNumber) {
+      result = -result;
+    }
+
+    return result;
+  }
+
+  return {
+    type,
+    digits,
+    bitDepth,
+    negativePrefix,
+    encodeNumber,
+    decodeNumber
+  };
+}
+
+export const NUMBER_STRING_DENCODER_64 = numberStringDencoder({
+  negativePrefix: NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX,
+  digits: NUMBER_STRING_DENCODER_64_DIGITS
+});
+
+export type NumberStringDencoderFunction = ((input: NumberStringDencoderString) => NumberStringDencoderNumber) & ((input: NumberStringDencoderNumber) => NumberStringDencoderString);
+
+export function numberStringDencoderFunction(dencoder: NumberStringDencoder): NumberStringDencoderFunction {
+  const fn = (input: NumberStringDencoderString | NumberStringDencoderNumber) => {
+    const result: NumberStringDencoderNumber | NumberStringDencoderString = typeof input === 'number' ? dencoder.encodeNumber(input) : dencoder.decodeNumber(input);
+    return result;
+  };
+
+  return fn as NumberStringDencoderFunction;
+}
+
+export function numberStringDencoderEncodedStringValueFunction(dencoder: NumberStringDencoder): (input: NumberStringDencoderString | NumberStringDencoderNumber) => NumberStringDencoderString {
+  return (input: NumberStringDencoderString | NumberStringDencoderNumber) => {
+    return typeof input === 'number' ? dencoder.encodeNumber(input) : input;
+  };
+}
+
+export function numberStringDencoderDecodedNumberValueFunction(dencoder: NumberStringDencoder): (input: NumberStringDencoderString | NumberStringDencoderNumber) => NumberStringDencoderNumber {
+  return (input: NumberStringDencoderString | NumberStringDencoderNumber) => {
+    return typeof input === 'number' ? input : dencoder.decodeNumber(input);
+  };
+}
+
+// TODO: can add a function that can encode/decode fractions by splitting at the decimal point and encoding twice.

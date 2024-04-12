@@ -102,7 +102,7 @@ export function addSuffix(suffix: string, input: string): string {
 /**
  * Function that adds a configured suffix to the input string if it does not exist on that string.
  */
-export type AddSuffixFunction = (input: string) => string;
+export type AddSuffixFunction = TransformStringFunction;
 
 /**
  * Creates an AddSuffixFunction
@@ -116,4 +116,19 @@ export function addSuffixFunction(suffix: string): AddSuffixFunction {
   return (input: string) => {
     return input.endsWith(suffix) ? input : input + suffix;
   };
+}
+
+/**
+ * Function that pads the start of a string to a minimum length.
+ */
+export type PadStartFunction = TransformStringFunction;
+
+/**
+ *
+ * @param minLength
+ * @param padCharacter
+ * @returns
+ */
+export function padStartFunction(minLength: number, padCharacter: string): PadStartFunction {
+  return (input: string) => input.padStart(minLength, padCharacter);
 }
