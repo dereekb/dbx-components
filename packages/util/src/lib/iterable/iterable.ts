@@ -23,6 +23,15 @@ export function asIterable<T = unknown>(values: IterableOrValue<T>, treatStringA
   return iterable;
 }
 
+/**
+ * Converts the input IterableOrValue value to an array.
+ *
+ * By default will treat strings as a non-iterable value, using the string as a single value.
+ *
+ * @param values
+ * @param treatStringAsIterable
+ * @returns
+ */
 export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable?: boolean): T[] {
   let iterable: Array<T>;
 
@@ -37,6 +46,26 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
   return iterable;
 }
 
+/**
+ * Converts the input IterableOrValue value to a Set.
+ *
+ * By default will treat strings as a non-iterable value, using the string as a single value.
+ *
+ * @param values
+ * @param treatStringAsIterable
+ * @returns
+ */
+export function iterableToSet<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable = false): Set<T> {
+  return new Set<T>(iterableToArray(values, treatStringAsIterable));
+}
+
+/**
+ * Converts the input IterableOrValue value to a Map using the input readKey function.
+ *
+ * @param values
+ * @param readKey
+ * @returns
+ */
 export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: IterableOrValue<T>, readKey: ReadKeyFunction<T, K>): Map<Maybe<K>, T> {
   const map = new Map<Maybe<K>, T>(iterableToArray(values).map((value) => [readKey(value), value]));
   return map;
