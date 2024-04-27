@@ -1,6 +1,6 @@
 import { cutValueToPrecisionFunction } from '../number/round';
 import { type Maybe } from '../value/maybe.type';
-import { type Hours, type Minutes, MINUTES_IN_HOUR } from './date';
+import { type Hours, type Minutes, MINUTES_IN_HOUR, MINUTES_IN_DAY } from './date';
 
 /**
  * A number that represents hours and rounded to the nearest minute.
@@ -61,4 +61,96 @@ export function computeNextFractionalHour(input: FractionalHour, change: Compute
   }
 
   return result;
+}
+
+/**
+ * The minute of the day.
+ *
+ * Number from 0-1439.
+ */
+export type MinuteOfDay = number;
+
+/**
+ * A pair of hours and minutes.
+ */
+export interface HoursAndMinutes {
+  readonly hour: number;
+  readonly minute: number;
+}
+
+/**
+ * Converts the input number of minutes to the equivalent in hours and minutes.
+ *
+ * @param inputMinutes
+ * @returns
+ */
+export function minutesToHoursAndMinutes(inputMinutes: Minutes): HoursAndMinutes {
+  const hour = Math.floor(inputMinutes / 60);
+  const minute = inputMinutes % 60;
+
+  return {
+    hour,
+    minute
+  };
+}
+
+/**
+ * Reads the hour and minutes of the Date.
+ *
+ * @param date
+ * @returns
+ */
+export function dateToHoursAndMinutes(date: Date): HoursAndMinutes {
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  return {
+    hour,
+    minute
+  };
+}
+
+/**
+ * Converts the input hours and minutes to a MinuteOfDay.
+ *
+ * @param hour
+ * @param minute
+ * @returns
+ */
+export function toMinuteOfDay(hour: Hours, minute: Minutes): MinuteOfDay {
+  return asMinuteOfDay(hour * 60 + minute);
+}
+
+/**
+ * Creates a new date from the minute of the day.
+ *
+ * @param minuteOfDay
+ * @param day
+ * @returns
+ */
+export function dateFromMinuteOfDay(minuteOfDay: Minutes | MinuteOfDay, day?: Date) {
+  const date = day || new Date();
+  const { hour, minute } = minutesToHoursAndMinutes(asMinuteOfDay(minuteOfDay));
+  date.setHours(hour, minute, 0, 0);
+  return date;
+}
+
+/**
+ * Converts a Date to a MinuteOfDay.
+ *
+ * @param date
+ * @returns
+ */
+export function dateToMinuteOfDay(date: Date): MinuteOfDay {
+  const { hour, minute } = dateToHoursAndMinutes(date);
+  return toMinuteOfDay(hour, minute);
+}
+
+/**
+ * Converts the input minutes to a MinuteOfDay.
+ *
+ * @param minutes
+ * @returns
+ */
+export function asMinuteOfDay(minutes: Minutes): MinuteOfDay {
+  return Math.max(0, minutes % MINUTES_IN_DAY);
 }

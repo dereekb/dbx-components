@@ -1,5 +1,5 @@
-import { type Hours, type Minutes } from '../date/date';
-import { type Maybe } from './maybe.type';
+import { type Minutes } from '../date/date';
+import { minutesToHoursAndMinutes } from '../date/hour';
 
 /**
  * A cron schedule expression string
@@ -17,16 +17,11 @@ export type CronExpression = string;
  * @returns
  */
 export function cronExpressionRepeatingEveryNMinutes(inputMinutes: Minutes): CronExpression {
-  let minutes: Minutes;
-  let hours: Maybe<Hours>;
-
   let expression: CronExpression;
 
   if (inputMinutes >= 60) {
-    hours = Math.floor(inputMinutes / 60);
-    minutes = inputMinutes % 60;
-
-    expression = `${minutes} */${hours} * * *`; // every nth hour at the given minute
+    const { hour, minute } = minutesToHoursAndMinutes(inputMinutes);
+    expression = `${minute} */${hour} * * *`; // every nth hour at the given minute
   } else {
     expression = `*/${inputMinutes} * * * *`; // every nth minute
   }

@@ -1,6 +1,7 @@
+import { startOfDay } from 'date-fns';
 import { range } from '../array/array.number';
 import { MINUTES_IN_HOUR } from './date';
-import { computeNextFractionalHour, fractionalHoursToMinutes, hourToFractionalHour, minutesToFractionalHours } from './hour';
+import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
 
 describe('fractionalHoursToMinutes()', () => {
   it('should convert the fractional hours to minutes.', () => {
@@ -116,5 +117,85 @@ describe('fractional hours', () => {
         }
       }
     });
+  });
+});
+
+describe('minutesToHoursAndMinutes()', () => {
+  it('should convert 0 minutes to 0 hours', () => {
+    const result = minutesToHoursAndMinutes(0);
+    expect(result.hour).toBe(0);
+    expect(result.minute).toBe(0);
+  });
+
+  it('should convert 60 minutes to 1 hour', () => {
+    const result = minutesToHoursAndMinutes(MINUTES_IN_HOUR);
+    expect(result.hour).toBe(1);
+    expect(result.minute).toBe(0);
+  });
+
+  it('should convert -60 minutes to -1 hour', () => {
+    const result = minutesToHoursAndMinutes(-MINUTES_IN_HOUR);
+    expect(result.hour).toBe(-1);
+    expect(result.minute).toBe(-0);
+  });
+
+  it('should convert 1439 minutes to 23 hours, 59 minutes', () => {
+    const result = minutesToHoursAndMinutes(1439);
+    expect(result.hour).toBe(23);
+    expect(result.minute).toBe(59);
+  });
+
+  it('should convert 2000 minutes to 33 hours, 20 minutes', () => {
+    const result = minutesToHoursAndMinutes(2000);
+    expect(result.hour).toBe(33);
+    expect(result.minute).toBe(20);
+  });
+});
+
+describe('toMinuteOfDay()', () => {
+  it('should convert 0 hours and 0 minutes to 0', () => {
+    const result = toMinuteOfDay(0, 0);
+    expect(result).toBe(0);
+  });
+
+  it('should convert 23 hours and 59 minutes to 1439 minutes', () => {
+    const result = toMinuteOfDay(23, 59);
+    expect(result).toBe(1439);
+  });
+});
+
+describe('dateFromMinuteOfDay()', () => {
+  it('should return a date with the 0 minute of the day', () => {
+    const now = new Date();
+    const date = dateFromMinuteOfDay(0, now);
+    expect(date.getHours()).toBe(0);
+    expect(date.getMinutes()).toBe(0);
+    expect(date).toBeSameSecondAs(startOfDay(now));
+  });
+});
+
+describe('dateToMinuteOfDay()', () => {
+  it('should convert midnight to 0', () => {
+    const now = new Date();
+    const midnight = startOfDay(now);
+    const minuteOfDay = dateToMinuteOfDay(midnight);
+    expect(minuteOfDay).toBe(0);
+  });
+});
+
+describe('asMinuteOfDay()', () => {
+  it('should convert 1440 minutes to 0', () => {
+    const result = asMinuteOfDay(1440);
+    expect(result).toBe(0);
+  });
+
+  it('should convert 720 minutes to 720', () => {
+    const result = asMinuteOfDay(720);
+    expect(result).toBe(720);
+  });
+
+  it('should convert 2000 minutes to 560', () => {
+    const result = asMinuteOfDay(2000);
+    expect(result).toBe(560);
   });
 });
