@@ -1,5 +1,5 @@
-import { DateTimezoneUtcNormalInstance, parseISO8601DayStringToDate, toJsDate, formatToISO8601DayStringForSystem, formatToISO8601DateString, isSameDateHoursAndMinutes, DateRangeWithDateOrStringValue } from '@dereekb/date';
-import { ISO8601DayString, Maybe } from '@dereekb/util';
+import { DateTimezoneUtcNormalInstance, parseISO8601DayStringToDate, toJsDate, formatToISO8601DayStringForSystem, formatToISO8601DateString, isSameDateHoursAndMinutes, DateRangeWithDateOrStringValue, parseJsDateString } from '@dereekb/date';
+import { ISO8601DayString, Maybe, asMinuteOfDay, dateFromMinuteOfDay, dateToMinuteOfDay } from '@dereekb/util';
 
 export enum DbxDateTimeValueMode {
   /**
@@ -13,22 +13,66 @@ export enum DbxDateTimeValueMode {
   /**
    * Value is returned/parsed as an ISO8601DayString, relative to the current timezone.
    */
-  DAY_STRING = 2
+  DAY_STRING = 2,
+  /**
+   * Value is returned/parsed as a Unix timestamp, relative to the current timezone.
+   */
+  UNIX_TIMESTAMP = 3,
+  /**
+   * Value is returned/parsed as a minute of the day, relative to the current timezone.
+   */
+  MINUTE_OF_DAY = 4
 }
 
-export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date | string>) => Maybe<Date> {
-  let factory: (date: Maybe<Date | string>) => Maybe<Date>;
+export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date | string | number>) => Maybe<Date> {
+  let factory: (date: Maybe<Date | string | number>) => Maybe<Date>;
   let useTimezoneInstance = true;
 
   switch (mode) {
     case DbxDateTimeValueMode.DAY_STRING:
-      factory = (x) => (typeof x === 'string' ? parseISO8601DayStringToDate(x) : x);
+      factory = (x) => {
+        let result: Maybe<Date>;
+
+        switch (typeof x) {
+          case 'string':
+            result = parseISO8601DayStringToDate(x);
+            break;
+          case 'number':
+            result = new Date(x);
+            break;
+          default:
+            result = x;
+            break;
+        }
+
+        return result;
+      };
       useTimezoneInstance = false; // day strings do not use timezones
       break;
+    case DbxDateTimeValueMode.MINUTE_OF_DAY:
+      factory = (x) => {
+        let result: Maybe<Date>;
+
+        switch (typeof x) {
+          case 'number':
+            result = dateFromMinuteOfDay(x);
+            break;
+          case 'string':
+            result = parseJsDateString(x);
+            break;
+          default:
+            result = x;
+            break;
+        }
+
+        return result;
+      };
+      break;
+    case DbxDateTimeValueMode.UNIX_TIMESTAMP:
     case DbxDateTimeValueMode.DATE_STRING:
     case DbxDateTimeValueMode.DATE:
     default:
-      factory = (x) => (x != null ? toJsDate(x) : x);
+      factory = (x) => (x != null ? toJsDate(x as Date | string | number) : x);
       break;
   }
 
@@ -45,8 +89,8 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
   return factory;
 }
 
-export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date>) => Maybe<Date | string> {
-  let factory: (date: Maybe<Date>) => Maybe<Date | string>;
+export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date>) => Maybe<Date | string | number> {
+  let factory: (date: Maybe<Date>) => Maybe<Date | string | number>;
   let useTimezoneInstance = true;
 
   switch (mode) {
@@ -56,6 +100,12 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
       break;
     case DbxDateTimeValueMode.DATE_STRING:
       factory = (x) => (x != null ? formatToISO8601DateString(x) : x);
+      break;
+    case DbxDateTimeValueMode.UNIX_TIMESTAMP:
+      factory = (x) => (x != null ? x.getTime() : x);
+      break;
+    case DbxDateTimeValueMode.MINUTE_OF_DAY:
+      factory = (x) => (x != null ? dateToMinuteOfDay(x) : x);
       break;
     case DbxDateTimeValueMode.DATE:
     default:
@@ -76,8 +126,9 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
   return factory;
 }
 
-export function dbxDateTimeIsSameDateTimeFieldValue(a: Maybe<Date | ISO8601DayString>, b: Maybe<Date | ISO8601DayString>) {
-  return a && b ? (typeof a === 'string' ? a === b : isSameDateHoursAndMinutes(a, b as Date)) : a == b;
+export function dbxDateTimeIsSameDateTimeFieldValue(a: Maybe<Date | ISO8601DayString | number>, b: Maybe<Date | ISO8601DayString | number>) {
+  const typeofA = typeof a;
+  return a && b ? (typeofA === 'string' || typeofA === 'number' ? a === b : isSameDateHoursAndMinutes(a as Date, b as Date)) : a == b;
 }
 
 export function dbxDateRangeIsSameDateRangeFieldValue(a: Maybe<DateRangeWithDateOrStringValue>, b: Maybe<DateRangeWithDateOrStringValue>) {
