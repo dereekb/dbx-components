@@ -1,4 +1,4 @@
-import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction } from '@dereekb/util';
+import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -259,7 +259,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly valueInSystemTimezone$ = this.formControl$.pipe(
-    map((control) => control.valueChanges.pipe(startWith<Maybe<Date>>(control.value), shareReplay(1))),
+    map((control) => control.valueChanges.pipe(startWith<Maybe<Date | ISO8601DayString | MinuteOfDay | UnixDateTimeNumber>>(control.value), shareReplay(1))),
     combineLatestWith(this.timezoneInstance$),
     switchMap(([x, timezoneInstance]) => {
       return x.pipe(map(dbxDateTimeInputValueParseFactory(this.valueMode, timezoneInstance)));
@@ -323,7 +323,13 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   }
 
   get timeOnly(): Maybe<boolean> {
-    return this.dateTimeField.timeOnly;
+    const timeValuesOnly = this.valueMode === DbxDateTimeValueMode.MINUTE_OF_DAY;
+
+    if (timeValuesOnly) {
+      return true;
+    } else {
+      return this.dateTimeField.timeOnly;
+    }
   }
 
   get showDateInput(): boolean {
