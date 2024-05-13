@@ -48,6 +48,10 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     }
   }
 
+  .dbx-datetime-clear-button {
+    margin-right: 3px;
+  }
+
   .dbx-datetime-row {
     display: flex;
     justify-content: center;

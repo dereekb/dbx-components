@@ -110,14 +110,14 @@ export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFie
 
 export type DateTimeRangeFieldTimeConfig = Omit<DateDateRangeFieldDateConfig, 'allDayLabel' | 'fullDayFieldName' | 'fullDayInUTC'>;
 
-export interface DateDateTimeRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets'> {
+export interface DateDateTimeRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode'> {
   required?: boolean;
   start?: Partial<DateTimeRangeFieldTimeConfig>;
   end?: Partial<DateTimeRangeFieldTimeConfig>;
 }
 
 export function dateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {}): FormlyFieldConfig {
-  const { required = false, start: inputStart, end: inputEnd, timezone, timeDate, showTimezone, presets } = inputConfig;
+  const { required = false, start: inputStart, end: inputEnd, timezone, timeDate, showTimezone, presets, valueMode } = inputConfig;
 
   function dateTimeRangeFieldConfig(config: Maybe<Partial<DateTimeRangeFieldTimeConfig>>): Partial<DateTimeFieldConfig> {
     return {
