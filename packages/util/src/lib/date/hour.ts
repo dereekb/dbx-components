@@ -1,6 +1,6 @@
 import { cutValueToPrecisionFunction } from '../number/round';
 import { type Maybe } from '../value/maybe.type';
-import { type Hours, type Minutes, MINUTES_IN_HOUR, MINUTES_IN_DAY } from './date';
+import { type Hours, type Minutes, MINUTES_IN_HOUR, MINUTES_IN_DAY, HOURS_IN_DAY } from './date';
 
 /**
  * A number that represents hours and rounded to the nearest minute.
@@ -69,6 +69,19 @@ export function computeNextFractionalHour(input: FractionalHour, change: Compute
  * Number from 0-1439.
  */
 export type MinuteOfDay = number;
+
+export const MINUTE_OF_DAY_MINIUMUM = 0;
+export const MINUTE_OF_DAY_MAXMIMUM = MINUTES_IN_DAY - 1;
+
+/**
+ * Returns true if the input valuer is a MinuteOfDay.
+ *
+ * @param input
+ * @returns
+ */
+export function isMinuteOfDay(input: number): input is MinuteOfDay {
+  return input >= MINUTE_OF_DAY_MINIUMUM && input <= MINUTE_OF_DAY_MAXMIMUM;
+}
 
 /**
  * A pair of hours and minutes.
