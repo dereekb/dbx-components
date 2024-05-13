@@ -18,17 +18,26 @@
     </div>
   </div>
   <div *ngIf="!hideDateHint" class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
-    <div class="dbx-hint" [ngSwitch]="fullDay$ | async">
-      <small *ngSwitchCase="true">
-        <b class="dbx-ok">{{ allDayLabel }}</b>
-        {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
-      </small>
-      <small *ngSwitchCase="false">
-        <ng-container *ngIf="displayValue$ | async">
-          <b class="dbx-ok">{{ atTimeLabel }}</b>
-          {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
+    <div class="dbx-hint">
+      <ng-container [ngSwitch]="hasEmptyDisplayValue$ | async">
+        <ng-container *ngSwitchCase="true">
+          <span class="dbx-small">No date/time set</span>
         </ng-container>
-      </small>
+        <ng-container *ngSwitchCase="false">
+          <ng-container [ngSwitch]="fullDay$ | async">
+            <small *ngSwitchCase="true">
+              <b class="dbx-ok">{{ allDayLabel }}</b>
+              {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
+            </small>
+            <small *ngSwitchCase="false">
+              <ng-container *ngIf="displayValue$ | async">
+                <b class="dbx-ok">{{ atTimeLabel }}</b>
+                {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
+              </ng-container>
+            </small>
+          </ng-container>
+        </ng-container>
+      </ng-container>
     </div>
   </div>
 </div>
@@ -37,10 +46,13 @@
 <ng-template #dateInputTemplate>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
-    <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
+    <input #dateInput matInput [required]="isDateRequired" [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
     <button matPrefix class="dbx-datetime-row-button" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
       <mat-icon>calendar_today</mat-icon>
+    </button>
+    <button matSuffix *ngIf="showClearButton$ | async" class="dbx-datetime-clear-button" mat-icon-button aria-label="clears the date and time menu" [disabled]="disabled" (click)="clearValue()">
+      <mat-icon>clear</mat-icon>
     </button>
     <span matTextSuffix *ngIf="!(showTimeInput$ | async)">
       <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
@@ -63,7 +75,7 @@
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
-    <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
+    <input #timeInput matInput [required]="isTimeRequired" [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
     <button matPrefix class="dbx-datetime-row-button" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
       <mat-icon>timer</mat-icon>
     </button>
