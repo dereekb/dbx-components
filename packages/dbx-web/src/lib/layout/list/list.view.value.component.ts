@@ -117,6 +117,9 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
         <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
           <mat-icon matListItemIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
           <dbx-injection [config]="item.config"></dbx-injection>
+          <span *ngIf="item.metaConfig" matListItemMeta>
+            <dbx-injection [config]="item.metaConfig"></dbx-injection>
+          </span>
         </a>
       </dbx-anchor>
       <div class="dbx-list-view-group-footer" *ngIf="footerConfig">

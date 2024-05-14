@@ -5,8 +5,12 @@ import { DecisionFunction, Maybe } from '@dereekb/util';
 
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<unknown>('DbxValueListViewItem');
 
-export interface DbxValueListItem<T> {
+export interface DbxValueListItem<T, M = unknown> {
   itemValue: T;
+  /**
+   * Arbitrary meta details available to the meta component.
+   */
+  meta?: M;
   icon?: string;
   disabled?: boolean;
   rippleDisabled?: boolean;
@@ -32,12 +36,14 @@ export type DbxValueAsListItem<T> = T & Omit<DbxValueListItem<DbxValueListItem<T
 
 export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxInjectionComponentConfig<V> {
   mapValuesToItemValues?(values: T[]): Observable<I[]>;
+  metaConfig?: DbxInjectionComponentConfig<any>;
 }
 
 export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueListItem<T>>(itemValues: T[]) => of(itemValues.map((itemValue) => ({ itemValue })) as I[]);
 
 export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> = I & {
   config: DbxInjectionComponentConfig<V>;
+  metaConfig?: DbxInjectionComponentConfig<any>;
 };
 
 export function mapValuesToValuesListItemConfigObs<T, I extends DbxValueListItem<T>, V = unknown>(listViewConfig: AbstractDbxValueListViewConfig<T, I, V>, itemValues: T[]): Observable<DbxValueListItemConfig<T, I, V>[]> {
@@ -62,17 +68,28 @@ export function addConfigToValueListItems<T, I extends DbxValueListItem<T>, V = 
     const anchor = listItem.anchor;
 
     listItem.disabled = listItem.disabled || anchor?.disabled;
-    (listItem as DbxValueListItemConfig<T, I, V>).config = Object.assign(
-      {
+    (listItem as DbxValueListItemConfig<T, I, V>).config = Object.assign({}, listViewConfig, {
+      providers: [
+        {
+          provide: DBX_VALUE_LIST_VIEW_ITEM,
+          useValue: listItem
+        },
+        ...(listViewConfig.providers ?? [])
+      ] as StaticProvider[]
+    });
+
+    // only attach meta config if it is configured
+    if (listViewConfig.metaConfig) {
+      (listItem as DbxValueListItemConfig<T, I, V>).metaConfig = Object.assign({}, listViewConfig.metaConfig, {
         providers: [
           {
             provide: DBX_VALUE_LIST_VIEW_ITEM,
             useValue: listItem
-          }
+          },
+          ...(listViewConfig.metaConfig?.providers ?? [])
         ] as StaticProvider[]
-      },
-      listViewConfig
-    );
+      });
+    }
 
     return listItem as DbxValueListItemConfig<T, I, V>;
   });

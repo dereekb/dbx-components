@@ -6,6 +6,7 @@ export * from './list.track';
 export * from './list.grid.view.directive';
 export * from './list.grid.view.component';
 export * from './list.view.directive';
+export * from './list.view.meta.icon.component';
 export * from './list.view.value.group';
 export * from './list.view.value.group.title';
 export * from './list.view.value.group.title.directive';

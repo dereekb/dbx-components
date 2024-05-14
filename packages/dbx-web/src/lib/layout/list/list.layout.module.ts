@@ -17,6 +17,7 @@ import { DbxValueListGridViewContentComponent, DbxValueListGridSizeDirective, Db
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxListItemIsSelectedModifierDirective } from './list.view.value.modifier.selection.directive';
 import { DbxListTitleGroupDirective, DbxListTitleGroupHeaderComponent } from './list.view.value.group.title.directive';
+import { DbxListViewMetaIconComponent } from './list.view.meta.icon.component';
 
 const privateDeclarations = [DbxListInternalContentDirective];
 
@@ -30,6 +31,7 @@ const declarations = [
   DbxValueListGridSizeDirective,
   DbxValueListGridViewComponent,
   DbxValueListGridViewContentComponent,
+  DbxListViewMetaIconComponent,
   DbxListTitleGroupDirective,
   DbxListTitleGroupHeaderComponent,
   DbxSelectionValueListViewComponent,
