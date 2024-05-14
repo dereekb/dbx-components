@@ -1,10 +1,10 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField } from '@dereekb/dbx-form';
-import { addDays, addHours, addMonths, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
+import { addDays, addHours, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, Observable, delay, map, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate } from '@dereekb/date';
+import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.date.component.html'
@@ -52,6 +52,20 @@ export class DocFormDateValueComponent {
         { label: '12:30 PM', timeString: '12:30PM' },
         { label: 'Now', logicalDate: 'now' }
       ]
+    }),
+    dateTimeField({
+      timezone: this.timezone$,
+      label: 'Time For Today',
+      timeDate: new Date(),
+      showClearButton: false,
+      key: 'timeForToday',
+      description: 'This date field has a filter that only allows picking a time for today. This date field is configured to not show the clear button.',
+      pickerConfig: {
+        limits: {
+          min: findMaxDate([startOfDay(new Date()), addHours(new Date(), -2)]),
+          max: findMinDate([endOfDay(new Date()), addHours(new Date(), 2)])
+        }
+      }
     }),
     dateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }),
     dateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }),

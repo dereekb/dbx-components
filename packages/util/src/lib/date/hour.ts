@@ -70,6 +70,19 @@ export function computeNextFractionalHour(input: FractionalHour, change: Compute
  */
 export type MinuteOfDay = number;
 
+export const MINUTE_OF_DAY_MINIUMUM = 0;
+export const MINUTE_OF_DAY_MAXMIMUM = MINUTES_IN_DAY - 1;
+
+/**
+ * Returns true if the input valuer is a MinuteOfDay.
+ *
+ * @param input
+ * @returns
+ */
+export function isMinuteOfDay(input: number): input is MinuteOfDay {
+  return input >= MINUTE_OF_DAY_MINIUMUM && input <= MINUTE_OF_DAY_MAXMIMUM;
+}
+
 /**
  * A pair of hours and minutes.
  */

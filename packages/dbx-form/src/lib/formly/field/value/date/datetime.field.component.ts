@@ -475,7 +475,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$, this.timeDate$, this.isTimeCleared$]).pipe(
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([
+    this._config.pipe(
+      first(),
+      switchMap(() => (this.timeOnly ? of(null) : this.dateValue$))
+    ),
+    this.timeInput$.pipe(startWith(null)),
+    this.fullDay$,
+    this.timeDate$,
+    this.isTimeCleared$
+  ]).pipe(
     map(([date, timeString, fullDay, timeDate, isTimeCleared]) => {
       let result: Maybe<Date>;
 
@@ -601,7 +610,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly showClearButton$: Observable<boolean> = this.hasEmptyDisplayValue$.pipe(
-    map((x) => !x),
+    map((x) => Boolean(this.showClearButton && !x)),
     distinctUntilChanged(),
     shareReplay(1)
   );
