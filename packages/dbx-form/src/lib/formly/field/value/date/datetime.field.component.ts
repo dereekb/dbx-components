@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs, timeoutStartWith } from '@dereekb/rxjs';
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
@@ -475,7 +475,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$, this.timeDate$, this.isTimeCleared$]).pipe(
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([
+    this._config.pipe(
+      first(),
+      switchMap(() => (this.timeOnly ? of(null) : this.dateValue$))
+    ),
+    this.timeInput$.pipe(startWith(null)),
+    this.fullDay$,
+    this.timeDate$,
+    this.isTimeCleared$
+  ]).pipe(
     map(([date, timeString, fullDay, timeDate, isTimeCleared]) => {
       let result: Maybe<Date>;
 
@@ -601,7 +610,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly showClearButton$: Observable<boolean> = this.hasEmptyDisplayValue$.pipe(
-    map((x) => !x),
+    map((x) => Boolean(this.showClearButton && !x)),
     distinctUntilChanged(),
     shareReplay(1)
   );

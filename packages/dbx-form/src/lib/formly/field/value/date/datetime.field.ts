@@ -27,7 +27,7 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 }
 
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
-  const { key = 'date', dateLabel, timeLabel, allDayLabel, atTimeLabel, timeDate, timezone, showTimezone, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, pickerConfig, getSyncFieldsObs, hideDatePicker, hideDateHint, timeOnly = false, presets, materialFormField } = config;
+  const { key = 'date', showClearButton, dateLabel, timeLabel, allDayLabel, atTimeLabel, timeDate, timezone, showTimezone, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, pickerConfig, getSyncFieldsObs, hideDatePicker, hideDateHint, timeOnly = false, presets, materialFormField } = config;
 
   const classGetter = 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper';
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
@@ -35,6 +35,7 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
     type: 'datetime',
     ...propsAndConfigForFieldConfig(config, {
       ...materialFormField,
+      showClearButton,
       classGetter,
       dateLabel,
       timeLabel,
