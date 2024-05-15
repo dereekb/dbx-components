@@ -126,6 +126,7 @@ export function dateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {
       required,
       timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
       getSyncFieldsObs: undefined,
+      valueMode,
       timeOnly: true,
       hideDateHint: true
     };
