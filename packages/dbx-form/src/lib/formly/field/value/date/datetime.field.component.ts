@@ -412,8 +412,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   readonly currentDate$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), shareReplay(1));
   readonly date$ = this.currentDate$.pipe(filterMaybe(), shareReplay(1));
 
-  readonly timezoneAbbreviation$ = combineLatest([this.date$, this.timezone$, this.timeDate$]).pipe(
-    map(([date, timezone, timeDate]) => getTimezoneAbbreviation(timezone, timeDate ?? date)),
+  readonly timezoneAbbreviation$ = combineLatest([this.currentDate$, this.timezone$, this.timeDate$]).pipe(
+    map(([date, timezone, timeDate]) => getTimezoneAbbreviation(timezone, timeDate ?? date ?? new Date())),
     distinctUntilChanged(),
     shareReplay(1)
   );

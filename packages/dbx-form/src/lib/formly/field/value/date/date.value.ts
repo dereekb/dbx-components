@@ -21,7 +21,11 @@ export enum DbxDateTimeValueMode {
   /**
    * Value is returned/parsed as a minute of the day, relative to the current timezone.
    */
-  MINUTE_OF_DAY = 4
+  MINUTE_OF_DAY = 4,
+  /**
+   * Value is returned/parsed as a minute of the day, relative to the system timezone.
+   */
+  SYSTEM_MINUTE_OF_DAY = 5
 }
 
 export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date | string | number>) => Maybe<Date> {
@@ -49,6 +53,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
       };
       useTimezoneInstance = false; // day strings do not use timezones
       break;
+    case DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY:
     case DbxDateTimeValueMode.MINUTE_OF_DAY:
       factory = (x) => {
         let result: Maybe<Date>;
@@ -67,6 +72,11 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
 
         return result;
       };
+
+      if (mode === DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY) {
+        useTimezoneInstance = false;
+      }
+
       break;
     case DbxDateTimeValueMode.UNIX_TIMESTAMP:
     case DbxDateTimeValueMode.DATE_STRING:
@@ -104,8 +114,13 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
     case DbxDateTimeValueMode.UNIX_TIMESTAMP:
       factory = (x) => (x != null ? x.getTime() : x);
       break;
+    case DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY:
     case DbxDateTimeValueMode.MINUTE_OF_DAY:
       factory = (x) => (x != null ? dateToMinuteOfDay(x) : x);
+
+      if (mode === DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY) {
+        useTimezoneInstance = false;
+      }
       break;
     case DbxDateTimeValueMode.DATE:
     default:

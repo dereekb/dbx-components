@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "10.1.15",
+  "version": "10.1.16",
   "type": "commonjs",
   "exports": {
     ".": {
