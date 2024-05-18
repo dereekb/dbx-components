@@ -62,14 +62,14 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
 
 export type DateDateRangeFieldDateConfig = Omit<DateTimeFieldConfig, 'dateLabel' | 'timeOnly' | 'timeMode' | 'getSyncFieldsObs'>;
 
-export interface DateDateRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets'> {
+export interface DateDateRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode'> {
   required?: boolean;
   start?: Partial<DateDateRangeFieldDateConfig>;
   end?: Partial<DateDateRangeFieldDateConfig>;
 }
 
 export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFieldConfig {
-  const { required: inputRequired, start, end, timeDate, timezone, showTimezone, presets } = config;
+  const { required: inputRequired, start, end, timeDate, timezone, showTimezone, presets, valueMode } = config;
   const required = inputRequired ?? start?.required ?? false;
 
   const startFieldKey = start?.key ?? 'start';
@@ -84,6 +84,7 @@ export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFie
     timeDate,
     timezone,
     showTimezone,
+    valueMode,
     ...start,
     required,
     key: startFieldKey
@@ -98,6 +99,7 @@ export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFie
     timeDate,
     timezone,
     showTimezone,
+    valueMode,
     ...end,
     required,
     key: endFieldKey
@@ -122,11 +124,11 @@ export function dateTimeRangeField(inputConfig: DateDateTimeRangeFieldConfig = {
 
   function dateTimeRangeFieldConfig(config: Maybe<Partial<DateTimeRangeFieldTimeConfig>>): Partial<DateTimeFieldConfig> {
     return {
+      valueMode,
       ...config,
       required,
       timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
       getSyncFieldsObs: undefined,
-      valueMode,
       timeOnly: true,
       hideDateHint: true
     };
