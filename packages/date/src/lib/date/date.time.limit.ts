@@ -1,5 +1,5 @@
 import { type Minutes, type Hours, type Days, type Maybe, DATE_NOW_VALUE } from '@dereekb/util';
-import { addMinutes, isBefore, isSameDay } from 'date-fns';
+import { addMinutes, isBefore } from 'date-fns';
 import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from './date';
 import { type DateRange, clampDateRangeToDateRange, clampDateToDateRange } from './date.range';
 import { type LogicalDate, dateFromLogicalDate } from './date.logical';

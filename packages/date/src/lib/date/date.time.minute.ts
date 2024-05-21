@@ -5,7 +5,7 @@ import { roundDateTimeDownToSteps, type StepRoundDateTimeDown } from './date.rou
 import { dateCellScheduleDateFilter, findNextDateInDateCellScheduleFilter, type DateCellScheduleDateFilter, type DateCellScheduleDateFilterConfig, type DateCellScheduleDateFilterInput } from './date.cell.schedule';
 import { type LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 import { dateFromLogicalDate } from './date.logical';
-import { DateRange, dateRangeFromStartAndEndOfDay, dateRangeOverlapsDateRange } from './date.range';
+import { type DateRange, dateRangeFromStartAndEndOfDay, dateRangeOverlapsDateRange } from './date.range';
 
 export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
   /**
