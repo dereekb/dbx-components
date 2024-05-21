@@ -1,9 +1,9 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField } from '@dereekb/dbx-form';
-import { addDays, addHours, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
+import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { BehaviorSubject, Observable, delay, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, delay, interval, map, of } from 'rxjs';
 import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
 
 @Component({
@@ -18,6 +18,7 @@ export class DocFormDateValueComponent {
     unixTimeStamp: new Date().getTime(),
     unixTimeStampInNewYork: new Date().getTime(),
     minuteOfDay: 720,
+    changingConfiguration: new Date(),
     dateOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'Asia/Tokyo' }).systemDateToTargetDate(startOfDay(new Date())),
     timeOnlyWithLockedTimezone: dateTimezoneUtcNormal({ timezone: 'America/New_York' }).systemDateToTargetDate(startOfDay(new Date()))
   });
@@ -55,7 +56,7 @@ export class DocFormDateValueComponent {
     }),
     dateTimeField({
       timezone: this.timezone$,
-      label: 'Time For Today',
+      label: 'Time For Today (For Timezone)',
       timeDate: new Date(),
       showClearButton: false,
       key: 'timeForToday',
@@ -66,6 +67,21 @@ export class DocFormDateValueComponent {
           max: findMinDate([endOfDay(new Date()), addHours(new Date(), 2)])
         }
       }
+    }),
+    dateTimeField({
+      label: 'Changing Configuration',
+      showClearButton: false,
+      key: 'changingConfiguration',
+      description: 'This date field has a filter that changes every second to require a minute more in the future for every second that passes.',
+      pickerConfig: interval(1000).pipe(
+        map((x) => {
+          return {
+            limits: {
+              min: addMinutes(new Date(), x)
+            }
+          };
+        })
+      )
     }),
     dateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }),
     dateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }),

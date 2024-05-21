@@ -1,6 +1,6 @@
 import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter } from 'rxjs';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
@@ -212,6 +212,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _valueSub = new SubscriptionObject();
 
   private _config = new BehaviorSubject<Maybe<Observable<DbxDateTimePickerConfiguration>>>(undefined);
+  readonly latestConfig$ = this._config.pipe(switchMapMaybeDefault(), distinctUntilChanged(), shareReplay(1));
+
   private _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
 
   private _defaultTimezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
@@ -228,6 +230,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   private _cleared = new Subject<void>();
   private _updateTime = new Subject<void>();
+
+  private _configUpdateTimeSync = new SubscriptionObject(
+    this.latestConfig$.pipe(skip(1)).subscribe((x) => {
+      this._updateTime.next();
+    })
+  );
 
   readonly timezone$: Observable<Maybe<TimezoneString>> = this._defaultTimezone.pipe(switchMapMaybeDefault(), distinctUntilChanged()).pipe(
     map((defaultTimezone) => {
@@ -584,7 +592,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.dateTimePickerConfig$]).pipe(
     throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
-    distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
+    distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0 && current[2] === next[2]),
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
     map(([date, stepsOffset, config]) => {
       if (date != null) {
@@ -754,6 +762,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._sub.destroy();
     this._valueSub.destroy();
     this._config.complete();
+    this._configUpdateTimeSync.destroy();
     this._defaultTimezone.complete();
     this._timeDate.complete();
     this._presets.complete();
