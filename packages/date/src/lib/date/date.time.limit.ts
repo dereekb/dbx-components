@@ -125,6 +125,10 @@ export class LimitDateTimeInstance {
    */
   dateRange(): Partial<DateRange> {
     const { instant = new Date() } = this.config;
+    return this.dateRangeForInstant(instant);
+  }
+
+  dateRangeForInstant(instant: Date) {
     const { min, max } = this;
     return {
       start: min ? dateFromLogicalDate(min, instant) : undefined,

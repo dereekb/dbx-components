@@ -353,6 +353,16 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
 }
 
 /**
+ * Convenience function that calls dateRange() to return the first millisecond and last millisecond of the input date.
+ *
+ * @param date
+ * @returns
+ */
+export function dateRangeFromStartAndEndOfDay(date: Date): DateRange {
+  return dateRange({ date, type: DateRangeType.DAY });
+}
+
+/**
  * Function that iterates dates within a date range at a pre-configured iteration step.
  */
 export type IterateDatesInDateRangeFunction = <T = void>(dateRange: DateRange, forEachFn: (date: Date) => T) => T[];

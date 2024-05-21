@@ -168,6 +168,11 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * Whether or not to display the clear date button. True by default.
    */
   readonly showClearButton?: Maybe<boolean>;
+
+  /**
+   * The number of minutes to add/subtract when using the arrow keys.
+   */
+  readonly minuteStep?: Maybe<number>;
 }
 
 export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
@@ -396,6 +401,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     return this.field.props.showClearButton;
   }
 
+  get minuteStep() {
+    return this.field.props.minuteStep ?? this.field.props.step ?? 5;
+  }
+
   readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(
     switchMap((control) => control.valueChanges.pipe(startWith(control.value))),
     distinctUntilChanged(),
@@ -507,7 +516,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
                 useSystemTimezone: true
               }) ?? date;
           } else if (!this.timeOnly) {
-            result = date;
+            if (this.timeMode !== DbxDateTimeFieldTimeMode.REQUIRED) {
+              // only autofill the date if the time is marked as required (and the time string is empty)
+              result = date;
+            }
           }
         }
       }
@@ -583,7 +595,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         });
 
         date = instance.clamp(date);
-        const minutes = stepsOffset * 5;
+        const minutes = stepsOffset * this.minuteStep;
 
         if (minutes != 0) {
           date = addMinutes(date, minutes);
