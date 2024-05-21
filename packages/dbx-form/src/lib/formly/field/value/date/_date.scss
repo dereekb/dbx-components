@@ -56,6 +56,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     display: flex;
     justify-content: center;
     align-items: center;
+    min-width: 220px;
 
     .mat-mdc-form-field-subscript-wrapper {
       // hide the subscript wrapper since it is not used here
