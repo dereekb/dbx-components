@@ -1,5 +1,5 @@
 import { type Minutes, type Hours, type Days, type Maybe, DATE_NOW_VALUE } from '@dereekb/util';
-import { addMinutes, isBefore } from 'date-fns';
+import { addMinutes, isBefore, isSameDay } from 'date-fns';
 import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from './date';
 import { type DateRange, clampDateRangeToDateRange, clampDateToDateRange } from './date.range';
 import { type LogicalDate, dateFromLogicalDate } from './date.logical';
@@ -125,6 +125,10 @@ export class LimitDateTimeInstance {
    */
   dateRange(): Partial<DateRange> {
     const { instant = new Date() } = this.config;
+    return this.dateRangeForInstant(instant);
+  }
+
+  dateRangeForInstant(instant: Date) {
     const { min, max } = this;
     return {
       start: min ? dateFromLogicalDate(min, instant) : undefined,

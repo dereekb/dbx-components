@@ -516,7 +516,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
                 useSystemTimezone: true
               }) ?? date;
           } else if (!this.timeOnly) {
-            result = date;
+            if (this.timeMode !== DbxDateTimeFieldTimeMode.REQUIRED) {
+              // only autofill the date if the time is marked as required (and the time string is empty)
+              result = date;
+            }
           }
         }
       }

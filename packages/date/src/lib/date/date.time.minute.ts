@@ -5,6 +5,7 @@ import { roundDateTimeDownToSteps, type StepRoundDateTimeDown } from './date.rou
 import { dateCellScheduleDateFilter, findNextDateInDateCellScheduleFilter, type DateCellScheduleDateFilter, type DateCellScheduleDateFilterConfig, type DateCellScheduleDateFilterInput } from './date.cell.schedule';
 import { type LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 import { dateFromLogicalDate } from './date.logical';
+import { DateRange, dateRangeFromStartAndEndOfDay, dateRangeOverlapsDateRange } from './date.range';
 
 export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
   /**
@@ -109,6 +110,36 @@ export class DateTimeMinuteInstance {
   }
 
   /**
+   * Returns true if the input date is on the schedule and possibly holds a valid value for the limit.
+   *
+   * @param date
+   */
+  dateDayContainsValidDateValue(date: Date) {
+    const isInSchedule = this.dateIsInSchedule(date);
+    let dateDayContainsValidDateValue = false;
+
+    if (isInSchedule) {
+      const limitRange = this._limit.dateRange();
+
+      if (limitRange.start == null && limitRange.end == null) {
+        dateDayContainsValidDateValue = true; // no limit
+      } else {
+        const dateStartAndEnd = dateRangeFromStartAndEndOfDay(date);
+
+        if (limitRange.start != null && limitRange.end != null) {
+          dateDayContainsValidDateValue = dateRangeOverlapsDateRange(dateStartAndEnd, limitRange as DateRange); // true if there is any overlap at all
+        } else if (limitRange.start != null) {
+          dateDayContainsValidDateValue = !isAfter(limitRange.start, dateStartAndEnd.end);
+        } else if (limitRange.end != null) {
+          dateDayContainsValidDateValue = !isBefore(limitRange.end, dateStartAndEnd.start);
+        }
+      }
+    }
+
+    return dateDayContainsValidDateValue;
+  }
+
+  /**
    * Returns true if the input is within the range and in the schedule.
    *
    * @param date
@@ -166,7 +197,7 @@ export class DateTimeMinuteInstance {
     }
 
     // Schedule
-    isInSchedule = this._dateFilter ? this._dateFilter(date) : true; // default
+    isInSchedule = this.dateIsInSchedule(date);
 
     return {
       isBeforeMaximum,
@@ -176,6 +207,10 @@ export class DateTimeMinuteInstance {
       inPast,
       isInSchedule
     };
+  }
+
+  dateIsInSchedule(date = this.date): boolean {
+    return this._dateFilter ? this._dateFilter(date) : true; // true if no date filter
   }
 
   round(round: RoundDateTimeMinute): Date {
@@ -311,18 +346,18 @@ export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): De
 }
 
 /**
- * Similar to dateTimeMinuteDecisionFunction(), but compares the first and last instant of the input day.
+ * Similar to dateTimeMinuteDecisionFunction(), but compares the first and last instant of the input day to determine the decision.
  *
  * @param config
- * @param startAndEndOfDayMustBeValue Whether or not the start of the day and end of the day must be valid to be considered valid. Defaults to false.
+ * @param startAndEndOfDayMustBeValid Whether or not the start of the day and end of the day must be valid to be considered valid. Defaults to false.
  * @returns
  */
-export function dateTimeMinuteWholeDayDecisionFunction(config: DateTimeMinuteConfig, startAndEndOfDayMustBeValue = false): DecisionFunction<Date> {
+export function dateTimeMinuteWholeDayDecisionFunction(config: DateTimeMinuteConfig, startAndEndOfDayMustBeValid = false): DecisionFunction<Date> {
   const instance = new DateTimeMinuteInstance(config, null);
 
-  if (startAndEndOfDayMustBeValue) {
+  if (startAndEndOfDayMustBeValid) {
     return (date: Date) => instance.isValid(startOfDay(date)) && instance.isValid(endOfDay(date));
   } else {
-    return (date: Date) => instance.isValid(startOfDay(date)) || instance.isValid(endOfDay(date));
+    return (date: Date) => instance.dateDayContainsValidDateValue(date);
   }
 }
