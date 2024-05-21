@@ -3,9 +3,8 @@ import { Component } from '@angular/core';
 import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField } from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { BehaviorSubject, Observable, count, delay, interval, map, of, timer } from 'rxjs';
+import { BehaviorSubject, Observable, delay, interval, map, of } from 'rxjs';
 import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
-import { tapLog } from '@dereekb/rxjs';
 
 @Component({
   templateUrl: './value.date.component.html'
