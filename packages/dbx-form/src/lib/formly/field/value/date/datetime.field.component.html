@@ -44,7 +44,7 @@
 <ng-template #dateInputTemplate>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
-    <input #dateInput matInput [required]="isDateRequired" [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
+    <input #dateInput matInput [required]="isDateRequired" [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" [disabled]="disabled" />
     <mat-datepicker #picker></mat-datepicker>
     <button matPrefix class="dbx-datetime-row-button" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
       <mat-icon>calendar_today</mat-icon>
@@ -73,7 +73,7 @@
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
-    <input #timeInput matInput [required]="isTimeRequired" [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
+    <input #timeInput matInput [required]="isTimeRequired" [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" [disabled]="disabled" />
     <button matPrefix class="dbx-datetime-row-button" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
       <mat-icon>timer</mat-icon>
     </button>
