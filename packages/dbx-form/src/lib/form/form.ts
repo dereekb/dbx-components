@@ -2,7 +2,7 @@ import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, Maybe } from '@dereekb/util';
-import { AbstractControl, FormControlStatus, FormGroup } from '@angular/forms';
+import { AbstractControl, FormControlStatus } from '@angular/forms';
 
 /**
  * Current state of a DbxForm
