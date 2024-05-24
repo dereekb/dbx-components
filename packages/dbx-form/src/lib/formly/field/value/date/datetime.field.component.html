@@ -1,9 +1,7 @@
-<div class="dbx-datetime-field" fxLayout="row wrap" fxLayout.xs="column wrap" fxLayoutAlign="space-evenly stretch">
+<div class="dbx-datetime-field" fxLayout="row wrap" fxLayout.xs="column wrap" fxLayoutGap="6px grid" fxLayoutAlign="space-evenly stretch">
   <!-- Date -->
   <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="dateOnly ? '100' : '50'" *ngIf="showDateInput">
     <ng-container *ngTemplateOutlet="dateInputTemplate"></ng-container>
-    <!-- Additional spacing -->
-    <dbx-button-spacer *ngIf="!dateOnly"></dbx-button-spacer>
   </div>
   <!-- Time -->
   <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="showDateInput ? '50' : '100'">
@@ -46,7 +44,7 @@
 <ng-template #dateInputTemplate>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
-    <input #dateInput matInput [required]="isDateRequired" [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
+    <input #dateInput matInput [disabled]="disabled" [required]="isDateRequired" [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
     <button matPrefix class="dbx-datetime-row-button" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
       <mat-icon>calendar_today</mat-icon>

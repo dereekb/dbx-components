@@ -2,7 +2,7 @@ import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, Maybe } from '@dereekb/util';
-import { FormControlStatus } from '@angular/forms';
+import { AbstractControl, FormControlStatus } from '@angular/forms';
 
 /**
  * Current state of a DbxForm
@@ -107,4 +107,12 @@ export function provideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider
 
 export function provideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
   return [...provideDbxForm(sourceType), { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }];
+}
+
+export function toggleDisableFormControl(form: AbstractControl<any>, isDisabled: boolean, config?: Parameters<AbstractControl['disable']>[0]) {
+  if (isDisabled) {
+    form.disable(config);
+  } else {
+    form.enable(config);
+  }
 }

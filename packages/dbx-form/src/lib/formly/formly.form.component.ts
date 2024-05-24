@@ -1,13 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first } from 'rxjs';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, hasDifferentValues, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, iterablesAreSetEquivalent, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyFormState {
   changesSinceLastResetCount: number;
@@ -134,24 +134,25 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
       let change = false;
 
       if (this.form.disabled !== isDisabled) {
-        if (isDisabled) {
-          this.form.disable({ emitEvent: true });
-        } else {
-          this.form.enable({ emitEvent: true });
-        }
-
+        toggleDisableFormControl(this.form, isDisabled, { emitEvent: true });
         change = true;
       }
 
       return change;
     };
 
-    this._disabledSub.subscription = this._disabled.pipe(distinctUntilChanged(hasDifferentValues)).subscribe((disabled) => {
+    this._disabledSub.subscription = this._disabled.pipe(distinctUntilChanged(iterablesAreSetEquivalent)).subscribe(() => {
       resyncDisabledState();
     });
 
     // NOTE: Form sometimes becomes undisabled somewhere/somehow. Re-enforce the disabled state where necessary.
-    this._enforceDisabledSub.subscription = this.form.statusChanges.pipe(throttleTime(50, undefined, { leading: true, trailing: true })).subscribe((change) => {
+    this._enforceDisabledSub.subscription = merge([
+      this._reset.pipe(
+        map(() => 'RESET'),
+        delay(50)
+      ),
+      this.form.statusChanges.pipe(throttleTime(50, undefined, { leading: true, trailing: true }))
+    ]).subscribe((change) => {
       resyncDisabledState();
     });
   }
@@ -226,7 +227,8 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
-    this._disabled.next(BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled));
+    const next = BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled);
+    this._disabled.next(next);
   }
 
   // MARK: Update
