@@ -12,6 +12,7 @@ import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './d
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
 import { FormControlPath, streamValueFromControl } from '../../../../form/form.angular.util';
+import { toggleDisableFormControl } from '../../../../form/form';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -708,14 +709,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._timeDate.next(asObservableFromGetter(this.timeDate));
 
     // Watch for disabled changes so we can propogate them properly.
-    this.formControl.registerOnDisabledChange((disabled) => {
-      if (disabled) {
-        this.dateInputCtrl.disable({ emitEvent: false });
-        this.timeInputCtrl.disable({ emitEvent: false });
-      } else {
-        this.dateInputCtrl.enable({ emitEvent: false });
-        this.timeInputCtrl.enable({ emitEvent: false });
-      }
+    this.formControl.registerOnDisabledChange((isDisabled) => {
+      toggleDisableFormControl(this.dateInputCtrl, isDisabled);
+      toggleDisableFormControl(this.timeInputCtrl, isDisabled);
     });
 
     const isFullDayField = this.dateTimeField.fullDayFieldName;

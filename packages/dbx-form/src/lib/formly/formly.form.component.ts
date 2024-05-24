@@ -3,11 +3,11 @@ import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, hasDifferentValues, iterablesAreSetEquivalent, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, iterablesAreSetEquivalent, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyFormState {
   changesSinceLastResetCount: number;
@@ -134,12 +134,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
       let change = false;
 
       if (this.form.disabled !== isDisabled) {
-        if (isDisabled) {
-          this.form.disable({ emitEvent: true });
-        } else {
-          this.form.enable({ emitEvent: true });
-        }
-
+        toggleDisableFormControl(this.form, isDisabled, { emitEvent: true });
         change = true;
       }
 
