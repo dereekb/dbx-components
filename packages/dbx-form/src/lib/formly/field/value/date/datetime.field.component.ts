@@ -94,6 +94,22 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   readonly timeOnly?: boolean;
 
   /**
+   * Only applicable when timeOnly is false.
+   *
+   * Whether or not to always show the date input even when there is only a single date that can be selected.
+   *
+   * Defaults to true.
+   */
+  readonly alwaysShowDateInput?: boolean;
+
+  /**
+   * Whether or not to autofill the date when time is picked.
+   *
+   * Defaults to false.
+   */
+  readonly autofillDateWhenTimeIsPicked?: boolean;
+
+  /**
    * Whether or not the time can be added/removed optionally.
    *
    * This is ignored if timeOnly is specified.
@@ -211,6 +227,7 @@ const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDateTimeFieldProps>> implements OnInit, OnDestroy {
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
+  private _autoFillDateSync = new SubscriptionObject();
 
   private _config = new BehaviorSubject<Maybe<Observable<DbxDateTimePickerConfiguration>>>(undefined);
   readonly latestConfig$ = this._config.pipe(switchMapMaybeDefault(), distinctUntilChanged(), shareReplay(1));
@@ -231,6 +248,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   private _cleared = new Subject<void>();
   private _updateTime = new Subject<void>();
+
+  private _resyncTimeInputSub = new SubscriptionObject();
+  private _resyncTimeInput = new Subject<void>();
+
+  readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
 
   private _configUpdateTimeSync = new SubscriptionObject(
     this.latestConfig$.pipe(skip(1)).subscribe((x) => {
@@ -350,6 +372,14 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     } else {
       return this.dateTimeField.timeOnly;
     }
+  }
+
+  get alwaysShowDateInput(): boolean {
+    return this.props.alwaysShowDateInput ?? true;
+  }
+
+  get autofillDateWhenTimeIsPicked(): boolean {
+    return this.props.autofillDateWhenTimeIsPicked ?? this.alwaysShowDateInput === false;
   }
 
   get showDateInput(): boolean {
@@ -576,6 +606,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
+  readonly dateMinAndMaxIsSameDay$: Observable<boolean> = combineLatest([this.dateInputMin$, this.dateInputMax$]).pipe(
+    map(([a, b]) => Boolean(a && b) && isSameDateDay(a, b)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.dateTimePickerConfig$.pipe(
     distinctUntilChanged(),
     map((x) => {
@@ -636,6 +672,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
+  readonly canAutofillDateWithOnlyAvailableDate$: Observable<boolean> = this.dateMinAndMaxIsSameDay$;
+
+  readonly showDateInput$: Observable<boolean> = this.dateMinAndMaxIsSameDay$.pipe(
+    map((dateMinAndMaxIsSameDay) => {
+      return this.showDateInput && (this.alwaysShowDateInput || !dateMinAndMaxIsSameDay);
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   constructor(private readonly cdRef: ChangeDetectorRef, private readonly dbxDateTimeFieldConfigService: DbxDateTimeFieldMenuPresetsService) {
     super();
   }
@@ -674,6 +720,29 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       this.setTime(x);
     });
     */
+
+    if (this.autofillDateWhenTimeIsPicked) {
+      this._autoFillDateSync.subscription = this.canAutofillDateWithOnlyAvailableDate$
+        .pipe(
+          switchMap((canAutofill) => {
+            if (canAutofill) {
+              // when the time updates the first time, set the current min date
+              return this._updateTime.pipe(
+                debounceTime(200),
+                switchMap((x) => this.dateInputMin$),
+                filterMaybe()
+              );
+            } else {
+              return of(null); // don't show anything
+            }
+          })
+        )
+        .subscribe((autoDate) => {
+          if (autoDate != null) {
+            this.dateInputCtrl.setValue(autoDate);
+          }
+        });
+    }
 
     this._valueSub.subscription = this.valueInSystemTimezone$
       .pipe(
@@ -751,6 +820,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     } else {
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
     }
+
+    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((x) => this.timeString$.pipe(first()))).subscribe((x) => {
+      this.timeInputCtrl.setValue(x, { emitEvent: false });
+    });
   }
 
   override ngOnDestroy(): void {
@@ -760,6 +833,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._config.complete();
     this._configUpdateTimeSync.destroy();
     this._defaultTimezone.complete();
+    this._resyncTimeInputSub.destroy();
+    this._autoFillDateSync.destroy();
     this._timeDate.complete();
     this._presets.complete();
     this._fullDayControlObs.complete();
@@ -767,6 +842,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._formControlObs.complete();
     this._updateTime.complete();
     this._cleared.complete();
+    this._resyncTimeInput.complete();
     this._syncConfigObs.complete();
   }
 
@@ -889,6 +965,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   focusOutTime(): void {
     this._updateTime.next();
+    this._resyncTimeInput.next();
   }
 
   addTime(): void {
