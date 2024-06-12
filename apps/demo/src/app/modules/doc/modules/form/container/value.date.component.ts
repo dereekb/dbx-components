@@ -57,10 +57,11 @@ export class DocFormDateValueComponent {
     dateTimeField({
       timezone: this.timezone$,
       label: 'Time For Today (For Timezone)',
+      alwaysShowDateInput: false,
       timeDate: new Date(),
       showClearButton: false,
       key: 'timeForToday',
-      description: 'This date field has a filter that only allows picking a time for today. This date field is configured to not show the clear button.',
+      description: 'This date field has a filter that only allows picking a time for today (that is within the last two hours and next two hours). This date field is configured to not show the clear button. This field is also configured to hide the date field when the selectable date is only a single day.',
       pickerConfig: {
         limits: {
           min: findMaxDate([startOfDay(new Date()), addHours(new Date(), -2)]),

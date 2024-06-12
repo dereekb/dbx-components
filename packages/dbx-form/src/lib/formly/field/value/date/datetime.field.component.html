@@ -1,10 +1,10 @@
 <div class="dbx-datetime-field" fxLayout="row wrap" fxLayout.xs="column wrap" fxLayoutGap="6px grid" fxLayoutAlign="space-evenly stretch">
   <!-- Date -->
-  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="dateOnly ? '100' : '50'" *ngIf="showDateInput">
+  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="dateOnly ? '100' : '50'" *ngIf="showDateInput$ | async">
     <ng-container *ngTemplateOutlet="dateInputTemplate"></ng-container>
   </div>
   <!-- Time -->
-  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="showDateInput ? '50' : '100'">
+  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="(showDateInput$ | async) ? '50' : '100'">
     <ng-container *ngIf="showTimeInput$ | async">
       <ng-container *ngTemplateOutlet="timeMenuAndInputTemplate"></ng-container>
     </ng-container>
