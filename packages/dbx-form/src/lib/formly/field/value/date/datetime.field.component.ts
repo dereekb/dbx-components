@@ -249,6 +249,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _cleared = new Subject<void>();
   private _updateTime = new Subject<void>();
 
+  private _resyncTimeInputSub = new SubscriptionObject();
+  private _resyncTimeInput = new Subject<void>();
+
+  readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
+
   private _configUpdateTimeSync = new SubscriptionObject(
     this.latestConfig$.pipe(skip(1)).subscribe((x) => {
       this._updateTime.next();
@@ -815,6 +820,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     } else {
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
     }
+
+    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((x) => this.timeString$.pipe(first()))).subscribe((x) => {
+      this.timeInputCtrl.setValue(x, { emitEvent: false });
+    });
   }
 
   override ngOnDestroy(): void {
@@ -824,6 +833,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._config.complete();
     this._configUpdateTimeSync.destroy();
     this._defaultTimezone.complete();
+    this._resyncTimeInputSub.destroy();
     this._autoFillDateSync.destroy();
     this._timeDate.complete();
     this._presets.complete();
@@ -832,6 +842,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._formControlObs.complete();
     this._updateTime.complete();
     this._cleared.complete();
+    this._resyncTimeInput.complete();
     this._syncConfigObs.complete();
   }
 
@@ -954,6 +965,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   focusOutTime(): void {
     this._updateTime.next();
+    this._resyncTimeInput.next();
   }
 
   addTime(): void {
