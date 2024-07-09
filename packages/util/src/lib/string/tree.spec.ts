@@ -1,4 +1,4 @@
-import { SplitStringTree, findBestSplitStringTreeMatch, findBestSplitStringTreeMatchPath, splitStringTreeFactory } from './tree';
+import { type SplitStringTree, findBestSplitStringTreeMatch, findBestSplitStringTreeMatchPath, splitStringTreeFactory } from './tree';
 
 describe('splitStringTreeFactory()', () => {
   describe('factory', () => {

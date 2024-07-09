@@ -1,7 +1,7 @@
-import { ArrayOrValue, asArray, lastValue } from '../array/array';
-import { Configurable } from '../type';
-import { Building } from '../value/build';
-import { Maybe } from '../value/maybe.type';
+import { type ArrayOrValue, asArray, lastValue } from '../array/array';
+import { type Configurable } from '../type';
+import { type Building } from '../value/build';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A tree node
@@ -55,7 +55,7 @@ export type SplitStringTreeFactory<M = unknown> = ((input: SplitStringTreeFactor
   readonly _separator: string;
 };
 
-export interface SplitStringTreeFactoryConfig<M = unknown> extends AddToSplitStringTreeInputConfig<M> {}
+export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInputConfig<M>
 
 /**
  * Creates a SplitStringTreeFactory with the configured splitter.
