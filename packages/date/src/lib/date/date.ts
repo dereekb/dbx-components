@@ -1,4 +1,4 @@
-import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
+import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, isBefore as isBeforeDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
 import { type DayOfWeekNameFunction, type DateOrDateString, filterMaybeValues, type ISO8601DateString, type Maybe, type Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, type Seconds, type TimezoneString, type ArrayOrValue, asArray, type MapFunction, type ISO8601DateStringUTCFull, type UTCDateString, isISO8601DateString, type DayOfWeek, dayOfWeek, sortNumbersAscendingFunction, type UnixDateTimeNumber } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
@@ -135,6 +135,15 @@ export function isAfter(a: Maybe<Date>, b: Maybe<Date>): Maybe<boolean>;
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = undefined): Maybe<boolean> {
   return a && b ? isAfterDate(a, b) : defaultValue;
+}
+
+/**
+ * Returns true if a and b are defined and a is before b, otherwise returns the default value.
+ */
+export function isBefore(a: Maybe<Date>, b: Maybe<Date>): Maybe<boolean>;
+export function isBefore(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
+export function isBefore(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = undefined): Maybe<boolean> {
+  return a && b ? isBeforeDate(a, b) : defaultValue;
 }
 
 /**
