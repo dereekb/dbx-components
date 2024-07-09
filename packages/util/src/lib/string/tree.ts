@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray } from '../array';
+import { ArrayOrValue, asArray, lastValue } from '../array/array';
 import { Configurable } from '../type';
 import { Building } from '../value/build';
 import { Maybe } from '../value/maybe.type';
@@ -10,11 +10,11 @@ export type SplitStringTreeNodeString = string;
 
 export const SPLIT_STRING_TREE_NODE_ROOT_VALUE = '';
 
-export type SplitStringTreeChildren = {
-  [key: string]: SplitStringTree;
+export type SplitStringTreeChildren<M = unknown> = {
+  [key: string]: SplitStringTree<M>;
 };
 
-export interface SplitStringTree {
+export interface SplitStringTree<M = unknown> {
   /**
    * The full string value.
    *
@@ -38,18 +38,24 @@ export interface SplitStringTree {
    *
    * { a: { b: { c: {} }} }
    */
-  readonly children: SplitStringTreeChildren;
+  readonly children: SplitStringTreeChildren<M>;
+  /**
+   * Meta value for the node.
+   */
+  readonly meta?: M;
 }
 
-export type SplitStringTreeRoot = Pick<SplitStringTree, 'children'>;
+export type SplitStringTreeRoot<M = unknown> = Pick<SplitStringTree<M>, 'children'>;
 
-export type SplitStringTreeFactory = ((values: ArrayOrValue<string>, existing?: SplitStringTree) => SplitStringTree) & {
+export interface SplitStringTreeFactoryInput<M = unknown> extends Pick<AddToSplitStringTreeInputValueWithMeta<M>, 'leafMeta' | 'nodeMeta'> {
+  readonly values: ArrayOrValue<SplitStringTreeNodeString>;
+}
+
+export type SplitStringTreeFactory<M = unknown> = ((input: SplitStringTreeFactoryInput, existing?: SplitStringTree<M>) => SplitStringTree<M>) & {
   readonly _separator: string;
 };
 
-export interface SplitStringTreeFactoryConfig {
-  readonly separator: string;
-}
+export interface SplitStringTreeFactoryConfig<M = unknown> extends AddToSplitStringTreeInputConfig<M> {}
 
 /**
  * Creates a SplitStringTreeFactory with the configured splitter.
@@ -57,26 +63,51 @@ export interface SplitStringTreeFactoryConfig {
  * @param config
  * @returns
  */
-export function splitStringTreeFactory(config: SplitStringTreeFactoryConfig): SplitStringTreeFactory {
+export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFactoryConfig<M>): SplitStringTreeFactory<M> {
   const { separator } = config;
 
-  const fn = ((values: ArrayOrValue<string>, existing?: SplitStringTree): SplitStringTree => {
-    const result: SplitStringTree = existing ?? {
+  const fn = ((input: SplitStringTreeFactoryInput<M>, existing?: SplitStringTree<M>): SplitStringTree<M> => {
+    const { leafMeta, nodeMeta, values } = input;
+    const result: SplitStringTree<M> = existing ?? {
       fullValue: SPLIT_STRING_TREE_NODE_ROOT_VALUE,
       nodeValue: SPLIT_STRING_TREE_NODE_ROOT_VALUE,
       children: {}
     };
 
     asArray(values).forEach((value) => {
-      addToSplitStringTree(result, value, separator);
+      addToSplitStringTree<M>(result, { value, leafMeta, nodeMeta }, config);
     });
 
     return result;
-  }) as Building<SplitStringTreeFactory>;
+  }) as Building<SplitStringTreeFactory<M>>;
 
   fn._separator = separator;
 
-  return fn as SplitStringTreeFactory;
+  return fn as SplitStringTreeFactory<M>;
+}
+
+export interface AddToSplitStringTreeInputValueWithMeta<M = unknown> {
+  readonly value: SplitStringTreeNodeString;
+  /**
+   * The meta value to merge/attach to each node in the tree
+   */
+  readonly nodeMeta?: M;
+  /**
+   * The meta value to merge/attach to each leaf node
+   */
+  readonly leafMeta?: M;
+}
+
+export interface AddToSplitStringTreeInputConfig<M = unknown> {
+  readonly separator: string;
+  /**
+   * Used for merging the meta values of two nodes.
+   *
+   * @param current
+   * @param next
+   * @returns
+   */
+  readonly mergeMeta?: (current: M, next: M) => M;
 }
 
 /**
@@ -87,21 +118,42 @@ export function splitStringTreeFactory(config: SplitStringTreeFactoryConfig): Sp
  * @param separator
  * @returns
  */
-export function addToSplitStringTree(tree: SplitStringTree, value: SplitStringTreeNodeString, separator: string): SplitStringTree {
+export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inputValue: AddToSplitStringTreeInputValueWithMeta<M>, config: AddToSplitStringTreeInputConfig<M>): SplitStringTree<M> {
+  const { separator, mergeMeta } = config;
+  const { value, leafMeta, nodeMeta } = inputValue;
+
+  function nextMeta(node: SplitStringTree<M>, nextMeta: M): M | undefined {
+    if (mergeMeta && node.meta != null) {
+      return mergeMeta(node.meta, nextMeta);
+    } else {
+      return nextMeta;
+    }
+  }
+
   const parts = value.split(separator);
-  let currentNode: Configurable<SplitStringTree> = tree;
+  let currentNode: Configurable<SplitStringTree<M>> = tree;
 
   parts.forEach((nodeValue) => {
     const existingChildNode = currentNode.children[nodeValue];
-    const childNode = (existingChildNode ?? { nodeValue, children: {} }) as Configurable<SplitStringTree>; // use the existing node or create a new node
+    const childNode = (existingChildNode ?? { nodeValue, children: {} }) as Configurable<SplitStringTree<M>>; // use the existing node or create a new node
 
     if (!existingChildNode) {
       childNode.fullValue = currentNode.fullValue ? currentNode.fullValue + separator + nodeValue : nodeValue;
       currentNode.children[nodeValue] = childNode;
     }
 
+    // add the meta to the node
+    if (nodeMeta != null) {
+      childNode.meta = nextMeta(childNode, nodeMeta);
+    }
+
     currentNode = childNode;
   });
+
+  // add the meta to the leaf node
+  if (leafMeta != null) {
+    currentNode.meta = nextMeta(currentNode, leafMeta);
+  }
 
   return tree;
 }
@@ -117,10 +169,36 @@ export function addToSplitStringTree(tree: SplitStringTree, value: SplitStringTr
  * @returns
  */
 export function findBestSplitStringTreeMatch(tree: SplitStringTree, value: SplitStringTreeNodeString): Maybe<SplitStringTree> {
-  let bestResult = findBestSplitStringTreeChildMatch(tree, value);
+  return lastValue(findBestSplitStringTreeMatchPath(tree, value));
+}
+
+/**
+ * Returns the best match for the value in the true, excluding the input tree value.
+ *
+ * Only returns a result if there is match of any kind.
+ *
+ * @param tree
+ * @param value
+ * @returns
+ */
+export function findBestSplitStringTreeChildMatch<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>> {
+  return lastValue(findBestSplitStringTreeChildMatchPath(tree, value));
+}
+
+/**
+ * Returns the best match for the value in the tree, including the input tree value.
+ *
+ * Only returns a result if there is match of any kind.
+ *
+ * @param tree
+ * @param value
+ * @returns
+ */
+export function findBestSplitStringTreeMatchPath<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>[]> {
+  let bestResult = findBestSplitStringTreeChildMatchPath(tree, value);
 
   if (!bestResult && tree.fullValue && value.startsWith(tree.fullValue)) {
-    bestResult = tree;
+    bestResult = [tree];
   }
 
   return bestResult;
@@ -135,20 +213,21 @@ export function findBestSplitStringTreeMatch(tree: SplitStringTree, value: Split
  * @param value
  * @returns
  */
-export function findBestSplitStringTreeChildMatch(tree: SplitStringTree, value: SplitStringTreeNodeString): Maybe<SplitStringTree> {
+export function findBestSplitStringTreeChildMatchPath<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>[]> {
   const { children } = tree;
-  let bestMatch: Maybe<SplitStringTree>;
+  let bestMatchPath: Maybe<SplitStringTree<M>[]>;
 
   Object.entries(children).find(([_, child]) => {
     let stopScan = false;
 
     if (value.startsWith(child.fullValue)) {
-      bestMatch = findBestSplitStringTreeMatch(child, value) ?? child;
+      const bestChildPath = findBestSplitStringTreeChildMatchPath(child, value) ?? [];
+      bestMatchPath = [child, ...bestChildPath];
       stopScan = true;
     }
 
     return stopScan;
   });
 
-  return bestMatch;
+  return bestMatchPath;
 }
