@@ -146,6 +146,67 @@ describe('applySplitStringTreeWithMultipleValues()', () => {
     expect(resultB.children['a'].children['a'].children['a'].meta).toBe(metaB); // check meta was replaced
     expect(resultB.children['e'].children['d'].children['c'].meta).toBe(metaB); // check was added
   });
+
+  it('should create a tree from multiple values', () => {
+    const values = ['a/a/a', 'a/b/a'];
+
+    const metaA = { x: 1, y: 'a' };
+    const metaB = { x: 2 };
+
+    const resultB = applySplitStringTreeWithMultipleValues({
+      entries: [
+        {
+          values: [...values, 'x/x/x'],
+          leafMeta: metaA
+        },
+        {
+          values: [...values, 'e/d/c'],
+          leafMeta: metaB
+        }
+      ],
+      factory
+    });
+
+    expect(resultB.children['x'].children['x'].children['x'].meta).toBe(metaA); // check was added
+
+    expect(resultB.children['a'].meta).toBeUndefined();
+    expect(resultB.children['a'].children['a'].meta).toBeUndefined();
+    expect(resultB.children['a'].children['a'].children['a'].meta).toBe(metaB); // check meta was replaced
+    expect(resultB.children['e'].children['d'].children['c'].meta).toBe(metaB); // check was added
+  });
+
+  it('should extend an existing tree from multiple values', () => {
+    const values = ['a/a/a', 'a/b/a'];
+
+    const metaA = { x: 1, y: 'a' };
+    const metaB = { x: 2 };
+
+    const resultA = factory({ values: 'g/g', leafMeta: metaA });
+
+    const resultB = applySplitStringTreeWithMultipleValues({
+      entries: [
+        {
+          values: [...values, 'x/x/x'],
+          leafMeta: metaA
+        },
+        {
+          values: [...values, 'e/d/c'],
+          leafMeta: metaB
+        }
+      ],
+      factory,
+      existing: resultA
+    });
+
+    expect(resultB).toBe(resultA); // should have extended
+    expect(resultB.children['g'].children['g'].meta).toBe(metaA);
+    expect(resultB.children['x'].children['x'].children['x'].meta).toBe(metaA); // check was added
+
+    expect(resultB.children['a'].meta).toBeUndefined();
+    expect(resultB.children['a'].children['a'].meta).toBeUndefined();
+    expect(resultB.children['a'].children['a'].children['a'].meta).toBe(metaB); // check meta was replaced
+    expect(resultB.children['e'].children['d'].children['c'].meta).toBe(metaB); // check was added
+  });
 });
 
 describe('findBestSplitStringTreeMatch()', () => {

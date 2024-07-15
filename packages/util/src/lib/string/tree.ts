@@ -94,7 +94,7 @@ export interface ApplySplitStringTreeWithMultipleValuesInput<M = unknown> {
 
 export function applySplitStringTreeWithMultipleValues<M = unknown>(input: ApplySplitStringTreeWithMultipleValuesInput<M>): SplitStringTree<M> {
   const { entries, factory, existing } = input;
-  let result: Maybe<SplitStringTree<M>>;
+  let result: Maybe<SplitStringTree<M>> = existing;
 
   entries.forEach((entry) => {
     result = factory(entry, result);
@@ -189,7 +189,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
  * @param value
  * @returns
  */
-export function findBestSplitStringTreeMatch(tree: SplitStringTree, value: SplitStringTreeNodeString): Maybe<SplitStringTree> {
+export function findBestSplitStringTreeMatch<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>> {
   return lastValue(findBestSplitStringTreeMatchPath(tree, value));
 }
 
