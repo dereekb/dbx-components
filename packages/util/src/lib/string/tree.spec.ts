@@ -1,4 +1,4 @@
-import { type SplitStringTree, findBestSplitStringTreeMatch, findBestSplitStringTreeMatchPath, splitStringTreeFactory } from './tree';
+import { type SplitStringTree, findBestSplitStringTreeMatch, findBestSplitStringTreeMatchPath, splitStringTreeFactory, applySplitStringTreeWithMultipleValues } from './tree';
 
 describe('splitStringTreeFactory()', () => {
   describe('factory', () => {
@@ -113,6 +113,38 @@ describe('splitStringTreeFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('applySplitStringTreeWithMultipleValues()', () => {
+  const factory = splitStringTreeFactory({ separator: '/' });
+
+  it('should crete a tree from multiple values', () => {
+    const values = ['a/a/a', 'a/b/a'];
+
+    const metaA = { x: 1, y: 'a' };
+    const metaB = { x: 2 };
+
+    const resultB = applySplitStringTreeWithMultipleValues({
+      entries: [
+        {
+          values: [...values, 'x/x/x'],
+          leafMeta: metaA
+        },
+        {
+          values: [...values, 'e/d/c'],
+          leafMeta: metaB
+        }
+      ],
+      factory
+    });
+
+    expect(resultB.children['x'].children['x'].children['x'].meta).toBe(metaA); // check was added
+
+    expect(resultB.children['a'].meta).toBeUndefined();
+    expect(resultB.children['a'].children['a'].meta).toBeUndefined();
+    expect(resultB.children['a'].children['a'].children['a'].meta).toBe(metaB); // check meta was replaced
+    expect(resultB.children['e'].children['d'].children['c'].meta).toBe(metaB); // check was added
   });
 });
 

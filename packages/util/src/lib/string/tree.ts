@@ -51,11 +51,11 @@ export interface SplitStringTreeFactoryInput<M = unknown> extends Pick<AddToSpli
   readonly values: ArrayOrValue<SplitStringTreeNodeString>;
 }
 
-export type SplitStringTreeFactory<M = unknown> = ((input: SplitStringTreeFactoryInput, existing?: SplitStringTree<M>) => SplitStringTree<M>) & {
+export type SplitStringTreeFactory<M = unknown> = ((input: SplitStringTreeFactoryInput<M>, existing?: Maybe<SplitStringTree<M>>) => SplitStringTree<M>) & {
   readonly _separator: string;
 };
 
-export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInputConfig<M>
+export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInputConfig<M>;
 
 /**
  * Creates a SplitStringTreeFactory with the configured splitter.
@@ -66,7 +66,7 @@ export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInpu
 export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFactoryConfig<M>): SplitStringTreeFactory<M> {
   const { separator } = config;
 
-  const fn = ((input: SplitStringTreeFactoryInput<M>, existing?: SplitStringTree<M>): SplitStringTree<M> => {
+  const fn = ((input: SplitStringTreeFactoryInput<M>, existing?: Maybe<SplitStringTree<M>>): SplitStringTree<M> => {
     const { leafMeta, nodeMeta, values } = input;
     const result: SplitStringTree<M> = existing ?? {
       fullValue: SPLIT_STRING_TREE_NODE_ROOT_VALUE,
@@ -84,6 +84,27 @@ export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFacto
   fn._separator = separator;
 
   return fn as SplitStringTreeFactory<M>;
+}
+
+export interface ApplySplitStringTreeWithMultipleValuesInput<M = unknown> {
+  readonly entries: SplitStringTreeFactoryInput<M>[];
+  readonly factory: SplitStringTreeFactory<M>;
+  readonly existing?: SplitStringTree<M>;
+}
+
+export function applySplitStringTreeWithMultipleValues<M = unknown>(input: ApplySplitStringTreeWithMultipleValuesInput<M>): SplitStringTree<M> {
+  const { entries, factory, existing } = input;
+  let result: Maybe<SplitStringTree<M>>;
+
+  entries.forEach((entry) => {
+    result = factory(entry, result);
+  });
+
+  if (!result) {
+    result = factory({ values: [] });
+  }
+
+  return result;
 }
 
 export interface AddToSplitStringTreeInputValueWithMeta<M = unknown> {
