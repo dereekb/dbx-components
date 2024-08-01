@@ -1,6 +1,6 @@
 import { type Observable } from 'rxjs';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
-import { type DocumentSnapshot, getDocs, limit, query, type QueryConstraint, startAt, type Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot, documentId } from 'firebase/firestore';
+import { type DocumentSnapshot, getDocs, limit, query, type QueryConstraint, startAt, type Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot, documentId, getCountFromServer } from 'firebase/firestore';
 import {
   FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE,
@@ -62,6 +62,9 @@ export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQuer
 export function firebaseFirestoreQueryDriver(): FirestoreQueryDriver {
   return {
     ...firebaseFirestoreQueryConstraintFunctionsDriver(),
+    countDocs<T>(query: Query<T>): Promise<number> {
+      return getCountFromServer(query as FirebaseFirestoreQuery<T>).then((x) => x.data().count);
+    },
     getDocs<T>(query: Query<T>, transaction?: Transaction): Promise<QuerySnapshot<T>> {
       if (transaction) {
         // TODO: Decide if by design we should log an error, or throw an exception like this.

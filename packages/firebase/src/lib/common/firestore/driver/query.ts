@@ -18,6 +18,15 @@ export interface FirestoreQueryConstraintFunctionsDriver {
  */
 export interface FirestoreQueryDriver extends FirestoreQueryConstraintFunctionsDriver {
   /**
+   * Counts only the number of matching documents for the query.
+   *
+   * @param query
+   * @see https://firebase.google.com/docs/firestore/query-data/aggregation-queries for more info.
+   *
+   * NOTE: If using with startAt, make sure there is an orderBy filter also added, otherwise you may encounter a seemingly unrelated "cursor has too many values" error.
+   */
+  countDocs<T>(query: Query<T>): Promise<number>;
+  /**
    * Retrieves a QuerySnapshot based on the input Query. A transaction may optionally be provided.
    *
    * Drivers that do not support the use of the transaction will throw an exception.

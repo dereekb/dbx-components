@@ -1,5 +1,4 @@
 # NOTE: Be careful updating this file, as it is used by the setup script.
-version: '3'
 services:
   demo-api-server:
     build: .

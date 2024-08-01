@@ -15,6 +15,10 @@ export interface FirestoreExecutableQueryGetDocsContext {
 export interface FirestoreExecutableQuery<T> {
   readonly query: Query<T>;
   /**
+   * Returns the number of matching documents.
+   */
+  countDocs(): Promise<number>;
+  /**
    * Limits the results to a single document, then returns that first/single document if it exists.
    */
   getFirstDoc(transaction?: Transaction): Promise<Maybe<QueryDocumentSnapshot<T>>>;
@@ -53,14 +57,15 @@ export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, QueryL
  */
 export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): FirestoreQueryFactory<T> {
   const { queryLike, firestoreQueryDriver: driver } = config;
-  const { getDocs, streamDocs, query: makeQuery } = driver;
+  const { getDocs, streamDocs, query: makeQuery, countDocs } = driver;
 
   const extendQuery = (inputQuery: Query<T>, queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => {
     const allConstraints = flattenArrayOrValueArray(queryConstraints);
     const query = makeQuery(inputQuery, ...allConstraints);
 
-    return {
+    const result: FirestoreExecutableQuery<T> = {
       query,
+      countDocs: async () => countDocs(query),
       getFirstDoc: async (transaction?: Transaction) => {
         const contraintsForOneDoc = addOrReplaceLimitInConstraints(1)(allConstraints);
         const query = makeQuery(inputQuery, ...contraintsForOneDoc);
@@ -71,6 +76,8 @@ export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): Fires
       streamDocs: () => streamDocs(query),
       filter: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => extendQuery(query, queryConstraints)
     };
+
+    return result;
   };
 
   return {

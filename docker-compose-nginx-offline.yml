@@ -1,4 +1,3 @@
-version: '3'
 services:
   dbx-components-offline-server:
     image: nginx:1.21
