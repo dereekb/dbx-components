@@ -33,7 +33,8 @@ import {
   whereDateIsAfterWithSort,
   FirestoreDocumentSnapshotDataPair,
   loadAllFirestoreDocumentSnapshotPairs,
-  loadAllFirestoreDocumentSnapshot
+  loadAllFirestoreDocumentSnapshot,
+  orderByDocumentId
 } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
@@ -1495,8 +1496,9 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
             const first = await firstQuery.getDocs();
             expect(first.docs.length).toBe(limitCount);
 
-            const second = await firstQuery.filter(startAt(first.docs[1])).countDocs();
-            expect(second).toBe(limitCount);
+            // NOTE: startAt with count requires an orderBy to be set.
+            const secondCount = await firstQuery.filter(orderByDocumentId(), startAt(first.docs[1])).countDocs();
+            expect(secondCount).toBe(limitCount);
           });
         });
 

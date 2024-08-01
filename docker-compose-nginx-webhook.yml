@@ -1,4 +1,3 @@
-version: '3'
 services:
   demo-api-webhook-server:
     image: nginx:1.21
