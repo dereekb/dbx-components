@@ -10,6 +10,10 @@ import { firestoreDocumentLoader, firestoreQueryDocumentSnapshotPairsLoader, typ
 export interface FirestoreCollectionExecutableDocumentQuery<T, D extends FirestoreDocument<T>> {
   readonly baseQuery: FirestoreExecutableQuery<T>;
   /**
+   * Returns the number of result documents.
+   */
+  countDocs(): Promise<number>;
+  /**
    * Limits the results to a single document, then returns that first/single document if it exists.
    */
   getFirstDoc(transaction?: Transaction): Promise<Maybe<D>>;
@@ -57,6 +61,7 @@ export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T
   const wrapQuery: (baseQuery: FirestoreExecutableQuery<T>) => FirestoreCollectionExecutableDocumentQuery<T, D> = (baseQuery: FirestoreExecutableQuery<T>) => {
     return {
       baseQuery,
+      countDocs: async () => baseQuery.countDocs(),
       getFirstDoc: async (transaction?: Transaction) => {
         const result = await baseQuery.getFirstDoc(transaction);
         return result ? documentLoader([result.ref])[0] : undefined;

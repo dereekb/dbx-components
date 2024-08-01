@@ -1022,6 +1022,16 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 done();
               });
           });
+
+          it('should limit the number of items counted.', async () => {
+            const limitCount = 2;
+
+            const unlimited = await query().countDocs();
+            expect(unlimited).toBe(testDocumentCount);
+
+            const result = await query(limit(limitCount)).countDocs();
+            expect(result).toBe(limitCount);
+          });
         });
 
         describe('limitToLast', () => {
@@ -1064,6 +1074,16 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 done();
               });
           });
+
+          it('should limit the number of items counted.', async () => {
+            const limitCount = 2;
+
+            const unlimited = await query().countDocs();
+            expect(unlimited).toBe(testDocumentCount);
+
+            const result = await query(orderBy('value'), limitToLast(limitCount)).countDocs();
+            expect(result).toBe(limitCount);
+          });
         });
 
         describe('orderBy', () => {
@@ -1087,6 +1107,13 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               expect(result.docs.length).toBe(1);
               expect(result.docs[0].data().value).toBe(value);
             });
+
+            it('should return the count of the documents matching the query.', async () => {
+              const value = '0';
+
+              const result = await query(where('value', '==', value)).countDocs();
+              expect(result).toBe(1);
+            });
           });
 
           describe('in', () => {
@@ -1100,6 +1127,13 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               expect(values).toContain('0');
               expect(values).toContain('1');
               expect(values).toContain('2');
+            });
+
+            it('should return the count of documents with any of the input values.', async () => {
+              const targetValue = ['0', '1', '2'];
+
+              const result = await query(where<MockItem>('value', 'in', targetValue)).countDocs();
+              expect(result).toBe(3);
             });
           });
 
@@ -1116,6 +1150,13 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
               expect(values).not.toContain('2');
               expect(values).toContain('3');
               expect(values).toContain('4');
+            });
+
+            it('should return the count of documents that do not contain any of the input values.', async () => {
+              const targetValue = ['0', '1', '2'];
+
+              const result = await query(where<MockItem>('value', 'not-in', targetValue)).countDocs();
+              expect(result).toBe(2);
             });
           });
 
@@ -1135,6 +1176,14 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
                 const result = await query(where<MockItem>('tags', 'in', targetValue)).getDocs();
                 expect(result.docs.length).toBe(0);
+              });
+
+              it('should return the count of documents with arrays that only have the given values.', async () => {
+                // NOTE: we pass an array to match exactly
+                const targetValue = [['0', 'even']];
+
+                const result = await query(where<MockItem>('tags', 'in', targetValue)).countDocs();
+                expect(result).toBe(1);
               });
             });
 
@@ -1215,6 +1264,11 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   });
 
                   expect(result.docs.length).toBe(expectedNumberOfEvenValues);
+                });
+
+                it('should return the count of only models with searched prefix', async () => {
+                  const result = await query(whereStringHasRootIdentityModelKey<MockItem>('value', mockItemIdentity)).countDocs();
+                  expect(result).toBe(expectedNumberOfEvenValues);
                 });
               });
 
@@ -1432,6 +1486,17 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
             const second = await firstQuery.filter(startAt(first.docs[1])).getDocs();
             expect(second.docs.length).toBe(limitCount);
             expect(second.docs[0].id).toBe(first.docs[1].id);
+          });
+
+          it('should return the count of values starting from the specified startAt document.', async () => {
+            const limitCount = 2;
+
+            const firstQuery = query(limit(limitCount));
+            const first = await firstQuery.getDocs();
+            expect(first.docs.length).toBe(limitCount);
+
+            const second = await firstQuery.filter(startAt(first.docs[1])).countDocs();
+            expect(second).toBe(limitCount);
           });
         });
 

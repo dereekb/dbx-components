@@ -53,6 +53,12 @@ export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryC
 export function googleCloudFirestoreQueryDriver(): FirestoreQueryDriver {
   return {
     ...firestoreClientQueryConstraintFunctionsDriver(),
+    countDocs<T>(query: Query<T>): Promise<number> {
+      return (query as FirestoreServerQueryBuilder)
+        .count()
+        .get()
+        .then((x) => x.data().count);
+    },
     getDocs<T>(query: Query<T>, transaction?: Transaction): Promise<QuerySnapshot<T>> {
       let result: Promise<QuerySnapshot<T>>;
 
