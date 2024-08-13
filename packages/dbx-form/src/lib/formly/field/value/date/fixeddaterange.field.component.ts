@@ -11,7 +11,7 @@ import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTim
 import { DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DateAdapter } from '@angular/material/core';
-import { isAfter } from 'date-fns';
+import { isAfter, isBefore } from 'date-fns';
 
 export type DbxFixedDateRangeDateRangeInput = Omit<DateRangeInput, 'date'>;
 
@@ -284,22 +284,20 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                       pickType = acc.lastPickType === 'start' && acc.boundary && isDateInDateRange(startOrNextDate, acc.boundary) ? 'end' : 'start';
                     }
 
-                    // assert the start exists from the previous click, otherwise clear it.
-                    if (pickType === 'end') {
-                      const lastStart = acc.lastDateRange?.start;
-
-                      if (!lastStart || !isAfter(startOrNextDate, lastStart)) {
-                        pickType = 'start';
-                      }
-                    }
-
                     // react based on how this
                     switch (pickType) {
                       case 'end':
+                        const lastStart = acc.lastDateRange?.start as Date;
+
+                        const selectionIsBeforePreviousSelection = !lastStart || isBefore(startOrNextDate, lastStart);
+
+                        const nextStart: Date = selectionIsBeforePreviousSelection ? startOrNextDate : lastStart;
+                        const nextEnd: Date = selectionIsBeforePreviousSelection ? lastStart : startOrNextDate;
+
                         // if we're picking the end then set the range.
                         range = {
-                          start: acc.lastDateRange?.start as Date,
-                          end: startOrNextDate
+                          start: nextStart,
+                          end: nextEnd
                         };
                         boundary = range;
                         break;
