@@ -15,29 +15,37 @@
       </button>
     </div>
   </div>
-  <div *ngIf="!hideDateHint" class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
-    <div class="dbx-hint">
-      <ng-container [ngSwitch]="hasEmptyDisplayValue$ | async">
-        <ng-container *ngSwitchCase="true">
-          <span class="dbx-small">No date/time set</span>
-        </ng-container>
-        <ng-container *ngSwitchCase="false">
-          <ng-container [ngSwitch]="fullDay$ | async">
-            <small *ngSwitchCase="true">
-              <b class="dbx-ok">{{ allDayLabel }}</b>
-              {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
-            </small>
-            <small *ngSwitchCase="false">
-              <ng-container *ngIf="displayValue$ | async">
-                <b class="dbx-ok">{{ atTimeLabel }}</b>
-                {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
+  <!-- Date Hint -->
+  <ng-container [ngSwitch]="hasError$ | async">
+    <ng-container *ngSwitchCase="false">
+      <div *ngIf="!hideDateHint" class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
+        <div class="dbx-hint">
+          <ng-container [ngSwitch]="hasEmptyDisplayValue$ | async">
+            <ng-container *ngSwitchCase="true">
+              <span class="dbx-small">No date/time set</span>
+            </ng-container>
+            <ng-container *ngSwitchCase="false">
+              <ng-container [ngSwitch]="fullDay$ | async">
+                <small *ngSwitchCase="true">
+                  <b class="dbx-ok">{{ allDayLabel }}</b>
+                  {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
+                </small>
+                <small *ngSwitchCase="false">
+                  <ng-container *ngIf="displayValue$ | async">
+                    <b class="dbx-ok">{{ atTimeLabel }}</b>
+                    {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
+                  </ng-container>
+                </small>
               </ng-container>
-            </small>
+            </ng-container>
           </ng-container>
-        </ng-container>
-      </ng-container>
-    </div>
-  </div>
+        </div>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="true">
+      <mat-error *ngIf="currentErrorMessage$ | async">{{ currentErrorMessage$ | async }}</mat-error>
+    </ng-container>
+  </ng-container>
 </div>
 
 <!-- Date Input Template -->
@@ -73,13 +81,14 @@
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
-    <input #timeInput matInput [required]="isTimeRequired" [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
+    <input #timeInput [errorStateMatcher]="timeErrorStateMatcher" matInput [required]="isTimeRequired" [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnTimeInput($event)" />
     <button matPrefix class="dbx-datetime-row-button" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
       <mat-icon>timer</mat-icon>
     </button>
     <span matTextSuffix>
       <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
     </span>
+    <mat-error *ngIf="timeInputCtrl.hasError('pattern')">The input time is not recognizable.</mat-error>
   </mat-form-field>
 </ng-template>
 

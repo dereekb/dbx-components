@@ -2,17 +2,18 @@ import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601Dat
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
+import { AbstractControl, FormControl, Validators, FormGroup, AsyncValidatorFn, ValidationErrors } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs, tapLog } from '@dereekb/rxjs';
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
 import { FormControlPath, streamValueFromControl } from '../../../../form/form.angular.util';
 import { toggleDisableFormControl } from '../../../../form/form';
+import { ErrorStateMatcher } from '@angular/material/core';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -221,6 +222,16 @@ export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldS
 
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
+/**
+ * Error code used when the selected date is not in the schedule.
+ */
+export const DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR = 'dateTimeFieldDateNotInSchedule';
+
+/**
+ * Error code used when the selected time/time input is not in the limited range.
+ */
+export const DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR = 'dateTimeFieldTimeNotInRange';
+
 @Component({
   templateUrl: 'datetime.field.component.html'
 })
@@ -251,6 +262,16 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   private _resyncTimeInputSub = new SubscriptionObject();
   private _resyncTimeInput = new Subject<void>();
+
+  readonly timeErrorStateMatcher: ErrorStateMatcher = {
+    isErrorState: (control: AbstractControl | null, form) => {
+      if (control) {
+        return (control.invalid && (control.dirty || control.touched)) || this.errorStateMatcher.isErrorState(this.formControl, form);
+      } else {
+        return false;
+      }
+    }
+  };
 
   readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
 
@@ -606,6 +627,15 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
+  /**
+   * Whether or not there is a limited min/max date range applied/available.
+   */
+  readonly hasRestrictedDateRange$: Observable<boolean> = combineLatest([this.dateInputMin$, this.dateInputMax$]).pipe(
+    map(([a, b]) => Boolean(a || b)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly dateMinAndMaxIsSameDay$: Observable<boolean> = combineLatest([this.dateInputMin$, this.dateInputMax$]).pipe(
     map(([a, b]) => Boolean(a && b) && isSameDateDay(a, b)),
     distinctUntilChanged(),
@@ -639,18 +669,32 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
           roundDownToMinute: true
         });
 
-        date = instance.clamp(date);
-        const minutes = stepsOffset * this.minuteStep;
+        // only clamp when the steps offset is set
+        if (stepsOffset) {
+          date = instance.clamp(date);
 
-        if (minutes != 0) {
-          date = addMinutes(date, minutes);
-          date = instance.clamp(date); // clamp the date again
+          const minutes = stepsOffset * this.minuteStep;
+
+          if (minutes != 0) {
+            date = addMinutes(date, minutes);
+            date = instance.clamp(date); // clamp the date again
+          }
         }
       }
 
       return date;
     }),
     distinctUntilChanged(isSameDateHoursAndMinutes),
+    shareReplay(1)
+  );
+
+  readonly dateTimePickerInstance$ = this.dateTimePickerConfig$.pipe(
+    map((config) => {
+      return new DateTimeMinuteInstance({
+        ...config,
+        roundDownToMinute: true
+      });
+    }),
     shareReplay(1)
   );
 
@@ -678,6 +722,39 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     map((dateMinAndMaxIsSameDay) => {
       return this.showDateInput && (this.alwaysShowDateInput || !dateMinAndMaxIsSameDay);
     }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly currentErrorMessage$ = this.formControl$.pipe(
+    switchMap((formControl) =>
+      formControl.statusChanges.pipe(
+        filter((x) => x === 'INVALID' || x === 'VALID'),
+        map((x) => {
+          let currentErrorMessage: string | undefined;
+
+          if (x === 'INVALID') {
+            if (this.formControl.hasError('required')) {
+              currentErrorMessage = 'Date is required';
+            } else if (this.formControl.hasError(DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR)) {
+              currentErrorMessage = 'Date does not fall on an available dates in schedule.';
+            } else if (this.formControl.hasError(DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR)) {
+              currentErrorMessage = 'Time is not valid for the given date.';
+            } else {
+              currentErrorMessage = 'The given date and time is invalid.';
+            }
+          }
+
+          return currentErrorMessage;
+        })
+      )
+    ),
+    startWith(undefined),
+    shareReplay(1)
+  );
+
+  readonly hasError$ = this.currentErrorMessage$.pipe(
+    map((x) => Boolean(x)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -821,9 +898,55 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
     }
 
-    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((x) => this.timeString$.pipe(first()))).subscribe((x) => {
-      this.timeInputCtrl.setValue(x, { emitEvent: false });
+    this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((x) => combineLatest([this.currentDate$, this.timeString$]).pipe(first()))).subscribe(([currentDate, timeString]) => {
+      // only resync when the current date is set, otherwise do not change the time string.
+      // This helps in cases where the user picks a time first and we don't want it to be cleared.
+      if (currentDate != null) {
+        this.timeInputCtrl.setValue(timeString, { emitEvent: false });
+      }
     });
+
+    // add validators/errors for the form
+    this.formControl.addAsyncValidators([
+      (x) => {
+        const formValue = x.value as Maybe<Date>;
+        let obs: Observable<ValidationErrors>;
+
+        if (formValue != null) {
+          obs = combineLatest([this.timezoneInstance$, this.dateTimePickerInstance$]).pipe(
+            map(([timezoneInstance, x]) => {
+              // the form value is going to be in the output form, so we need to parse it back to the "input" date before evaluating it
+              const formValueInSystemTimezone = dbxDateTimeInputValueParseFactory(this.valueMode, timezoneInstance)(formValue);
+
+              let errors: ValidationErrors = {
+                ...this.timeInputCtrl.errors
+              };
+
+              if (formValueInSystemTimezone) {
+                if (x.dateIsInSchedule(formValueInSystemTimezone)) {
+                  if (!x.isInValidRange(formValueInSystemTimezone)) {
+                    errors = {
+                      [DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR]: true
+                    };
+                  }
+                } else {
+                  errors = {
+                    [DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR]: true
+                  };
+                }
+              }
+
+              return errors;
+            }),
+            first()
+          );
+        } else {
+          obs = of({});
+        }
+
+        return obs;
+      }
+    ]);
   }
 
   override ngOnDestroy(): void {
@@ -964,8 +1087,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   }
 
   focusOutTime(): void {
-    this._updateTime.next();
-    this._resyncTimeInput.next();
+    // only refresh when there is not a pattern error
+    if (!this.timeInputCtrl.hasError('pattern')) {
+      this._updateTime.next();
+      this._resyncTimeInput.next();
+    }
   }
 
   addTime(): void {
