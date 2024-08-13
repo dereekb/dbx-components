@@ -110,6 +110,13 @@ export class DateTimeMinuteInstance {
   }
 
   /**
+   * Returns the LimitDateTimeInstance. This does not take the schedule into consideration.
+   */
+  get limitInstance() {
+    return this._limit;
+  }
+
+  /**
    * Returns true if the input date is on the schedule and possibly holds a valid value for the limit.
    *
    * @param date
