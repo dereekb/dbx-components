@@ -11,7 +11,7 @@ import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTim
 import { DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DateAdapter } from '@angular/material/core';
-import { isAfter, isBefore } from 'date-fns';
+import { isBefore } from 'date-fns';
 
 export type DbxFixedDateRangeDateRangeInput = Omit<DateRangeInput, 'date'>;
 
