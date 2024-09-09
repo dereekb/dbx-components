@@ -19,7 +19,7 @@ export class DocInteractionTestDateFilterFormComponent extends AbstractSyncForml
   readonly fields: FormlyFieldConfig[] = [
     fixedDateRangeField({
       key: 'range',
-      selectionMode: 'arbitrary_quick',
+      selectionMode: 'normal',
       dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 12 },
       pickerConfig: {
         limits: {

@@ -63,31 +63,11 @@
         "passWithNoTests": true
       }
     },
-    "test-timezones": {
-      "outputs": [
-        "{workspaceRoot}/coverage/packages/date",
-        "{projectRoot}/.reports/jest/utc.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-chicago.date.junit.xml",
-        "{projectRoot}/.reports/jest/pacific-auckland.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml",
-        "{projectRoot}/.reports/jest/america-new_york.date.junit.xml",
-        "{projectRoot}/.reports/jest/asia-tokyo.date.junit.xml",
-        "{projectRoot}/.reports/jest/asia-singapore.date.junit.xml",
-        "{projectRoot}/.reports/jest/europe-dublic.date.junit.xml"
-      ],
+    "test-timezones-usa": {
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml", "{projectRoot}/.reports/jest/america-new_york.date.junit.xml", "{projectRoot}/.reports/jest/america-chicago.date.junit.xml", "{projectRoot}/.reports/jest/america-denver.date.junit.xml", "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml", "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          {
-            "command": "TZ=Asia/Tokyo && echo $TZ && nx test date --skip-nx-cache"
-          },
-          {
-            "command": "TZ=Asia/Singapore && echo $TZ && nx test date --skip-nx-cache"
-          },
-          {
-            "command": "TZ=Europe/Dublin && echo $TZ && nx test date --skip-nx-cache"
-          },
           {
             "command": "TZ=America/New_York && echo $TZ && nx test date --skip-nx-cache"
           },
@@ -102,6 +82,27 @@
           },
           {
             "command": "TZ=America/Anchorage && echo $TZ && nx test date --skip-nx-cache"
+          },
+          {
+            "command": "nx test date --skip-nx-cache"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "test-timezones-world": {
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml", "{projectRoot}/.reports/jest/asia-tokyo.date.junit.xml", "{projectRoot}/.reports/jest/asia-singapore.date.junit.xml", "{projectRoot}/.reports/jest/europe-dublin.date.junit.xml", "{projectRoot}/.reports/jest/pacific-auckland.date.junit.xml", "{projectRoot}/.reports/jest/pacific-kiritimati.date.junit.xml", "{projectRoot}/.reports/jest/pacific-niue.date.junit.xml"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "TZ=Asia/Tokyo && echo $TZ && nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Asia/Singapore && echo $TZ && nx test date --skip-nx-cache"
+          },
+          {
+            "command": "TZ=Europe/Dublin && echo $TZ && nx test date --skip-nx-cache"
           },
           {
             "command": "TZ=Pacific/Auckland && echo $TZ && nx test date --skip-nx-cache"
