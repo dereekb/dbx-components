@@ -11,7 +11,7 @@ import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTim
 import { DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DateAdapter } from '@angular/material/core';
-import { isBefore } from 'date-fns';
+import { isAfter, isBefore } from 'date-fns';
 
 export type DbxFixedDateRangeDateRangeInput = Omit<DateRangeInput, 'date'>;
 
@@ -107,7 +107,7 @@ function dbxFixedDateRangeOutputValueFactory(mode: DbxDateTimeValueMode, timezon
 
 const TIME_OUTPUT_THROTTLE_TIME: Milliseconds = 10;
 
-export type FixedDateRangeScanType = 'start' | 'end';
+export type FixedDateRangeScanType = 'start' | 'end' | 'startRepeat';
 
 export interface FixedDateRangeScan {
   /**
@@ -270,6 +270,14 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                     boundary: range,
                     range
                   };
+
+                  // for normal mode we want to protect against "start" being input, then the output being passed,
+                  // and then the next click being treated as another "start" instead of an "end".
+                  if (mode === 'normal' && acc.lastPickType === 'start' && isSameDateDay(startOrNextDate, end)) {
+                    if (isSameDateDay(startOrNextDate, acc.lastDateRange?.start)) {
+                      pickType = 'startRepeat';
+                    }
+                  }
                 } else {
                   let range: Maybe<DateRange> = undefined;
                   let boundary: Maybe<DateRange> = potentialBoundary;
@@ -279,6 +287,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                       // if there is no configured range/boundary, then just set the pick type based on the last type
                       boundary = undefined;
                       pickType = acc.lastPickType === 'start' ? 'end' : 'start';
+                    } else if (acc.lastPickType === 'startRepeat') {
+                      pickType = 'end';
                     } else {
                       // if the pick is outside the boundary, then consider it a start pick type.
                       pickType = acc.lastPickType === 'start' && acc.boundary && isDateInDateRange(startOrNextDate, acc.boundary) ? 'end' : 'start';
@@ -289,17 +299,39 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                       case 'end':
                         const lastStart = acc.lastDateRange?.start as Date;
 
+                        let boundaryToCheck: DateRange;
                         const selectionIsBeforePreviousSelection = !lastStart || isBefore(startOrNextDate, lastStart);
 
-                        const nextStart: Date = selectionIsBeforePreviousSelection ? startOrNextDate : lastStart;
-                        const nextEnd: Date = selectionIsBeforePreviousSelection ? lastStart : startOrNextDate;
+                        let nextStart: Date;
+                        let nextEnd: Date;
+
+                        if (selectionIsBeforePreviousSelection) {
+                          nextStart = startOrNextDate;
+                          nextEnd = lastStart;
+                          boundaryToCheck = potentialBoundary;
+                        } else {
+                          nextStart = lastStart;
+                          nextEnd = startOrNextDate;
+                          boundaryToCheck = dateRange({ ...dateRangeInput, date: nextStart } as DateRangeInput);
+                        }
+
+                        // Recalculate the boundary using the next start date. If it is outside the selectable range, then it becomes a "start" pick type.
+                        if (isBefore(boundaryToCheck.end, nextEnd)) {
+                          // TODO: Allow changing the behavior to fill the entire range instead of just resetting it entirely
+
+                          nextStart = startOrNextDate;
+                          nextEnd = startOrNextDate;
+                          pickType = 'start';
+                          boundary = boundaryToCheck;
+                        } else {
+                          boundary = range;
+                        }
 
                         // if we're picking the end then set the range.
                         range = {
                           start: nextStart,
                           end: nextEnd
                         };
-                        boundary = range;
                         break;
                       case 'start':
                         // retain the boundary as potential boundary, and set our new range from the single date.
