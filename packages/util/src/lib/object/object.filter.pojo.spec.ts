@@ -176,6 +176,22 @@ describe('assignValuesToPOJOFunction()', () => {
         expect(objectHasKey(result, 'ms')).toBe(false);
       });
     });
+
+    describe('copy override', () => {
+      const assignFunction = assignValuesToPOJOFunction<TestObject>({ keysFilter: ['v', 'ms'], valueFilter: KeyValueTypleValueFilter.NULL });
+
+      it('should return the input value if copy=false', () => {
+        const a: TestObject & { x: number } = { v: 100, ms: '100', x: 100 };
+        const result = assignFunction(a, { v: 0 }, false);
+        expect(a).toBe(result);
+      });
+
+      it('should return a new object if copy=true', () => {
+        const a: TestObject & { x: number } = { v: 100, ms: '100', x: 100 };
+        const result = assignFunction(a, { v: 0 }, true);
+        expect(a).not.toBe(result);
+      });
+    });
   });
 });
 

@@ -286,10 +286,19 @@ export function assignValuesToPOJO<T extends object, K extends keyof T = keyof T
   return assignValuesToPOJOFunction<T, K>(input)(target, obj);
 }
 
+export type AssignValuesToPOJOCopyFunction<T> = (target: T, obj: T, returnCopy: true) => T;
+export type AssignValuesToPOJONoCopyFunction<T> = <I extends T>(target: I, obj: T, returnCopy: false) => I;
+
 /**
  * Assigns values from the object to the target based on the configuration, and returns the result.
+ *
+ * Additional argument available to return a copy instead of assigning to the input value.
  */
-export type AssignValuesToPOJOFunction<T> = (target: T, obj: T) => T;
+export type AssignValuesToPOJOFunction<T> = ((target: T, obj: T, returnCopy?: boolean) => T) &
+  AssignValuesToPOJOCopyFunction<T> &
+  AssignValuesToPOJONoCopyFunction<T> & {
+    readonly _returnCopyByDefault: boolean;
+  };
 
 export type AssignValuesToPOJOFunctionInput<T extends object = object, K extends keyof T = keyof T> =
   | KeyValueTypleValueFilter
@@ -319,11 +328,15 @@ export function assignValuesToPOJOFunction<T extends object, K extends keyof T =
     }
   });
 
-  return (inputTarget: T, obj: T) => {
-    const target = copy ? { ...inputTarget } : inputTarget;
+  const fn = <I extends T>(inputTarget: I, obj: T, inputCopy = copy) => {
+    const target = inputCopy ? { ...inputTarget } : inputTarget;
     assignEachValueToTarget(obj, target);
     return target;
   };
+
+  fn._returnCopyByDefault = copy;
+
+  return fn;
 }
 
 // MARK: ValuesFromPOJO
