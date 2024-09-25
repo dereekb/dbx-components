@@ -39,6 +39,9 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
         this.updateWithNewUserEvent(api, streamEvent);
         break;
       case DbxAnalyticsStreamEventType.UserLoginEvent:
+        this.changeUser(api, streamEvent.user);
+        this.updateWithEvent(api, streamEvent);
+        break;
       case DbxAnalyticsStreamEventType.Event:
         this.updateWithEvent(api, streamEvent);
         break;
@@ -87,7 +90,7 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
   }
 
   private changeUser(api: SegmentAnalytics.AnalyticsJS, user: Maybe<DbxAnalyticsUser>): void {
-    if (user) {
+    if (user?.user) {
       api.identify(
         user.user,
         {

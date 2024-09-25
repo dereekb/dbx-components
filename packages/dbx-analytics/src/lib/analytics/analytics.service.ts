@@ -1,9 +1,9 @@
-import { Observable, Subject, BehaviorSubject, of, Subscription, first, shareReplay, switchMap } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, of, Subscription, first, shareReplay, switchMap, distinctUntilChanged, map, delay } from 'rxjs';
 import { Inject, Injectable, Optional } from '@angular/core';
-import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
+import { SubscriptionObject, filterMaybe, tapLog } from '@dereekb/rxjs';
 import { DbxAnalyticsEvent, DbxAnalyticsEventData, DbxAnalyticsEventName, DbxAnalyticsUser, NewUserAnalyticsEventData, DbxUserAnalyticsEvent } from './analytics';
 import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
-import { Maybe, Destroyable } from '@dereekb/util';
+import { Maybe, Destroyable, safeCompareEquality } from '@dereekb/util';
 
 export abstract class DbxAnalyticsEventEmitterService {
   abstract sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void;
@@ -94,12 +94,14 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   readonly events$ = this._subject.asObservable();
 
   private _userSource = new BehaviorSubject<Maybe<DbxAnalyticsUserSource>>(undefined);
+
   readonly user$ = this._userSource.pipe(
     switchMap((x) => (x ? x.analyticsUser$ : of(undefined))),
     shareReplay(1)
   );
 
   private _userSourceSub = new SubscriptionObject();
+  private _userIdEventSub = new SubscriptionObject();
   private _loggerSub = new SubscriptionObject();
 
   constructor(private _config: DbxAnalyticsServiceConfiguration, @Optional() @Inject(DbxAnalyticsUserSource) userSource?: Maybe<DbxAnalyticsUserSource>) {
@@ -113,7 +115,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
 
   // MARK: Source
   /**
-   * Sets the user directly.
+   * Sets the user directly, overridding the UserSource.
    */
   public setUser(user: Maybe<DbxAnalyticsUser>): void {
     let source: Maybe<DbxAnalyticsUserSource>;
@@ -123,6 +125,10 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     }
 
     this._userSource.next(source);
+
+    if (this._userSource.value) {
+      console.warn('DbxAnalyticsService has a userSource that is set. Source is now overridden by setUser() value.');
+    }
   }
 
   public setUserSource(source: DbxAnalyticsUserSource): void {
@@ -209,9 +215,16 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
     );
   }
 
-  protected sendNextEvent(event: DbxAnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: DbxAnalyticsUser): void {
+  /**
+   * Sends the next event.
+   *
+   * @param event
+   * @param type
+   * @param userOverride Uses this user if set as null or an override value. If undefined the current analytics user is used.
+   */
+  protected sendNextEvent(event: DbxAnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: Maybe<DbxAnalyticsUser>): void {
     this.user$.pipe(first()).subscribe((analyticsUser) => {
-      const user: Maybe<DbxAnalyticsUser> = userOverride != null ? userOverride : analyticsUser;
+      const user: Maybe<DbxAnalyticsUser> = userOverride !== undefined ? userOverride : analyticsUser;
       const analyticsEvent: DbxUserAnalyticsEvent = { ...event, user };
       this.nextEvent(analyticsEvent, type);
     });
@@ -242,14 +255,20 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
       });
     }
 
-    this._userSourceSub.subscription = this.user$.subscribe(() => {
-      this.sendNextEvent({}, DbxAnalyticsStreamEventType.UserChange);
+    this._userSourceSub.subscription = this.user$.subscribe((user) => {
+      this.sendNextEvent({}, DbxAnalyticsStreamEventType.UserChange, user ?? null);
+    });
+
+    this._userIdEventSub.subscription = this.user$.pipe(distinctUntilChanged((a, b) => safeCompareEquality(a, b, (x, y) => x.user === y.user))).subscribe((user) => {
+      this.sendNextEvent({}, DbxAnalyticsStreamEventType.UserIdChange, user ?? null);
     });
   }
 
   destroy() {
     this._subject.complete();
+    this._userSource.complete();
     this._userSourceSub.destroy();
+    this._userIdEventSub.destroy();
     this._loggerSub.destroy();
   }
 }

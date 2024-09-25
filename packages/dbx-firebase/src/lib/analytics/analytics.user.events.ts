@@ -26,7 +26,7 @@ export class DbxFirebaseAnalyticsUserEventsListener implements Initialized, Dest
     });
 
     this._logoutSub.subscription = this.dbxFirebaseAuthService.onLogOut$.subscribe(() => {
-      this.dbxAnalyticsService.sendUserLogoutEvent();
+      this.dbxAnalyticsService.sendUserLogoutEvent(undefined, false); // do not clear user. Will be cleared by the analytics service
     });
   }
 
