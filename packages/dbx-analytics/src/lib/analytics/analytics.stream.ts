@@ -3,7 +3,16 @@ import { DbxAnalyticsUser, DbxUserAnalyticsEvent, DbxAnalyticsUserId } from './a
 
 export enum DbxAnalyticsStreamEventType {
   PageView,
+  /**
+   * Emitted any time the user value changes.
+   *
+   * Can emit when the user goes from defined to undefined.
+   */
   UserChange,
+  /**
+   * Emitted any time the user id changes.
+   */
+  UserIdChange,
 
   // User Events
   NewUserEvent,

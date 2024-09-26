@@ -10,7 +10,8 @@ export type DbxFirebaseAnalyticsUserPropertiesFactory = FactoryWithRequiredInput
 export function readDbxAnalyticsUserPropertiesFromAuthUserInfo(user: AuthUserInfo): DbxAnalyticsUserProperties {
   const properties: DbxAnalyticsUserProperties = {
     name: user.displayName ?? '',
-    email: user.email ?? ''
+    email: user.email ?? '',
+    createdAt: user.creationTime ?? ''
   };
 
   return properties;

@@ -328,8 +328,8 @@ export function assignValuesToPOJOFunction<T extends object, K extends keyof T =
     }
   });
 
-  const fn = <I extends T>(inputTarget: I, obj: T, inputCopy = copy) => {
-    const target = inputCopy ? { ...inputTarget } : inputTarget;
+  const fn = <I extends T>(inputTarget: I, obj: T, returnCopy = copy) => {
+    const target = returnCopy ? { ...inputTarget } : inputTarget;
     assignEachValueToTarget(obj, target);
     return target;
   };
