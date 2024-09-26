@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "10.1.26",
+  "version": "10.1.27",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
