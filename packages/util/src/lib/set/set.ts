@@ -22,13 +22,13 @@ export function asSet<T>(values: IterableOrValue<T>): Set<T> {
   return set;
 }
 
-export function copySetAndDo<T>(set: Set<T>, fn: (set: Set<T>) => void): Set<T> {
-  const newSet = new Set(set);
+export function copySetAndDo<T>(set: Maybe<Set<T>>, fn: (set: Set<T>) => void): Set<T> {
+  const newSet = new Set(set ?? undefined);
   fn(newSet);
   return newSet;
 }
 
-export function addToSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
+export function addToSetCopy<T>(set: Maybe<Set<T>>, values: Maybe<IterableOrValue<T>>): Set<T> {
   return copySetAndDo(set, (x) => addToSet(x, values));
 }
 
@@ -50,7 +50,7 @@ export function toggleInSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
   });
 }
 
-export function removeFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
+export function removeFromSetCopy<T>(set: Maybe<Set<T>>, values: Maybe<IterableOrValue<T>>): Set<T> {
   return copySetAndDo(set, (x) => removeFromSet(x, values));
 }
 

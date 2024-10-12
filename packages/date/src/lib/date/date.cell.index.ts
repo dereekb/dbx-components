@@ -1,4 +1,4 @@
-import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, addToSet, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
+import { type Maybe, type SortCompareFunction, sortAscendingIndexNumberRefFunction, type RequiredOnKeys, type ArrayOrValue, asArray, sumOfIntegersBetween, type UniqueModel, type IndexNumber, lastValue, type FactoryWithRequiredInput, pushArrayItemsIntoArray, range, type DateRelativeState, makeValuesGroupMap } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 import { DateCell, isValidDateCellIndex } from './date.cell';
@@ -339,24 +339,34 @@ export function allIndexesInDateCellRange(input: DateCellRange): DateCellIndex[]
 }
 
 /**
+ * Returns an array of all indexes within the input.
+ *
+ * @param input
+ * @returns
+ */
+export function allIndexesInDateCellRangesToArray(input: (DateCellIndex | DateCellRange)[]): DateCellIndex[] {
+  const result: DateCellIndex[] = [];
+
+  input.forEach((x) => {
+    if (typeof x === 'number') {
+      result.push(x);
+    } else {
+      const allIndexes = allIndexesInDateCellRange(x);
+      pushArrayItemsIntoArray(result, allIndexes);
+    }
+  });
+
+  return result;
+}
+
+/**
  * Returns the set of all indexes within the input.
  *
  * @param input
  * @returns
  */
 export function allIndexesInDateCellRanges(input: (DateCellIndex | DateCellRange)[]): Set<DateCellIndex> {
-  const set = new Set<DateCellIndex>();
-
-  input.forEach((x) => {
-    if (typeof x === 'number') {
-      set.add(x);
-    } else {
-      const allIndexes = allIndexesInDateCellRange(x);
-      addToSet(set, allIndexes);
-    }
-  });
-
-  return set;
+  return new Set<DateCellIndex>(allIndexesInDateCellRangesToArray(input));
 }
 
 /**
