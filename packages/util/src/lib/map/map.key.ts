@@ -1,5 +1,5 @@
 import { type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
-import { type IterableOrValue, useIterableOrValue, wrapTuples } from '../iterable/iterable';
+import { type IterableOrValue, useIterableOrValue, wrapTuples, isIterable } from '../iterable/iterable';
 import { type Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
 
@@ -110,6 +110,22 @@ export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> 
    */
   add(key: Maybe<K>, value: IterableOrValue<T>): void;
   /**
+   * Adds all input values with all the input key pairs to the map. Use for inserting multiple Tuple values.
+   *
+   * @param keys
+   * @param value
+   */
+  addTuplesToKeys(keys: Maybe<IterableOrValue<K>>, value: IterableOrValue<T>): void;
+  /**
+   * Adds the input keys and value pairs to the map.
+   *
+   * Use the addTuple() function if adding a single tuple value to the array.
+   *
+   * @param keys
+   * @param value
+   */
+  addToKeys(keys: Maybe<IterableOrValue<K>>, value: IterableOrValue<T>): void;
+  /**
    * Returns true if the map contains the input key.
    *
    * @param key
@@ -142,6 +158,8 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
     useIterableOrValue(value, (x) => (array as T[]).push(x));
   };
 
+  const addTuples = (key: Maybe<K>, value: IterableOrValue<T>) => add(key, wrapTuples(value));
+
   const builder: MultiValueMapBuilder<T, K> = {
     map: () => map,
     entries: () => mapToTuples(map),
@@ -150,7 +168,9 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
       return map.delete(key);
     },
     add,
-    addTuples: (key: Maybe<K>, value: IterableOrValue<T>) => add(key, wrapTuples(value)),
+    addTuples,
+    addToKeys: (keys: Maybe<IterableOrValue<K>>, value: IterableOrValue<T>) => useIterableOrValue(keys, (k) => add(k, value)),
+    addTuplesToKeys: (keys: Maybe<IterableOrValue<K>>, value: IterableOrValue<T>) => useIterableOrValue(keys, (k) => addTuples(k, value)),
     has: (key: Maybe<K>) => {
       return map.has(key);
     },
@@ -161,6 +181,7 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
 
   return builder;
 }
+
 /**
  * Determines if two maps have the same keys.
  *
