@@ -47,20 +47,45 @@ export function firebaseServerActionsTransformContext(logError?: FirebaseServerA
   };
 }
 
-export function firebaseServerActionsTransformFactory(logError: FirebaseServerActionsTransformFactoryLogErrorFunctionInput = false): TransformAndValidateObjectFactory {
+export const FIRESTBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
+
+/**
+ *
+ * @param validationError
+ * @returns
+ */
+export function firebaseServerValidationServerError(validationError: ValidationError[]) {
   const nestValidationExceptionFactory = new ValidationPipe().createExceptionFactory();
+  const nestError = nestValidationExceptionFactory(validationError);
+  const data = (nestError as HttpException).getResponse();
+
+  return {
+    message: `Expected a different timezone than the timing that was passed in the request.`,
+    code: FIRESTBASE_SERVER_VALIDATION_ERROR_CODE,
+    data
+  };
+}
+
+/**
+ * Creates a new badRequestError with the validation error details as the response data.
+ *
+ * @param validationError
+ * @returns
+ */
+export function firebaseServerValidationError(validationError: ValidationError[]) {
+  const serverError = firebaseServerValidationServerError(validationError);
+  return badRequestError(serverError);
+}
+
+export function firebaseServerActionsTransformFactory(logError: FirebaseServerActionsTransformFactoryLogErrorFunctionInput = false): TransformAndValidateObjectFactory {
   const logErrorFunction = logError !== false ? (typeof logError === 'function' ? logError : defaultFirebaseServerActionsTransformFactoryLogErrorFunction) : mapIdentityFunction;
 
   return transformAndValidateObjectFactory({
     handleValidationError: (validationError: ValidationError[]) => {
-      const nestError = nestValidationExceptionFactory(validationError);
-      const details = (nestError as HttpException).getResponse();
-      logErrorFunction(details as object);
-      throw badRequestError({
-        code: 'VALIDATION_ERROR',
-        message: 'One or more data/form validation errors occurred.',
-        data: details
-      });
+      const serverError = firebaseServerValidationServerError(validationError);
+      const { data } = serverError;
+      logErrorFunction(data as object);
+      throw badRequestError(serverError);
     }
   });
 }
