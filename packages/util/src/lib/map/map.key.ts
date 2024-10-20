@@ -1,5 +1,5 @@
 import { type PrimativeKey, type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
-import { type IterableOrValue, useIterableOrValue, wrapTuples, isIterable } from '../iterable/iterable';
+import { type IterableOrValue, useIterableOrValue, wrapTuples } from '../iterable/iterable';
 import { type Maybe } from '../value/maybe.type';
 import { expandArrayMapTuples, mapToTuples } from './map';
 

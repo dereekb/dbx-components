@@ -1,7 +1,7 @@
 import { type ValidationError } from 'class-validator';
 import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory } from '@dereekb/model';
 import { type HttpException, ValidationPipe } from '@nestjs/common';
-import { ErrorMessageOrPartialServerError, mapIdentityFunction } from '@dereekb/util';
+import { mapIdentityFunction } from '@dereekb/util';
 import { badRequestError } from '../../function/error';
 
 // MARK: Action Context
