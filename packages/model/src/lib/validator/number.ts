@@ -1,5 +1,5 @@
 import { isMinuteOfDay, type ObjectWithConstructor } from '@dereekb/util';
-import { type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
 
 /**
  * isMinuteOfDay validator
@@ -13,9 +13,7 @@ export function IsMinuteOfDay(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isMinuteOfDay,
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a valid minute of the day.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a valid minute of the day.`, validationOptions)
       }
     });
   };

@@ -1,5 +1,5 @@
 import { isISO8601DayString, type ObjectWithConstructor } from '@dereekb/util';
-import { type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
 
 /**
  * isISO8601DayString validator
@@ -13,9 +13,7 @@ export function IsISO8601DayString(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isISO8601DayString,
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a ISO8601DayString.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a ISO8601DayString.`, validationOptions)
       }
     });
   };

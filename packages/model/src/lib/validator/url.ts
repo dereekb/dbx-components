@@ -1,5 +1,5 @@
 import { isWebsiteUrl, isWebsiteUrlWithPrefix, type ObjectWithConstructor } from '@dereekb/util';
-import { type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
 
 /**
  * isWebsiteUrl validator
@@ -13,9 +13,7 @@ export function IsWebsiteUrl(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isWebsiteUrl,
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a valid website url`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a valid website url.`, validationOptions)
       }
     });
   };
@@ -33,9 +31,7 @@ export function IsWebsiteUrlWithPrefix(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isWebsiteUrlWithPrefix,
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a valid website url with a http/https prefix.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a valid website url that starts with a http/https prefix.`, validationOptions)
       }
     });
   };

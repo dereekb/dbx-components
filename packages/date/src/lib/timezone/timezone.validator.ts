@@ -1,5 +1,5 @@
 import { type ObjectWithConstructor } from '@dereekb/util';
-import { type ValidationArguments, type ValidationOptions, registerDecorator } from 'class-validator';
+import { buildMessage, type ValidationArguments, type ValidationOptions, registerDecorator } from 'class-validator';
 import { isKnownTimezone } from './timezone';
 
 /**
@@ -14,9 +14,7 @@ export function IsKnownTimezone(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isKnownTimezone,
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a known timezone.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a known timezone.`, validationOptions)
       }
     });
   };
