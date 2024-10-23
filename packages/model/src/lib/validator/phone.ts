@@ -1,5 +1,5 @@
 import { isE164PhoneNumber, isE164PhoneNumberWithExtension, type ObjectWithConstructor } from '@dereekb/util';
-import { buildMessage, type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
  * isE164PhoneNumber validator that does not allowed extensions.

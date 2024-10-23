@@ -1,4 +1,4 @@
-import { PrimativeKey } from '../key';
+import { type PrimativeKey } from '../key';
 import { allowValueOnceFilter, filterUniqueValues, isUniqueKeyedFunction, unique } from './array.unique';
 
 describe('unique', () => {

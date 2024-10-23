@@ -1,7 +1,6 @@
-import { E164PhoneNumber, Maybe, type E164PhoneNumberWithExtension } from '@dereekb/util';
+import { Maybe } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsArray, IsOptional, IsString, ValidateNested, validate } from 'class-validator';
-import { IsE164PhoneNumber, IsE164PhoneNumberWithOptionalExtension } from './phone';
 import { IsUniqueKeyed } from './unique';
 
 class TestModelClass {

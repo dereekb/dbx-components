@@ -1,5 +1,5 @@
 import { type ObjectWithConstructor } from '@dereekb/util';
-import { buildMessage, type ValidationArguments, type ValidationOptions, registerDecorator } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 import { isValidDateCellTiming } from './date.cell';
 import { isValidDateCellRange, isValidDateCellRangeSeries } from './date.cell.index';
 

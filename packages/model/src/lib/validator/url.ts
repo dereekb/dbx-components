@@ -1,5 +1,5 @@
 import { isWebsiteUrl, isWebsiteUrlWithPrefix, type ObjectWithConstructor } from '@dereekb/util';
-import { buildMessage, type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
  * isWebsiteUrl validator
