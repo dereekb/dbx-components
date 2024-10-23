@@ -100,6 +100,34 @@ export function filterUniqueValues<T, K extends PrimativeKey = PrimativeKey>(val
   return filterUniqueFunction(readKey, additionalKeys)(values);
 }
 
+/**
+ * Returns true if all input values have unique keys.
+ */
+export type IsUniqueKeyedFunction<T> = DecisionFunction<T[]>;
+
+export function isUniqueKeyedFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): IsUniqueKeyedFunction<T> {
+  return (input) => {
+    const keys = new Set<Maybe<K>>();
+
+    const findResult = input.findIndex((x) => {
+      const key = readKey(x);
+      let hasDuplicate = false;
+
+      if (key != null) {
+        if (keys.has(key)) {
+          hasDuplicate = true;
+        } else {
+          keys.add(key);
+        }
+      }
+
+      return hasDuplicate;
+    });
+
+    return findResult === -1;
+  };
+}
+
 // MARK: Factory
 /**
  * Function that returns true for a value the first time that value's key is visited. Will return false for all visits after that.

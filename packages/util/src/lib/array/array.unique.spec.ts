@@ -1,4 +1,5 @@
-import { allowValueOnceFilter, filterUniqueValues, unique } from './array.unique';
+import { PrimativeKey } from '../key';
+import { allowValueOnceFilter, filterUniqueValues, isUniqueKeyedFunction, unique } from './array.unique';
 
 describe('unique', () => {
   it('should return only unique values', () => {
@@ -27,6 +28,26 @@ describe('filterUniqueValues()', () => {
 
     expect(result.length).toBe(values.length);
     values.forEach((x) => expect(result).toContain(x));
+  });
+});
+
+describe('isUniqueKeyedFunction()', () => {
+  describe('function', () => {
+    const fn = isUniqueKeyedFunction<PrimativeKey>((x) => x);
+
+    it('should return true if all values are unique', () => {
+      const values = [0, 1, 2, 3, 4];
+      const result = fn(values);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false if one or more values are not unique', () => {
+      const values = [0, 1, 2, 3, 4, 0, 1, 2, 3, 4];
+      const result = fn(values);
+
+      expect(result).toBe(false);
+    });
   });
 });
 
