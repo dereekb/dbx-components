@@ -47,7 +47,7 @@ export function firebaseServerActionsTransformContext(logError?: FirebaseServerA
   };
 }
 
-export const FIRESTBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
+export const FIREBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
 
 /**
  *
@@ -60,8 +60,8 @@ export function firebaseServerValidationServerError(validationError: ValidationE
   const data = (nestError as HttpException).getResponse();
 
   return {
-    message: `Expected a different timezone than the timing that was passed in the request.`,
-    code: FIRESTBASE_SERVER_VALIDATION_ERROR_CODE,
+    message: 'One or more data/form validation errors occurred.',
+    code: FIREBASE_SERVER_VALIDATION_ERROR_CODE,
     data
   };
 }
@@ -89,3 +89,9 @@ export function firebaseServerActionsTransformFactory(logError: FirebaseServerAc
     }
   });
 }
+
+// MARK: Compat
+/**
+ * @deprecated mispelling. Use FIREBASE_SERVER_VALIDATION_ERROR_CODE instead.
+ */
+export const FIRESTBASE_SERVER_VALIDATION_ERROR_CODE = FIREBASE_SERVER_VALIDATION_ERROR_CODE;

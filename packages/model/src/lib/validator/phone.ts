@@ -1,5 +1,5 @@
 import { isE164PhoneNumber, isE164PhoneNumberWithExtension, type ObjectWithConstructor } from '@dereekb/util';
-import { type ValidationOptions, registerDecorator, type ValidationArguments } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 
 /**
  * isE164PhoneNumber validator that does not allowed extensions.
@@ -13,9 +13,7 @@ export function IsE164PhoneNumber(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: (x) => isE164PhoneNumber(x, false),
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a E164PhoneNumber with no extension.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a E164PhoneNumber with no extension.`, validationOptions)
       }
     });
   };
@@ -36,9 +34,7 @@ export function IsE164PhoneNumberWithOptionalExtension(validationOptions?: Valid
       options: validationOptions,
       validator: {
         validate: (x) => isE164PhoneNumber(x, true),
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not an E164PhoneNumber or has an invalid extension.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not an E164PhoneNumber or has an invalid extension.`, validationOptions)
       }
     });
   };
@@ -59,9 +55,7 @@ export function IsE164PhoneNumberWithExtension(validationOptions?: ValidationOpt
       options: validationOptions,
       validator: {
         validate: isE164PhoneNumberWithExtension,
-        defaultMessage(args: ValidationArguments) {
-          return `"${args.value}" is not a E164PhoneNumberWithExtension.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a E164PhoneNumberWithExtension.`, validationOptions)
       }
     });
   };

@@ -1,5 +1,5 @@
 import { type ObjectWithConstructor } from '@dereekb/util';
-import { type ValidationArguments, type ValidationOptions, registerDecorator } from 'class-validator';
+import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
 import { isValidDateCellTiming } from './date.cell';
 import { isValidDateCellRange, isValidDateCellRangeSeries } from './date.cell.index';
 
@@ -15,9 +15,7 @@ export function IsValidDateCellTiming(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isValidDateCellTiming,
-        defaultMessage(args: ValidationArguments) {
-          return `"${JSON.stringify(args.value)}" is not a valid DateCellTiming.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${JSON.stringify(args?.value)}" is not a valid DateCellTiming.`, validationOptions)
       }
     });
   };
@@ -35,9 +33,7 @@ export function IsValidDateCellRange(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate: isValidDateCellRange,
-        defaultMessage(args: ValidationArguments) {
-          return `"${JSON.stringify(args.value)}" is not a valid DateCellRange.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${JSON.stringify(args?.value)}" is not a valid DateCellRange.`, validationOptions)
       }
     });
   };
@@ -55,9 +51,7 @@ export function IsValidDateCellRangeSeries(validationOptions?: ValidationOptions
       options: validationOptions,
       validator: {
         validate: isValidDateCellRangeSeries,
-        defaultMessage(args: ValidationArguments) {
-          return `"${JSON.stringify(args.value)}" is not a valid DateCellRange series. Items must be sorted in ascending order and have no repeat indexes.`;
-        }
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${JSON.stringify(args?.value)}" is not a valid DateCellRange series. Items must be sorted in ascending order and have no repeat indexes.`, validationOptions)
       }
     });
   };
