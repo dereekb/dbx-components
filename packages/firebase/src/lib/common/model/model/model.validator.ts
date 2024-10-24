@@ -1,6 +1,6 @@
 import { type ObjectWithConstructor } from '@dereekb/util';
 import { buildMessage, type ValidationOptions, registerDecorator } from 'class-validator';
-import { isFirestoreModelId, isFirestoreModelKey } from '../../firestore/collection/collection';
+import { isFirestoreModelId, isFirestoreModelIdOrKey, isFirestoreModelKey } from '../../firestore/collection/collection';
 
 /**
  * isFirestoreModelKey validator
@@ -33,6 +33,24 @@ export function IsFirestoreModelId(validationOptions?: ValidationOptions) {
       validator: {
         validate: isFirestoreModelId,
         defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a FirestoreModelId.`, validationOptions)
+      }
+    });
+  };
+}
+
+/**
+ * isFirestoreModelIdOrKey validator
+ */
+export function IsFirestoreModelIdOrKey(validationOptions?: ValidationOptions) {
+  return function (object: ObjectWithConstructor, propertyName: string) {
+    registerDecorator({
+      name: 'isFirestoreModelIdOrKey',
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      validator: {
+        validate: isFirestoreModelIdOrKey,
+        defaultMessage: buildMessage((eachPrefix, args) => eachPrefix + `$property value of "${args?.value}" is not a FirestoreModelId or FirestoreModelKey.`, validationOptions)
       }
     });
   };

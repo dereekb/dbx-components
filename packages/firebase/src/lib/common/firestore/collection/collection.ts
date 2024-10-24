@@ -18,7 +18,7 @@ import { type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterat
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
 import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront } from '@dereekb/util';
+import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront, firstAndLastCharacterOccurrence, stringContains } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -376,6 +376,15 @@ export const FIRESTORE_MODEL_KEY_REGEX_STRICT = /^(?:(?:(?!\.\.?$)(?!.*__.*__)([
  */
 export function isFirestoreModelKey(input: string | FirestoreModelKey): input is FirestoreModelKey {
   return FIRESTORE_MODEL_KEY_REGEX.test(input);
+}
+
+/**
+ * Returns true if the input string is a FirestoreModelId.
+ *
+ * @param input
+ */
+export function isFirestoreModelIdOrKey(input: string | FirestoreModelId | FirestoreModelKey): input is FirestoreModelId | FirestoreModelKey {
+  return stringContains(input, '/') ? FIRESTORE_MODEL_KEY_REGEX.test(input) : FIRESTORE_MODEL_ID_REGEX.test(input);
 }
 
 /**
