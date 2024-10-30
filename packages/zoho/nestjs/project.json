@@ -1,0 +1,35 @@
+{
+  "name": "zoho-nestjs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "components/zoho/nestjs/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/zoho/nestjs",
+        "tsConfig": "components/zoho/nestjs/tsconfig.lib.json",
+        "packageJson": "components/zoho/nestjs/package.json",
+        "main": "components/zoho/nestjs/src/index.ts",
+        "assets": ["components/zoho/nestjs/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["components/zoho/nestjs/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/zoho/nestjs"],
+      "options": {
+        "jestConfig": "components/zoho/nestjs/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
