@@ -2,10 +2,11 @@ import { fetchJsonFunction, nodeFetchService, ConfiguredFetch, returnNullHandleF
 import { ZohoRecruitConfig, ZohoRecruitContext, ZohoRecruitContextRef, ZohoRecruitFetchFactory, ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
 import { LogZohoServerErrorFunction } from '../zoho.api.error';
 import { handleZohoRecruitErrorFetch } from './recruit.error.api';
+import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 
 export type ZohoRecruit = ZohoRecruitContextRef;
 
-export interface ZohoRecruitFactoryConfig {
+export interface ZohoRecruitFactoryConfig extends ZohoAccountsContextRef {
   /**
    * Creates a new fetch instance to use when making calls.
    */
@@ -19,6 +20,7 @@ export interface ZohoRecruitFactoryConfig {
 export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
 
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {
+  const { accountsContext } = factoryConfig;
   const {
     logZohoServerErrorFunction,
     fetchFactory = (input: ZohoRecruitFetchFactoryInput) =>
@@ -37,12 +39,12 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
   } = factoryConfig;
 
   return (config: ZohoRecruitConfig) => {
-    if (!config.apiKey) {
+    if (!config.refreshToken) {
       throw new Error('ZohoConfig missing apiKey.');
     }
 
     const apiUrl = zohoRecruitConfigApiUrl(config.apiUrl ?? 'sandbox');
-    const baseFetch = fetchFactory({ apiKey: config.apiKey, apiUrl });
+    const baseFetch = fetchFactory({ apiKey: config.refreshToken, apiUrl });
 
     const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction);
     const fetchJson = fetchJsonFunction(fetch, {
