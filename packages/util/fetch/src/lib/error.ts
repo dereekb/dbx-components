@@ -1,4 +1,14 @@
+import { isObject } from 'lodash';
 import { BaseError } from 'make-error';
+
+/**
+ * Thrown by a FetchRequestFactory if one of the async request initialization steps fails.
+ */
+export class FetchRequestFactoryError extends BaseError {
+  constructor(readonly error: Error | unknown) {
+    super(`Fetch request failed to build due to an unexpected error: ${isObject(error) ? (error as Error).message ?? '' : ''}`);
+  }
+}
 
 /**
  * Wraps the input fetch function to always pass the fetch response promise to requireOkResponse().

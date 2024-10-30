@@ -1,5 +1,5 @@
-import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples } from '@dereekb/util';
-import { fetchOk } from './error';
+import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples, PromiseOrValue, isPromiseLike, GetterOrValue, asGetter } from '@dereekb/util';
+import { FetchRequestFactoryError, fetchOk } from './error';
 import { type ConfiguredFetchWithTimeout, type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
 
@@ -82,8 +82,9 @@ export function configureFetch(config: ConfigureFetchInput): ConfiguredFetchWith
 
   const makeFetchRequest = fetchRequestFactory(config);
 
-  return (input: RequestInfo | URL, init?: RequestInit | undefined) => {
-    let response = makeFetch(makeFetchRequest(input, init));
+  return async (input: RequestInfo | URL, init?: RequestInit | undefined) => {
+    const request = await makeFetchRequest(input, init);
+    let response = makeFetch(request);
 
     if (mapResponse) {
       response = mapResponse(response);
@@ -110,11 +111,11 @@ export interface FetchRequestFactoryInput {
   /**
    * Base request info to add to each value.
    */
-  baseRequest?: RequestInit;
+  baseRequest?: GetterOrValue<PromiseOrValue<RequestInit>>;
   /**
    * Default timeout to add to requestInit values.
    *
-   * NOTE: This timeout is not used by this fetchRequest directly, but instead
+   * NOTE: This timeout is not used by this fetchRequest directly, but is added to the baseRequest.
    */
   timeout?: number;
   /**
@@ -125,15 +126,13 @@ export interface FetchRequestFactoryInput {
   requestInitFactory?: FetchRequestInitFactory;
 }
 
-export type FetchRequestInitFactory = (currRequest: Request, init?: RequestInit) => RequestInitWithTimeout | undefined;
-
-export type FetchRequestFactory = (input: RequestInfo | URL, init?: RequestInit | undefined) => Request;
+export type FetchRequestInitFactory = (currRequest: PromiseOrValue<Request>, init?: PromiseOrValue<RequestInit>) => PromiseOrValue<RequestInitWithTimeout | undefined>;
+export type FetchRequestFactory = (input: RequestInfo | URL, init?: RequestInit | undefined) => PromiseOrValue<Request>;
 export type AbortControllerFactory = Factory<AbortController>;
 
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
   const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
   const baseUrl = inputBaseUrl ? new URL(removeTrailingSlashes(inputBaseUrl)) : undefined;
-  const baseRequest = (timeout ? { ...inputBaseRequest, timeout } : inputBaseRequest) as RequestInitWithTimeout;
 
   const buildUrl = baseUrl
     ? (url: string | WebsitePath | URL) => {
@@ -144,16 +143,18 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
       }
     : undefined;
 
-  function asFetchRequest(input: RequestInfo | URL): Request {
-    if (isFetchRequest(input)) {
-      return input;
+  async function asFetchRequest(input: PromiseOrValue<RequestInfo | URL>): Promise<Request> {
+    let awaitedInput: RequestInfo | URL = isPromiseLike(input) ? await input : input;
+
+    if (isFetchRequest(awaitedInput)) {
+      return awaitedInput;
     } else {
-      return makeRequest(input);
+      return makeRequest(awaitedInput);
     }
   }
 
   const buildRequestWithFixedUrl = buildUrl
-    ? (input: RequestInfo | URL) => {
+    ? async (input: RequestInfo | URL) => {
         let relativeUrl: Maybe<string>;
         let baseRequest: Request | undefined;
         let request: Request | undefined;
@@ -168,12 +169,12 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
             request = input;
           }
         } else {
-          request = makeRequest(input);
+          request = await makeRequest(input);
         }
 
         if (!request) {
           const url = buildUrl(relativeUrl as string);
-          request = makeRequest(url.href, baseRequest);
+          request = await makeRequest(url.href, baseRequest);
         }
 
         return request;
@@ -182,13 +183,22 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
 
   let buildRequestInit: FetchRequestInitFactory;
 
-  if (baseRequest) {
-    function combineRequestInits(request: Request, requestInit: RequestInit | undefined) {
-      const merged: RequestInit = mergeRequestInits(baseRequest, requestInit) as RequestInitWithTimeout;
-      const timeout = (merged as RequestInitWithTimeout).timeout === undefined ? (request as RequestWithTimeout).timeout : (merged as RequestInitWithTimeout).timeout;
+  if (inputBaseRequest != null || timeout != null) {
+    const inputBaseRequestAsGetter = asGetter(inputBaseRequest);
 
+    async function computeBaseRequest() {
+      const computedBaseRequest = await inputBaseRequestAsGetter();
+      const baseRequest = (timeout ? { ...computedBaseRequest, timeout } : computedBaseRequest) as RequestInitWithTimeout;
+      return baseRequest;
+    }
+
+    async function combineRequestInits(request: PromiseOrValue<Request>, requestInit: PromiseOrValue<RequestInit | undefined>) {
+      const baseRequest = await computeBaseRequest();
+      const merged: RequestInit = mergeRequestInits(baseRequest, await requestInit) as RequestInitWithTimeout;
+      const timeout = (merged as RequestInitWithTimeout).timeout === undefined ? (request as RequestWithTimeout).timeout : (merged as RequestInitWithTimeout).timeout;
       return { ...merged, timeout } as RequestInitWithTimeout;
     }
+
     if (requestInitFactory) {
       buildRequestInit = (req, x) => requestInitFactory(req, combineRequestInits(req, x));
     } else {
@@ -200,13 +210,16 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
     buildRequestInit = (_, x) => x;
   }
 
-  return (input: RequestInfo | URL, init?: RequestInit | undefined) => {
-    const fixedRequest = buildRequestWithFixedUrl(input);
-    init = buildRequestInit(fixedRequest, init);
-
-    const request = makeRequest(fixedRequest, init);
-    (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
-    return request;
+  return async (input: RequestInfo | URL, init?: RequestInit | undefined) => {
+    try {
+      const fixedRequest = await buildRequestWithFixedUrl(input);
+      init = await buildRequestInit(fixedRequest, init);
+      const request = await makeRequest(fixedRequest, init);
+      (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
+      return request;
+    } catch (e) {
+      throw new FetchRequestFactoryError(e);
+    }
   };
 }
 
