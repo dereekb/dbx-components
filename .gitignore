@@ -66,4 +66,6 @@ service_account.json
 
 # CI/Jest
 /.reports
+/.tmp
 .nx
+.tmp
