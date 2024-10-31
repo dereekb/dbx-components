@@ -34,8 +34,6 @@ export function accessToken(context: ZohoAccountsContext): (input?: ZohoAccounts
         throw new ZohoAccountsAccessTokenError((result as ZohoAccountsAccessTokenErrorResponse).error);
       }
 
-      console.log({ result });
-
       return result as ZohoAccountsAccessTokenResponse;
     });
 }

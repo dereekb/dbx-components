@@ -302,3 +302,14 @@ export type DateRelativeState = DateRelativeDirection | 'present';
 export function isDate(value: unknown): value is Date {
   return value instanceof Date || (typeof value === 'object' && Object.prototype.toString.call(value) === '[object Date]');
 }
+
+/**
+ * Returns true if the two input dates are equal.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function isEqualDate(a: Date, b: Date): boolean {
+  return a.getTime() === b.getTime();
+}

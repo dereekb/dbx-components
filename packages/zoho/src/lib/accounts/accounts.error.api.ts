@@ -1,4 +1,4 @@
-import { ConfiguredFetch, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
+import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, logZohoServerErrorFunction } from '../zoho.api.error';
 
 export type ZohoAccountsAccessTokenErrorCode = 'invalid_code' | 'invalid_client';

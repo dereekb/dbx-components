@@ -1,8 +1,6 @@
-import { Inject, Injectable, BadRequestException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ZohoRecruit, ZohoRecruitContext, zohoRecruitFactory } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
-import { WebsiteUrl } from '@dereekb/util';
-import { Request } from 'express';
 import { ZohoAccountsApi } from '../account/accounts.api';
 
 @Injectable()
@@ -19,4 +17,6 @@ export class ZohoRecruitApi {
       accountsContext: zohoAccountsApi.accountsContext
     })(config.zohoRecruit);
   }
+
+  // MARK: Accessors
 }

@@ -1,4 +1,24 @@
 {
   "name": "@dereekb/zoho",
-  "version": "0.18.1"
+  "version": "10.1.30",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js",
+        "import": "./index.mjs"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
+    },
+    "./nestjs": {
+      "types": "./nestjs/src/index.d.ts",
+      "main": "./nestjs/src/index.js",
+      "require": "./nestjs/src/index.js",
+      "default": "./nestjs/src/index.js"
+    }
+  }
 }

@@ -5,7 +5,6 @@ import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Ob
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
-import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, iterablesAreSetEquivalent, Maybe } from '@dereekb/util';
 
@@ -183,7 +182,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
 
   setValue(value: T): void {
     // console.log('set value: ', value);
-    this.model = cloneDeep(value) as T;
+    this.model = structuredClone(value) as T;
 
     if (this.options.updateInitialValue) {
       this.options.updateInitialValue();

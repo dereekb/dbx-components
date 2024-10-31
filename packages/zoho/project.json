@@ -20,14 +20,39 @@
       }
     },
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/zoho",
         "outputPath": "dist/packages/zoho",
-        "tsConfig": "packages/zoho/tsconfig.lib.json",
-        "packageJson": "packages/zoho/package.json",
         "main": "packages/zoho/src/index.ts",
-        "assets": ["packages/zoho/*.md"]
+        "tsConfig": "packages/zoho/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/zoho/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "assets": [
+          {
+            "glob": "packages/zoho/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
       }
     },
     "lint": {
@@ -46,5 +71,6 @@
       }
     }
   },
-  "tags": []
+  "tags": [],
+  "implicitDependencies": ["util-fetch", "!util-test"]
 }

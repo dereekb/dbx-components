@@ -1,4 +1,4 @@
-import { hasSameTimezone, isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString } from '@dereekb/util';
+import { hasSameTimezone, isDate, isEqualDate, isISO8601DateString, isISO8601DayString, isMonthDaySlashDate, isUTCDateString } from '@dereekb/util';
 
 describe('hasSameTimezone', () => {
   it('should return true if both timezone refs have the same timezone.', () => {
@@ -81,5 +81,25 @@ describe('isMonthDaySlashDate()', () => {
   it('should validate the long year string', () => {
     const result = isMonthDaySlashDate('01/01/1970');
     expect(result).toBe(true);
+  });
+});
+
+describe('isDate()', () => {
+  it('should return true if the input is a Date.', () => {
+    expect(isDate(new Date())).toBe(true);
+  });
+
+  it('should return false if the input is an object.', () => {
+    expect(isDate({})).toBe(false);
+  });
+});
+
+describe('isEqualDate()', () => {
+  it('should return true if the two input dates are equal.', () => {
+    expect(isEqualDate(new Date(0), new Date(0))).toBe(true);
+  });
+
+  it('should return false if the two input dates are not equal.', () => {
+    expect(isEqualDate(new Date(0), new Date(1))).toBe(false);
   });
 });

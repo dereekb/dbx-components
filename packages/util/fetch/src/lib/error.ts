@@ -1,4 +1,3 @@
-import { isObject } from 'lodash';
 import { BaseError } from 'make-error';
 
 /**
@@ -6,7 +5,7 @@ import { BaseError } from 'make-error';
  */
 export class FetchRequestFactoryError extends BaseError {
   constructor(readonly error: Error | unknown) {
-    super(`Fetch request failed to build due to an unexpected error: ${isObject(error) ? (error as Error).message ?? '' : ''}`);
+    super(`Fetch request failed to build due to an unexpected error: ${typeof error === 'object' ? (error as Error).message ?? '' : ''}`);
   }
 }
 
