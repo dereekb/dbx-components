@@ -1,7 +1,7 @@
 import { FactoryWithRequiredInput } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
 import { ZohoApiUrl, ZohoRefreshToken, ZohoApiUrlKey, ZohoConfig } from '../zoho.config';
-import { ZohoAccountsContextRef } from '../account/accounts.config';
+import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 
 export type ZohoRecruitApiUrl = ZohoApiUrl;
 export type ZohoRecruitApiKey = ZohoRefreshToken;
@@ -23,7 +23,7 @@ export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): Zo
 
 export interface ZohoRecruitConfig extends ZohoConfig {}
 
-export interface ZohoRecruitFetchFactoryInput extends ZohoAccountsContextRef {
+export interface ZohoRecruitFetchFactoryInput {
   readonly apiUrl: ZohoRecruitApiUrl;
 }
 

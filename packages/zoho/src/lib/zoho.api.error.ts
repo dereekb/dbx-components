@@ -1,4 +1,4 @@
-import { ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
+import { ConfiguredFetch, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
 export interface ZohoServerErrorResponseData {

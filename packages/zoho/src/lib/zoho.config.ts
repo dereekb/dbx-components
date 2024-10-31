@@ -15,6 +15,21 @@ export type ZohoApiUrl = string;
  */
 export type ZohoRefreshToken = string;
 
+/**
+ * OAuth Client Id
+ */
+export type ZohoOAuthClientId = string;
+
+/**
+ * OAuth Client Secret
+ */
+export type ZohoOAuthClientSecret = string;
+
+export interface ZohoAuthClientIdAndSecretPair {
+  readonly clientId: ZohoOAuthClientId;
+  readonly clientSecret: ZohoOAuthClientSecret;
+}
+
 export type ZohoApiUrlKey = 'sandbox' | 'production';
 
 export type ZohoConfigApiUrlInput = ZohoApiUrlKey | ZohoApiUrl;

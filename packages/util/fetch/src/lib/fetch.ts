@@ -218,7 +218,11 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
       (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
       return request;
     } catch (e) {
-      throw new FetchRequestFactoryError(e);
+      if (e instanceof FetchRequestFactoryError) {
+        throw e;
+      } else {
+        throw new FetchRequestFactoryError(e);
+      }
     }
   };
 }

@@ -1,5 +1,11 @@
-import { ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
+import { ConfiguredFetch, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, logZohoServerErrorFunction } from '../zoho.api.error';
+
+export class ZohoAccountsAuthRetrievalError extends FetchRequestFactoryError {
+  constructor(readonly reason?: string) {
+    super(`Failed to retrieve proper authentication for the API call. Reason: ${reason}`);
+  }
+}
 
 export const logZohoAccountsErrorToConsole = logZohoServerErrorFunction('ZohoAccounts');
 

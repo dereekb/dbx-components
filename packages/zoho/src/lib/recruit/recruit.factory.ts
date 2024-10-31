@@ -3,6 +3,7 @@ import { ZohoRecruitConfig, ZohoRecruitContext, ZohoRecruitContextRef, ZohoRecru
 import { LogZohoServerErrorFunction } from '../zoho.api.error';
 import { handleZohoRecruitErrorFetch } from './recruit.error.api';
 import { ZohoAccountsContextRef } from '../accounts/accounts.config';
+import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 
 export type ZohoRecruit = ZohoRecruitContextRef;
 
@@ -21,17 +22,19 @@ export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
 
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {
   const { accountsContext } = factoryConfig;
+  const accessTokenStringFactory = zohoAccessTokenStringFactory(accountsContext.accessToken);
+
   const {
     logZohoServerErrorFunction,
     fetchFactory = (input: ZohoRecruitFetchFactoryInput) =>
       nodeFetchService.makeFetch({
         baseUrl: input.apiUrl,
-        baseRequest: {
+        baseRequest: async () => ({
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${input.apiKey}`
+            Authorization: `Bearer ${await accessTokenStringFactory()}`
           }
-        },
+        }),
         timeout: 20 * 1000, // 20 second timeout
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
@@ -39,12 +42,12 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
   } = factoryConfig;
 
   return (config: ZohoRecruitConfig) => {
-    if (!config.refreshToken) {
-      throw new Error('ZohoConfig missing apiKey.');
+    if (!config.apiUrl) {
+      throw new Error('ZohoConfig missing api url.');
     }
 
-    const apiUrl = zohoRecruitConfigApiUrl(config.apiUrl ?? 'sandbox');
-    const baseFetch = fetchFactory({ apiKey: config.refreshToken, apiUrl });
+    const apiUrl = zohoRecruitConfigApiUrl(config.apiUrl);
+    const baseFetch = fetchFactory({ apiUrl });
 
     const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction);
     const fetchJson = fetchJsonFunction(fetch, {

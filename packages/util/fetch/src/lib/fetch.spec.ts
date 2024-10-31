@@ -77,19 +77,41 @@ describe('fetchRequestFactory()', () => {
       });
 
       describe('async getter with error', () => {
-        const factory = testFetch.fetchRequestFactory({
-          baseUrl,
-          baseRequest: async () => {
-            throw new Error('test error');
-          }
+        describe('other error', () => {
+          const factory = testFetch.fetchRequestFactory({
+            baseUrl,
+            baseRequest: async () => {
+              throw new Error('test error');
+            }
+          });
+
+          it('should throw a FetchRequestFactoryError', async () => {
+            try {
+              await factory('test');
+            } catch (e) {
+              expect(e instanceof FetchRequestFactoryError).toBe(true);
+            }
+          });
         });
 
-        it('should throw a FetchRequestFactoryError', async () => {
-          try {
-            await factory('test');
-          } catch (e) {
-            expect(e instanceof FetchRequestFactoryError).toBe(true);
-          }
+        describe('fetch request error', () => {
+          const testError = new FetchRequestFactoryError('test error');
+
+          const factory = testFetch.fetchRequestFactory({
+            baseUrl,
+            baseRequest: async () => {
+              throw testError;
+            }
+          });
+
+          it('should pass through any thrown FetchRequestFactoryError', async () => {
+            try {
+              await factory('test');
+            } catch (e) {
+              expect(e instanceof FetchRequestFactoryError).toBe(true);
+              expect(e).toBe(testError);
+            }
+          });
         });
       });
     });

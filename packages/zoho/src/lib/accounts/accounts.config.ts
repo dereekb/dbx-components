@@ -1,7 +1,7 @@
-import { FactoryWithRequiredInput } from '@dereekb/util';
+import { FactoryWithRequiredInput, Maybe } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
-import { ZohoApiUrl, ZohoRefreshToken, ZohoApiUrlKey, ZohoConfig } from '../zoho.config';
-import { ZohoAccessTokenCache, ZohoAccessTokenFactory } from './accounts.api';
+import { ZohoApiUrl, ZohoRefreshToken, ZohoApiUrlKey, ZohoConfig, ZohoOAuthClientId, ZohoOAuthClientSecret, ZohoAuthClientIdAndSecretPair } from '../zoho.config';
+import { ZohoAccessTokenCache, ZohoAccessTokenFactory } from './accounts';
 
 /**
  * The Zoho Accounts API URL for the US datacenter.
@@ -33,15 +33,15 @@ export function zohoAccountsConfigApiUrl(input: ZohoAccountsConfigApiUrlInput): 
 /**
  * Configuration for ZohoAccounts.
  */
-export interface ZohoAccountsConfig extends ZohoConfig {
+export interface ZohoAccountsConfig extends ZohoConfig, ZohoAuthClientIdAndSecretPair {
   /**
    * Refresh token used for generaing new ZohoAccessToken values.
    */
   readonly refreshToken: ZohoRefreshToken;
   /**
-   * ZohoAccessTokenCache for caching access tokens.
+   * Optional ZohoAccessTokenCache for caching access tokens.
    */
-  readonly accessTokenCache: ZohoAccessTokenCache;
+  readonly accessTokenCache?: Maybe<ZohoAccessTokenCache>;
 }
 
 export interface ZohoAccountsFetchFactoryInput {

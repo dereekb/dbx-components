@@ -1,44 +1,48 @@
-import { Maybe } from '@dereekb/util';
+import { FetchJsonBody, FetchJsonInput } from '@dereekb/util/fetch';
+import { ZohoAccountsContext } from './accounts.config';
+import { ZohoAuthClientIdAndSecretPair, ZohoRefreshToken } from '../zoho.config';
+import { ZohoAccessTokenApiDomain, ZohoAccessTokenScopesString, ZohoAccessTokenString } from './accounts';
+import { Maybe, Seconds } from '@dereekb/util';
 
-/**
- * Arbitrary key used to identify a specific service.
- *
- * I.E. recruit
- */
-export type ZohoServiceAccessTokenKey = string;
+export interface ZohoAccountsAccessTokenInput {
+  readonly client?: Maybe<ZohoAuthClientIdAndSecretPair>;
+  readonly refreshToken?: Maybe<ZohoRefreshToken>;
+}
 
-/**
- * Access token generated from a refresh token.
- */
-export type ZohoAccessTokenString = string;
-
-export interface ZohoAccessToken {
-  readonly accessToken: ZohoAccessTokenString;
-  readonly expiresIn: number;
+export interface ZohoAccountsAccessTokenResponse {
+  access_token: ZohoAccessTokenString;
+  scope: ZohoAccessTokenScopesString;
+  api_domain: ZohoAccessTokenApiDomain;
+  token_type: 'Bearer';
+  expires_in: Seconds;
 }
 
 /**
- * Used for retrieving and storing ZohoAccessToken values.
+ * Trades a refresh token for a new AccessToken
+ * @param context
+ * @returns
  */
-export interface ZohoAccessTokenCache {
-  /**
-   * Loads the token from the cache, if available.
-   *
-   * The token may be expired.
-   */
-  loadCachedToken(): Promise<Maybe<ZohoAccessToken>>;
-  /**
-   * Updates the cache with the given access token.
-   */
-  updateCachedToken(accessToken: ZohoAccessToken): Promise<void>;
+export function zohoAccountsAccessToken(context: ZohoAccountsContext): (input?: ZohoAccountsAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse> {
+  return (input) =>
+    context.fetchJson(
+      '/oauth/v2/token',
+      zohoAccountsApiFetchJsonInput(
+        'POST',
+        new URLSearchParams([
+          ['grant_type', 'refresh_token'],
+          ['client_id', input?.client?.clientId ?? context.config.clientId],
+          ['client_secret', input?.client?.clientSecret ?? context.config.clientSecret],
+          ['refresh_token', input?.refreshToken ?? context.config.refreshToken]
+        ])
+      )
+    );
 }
 
-/**
- * Source for retriving a ZohoAccessToken.
- */
-export type ZohoAccessTokenFactory = () => Promise<ZohoAccessToken>;
+export function zohoAccountsApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
+  const result = {
+    method,
+    body
+  };
 
-/**
- * A ZohoAccessTokenFactory that always generates a new ZohoAccessToken.
- */
-export type ZohoAccessTokenRefresher = ZohoAccessTokenFactory;
+  return result;
+}
