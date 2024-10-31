@@ -3,8 +3,8 @@ import { ZohoRecruitModule } from './recruit.module';
 import { DynamicModule } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZOHO_RECRUIT_SERVICE_NAME, ZohoAccountsAccessTokenError } from '@dereekb/zoho';
-import { ZohoAccountsApi } from '../account/accounts.api';
-import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../account/accounts.service';
+import { ZohoAccountsApi } from '../accounts/accounts.api';
+import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 

@@ -2,7 +2,7 @@ import { ZohoRecruitModule } from './recruit.module';
 import { DynamicModule } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
-import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../account/accounts.service';
+import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 

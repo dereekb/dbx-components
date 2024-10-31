@@ -20,5 +20,8 @@
       "require": "./nestjs/src/index.js",
       "default": "./nestjs/src/index.js"
     }
+  },
+  "peerDependencies": {
+    "@dereekb/util": "*"
   }
 }

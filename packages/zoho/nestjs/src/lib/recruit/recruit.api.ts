@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ZohoRecruit, ZohoRecruitContext, zohoRecruitFactory } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
-import { ZohoAccountsApi } from '../account/accounts.api';
+import { ZohoAccountsApi } from '../accounts/accounts.api';
 
 @Injectable()
 export class ZohoRecruitApi {
