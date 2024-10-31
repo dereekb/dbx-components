@@ -1,13 +1,16 @@
 import { ZohoRecruitConfig, ZohoRecruitFactoryConfig } from '@dereekb/zoho';
+import { assertValidZohoConfig } from '../zoho.config';
 
 export type ZohoRecruitServiceApiConfig = ZohoRecruitConfig & {};
 
 /**
- * Configuration for ZohoService
+ * Configuration for ZohoRecruitService
  */
 export abstract class ZohoRecruitServiceConfig {
-  zohoRecruit!: ZohoRecruitServiceApiConfig;
-  factoryConfig?: ZohoRecruitFactoryConfig;
+  readonly zohoRecruit!: ZohoRecruitServiceApiConfig;
+  readonly factoryConfig?: ZohoRecruitFactoryConfig;
 
-  static assertValidConfig(config: ZohoRecruitServiceConfig) {}
+  static assertValidConfig(config: ZohoRecruitServiceConfig) {
+    assertValidZohoConfig(config.zohoRecruit);
+  }
 }

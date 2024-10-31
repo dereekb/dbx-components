@@ -3,6 +3,7 @@ import { ZohoRecruit, ZohoRecruitContext, zohoRecruitFactory } from '@dereekb/zo
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { WebsiteUrl } from '@dereekb/util';
 import { Request } from 'express';
+import { ZohoAccountsApi } from '../account/accounts.api';
 
 @Injectable()
 export class ZohoRecruitApi {
@@ -12,7 +13,10 @@ export class ZohoRecruitApi {
     return this.zohoRecruit.recruitContext;
   }
 
-  constructor(@Inject(ZohoRecruitServiceConfig) public readonly config: ZohoRecruitServiceConfig) {
-    this.zohoRecruit = zohoRecruitFactory(config.factoryConfig ?? {})(config.zohoRecruit);
+  constructor(@Inject(ZohoRecruitServiceConfig) public readonly config: ZohoRecruitServiceConfig, @Inject(ZohoAccountsApi) public readonly zohoAccountsApi: ZohoAccountsApi) {
+    this.zohoRecruit = zohoRecruitFactory({
+      ...config.factoryConfig,
+      accountsContext: zohoAccountsApi.accountsContext
+    })(config.zohoRecruit);
   }
 }

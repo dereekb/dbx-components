@@ -53,7 +53,7 @@ export type ZohoAccountsFetchFactory = FactoryWithRequiredInput<ConfiguredFetch,
 export interface ZohoAccountsContext {
   readonly fetch: ConfiguredFetch;
   readonly fetchJson: FetchJsonFunction;
-  readonly accessToken: ZohoAccessTokenFactory;
+  readonly loadAccessToken: ZohoAccessTokenFactory;
   readonly config: ZohoAccountsConfig;
 }
 

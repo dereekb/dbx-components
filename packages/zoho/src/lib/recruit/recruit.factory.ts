@@ -22,7 +22,7 @@ export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
 
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {
   const { accountsContext } = factoryConfig;
-  const accessTokenStringFactory = zohoAccessTokenStringFactory(accountsContext.accessToken);
+  const accessTokenStringFactory = zohoAccessTokenStringFactory(accountsContext.loadAccessToken);
 
   const {
     logZohoServerErrorFunction,

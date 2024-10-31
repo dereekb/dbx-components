@@ -1,7 +1,7 @@
 {
   "name": "zoho",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "components/zoho/src",
+  "sourceRoot": "packages/zoho/src",
   "projectType": "library",
   "targets": {
     "build": {
@@ -24,24 +24,24 @@
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/zoho",
-        "tsConfig": "components/zoho/tsconfig.lib.json",
-        "packageJson": "components/zoho/package.json",
-        "main": "components/zoho/src/index.ts",
-        "assets": ["components/zoho/*.md"]
+        "tsConfig": "packages/zoho/tsconfig.lib.json",
+        "packageJson": "packages/zoho/package.json",
+        "main": "packages/zoho/src/index.ts",
+        "assets": ["packages/zoho/*.md"]
       }
     },
     "lint": {
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["components/zoho/**/*.ts"]
+        "lintFilePatterns": ["packages/zoho/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/zoho"],
       "options": {
-        "jestConfig": "components/zoho/jest.config.ts",
+        "jestConfig": "packages/zoho/jest.config.ts",
         "passWithNoTests": true
       }
     }

@@ -4,6 +4,6 @@
 
 module.exports = {
   displayName: 'zoho-nestjs',
-  preset: '../../../jest.preset.js',
+  preset: '../../../jest.preset.ts',
   coverageDirectory: '../../../coverage/packages/zoho/nestjs'
 };

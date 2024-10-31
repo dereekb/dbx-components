@@ -1,12 +1,13 @@
 import { Maybe } from '@dereekb/util';
-import { ZohoAccountsAuthRetrievalError } from './accounts.error.api';
+import { ZohoAccountsAuthFailureError } from './accounts.error.api';
+import { ZohoApiServiceName } from '../zoho.config';
 
 /**
- * Arbitrary key used to identify a specific service.
+ * Arbitrary key used to identify a specific service's access token. Typically coincides with the ZohoApiServiceName.
  *
  * I.E. recruit
  */
-export type ZohoServiceAccessTokenKey = string;
+export type ZohoServiceAccessTokenKey = ZohoApiServiceName | string;
 
 /**
  * Access token authorization string generated from a refresh token.
@@ -87,7 +88,7 @@ export function zohoAccessTokenStringFactory(zohoAccessTokenFactory: ZohoAccessT
     const token = await zohoAccessTokenFactory();
 
     if (!token?.accessToken) {
-      throw new ZohoAccountsAuthRetrievalError();
+      throw new ZohoAccountsAuthFailureError();
     }
 
     return token.accessToken;

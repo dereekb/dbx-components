@@ -2,6 +2,13 @@ import { FactoryWithRequiredInput } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
 
 /**
+ * Name used to identify a specific service. Always lowercase.
+ *
+ * I.E. recruit
+ */
+export type ZohoApiServiceName = string;
+
+/**
  * The base URL for a Zoho API.
  */
 export type ZohoApiUrl = string;

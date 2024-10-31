@@ -3,6 +3,7 @@ import { ZohoAccountsContext } from './accounts.config';
 import { ZohoAuthClientIdAndSecretPair, ZohoRefreshToken } from '../zoho.config';
 import { ZohoAccessTokenApiDomain, ZohoAccessTokenScopesString, ZohoAccessTokenString } from './accounts';
 import { Maybe, Seconds } from '@dereekb/util';
+import { ZohoAccountsAccessTokenError, ZohoAccountsAccessTokenErrorCode } from './accounts.error.api';
 
 export interface ZohoAccountsAccessTokenInput {
   readonly client?: Maybe<ZohoAuthClientIdAndSecretPair>;
@@ -17,25 +18,26 @@ export interface ZohoAccountsAccessTokenResponse {
   expires_in: Seconds;
 }
 
+export interface ZohoAccountsAccessTokenErrorResponse {
+  error: ZohoAccountsAccessTokenErrorCode;
+}
+
 /**
  * Trades a refresh token for a new AccessToken
  * @param context
  * @returns
  */
-export function zohoAccountsAccessToken(context: ZohoAccountsContext): (input?: ZohoAccountsAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse> {
+export function accessToken(context: ZohoAccountsContext): (input?: ZohoAccountsAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse> {
   return (input) =>
-    context.fetchJson(
-      '/oauth/v2/token',
-      zohoAccountsApiFetchJsonInput(
-        'POST',
-        new URLSearchParams([
-          ['grant_type', 'refresh_token'],
-          ['client_id', input?.client?.clientId ?? context.config.clientId],
-          ['client_secret', input?.client?.clientSecret ?? context.config.clientSecret],
-          ['refresh_token', input?.refreshToken ?? context.config.refreshToken]
-        ])
-      )
-    );
+    context.fetchJson<ZohoAccountsAccessTokenResponse | ZohoAccountsAccessTokenErrorResponse>(`/oauth/v2/token?grant_type=refresh_token&client_id=${input?.client?.clientId ?? context.config.clientId}&client_secret=${input?.client?.clientSecret ?? context.config.clientSecret}&refresh_token=${input?.refreshToken ?? context.config.refreshToken}`, zohoAccountsApiFetchJsonInput('POST')).then((result) => {
+      if ((result as ZohoAccountsAccessTokenErrorResponse)?.error) {
+        throw new ZohoAccountsAccessTokenError((result as ZohoAccountsAccessTokenErrorResponse).error);
+      }
+
+      console.log({ result });
+
+      return result as ZohoAccountsAccessTokenResponse;
+    });
 }
 
 export function zohoAccountsApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {

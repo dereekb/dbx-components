@@ -1,7 +1,21 @@
 import { ConfiguredFetch, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, logZohoServerErrorFunction } from '../zoho.api.error';
 
-export class ZohoAccountsAuthRetrievalError extends FetchRequestFactoryError {
+export type ZohoAccountsAccessTokenErrorCode = 'invalid_code' | 'invalid_client';
+
+/**
+ * Thrown if the call to the Zoho API creating an access token using a refresh token fails.
+ */
+export class ZohoAccountsAccessTokenError extends FetchRequestFactoryError {
+  constructor(readonly errorCode: ZohoAccountsAccessTokenErrorCode) {
+    super(`ZohoAccountsAccessTokenError: ${errorCode}`);
+  }
+}
+
+/**
+ * Thrown if a valid ZohoAccessToken cannot be retrieved successfully.
+ */
+export class ZohoAccountsAuthFailureError extends FetchRequestFactoryError {
   constructor(readonly reason?: string) {
     super(`Failed to retrieve proper authentication for the API call. Reason: ${reason}`);
   }

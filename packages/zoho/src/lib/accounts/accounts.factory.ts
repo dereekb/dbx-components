@@ -1,10 +1,10 @@
 import { fetchJsonFunction, nodeFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZohoAccountsConfig, ZohoAccountsContext, ZohoAccountsContextRef, ZohoAccountsFetchFactory, ZohoAccountsFetchFactoryInput, zohoAccountsConfigApiUrl } from './accounts.config';
 import { LogZohoServerErrorFunction } from '../zoho.api.error';
-import { ZohoAccountsAuthRetrievalError, handleZohoAccountsErrorFetch } from './accounts.error.api';
+import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch } from './accounts.error.api';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoAccessTokenFactory, ZohoAccessTokenRefresher } from './accounts';
 import { MS_IN_MINUTE, MS_IN_SECOND, Maybe, Milliseconds } from '@dereekb/util';
-import { zohoAccountsAccessToken } from './accounts.api';
+import { accessToken } from './accounts.api';
 
 export type ZohoAccounts = ZohoAccountsContextRef;
 
@@ -57,7 +57,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
 
     const tokenRefresher: ZohoAccessTokenRefresher = async () => {
       const createdAt = new Date().getTime();
-      const { access_token, api_domain, scope, expires_in } = await zohoAccountsAccessToken(accountsContext)();
+      const { access_token, api_domain, scope, expires_in } = await accessToken(accountsContext)();
 
       const result: ZohoAccessToken = {
         accessToken: access_token,
@@ -70,7 +70,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
       return result;
     };
 
-    const accessToken: ZohoAccessTokenFactory = zohoAccountsZohoAccessTokenFactory({
+    const loadAccessToken: ZohoAccessTokenFactory = zohoAccountsZohoAccessTokenFactory({
       tokenRefresher,
       accessTokenCache: config.accessTokenCache
     });
@@ -78,7 +78,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
     const accountsContext: ZohoAccountsContext = {
       fetch,
       fetchJson,
-      accessToken,
+      loadAccessToken,
       config: {
         ...config,
         apiUrl
@@ -144,7 +144,7 @@ export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAcces
         currentToken = await tokenRefresher();
       } catch (e) {
         console.error(`zohoAccountsZohoAccessTokenFactory(): Failed retrieving new token from tokenRefresher: `, e);
-        throw new ZohoAccountsAuthRetrievalError('Token Refresh Failed');
+        throw new ZohoAccountsAuthFailureError('Token Refresh Failed');
       }
 
       if (currentToken) {
