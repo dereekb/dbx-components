@@ -4,8 +4,8 @@
  * Since fail() was silently removed, we redefine it.
  */
 
-import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue, build } from '@dereekb/util';
-import { BaseError } from 'make-error';
+import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue, build, ClassType, Maybe, ClassLikeType } from '@dereekb/util';
+import { BaseError, Constructor } from 'make-error';
 
 // MARK: Types
 export interface JestDoneCallback {
@@ -57,6 +57,15 @@ export function failDueToSuccessError(message?: string): JestUnexpectedSuccessFa
   return new JestUnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
 }
 
+/**
+ * Error thrown when the error type was different than the expected type.
+ */
+export class JestExpeectedErrorOfSpecificTypeError extends BaseError {
+  constructor(encounteredType: unknown, expectedType?: Maybe<ClassLikeType | string>) {
+    super(`The error encountered was not of the expected type. Expected: ${expectedType ?? 'n/a'}, but encountered: ${encounteredType} `);
+  }
+}
+
 export function failTest(message?: string): never {
   throw failDueToSuccessError(message);
 }
@@ -79,18 +88,45 @@ export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
 
 // MARK: Expect Fail
 /**
+ * Used to assert additional information about the expected error.
+ *
+ * Can assert within this function, or return a boolean. A boolean returning false means the test should throw a JestExpeectedErrorOfSpecificTypeError.
+ */
+export type JestExpectFailAssertionFunction = (error: unknown) => PromiseOrValue<Maybe<boolean> | void>;
+
+/**
+ * Creates a JestExpeectedErrorOfSpecificTypeError that asserts the encountered error is of the expected type using the instanceof keyword.
+ *
+ * @param expectedType
+ * @returns
+ */
+export function jestExpectFailAssertErrorType(expectedType: ClassType | ClassLikeType | typeof Error | any): JestExpectFailAssertionFunction {
+  return (error: unknown) => {
+    if (!(error instanceof expectedType)) {
+      throw new JestExpeectedErrorOfSpecificTypeError(error, expectedType);
+    }
+  };
+}
+
+/**
  * Function that expects any failure to be thrown, then throws a JestExpectedFailError.
  *
  * @param errorFn
  * @param handleError
  */
-export function expectFail(errorFn: () => void): void;
-export function expectFail(errorFn: () => Promise<void>): Promise<void>;
-export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R): PromiseOrValue<void> {
+export function expectFail(errorFn: () => void, assertFailType?: JestExpectFailAssertionFunction): void;
+export function expectFail(errorFn: () => Promise<void>, assertFailType?: JestExpectFailAssertionFunction): Promise<void>;
+export function expectFail<R extends PromiseOrValue<void>>(errorFn: () => R, assertFailType?: JestExpectFailAssertionFunction): PromiseOrValue<void> {
   function handleError(e: unknown) {
     if (e instanceof JestUnexpectedSuccessFailureError) {
       throw e;
     } else {
+      const assertionResult = assertFailType?.(e);
+
+      if (assertionResult === false) {
+        throw new JestExpeectedErrorOfSpecificTypeError(e);
+      }
+
       failSuccessfully();
     }
   }
