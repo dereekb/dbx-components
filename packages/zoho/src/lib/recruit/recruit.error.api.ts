@@ -1,6 +1,6 @@
 import { ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, logZohoServerErrorFunction } from '../zoho.api.error';
+import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, zohoServerErrorData } from '../zoho.error.api';
 
 export const logZohoRecruitErrorToConsole = logZohoServerErrorFunction('ZohoRecruit');
 
@@ -20,9 +20,11 @@ export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoS
   const error = errorResponseData.error;
 
   if (error) {
-    switch (error.code) {
+    const errorData = zohoServerErrorData(error);
+
+    switch (errorData.code) {
       default:
-        result = new ZohoServerError(error, responseError);
+        result = result = new ZohoServerError(errorData, responseError);
         break;
     }
   }
@@ -30,4 +32,5 @@ export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoS
   return result;
 }
 
+export const interceptZohoRecruitErrorResponse = interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorResponseData);
 export const handleZohoRecruitErrorFetch = handleZohoErrorFetchFactory(parseZohoRecruitError, logZohoRecruitErrorToConsole);

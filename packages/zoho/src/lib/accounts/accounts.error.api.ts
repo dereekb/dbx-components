@@ -1,5 +1,5 @@
 import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, logZohoServerErrorFunction } from '../zoho.api.error';
+import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData } from '../zoho.error.api';
 
 export type ZohoAccountsAccessTokenErrorCode = 'invalid_code' | 'invalid_client';
 
@@ -39,9 +39,11 @@ export function parseZohoAccountsServerErrorResponseData(errorResponseData: Zoho
   const error = errorResponseData.error;
 
   if (error) {
-    switch (error.code) {
+    const errorData = zohoServerErrorData(error);
+
+    switch (errorData.code) {
       default:
-        result = new ZohoServerError(error, responseError);
+        result = parseZohoServerErrorResponseData(errorResponseData, responseError);
         break;
     }
   }
@@ -49,4 +51,5 @@ export function parseZohoAccountsServerErrorResponseData(errorResponseData: Zoho
   return result;
 }
 
+export const interceptZohoAccountsErrorResponse = interceptZohoErrorResponseFactory(parseZohoAccountsServerErrorResponseData);
 export const handleZohoAccountsErrorFetch = handleZohoErrorFetchFactory(parseZohoAccountsError, logZohoAccountsErrorToConsole);

@@ -1,7 +1,7 @@
 import { fetchJsonFunction, nodeFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZohoAccountsConfig, ZohoAccountsContext, ZohoAccountsContextRef, ZohoAccountsFetchFactory, ZohoAccountsFetchFactoryInput, zohoAccountsConfigApiUrl } from './accounts.config';
-import { LogZohoServerErrorFunction } from '../zoho.api.error';
-import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch } from './accounts.error.api';
+import { LogZohoServerErrorFunction } from '../zoho.error.api';
+import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch, interceptZohoAccountsErrorResponse } from './accounts.error.api';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoAccessTokenFactory, ZohoAccessTokenRefresher } from './accounts';
 import { MS_IN_MINUTE, MS_IN_SECOND, Maybe, Milliseconds } from '@dereekb/util';
 import { accessToken } from './accounts.api';
@@ -52,6 +52,7 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
 
     const fetch: ConfiguredFetch = handleZohoAccountsErrorFetch(baseFetch, logZohoServerErrorFunction);
     const fetchJson = fetchJsonFunction(fetch, {
+      interceptJsonResponse: interceptZohoAccountsErrorResponse, // intercept errors that return status 200
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 

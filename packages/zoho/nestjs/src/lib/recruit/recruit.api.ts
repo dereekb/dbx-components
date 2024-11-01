@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoRecruit, ZohoRecruitContext, zohoRecruitFactory } from '@dereekb/zoho';
+import { ZohoRecruit, ZohoRecruitContext, getRecordById, zohoRecruitFactory } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -19,4 +19,7 @@ export class ZohoRecruitApi {
   }
 
   // MARK: Accessors
+  get getRecordById() {
+    return getRecordById(this.recruitContext);
+  }
 }

@@ -21,6 +21,8 @@ Edit the following URL with the specific details:
 
 https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
 
+https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL&client_id=CLIENT_ID&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+
 - The scope is the list of roles we want to grant this refresh token
 - The clientId is the client id generated in the previous step
 - The redirectUrl is where the web page will redirect us after we authorize the request.

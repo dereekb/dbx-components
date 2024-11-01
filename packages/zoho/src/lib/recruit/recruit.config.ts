@@ -15,9 +15,9 @@ export type ZohoRecruitConfigApiUrlInput = ZohoRecruitApiUrlKey | ZohoRecruitApi
 export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): ZohoApiUrl {
   switch (input) {
     case 'sandbox':
-      return 'https://sandbox.zohoapis.com/recruit/v2/';
+      return 'https://recruitsandbox.zoho.com/recruit';
     case 'production':
-      return 'https://recruit.zoho.com/recruit/v2/';
+      return 'https://recruit.zoho.com/recruit/';
     default:
       return input;
   }

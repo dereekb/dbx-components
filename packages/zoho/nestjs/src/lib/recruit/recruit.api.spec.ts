@@ -6,6 +6,11 @@ import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheSe
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 
+/**
+ * This candidate is only avaialble within the specific testing sandbox used for tests.
+ */
+const TEST_CANDIDATE_ID = '576214000000569001';
+
 describe('recruit.api', () => {
   let nest: TestingModule;
 
@@ -36,6 +41,18 @@ describe('recruit.api', () => {
 
     beforeEach(() => {
       api = nest.get(ZohoRecruitApi);
+    });
+
+    describe('getRecordById()', () => {
+      it('should return a record', async () => {
+        const result = await api.getRecordById({
+          module: 'Candidates',
+          id: TEST_CANDIDATE_ID
+        });
+
+        expect(result).toBeDefined();
+        expect(result.response.result).toBeDefined();
+      });
     });
   });
 });

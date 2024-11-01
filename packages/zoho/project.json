@@ -59,7 +59,7 @@
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/zoho/**/*.ts"]
+        "lintFilePatterns": ["packages/zoho/**/*.ts", "packages/zoho/package.json", "packages/zoho/project.json"]
       }
     },
     "test": {
@@ -68,6 +68,29 @@
       "options": {
         "jestConfig": "packages/zoho/jest.config.ts",
         "passWithNoTests": true
+      }
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run zoho tests",
+            "command": "npx nx test zoho"
+          },
+          {
+            "description": "run zoho-nestjs tests",
+            "command": "npx nx test zoho-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/zoho && npm publish --access public"
       }
     }
   },
