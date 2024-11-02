@@ -4,8 +4,8 @@ import { BaseError } from 'make-error';
  * Thrown by a FetchRequestFactory if one of the async request initialization steps fails.
  */
 export class FetchRequestFactoryError extends BaseError {
-  constructor(readonly error: Error | unknown) {
-    super(`Fetch request failed to build due to an unexpected error: ${typeof error === 'object' ? (error as Error).message ?? '' : ''}`);
+  constructor(readonly error: Error | string | unknown) {
+    super(`Fetch request failed to build due to an unexpected error: ${typeof error === 'object' ? (error as Error).message ?? '' : error}`);
   }
 }
 
