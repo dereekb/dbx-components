@@ -2,10 +2,13 @@ import { isUsStateCodeString, ModelKey, UnitedStatesAddress, WebsitePath } from 
 
 export interface ZohoModel {}
 
+// MARK: V1
 /**
- * General Zoho API GET request response.
+ * General Zoho API GET request response sent by the v1 API.
+ *
+ * @deprecated
  */
-export interface ZohoGetApiResult<T> {
+export interface ZohoGetApiV1Result<T> {
   readonly response: {
     /**
      * Result value

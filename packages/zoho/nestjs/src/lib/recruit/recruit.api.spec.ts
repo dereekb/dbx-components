@@ -50,8 +50,9 @@ describe('recruit.api', () => {
           id: TEST_CANDIDATE_ID
         });
 
+
         expect(result).toBeDefined();
-        expect(result.response.result).toBeDefined();
+        expect(result.data).toBeDefined();
       });
     });
   });
