@@ -8,13 +8,36 @@ export interface ZohoServerErrorResponseData {
   readonly error: ZohoServerErrorResponseDataError;
 }
 
+/**
+ * A code used in some cases to denote success.
+ */
+export const ZOHO_SUCCESS_CODE = 'SUCCESS';
+
+export type ZohoServerSuccessCode = typeof ZOHO_SUCCESS_CODE;
+export type ZohoServerSuccessStatus = 'success';
+
 export type ZohoServerErrorCode = string;
 export type ZohoServerErrorStatus = 'error';
 
-export interface ZohoServerErrorData {
+/**
+ * Zoho Server Error Data
+ *
+ * Always contains a code and message. Details and status are optional.
+ */
+export interface ZohoServerErrorData<T = unknown> {
   readonly code: ZohoServerErrorCode;
   readonly message: string;
+  readonly details?: T;
+  /**
+   * Is sometimes present on some error responses.
+   */
+  readonly status?: ZohoServerErrorStatus;
 }
+
+/**
+ * Contains details and a status
+ */
+export type ZohoServerErrorDataWithDetails<T = unknown> = Required<ZohoServerErrorData<T>>;
 
 export function zohoServerErrorData(error: ZohoServerErrorResponseDataError): ZohoServerErrorData {
   const errorType = typeof error;
@@ -32,21 +55,29 @@ export function zohoServerErrorData(error: ZohoServerErrorResponseDataError): Zo
   return errorData;
 }
 
+/**
+ * Zoho Server Error
+ */
 export class ZohoServerError<D extends ZohoServerErrorData = ZohoServerErrorData> extends BaseError {
   get code() {
-    return this.data.code;
+    return this.error.code;
   }
 
-  constructor(readonly data: D, readonly responseError: FetchResponseError) {
-    super(data.message);
-  }
-
-  get errorData(): object {
-    return this.data;
+  constructor(readonly error: D) {
+    super(error.message);
   }
 }
 
-export type LogZohoServerErrorFunction = (error: ZohoServerError) => void;
+/**
+ * Zoho Server Error that includes the FetchResponseError
+ */
+export class ZohoServerFetchResponseError<D extends ZohoServerErrorData = ZohoServerErrorData> extends ZohoServerError<D> {
+  constructor(readonly data: D, readonly responseError: FetchResponseError) {
+    super(data);
+  }
+}
+
+export type LogZohoServerErrorFunction = (error: ZohoServerFetchResponseError) => void;
 
 /**
  * Creates a logZohoServerErrorFunction that logs the error to console.
@@ -55,8 +86,8 @@ export type LogZohoServerErrorFunction = (error: ZohoServerError) => void;
  * @returns
  */
 export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoServerErrorFunction {
-  return (error: ZohoServerError) => {
-    console.log(`${zohoApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.errorData });
+  return (error: ZohoServerFetchResponseError) => {
+    console.log(`${zohoApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
   };
 }
 
@@ -68,7 +99,7 @@ export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoSe
  */
 export type HandleZohoErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZohoServerErrorFunction) => ConfiguredFetch;
 
-export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ZohoServerError | undefined>;
+export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ZohoServerFetchResponseError | undefined>;
 
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
@@ -97,7 +128,7 @@ export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchRespon
   };
 }
 
-export type ParseZohoRecruitServerErrorResponseData = (zohoServerErrorResponseData: ZohoServerErrorResponseData, fetchResponseError: FetchResponseError) => ZohoServerError | undefined;
+export type ParseZohoRecruitServerErrorResponseData = (zohoServerErrorResponseData: ZohoServerErrorResponseData, fetchResponseError: FetchResponseError) => ZohoServerFetchResponseError | undefined;
 
 /**
  * FetchJsonInterceptJsonResponseFunction that intercepts ZohoServerError responses and throws a ZohoServerError.
@@ -125,29 +156,38 @@ export function interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorRes
 }
 
 // MARK: Parsed Errors
-
 /**
- * Thrown in the following (but not limited to) cases:
+ * Error in the following (but not limited to) cases:
  * - An extra parameter is provided
  */
-const ZOHO_INTERNAL_ERROR_CODE = 'INTERNAL_ERROR';
+export const ZOHO_INTERNAL_ERROR_CODE = 'INTERNAL_ERROR';
 
 /**
- * Thrown when the Zoho API returns an internal error
+ * Error when the Zoho API returns an internal error
  */
-export class ZohoInternalError extends ZohoServerError {}
+export class ZohoInternalError extends ZohoServerFetchResponseError {}
 
 /**
- * Thrown in the following cases:
+ * Error in the following cases:
  * - Authorization is not properly constructed ("Invalid Ticket Id")
  * - OAuth token is expired ("Invalid OAuthtoken")
  */
-const ZOHO_INVALID_AUTHORIZATION_ERROR_CODE = '4834';
+export const ZOHO_INVALID_AUTHORIZATION_ERROR_CODE = '4834';
 
 /**
- * Thrown when the Zoho API returns an invalid authorization error code.
+ * Error when the Zoho API returns an invalid authorization error code.
  */
-export class ZohoInvalidAuthorizationError extends ZohoServerError {}
+export class ZohoInvalidAuthorizationError extends ZohoServerFetchResponseError {}
+
+/**
+ * Error when a mandatory field is missing.
+ */
+export const ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE = 'MANDATORY_NOT_FOUND';
+
+/**
+ * Error when a duplicate record is found with a matching unique field value.
+ */
+export const ZOHO_DUPLICATE_DATA_ERROR_CODE = 'DUPLICATE_DATA';
 
 /**
  * Function that parses/transforms a ZohoServerErrorResponseData into a general ZohoServerError or other known error type.
@@ -156,8 +196,8 @@ export class ZohoInvalidAuthorizationError extends ZohoServerError {}
  * @param responseError
  * @returns
  */
-export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerError | undefined {
-  let result: ZohoServerError | undefined;
+export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
+  let result: ZohoServerFetchResponseError | undefined;
   const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
   if (error) {
@@ -171,7 +211,7 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
         result = new ZohoInvalidAuthorizationError(errorData, responseError);
         break;
       default:
-        result = new ZohoServerError(errorData, responseError);
+        result = new ZohoServerFetchResponseError(errorData, responseError);
         break;
     }
   }

@@ -43,6 +43,13 @@ export interface ZohoRecruitCreatedByData {
   id: string; // TODO: figure out what kind of id this is
 }
 
+export type ZohoNewRecruitRecord = Record<ZohoRecruitFieldName, any> & {
+  /**
+   * Use "draft" if the record should be created as a draft.
+   */
+  $state?: ZohoRecruitDraftOrSaveState;
+};
+
 export type ZohoRecruitRecord = Record<ZohoRecruitFieldName, any> & {
   id: ZohoRecruitRecordId;
   Updated_On: ISO8601DateString;

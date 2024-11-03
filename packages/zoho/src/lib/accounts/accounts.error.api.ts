@@ -1,5 +1,5 @@
 import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { ZohoServerError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData } from '../zoho.error.api';
+import { ZohoServerFetchResponseError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData } from '../zoho.error.api';
 
 export type ZohoAccountsAccessTokenErrorCode = 'invalid_code' | 'invalid_client';
 
@@ -23,9 +23,9 @@ export class ZohoAccountsAuthFailureError extends FetchRequestFactoryError {
 
 export const logZohoAccountsErrorToConsole = logZohoServerErrorFunction('ZohoAccounts');
 
-export async function parseZohoAccountsError(responseError: FetchResponseError): Promise<ZohoServerError | undefined> {
+export async function parseZohoAccountsError(responseError: FetchResponseError): Promise<ZohoServerFetchResponseError | undefined> {
   const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
-  let result: ZohoServerError | undefined;
+  let result: ZohoServerFetchResponseError | undefined;
 
   if (data) {
     result = parseZohoAccountsServerErrorResponseData(data, responseError);
@@ -34,8 +34,8 @@ export async function parseZohoAccountsError(responseError: FetchResponseError):
   return result;
 }
 
-export function parseZohoAccountsServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerError | undefined {
-  let result: ZohoServerError | undefined;
+export function parseZohoAccountsServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
+  let result: ZohoServerFetchResponseError | undefined;
   const error = errorResponseData.error;
 
   if (error) {

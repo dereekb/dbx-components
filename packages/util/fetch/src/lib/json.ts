@@ -23,6 +23,12 @@ export function fetchJsonBodyString(body: FetchJsonBody | undefined): string | u
 export interface FetchJsonInput extends Omit<RequestInit, 'body'> {
   method: FetchMethod;
   body?: FetchJsonBody | undefined;
+  /**
+   * Optional intercept function to intercept/transform the response.
+   *
+   * Does not override any other configured interceptor and occurs after those configured interceptors.
+   */
+  interceptResponse?: FetchJsonInterceptJsonResponseFunction;
 }
 
 export type FetchJsonInputMapFunction = MapSameFunction<FetchJsonInput>;
@@ -84,10 +90,14 @@ export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJso
   return (url: FetchURLInput, methodOrInput?: string | FetchJsonInput, body?: FetchJsonBody) => {
     const requestUrl = fetchURL(url);
     const requestInit = configuredFetchJsonRequestInit(methodOrInput, body);
+
+    const inputIntercept = typeof methodOrInput === 'object' ? methodOrInput.interceptResponse : undefined;
     const responsePromise = fetch(requestUrl, requestInit);
+
     return responsePromise.then((response) => {
       const jsonPromise = response.json().catch(handleFetchJsonParseErrorFunction);
-      return interceptJsonResponse ? jsonPromise.then((json) => interceptJsonResponse(json, response)) : jsonPromise;
+      const interceptedJsonResponsePromise = interceptJsonResponse ? jsonPromise.then((json) => interceptJsonResponse(json, response)) : jsonPromise;
+      return inputIntercept ? interceptedJsonResponsePromise.then((result) => inputIntercept(result, response)) : interceptedJsonResponsePromise;
     });
   };
 }

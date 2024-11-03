@@ -1,6 +1,6 @@
 import { ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-import { ZohoServerError, ZohoServerErrorResponseData, ZohoServerErrorResponseDataError, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData } from '../zoho.error.api';
+import { ZohoServerFetchResponseError, ZohoServerErrorDataWithDetails, ZohoServerErrorResponseData, ZohoServerErrorResponseDataError, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE } from '../zoho.error.api';
 import { ZohoRecruitModuleName, ZohoRecruitRecordId } from './recruit';
 import { ZohoDataArrayResultRef } from '../zoho.api.page';
 
@@ -8,6 +8,29 @@ export class ZohoRecruitRecordNoContentError extends BaseError {
   constructor(readonly moduleName?: ZohoRecruitModuleName, readonly recordId?: ZohoRecruitRecordId) {
     super(`There was no content or matching records for the content. It may not exist.`);
   }
+}
+
+export class ZohoRecruitRecordCrudError extends ZohoServerError<ZohoServerErrorDataWithDetails> {}
+
+export class ZohoRecruitRecordCrudMandatoryFieldNotFoundError extends ZohoRecruitRecordCrudError {}
+export class ZohoRecruitRecordCrudDuplicateDataError extends ZohoRecruitRecordCrudError {}
+
+export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoRecruitRecordCrudError {
+  let result: ZohoRecruitRecordCrudError;
+
+  switch (error.code) {
+    case ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE:
+      result = new ZohoRecruitRecordCrudMandatoryFieldNotFoundError(error);
+      break;
+    case ZOHO_DUPLICATE_DATA_ERROR_CODE:
+      result = new ZohoRecruitRecordCrudDuplicateDataError(error);
+      break;
+    default:
+      result = new ZohoRecruitRecordCrudError(error);
+      break;
+  }
+
+  return result;
 }
 
 export function assertRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecruitModuleName, recordId?: ZohoRecruitRecordId) {
@@ -22,9 +45,9 @@ export function assertRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecrui
 
 export const logZohoRecruitErrorToConsole = logZohoServerErrorFunction('ZohoRecruit');
 
-export async function parseZohoRecruitError(responseError: FetchResponseError): Promise<ZohoServerError | undefined> {
+export async function parseZohoRecruitError(responseError: FetchResponseError): Promise<ZohoServerFetchResponseError | undefined> {
   const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
-  let result: ZohoServerError | undefined;
+  let result: ZohoServerFetchResponseError | undefined;
 
   if (data) {
     result = parseZohoRecruitServerErrorResponseData(data, responseError);
@@ -33,8 +56,8 @@ export async function parseZohoRecruitError(responseError: FetchResponseError): 
   return result;
 }
 
-export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerError | undefined {
-  let result: ZohoServerError | undefined;
+export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
+  let result: ZohoServerFetchResponseError | undefined;
   const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
   if (error) {
