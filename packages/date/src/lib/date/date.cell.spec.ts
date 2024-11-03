@@ -703,9 +703,36 @@ describe('calculateExpectedDateCellTimingDurationPair()', () => {
 
           const result = calculateExpectedDateCellTimingDurationPair(timing);
 
-          expect(result.duration).toBe(duration);
           expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedStartsAt);
-          expect(result.expectedFinalStartsAt).toBeSameSecondAs(timing.startsAt);
+          expect(result.duration).toBe(duration);
+        });
+
+        it(`should calculate the expected duration pair for a single day over three hours`, () => {
+          const startOfDay = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+          const expectedStartOfDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T00:00:00.000Z')); // midnight
+          expect(startOfDay).toBeSameSecondAs(expectedStartOfDay);
+
+          const startsAt = addHours(startOfDay, 3);
+          const expectedStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T03:00:00.000Z')); // 2AM after "second" 1AM
+          expect(startsAt).toBeSameSecondAs(expectedStartsAt);
+
+          const duration = 3 * MINUTES_IN_HOUR;
+          const expectedEnd = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T06:00:00.000Z')); // 3AM
+          const end = addMinutes(expectedStartsAt, duration);
+
+          expect(end).toBeSameSecondAs(expectedEnd);
+
+          const timing = dateCellTiming({ startsAt, duration }, 1, timezoneInstance); // one day
+
+          expect(timing.start).toBeSameSecondAs(startOfDay);
+          expect(timing.startsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(timing.duration).toBe(duration);
+          expect(timing.end).toBeSameSecondAs(expectedEnd);
+
+          const result = calculateExpectedDateCellTimingDurationPair(timing);
+
+          expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(result.duration).toBe(duration);
         });
 
         it(`should calculate the expected duration pair for two days`, () => {
@@ -740,7 +767,6 @@ describe('calculateExpectedDateCellTimingDurationPair()', () => {
           const expectedFinalStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-04T03:00:00.000Z')); // 2AM after "second" 1AM
 
           expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedFinalStartsAt);
-          expect(result.expectedFinalStartsAt).toBeSameSecondAs(timing.startsAt);
           expect(result.duration).toBe(duration);
         });
       });

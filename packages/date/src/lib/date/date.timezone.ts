@@ -817,14 +817,11 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
     const DEFAULT_TYPE = 'target';
     const inputType = inputInputType ?? DEFAULT_TYPE;
 
-    let originalDate: Date;
     let baseDate: Date;
     let copyFrom: Maybe<Date>;
 
     // set baseDate
     if (inputDate != null) {
-      originalDate = inputDate;
-
       if (inputType === 'base') {
         // use dates directly as UTC
         baseDate = inputDate;
@@ -833,7 +830,6 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
       }
     } else {
       baseDate = new Date();
-      originalDate = timezoneInstance.convertDate(baseDate, inputType, 'base');
     }
 
     // set copyFrom
@@ -865,7 +861,7 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
     const nextTime = nextDay + nextHours + nextMinutes + (roundDownToMinute ? 0 : secondsAndMilliseconds);
     const nextBaseDate = new Date(nextTime);
 
-    const { date: result } = timezoneInstance.safeMirroredConvertDate(nextBaseDate, originalDate, outputType ?? inputType);
+    const result: Date = timezoneInstance.convertDate(nextBaseDate, outputType ?? inputType, 'base');
     return result;
   };
   fn._timezoneInstance = timezoneInstance;

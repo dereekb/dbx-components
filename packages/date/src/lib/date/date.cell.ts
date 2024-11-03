@@ -362,7 +362,8 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
   const utcDay = formatToISO8601DayStringForUTC(startsAtInUtc);
   const start = normalInstance.startOfDayInTargetTimezone(utcDay);
 
-  let { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target');
+  const safeMirror = isEqualDate(startsAtInUtc, startsAtInUtcInitial);
+  let { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target', safeMirror);
 
   /*
   let startsAt = normalInstance.targetDateToBaseDate(startsAtInUtc);
@@ -698,28 +699,24 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
   const { end, startsAt, timezone } = timing;
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
-  // let startsAtInUtcNormal = normalInstance.baseDateToTargetDate(startsAt); // convert to UTC normal
-  // const endInUtcNormal = normalInstance.baseDateToTargetDate(end);
+  let startsAtInUtcNormal = normalInstance.baseDateToTargetDate(startsAt); // convert to UTC normal
+  let endInUtcNormal = normalInstance.baseDateToTargetDate(end);
 
-  const expectedFinalStartsAt = normalInstance.setOnDate({
-    date: end,
-    copyFrom: startsAt
-  });
+  const { daylightSavingsOffset: startDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtcNormal, startsAt, 'target');
+  const { daylightSavingsOffset: endDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate(endInUtcNormal, end, 'target');
 
-  const duration = differenceInMinutes(end, startsAt);
+  if (startDaylightSavingsOffset) {
+    startsAtInUtcNormal = addHours(startsAtInUtcNormal, startDaylightSavingsOffset);
+  }
 
-  /*
-  // check for loss of data due to daylight savings change
-  const { daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtcNormal, startsAt, 'target');
+  if (endDaylightSavingsOffset) {
+    endInUtcNormal = addHours(endInUtcNormal, endDaylightSavingsOffset);
+  }
 
-  const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(endInUtcNormal, startsAtInUtcNormal) - (daylightSavingsOffset * MS_IN_HOUR);
+  const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(endInUtcNormal, startsAtInUtcNormal);
   const duration = (finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE) % MINUTES_IN_DAY || MINUTES_IN_DAY;
   const expectedFinalStartsAtUtc = addMinutes(endInUtcNormal, -duration);
-
-  let expectedFinalStartsAt = normalInstance.targetDateToBaseDate(addHours(expectedFinalStartsAtUtc, -daylightSavingsOffset));
-  */
-
-  console.log({ timing, end, startsAt, duration, expectedFinalStartsAt });
+  const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(expectedFinalStartsAtUtc); // 2024-11-03T03:00:00.000Z
 
   return {
     duration,
