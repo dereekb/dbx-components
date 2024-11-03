@@ -7,6 +7,11 @@ import { type Maybe } from '../value/maybe.type';
 export type DateRelativeDirection = 'past' | 'future';
 
 /**
+ * Hour, minute, or second as a string.
+ */
+export type DateHourMinuteOrSecond = 'hour' | 'minute' | 'second';
+
+/**
  * A valid ISO8601 formatted date string.
  *
  * I.E. "2020-04-30T00:00:00.000Z"
@@ -225,6 +230,8 @@ export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO
 
 /**
  * Time in seconds (instead of ms) since the epoch.
+ *
+ * Returned by Date.getTime().
  */
 export type UnixDateTimeNumber = number;
 

@@ -24,7 +24,7 @@ import {
 } from './date.cell';
 import { type DateCellRange, dateCellRangeHasRange, type DateCellRangeWithRange, type DateCellOrDateCellIndexOrDateCellRange, type DateOrDateRangeOrDateCellIndexOrDateCellRange, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
 import { type DateRange, type DateRangeStart, isDateRange, isDateRangeStart } from './date.range';
-import { copyHoursAndMinutesFromDateWithTimezoneNormal, type DateTimezoneConversionConfigUseSystemTimezone, type DateTimezoneUtcNormalInstance } from './date.timezone';
+import { copyHoursAndMinutesFromDateWithTimezoneNormal, dateTimezoneUtcNormal, type DateTimezoneConversionConfigUseSystemTimezone, type DateTimezoneUtcNormalInstance } from './date.timezone';
 
 /**
  * Input for dateCellRange
@@ -862,6 +862,8 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
       // if we're only replacing the startsAt, copy the hours/minutes from the target time
       const { start: currentStart, normalInstance } = dateCellTimingStartPair(timing);
       startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(currentStart, event.startsAt, normalInstance);
+
+      // console.log({ startsAt, currentStart, eventStartsAt: event.startsAt });
     }
   }
 

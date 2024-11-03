@@ -4,7 +4,8 @@ import { type Maybe } from '../value/maybe.type';
 import { asNumber, type AsNumberInput } from './number';
 
 // MARK: Rounding
-export type NumberRounding = 'none' | 'floor' | 'ceil' | 'round';
+export type FloorOrCeilRounding = 'floor' | 'ceil';
+export type NumberRounding = 'none' | FloorOrCeilRounding | 'round';
 export type RoundingFunction = MapFunction<number, number>;
 
 export function roundingFunction(type: NumberRounding): RoundingFunction {

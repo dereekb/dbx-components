@@ -1,5 +1,33 @@
-import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, isBefore as isBeforeDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
-import { type DayOfWeekNameFunction, type DateOrDateString, filterMaybeValues, type ISO8601DateString, type Maybe, type Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, type Seconds, type TimezoneString, type ArrayOrValue, asArray, type MapFunction, type ISO8601DateStringUTCFull, type UTCDateString, isISO8601DateString, type DayOfWeek, dayOfWeek, sortNumbersAscendingFunction, type UnixDateTimeNumber } from '@dereekb/util';
+import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, isBefore as isBeforeDate, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay, set as setDateValues } from 'date-fns';
+import {
+  type DayOfWeekNameFunction,
+  type DateOrDateString,
+  filterMaybeValues,
+  type ISO8601DateString,
+  type Maybe,
+  type Minutes,
+  MINUTES_IN_DAY,
+  MS_IN_HOUR,
+  MS_IN_MINUTE,
+  type Seconds,
+  type TimezoneString,
+  type ArrayOrValue,
+  asArray,
+  type MapFunction,
+  type ISO8601DateStringUTCFull,
+  type UTCDateString,
+  isISO8601DateString,
+  type DayOfWeek,
+  dayOfWeek,
+  sortNumbersAscendingFunction,
+  type UnixDateTimeNumber,
+  MS_IN_DAY,
+  MS_IN_SECOND,
+  Milliseconds,
+  DateOrUnixDateTimeNumber,
+  DateHourMinuteOrSecond,
+  FloorOrCeilRounding
+} from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
 
@@ -205,6 +233,8 @@ export function utcDayForDate(date: Date): Date {
  * For example, if it is currently 9PM:
  * - if 10PM on any day is passed then 9PM the next day will be returned.
  * - if 11PM on any day is passed, 11PM today will be returned.
+ *
+ * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
  */
 export function takeNextUpcomingTime(date: Date, roundDownToMinute?: boolean): Date {
   date = copyHoursAndMinutesFromDateToToday(date, roundDownToMinute);
@@ -218,6 +248,8 @@ export function takeNextUpcomingTime(date: Date, roundDownToMinute?: boolean): D
 
 /**
  * Creates a new date and copies the hours/minutes from the previous date and applies them to a date for today.
+ *
+ * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
  */
 export function copyHoursAndMinutesFromDateToToday(fromDate: Date, roundDownToMinute?: boolean): Date {
   return copyHoursAndMinutesFromDate(new Date(), fromDate, roundDownToMinute);
@@ -225,6 +257,8 @@ export function copyHoursAndMinutesFromDateToToday(fromDate: Date, roundDownToMi
 
 /**
  * Copies the hours/minutes from now to the target date.
+ *
+ * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
  */
 export function copyHoursAndMinutesFromNow(target: Date, roundDownToMinute?: boolean): Date {
   return copyHoursAndMinutesFromDate(target, new Date(), roundDownToMinute);
@@ -232,6 +266,8 @@ export function copyHoursAndMinutesFromNow(target: Date, roundDownToMinute?: boo
 
 /**
  * Creates a new date and copies the hours/minutes from the input date to the target date.
+ *
+ * @deprecated Fails in the rare case where it is the first two hours of a day in a daylight savings zone when daylight savings changes.
  */
 export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, roundDownToMinute?: boolean): Date {
   return copyHoursAndMinutesToDate(
@@ -280,23 +316,68 @@ export const copyHoursAndMinutesToToday = copyHoursAndMinutesToDate;
  * Removes the seconds and milliseconds from the input date, or returns the current date with no seconds or milliseconds.
  */
 export function roundDownToMinute(date = new Date()): Date {
-  return setDateValues(date, {
-    seconds: 0,
-    milliseconds: 0
-  });
+  return roundDateDownTo(date, 'minute');
 }
 
 /**
- * Removes all minutes,
+ * Removes the minutes, seconds and milliseconds from the input date, or returns the current date with no mkinutes, seconds or milliseconds.
+ */
+export function roundDownToHour(date: Date = new Date()): Date {
+  return roundDateDownTo(date, 'hour');
+}
+
+export function roundDateDownTo(date: Date, roundToUnit: DateHourMinuteOrSecond): Date {
+  return roundDateToDate(date, roundToUnit, 'floor');
+}
+
+export function roundDateTo(date: Date, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): Date;
+export function roundDateTo(unixDateTimeNumber: UnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType?: FloorOrCeilRounding): UnixDateTimeNumber;
+export function roundDateTo(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): DateOrUnixDateTimeNumber {
+  return typeof date === 'number' ? roundDateToUnixDateTimeNumber(date, roundToUnit, roundType) : roundDateTo(date, roundToUnit, roundType);
+}
+
+export function roundDateToDate(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): Date {
+  return new Date(roundDateToUnixDateTimeNumber(date, roundToUnit, roundType));
+}
+
+/**
+ * Rounds the input Date value down to the nearest hour, minute, or second.
+ *
  * @param date
+ * @param roundToUnit
+ * @param roundType
  * @returns
  */
-export function roundDownToHour(date: Date): Date {
-  return setDateValues(date, {
-    minutes: 0,
-    seconds: 0,
-    milliseconds: 0
-  });
+export function roundDateToUnixDateTimeNumber(date: DateOrUnixDateTimeNumber, roundToUnit: DateHourMinuteOrSecond, roundType: FloorOrCeilRounding = 'floor'): UnixDateTimeNumber {
+  const inputTimeUnrounded = typeof date === 'number' ? date : date.getTime();
+
+  let roundAmount: number = 0;
+
+  switch (roundToUnit) {
+    case 'hour':
+      roundAmount = MS_IN_HOUR;
+      break;
+    case 'second':
+      roundAmount = MS_IN_SECOND;
+      break;
+    default:
+    case 'minute':
+      roundAmount = MS_IN_MINUTE;
+      break;
+  }
+
+  const secondsAndMs = inputTimeUnrounded % roundAmount; // determine the number of seconds and milliseconds (prepare to round to nearest minute)
+  let roundedTime: number = inputTimeUnrounded;
+
+  if (secondsAndMs !== 0) {
+    roundedTime = inputTimeUnrounded - secondsAndMs; // remove seconds and ms as it will throw off the final tzOffset
+
+    if (roundType === 'ceil') {
+      roundedTime += roundAmount; // round up by adding the units
+    }
+  }
+
+  return roundedTime;
 }
 
 export type ReduceDatesFunction = (inputDates: ArrayOrValue<Maybe<Date>>) => Maybe<Date>;

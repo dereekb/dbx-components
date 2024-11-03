@@ -1219,8 +1219,8 @@ describe('dateCellTimingFromDateCellTimingStartsAtEndRange()', () => {
 
         expect(result.timezone).toBe(timing.timezone);
         expect(result.end).toBeSameSecondAs(timing.end);
-        expect(result.duration).toBe(timing.duration);
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.duration).toBe(timing.duration);
 
         expect(isValidDateCellTiming(result)).toBe(true);
       });
@@ -1239,12 +1239,14 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
 
         describe(`${timezone}`, () => {
           describe('replaceStartsAt=true', () => {
-            it('should return a copy of a timing.', () => {
+            it('should return a copy of the input timing if it is the same', () => {
               const result = updateDateCellTimingWithDateCellTimingEvent({
                 timing,
                 event: timing,
                 replaceStartsAt: true
               }); // use the first event again
+
+              console.log({ result, timing });
 
               expect(result.timezone).toBe(timing.timezone);
               expect(result.end).toBeSameSecondAs(timing.end);
@@ -1255,11 +1257,15 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
             });
 
             it('should return the original timing using the second event', () => {
+              const startsAt = addDays(timing.startsAt, 1);
+
               const result = updateDateCellTimingWithDateCellTimingEvent({
                 timing,
-                event: { startsAt: addDays(timing.startsAt, 1), duration: timing.duration },
+                event: { startsAt, duration: timing.duration },
                 replaceStartsAt: true
               }); // use the first event again
+
+              console.log({ result, timing, startsAt });
 
               expect(result.timezone).toBe(timing.timezone);
               expect(result.end).toBeSameSecondAs(timing.end);
@@ -1315,7 +1321,7 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
                 const daylightSavingsBeforeFirstDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-03-10T00:00:00Z'));
                 const timing = dateCellTiming({ startsAt: daylightSavingsBeforeFirstDayActive, duration: 60 }, 5, timezone); // 1 day
 
-                it(`should return a copy of a timing`, () => {
+                it(`should return a copy of the input timing`, () => {
                   const result = updateDateCellTimingWithDateCellTimingEvent({
                     timing,
                     event: timing,

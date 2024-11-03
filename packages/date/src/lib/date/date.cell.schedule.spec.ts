@@ -435,21 +435,51 @@ describe('expandDateCellScheduleFactory()', () => {
 
     describe('timezones', () => {
       function describeTestsForTimezone(timezone: TimezoneString) {
-        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
-        const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone();
-        const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration: 60 }, 1, timezone); // 1 day
-
         describe(`${timezone}`, () => {
-          it(`should return the first startsAt of the timing for ${timezone}`, () => {
-            const schedule: DateCellSchedule = { w: '89' };
-            const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
+          describe('today', () => {
+            const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+            const startOfTodayInTimezone = timezoneInstance.startOfDayInTargetTimezone();
+            const timing = dateCellTiming({ startsAt: startOfTodayInTimezone, duration: 60 }, 1, timezone); // 1 day
 
-            expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
-            expect(timing.end).toBeSameSecondAs(addMinutes(startOfTodayInTimezone, timing.duration));
+            it(`should return the first startsAt of the timing for ${timezone}`, () => {
+              const schedule: DateCellSchedule = { w: '89' };
+              const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
 
-            const expandedDayZero = expandedDays[0];
-            expect(expandedDayZero.i).toBe(0);
-            expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+              console.log({ timing, startOfTodayInTimezone, expandedDays });
+
+              expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
+              expect(timing.end).toBeSameSecondAs(addMinutes(startOfTodayInTimezone, timing.duration));
+
+              const expandedDayZero = expandedDays[0];
+              expect(expandedDayZero.i).toBe(0);
+              expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+            });
+          });
+
+          /**
+           * Timezone change
+           */
+          describe('daylight savings', () => {
+            describe('nov 3 2024', () => {
+              const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+              const startOfNovember3rdInUtz = timezoneInstance.startOfDayInBaseDate('2024-11-03');
+              const startOfNovember3rdInTimezone = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+              const timing = dateCellTiming({ startsAt: startOfNovember3rdInTimezone, duration: 60 }, 1, timezone); // 1 day
+
+              it(`should return the first startsAt of the timing for ${timezone}`, () => {
+                const schedule: DateCellSchedule = { w: '89' };
+                const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
+
+                console.log({ timing, startOfTodayInTimezone: startOfNovember3rdInTimezone, expandedDays, startOfNovember3rdInUtz });
+
+                expect(timing.startsAt).toBeSameSecondAs(startOfNovember3rdInTimezone);
+                expect(timing.end).toBeSameSecondAs(addMinutes(startOfNovember3rdInTimezone, timing.duration));
+
+                const expandedDayZero = expandedDays[0];
+                expect(expandedDayZero.i).toBe(0);
+                expect(expandedDayZero.startsAt).toBeSameSecondAs(timing.startsAt);
+              });
+            });
           });
         });
       }

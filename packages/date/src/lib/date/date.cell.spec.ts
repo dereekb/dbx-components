@@ -261,30 +261,133 @@ describe('dateCellTiming()', () => {
     });
 
     describe('daylight savings changes', () => {
+      describe('America/Chicago', () => {
+        const timezone = 'America/Chicago';
+        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+
+        it(`should return a timing with the correct duration for ${timezone} with one day`, () => {
+          const startOfDay = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+          const expectedStartOfDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T00:00:00.000Z')); // midnight
+          expect(startOfDay).toBeSameSecondAs(expectedStartOfDay);
+
+          const startsAt = addHours(startOfDay, 3);
+          const expectedStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T03:00:00.000Z')); // 2AM after "second" 1AM
+          expect(startsAt).toBeSameSecondAs(expectedStartsAt);
+
+          const duration = 60;
+          const expectedEnd = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T04:00:00.000Z')); // 3AM
+          const end = addMinutes(expectedStartsAt, 60);
+
+          expect(end).toBeSameSecondAs(expectedEnd);
+
+          const timing = dateCellTiming({ startsAt, duration }, 1, timezoneInstance); // one day
+
+          expect(timing.start).toBeSameSecondAs(startOfDay);
+          expect(timing.startsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(timing.duration).toBe(duration);
+          expect(timing.end).toBeSameSecondAs(expectedEnd);
+        });
+
+        it(`should return a timing with the correct duration for ${timezone} with two days`, () => {
+          const startOfToday = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+          const expectedStartOfDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T00:00:00.000Z')); // midnight
+
+          expect(startOfToday).toBeSameSecondAs(expectedStartOfDay);
+
+          const startsAt = addHours(startOfToday, 3);
+          const expectedStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T03:00:00.000Z')); // 2AM after "second" 1AM
+          expect(startsAt).toBeSameSecondAs(expectedStartsAt);
+
+          const duration = 60;
+          const expectedStartOfSecondDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-04T03:00:00.000Z')); // 2AM
+          const expectedEndOfSecondDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-04T04:00:00.000Z')); // 3AM
+          expect(expectedEndOfSecondDay).toBeSameSecondAs(addMinutes(expectedStartOfSecondDay, duration));
+
+          const endOfDay = expectedEndOfSecondDay;
+          expect(endOfDay).toBeSameSecondAs(expectedEndOfSecondDay);
+
+          const timing = dateCellTiming({ startsAt, duration }, 2, timezoneInstance); // two days
+
+          expect(timing.start).toBeSameSecondAs(startOfToday);
+          expect(timing.startsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(timing.duration).toBe(duration);
+          expect(timing.end).toBeSameSecondAs(expectedEndOfSecondDay);
+        });
+      });
+
       function describeTestsForTimezone(timezone: TimezoneString) {
         const timezoneInstance = dateTimezoneUtcNormal({ timezone });
 
-        const startDay = '2023-11-03';
-        const endDay = '2023-11-08';
-        const totalDays = 6;
+        const startDay = '2024-11-03';
 
         const startOfDayInTimezone = timezoneInstance.startOfDayInTargetTimezone(startDay);
-        const startOfEndDay = timezoneInstance.startOfDayInTargetTimezone(endDay);
 
         const duration = 60;
 
         describe(`${timezone}`, () => {
-          it(`should create a proper timing given the timezone ${timezone}`, () => {
-            const result = dateCellTiming({ startsAt: startOfDayInTimezone, duration }, totalDays, timezoneInstance);
-            expect(isValidFullDateCellTiming(result)).toBe(true);
-            expect(isValidDateCellTiming(result)).toBe(true);
+          describe('nov 3 2024', () => {
+            /*
+            it(`should return a timing with the correct duration for timezone ${timezone} with one day`, () => {
 
-            expect(timezoneInstance.configuredTimezoneString).toBe(timezone);
-            expect(result.timezone).toBe(timezone);
-            expect(result.start).toBeSameSecondAs(startOfDayInTimezone);
-            expect(result.startsAt).toBeSameSecondAs(result.start); // starts at midnight, same instant
-            expect(result.end).toBeSameSecondAs(addMinutes(startOfEndDay, duration));
-            expect(result.duration).toBe(result.duration);
+              const duration = 60;
+              const startOfDay = startOfDayInTimezone;
+              const startsAt = addHours(startOfDay, 3);
+              const expectedEndsAt = addMinutes(startsAt, 60);
+
+              console.log('a');
+
+              const timing = dateCellTiming({ startsAt, duration }, 1); // one day
+
+              console.log('b');
+
+              expect(timing.start).toBeSameSecondAs(startOfDay);
+              expect(timing.startsAt).toBeSameSecondAs(startsAt);
+              expect(timing.duration).toBe(duration);
+              expect(timing.end).toBeSameSecondAs(expectedEndsAt);
+            });
+
+            it(`should return a timing with the correct duration for timezone ${timezone} with two days`, () => {
+
+              const startOfDay = startOfDayInTimezone;
+              const expectedStartOfDay = timezoneInstance.targetDateToBaseDate(new Date("2024-11-03T00:00:00.000Z"));  // midnight
+
+              expect(startOfDay).toBeSameSecondAs(expectedStartOfDay);
+
+              const startsAt = addHours(startOfDay, 3);
+              const expectedStartsAt = timezoneInstance.targetDateToBaseDate(new Date("2024-11-03T03:00:00.000Z"));  // 2AM after "second" 1AM
+              expect(startsAt).toBeSameSecondAs(expectedStartsAt);
+
+              const duration = 60;
+              const expectedEndOfDay = timezoneInstance.targetDateToBaseDate(new Date("2024-11-04T04:00:00.000Z"));  // 3AM
+              const endOfDay = addHours(addMinutes(expectedStartsAt, 60), 24);
+
+              expect(endOfDay).toBeSameSecondAs(expectedEndOfDay);
+
+              const timing = dateCellTiming({ startsAt, duration }, 2); // two days
+
+              expect(timing.start).toBeSameSecondAs(startOfDay);
+              expect(timing.startsAt).toBeSameSecondAs(expectedStartsAt);
+              expect(timing.duration).toBe(duration);
+              expect(timing.end).toBeSameSecondAs(expectedEndOfDay);
+            });
+            */
+
+            it(`should return a timing with the correct duration for timezone ${timezone} with six days`, () => {
+              const endDay = '2024-11-08';
+              const totalDays = 6;
+              const startOfEndDay = timezoneInstance.startOfDayInTargetTimezone(endDay);
+
+              const result = dateCellTiming({ startsAt: startOfDayInTimezone, duration }, totalDays, timezoneInstance);
+              expect(isValidFullDateCellTiming(result)).toBe(true);
+              expect(isValidDateCellTiming(result)).toBe(true);
+
+              expect(timezoneInstance.configuredTimezoneString).toBe(timezone);
+              expect(result.timezone).toBe(timezone);
+              expect(result.start).toBeSameSecondAs(startOfDayInTimezone);
+              expect(result.startsAt).toBeSameSecondAs(result.start); // starts at midnight, same instant
+              expect(result.end).toBeSameSecondAs(addMinutes(startOfEndDay, duration));
+              expect(result.duration).toBe(result.duration);
+            });
           });
         });
       }
@@ -569,6 +672,78 @@ describe('calculateExpectedDateCellTimingDurationPair()', () => {
       const result = calculateExpectedDateCellTimingDurationPair(timing);
       expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedFinalStartsAt);
       expect(result.duration).toBe(duration);
+    });
+
+    describe('nov 3 2024 daylight savings', () => {
+      describe('America/Chicago', () => {
+        const timezone = 'America/Chicago';
+        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
+
+        it(`should calculate the expected duration pair for a single day`, () => {
+          const startOfDay = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+          const expectedStartOfDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T00:00:00.000Z')); // midnight
+          expect(startOfDay).toBeSameSecondAs(expectedStartOfDay);
+
+          const startsAt = addHours(startOfDay, 3);
+          const expectedStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T03:00:00.000Z')); // 2AM after "second" 1AM
+          expect(startsAt).toBeSameSecondAs(expectedStartsAt);
+
+          const duration = 60;
+          const expectedEnd = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T04:00:00.000Z')); // 3AM
+          const end = addMinutes(expectedStartsAt, 60);
+
+          expect(end).toBeSameSecondAs(expectedEnd);
+
+          const timing = dateCellTiming({ startsAt, duration }, 1, timezoneInstance); // one day
+
+          expect(timing.start).toBeSameSecondAs(startOfDay);
+          expect(timing.startsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(timing.duration).toBe(duration);
+          expect(timing.end).toBeSameSecondAs(expectedEnd);
+
+          const result = calculateExpectedDateCellTimingDurationPair(timing);
+
+          expect(result.duration).toBe(duration);
+          expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(result.expectedFinalStartsAt).toBeSameSecondAs(timing.startsAt);
+        });
+
+        it(`should calculate the expected duration pair for two days`, () => {
+          const startOfToday = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+          const expectedStartOfDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T00:00:00.000Z')); // midnight
+
+          expect(startOfToday).toBeSameSecondAs(expectedStartOfDay);
+
+          const startsAt = addHours(startOfToday, 3);
+          const expectedStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-03T03:00:00.000Z')); // 2AM after "second" 1AM
+          expect(startsAt).toBeSameSecondAs(expectedStartsAt);
+
+          const duration = 60;
+          const expectedStartOfSecondDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-04T03:00:00.000Z')); // 2AM
+          const expectedEndOfSecondDay = timezoneInstance.targetDateToBaseDate(new Date('2024-11-04T04:00:00.000Z')); // 3AM
+          expect(expectedEndOfSecondDay).toBeSameSecondAs(addMinutes(expectedStartOfSecondDay, duration));
+
+          const endOfDay = expectedEndOfSecondDay; // addHours(addMinutes(expectedStartsAt, duration), 24 + 1);    // add extra minute due to bug with addMinutes and expectedStartsAt
+          expect(endOfDay).toBeSameSecondAs(expectedEndOfSecondDay);
+
+          console.log({ expectedStartOfSecondDay, expectedEndOfSecondDay, startsAt, endOfDay });
+
+          const timing = dateCellTiming({ startsAt, duration }, 2, timezoneInstance); // two days
+
+          expect(timing.start).toBeSameSecondAs(startOfToday);
+          expect(timing.startsAt).toBeSameSecondAs(expectedStartsAt);
+          expect(timing.duration).toBe(duration);
+          expect(timing.end).toBeSameSecondAs(expectedEndOfSecondDay);
+
+          const result = calculateExpectedDateCellTimingDurationPair(timing);
+
+          const expectedFinalStartsAt = timezoneInstance.targetDateToBaseDate(new Date('2024-11-04T03:00:00.000Z')); // 2AM after "second" 1AM
+
+          expect(result.expectedFinalStartsAt).toBeSameSecondAs(expectedFinalStartsAt);
+          expect(result.expectedFinalStartsAt).toBeSameSecondAs(timing.startsAt);
+          expect(result.duration).toBe(duration);
+        });
+      });
     });
   });
 
