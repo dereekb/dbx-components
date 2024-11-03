@@ -37,6 +37,85 @@ export function findStringsRegexString(find: ArrayOrValue<string>): string {
   return escapedInput.join('|');
 }
 
+export interface EscapeStringCharactersFunctionConfig {
+  /**
+   * The set of characters to find and use the escapeCharacter() function on.
+   *
+   * Targets should be individual characters. Strings of more than one character are ignored.
+   */
+  readonly escapeTargets: Iterable<string> | Set<string>;
+  /**
+   * Escapes the target character. Can return any string to properly "escape" the character.
+   *
+   * @param char
+   * @returns
+   */
+  readonly escapeCharacter: (char: string) => string;
+}
+
+/**
+ * Function that properly "escapes" specific characters in a string.
+ *
+ * How the characters are escaped is determined by the function.
+ */
+export type EscapeStringCharactersFunction = (input: string) => string;
+
+/**
+ * Creates an EscapeStringCharactersFunction
+ *
+ * @param config
+ * @returns
+ */
+export function escapeStringCharactersFunction(config: EscapeStringCharactersFunctionConfig): EscapeStringCharactersFunction {
+  const { escapeTargets: inputEscapeTargets, escapeCharacter } = config;
+  const escapeTargets = inputEscapeTargets instanceof Set ? inputEscapeTargets : new Set(inputEscapeTargets);
+
+  return (input: string) => {
+    /**
+     * Find index of all occurences in the input to replace/merge together.
+     */
+    const occurrences = findAllCharacterOccurences(escapeTargets, input);
+
+    let result: string;
+
+    switch (occurrences.length) {
+      case 0:
+        result = input;
+        break;
+      case 1:
+        const charToReplace = input[occurrences[0]];
+        result = replaceCharacterAtIndexWith(input, occurrences[0], escapeCharacter(charToReplace)); //Add an escape to the character
+        break;
+      default:
+        const parts: string[] = [];
+        const endAt = occurrences.length;
+
+        let start: number = 0;
+        let occurrence: number = 0;
+
+        for (let i = 0; i < endAt; i += 1) {
+          occurrence = occurrences[i];
+
+          const char = input[occurrence];
+          const sub = input.substring(start, occurrence);
+          const part = sub + escapeCharacter(char);
+          parts.push(part);
+
+          start = occurrence + 1;
+        }
+
+        // add in the last substring
+        parts.push(input.substring(start));
+
+        // join all parts together
+        result = parts.join('');
+        break;
+    }
+
+    return result;
+  };
+}
+
 /**
  * Escapes the input string to be usable in a Regex value.
  *
@@ -44,54 +123,12 @@ export function findStringsRegexString(find: ArrayOrValue<string>): string {
  *
  * @param input
  */
-export function escapeStringForRegex(input: string): string {
-  /**
-   * index of all occurences in the input to replace/merge together.
-   */
-  const occurrences = findAllCharacterOccurences(REGEX_SPECIAL_CHARACTERS_SET, input);
-
-  let result: string;
-
-  function escapeCharacter(char: string): string {
+export const escapeStringForRegex = escapeStringCharactersFunction({
+  escapeTargets: REGEX_SPECIAL_CHARACTERS_SET,
+  escapeCharacter(char: string): string {
     return `\\${char}`;
   }
-
-  switch (occurrences.length) {
-    case 0:
-      result = input;
-      break;
-    case 1:
-      const charToReplace = input[occurrences[0]];
-      result = replaceCharacterAtIndexWith(input, occurrences[0], escapeCharacter(charToReplace)); //Add an escape to the character
-      break;
-    default:
-      const parts: string[] = [];
-      const endAt = occurrences.length;
-
-      let start: number = 0;
-      let occurrence: number = 0;
-
-      for (let i = 0; i < endAt; i += 1) {
-        occurrence = occurrences[i];
-
-        const char = input[occurrence];
-        const sub = input.substring(start, occurrence);
-        const part = sub + escapeCharacter(char);
-        parts.push(part);
-
-        start = occurrence + 1;
-      }
-
-      // add in the last substring
-      parts.push(input.substring(start));
-
-      // join all parts together
-      result = parts.join('');
-      break;
-  }
-
-  return result;
-}
+});
 
 export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<number>) => number[];
 

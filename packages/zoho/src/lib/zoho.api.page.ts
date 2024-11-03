@@ -1,13 +1,16 @@
 import { PageNumber } from '@dereekb/util';
 
-/**
- * Page result that contains an array of data and page information.
- */
-export interface ZohoPageResult<T> {
+export interface ZohoDataArrayResultRef<T> {
   /**
    * Array of data returned.
    */
   readonly data: T[];
+}
+
+/**
+ * Page result that contains an array of data and page information.
+ */
+export interface ZohoPageResult<T> extends ZohoDataArrayResultRef<T> {
   /**
    * Current page information
    */

@@ -1,3 +1,4 @@
+import { Maybe } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonInterceptJsonResponseFunction, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
@@ -124,6 +125,18 @@ export function interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorRes
 }
 
 // MARK: Parsed Errors
+
+/**
+ * Thrown in the following (but not limited to) cases:
+ * - An extra parameter is provided
+ */
+const ZOHO_INTERNAL_ERROR_CODE = 'INTERNAL_ERROR';
+
+/**
+ * Thrown when the Zoho API returns an internal error
+ */
+export class ZohoInternalError extends ZohoServerError {}
+
 /**
  * Thrown in the following cases:
  * - Authorization is not properly constructed ("Invalid Ticket Id")
@@ -145,12 +158,15 @@ export class ZohoInvalidAuthorizationError extends ZohoServerError {}
  */
 export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerError | undefined {
   let result: ZohoServerError | undefined;
-  const error = errorResponseData.error;
+  const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
   if (error) {
     const errorData = zohoServerErrorData(error);
 
     switch (errorData.code) {
+      case ZOHO_INTERNAL_ERROR_CODE:
+        result = new ZohoInternalError(errorData, responseError);
+        break;
       case ZOHO_INVALID_AUTHORIZATION_ERROR_CODE:
         result = new ZohoInvalidAuthorizationError(errorData, responseError);
         break;
@@ -161,4 +177,18 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
   }
 
   return result;
+}
+
+/**
+ * Attempts to retrieve an ZohoServerErrorResponseDataError from the input.
+ *
+ * Non-200 errors returned by the Zoho API are returned as the object directly instead of as an ZohoServerErrorResponseData directly.
+ *
+ * @param errorResponseData
+ * @param responseError
+ * @returns
+ */
+export function tryFindZohoServerErrorData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZohoServerErrorResponseDataError> {
+  const error = (errorResponseData as ZohoServerErrorResponseData).error ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
+  return error;
 }
