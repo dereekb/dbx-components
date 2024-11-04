@@ -1,7 +1,7 @@
 import { addMilliseconds, addMinutes, minutesToHours, startOfDay, set as setDate, endOfDay, millisecondsToHours, millisecondsToMinutes, roundToNearestMinutes, differenceInHours, addHours } from 'date-fns';
 import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours, Minutes, MS_IN_MINUTE, Configurable, MS_IN_DAY, cachedGetter, Getter, LogicalDate } from '@dereekb/util';
 import { utcToZonedTime, format as formatDate } from 'date-fns-tz';
-import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs, requireCurrentTimezone } from './date';
+import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isSameDate, isStartOfDayInUTC, minutesToMs, requireCurrentTimezone, roundDateDownTo } from './date';
 import { type DateRange, type TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { dateFromLogicalDate } from './date.logical';
 
@@ -795,6 +795,8 @@ export interface SetOnDateWithTimezoneNormalFunctionInput {
   readonly copyMinutes?: Maybe<Boolean>;
   /**
    * Whether or not to round down to the nearest minute.
+   *
+   * Defaults to false.
    */
   readonly roundDownToMinute?: Maybe<boolean>;
 }
@@ -820,6 +822,21 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
     let baseDate: Date;
     let copyFrom: Maybe<Date>;
 
+    // set copyFrom
+    if (copyFromInput != null) {
+      copyFrom = dateFromLogicalDate(copyFromInput); // read the logical date and set initial value
+
+      // if the input matches the copyFrom values, then skip conversion
+      // this step is also crucial for returning the correct value for daylight savings ending changes
+      if (inputDate != null && isSameDate(copyFrom, inputDate) && copyHours !== false && copyMinutes !== false) {
+        return roundDownToMinute ? roundDateDownTo(inputDate, 'minute') : inputDate;
+      }
+
+      if (inputType !== 'base') {
+        copyFrom = copyFrom != null ? timezoneInstance.convertDate(copyFrom, 'base', inputType) : undefined;
+      }
+    }
+
     // set baseDate
     if (inputDate != null) {
       if (inputType === 'base') {
@@ -830,15 +847,6 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
       }
     } else {
       baseDate = new Date();
-    }
-
-    // set copyFrom
-    if (copyFromInput != null) {
-      copyFrom = dateFromLogicalDate(copyFromInput); // read the logical date and set initial value
-
-      if (inputType !== 'base') {
-        copyFrom = copyFrom != null ? timezoneInstance.convertDate(copyFrom, 'base', inputType) : undefined;
-      }
     }
 
     const hours: Maybe<number> = inputHours ?? (copyHours !== false ? copyFrom?.getUTCHours() : undefined);
@@ -860,8 +868,17 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
 
     const nextTime = nextDay + nextHours + nextMinutes + (roundDownToMinute ? 0 : secondsAndMilliseconds);
     const nextBaseDate = new Date(nextTime);
+    let result: Date = timezoneInstance.convertDate(nextBaseDate, outputType ?? inputType, 'base');
 
-    const result: Date = timezoneInstance.convertDate(nextBaseDate, outputType ?? inputType, 'base');
+    // one more test to limit the "range" of the change
+    // if it is over 1 day, then we can infer there is a timezone mismatch issue. It only occurs in one direction here, so we can safely
+    // infer that the real valid result can be derived by subtracting one day
+    const inputToResultDifferenceInHours = inputDate != null ? differenceInHours(result, inputDate) : 0;
+
+    if (inputToResultDifferenceInHours >= 24) {
+      result = addHours(result, -24);
+    }
+
     return result;
   };
   fn._timezoneInstance = timezoneInstance;

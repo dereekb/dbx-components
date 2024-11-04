@@ -12,8 +12,15 @@ beforeEach(() => {
 
 describe('getCurrentSystemOffsetInMs()', () => {
   it('should return the current system offset in milliseconds.', () => {
+    // will fail during specific daylight savings times of the year
     const expected = -minutesToMilliseconds(new Date().getTimezoneOffset());
-    expect(getCurrentSystemOffsetInMs(new Date())).toBe(expected);
+    const currentOffset = getCurrentSystemOffsetInMs(new Date());
+
+    if (Math.abs(expected) === 0 && Math.abs(currentOffset) === 0) {
+      // true, sometimes expected will be -0
+    } else {
+      expect(currentOffset).toBe(expected);
+    }
   });
 });
 
@@ -653,6 +660,7 @@ describe('setOnDateWithTimezoneNormalFunction()', () => {
       const result = systemInstance.setOnDate({
         date,
         copyFrom: date
+        // roundDownToMinute: false   // default behavior
       });
 
       expect(result).toBeSameSecondAs(expectedDate);
@@ -696,6 +704,7 @@ describe('copyHoursAndMinutesFromDateWithTimezoneNormal()', () => {
     describe('timezone changes', () => {
       describe('America/Chicago', () => {
         const timezone = 'America/Chicago';
+        const timezoneInstance = dateTimezoneUtcNormal({ timezone });
 
         describe('nov 3 2024', () => {
           // America/Denver goes from -5 to -6
@@ -703,7 +712,6 @@ describe('copyHoursAndMinutesFromDateWithTimezoneNormal()', () => {
           const expectedStartOfNextDay = new Date('2024-11-04T06:00:00.000Z');
 
           it('copying midnight to midnight should return the expected day', () => {
-            const timezoneInstance = dateTimezoneUtcNormal({ timezone });
             const startOfDayInTimezone = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
             expect(startOfDayInTimezone).toBeSameSecondAs(expectedStartOfDay);
 
@@ -711,8 +719,34 @@ describe('copyHoursAndMinutesFromDateWithTimezoneNormal()', () => {
             expect(result).toBeSameSecondAs(startOfDayInTimezone);
           });
 
+          it('copying 1AM to 1AM should return the expected day', () => {
+            const expectedOneAM = new Date('2024-11-03T06:00:00.000Z');
+            const oneAMInTimezone = addHours(timezoneInstance.startOfDayInTargetTimezone('2024-11-03'), 1);
+            expect(expectedOneAM).toBeSameSecondAs(oneAMInTimezone);
+
+            const result = copyHoursAndMinutesFromDateWithTimezoneNormal(expectedOneAM, oneAMInTimezone, timezone);
+            expect(result).toBeSameSecondAs(oneAMInTimezone);
+          });
+
+          it('copying 2AM to 2AM should return the expected day', () => {
+            const expectedTwoAM = new Date('2024-11-03T07:00:00.000Z');
+            const twoAMInTimezone = addHours(timezoneInstance.startOfDayInTargetTimezone('2024-11-03'), 2);
+            expect(expectedTwoAM).toBeSameSecondAs(twoAMInTimezone);
+
+            const result = copyHoursAndMinutesFromDateWithTimezoneNormal(expectedTwoAM, twoAMInTimezone, timezone);
+            expect(result).toBeSameSecondAs(twoAMInTimezone);
+          });
+
+          it('copying 3AM to 3AM should return the expected day', () => {
+            const expectedThreeAM = new Date('2024-11-03T08:00:00.000Z');
+            const threeAMInTimezone = addHours(timezoneInstance.startOfDayInTargetTimezone('2024-11-03'), 3);
+            expect(expectedThreeAM).toBeSameSecondAs(threeAMInTimezone);
+
+            const result = copyHoursAndMinutesFromDateWithTimezoneNormal(expectedThreeAM, threeAMInTimezone, timezone);
+            expect(result).toBeSameSecondAs(threeAMInTimezone);
+          });
+
           it('copying the midnight should return the midnight', () => {
-            const timezoneInstance = dateTimezoneUtcNormal({ timezone });
             const startOfDayInTimezone = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
 
             const result = copyHoursAndMinutesFromDateWithTimezoneNormal(startOfDayInTimezone, startOfDayInTimezone, timezone);
@@ -721,8 +755,6 @@ describe('copyHoursAndMinutesFromDateWithTimezoneNormal()', () => {
 
           it('copying the noon should return the noon', () => {
             const expectedNoonOfDay = new Date('2024-11-03T18:00:00.000Z');
-
-            const timezoneInstance = dateTimezoneUtcNormal({ timezone });
             const startOfDayInTimezone = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
 
             const result = copyHoursAndMinutesFromDateWithTimezoneNormal(startOfDayInTimezone, expectedNoonOfDay, timezone);

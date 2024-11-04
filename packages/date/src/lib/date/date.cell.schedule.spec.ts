@@ -445,8 +445,6 @@ describe('expandDateCellScheduleFactory()', () => {
               const schedule: DateCellSchedule = { w: '89' };
               const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
 
-              console.log({ timing, startOfTodayInTimezone, expandedDays });
-
               expect(timing.startsAt).toBeSameSecondAs(startOfTodayInTimezone);
               expect(timing.end).toBeSameSecondAs(addMinutes(startOfTodayInTimezone, timing.duration));
 
@@ -469,8 +467,6 @@ describe('expandDateCellScheduleFactory()', () => {
               it(`should return the first startsAt of the timing for ${timezone}`, () => {
                 const schedule: DateCellSchedule = { w: '89' };
                 const expandedDays = expandDateCellSchedule({ timing, schedule, maxDateCellsToReturn: 1 });
-
-                console.log({ timing, startOfTodayInTimezone: startOfNovember3rdInTimezone, expandedDays, startOfNovember3rdInUtz });
 
                 expect(timing.startsAt).toBeSameSecondAs(startOfNovember3rdInTimezone);
                 expect(timing.end).toBeSameSecondAs(addMinutes(startOfNovember3rdInTimezone, timing.duration));

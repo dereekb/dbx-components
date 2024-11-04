@@ -753,8 +753,6 @@ describe('calculateExpectedDateCellTimingDurationPair()', () => {
           const endOfDay = expectedEndOfSecondDay; // addHours(addMinutes(expectedStartsAt, duration), 24 + 1);    // add extra minute due to bug with addMinutes and expectedStartsAt
           expect(endOfDay).toBeSameSecondAs(expectedEndOfSecondDay);
 
-          console.log({ expectedStartOfSecondDay, expectedEndOfSecondDay, startsAt, endOfDay });
-
           const timing = dateCellTiming({ startsAt, duration }, 2, timezoneInstance); // two days
 
           expect(timing.start).toBeSameSecondAs(startOfToday);

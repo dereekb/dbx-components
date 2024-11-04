@@ -862,8 +862,6 @@ export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCel
       // if we're only replacing the startsAt, copy the hours/minutes from the target time
       const { start: currentStart, normalInstance } = dateCellTimingStartPair(timing);
       startsAt = copyHoursAndMinutesFromDateWithTimezoneNormal(currentStart, event.startsAt, normalInstance);
-
-      // console.log({ startsAt, currentStart, eventStartsAt: event.startsAt });
     }
   }
 

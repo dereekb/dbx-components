@@ -365,28 +365,12 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
   const safeMirror = isEqualDate(startsAtInUtc, startsAtInUtcInitial);
   let { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target', safeMirror);
 
-  /*
-  let startsAt = normalInstance.targetDateToBaseDate(startsAtInUtc);
-  let daylightSavingsOffset = 0;
-
-  if (!isEqualDate(startsAt, inputStartsAt) && isEqualDate(startsAtInUtc, startsAtInUtcInitial)) {
-    // in some cases where daylight savings ends (november 3rd), 
-    // the input startsAt time will not be properly recovered due to loss of timezone information
-    // (cannot determine whether or not to apply the -5 or -6 offset after daylight savings ends)
-    daylightSavingsOffset = differenceInHours(inputStartsAt, startsAt);
-    startsAt = addHours(startsAt, daylightSavingsOffset);
-
-    // startsAtInUtc = addHours(startsAtInUtc, 1);
-  }
-  */
-
-  const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24 + daylightSavingsOffset); // use addHours instead of addDays, since addDays will take into account a daylight savings change if the system time changes
-
   // calculate end to be the ending date/time of the final duration span
+  const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24 + daylightSavingsOffset); // use addHours instead of addDays, since addDays will take into account a daylight savings change if the system time changes
   const lastStartInTarget = normalInstance.targetDateToBaseDate(lastStartsAtInBaseTimezone);
   const end: Date = addMinutes(lastStartInTarget, duration);
 
-  console.log({ lastStartsAtInBaseTimezone, inputStartsAt, startsAtInUtcInitial, startsAtInUtc, startsAt, daylightSavingsOffset, start, lastStartInTarget, end });
+  // console.log({ lastStartsAtInBaseTimezone, inputStartsAt, startsAtInUtcInitial, startsAtInUtc, startsAt, daylightSavingsOffset, start, lastStartInTarget, end });
 
   return {
     start,
