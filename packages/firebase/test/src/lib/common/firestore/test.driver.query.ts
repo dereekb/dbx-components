@@ -34,9 +34,10 @@ import {
   FirestoreDocumentSnapshotDataPair,
   loadAllFirestoreDocumentSnapshotPairs,
   loadAllFirestoreDocumentSnapshot,
-  orderByDocumentId
+  orderByDocumentId,
+  filterRepeatCheckpointSnapshots
 } from '@dereekb/firebase';
-import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey } from '../mock';
+import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey, MockItemUser } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 import { DateRangeType } from '@dereekb/date';
 
@@ -229,6 +230,132 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
               expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
               expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+            });
+
+            describe('1 item exists', () => {
+              let onlyItem: MockItemUserDocument;
+
+              beforeEach(async () => {
+                onlyItem = allMockUserItems.pop() as MockItemUserDocument;
+                await Promise.all(allMockUserItems.map((x) => x.accessor.delete()));
+                allMockUserItems = [onlyItem];
+              });
+
+              it('should iterate the single item', async () => {
+                const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+                expect(allMockUserItems).toHaveLength(1);
+
+                const result = await iterateFirestoreDocumentSnapshotPairs({
+                  iterateSnapshotPair: async (x) => {
+                    expect(x.data).toBeDefined();
+                    expect(x.snapshot).toBeDefined();
+                    expect(x.document).toBeDefined();
+
+                    const key = x.document.key;
+
+                    if (mockUserItemsVisited.has(key)) {
+                      throw new Error('encountered repeat key');
+                    } else {
+                      mockUserItemsVisited.add(key);
+                    }
+                  },
+                  documentAccessor,
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  batchSize: null,
+                  limitPerCheckpoint: 200,
+                  totalSnapshotsLimit: 100,
+                  performTasksConfig: {
+                    maxParallelTasks: 20
+                  },
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(mockUserItemsVisited.size).toBe(allMockUserItems.length);
+                expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
+              });
+
+              // TODO: Case where a document was visited twice via iteration after it was updated. Assumed
+              // to occur when the updated item matches an "or" case or other value when using "in". Cannot
+              // reproduce at the moment.
+              /*
+              describe('scenario', () => {
+
+                it('should visit the item twice if it is updated and matches a different filter', async () => {
+                  const onlyItemValue = await onlyItem.snapshotData() as MockItemUser;
+                  const nameToChangeTo = `${onlyItemValue.name}-changed`;
+                  const namesToFilter = [onlyItemValue.name, nameToChangeTo];
+
+                  const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+                  const mockUserItemsVisited = new Set<MockItemUserKey>();
+                  let updates = 0;
+
+                  expect(allMockUserItems).toHaveLength(1);
+
+                  const result = await iterateFirestoreDocumentSnapshotPairs({
+                    iterateSnapshotPair: async (x) => {
+                      expect(x.data).toBeDefined();
+                      expect(x.snapshot).toBeDefined();
+                      expect(x.document).toBeDefined();
+
+                      await x.document.update({ name: nameToChangeTo });
+                      updates += 1;
+
+                      const key = x.document.key;
+                      mockUserItemsVisited.add(key);
+                    },
+                    documentAccessor,
+                    queryFactory: f.instance.mockItemUserCollectionGroup,
+                    batchSize: null,
+                    limitPerCheckpoint: 200,
+                    totalSnapshotsLimit: 100,
+                    performTasksConfig: {
+                      maxParallelTasks: 20
+                    },
+                    constraintsFactory: () => [where<MockItemUser>('name', 'in', namesToFilter)],
+                  });
+
+                  expect(updates).toBe(2);
+                  expect(result.totalSnapshotsVisited).toBe(2);
+                  expect(mockUserItemsVisited.size).toBe(1);
+                });
+
+              });
+              */
+            });
+
+            describe('0 items exists', () => {
+              beforeEach(async () => {
+                await Promise.all(allMockUserItems.map((x) => x.accessor.delete()));
+              });
+
+              it('should iterate no items', async () => {
+                const documentAccessor = f.instance.mockItemUserCollectionGroup.documentAccessor();
+                const mockUserItemsVisited = new Set<MockItemUserKey>();
+
+                const result = await iterateFirestoreDocumentSnapshotPairs({
+                  iterateSnapshotPair: async (x) => {
+                    expect(x.data).toBeDefined();
+                    expect(x.snapshot).toBeDefined();
+                    expect(x.document).toBeDefined();
+
+                    const key = x.document.key;
+
+                    if (mockUserItemsVisited.has(key)) {
+                      throw new Error('encountered repeat key');
+                    } else {
+                      mockUserItemsVisited.add(key);
+                    }
+                  },
+                  documentAccessor,
+                  queryFactory: f.instance.mockItemUserCollectionGroup,
+                  constraintsFactory: [] // no constraints
+                });
+
+                expect(result.totalSnapshotsVisited).toBe(0);
+                expect(mockUserItemsVisited.size).toBe(0);
+              });
             });
           });
 
