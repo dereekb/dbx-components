@@ -1,9 +1,9 @@
-import { ZohoRecruitSearchRecordsCriteriaEntry, ZohoRecruitSearchRecordsCriteriaTree, zohoRecruitSearchRecordsCriteriaString } from './recruit';
+import { ZohoRecruitSearchRecordsCriteriaEntry, ZohoRecruitSearchRecordsCriteriaEntryArray, ZohoRecruitSearchRecordsCriteriaTree, zohoRecruitSearchRecordsCriteriaString } from './recruit';
 
 describe('zohoRecruitSearchRecordsCriteriaString()', () => {
-  describe('entries array', () => {
+  describe('entry array', () => {
     it('should convert an array of entries', () => {
-      const tree: ZohoRecruitSearchRecordsCriteriaEntry[] = [
+      const tree: ZohoRecruitSearchRecordsCriteriaEntryArray = [
         { field: 'testA', filter: 'contains', value: 'a' },
         { field: 'testB', filter: 'contains', value: 'b' }
       ];
@@ -15,8 +15,13 @@ describe('zohoRecruitSearchRecordsCriteriaString()', () => {
 
   describe('trees', () => {
     it('should convert a tree of AND values', () => {
+      const entries: ZohoRecruitSearchRecordsCriteriaEntryArray = [
+        { field: 'testA', filter: 'contains', value: 'a' },
+        { field: 'testB', filter: 'contains', value: 'b' }
+      ];
+
       const tree: ZohoRecruitSearchRecordsCriteriaTree = {
-        and: []
+        and: [entries]
       };
 
       const result = zohoRecruitSearchRecordsCriteriaString(tree);
