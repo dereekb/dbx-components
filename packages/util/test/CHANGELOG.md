@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [10.2.0](https://github.com/dereekb/dbx-components/compare/v10.1.30-dev...v10.2.0) (2024-11-07)
+
+
+### Features
+
+* zoho recruit ([#26](https://github.com/dereekb/dbx-components/issues/26)) ([8e028fd](https://github.com/dereekb/dbx-components/commit/8e028fd6fc57fb276ce04d37ce010fb5a42d4157))
+
+
+
 ## [10.1.30](https://github.com/dereekb/dbx-components/compare/v10.1.29-dev...v10.1.30) (2024-10-23)
 
 

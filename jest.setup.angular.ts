@@ -8,6 +8,14 @@ import 'jest-preset-angular/setup-jest';
 import 'reflect-metadata';
 
 /**
+ * https://github.com/jsdom/jsdom/issues/3363
+ *
+ * Fix for lack of structure clone
+ */
+import structuredClone from '@ungap/structured-clone';
+(global as any).structuredClone = structuredClone;
+
+/**
  * Must add TextEncoder/TextDecoder to the globals since it is not available in JSDOM by default.
  *
  * https://github.com/firebase/firebase-js-sdk/issues/7845

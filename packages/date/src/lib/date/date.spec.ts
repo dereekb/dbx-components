@@ -1,7 +1,7 @@
-import { expandDaysForDateRange, isSameDateDay } from '@dereekb/date';
-import { Day, isISO8601DateString, isUTCDateString } from '@dereekb/util';
-import { parseISO, addMinutes, addDays, endOfWeek, startOfWeek } from 'date-fns';
-import { parseJsDateString, readDaysOfWeek } from './date';
+import { dateTimezoneUtcNormal, expandDaysForDateRange, isSameDateDay } from '@dereekb/date';
+import { Day, MS_IN_MINUTE, MS_IN_SECOND, isISO8601DateString, isUTCDateString } from '@dereekb/util';
+import { parseISO, addMinutes, addDays, endOfWeek, startOfWeek, set as setDateValues, addHours } from 'date-fns';
+import { parseJsDateString, readDaysOfWeek, requireCurrentTimezone, roundDateToDate, roundDateToUnixDateTimeNumber } from './date';
 
 describe('isSameDateDay()', () => {
   const dateAString = '2020-04-30T00:00:00.000';
@@ -100,5 +100,114 @@ describe('readDaysOfWeek()', () => {
     expect(result).toContain(Day.WEDNESDAY);
     expect(result).toContain(Day.THURSDAY);
     expect(result).toContain(Day.FRIDAY);
+  });
+});
+
+describe('roundDateToUnixDateTimeNumber()', () => {
+  describe('floor', () => {
+    it('should round the date down to the hour', () => {
+      const date = new Date('2024-01-01T01:05:07.123Z');
+      const expectedDate = new Date('2024-01-01T01:00:00.000Z');
+
+      const result = roundDateToDate(date, 'hour', 'floor');
+      expect(result).toBeSameSecondAs(expectedDate);
+    });
+
+    it('should round the date down to the minute', () => {
+      const date = new Date('2024-01-01T01:05:07.123Z');
+      const expectedDate = new Date('2024-01-01T01:05:00.000Z');
+
+      const result = roundDateToDate(date, 'minute', 'floor');
+      expect(result).toBeSameSecondAs(expectedDate);
+    });
+
+    it('should round the date down to the second', () => {
+      const date = new Date('2024-01-01T01:05:07.123Z');
+      const expectedDate = new Date('2024-01-01T01:05:07.000Z');
+
+      const result = roundDateToDate(date, 'second', 'floor');
+      expect(result).toBeSameSecondAs(expectedDate);
+    });
+  });
+
+  describe('ceil', () => {
+    it('should round the date up to the hour', () => {
+      const date = new Date('2024-01-01T01:05:07.123Z');
+      const expectedDate = new Date('2024-01-01T02:00:00.000Z');
+
+      const result = roundDateToDate(date, 'hour', 'ceil');
+      expect(result).toBeSameSecondAs(expectedDate);
+    });
+
+    it('should round the date up to the minute', () => {
+      const date = new Date('2024-01-01T01:05:07.123Z');
+      const expectedDate = new Date('2024-01-01T01:06:00.000Z');
+
+      const result = roundDateToDate(date, 'minute', 'ceil');
+      expect(result).toBeSameSecondAs(expectedDate);
+    });
+
+    it('should round the date up to the second', () => {
+      const date = new Date('2024-01-01T01:05:07.123Z');
+      const expectedDate = new Date('2024-01-01T01:05:08.000Z');
+
+      const result = roundDateToDate(date, 'second', 'ceil');
+      expect(result).toBeSameSecondAs(expectedDate);
+    });
+  });
+
+  describe('scenario', () => {
+    describe('daylight savings', () => {
+      const timezone = requireCurrentTimezone();
+      const timezoneInstance = dateTimezoneUtcNormal(timezone);
+
+      if (timezoneInstance.targetTimezoneExperiencesDaylightSavings(new Date('2024-11-03T00:00:00.000Z'))) {
+        const midnight = timezoneInstance.startOfDayInTargetTimezone('2024-11-03');
+
+        const timezoneFirstHourBeforeShift = addHours(midnight, 1); // 1AM
+        const timezoneShiftTime = addHours(midnight, 2); // 2AM, second 1AM after rollback
+
+        describe('nov 3 2024', () => {
+          // America/Chicago
+
+          describe('date-fns: set()', () => {
+            it('should erraneously roll the hour back', () => {
+              const result = setDateValues(timezoneFirstHourBeforeShift, {
+                minutes: 0
+              });
+
+              expect(result).toBeSameSecondAs(timezoneShiftTime);
+            });
+          });
+
+          describe('Date.setMinute(0)', () => {
+            it('should erraneously roll the hour back', () => {
+              const result = new Date(new Date(timezoneFirstHourBeforeShift).setMinutes(0));
+              expect(result).toBeSameSecondAs(timezoneShiftTime);
+            });
+          });
+
+          describe('function', () => {
+            it('should properly round down the hour without losing the timezone shift', () => {
+              const result = roundDateToUnixDateTimeNumber(new Date(timezoneShiftTime.getTime() + MS_IN_MINUTE), 'hour', 'floor');
+              expect(new Date(result)).toBeSameSecondAs(timezoneShiftTime);
+            });
+
+            it('should properly round down the minute without losing the timezone shift', () => {
+              const result = roundDateToUnixDateTimeNumber(new Date(timezoneShiftTime.getTime() + MS_IN_SECOND), 'minute', 'floor');
+              expect(new Date(result)).toBeSameSecondAs(timezoneShiftTime);
+            });
+
+            it('should properly round down the second without losing the timezone shift', () => {
+              const oneHundredMs = 100;
+              const result = roundDateToUnixDateTimeNumber(new Date(timezoneShiftTime.getTime() + oneHundredMs), 'second', 'floor');
+              expect(new Date(result)).toBeSameSecondAs(timezoneShiftTime);
+            });
+          });
+        });
+      } else {
+        it('this timezone has no daylight savings effect', () => {});
+      }
+    });
   });
 });

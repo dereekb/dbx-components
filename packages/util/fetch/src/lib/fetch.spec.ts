@@ -1,6 +1,7 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { type FetchService, mergeRequestHeaders, mergeRequestInits } from './fetch';
 import { nodeFetchService } from './provider';
+import { FetchRequestFactoryError } from './error';
 
 // TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.
 
@@ -18,6 +19,103 @@ describe('fetchService()', () => {
 
 describe('fetchRequestFactory()', () => {
   describe('function', () => {
+    describe('with baseRequest', () => {
+      const baseUrl = 'https://components.dereekb.com/api/';
+
+      describe('as value', () => {
+        const factory = testFetch.fetchRequestFactory({
+          baseUrl,
+          baseRequest: {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer token'
+            }
+          }
+        });
+
+        it('should use the base request', async () => {
+          const result = await factory('test');
+          const authHeader = result.headers.get('Authorization');
+          expect(authHeader).toBe('Bearer token');
+        });
+      });
+
+      describe('as getter', () => {
+        const factory = testFetch.fetchRequestFactory({
+          baseUrl,
+          baseRequest: () => ({
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer token'
+            }
+          })
+        });
+
+        it('should use the base request', async () => {
+          const result = await factory('test');
+          const authHeader = result.headers.get('Authorization');
+          expect(authHeader).toBe('Bearer token');
+        });
+      });
+
+      describe('as async getter', () => {
+        const factory = testFetch.fetchRequestFactory({
+          baseUrl,
+          baseRequest: async () => ({
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer token'
+            }
+          })
+        });
+
+        it('should use the base request', async () => {
+          const result = await factory('test');
+          const authHeader = result.headers.get('Authorization');
+          expect(authHeader).toBe('Bearer token');
+        });
+      });
+
+      describe('async getter with error', () => {
+        describe('other error', () => {
+          const factory = testFetch.fetchRequestFactory({
+            baseUrl,
+            baseRequest: async () => {
+              throw new Error('test error');
+            }
+          });
+
+          it('should throw a FetchRequestFactoryError', async () => {
+            try {
+              await factory('test');
+            } catch (e) {
+              expect(e instanceof FetchRequestFactoryError).toBe(true);
+            }
+          });
+        });
+
+        describe('fetch request error', () => {
+          const testError = new FetchRequestFactoryError('test error');
+
+          const factory = testFetch.fetchRequestFactory({
+            baseUrl,
+            baseRequest: async () => {
+              throw testError;
+            }
+          });
+
+          it('should pass through any thrown FetchRequestFactoryError', async () => {
+            try {
+              await factory('test');
+            } catch (e) {
+              expect(e instanceof FetchRequestFactoryError).toBe(true);
+              expect(e).toBe(testError);
+            }
+          });
+        });
+      });
+    });
+
     describe('with baseUrl', () => {
       describe('invalid', () => {
         itShouldFail('when creating a factory with an invalid base url', () => {
@@ -41,8 +139,8 @@ describe('fetchRequestFactory()', () => {
             });
 
             describe('url input as string', () => {
-              it('should append the base url with the path to the request.', () => {
-                const result = factory('test');
+              it('should append the base url with the path to the request.', async () => {
+                const result = await factory('test');
                 expect(result.url).toBe(`${baseUrl}test`);
               });
             });
@@ -56,8 +154,8 @@ describe('fetchRequestFactory()', () => {
             });
 
             describe('url input as string', () => {
-              it('should append the base url with the path to the request.', () => {
-                const result = factory('test');
+              it('should append the base url with the path to the request.', async () => {
+                const result = await factory('test');
                 expect(result.url).toBe(`${baseUrl}/test`);
               });
             });
@@ -72,29 +170,29 @@ describe('fetchRequestFactory()', () => {
           });
 
           describe('url input as string', () => {
-            it('should retain the path of an input request if it begins with http(s).', () => {
+            it('should retain the path of an input request if it begins with http(s).', async () => {
               const expectedUrl = 'https://google.com/';
-              const request = testFetch.makeRequest(expectedUrl);
-              const result = factory(request);
+              const request = await testFetch.makeRequest(expectedUrl);
+              const result = await factory(request);
               expect(result.url).toBe(expectedUrl);
             });
 
-            it('should append the base url to the request.', () => {
-              const result = factory('test');
+            it('should append the base url to the request.', async () => {
+              const result = await factory('test');
               expect(result.url).toBe('https://components.dereekb.com/test');
             });
 
-            it('should append the base url to the request if it has a front slash.', () => {
-              const result = factory('/test');
+            it('should append the base url to the request if it has a front slash.', async () => {
+              const result = await factory('/test');
               expect(result.url).toBe('https://components.dereekb.com/test');
             });
           });
 
           describe('url input as URL', () => {
-            it('should use the URL as is, and ignore the baseUrl.', () => {
+            it('should use the URL as is, and ignore the baseUrl.', async () => {
               const expectedUrl = 'https://google.com/';
               const request = new URL(expectedUrl);
-              const result = factory(request);
+              const result = await factory(request);
               expect(result.url).toBe(expectedUrl);
             });
           });

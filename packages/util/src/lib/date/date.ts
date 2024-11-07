@@ -7,6 +7,11 @@ import { type Maybe } from '../value/maybe.type';
 export type DateRelativeDirection = 'past' | 'future';
 
 /**
+ * Hour, minute, or second as a string.
+ */
+export type DateHourMinuteOrSecond = 'hour' | 'minute' | 'second';
+
+/**
  * A valid ISO8601 formatted date string.
  *
  * I.E. "2020-04-30T00:00:00.000Z"
@@ -225,6 +230,8 @@ export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO
 
 /**
  * Time in seconds (instead of ms) since the epoch.
+ *
+ * Returned by Date.getTime().
  */
 export type UnixDateTimeNumber = number;
 
@@ -301,4 +308,15 @@ export type DateRelativeState = DateRelativeDirection | 'present';
  */
 export function isDate(value: unknown): value is Date {
   return value instanceof Date || (typeof value === 'object' && Object.prototype.toString.call(value) === '[object Date]');
+}
+
+/**
+ * Returns true if the two input dates are equal.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function isEqualDate(a: Date, b: Date): boolean {
+  return a.getTime() === b.getTime();
 }

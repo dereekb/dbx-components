@@ -1,6 +1,9 @@
 import { type PageNumber, type Page } from './page';
 
 // MARK: PageCalculator
+/**
+ * @deprecated
+ */
 export interface PageCalculatorConfig {
   pageSize: number;
   limitKey?: string;
@@ -8,7 +11,9 @@ export interface PageCalculatorConfig {
 }
 
 /**
- * Page calcuaktion context for calculating the amount to skip/etc.
+ * Page calculation context for calculating the amount to skip/etc.
+ *
+ * @deprecated
  */
 export class PageCalculator {
   public readonly pageSize: number;

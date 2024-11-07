@@ -1,13 +1,95 @@
-import { isEqual } from 'lodash';
 import { type FieldOfType } from '../key';
 import { type EqualityComparatorFunction } from '../value/comparator';
 import { type Building } from '../value/build';
+import { isDate, isEqualDate } from '../date';
+import { isIterable } from '../iterable';
+import { setsAreEquivalent } from '../set/set';
 
 /**
  * Performs a deep comparison to check if all values on the input filters are equal.
+ *
+ * Recursively compares Arrays, Objects, Maps, Sets, Primatives, and Dates.
  */
 export function areEqualPOJOValues<F>(a: F, b: F): boolean {
-  return isEqual(a, b);
+  // check self
+  if (a === b) {
+    return true;
+  }
+
+  // check one value is nullish and other is not
+  if ((a == null || b == null) && (a || b)) {
+    return false;
+  }
+
+  // object check
+  if (typeof a === 'object') {
+    // check if they are arrays
+    if (isIterable(a, false)) {
+      if (Array.isArray(a)) {
+        if (a.length !== (b as any[]).length) {
+          return false;
+        }
+
+        const firstInequalityIndex = a.findIndex((aValue, i) => {
+          const bValue = (b as any[])[i];
+          return !areEqualPOJOValues(aValue, bValue);
+        });
+
+        return firstInequalityIndex === -1;
+      } else if (a instanceof Set) {
+        return setsAreEquivalent(a, b as Set<any>);
+      } else if (a instanceof Map) {
+        const bMap = b as Map<any, any>;
+
+        if (a.size !== bMap.size) {
+          return false;
+        }
+
+        const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
+          const bValue = bMap.get(key);
+          return !areEqualPOJOValues(aValue, bValue);
+        });
+
+        return firstInequalityIndex === -1;
+      }
+    } else if (typeof b === 'object') {
+      // check contructors/types
+      const firstType = a?.constructor.name;
+      const secondType = b?.constructor.name;
+
+      if (firstType !== secondType) {
+        return false; // false if not the same type
+      }
+
+      // check Date comparison
+      if (isDate(a)) {
+        return isEqualDate(a, b as Date);
+      }
+
+      // check object comparison via keys
+      const aObject = a as Record<string, any>;
+      const bObject = b as Record<string, any>;
+
+      const aKeys = Object.keys(aObject);
+      const bKeys = Object.keys(bObject);
+
+      // compare keys
+      if (aKeys.length === bKeys.length) {
+        const firstInequalityIndex = aKeys.findIndex((key) => {
+          const aKeyValue = aObject[key];
+          const bKeyValue = bObject[key];
+          return !areEqualPOJOValues(aKeyValue, bKeyValue);
+        });
+
+        if (firstInequalityIndex === -1) {
+          return true; // is equal if no non-matching key/value pair is found
+        }
+      }
+    }
+  }
+
+  // still not equal if down here
+  return false;
 }
 
 // MARK: ObjectFieldEqualityChecker

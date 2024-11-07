@@ -22,10 +22,15 @@
       "inputs": ["production", "^production"]
     },
     "run-all-tests": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"]
     },
     "test": {
       "dependsOn": ["build"],
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"]
+    },
+    "test-skip-build": {
+      "dependsOn": [],
       "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"]
     },
     "publish": {

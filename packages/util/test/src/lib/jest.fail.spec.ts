@@ -1,4 +1,7 @@
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, JestDoneCallback } from './jest.fail';
+import { BaseError } from 'make-error';
+import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, JestDoneCallback, JestExpeectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
+
+class TestError extends BaseError {}
 
 describe('expectFail', () => {
   describe('sync', () => {
@@ -42,6 +45,75 @@ describe('expectFail', () => {
       } catch (e) {
         expect(e).toBeInstanceOf(JestExpectedFailError);
       }
+    });
+  });
+
+  describe('assertFailType', () => {
+    it('should resolve successfully the assertion returns nullish.', async () => {
+      try {
+        await expectFail(
+          async () => {
+            throw new Error('success');
+          },
+          () => null
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(JestExpectedFailError);
+      }
+    });
+
+    it('should resolve successfully the assertion returns true.', async () => {
+      try {
+        await expectFail(
+          async () => {
+            throw new Error('success');
+          },
+          () => true
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(JestExpectedFailError);
+      }
+    });
+
+    it('should throw a JestExpeectedErrorOfSpecificTypeError if the assertion returns false.', async () => {
+      try {
+        await expectFail(
+          async () => {
+            throw new Error('success');
+          },
+          () => false
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(JestExpeectedErrorOfSpecificTypeError);
+      }
+    });
+
+    it('should throw a custom error if the error assertion throws an error.', async () => {
+      try {
+        await expectFail(
+          async () => {
+            throw new Error('success');
+          },
+          (e) => {
+            throw new Error('error'); // throw custom error
+          }
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect((e as Error).message).toBe('error');
+      }
+    });
+
+    describe('jestExpectFailAssertionFunction()', () => {
+      it('should resolve successfully if the error is of the expected type', async () => {
+        try {
+          await expectFail(async () => {
+            throw new Error('success');
+          }, jestExpectFailAssertErrorType(Error));
+        } catch (e) {
+          expect(e).toBeInstanceOf(JestExpectedFailError);
+        }
+      });
     });
   });
 });

@@ -50,6 +50,13 @@ export function firstAndLastCharacterOccurrence(input: string, find: string): Fi
 }
 
 /**
+ * Returns true if the input string contains the character (or string) to find.
+ */
+export function stringContains(input: string, find: string): boolean {
+  return input.indexOf(find) !== -1;
+}
+
+/**
  * Function that replaces the last character with the configured replacement string if it is any of the configured values.
  */
 export type ReplaceLastCharacterIfIsFunction = (input: string) => string;

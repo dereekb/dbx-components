@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-form",
-  "version": "10.1.30",
+  "version": "10.2.0",
   "peerDependencies": {
     "@angular/common": "^16.2.12",
     "@angular/core": "^16.2.12",
@@ -22,7 +22,6 @@
     "ngx-editor": "^16.0.0",
     "ngx-mat-intl-tel-input": "^5.0.0",
     "@dereekb/model": "*",
-    "lodash": "4.17.21",
     "@angular/platform-browser": "^16.2.12"
   },
   "dependencies": {},

@@ -23,6 +23,12 @@ export function fetchJsonBodyString(body: FetchJsonBody | undefined): string | u
 export interface FetchJsonInput extends Omit<RequestInit, 'body'> {
   method: FetchMethod;
   body?: FetchJsonBody | undefined;
+  /**
+   * Optional intercept function to intercept/transform the response.
+   *
+   * Does not override any other configured interceptor and occurs after those configured interceptors.
+   */
+  interceptResponse?: FetchJsonInterceptJsonResponseFunction;
 }
 
 export type FetchJsonInputMapFunction = MapSameFunction<FetchJsonInput>;
@@ -36,6 +42,8 @@ export type FetchJsonWithInputFunction = <R>(url: FetchURLInput, input: FetchJso
  */
 export type FetchJsonFunction = FetchJsonGetFunction & FetchJsonMethodAndBodyFunction & FetchJsonWithInputFunction;
 
+export type FetchJsonInterceptJsonResponseFunction = (json: any, response: Response) => any;
+
 export type HandleFetchJsonParseErrorFunction = (response: Response) => string | null | never;
 
 export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => {
@@ -45,7 +53,16 @@ export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunct
 export const returnNullHandleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => null;
 
 export interface FetchJsonFunctionConfig extends FetchJsonRequestInitFunctionConfig {
-  handleFetchJsonParseErrorFunction?: HandleFetchJsonParseErrorFunction;
+  /**
+   * Optional intercept function to transform all response JSON before returning the result.
+   *
+   * Useful for cases where an API returns errors with a 200 response.
+   */
+  readonly interceptJsonResponse?: FetchJsonInterceptJsonResponseFunction;
+  /**
+   * Optional function to handle JSON parsing errors.
+   */
+  readonly handleFetchJsonParseErrorFunction?: HandleFetchJsonParseErrorFunction;
 }
 
 /**
@@ -67,14 +84,21 @@ export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJso
     handleFetchJsonParseErrorFunction: config.handleFetchJsonParseErrorFunction ?? throwJsonResponseParseErrorFunction
   };
 
-  const { handleFetchJsonParseErrorFunction } = config;
+  const { handleFetchJsonParseErrorFunction, interceptJsonResponse } = config;
   const configuredFetchJsonRequestInit = fetchJsonRequestInitFunction(config);
 
   return (url: FetchURLInput, methodOrInput?: string | FetchJsonInput, body?: FetchJsonBody) => {
     const requestUrl = fetchURL(url);
     const requestInit = configuredFetchJsonRequestInit(methodOrInput, body);
-    const response = fetch(requestUrl, requestInit);
-    return response.then((x) => x.json().catch(handleFetchJsonParseErrorFunction));
+
+    const inputIntercept = typeof methodOrInput === 'object' ? methodOrInput.interceptResponse : undefined;
+    const responsePromise = fetch(requestUrl, requestInit);
+
+    return responsePromise.then((response) => {
+      const jsonPromise = response.json().catch(handleFetchJsonParseErrorFunction);
+      const interceptedJsonResponsePromise = interceptJsonResponse ? jsonPromise.then((json) => interceptJsonResponse(json, response)) : jsonPromise;
+      return inputIntercept ? interceptedJsonResponsePromise.then((result) => inputIntercept(result, response)) : interceptedJsonResponsePromise;
+    });
   };
 }
 

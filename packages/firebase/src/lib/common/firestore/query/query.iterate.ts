@@ -1,4 +1,4 @@
-import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds, mapIdentityFunction, type AllowValueOnceFilter, allowValueOnceFilter } from '@dereekb/util';
+import { type GetterOrValue, type PromiseOrValue, type IndexRef, type Maybe, asGetter, lastValue, type PerformAsyncTasksConfig, performAsyncTasks, batch, type IndexNumber, type PerformAsyncTasksResult, type FactoryWithRequiredInput, performTasksFromFactoryInParallelFunction, getValueFromGetter, type Milliseconds, mapIdentityFunction, type AllowValueOnceFilter, allowValueOnceFilter, type ReadKeyFunction } from '@dereekb/util';
 import { type FirestoreDocument, type LimitedFirestoreDocumentAccessor, firestoreDocumentSnapshotPairsLoaderInstance, type FirestoreDocumentSnapshotDataPairWithData } from '../accessor';
 import { type QueryDocumentSnapshot, type QuerySnapshot, type DocumentSnapshot } from '../types';
 import { type FirestoreQueryConstraint, startAfter, limit } from './constraint';
@@ -263,7 +263,7 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    * @param snapshot
    * @returns
    */
-  filterCheckpointSnapshots?(snapshot: QueryDocumentSnapshot<T>[]): PromiseOrValue<QueryDocumentSnapshot<T>[]>;
+  filterCheckpointSnapshots?: IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T>;
   /**
    * The iterate function per each snapshot.
    */
@@ -272,6 +272,26 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
    * (Optional) Called at the end of each checkpoint.
    */
   useCheckpointResult?(checkpointResults: IterateFirestoreDocumentSnapshotCheckpointsIterationResult<T, R>): PromiseOrValue<void>;
+}
+
+/**
+ * Filter function used to filter out snapshots.
+ *
+ * @param snapshot
+ * @returns
+ */
+export type IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T> = (snapshot: QueryDocumentSnapshot<T>[]) => PromiseOrValue<QueryDocumentSnapshot<T>[]>;
+
+/**
+ * Creates a IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction that filters out any repeat documents.
+ *
+ * Repeat documents can occur in cases where the document is updated and the query matches it again for a different reason.
+ *
+ * @param readKeyFunction
+ */
+export function filterRepeatCheckpointSnapshots<T>(readKeyFunction: ReadKeyFunction<QueryDocumentSnapshot<T>> = (x) => x.id): IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T> {
+  const allowOnceFilter = allowValueOnceFilter(readKeyFunction);
+  return async (snapshots: QueryDocumentSnapshot<T>[]) => snapshots.filter(allowOnceFilter);
 }
 
 export interface IterateFirestoreDocumentSnapshotCheckpointsIterationResult<T, R> extends IndexRef {

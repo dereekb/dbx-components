@@ -1,8 +1,9 @@
-import { addMilliseconds, addMinutes, minutesToHours, startOfDay, set as setDate, endOfDay } from 'date-fns';
-import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours } from '@dereekb/util';
+import { addMilliseconds, startOfDay, endOfDay, millisecondsToHours, millisecondsToMinutes, differenceInHours, addHours } from 'date-fns';
+import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours, type Minutes, MS_IN_MINUTE, MS_IN_DAY, cachedGetter, type Getter, type LogicalDate } from '@dereekb/util';
 import { utcToZonedTime, format as formatDate } from 'date-fns-tz';
-import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isStartOfDayInUTC, minutesToMs } from './date';
+import { guessCurrentTimezone, isSameDate, isStartOfDayInUTC, requireCurrentTimezone, roundDateDownTo } from './date';
 import { type DateRange, type TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
+import { dateFromLogicalDate } from './date.logical';
 
 /**
  * Inherited from the RRule library where RRule only deals with UTC date/times, dates going into it must always be in UTC.
@@ -93,8 +94,9 @@ export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConf
  * @param date Date is required to get the correct offset for the given date.
  * @returns
  */
-export function getCurrentSystemOffsetInMs(date: Date): number {
-  return minutesToMs(getCurrentSystemOffsetInMinutes(date));
+export function getCurrentSystemOffsetInMs(date: Date): Milliseconds {
+  const systemTimezone = requireCurrentTimezone();
+  return calculateTimezoneOffset(systemTimezone, date);
 }
 
 /**
@@ -103,22 +105,27 @@ export function getCurrentSystemOffsetInMs(date: Date): number {
  * @param date
  * @returns
  */
-export function getCurrentSystemOffsetInHours(date: Date): number {
-  return minutesToHours(getCurrentSystemOffsetInMinutes(date));
+export function getCurrentSystemOffsetInHours(date: Date): Hours {
+  return millisecondsToHours(getCurrentSystemOffsetInMs(date));
 }
 
 /**
- * Equivalent to -date.getTimezoneOffset().
+ * Returns the system offset for the input date, in minutes.
+ *
+ * The offset corresponds positively with the UTC offset, so UTC-6 is negative 6 hours, in milliseconds.
  *
  * @param date
  * @returns
  */
-export function getCurrentSystemOffsetInMinutes(date: Date): number {
-  return -date.getTimezoneOffset();
+export function getCurrentSystemOffsetInMinutes(date: Date): Minutes {
+  return millisecondsToMinutes(getCurrentSystemOffsetInMs(date));
 }
 
 /**
  * Returns the timezone offset in milliseconds.
+ *
+ * This is preferential to Date.getTimezoneOffset() or date-fns's getTimezoneOffset() as those are currently wrong for the first
+ * two hours when daylight savings changes.
  *
  * I.E. GMT-5 = -5 hours (in milliseconds)
  *
@@ -126,7 +133,7 @@ export function getCurrentSystemOffsetInMinutes(date: Date): number {
  * @param date
  * @returns
  */
-export function calculateTimezoneOffset(timezone: TimezoneString, date: Date) {
+export function calculateTimezoneOffset(timezone: TimezoneString, date: Date): Milliseconds {
   /*
   // BUG: There is a bug with getTimezoneOffset where the offset is not calculated properly for the first 2 hours after the DST change.
   // https://github.com/marnusw/date-fns-tz/issues/227
@@ -134,13 +141,22 @@ export function calculateTimezoneOffset(timezone: TimezoneString, date: Date) {
   const tzOffset = getTimezoneOffset(timezone, date);
   */
 
-  // WORKAROUND: This is the current workaround. Performance hit seems negligible for all UI use cases.
-  const zoneDate = utcToZonedTime(date, timezone);
+  /*
+   * WORKAROUND: This is the current workaround. Performance hit seems negligible for all UI use cases.
+   */
+
+  // inputTimeDate.setSeconds(0);         // NOTE: setting seconds/milliseconds during the daylight savings epoch will also remove an hour
+  // inputTimeDate.setMilliseconds(0);    // do not clear seconds in this way.
+
+  const inputTimeUnrounded = date.getTime();
+  const secondsAndMs = inputTimeUnrounded % MS_IN_MINUTE; // determine the number of seconds and milliseconds (prepare to round to nearest minute)
+  const inputTime = inputTimeUnrounded - secondsAndMs; // remove seconds and ms as it will throw off the final tzOffset
+
+  const zoneDate = utcToZonedTime(inputTime, timezone);
   const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm'); // ignore seconds, etc.
   const zoneDateTime = new Date(zoneDateStr + 'Z').getTime();
-  const inputTime = setDate(date, { seconds: 0, milliseconds: 0 }).getTime();
-  const tzOffset = zoneDateTime - inputTime;
 
+  const tzOffset = zoneDateTime - inputTime;
   return tzOffset;
 }
 
@@ -262,6 +278,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   }
 
   private readonly _getOffset: DateTimezoneOffsetFunction;
+  private readonly _setOnDate: Getter<SetOnDateWithTimezoneNormalFunction> = cachedGetter(() => setOnDateWithTimezoneNormalFunction(this));
 
   constructor(config: DateTimezoneUtcNormalInstanceInput) {
     let getOffsetInMsFn: Maybe<GetOffsetForDateFunction>;
@@ -339,11 +356,46 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     this.hasConversion = hasConversion;
   }
 
-  private _computeOffsetDate(date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget) {
+  convertDate(date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget) {
     return addMilliseconds(date, this._getOffset(date, from, to));
   }
 
+  /**
+   * A "safer" conversion that will return a "mirrored" offset. Only functional with a "to" UTC value.
+   *
+   * This is required in cases where "reverse" offset will be used and must be consistent so they reverse in both directions the same amount compared to the base.
+   *
+   * For example, when daylight savings changed on November 3, 2024 the offset returned was 5 but to get back to the original an offset of 6 was required.
+   * This is where some contextual data was not being used. This function uses that contextual data to make sure the reverse will be consistent.
+   *
+   * @param baseDate The base date. Should have been derived from the originalContextDate using the convertDate() function
+   * @param originalContextDate Original date used to derive the baseDate.
+   * @param fromOrTo the "type" of date the originalContextDate is
+   */
+  safeMirroredConvertDate(baseDate: BaseDateAsUTC, originalContextDate: Date, contextType: DateTimezoneConversionTarget, safeConvert = true): { date: Date; daylightSavingsOffset: number } {
+    if (contextType === 'base') {
+      return { date: baseDate, daylightSavingsOffset: 0 };
+    } else {
+      const reverseConversion = this.convertDate(baseDate, contextType, 'base');
+
+      // in some cases where daylight savings ends (november 3rd),
+      // the input startsAt time will not be properly recovered due to loss of timezone information
+      // (cannot determine whether or not to apply the -5 or -6 offset after daylight savings ends)
+      const daylightSavingsOffset = safeConvert ? differenceInHours(originalContextDate, reverseConversion) : 0;
+      const date = daylightSavingsOffset ? addHours(reverseConversion, daylightSavingsOffset) : reverseConversion;
+
+      return {
+        date,
+        daylightSavingsOffset
+      };
+    }
+  }
+
   // MARK: DateTimezoneBaseDateConverter
+  get setOnDate() {
+    return this._setOnDate();
+  }
+
   getCurrentOffset(date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget): number {
     return this._getOffset(date, from, to);
   }
@@ -361,27 +413,27 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   }
 
   targetDateToBaseDate(date: Date): Date {
-    return this._computeOffsetDate(date, 'target', 'base');
+    return this.convertDate(date, 'target', 'base');
   }
 
   baseDateToTargetDate(date: Date): Date {
-    return this._computeOffsetDate(date, 'base', 'target');
+    return this.convertDate(date, 'base', 'target');
   }
 
   baseDateToSystemDate(date: Date): Date {
-    return this._computeOffsetDate(date, 'base', 'system');
+    return this.convertDate(date, 'base', 'system');
   }
 
   systemDateToBaseDate(date: Date): Date {
-    return this._computeOffsetDate(date, 'system', 'base');
+    return this.convertDate(date, 'system', 'base');
   }
 
   targetDateToSystemDate(date: Date): Date {
-    return this._computeOffsetDate(date, 'target', 'system');
+    return this.convertDate(date, 'target', 'system');
   }
 
   systemDateToTargetDate(date: Date): Date {
-    return this._computeOffsetDate(date, 'system', 'target');
+    return this.convertDate(date, 'system', 'target');
   }
 
   getOffset(date: Date, transform: DateTimezoneUtcNormalInstanceTransformType): Milliseconds {
@@ -418,6 +470,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
   systemDateToTargetDateOffset(date: Date): Milliseconds {
     return this._getOffset(date, 'system', 'target');
+  }
+
+  conversionOffset(date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget) {
+    return this._getOffset(date, from, to);
   }
 
   calculateAllOffsets<T = number>(date: Date, map?: DateTimezoneConversionFunction<T>) {
@@ -691,6 +747,144 @@ export function startOfDayInTimezoneFromISO8601DayString(day: ISO8601DayString, 
   return startOfDayInTimezoneDayStringFactory(timezone)(day);
 }
 
+// MARK: Set
+export interface SetOnDateWithTimezoneNormalFunctionInput {
+  /**
+   * Date to update
+   *
+   * If not defined, will use "now".
+   */
+  readonly date?: Maybe<Date>;
+  /**
+   * The input date target type of the date and copyFrom values.
+   *
+   * Defaults to "target"
+   */
+  readonly inputType?: DateTimezoneConversionTarget;
+  /**
+   * The return date target type.
+   *
+   * Defaults to to the inputType, or to "target" if neither are defined.
+   */
+  readonly outputType?: DateTimezoneConversionTarget;
+  /**
+   * Hours to set
+   */
+  readonly hours?: Maybe<number>;
+  /**
+   * Minutes to set
+   */
+  readonly minutes?: Maybe<number>;
+  /**
+   * (Optional) date value to copy from.
+   *
+   * If hours or minutes are set, those values take priority over the value read from this.
+   */
+  readonly copyFrom?: Maybe<LogicalDate>;
+  /**
+   * If true, will copy the hours from the input date.
+   *
+   * Defaults to true.
+   */
+  readonly copyHours?: Maybe<boolean>;
+  /**
+   * If true, will copy the minutes from the input date.
+   *
+   * Defaults to true.
+   */
+  readonly copyMinutes?: Maybe<boolean>;
+  /**
+   * Whether or not to round down to the nearest minute.
+   *
+   * Defaults to false.
+   */
+  readonly roundDownToMinute?: Maybe<boolean>;
+}
+
+/**
+ * Sets the input values on the input date.
+ */
+export type SetOnDateWithTimezoneNormalFunction = ((input: SetOnDateWithTimezoneNormalFunctionInput) => Date) & {
+  readonly _timezoneInstance: DateTimezoneUtcNormalInstance;
+};
+
+/**
+ * Creates a new SetONDateFunction using the input
+ */
+export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNormalFunctionInput): SetOnDateWithTimezoneNormalFunction {
+  const timezoneInstance = dateTimezoneUtcNormal(timezone);
+
+  const fn = (input: SetOnDateWithTimezoneNormalFunctionInput) => {
+    const { date: inputDate, copyFrom: copyFromInput, copyHours, copyMinutes, inputType: inputInputType, outputType, hours: inputHours, minutes: inputMinutes, roundDownToMinute } = input;
+    const DEFAULT_TYPE = 'target';
+    const inputType = inputInputType ?? DEFAULT_TYPE;
+
+    let baseDate: Date;
+    let copyFrom: Maybe<Date>;
+
+    // set copyFrom
+    if (copyFromInput != null) {
+      copyFrom = dateFromLogicalDate(copyFromInput); // read the logical date and set initial value
+
+      // if the input matches the copyFrom values, then skip conversion
+      // this step is also crucial for returning the correct value for daylight savings ending changes
+      if (inputDate != null && isSameDate(copyFrom, inputDate) && copyHours !== false && copyMinutes !== false) {
+        return roundDownToMinute ? roundDateDownTo(inputDate, 'minute') : inputDate;
+      }
+
+      if (inputType !== 'base') {
+        copyFrom = copyFrom != null ? timezoneInstance.convertDate(copyFrom, 'base', inputType) : undefined;
+      }
+    }
+
+    // set baseDate
+    if (inputDate != null) {
+      if (inputType === 'base') {
+        // use dates directly as UTC
+        baseDate = inputDate;
+      } else {
+        baseDate = timezoneInstance.convertDate(inputDate, 'base', inputType);
+      }
+    } else {
+      baseDate = new Date();
+    }
+
+    const hours: Maybe<number> = inputHours ?? (copyHours !== false ? copyFrom?.getUTCHours() : undefined);
+    const minutes: Maybe<number> = inputMinutes ?? (copyMinutes !== false ? copyFrom?.getUTCMinutes() : undefined);
+
+    // NOTE: We do the math this way to avoid issues surrounding daylight savings
+    const time = baseDate.getTime();
+
+    const currentDayMillseconds = time % MS_IN_DAY;
+    const minutesSecondsAndMillseconds = currentDayMillseconds % MS_IN_HOUR;
+    const hoursInTimeInMs = currentDayMillseconds - minutesSecondsAndMillseconds;
+
+    const secondsAndMilliseconds = minutesSecondsAndMillseconds % MS_IN_MINUTE;
+    const minutesInTime = minutesSecondsAndMillseconds - secondsAndMilliseconds;
+
+    const nextDay = time - currentDayMillseconds;
+    const nextMinutes = minutes != null ? minutes * MS_IN_MINUTE : minutesInTime;
+    const nextHours = hours != null ? hours * MS_IN_HOUR : hoursInTimeInMs;
+
+    const nextTime = nextDay + nextHours + nextMinutes + (roundDownToMinute ? 0 : secondsAndMilliseconds);
+    const nextBaseDate = new Date(nextTime);
+    let result: Date = timezoneInstance.convertDate(nextBaseDate, outputType ?? inputType, 'base');
+
+    // one more test to limit the "range" of the change
+    // if it is over 1 day, then we can infer there is a timezone mismatch issue. It only occurs in one direction here, so we can safely
+    // infer that the real valid result can be derived by subtracting one day
+    const inputToResultDifferenceInHours = inputDate != null ? differenceInHours(result, inputDate) : 0;
+
+    if (inputToResultDifferenceInHours >= 24) {
+      result = addHours(result, -24);
+    }
+
+    return result;
+  };
+  fn._timezoneInstance = timezoneInstance;
+  return fn;
+}
+
 // MARK: Timezone Utilities
 /**
  * Convenience function for calling copyHoursAndMinutesFromDatesWithTimezoneNormal() with now.
@@ -700,11 +894,11 @@ export function startOfDayInTimezoneFromISO8601DayString(day: ISO8601DayString, 
  * @returns
  */
 export function copyHoursAndMinutesFromNowWithTimezoneNormal(input: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
-  return copyHoursAndMinutesFromDateWithTimezoneNormal(input, new Date(), timezone);
+  return copyHoursAndMinutesFromDateWithTimezoneNormal(input, 'now', timezone);
 }
 
 /**
- * Converts the two input dates, which are dates in the same timezone/normal but than the current system, using the input DateTimezoneUtcNormalFunctionInput.
+ * Converts the two input dates, which are dates in the same timezone/normal instead of the current system, using the input DateTimezoneUtcNormalFunctionInput.
  *
  * This converts the dates to the system timezone normal, copies the values, then back to the original timezone normal.
  *
@@ -712,19 +906,16 @@ export function copyHoursAndMinutesFromNowWithTimezoneNormal(input: Date, timezo
  * @param copyFrom
  * @param timezone
  */
-export function copyHoursAndMinutesFromDateWithTimezoneNormal(input: Date, copyFrom: Date, timezone: DateTimezoneUtcNormalFunctionInput): Date {
+export function copyHoursAndMinutesFromDateWithTimezoneNormal(input: Date, copyFrom: LogicalDate, timezone: DateTimezoneUtcNormalFunctionInput): Date {
   const timezoneInstance = dateTimezoneUtcNormal(timezone);
 
-  const inputInSystemTimezone = timezoneInstance.systemDateToTargetDate(input);
-  const copyFromInSystemTimezone = timezoneInstance.systemDateToTargetDate(copyFrom);
+  const result = timezoneInstance.setOnDate({
+    date: input,
+    copyFrom,
+    inputType: 'target',
+    copyHours: true,
+    copyMinutes: true
+  });
 
-  // handle the potential system date time offset when the system's timezone offset changes between dates...
-  const inputInSystemTimezoneOffset = inputInSystemTimezone.getTimezoneOffset();
-  const copyFromInSystemTimezoneOffset = copyFromInSystemTimezone.getTimezoneOffset();
-  const offsetDifference = inputInSystemTimezoneOffset - copyFromInSystemTimezoneOffset;
-
-  // copy the minutes then add the offset difference to get the appropriate time.
-  const copiedInSystemTimezone = addMinutes(copyHoursAndMinutesFromDate(inputInSystemTimezone, copyFromInSystemTimezone), offsetDifference);
-  const result = timezoneInstance.targetDateToSystemDate(copiedInSystemTimezone);
   return result;
 }

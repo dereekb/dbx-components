@@ -1,7 +1,18 @@
 {
   "name": "@dereekb/util/fetch",
-  "version": "10.1.30",
-  "type": "commonjs",
+  "version": "10.2.0",
+  ".": {
+    "types": "./src/index.d.ts",
+    "node": {
+      "require": "./index.cjs.js",
+      "import": "./index.mjs"
+    },
+    "browser": {
+      "require": "./index.cjs.js",
+      "import": "./index.esm.js"
+    },
+    "default": "./index.cjs.js"
+  },
   "peerDependencies": {
     "@dereekb/util": "*"
   }

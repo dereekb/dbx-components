@@ -31,6 +31,10 @@ describe('fetchJson()', () => {
     });
   });
 
+  describe('fetch with intercept', () => {
+    // TODO: test intercepting a json response
+  });
+
   describe('GET', () => {
     const method = 'GET';
 

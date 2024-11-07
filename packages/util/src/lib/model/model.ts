@@ -28,6 +28,8 @@ export interface UniqueModel {
   id?: ModelKey;
 }
 
+export type UniqueModelWithId = Required<UniqueModel>;
+
 export interface TypedModel<M extends ModelTypeString = ModelTypeString> {
   type: M;
 }
