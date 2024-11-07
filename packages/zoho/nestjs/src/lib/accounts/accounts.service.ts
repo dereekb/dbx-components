@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { Maybe, GetterOrValue, forEachKeyValue, Configurable } from '@dereekb/util';
+import { Maybe, forEachKeyValue, Configurable } from '@dereekb/util';
 import { dirname } from 'path';
-import { mkdir, readFile, writeFile, rm, mkdirSync } from 'fs';
+import { readFile, writeFile, rm, mkdirSync } from 'fs';
 
 export type ZohoAccountsAccessTokenCacheRecord = Record<ZohoServiceAccessTokenKey, Maybe<ZohoAccessToken>>;
 

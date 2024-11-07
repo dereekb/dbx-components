@@ -22,7 +22,6 @@
     "ngx-editor": "^16.0.0",
     "ngx-mat-intl-tel-input": "^5.0.0",
     "@dereekb/model": "*",
-    "lodash": "4.17.21",
     "@angular/platform-browser": "^16.2.12"
   },
   "dependencies": {},

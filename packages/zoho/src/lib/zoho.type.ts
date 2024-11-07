@@ -1,4 +1,4 @@
-import { isUsStateCodeString, ModelKey, UnitedStatesAddress, WebsitePath } from '@dereekb/util';
+import { WebsitePath } from '@dereekb/util';
 
 export interface ZohoModel {}
 

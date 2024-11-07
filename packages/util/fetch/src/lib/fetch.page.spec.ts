@@ -1,6 +1,5 @@
-import { limit } from 'firebase/firestore';
-import { PromiseOrValue, Maybe, randomNumberFactory, randomNumber } from '@dereekb/util';
-import { FetchPage, FetchPageLimitReachedError, FetchPageResultInfo, FetchPageResults, fetchPageFactory } from './fetch.page';
+import { type PromiseOrValue, type Maybe, randomNumber } from '@dereekb/util';
+import { type FetchPage, FetchPageLimitReachedError, type FetchPageResultInfo, type FetchPageResults, fetchPageFactory } from './fetch.page';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 
 interface FetchPageTestRequestObject {

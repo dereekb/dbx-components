@@ -1,5 +1,5 @@
 import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { ZohoServerFetchResponseError, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData, ZOHO_INVALID_AUTHORIZATION_ERROR_CODE, ParsedZohoServerError } from '../zoho.error.api';
+import { ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, zohoServerErrorData, ParsedZohoServerError } from '../zoho.error.api';
 
 /**
  * Error in the following cases:

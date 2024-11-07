@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ZohoRecruitApi } from './recruit.api';
 import { ZohoRecruitServiceConfig } from './recruit.config';
-import { ZOHO_API_URL_CONFIG_KEY, readZohoConfigFromConfigService, zohoConfigServiceReaderFunction } from '../zoho.config';
+import { ZOHO_API_URL_CONFIG_KEY, zohoConfigServiceReaderFunction } from '../zoho.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 import { ZohoAccountsServiceConfig, zohoAccountsServiceConfigFromConfigService } from '../accounts/accounts.config';
-import { ZOHO_ACCOUNTS_US_API_URL, ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
+import { ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
 
 export function zohoRecruitServiceConfigFactory(configService: ConfigService): ZohoRecruitServiceConfig {
   const getFromConfigService = zohoConfigServiceReaderFunction(ZOHO_RECRUIT_SERVICE_NAME, configService);

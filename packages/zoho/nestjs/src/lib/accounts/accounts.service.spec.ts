@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import { ZohoRecruitModule } from './../recruit/recruit.module';
 import { DynamicModule } from '@nestjs/common';
-import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService } from './accounts.service';
+import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService } from './accounts.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoAccountsApi } from './accounts.api';
 import { ZOHO_RECRUIT_SERVICE_NAME, ZohoAccountsAccessTokenError } from '@dereekb/zoho';

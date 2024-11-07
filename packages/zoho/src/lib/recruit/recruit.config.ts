@@ -23,7 +23,7 @@ export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): Zo
   }
 }
 
-export interface ZohoRecruitConfig extends ZohoConfig {}
+export type ZohoRecruitConfig = ZohoConfig
 
 export interface ZohoRecruitFetchFactoryInput {
   readonly apiUrl: ZohoRecruitApiUrl;

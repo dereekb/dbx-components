@@ -67,8 +67,8 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
       }
 
       // check object comparison via keys
-      let aObject = a as Record<string, any>;
-      let bObject = b as Record<string, any>;
+      const aObject = a as Record<string, any>;
+      const bObject = b as Record<string, any>;
 
       const aKeys = Object.keys(aObject);
       const bKeys = Object.keys(bObject);

@@ -1,7 +1,7 @@
-import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC, isEqualDate, MS_IN_HOUR } from '@dereekb/util';
+import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC, isEqualDate } from '@dereekb/util';
 import { type DateRange, type DateRangeDayDistanceInput, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay, addHours, differenceInHours, isSameDay, differenceInMinutes } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay, addHours } from 'date-fns';
 import { roundDownToMinute, isSameDate, isDate, requireCurrentTimezone, copyHoursAndMinutesFromUTCDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { type DateTimezoneUtcNormalFunctionInput, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
@@ -363,7 +363,7 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
   const start = normalInstance.startOfDayInTargetTimezone(utcDay);
 
   const safeMirror = isEqualDate(startsAtInUtc, startsAtInUtcInitial);
-  let { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target', safeMirror);
+  const { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target', safeMirror);
 
   // calculate end to be the ending date/time of the final duration span
   const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24 + daylightSavingsOffset); // use addHours instead of addDays, since addDays will take into account a daylight savings change if the system time changes

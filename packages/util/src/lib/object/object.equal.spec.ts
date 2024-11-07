@@ -1,4 +1,4 @@
-import { Getter } from '../getter/getter';
+import { type Getter } from '../getter/getter';
 import { setsAreEquivalent } from '../set/set';
 import { type Maybe } from '../value/maybe.type';
 import { areEqualPOJOValues, objectFieldEqualityChecker } from './object.equal';

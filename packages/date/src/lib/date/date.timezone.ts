@@ -1,7 +1,7 @@
-import { addMilliseconds, addMinutes, minutesToHours, startOfDay, set as setDate, endOfDay, millisecondsToHours, millisecondsToMinutes, roundToNearestMinutes, differenceInHours, addHours } from 'date-fns';
-import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours, Minutes, MS_IN_MINUTE, Configurable, MS_IN_DAY, cachedGetter, Getter, LogicalDate } from '@dereekb/util';
+import { addMilliseconds, startOfDay, endOfDay, millisecondsToHours, millisecondsToMinutes, differenceInHours, addHours } from 'date-fns';
+import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours, type Minutes, MS_IN_MINUTE, MS_IN_DAY, cachedGetter, type Getter, type LogicalDate } from '@dereekb/util';
 import { utcToZonedTime, format as formatDate } from 'date-fns-tz';
-import { copyHoursAndMinutesFromDate, guessCurrentTimezone, isSameDate, isStartOfDayInUTC, minutesToMs, requireCurrentTimezone, roundDateDownTo } from './date';
+import { guessCurrentTimezone, isSameDate, isStartOfDayInUTC, requireCurrentTimezone, roundDateDownTo } from './date';
 import { type DateRange, type TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { dateFromLogicalDate } from './date.logical';
 
@@ -786,13 +786,13 @@ export interface SetOnDateWithTimezoneNormalFunctionInput {
    *
    * Defaults to true.
    */
-  readonly copyHours?: Maybe<Boolean>;
+  readonly copyHours?: Maybe<boolean>;
   /**
    * If true, will copy the minutes from the input date.
    *
    * Defaults to true.
    */
-  readonly copyMinutes?: Maybe<Boolean>;
+  readonly copyMinutes?: Maybe<boolean>;
   /**
    * Whether or not to round down to the nearest minute.
    *

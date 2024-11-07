@@ -1,5 +1,3 @@
-import { FactoryWithRequiredInput } from '@dereekb/util';
-import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
 
 /**
  * Name used to identify a specific service. Always lowercase.

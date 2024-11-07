@@ -21,12 +21,10 @@ import {
   dayOfWeek,
   sortNumbersAscendingFunction,
   type UnixDateTimeNumber,
-  MS_IN_DAY,
   MS_IN_SECOND,
-  Milliseconds,
-  DateOrUnixDateTimeNumber,
-  DateHourMinuteOrSecond,
-  FloorOrCeilRounding
+  type DateOrUnixDateTimeNumber,
+  type DateHourMinuteOrSecond,
+  type FloorOrCeilRounding
 } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));

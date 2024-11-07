@@ -1,4 +1,4 @@
-import { CachedGetter, FIRST_PAGE, Getter, Maybe, Page, PromiseOrValue, cachedGetter, getNextPageNumber } from '@dereekb/util';
+import { type CachedGetter, FIRST_PAGE, type Maybe, type Page, type PromiseOrValue, cachedGetter } from '@dereekb/util';
 import { FetchRequestFactoryError } from './error';
 
 export class FetchPageNoNextPageError extends FetchRequestFactoryError {
@@ -156,7 +156,7 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
             }
 
             // assert next page
-            let nextPageInfo = hasNext ? await buildInputForNextPage(nextPageResult, input) : undefined;
+            const nextPageInfo = hasNext ? await buildInputForNextPage(nextPageResult, input) : undefined;
 
             if (!nextPageInfo) {
               throw new FetchPageNoNextPageError(nextPageResult);

@@ -13,8 +13,6 @@ import {
   ZohoRecruitRecordFieldsData,
   ZohoRecruitRecordId,
   ZohoRecruitRecordUpdateDetails,
-  ZohoRecruitSearchRecordsCriteriaString,
-  ZohoRecruitSearchRecordsCriteriaTree,
   ZohoRecruitSearchRecordsCriteriaTreeElement,
   ZohoRecruitTerritoryId,
   ZohoRecruitTrueFalseBoth,
@@ -279,7 +277,7 @@ export function zohoRecruitMultiRecordResult<I, OS extends ZohoRecrutMultiRecord
     }
   });
 
-  let result: ZohoRecruitMultiRecordResult<I, OS, OE> = {
+  const result: ZohoRecruitMultiRecordResult<I, OS, OE> = {
     successItems,
     errorItems
   };

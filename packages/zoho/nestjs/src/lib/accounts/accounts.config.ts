@@ -1,5 +1,4 @@
 import { ZohoAccountsConfig, ZohoAccountsFactoryConfig, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { ConfigService } from '@nestjs/config';
 import { ZohoConfigServiceReaderConfig, zohoConfigServiceReaderFunction } from '../zoho.config';
 
 export interface ZohoAccountsServiceApiConfig extends ZohoAccountsConfig {
@@ -32,7 +31,7 @@ export abstract class ZohoAccountsServiceConfig {
   }
 }
 
-export interface ZohoAccountsServiceConfigFromConfigServiceInput extends ZohoConfigServiceReaderConfig {}
+export type ZohoAccountsServiceConfigFromConfigServiceInput = ZohoConfigServiceReaderConfig
 
 export function zohoAccountsServiceConfigFromConfigService(input: ZohoAccountsServiceConfigFromConfigServiceInput): ZohoAccountsServiceConfig {
   const { serviceAccessTokenKey } = input;

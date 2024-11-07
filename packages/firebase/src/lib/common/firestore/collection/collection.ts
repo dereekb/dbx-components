@@ -18,7 +18,7 @@ import { type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterat
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
 import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront, firstAndLastCharacterOccurrence, stringContains } from '@dereekb/util';
+import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isOddNumber, lastValue, type Maybe, type ModelKey, type ModelTypeString, takeFront, stringContains } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.

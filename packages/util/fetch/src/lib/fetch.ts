@@ -1,4 +1,4 @@
-import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples, PromiseOrValue, isPromiseLike, GetterOrValue, asGetter } from '@dereekb/util';
+import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples, type PromiseOrValue, isPromiseLike, type GetterOrValue, asGetter } from '@dereekb/util';
 import { FetchRequestFactoryError, fetchOk } from './error';
 import { type ConfiguredFetchWithTimeout, type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
@@ -144,7 +144,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
     : undefined;
 
   async function asFetchRequest(input: PromiseOrValue<RequestInfo | URL>): Promise<Request> {
-    let awaitedInput: RequestInfo | URL = isPromiseLike(input) ? await input : input;
+    const awaitedInput: RequestInfo | URL = isPromiseLike(input) ? await input : input;
 
     if (isFetchRequest(awaitedInput)) {
       return awaitedInput;

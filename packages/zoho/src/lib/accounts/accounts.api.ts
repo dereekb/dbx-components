@@ -3,7 +3,7 @@ import { ZohoAccountsContext } from './accounts.config';
 import { ZohoAuthClientIdAndSecretPair, ZohoRefreshToken } from '../zoho.config';
 import { ZohoAccessTokenApiDomain, ZohoAccessTokenScopesString, ZohoAccessTokenString } from './accounts';
 import { Maybe, Seconds } from '@dereekb/util';
-import { ZohoAccountsAccessTokenError, ZohoAccountsAccessTokenErrorCode } from './accounts.error.api';
+import { ZohoAccountsAccessTokenErrorCode } from './accounts.error.api';
 
 export interface ZohoAccountsAccessTokenInput {
   readonly client?: Maybe<ZohoAuthClientIdAndSecretPair>;
