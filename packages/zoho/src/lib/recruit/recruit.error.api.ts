@@ -1,6 +1,6 @@
 import { ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-import { ZohoServerFetchResponseError, ZohoServerErrorDataWithDetails, ZohoServerErrorResponseData, ZohoServerErrorResponseDataError, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE } from '../zoho.error.api';
+import { ZohoServerFetchResponseError, ZohoServerErrorDataWithDetails, ZohoServerErrorResponseData, ZohoServerErrorResponseDataError, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE, ParsedZohoServerError } from '../zoho.error.api';
 import { ZohoRecruitModuleName, ZohoRecruitRecordId } from './recruit';
 import { ZohoDataArrayResultRef } from '../zoho.api.page';
 
@@ -45,9 +45,9 @@ export function assertRecordDataArrayResultHasContent<T>(moduleName?: ZohoRecrui
 
 export const logZohoRecruitErrorToConsole = logZohoServerErrorFunction('ZohoRecruit');
 
-export async function parseZohoRecruitError(responseError: FetchResponseError): Promise<ZohoServerFetchResponseError | undefined> {
+export async function parseZohoRecruitError(responseError: FetchResponseError) {
   const data: ZohoServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
-  let result: ZohoServerFetchResponseError | undefined;
+  let result: ParsedZohoServerError | undefined;
 
   if (data) {
     result = parseZohoRecruitServerErrorResponseData(data, responseError);
@@ -56,8 +56,8 @@ export async function parseZohoRecruitError(responseError: FetchResponseError): 
   return result;
 }
 
-export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
-  let result: ZohoServerFetchResponseError | undefined;
+export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData, responseError: FetchResponseError) {
+  let result: ParsedZohoServerError | undefined;
   const error = tryFindZohoServerErrorData(errorResponseData, responseError);
 
   if (error) {

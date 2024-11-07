@@ -77,7 +77,7 @@ export class ZohoServerFetchResponseError<D extends ZohoServerErrorData = ZohoSe
   }
 }
 
-export type LogZohoServerErrorFunction = (error: ZohoServerFetchResponseError) => void;
+export type LogZohoServerErrorFunction = (error: FetchRequestFactoryError | ZohoServerError | ZohoServerFetchResponseError) => void;
 
 /**
  * Creates a logZohoServerErrorFunction that logs the error to console.
@@ -86,8 +86,14 @@ export type LogZohoServerErrorFunction = (error: ZohoServerFetchResponseError) =
  * @returns
  */
 export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoServerErrorFunction {
-  return (error: ZohoServerFetchResponseError) => {
-    console.log(`${zohoApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
+  return (error: FetchRequestFactoryError | ZohoServerError | ZohoServerFetchResponseError) => {
+    if (error instanceof ZohoServerFetchResponseError) {
+      console.log(`${zohoApiNamePrefix}Error(${error.responseError.response.status}): `, { error, errorData: error.data });
+    } else if (error instanceof ZohoServerError) {
+      console.log(`${zohoApiNamePrefix}Error(code:${error.code}): `, { error });
+    } else {
+      console.log(`${zohoApiNamePrefix}Error(name:${error.name}): `, { error });
+    }
   };
 }
 
@@ -99,7 +105,8 @@ export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoSe
  */
 export type HandleZohoErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZohoServerErrorFunction) => ConfiguredFetch;
 
-export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ZohoServerFetchResponseError | undefined>;
+export type ParsedZohoServerError = FetchRequestFactoryError | ZohoServerError | undefined;
+export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ParsedZohoServerError>;
 
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
@@ -128,14 +135,14 @@ export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchRespon
   };
 }
 
-export type ParseZohoRecruitServerErrorResponseData = (zohoServerErrorResponseData: ZohoServerErrorResponseData, fetchResponseError: FetchResponseError) => ZohoServerFetchResponseError | undefined;
+export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: ZohoServerErrorResponseData, fetchResponseError: FetchResponseError) => ParsedZohoServerError;
 
 /**
  * FetchJsonInterceptJsonResponseFunction that intercepts ZohoServerError responses and throws a ZohoServerError.
  *
  * @returns
  */
-export function interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorResponseData: ParseZohoRecruitServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
+export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
   return (json: ZohoServerErrorResponseData | unknown, response: Response) => {
     const error = (json as ZohoServerErrorResponseData)?.error;
 
@@ -143,7 +150,7 @@ export function interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorRes
       const responseError = new FetchResponseError(response);
 
       if (responseError) {
-        const parsedError = parseZohoRecruitServerErrorResponseData(json as ZohoServerErrorResponseData, responseError);
+        const parsedError = parseZohoServerErrorResponseData(json as ZohoServerErrorResponseData, responseError);
 
         if (parsedError) {
           throw parsedError;

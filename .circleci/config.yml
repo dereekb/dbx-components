@@ -53,8 +53,8 @@ jobs:
                 paths:
                   - node_modules
                   - dist
-  # Runs tests for the projects that do not require the firebase emulators.
-  test-with-node:
+  # Runs tests for the projects that do not require the firebase emulators and are more basic
+  test-with-node-basic:
     <<: *defaults
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
@@ -77,12 +77,23 @@ jobs:
       - run:
           name: run date tests b
           command: npx nx test-timezones-world date
-      - run:
-          name: run dbx-core tests
-          command: npx nx test dbx-core
+      - store_test_results:
+          path: ~/code/.reports/jest/
+  # Runs tests for the projects that do not require the firebase emulators and are more complex (nestjs, angular)
+  test-with-node-complex:
+    <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
       - run:
           name: run dbx-analytics tests
           command: npx nx test dbx-analytics
+      - run:
+          name: run dbx-core tests
+          command: npx nx test dbx-core
       - run:
           name: run dbx-web tests
           command: npx nx test dbx-web
@@ -252,7 +263,10 @@ workflows:
   build-and-test-and-version:
     jobs:
       - build
-      - test-with-node:
+      - test-with-node-basic:
+          requires:
+            - build
+      - test-with-node-complex:
           requires:
             - build
       - test-with-node-firebase:
@@ -264,7 +278,8 @@ workflows:
       - run-release-and-push-to-main:
           requires:
             - build
-            - test-with-node
+            - test-with-node-basic
+            - test-with-node-complex
             - test-with-node-firebase
             - test-setup-script
           filters:

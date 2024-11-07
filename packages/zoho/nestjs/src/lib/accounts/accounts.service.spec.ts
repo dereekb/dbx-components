@@ -1,4 +1,4 @@
-import { expectFail, itShouldFail } from '@dereekb/util/test';
+import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import { ZohoRecruitModule } from './../recruit/recruit.module';
 import { DynamicModule } from '@nestjs/common';
 import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService } from './accounts.service';
@@ -70,14 +70,8 @@ describe('accounts.service', () => {
 
     describe('accessToken()', () => {
       describe('refresh token errors', () => {
-        it('should throw an ZohoAccountsAccessTokenError if refresh fails.', async () => {
-          try {
-            await api.accessToken({
-              refreshToken: 'invalidCode'
-            });
-          } catch (e) {
-            expect(e instanceof ZohoAccountsAccessTokenError).toBe(true);
-          }
+        itShouldFail('with an ZohoAccountsAccessTokenError if refresh fails.', async () => {
+          await expectFail(() => api.accessToken({ refreshToken: 'invalidCode' }), jestExpectFailAssertErrorType(ZohoAccountsAccessTokenError));
         });
       });
     });
