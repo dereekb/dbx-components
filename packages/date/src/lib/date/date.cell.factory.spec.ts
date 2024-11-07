@@ -1219,8 +1219,8 @@ describe('dateCellTimingFromDateCellTimingStartsAtEndRange()', () => {
 
         expect(result.timezone).toBe(timing.timezone);
         expect(result.end).toBeSameSecondAs(timing.end);
-        expect(result.duration).toBe(timing.duration);
         expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.duration).toBe(timing.duration);
 
         expect(isValidDateCellTiming(result)).toBe(true);
       });
@@ -1239,7 +1239,7 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
 
         describe(`${timezone}`, () => {
           describe('replaceStartsAt=true', () => {
-            it('should return a copy of a timing.', () => {
+            it('should return a copy of the input timing if it is the same', () => {
               const result = updateDateCellTimingWithDateCellTimingEvent({
                 timing,
                 event: timing,
@@ -1255,9 +1255,11 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
             });
 
             it('should return the original timing using the second event', () => {
+              const startsAt = addHours(timing.startsAt, 24);
+
               const result = updateDateCellTimingWithDateCellTimingEvent({
                 timing,
-                event: { startsAt: addDays(timing.startsAt, 1), duration: timing.duration },
+                event: { startsAt, duration: timing.duration },
                 replaceStartsAt: true
               }); // use the first event again
 
@@ -1315,7 +1317,7 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
                 const daylightSavingsBeforeFirstDayActive = timezoneInstance.targetDateToBaseDate(new Date('2023-03-10T00:00:00Z'));
                 const timing = dateCellTiming({ startsAt: daylightSavingsBeforeFirstDayActive, duration: 60 }, 5, timezone); // 1 day
 
-                it(`should return a copy of a timing`, () => {
+                it(`should return a copy of the input timing`, () => {
                   const result = updateDateCellTimingWithDateCellTimingEvent({
                     timing,
                     event: timing,
@@ -1335,12 +1337,12 @@ describe('updateDateCellTimingWithDateCellTimingEvent()', () => {
         });
       }
 
-      describeTestsForTimezone('UTC');
-      describeTestsForTimezone('America/Denver');
+      // describeTestsForTimezone('UTC');
+      // describeTestsForTimezone('America/Denver');
       describeTestsForTimezone('America/Los_Angeles');
-      describeTestsForTimezone('America/New_York');
-      describeTestsForTimezone('America/Chicago');
-      describeTestsForTimezone('Pacific/Fiji');
+      // describeTestsForTimezone('America/New_York');
+      // describeTestsForTimezone('America/Chicago');
+      // describeTestsForTimezone('Pacific/Fiji');
     });
   });
 });

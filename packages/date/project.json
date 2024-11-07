@@ -63,28 +63,33 @@
         "passWithNoTests": true
       }
     },
+    "test-skip-build": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml"],
+      "options": {
+        "jestConfig": "packages/date/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
     "test-timezones-usa": {
       "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml", "{projectRoot}/.reports/jest/america-new_york.date.junit.xml", "{projectRoot}/.reports/jest/america-chicago.date.junit.xml", "{projectRoot}/.reports/jest/america-denver.date.junit.xml", "{projectRoot}/.reports/jest/america-los_angeles.date.junit.xml", "{projectRoot}/.reports/jest/america-anchorage.date.junit.xml"],
       "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
-            "command": "TZ=America/New_York && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=America/New_York && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Chicago && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=America/Chicago && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Denver && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=America/Denver && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Los_Angeles && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=America/Los_Angeles && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Anchorage && echo $TZ && nx test date --skip-nx-cache"
-          },
-          {
-            "command": "nx test date --skip-nx-cache"
+            "command": "TZ=America/Anchorage && echo $TZ && nx test-skip-build date"
           }
         ],
         "parallel": false
@@ -96,25 +101,22 @@
       "options": {
         "commands": [
           {
-            "command": "TZ=Asia/Tokyo && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=Asia/Tokyo && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=Asia/Singapore && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=Asia/Singapore && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=Europe/Dublin && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=Europe/Dublin && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Auckland && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=Pacific/Auckland && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Kiritimati && echo $TZ && nx test date --skip-nx-cache"
+            "command": "TZ=Pacific/Kiritimati && echo $TZ && nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Niue && echo $TZ && nx test date --skip-nx-cache"
-          },
-          {
-            "command": "nx test date --skip-nx-cache"
+            "command": "TZ=Pacific/Niue && echo $TZ && nx test-skip-build date"
           }
         ],
         "parallel": false
@@ -137,40 +139,40 @@
       "options": {
         "commands": [
           {
-            "command": "TZ=Asia/Tokyo nx test date --skip-nx-cache"
+            "command": "TZ=Asia/Tokyo nx test-skip-build date"
           },
           {
-            "command": "TZ=Asia/Singapore nx test date --skip-nx-cache"
+            "command": "TZ=Asia/Singapore nx test-skip-build date"
           },
           {
-            "command": "TZ=Europe/Dublin nx test date --skip-nx-cache"
+            "command": "TZ=Europe/Dublin nx test-skip-build date"
           },
           {
-            "command": "TZ=America/New_York nx test date --skip-nx-cache"
+            "command": "TZ=America/New_York nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Chicago nx test date --skip-nx-cache"
+            "command": "TZ=America/Chicago nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Denver nx test date --skip-nx-cache"
+            "command": "TZ=America/Denver nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Los_Angeles nx test date --skip-nx-cache"
+            "command": "TZ=America/Los_Angeles nx test-skip-build date"
           },
           {
-            "command": "TZ=America/Anchorage nx test date --skip-nx-cache"
+            "command": "TZ=America/Anchorage nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Auckland nx test date --skip-nx-cache"
+            "command": "TZ=Pacific/Auckland nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Kiritimati nx test date --skip-nx-cache"
+            "command": "TZ=Pacific/Kiritimati nx test-skip-build date"
           },
           {
-            "command": "TZ=Pacific/Niue nx test date --skip-nx-cache"
+            "command": "TZ=Pacific/Niue nx test-skip-build date"
           },
           {
-            "command": "nx test date --skip-nx-cache"
+            "command": "nx test-skip-build date"
           }
         ],
         "parallel": false

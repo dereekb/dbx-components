@@ -1,0 +1,99 @@
+{
+  "name": "zoho",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/zoho/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/zoho"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run zoho:build-base"
+          },
+          {
+            "command": "npx nx run zoho-nestjs:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/zoho",
+        "outputPath": "dist/packages/zoho",
+        "main": "packages/zoho/src/index.ts",
+        "tsConfig": "packages/zoho/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/zoho/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "assets": [
+          {
+            "glob": "packages/zoho/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/zoho/**/*.ts", "packages/zoho/package.json", "packages/zoho/project.json"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/zoho"],
+      "options": {
+        "jestConfig": "packages/zoho/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run zoho tests",
+            "command": "npx nx test zoho"
+          },
+          {
+            "description": "run zoho-nestjs tests",
+            "command": "npx nx test zoho-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/zoho && npm publish --access public"
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["util-fetch", "!util-test"]
+}

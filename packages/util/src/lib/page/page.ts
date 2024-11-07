@@ -23,8 +23,6 @@ export type PageNumber = number;
 export interface Page {
   /**
    * Current page number.
-   *
-   * // TODO (COMPAT): Rename to pageNumber
    */
   page: PageNumber;
 }

@@ -12,23 +12,36 @@ Example: `nx g @nx/node:library firebase --buildable --publishable --importPath 
 
 ### Creating a child NodeJS Library
 
-Example: `nx generate @nx/node:library --name=fetch --buildable --publishable --importPath @dereekb/util/fetch --directory=util`
+Example: `nx generate @nx/node:library --name=fetch --buildable --publishable --importPath @dereekb/util/fetch --directory=packages/util`
 
 This example will end up as a child of @dereekb/util.
 
 ## Creating an Angular Library
 
-Example: `nx generate @nx/angular:library --name=dbx-firebase --buildable --publishable --importPath @dereekb/dbx-firebase`
+Example: `nx generate @nx/angular:library --name=dbx-firebase --buildable --publishable --importPath @dereekb/dbx-firebase --directory=packages/dbx-firebase`
 
 ### Creating a child Angular Library
 
-Example: `nx generate @nx/angular:library --name=calendar --buildable --publishable --importPath @dereekb/dbx-web/calendar --directory=dbx-web`
+Example: `nx g @nx/angular:lib --name=calendar --buildable --publishable --importPath @dereekb/dbx-web/calendar --directory=packages/dbx-web/calendar`
 
 ## Creating a NestJS Library
 
 ### Creating a child NestJS Library
 
-Example: `nx generate @nx/nest:library --name=mailgun --buildable --publishable --importPath @dereekb/nestjs/mailgun --directory=nestjs`
+Example: `nx g @nx/nest:lib --name=mailgun --buildable --publishable --importPath @dereekb/nestjs/mailgun --directory=packages/nestjs/mailgun`
+
+Be sure to copy the structure of the following files from an existing child library:
+
+- `jest.config.ts`
+- `package.json`
+- `project.json`: Add implicit dependencies, remove publish target, update lint and test targets
+- `tsconfig.json`
+- `tsconfig.lib.json`
+- `tsconfig.spec.json`
+
+You can delete the `README.md` due to how the nestjs package is built/exported.
+
+Update the packages/nestjs project's `project.json` and `package.json` to reflect the changes.
 
 # Setting up Firebase for Nx
 

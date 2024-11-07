@@ -1,7 +1,7 @@
-import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC } from '@dereekb/util';
+import { type IndexRef, MINUTES_IN_DAY, MS_IN_DAY, type Maybe, type TimezoneString, type Building, type Minutes, minutesToFractionalHours, type FractionalHour, type TimezoneStringRef, MS_IN_MINUTE, type ISO8601DayString, UTC_TIMEZONE_STRING, startOfDayForUTCDateInUTC, isEqualDate, MS_IN_HOUR } from '@dereekb/util';
 import { type DateRange, type DateRangeDayDistanceInput, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay, addHours } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addMinutes, getSeconds, getMilliseconds, getMinutes, isAfter, startOfDay, addHours, differenceInHours, isSameDay, differenceInMinutes } from 'date-fns';
 import { roundDownToMinute, isSameDate, isDate, requireCurrentTimezone, copyHoursAndMinutesFromUTCDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { type DateTimezoneUtcNormalFunctionInput, type DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, systemDateTimezoneUtcNormal, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
@@ -307,7 +307,8 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
   const { startsAt: inputStartsAt } = durationInput;
 
   // it is important that startsAt is evaluated the base time normal so we can avoid daylight savings issues
-  let startsAtInUtc = normalInstance.baseDateToTargetDate(inputStartsAt);
+  const startsAtInUtcInitial = normalInstance.baseDateToTargetDate(inputStartsAt);
+  let startsAtInUtc = startsAtInUtcInitial;
 
   let numberOfDayBlocks: number;
 
@@ -358,14 +359,18 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
     startsAtInUtc = roundDownToMinute(startsAtInUtc); // clear seconds and milliseconds from startsAt
   }
 
-  const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24); // use addDays so the system (if it experiences daylight savings) can account for change for daylight savings
-
-  // calculate end to be the ending date/time of the final duration span
-  const end: Date = addMinutes(normalInstance.targetDateToBaseDate(lastStartsAtInBaseTimezone), duration);
-
   const utcDay = formatToISO8601DayStringForUTC(startsAtInUtc);
   const start = normalInstance.startOfDayInTargetTimezone(utcDay);
-  const startsAt = normalInstance.targetDateToBaseDate(startsAtInUtc);
+
+  const safeMirror = isEqualDate(startsAtInUtc, startsAtInUtcInitial);
+  let { date: startsAt, daylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtc, inputStartsAt, 'target', safeMirror);
+
+  // calculate end to be the ending date/time of the final duration span
+  const lastStartsAtInBaseTimezone = addHours(startsAtInUtc, numberOfDayBlocks * 24 + daylightSavingsOffset); // use addHours instead of addDays, since addDays will take into account a daylight savings change if the system time changes
+  const lastStartInTarget = normalInstance.targetDateToBaseDate(lastStartsAtInBaseTimezone);
+  const end: Date = addMinutes(lastStartInTarget, duration);
+
+  // console.log({ lastStartsAtInBaseTimezone, inputStartsAt, startsAtInUtcInitial, startsAtInUtc, startsAt, daylightSavingsOffset, start, lastStartInTarget, end });
 
   return {
     start,
@@ -678,12 +683,24 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
   const { end, startsAt, timezone } = timing;
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
-  const startsAtInUtcNormal = normalInstance.baseDateToTargetDate(startsAt); // convert to UTC normal
-  const endInUtcNormal = normalInstance.baseDateToTargetDate(end);
+  let startsAtInUtcNormal = normalInstance.baseDateToTargetDate(startsAt); // convert to UTC normal
+  let endInUtcNormal = normalInstance.baseDateToTargetDate(end);
+
+  const { daylightSavingsOffset: startDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate(startsAtInUtcNormal, startsAt, 'target');
+  const { daylightSavingsOffset: endDaylightSavingsOffset } = normalInstance.safeMirroredConvertDate(endInUtcNormal, end, 'target');
+
+  if (startDaylightSavingsOffset) {
+    startsAtInUtcNormal = addHours(startsAtInUtcNormal, startDaylightSavingsOffset);
+  }
+
+  if (endDaylightSavingsOffset) {
+    endInUtcNormal = addHours(endInUtcNormal, endDaylightSavingsOffset);
+  }
 
   const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(endInUtcNormal, startsAtInUtcNormal);
   const duration = (finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE) % MINUTES_IN_DAY || MINUTES_IN_DAY;
-  const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(addMinutes(endInUtcNormal, -duration));
+  const expectedFinalStartsAtUtc = addMinutes(endInUtcNormal, -duration);
+  const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(expectedFinalStartsAtUtc); // 2024-11-03T03:00:00.000Z
 
   return {
     duration,
