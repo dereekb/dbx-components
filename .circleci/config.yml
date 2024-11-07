@@ -72,10 +72,13 @@ jobs:
           name: run model tests
           command: npx nx test model
       - run:
-          name: run date tests a
+          name: run date tests local
+          command: npx nx test date
+      - run:
+          name: run date tests usa
           command: npx nx test-timezones-usa date
       - run:
-          name: run date tests b
+          name: run date tests world
           command: npx nx test-timezones-world date
       - store_test_results:
           path: ~/code/.reports/jest/
