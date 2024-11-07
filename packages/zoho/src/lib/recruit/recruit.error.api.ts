@@ -1,6 +1,6 @@
-import { ConfiguredFetch, FetchResponseError } from '@dereekb/util/fetch';
+import { FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-import { ZohoServerFetchResponseError, ZohoServerErrorDataWithDetails, ZohoServerErrorResponseData, ZohoServerErrorResponseDataError, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE, ParsedZohoServerError } from '../zoho.error.api';
+import { ZohoServerErrorDataWithDetails, ZohoServerErrorResponseData, handleZohoErrorFetchFactory, interceptZohoErrorResponseFactory, logZohoServerErrorFunction, parseZohoServerErrorResponseData, tryFindZohoServerErrorData, zohoServerErrorData, ZohoServerError, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, ZOHO_DUPLICATE_DATA_ERROR_CODE, ParsedZohoServerError, ZOHO_INVALID_DATA_ERROR_CODE } from '../zoho.error.api';
 import { ZohoRecruitModuleName, ZohoRecruitRecordId } from './recruit';
 import { ZohoDataArrayResultRef } from '../zoho.api.page';
 
@@ -15,10 +15,29 @@ export class ZohoRecruitRecordCrudError extends ZohoServerError<ZohoServerErrorD
 export class ZohoRecruitRecordCrudMandatoryFieldNotFoundError extends ZohoRecruitRecordCrudError {}
 export class ZohoRecruitRecordCrudDuplicateDataError extends ZohoRecruitRecordCrudError {}
 
+export type ZohoRecruitRecordCrudInvalidDataErrorDetails = Record<string, string>;
+
+export class ZohoRecruitRecordCrudInvalidDataError extends ZohoRecruitRecordCrudError {
+  get invalidFieldDetails(): ZohoRecruitRecordCrudInvalidDataErrorDetails {
+    return this.error.details as ZohoRecruitRecordCrudInvalidDataErrorDetails;
+  }
+}
+
+export class ZohoRecruitRecordCrudNoMatchingRecordError extends ZohoRecruitRecordCrudInvalidDataError {}
+
 export function zohoRecruitRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoRecruitRecordCrudError {
   let result: ZohoRecruitRecordCrudError;
 
   switch (error.code) {
+    case ZOHO_INVALID_DATA_ERROR_CODE:
+      const invalidDataError = new ZohoRecruitRecordCrudInvalidDataError(error);
+
+      if (invalidDataError.invalidFieldDetails['id']) {
+        result = new ZohoRecruitRecordCrudNoMatchingRecordError(error);
+      } else {
+        result = invalidDataError;
+      }
+      break;
     case ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE:
       result = new ZohoRecruitRecordCrudMandatoryFieldNotFoundError(error);
       break;

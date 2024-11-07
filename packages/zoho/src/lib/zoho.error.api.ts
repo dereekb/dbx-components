@@ -187,6 +187,24 @@ export const ZOHO_INVALID_AUTHORIZATION_ERROR_CODE = '4834';
 export class ZohoInvalidAuthorizationError extends ZohoServerFetchResponseError {}
 
 /**
+ * Error in the following cases:
+ * - Search query is invalid
+ */
+export const ZOHO_INVALID_QUERY_ERROR_CODE = 'INVALID_QUERY';
+
+export interface ZohoInvalidQueryErrorDetails {
+  readonly reason: string;
+  readonly api_name: string;
+  readonly operator: string;
+}
+
+export class ZohoInvalidQueryError extends ZohoServerFetchResponseError {
+  get details() {
+    return this.error.details as ZohoInvalidQueryErrorDetails;
+  }
+}
+
+/**
  * Error when a mandatory field is missing.
  */
 export const ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE = 'MANDATORY_NOT_FOUND';
@@ -195,6 +213,11 @@ export const ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE = 'MANDATORY_NOT_FOUND';
  * Error when a duplicate record is found with a matching unique field value.
  */
 export const ZOHO_DUPLICATE_DATA_ERROR_CODE = 'DUPLICATE_DATA';
+
+/**
+ * Error when some passed data is invalid.
+ */
+export const ZOHO_INVALID_DATA_ERROR_CODE = 'INVALID_DATA';
 
 /**
  * Function that parses/transforms a ZohoServerErrorResponseData into a general ZohoServerError or other known error type.
@@ -216,6 +239,9 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
         break;
       case ZOHO_INVALID_AUTHORIZATION_ERROR_CODE:
         result = new ZohoInvalidAuthorizationError(errorData, responseError);
+        break;
+      case ZOHO_INVALID_QUERY_ERROR_CODE:
+        result = new ZohoInvalidQueryError(errorData, responseError);
         break;
       default:
         result = new ZohoServerFetchResponseError(errorData, responseError);

@@ -1,4 +1,4 @@
-import { CommaSeparatedString, ISO8601DateString, Maybe, PageNumber, escapeStringCharactersFunction, replaceStringsFunction, convertToArray, filterMaybeValues, ArrayOrValue, asArray } from '@dereekb/util';
+import { CommaSeparatedString, ISO8601DateString, Maybe, PageNumber, escapeStringCharactersFunction, replaceStringsFunction, convertToArray, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId, ISO8601DateStringUTCFull } from '@dereekb/util';
 
 /**
  * Zoho Recruit module name.
@@ -43,18 +43,39 @@ export interface ZohoRecruitCreatedByData {
   id: string; // TODO: figure out what kind of id this is
 }
 
-export type ZohoNewRecruitRecord = Record<ZohoRecruitFieldName, any> & {
+export type ZohoRecruitRecordFieldsData = Record<ZohoRecruitFieldName, any>;
+
+export interface ZohoRecordDraftStateData {
   /**
-   * Use "draft" if the record should be created as a draft.
+   * Used to update a draft record or to convert a draft to a normal record.
+   *
+   * When creating, passing "draft" will create the record as a draft.
    */
   $state?: ZohoRecruitDraftOrSaveState;
-};
+}
 
-export type ZohoRecruitRecord = Record<ZohoRecruitFieldName, any> & {
+export type NewZohoRecruitRecordData = ZohoRecruitRecordFieldsData & ZohoRecordDraftStateData;
+
+/**
+ * A ZohoRecruit record containing the corresponding record's id.
+ */
+export type UpdateZohoRecruitRecordData = UniqueModelWithId & ZohoRecruitRecordFieldsData & ZohoRecordDraftStateData;
+
+/**
+ * A ZohoRecruit record containing record details.
+ */
+export type ZohoRecruitRecord = UniqueModelWithId & ZohoRecruitRecordFieldsData;
+
+/**
+ * Update details returned by the server for an updated object.
+ */
+export interface ZohoRecruitRecordUpdateDetails {
   id: ZohoRecruitRecordId;
-  Updated_On: ISO8601DateString;
+  Modified_Time: ISO8601DateString;
+  Modified_By: ZohoRecruitCreatedByData;
+  Created_Time: ISO8601DateString;
   Created_By: ZohoRecruitCreatedByData;
-};
+}
 
 /**
  * Encoded criteria string.
@@ -66,8 +87,33 @@ export type ZohoRecruitSearchRecordsCriteriaString = string;
  *
  * If the input tree is empty, returns undefined.
  */
-export function zohoRecruitSearchRecordsCriteriaString(tree: ZohoRecruitSearchRecordsCriteriaTree): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
-  function convertToString(value: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement>): Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>> {
+export function zohoRecruitSearchRecordsCriteriaString<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData>(input: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
+  let result: Maybe<ZohoRecruitSearchRecordsCriteriaString>;
+
+  if (input != null) {
+    switch (typeof input) {
+      case 'string':
+        result = input;
+        break;
+      case 'object':
+        let tree: ZohoRecruitSearchRecordsCriteriaTree<T>;
+
+        if (Array.isArray(input)) {
+          tree = { and: [input] };
+        } else {
+          tree = input;
+        }
+
+        result = zohoRecruitSearchRecordsCriteriaStringForTree(tree);
+        break;
+    }
+  }
+
+  return result;
+}
+
+export function zohoRecruitSearchRecordsCriteriaStringForTree<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData>(tree: ZohoRecruitSearchRecordsCriteriaTree<T>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
+  function convertToString(value: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>> {
     let result: Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>>;
 
     if (typeof value === 'object') {
@@ -76,7 +122,7 @@ export function zohoRecruitSearchRecordsCriteriaString(tree: ZohoRecruitSearchRe
         result = value.map(zohoRecruitSearchRecordsCriteriaEntryToCriteriaString);
       } else if (value) {
         // criteria tree that first needs to be converted to a string
-        result = zohoRecruitSearchRecordsCriteriaString(value);
+        result = zohoRecruitSearchRecordsCriteriaStringForTree(value);
       }
     } else {
       result = value;
@@ -89,7 +135,7 @@ export function zohoRecruitSearchRecordsCriteriaString(tree: ZohoRecruitSearchRe
     return values.length > 1 ? `(${values.join(type)})` : values[0]; // wrap in and values
   }
 
-  function mergeValues(values: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement>[], type: 'and' | 'or'): ZohoRecruitSearchRecordsCriteriaString {
+  function mergeValues(values: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>[], type: 'and' | 'or'): ZohoRecruitSearchRecordsCriteriaString {
     const allStrings = filterMaybeValues(values.map(convertToString)).flatMap(asArray);
     return mergeStringValues(allStrings, type);
   }
@@ -109,23 +155,25 @@ export function zohoRecruitSearchRecordsCriteriaString(tree: ZohoRecruitSearchRe
  *
  * If both AND and OR values are provided at the root tree, then the will be merged together with AND.
  */
-export interface ZohoRecruitSearchRecordsCriteriaTree {
+export interface ZohoRecruitSearchRecordsCriteriaTree<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> {
   /**
    * Items to AND with eachother
    */
-  readonly and?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement[]>;
+  readonly and?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>[]>;
   /**
    * Items to OR with eachother
    */
-  readonly or?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement[]>;
+  readonly or?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>[]>;
 }
 
-export type ZohoRecruitSearchRecordsCriteriaTreeElement = ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaEntry[] | ZohoRecruitSearchRecordsCriteriaString;
+export type ZohoRecruitSearchRecordsCriteriaTreeElement<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaString;
 
-export type ZohoRecruitSearchRecordsCriteriaFilterType = 'starts_With' | 'equals' | 'contains';
+export type ZohoRecruitSearchRecordsCriteriaFilterType = 'starts_with' | 'equals' | 'contains';
 
-export interface ZohoRecruitSearchRecordsCriteriaEntry {
-  readonly field: ZohoRecruitFieldName;
+export type ZohoRecruitSearchRecordsCriteriaEntryArray<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> = ZohoRecruitSearchRecordsCriteriaEntry<T>[];
+
+export interface ZohoRecruitSearchRecordsCriteriaEntry<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> {
+  readonly field: keyof T extends string ? keyof T : never;
   readonly filter: ZohoRecruitSearchRecordsCriteriaFilterType;
   readonly value: string;
 }
@@ -147,7 +195,7 @@ export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunct
  * @param entry
  * @returns
  */
-export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString(entry: ZohoRecruitSearchRecordsCriteriaEntry): ZohoRecruitSearchRecordsCriteriaString {
+export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData>(entry: ZohoRecruitSearchRecordsCriteriaEntry<T>): ZohoRecruitSearchRecordsCriteriaString {
   const escapedValue = escapeZohoFieldValueForCriteriaString(entry.value);
   return `(${entry.field}:${entry.filter}:${escapedValue})`;
 }
