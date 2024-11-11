@@ -1,10 +1,11 @@
+import { addSeconds } from 'date-fns';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import { ZohoRecruitModule } from './../recruit/recruit.module';
 import { DynamicModule } from '@nestjs/common';
-import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService } from './accounts.service';
+import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from './accounts.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoAccountsApi } from './accounts.api';
-import { ZOHO_RECRUIT_SERVICE_NAME, ZohoAccountsAccessTokenError } from '@dereekb/zoho';
+import { ZOHO_RECRUIT_SERVICE_NAME, ZohoAccessToken, ZohoAccountsAccessTokenError, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 
@@ -74,6 +75,85 @@ describe('accounts.service', () => {
           await expectFail(() => api.accessToken({ refreshToken: 'invalidCode' }), jestExpectFailAssertErrorType(ZohoAccountsAccessTokenError));
         });
       });
+    });
+  });
+});
+
+describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
+  describe('instance', () => {
+    const DUMMY_TOKEN_RESULT = {
+      accessToken: 'test',
+      expiresIn: 3600,
+      expiresAt: addSeconds(new Date(), 3600),
+      apiDomain: 'domain',
+      scope: 'test'
+    };
+
+    let cachedValueA: ZohoAccessToken | undefined;
+    let cachedValueB: ZohoAccessToken | undefined;
+
+    beforeEach(() => {
+      cachedValueA = undefined;
+      cachedValueB = undefined;
+    });
+
+    const instance = mergeZohoAccountsAccessTokenCacheServices([
+      {
+        // never return a value...
+        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
+          loadCachedToken: async () => undefined,
+          updateCachedToken: async (x) => {
+            cachedValueA = x;
+          }
+        })
+      },
+      memoryZohoAccountsAccessTokenCacheService(),
+      {
+        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
+          loadCachedToken: async () => DUMMY_TOKEN_RESULT,
+          updateCachedToken: async (x) => {
+            cachedValueB = x;
+          }
+        })
+      },
+      {
+        // never cache a value
+        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
+          loadCachedToken: async () => undefined,
+          updateCachedToken: async (x) => {
+            throw new Error('test test test');
+          }
+        })
+      }
+    ]);
+
+    it('should try both services when retrieving a token', async () => {
+      const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
+      const result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
+
+      expect(result).toBeDefined();
+
+      if (result) {
+        expect(result.accessToken).toBe(DUMMY_TOKEN_RESULT.accessToken);
+        expect(result.expiresIn).toBe(DUMMY_TOKEN_RESULT.expiresIn);
+        expect(result.expiresAt).toBeSameSecondAs(DUMMY_TOKEN_RESULT.expiresAt);
+        expect(result.apiDomain).toBe(DUMMY_TOKEN_RESULT.apiDomain);
+        expect(result.scope).toBe(DUMMY_TOKEN_RESULT.scope);
+      }
+    });
+
+    it('should update all services when updating a token', async () => {
+      const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
+      const cache = instance.loadZohoAccessTokenCache(randomServiceName);
+
+      await cache.updateCachedToken(DUMMY_TOKEN_RESULT);
+
+      expect(cachedValueA).toBe(DUMMY_TOKEN_RESULT);
+      expect(cachedValueB).toBe(DUMMY_TOKEN_RESULT);
+
+      // this one should return the result from the memory cache
+      const resultFromMemory = await cache.loadCachedToken();
+      expect(resultFromMemory).toBe(DUMMY_TOKEN_RESULT);
     });
   });
 });
