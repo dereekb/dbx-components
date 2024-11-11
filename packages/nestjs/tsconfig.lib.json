@@ -7,5 +7,5 @@
     "target": "ES2022"
   },
   "include": ["**/*.ts"],
-  "exclude": ["stripe/**", "mailgun/**", "twilio/**", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["stripe/**", "mailgun/**", "twilio/**", "jest.config.ts", "**/*.spec.ts"]
 }

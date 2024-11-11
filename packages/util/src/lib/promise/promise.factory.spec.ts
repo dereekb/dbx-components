@@ -68,7 +68,7 @@ describe('tryWithPromiseFactoriesFunction()', () => {
         const result = await instance('2', { successOnMaybe: true });
         expect(result).toBeUndefined();
 
-        expect(lastValueTried1).toBe('1');
+        expect(lastValueTried1).toBe('2');
         expect(lastValueTried2).toBeUndefined();
         expect(lastValueTried3).toBeUndefined();
       });

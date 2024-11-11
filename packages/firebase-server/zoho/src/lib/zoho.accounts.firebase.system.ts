@@ -1,7 +1,6 @@
 import { ZohoAccessToken, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { FirestoreDocumentAccessor, SystemState, SystemStateDocument, SystemStateFirestoreCollection, SystemStateStoredData, SystemStateStoredDataFieldConverterConfig, firestoreArray, firestoreDate, firestoreNumber, firestoreObjectArray, firestoreString, firestoreSubObject } from '@dereekb/firebase';
+import { FirestoreDocumentAccessor, SystemState, SystemStateDocument, SystemStateStoredData, SystemStateStoredDataFieldConverterConfig, firestoreDate, firestoreNumber, firestoreObjectArray, firestoreString, firestoreSubObject } from '@dereekb/firebase';
 import { Configurable, filterUniqueFunction, isPast } from '@dereekb/util';
-import { filterUnique } from '@dereekb/rxjs';
 
 export const ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE = 'zoho_access_token';
 

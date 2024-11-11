@@ -9,6 +9,6 @@
     "target": "ES2022",
     "useDefineForClassFields": false
   },
-  "exclude": ["mapbox/**", "calendar/**", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
+  "exclude": ["mapbox/**", "calendar/**", "**/*.spec.ts", "jest.config.ts"],
   "include": ["**/*.ts"]
 }
