@@ -75,10 +75,12 @@ export class DbxActionContextMapDirectiveSourceInstance implements ActionContext
       map((x) => x.get(this.key)),
       distinctUntilChanged()
     );
+
     const _store$ = _source$.pipe(
       switchMap((x) => x?.store$ ?? of(undefined)),
       shareReplay(1)
     );
+
     this.store$ = actionContextStoreSourcePipe(_store$);
   }
 }

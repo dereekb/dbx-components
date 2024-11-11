@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Host, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, combineLatest, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
@@ -13,9 +13,11 @@ export const APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY = 'dbx_action_enforce_mod
   selector: '[dbxActionEnforceModified]'
 })
 export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
+
   private _enabled = new BehaviorSubject<boolean>(true);
 
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
+  constructor() {
     super();
   }
 

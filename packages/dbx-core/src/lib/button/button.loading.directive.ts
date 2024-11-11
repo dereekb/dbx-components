@@ -1,4 +1,4 @@
-import { Directive, Host, Input, NgZone } from '@angular/core';
+import { Directive, Host, Input, NgZone, inject } from '@angular/core';
 import { LoadingContext } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxButton } from './button';
@@ -12,7 +12,10 @@ import { DbxButton } from './button';
   selector: '[dbxLoadingButton]'
 })
 export class DbxLoadingButtonDirective extends AbstractSubscriptionDirective {
-  constructor(@Host() public readonly button: DbxButton, readonly ngZone: NgZone) {
+  readonly button = inject(DbxButton, { host: true });
+  readonly ngZone = inject(NgZone);
+
+  constructor() {
     super();
   }
 

@@ -7,7 +7,7 @@ import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe } from 
 export class SubscriptionObject implements Destroyable {
   private _subscription?: Maybe<Subscription>;
 
-  constructor(sub?: Subscription) {
+  constructor(sub?: Maybe<Subscription>) {
     if (sub) {
       this.setSub(sub);
     }

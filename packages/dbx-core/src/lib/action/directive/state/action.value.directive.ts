@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Host, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, shareReplay, switchMap, tap } from 'rxjs';
@@ -14,6 +14,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   selector: '[dbxActionValue]'
 })
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   private _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
 
@@ -26,7 +28,7 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
     this._valueOrFunction.next(valueOrFunction);
   }
 
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
+  constructor() {
     super();
   }
 

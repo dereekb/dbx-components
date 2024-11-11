@@ -47,10 +47,10 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   state$?: Maybe<Observable<S>>;
 
   @Output()
-  clickItem = new EventEmitter<T>();
+  readonly clickItem = new EventEmitter<T>();
 
   @Output()
-  loadMore = new EventEmitter<void>();
+  readonly loadMore = new EventEmitter<void>();
 
   constructor(readonly initConfig: ObservableOrValue<C>) {}
 

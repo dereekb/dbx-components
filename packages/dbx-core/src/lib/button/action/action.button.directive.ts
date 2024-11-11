@@ -1,5 +1,5 @@
 import { safeDetectChanges } from '../../util/view';
-import { Directive, Host, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Directive, Host, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
@@ -12,12 +12,10 @@ import { SubscriptionObject } from '@dereekb/rxjs';
   selector: '[dbxActionButton]'
 })
 export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective implements OnInit, OnDestroy {
+  private readonly cdRef = inject(ChangeDetectorRef);
+
   private _workingSub = new SubscriptionObject();
   private _disabledSub = new SubscriptionObject();
-
-  constructor(@Host() button: DbxButton, source: DbxActionContextStoreSourceInstance, private readonly cdRef: ChangeDetectorRef) {
-    super(button, source);
-  }
 
   override ngOnInit(): void {
     super.ngOnInit();

@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Host, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, distinctUntilChanged, combineLatest } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
@@ -13,10 +13,12 @@ export const APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY = 'dbx_action_disabled
   selector: '[dbxActionDisabledOnSuccess]'
 })
 export class DbxActionDisabledOnSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   private _disableOnSuccess = new BehaviorSubject<boolean>(true);
   readonly disableOnSuccess$ = this._disableOnSuccess.pipe(distinctUntilChanged());
 
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
+  constructor() {
     super();
   }
 

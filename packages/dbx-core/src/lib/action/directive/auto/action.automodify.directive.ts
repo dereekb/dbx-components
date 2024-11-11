@@ -8,9 +8,9 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxActionAutoModify]'
 })
 export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
-
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
+  private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
 
   @Input('dbxActionAutoModify')
   get autoModifyEnabled(): boolean {

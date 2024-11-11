@@ -86,7 +86,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   padded = true;
 
   @Output()
-  contentScrolled = new EventEmitter<number>();
+  readonly contentScrolled = new EventEmitter<number>();
 
   private _content: Maybe<DbxListInternalContentDirective>;
   private _disabled = new BehaviorSubject<boolean>(false);

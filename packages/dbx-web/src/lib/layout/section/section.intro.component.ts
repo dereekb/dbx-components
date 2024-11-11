@@ -25,7 +25,7 @@ import { DbxSectionComponent } from './section.component';
 })
 export class DbxIntroActionSectionComponent extends DbxSectionComponent implements OnDestroy {
   @Output()
-  showAction = new EventEmitter<void>();
+  readonly showAction = new EventEmitter<void>();
 
   @Input()
   showIntro?: boolean;

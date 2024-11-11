@@ -1,6 +1,7 @@
-import { OnDestroy, Directive } from '@angular/core';
+import { OnDestroy, Directive, Inject, Optional } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Abstract component that contains a SubscriptionObject and will clean it up automatically.
@@ -9,7 +10,7 @@ import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 export abstract class AbstractSubscriptionDirective implements OnDestroy {
   private _subscriptionObject = new SubscriptionObject();
 
-  constructor(subscription?: Subscription) {
+  constructor(@Inject(null) @Optional() subscription?: Subscription) {
     this.sub = subscription;
   }
 
@@ -17,7 +18,7 @@ export abstract class AbstractSubscriptionDirective implements OnDestroy {
     this._subscriptionObject.destroy();
   }
 
-  protected set sub(subscription: Subscription | undefined) {
+  protected set sub(subscription: Maybe<Subscription | undefined>) {
     this._subscriptionObject.subscription = subscription;
   }
 }

@@ -144,7 +144,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   );
 
   @Output()
-  clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
+  readonly clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
   // refresh any time the selected day function updates
   readonly state$ = this.dbxCalendarScheduleSelectionStore.state$;

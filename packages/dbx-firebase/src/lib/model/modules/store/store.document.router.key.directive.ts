@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { OnDestroy, Directive, Host, Input, OnInit } from '@angular/core';
+import { OnDestroy, Directive, Host, Input, OnInit, inject } from '@angular/core';
 import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
@@ -14,11 +14,15 @@ import { TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
   selector: '[dbxFirebaseDocumentStoreRouteKey]'
 })
 export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T>, { host: true });
+  readonly dbxRouterService = inject(DbxRouterService);
+
   private _redirectInstance = dbxFirebaseKeyRouteParamRedirect(this.dbxRouterService);
+
   readonly keyFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly key$: Observable<Maybe<TwoWayFlatFirestoreModelKey>> = this._redirectInstance.value$;
 
-  constructor(@Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>, readonly dbxRouterService: DbxRouterService) {
+  constructor() {
     super();
   }
 

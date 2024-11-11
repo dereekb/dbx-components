@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit } from '@angular/core';
+import { Directive, Host, OnInit, inject } from '@angular/core';
 import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxReadableErrorComponent } from './error.component';
 
@@ -9,7 +9,10 @@ import { DbxReadableErrorComponent } from './error.component';
   selector: '[dbxActionError]'
 })
 export class DbxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
-  constructor(@Host() public readonly error: DbxReadableErrorComponent, public readonly source: DbxActionContextStoreSourceInstance) {
+  readonly error = inject(DbxReadableErrorComponent, { host: true });
+  readonly source = inject(DbxActionContextStoreSourceInstance);
+
+  constructor() {
     super();
   }
 

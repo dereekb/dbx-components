@@ -31,10 +31,10 @@ export class DbxPromptConfirmComponent {
   private _config: DbxPromptConfirmConfig = {};
 
   @Output()
-  confirm = new EventEmitter<void>();
+  readonly confirm = new EventEmitter<void>();
 
   @Output()
-  cancel = new EventEmitter<void>();
+  readonly cancel = new EventEmitter<void>();
 
   @Input()
   get config(): DbxPromptConfirmConfig {

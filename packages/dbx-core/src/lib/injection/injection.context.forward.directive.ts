@@ -1,4 +1,4 @@
-import { Directive, Host } from '@angular/core';
+import { Directive, Host, inject } from '@angular/core';
 import { DbxInjectionContext, DbxInjectionContextConfig } from './injection.context';
 
 /**
@@ -9,7 +9,7 @@ import { DbxInjectionContext, DbxInjectionContextConfig } from './injection.cont
  */
 @Directive()
 export abstract class AbstractForwardDbxInjectionContextDirective implements DbxInjectionContext {
-  constructor(@Host() readonly dbxInjectionContext: DbxInjectionContext) {}
+  readonly dbxInjectionContext = inject(DbxInjectionContext, { host: true });
 
   // MARK: DbxInjectionContext
   showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T, unknown>): Promise<O> {

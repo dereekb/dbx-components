@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject } from 'rxjs';
-import { Directive, Host, Input, OnDestroy } from '@angular/core';
+import { Directive, Host, Input, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxMutableForm } from '../../form/form';
 import { LoadingState, loadingStateHasFinishedLoading } from '@dereekb/rxjs';
@@ -12,11 +12,9 @@ import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from '.
   selector: '[dbxFormLoadingSource]'
 })
 export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
-  private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
+  readonly form = inject(DbxMutableForm<T>, { host: true });
 
-  constructor(@Host() public readonly form: DbxMutableForm<T>) {
-    super();
-  }
+  private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
   @Input('dbxFormLoadingSourceMode')
   get mode(): DbxFormSourceDirectiveMode {

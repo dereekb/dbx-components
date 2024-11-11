@@ -10,6 +10,7 @@ import { Work } from '@dereekb/rxjs';
 @Directive()
 export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> implements OnInit, OnDestroy {
   readonly source: DbxActionContextStoreSourceInstance<T, O> = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   protected _dbxActionHandlerInstance = new DbxActionHandlerInstance<T, O>(this.source);
 
   ngOnInit(): void {

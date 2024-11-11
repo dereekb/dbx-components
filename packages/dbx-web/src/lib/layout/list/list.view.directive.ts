@@ -20,7 +20,7 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   readonly selectionMode$ = this._selectionMode.asObservable();
 
   @Output()
-  clickValue = new EventEmitter<T>();
+  readonly clickValue = new EventEmitter<T>();
 
   @Input()
   set valueArray(values: Maybe<T[]>) {

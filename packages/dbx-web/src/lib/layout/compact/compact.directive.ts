@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, Input, inject } from '@angular/core';
 import { CompactMode } from './compact';
 import { CompactContextStore } from './compact.store';
 
@@ -11,9 +11,8 @@ import { CompactContextStore } from './compact.store';
   exportAs: 'compact'
 })
 export class DbxCompactDirective {
-  mode$ = this.compactContextStore.mode$;
-
-  constructor(readonly compactContextStore: CompactContextStore) {}
+  readonly compactContextStore = inject(CompactContextStore);
+  readonly mode$ = this.compactContextStore.mode$;
 
   @Input('dbxCompact')
   set mode(mode: CompactMode | boolean) {

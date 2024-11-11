@@ -12,7 +12,7 @@ import { DbxCalendarEvent, prepareAndSortCalendarEvents } from './calendar';
 })
 export class DbxCalendarComponent<T> implements OnDestroy {
   @Output()
-  clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
+  readonly clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
   readonly viewDate$ = this.calendarStore.date$;
 

@@ -1,5 +1,5 @@
 import { distinctUntilChanged, filter, map, switchMap, combineLatest, BehaviorSubject, Observable, EMPTY, exhaustMap, takeUntil, Subject, tap, shareReplay, throttleTime } from 'rxjs';
-import { Directive, Host, Input, OnDestroy } from '@angular/core';
+import { Directive, Host, Input, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFormState, DbxFormStateRef, DbxMutableForm } from '../form';
 import { Maybe } from '@dereekb/util';
@@ -104,9 +104,11 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
   selector: '[dbxFormSource]'
 })
 export class DbxFormSourceDirective<T> extends AbstractSubscriptionDirective implements OnDestroy {
+  readonly form = inject(DbxMutableForm<T>, { host: true });
+
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
-  constructor(@Host() public readonly form: DbxMutableForm<T>) {
+  constructor() {
     super();
   }
 
