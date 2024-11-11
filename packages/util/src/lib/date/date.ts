@@ -320,3 +320,13 @@ export function isDate(value: unknown): value is Date {
 export function isEqualDate(a: Date, b: Date): boolean {
   return a.getTime() === b.getTime();
 }
+
+/**
+ * Returns true if the input date is in the past.
+ *
+ * @param input
+ * @returns
+ */
+export function isPast(input: Date): boolean {
+  return input.getTime() < Date.now();
+}

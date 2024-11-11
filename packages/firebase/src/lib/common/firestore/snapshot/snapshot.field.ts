@@ -66,7 +66,9 @@ import {
   isEqualToValueDecisionFunction,
   filterNullAndUndefinedValues,
   type ModelMapToFunction,
-  MAP_IDENTITY
+  MAP_IDENTITY,
+  Filter,
+  FilterFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';
@@ -827,6 +829,10 @@ export type FirestoreObjectArrayFieldConfig<T extends object, O extends object =
      * Filters the objects array uniquely.
      */
     readonly filterUnique?: FilterUniqueFunction<T, any>;
+    /**
+     * Arbitrary filter to apply to the array. Is run after the filterUnique function is run.
+     */
+    readonly filter?: FilterFunction<T>;
   };
 
 export type FirestoreObjectArrayFieldConfigObjectFieldInput<T extends object, O extends object = FirestoreModelData<T>> = {
@@ -857,12 +863,30 @@ export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O e
  * @returns
  */
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
-  const { filterUnique: inputFilterUnique } = config;
-  const filterUnique = inputFilterUnique ?? MAP_IDENTITY;
+  const { filterUnique: inputFilterUnique, filter: filterFn } = config;
+
   const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   const { from, to: baseTo } = toModelMapFunctions<T, O>(objectField);
+
+  let performFiltering: (x: T[]) => T[];
+
+  if (inputFilterUnique ?? filterFn) {
+    const filterUnique = inputFilterUnique ?? MAP_IDENTITY;
+
+    performFiltering = (x: T[]) => {
+      let result = filterUnique(x);
+
+      if (filterFn) {
+        result = result.filter(filterFn);
+      }
+
+      return result;
+    };
+  } else {
+    performFiltering = MAP_IDENTITY;
+  }
 
   const to: ModelMapToFunction<T, O> = (x) => {
     // remove null/undefined values from each field when converting to in order to mirror firestore usage (undefined is treated like null)
@@ -874,8 +898,8 @@ export function firestoreObjectArray<T extends object, O extends object = Firest
   return firestoreField<T[], O[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: (input: O[]) => sortFn(filterUnique(input.map((x) => from(x))), false), // map then filter then sort
-    toData: (input: T[]) => filterMaybeValues(sortFn(filterUnique(input), true)).map((x) => to(x)) // filter then sort then map
+    fromData: (input: O[]) => sortFn(performFiltering(input.map((x) => from(x))), false), // map then filter then sort
+    toData: (input: T[]) => filterMaybeValues(sortFn(performFiltering(input), true)).map((x) => to(x)) // filter then sort then map
   });
 }
 

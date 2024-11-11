@@ -17,6 +17,9 @@
           },
           {
             "command": "npx nx run firebase-server-mailgun:build-base"
+          },
+          {
+            "command": "npx nx run firebase-server-zoho:build-base"
           }
         ],
         "parallel": false

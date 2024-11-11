@@ -89,10 +89,13 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
       scope: 'test'
     };
 
+    let tokenToReturn: ZohoAccessToken | undefined;
+
     let cachedValueA: ZohoAccessToken | undefined;
     let cachedValueB: ZohoAccessToken | undefined;
 
     beforeEach(() => {
+      tokenToReturn = DUMMY_TOKEN_RESULT;
       cachedValueA = undefined;
       cachedValueB = undefined;
     });
@@ -107,17 +110,30 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
           }
         })
       },
+      {
+        // always return an expired token...
+        loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
+          loadCachedToken: async () => {
+            return {
+              ...DUMMY_TOKEN_RESULT,
+              expiresAt: new Date(Date.now() - 1000) // expired 1 second ago
+            };
+          },
+          updateCachedToken: async (x) => {}
+        })
+      },
       memoryZohoAccountsAccessTokenCacheService(),
+      // always return tokenToReturn
       {
         loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
-          loadCachedToken: async () => DUMMY_TOKEN_RESULT,
+          loadCachedToken: async () => tokenToReturn,
           updateCachedToken: async (x) => {
             cachedValueB = x;
           }
         })
       },
       {
-        // never cache a value
+        // always throw an error when updating the cache
         loadZohoAccessTokenCache: (service: ZohoServiceAccessTokenKey) => ({
           loadCachedToken: async () => undefined,
           updateCachedToken: async (x) => {
@@ -127,7 +143,7 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
       }
     ]);
 
-    it('should try both services when retrieving a token', async () => {
+    it('should try all services when retrieving a token', async () => {
       const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
       const result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
 
@@ -140,6 +156,24 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
         expect(result.apiDomain).toBe(DUMMY_TOKEN_RESULT.apiDomain);
         expect(result.scope).toBe(DUMMY_TOKEN_RESULT.scope);
       }
+    });
+
+    it('should never return an expired token even if a service returns an expired token', async () => {
+      const randomServiceName = `SERVICE_${Math.floor(Math.random() * 100000)}`;
+      tokenToReturn = {
+        ...DUMMY_TOKEN_RESULT,
+        expiresAt: new Date(Date.now() - 1000)
+      };
+
+      expect(tokenToReturn.expiresAt).toBeBefore(new Date());
+
+      let result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
+      expect(result).toBeUndefined();
+
+      tokenToReturn = DUMMY_TOKEN_RESULT;
+
+      result = await instance.loadZohoAccessTokenCache(randomServiceName).loadCachedToken();
+      expect(result).toBeDefined();
     });
 
     it('should update all services when updating a token', async () => {

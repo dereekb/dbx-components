@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { Maybe, forEachKeyValue, Configurable, filterMaybeValues, tryWithPromiseFactoriesFunction } from '@dereekb/util';
+import { Maybe, forEachKeyValue, Configurable, filterMaybeValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
 import { dirname } from 'path';
 import { readFile, writeFile, rm, mkdirSync } from 'fs';
 
@@ -49,7 +49,18 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
     loadZohoAccessTokenCache: function (service: string): ZohoAccessTokenCache {
       const accessCachesForServices = services.map((x) => x.loadZohoAccessTokenCache(service));
       const loadCachedTokenFromFirstService = tryWithPromiseFactoriesFunction<void, ZohoAccessToken>({
-        promiseFactories: accessCachesForServices.map((x) => () => x.loadCachedToken()),
+        promiseFactories: accessCachesForServices.map(
+          (x) => () =>
+            x.loadCachedToken().then((x) => {
+              let result: Maybe<ZohoAccessToken> = undefined;
+
+              if (x && !isPast(x.expiresAt)) {
+                result = x; // only return from cache if it is not expired
+              }
+
+              return result;
+            })
+        ),
         successOnMaybe: false,
         throwErrors: false
       });
