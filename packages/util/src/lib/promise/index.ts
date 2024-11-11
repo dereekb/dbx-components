@@ -5,6 +5,7 @@ export * from './map';
 export * from './promise';
 export * from './promise.loop';
 export * from './promise.ref';
+export * from './promise.factory';
 export * from './promise.type';
 export * from './wait';
 export * from './use';
