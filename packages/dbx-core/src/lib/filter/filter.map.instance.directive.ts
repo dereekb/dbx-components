@@ -1,6 +1,6 @@
 import { filterMaybe, FilterMapKey, FilterMap } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, OnDestroy } from '@angular/core';
+import { Directive, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -9,11 +9,11 @@ import { Maybe } from '@dereekb/util';
 @Directive()
 export abstract class AbstractDbxFilterMapInstanceDirective<F> implements OnDestroy {
   protected _key = new BehaviorSubject<Maybe<FilterMapKey>>(undefined);
+
+  readonly dbxFilterMap = inject(FilterMap<F>);
   readonly key$ = this._key.pipe(filterMaybe());
 
   readonly instance$ = this.dbxFilterMap.instanceObsForKeyObs(this.key$);
-
-  constructor(readonly dbxFilterMap: FilterMap<F>) {}
 
   ngOnDestroy(): void {
     this._key.complete();

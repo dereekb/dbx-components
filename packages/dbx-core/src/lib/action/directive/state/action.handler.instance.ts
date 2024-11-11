@@ -50,9 +50,11 @@ export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initi
     this._handlerValue.next(handlerValue);
   }
 
-  private _delegate = new DbxActionWorkInstanceDelegate<T, O>(this.source);
+  private _delegate: DbxActionWorkInstanceDelegate<T, O>;
 
-  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
+  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) {
+    this._delegate = new DbxActionWorkInstanceDelegate<T, O>(this.source);
+  }
 
   init(): void {
     this._sub.subscription = this.handlerFunction$

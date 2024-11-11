@@ -1,4 +1,4 @@
-import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef, OnDestroy, OnInit } from '@angular/core';
+import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
@@ -12,12 +12,14 @@ import { PromiseOrValue, PromiseReference, promiseReference, Maybe } from '@dere
   providers: provideDbxInjectionContext(DbxInjectionContextDirective)
 })
 export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
+  private readonly _injector = inject(Injector);
+  private readonly _templateRef = inject(TemplateRef<O>);
+  private readonly _viewContainer = inject(ViewContainerRef);
+
   private _currentPromise: Maybe<PromiseReference<unknown>>;
   private _instance = new DbxInjectionInstance(this._injector);
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
-
-  constructor(private readonly _injector: Injector, private readonly _templateRef: TemplateRef<O>, private readonly _viewContainer: ViewContainerRef) {}
 
   @Input()
   set config(config: Maybe<DbxInjectionComponentConfig<unknown>>) {

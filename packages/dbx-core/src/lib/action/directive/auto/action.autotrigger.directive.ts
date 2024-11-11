@@ -1,4 +1,4 @@
-import { Directive, Input, OnInit, OnDestroy, Host } from '@angular/core';
+import { inject, Directive, Input, OnInit, OnDestroy, Host } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, Subject, combineLatest, Observable, BehaviorSubject } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -90,6 +90,8 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
 
   private _triggerCount = 0;
 
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   readonly _errorCount$ = this.source.errorCountSinceLastSuccess$;
 
   readonly _triggerCount$ = this.source.isModifiedAndCanTriggerUpdates$.pipe(
@@ -136,10 +138,6 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     distinctUntilChanged((a, b) => a[0] === b[0]), // Only trigger when the count changes.
     map(() => undefined as void)
   );
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
-    super();
-  }
 
   get isEnabled(): boolean {
     return this.triggerEnabled !== false;

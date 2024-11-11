@@ -71,9 +71,11 @@ export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch):
 // MARK: Context
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   readonly contextType = FirestoreDocumentContextType.BATCH;
-  readonly accessorFactory = writeBatchAccessorFactory<T>(this.batch);
+  readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T, DocumentData>;
 
-  constructor(readonly batch: GoogleCloudWriteBatch) {}
+  constructor(readonly batch: GoogleCloudWriteBatch) {
+    this.accessorFactory = writeBatchAccessorFactory<T>(this.batch);
+  }
 }
 
 export function writeBatchDocumentContext<T>(batch: GoogleCloudWriteBatch): WriteBatchFirestoreDocumentContext<T> {

@@ -71,9 +71,11 @@ export function transactionAccessorFactory<T>(transaction: GoogleCloudTransactio
 // MARK: Context
 export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   readonly contextType = FirestoreDocumentContextType.TRANSACTION;
-  readonly accessorFactory = transactionAccessorFactory<T>(this.transaction);
+  readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T, DocumentData>;
 
-  constructor(readonly transaction: GoogleCloudTransaction) {}
+  constructor(readonly transaction: GoogleCloudTransaction) {
+    this.accessorFactory = transactionAccessorFactory<T>(this.transaction);
+  }
 }
 
 export function transactionDocumentContext<T>(transaction: GoogleCloudTransaction): TransactionFirestoreDocumentContext<T> {

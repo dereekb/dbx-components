@@ -67,9 +67,11 @@ export class FilterMap<F> implements Destroyable {
 }
 
 export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, FilterSource<F> {
-  readonly filter$ = this.dbxFilterMap.filterForKey(this.key);
+  readonly filter$: Observable<F>;
 
-  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) {}
+  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) {
+    this.filter$ = this.dbxFilterMap.filterForKey(this.key);
+  }
 
   initWithFilter(filterObs: Observable<F>): void {
     this.dbxFilterMap.addDefaultFilterObs(this.key, filterObs);

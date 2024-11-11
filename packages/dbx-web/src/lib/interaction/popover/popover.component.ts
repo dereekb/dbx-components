@@ -1,4 +1,4 @@
-import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef } from '@angular/core';
+import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef, inject } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
@@ -98,8 +98,11 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
 
   getClosingValueFn?: (value: Maybe<I>, closeType: NgPopoverCloseType) => PromiseOrValue<O | undefined>;
 
-  constructor(private popoverRef: NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>, private compactContextState: CompactContextStore, dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone) {
-    super(dbxRouterTransitionService, ngZone);
+  private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);
+  private readonly compactContextState = inject(CompactContextStore);
+
+  constructor() {
+    super();
 
     // Override Close to properly signal to listeners when a close is occuring.
     const originalClose = this.popoverRef.close;
@@ -128,7 +131,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
     };
 
     // eslint-disable-next-line
-    const overlay = (popoverRef as any)._overlay as Overlay; // overlay is not publically accessible
+    const overlay = (this.popoverRef as any)._overlay as Overlay; // overlay is not publically accessible
     const elementRef = this.config.origin;
     const configuration = this.config.configuration;
 

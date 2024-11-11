@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform, Inject, LOCALE_ID } from '@angular/core';
+import { Pipe, PipeTransform, Inject, LOCALE_ID, inject } from '@angular/core';
 import { formatDate } from '@angular/common';
 import { formatDistanceToNow, isValid } from 'date-fns';
 import { DateOrDateString, Maybe } from '@dereekb/util';
@@ -9,7 +9,7 @@ import { toJsDate } from '@dereekb/date';
  */
 @Pipe({ name: 'dateFormatDistance', pure: false })
 export class DateFormatDistancePipe implements PipeTransform {
-  constructor(@Inject(LOCALE_ID) private locale: string) {}
+  private locale = inject(LOCALE_ID);
 
   transform(input: Maybe<DateOrDateString>, format: string, includeSeconds = false): Maybe<string> {
     if (input) {

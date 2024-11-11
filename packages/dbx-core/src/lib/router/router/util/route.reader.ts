@@ -44,25 +44,33 @@ export interface DbxRouteParamReader<T> {
  * Utility class used for reading a single value from the DbxRouterService.
  */
 export class DbxRouteParamReaderInstance<T> implements DbxRouteParamReader<T>, Destroyable {
-  private _paramKey = new BehaviorSubject<string>(this.defaultParamKey);
-  readonly paramKey$ = this._paramKey.asObservable();
+  private _paramKey: BehaviorSubject<string>;
+  private _defaultValue: BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>;
 
-  private _defaultValue = new BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>(this.defaultValue);
+  readonly paramKey$: Observable<string>;
+  readonly paramValue$: Observable<Maybe<T>>;
+  readonly nextDefaultValue$: Observable<Maybe<T>>;
+  readonly defaultValue$: Observable<Maybe<T>>;
+  readonly value$: Observable<Maybe<T>>;
 
-  readonly paramValue$: Observable<Maybe<T>> = combineLatest([this.paramKey$, this.dbxRouterService.params$]).pipe(
-    map(([key, params]) => {
-      return (params[key] as Maybe<T>) ?? undefined;
-    }),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  constructor(readonly dbxRouterService: DbxRouterService, readonly defaultParamKey: string, readonly defaultValue?: MaybeObservableOrValueGetter<T>) {
+    this._paramKey = new BehaviorSubject<string>(this.defaultParamKey);
+    this._defaultValue = new BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>(this.defaultValue);
 
-  readonly nextDefaultValue$: Observable<Maybe<T>> = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
-  readonly defaultValue$: Observable<Maybe<T>> = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
+    this.paramKey$ = this._paramKey.asObservable();
 
-  readonly value$: Observable<Maybe<T>> = this.paramValue$.pipe(switchMapToDefault(this.defaultValue$), shareReplay(1));
+    this.paramValue$ = combineLatest([this.paramKey$, this.dbxRouterService.params$]).pipe(
+      map(([key, params]) => {
+        return (params[key] as Maybe<T>) ?? undefined;
+      }),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
 
-  constructor(readonly dbxRouterService: DbxRouterService, readonly defaultParamKey: string, readonly defaultValue?: MaybeObservableOrValueGetter<T>) {}
+    this.nextDefaultValue$ = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
+    this.defaultValue$ = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
+    this.value$ = this.paramValue$.pipe(switchMapToDefault(this.defaultValue$), shareReplay(1));
+  }
 
   destroy(): void {
     this._paramKey.complete();

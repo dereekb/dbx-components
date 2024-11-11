@@ -1,6 +1,6 @@
 import { Maybe, AuthRole, ArrayOrValue } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy } from '@angular/core';
+import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy, inject } from '@angular/core';
 import { authRolesSetContainsAllRolesFrom, DbxAuthService } from './service';
 import { AbstractIfDirective } from '../view/if.directive';
 
@@ -14,11 +14,7 @@ export class DbxAuthHasRolesDirective extends AbstractIfDirective implements OnD
   private _targetRoles = new BehaviorSubject<Maybe<ArrayOrValue<AuthRole>>>(undefined);
   readonly targetRoles$ = this._targetRoles.asObservable();
 
-  readonly show$ = this.dbxAuthService.authRoles$.pipe(authRolesSetContainsAllRolesFrom(this.targetRoles$));
-
-  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, private dbxAuthService: DbxAuthService) {
-    super(templateRef, viewContainer);
-  }
+  readonly show$ = inject(DbxAuthService).authRoles$.pipe(authRolesSetContainsAllRolesFrom(this.targetRoles$));
 
   override ngOnDestroy(): void {
     this._targetRoles.complete();

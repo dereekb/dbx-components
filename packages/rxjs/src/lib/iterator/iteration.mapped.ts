@@ -21,25 +21,32 @@ export interface MappedItemIterationInstanceMapConfig<O, I, M extends LoadingSta
 }
 
 export class MappedItemIterationInstance<O, I = unknown, M extends LoadingState<O> = LoadingState<O>, L extends LoadingState<I> = LoadingState<I>, N extends ItemIteration<I, L> = ItemIteration<I, L>> implements ItemIteration<O>, Destroyable {
-  constructor(readonly itemIterator: N, readonly config: MappedItemIterationInstanceMapConfig<O, I, M, L>) {}
+  readonly hasNext$: Observable<boolean>;
+  readonly canLoadMore$: Observable<boolean>;
 
-  readonly hasNext$: Observable<boolean> = this.itemIterator.hasNext$;
-  readonly canLoadMore$: Observable<boolean> = this.itemIterator.canLoadMore$;
+  readonly firstState$: Observable<M>;
+  readonly latestState$: Observable<M>;
+  readonly currentState$: Observable<M>;
 
-  readonly firstState$: Observable<M> = this.itemIterator.firstState$.pipe(
-    map((state) => mapLoadingStateResults(state, this.config)),
-    shareReplay(1)
-  );
+  constructor(readonly itemIterator: N, readonly config: MappedItemIterationInstanceMapConfig<O, I, M, L>) {
+    this.hasNext$ = this.itemIterator.hasNext$;
+    this.canLoadMore$ = this.itemIterator.canLoadMore$;
 
-  readonly latestState$: Observable<M> = this.itemIterator.latestState$.pipe(
-    map((state) => mapLoadingStateResults(state, this.config)),
-    shareReplay(1)
-  );
+    this.firstState$ = this.itemIterator.firstState$.pipe(
+      map((state) => mapLoadingStateResults(state, this.config)),
+      shareReplay(1)
+    );
 
-  readonly currentState$: Observable<M> = this.itemIterator.currentState$.pipe(
-    map((state) => mapLoadingStateResults<I, O, L, M>(state, this.config)),
-    shareReplay(1)
-  );
+    this.latestState$ = this.itemIterator.latestState$.pipe(
+      map((state) => mapLoadingStateResults(state, this.config)),
+      shareReplay(1)
+    );
+
+    this.currentState$ = this.itemIterator.currentState$.pipe(
+      map((state) => mapLoadingStateResults<I, O, L, M>(state, this.config)),
+      shareReplay(1)
+    );
+  }
 
   next(request?: ItemIteratorNextRequest): void {
     return this.itemIterator.next(request);

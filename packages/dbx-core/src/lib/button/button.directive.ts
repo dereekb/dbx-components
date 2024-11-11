@@ -61,10 +61,6 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   readonly clicked$ = this.buttonClick.asObservable();
 
-  constructor() {
-    super();
-  }
-
   /**
    * Pre-interceptor button click.
    */

@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
+import { Directive, Host, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { FactoryWithInput, GetterOrValue, Maybe } from '@dereekb/util';
 import { DbxActionHandlerInstance } from './action.handler.instance';
@@ -9,9 +9,8 @@ import { Work } from '@dereekb/rxjs';
  */
 @Directive()
 export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> implements OnInit, OnDestroy {
+  readonly source: DbxActionContextStoreSourceInstance<T, O> = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
   protected _dbxActionHandlerInstance = new DbxActionHandlerInstance<T, O>(this.source);
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
 
   ngOnInit(): void {
     this._dbxActionHandlerInstance.init();
