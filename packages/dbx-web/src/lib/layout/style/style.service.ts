@@ -1,5 +1,5 @@
 import { Destroyable, Maybe } from '@dereekb/util';
-import { filterMaybe, tapLog } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
 import { Injectable, InjectionToken, inject } from '@angular/core';
 

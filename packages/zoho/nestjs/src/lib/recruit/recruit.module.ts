@@ -1,4 +1,4 @@
-import { Module, ModuleMetadata } from '@nestjs/common';
+import { ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ZohoRecruitApi } from './recruit.api';
 import { ZohoRecruitServiceConfig } from './recruit.config';
