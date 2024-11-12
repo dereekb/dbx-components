@@ -27,3 +27,5 @@ Some related threads to the useDefineForClassFields usage:
 - Removed deprecated string `CREATE_MODEL_APP_FUNCTION_KEY` and related strings
 - Removed mergeIntoArray and related types
 - Renamed `DbxFormExpandWrapperComponent` and related values. The function was always `expandWrapper()` so this change most likely causes no issues.
+- Removed `ZohoRecruitModule` and replaced it will `appZohoRecruitModuleMetadata()`
+- 
