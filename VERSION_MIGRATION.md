@@ -1,3 +1,5 @@
+## Migration of v9.x.x to v10.x.x
+Migration/Upgrade info is available in the `setup/v9-to-v10-upgrade-info.md` document.
 
 ## Migration of v10.x.x to v11.x.x
 ### Overview
@@ -25,3 +27,5 @@ Some related threads to the useDefineForClassFields usage:
 - Removed deprecated string `CREATE_MODEL_APP_FUNCTION_KEY` and related strings
 - Removed mergeIntoArray and related types
 - Renamed `DbxFormExpandWrapperComponent` and related values. The function was always `expandWrapper()` so this change most likely causes no issues.
+- Removed `ZohoRecruitModule` and replaced it will `appZohoRecruitModuleMetadata()`
+- 

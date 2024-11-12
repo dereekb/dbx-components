@@ -1,19 +1,23 @@
 import { addSeconds } from 'date-fns';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
-import { ZohoRecruitModule } from './../recruit/recruit.module';
-import { DynamicModule } from '@nestjs/common';
+import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { ZohoAccountsAccessTokenCacheService, fileZohoAccountsAccessTokenCacheService, memoryZohoAccountsAccessTokenCacheService, mergeZohoAccountsAccessTokenCacheServices } from './accounts.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoAccountsApi } from './accounts.api';
 import { ZOHO_RECRUIT_SERVICE_NAME, ZohoAccessToken, ZohoAccountsAccessTokenError, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
+import { appZohoRecruitModuleMetadata } from '../recruit/recruit.module';
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
+
+@Module(appZohoRecruitModuleMetadata({}))
+export class TestZohoRecruitModule {}
 
 describe('accounts.service', () => {
   let nest: TestingModule;
 
   beforeEach(async () => {
-    const providers = [
+    // example of providing the cache service at the root/globally
+    const providers: Provider[] = [
       {
         provide: ZohoAccountsAccessTokenCacheService,
         useValue: cacheService
@@ -21,7 +25,7 @@ describe('accounts.service', () => {
     ];
 
     const rootModule: DynamicModule = {
-      module: ZohoRecruitModule,
+      module: TestZohoRecruitModule,
       providers,
       exports: providers,
       global: true

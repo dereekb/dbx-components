@@ -1,5 +1,5 @@
-import { ZohoRecruitModule } from './recruit.module';
-import { DynamicModule } from '@nestjs/common';
+import { appZohoRecruitModuleMetadata } from './recruit.module';
+import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
@@ -34,6 +34,9 @@ interface TestCandidate {
   Last_Name: string;
 }
 
+@Module(appZohoRecruitModuleMetadata({}))
+export class TestZohoRecruitModule {}
+
 describe('recruit.api', () => {
   let nest: TestingModule;
 
@@ -46,7 +49,7 @@ describe('recruit.api', () => {
     ];
 
     const rootModule: DynamicModule = {
-      module: ZohoRecruitModule,
+      module: TestZohoRecruitModule,
       providers,
       exports: providers,
       global: true

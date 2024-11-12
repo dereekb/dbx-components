@@ -1,5 +1,5 @@
-import { ZohoRecruitModule } from './recruit.module';
-import { DynamicModule } from '@nestjs/common';
+import { appZohoRecruitModuleMetadata } from './recruit.module';
+import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -7,19 +7,29 @@ import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheSe
 
 const cacheService = fileZohoAccountsAccessTokenCacheService();
 
-describe('ZohoRecruitModule', () => {
+@Module({
+  providers: [
+    {
+      provide: ZohoAccountsAccessTokenCacheService,
+      useValue: cacheService
+    }
+  ],
+  exports: [ZohoAccountsAccessTokenCacheService]
+})
+export class TestZohoDependencyModule {}
+
+// example of providing the dependency module
+@Module(appZohoRecruitModuleMetadata({ dependencyModule: TestZohoDependencyModule }))
+export class TestZohoRecruitModule {}
+
+describe('appZohoRecruitModuleMetadata()', () => {
   let nest: TestingModule;
 
   beforeEach(async () => {
-    const providers = [
-      {
-        provide: ZohoAccountsAccessTokenCacheService,
-        useValue: cacheService
-      }
-    ];
+    const providers: Provider[] = [];
 
     const rootModule: DynamicModule = {
-      module: ZohoRecruitModule,
+      module: TestZohoRecruitModule,
       providers,
       exports: providers,
       global: true

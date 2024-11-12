@@ -1,7 +1,8 @@
 import { DbxStyleService } from '@dereekb/dbx-web';
-import { ClickableAnchor } from '@dereekb/dbx-core';
+import { ClickableAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
+import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
 @Component({
   templateUrl: './layout.component.html',
@@ -10,6 +11,14 @@ import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 export class AppLayoutComponent {
   readonly dbxStyleService = inject(DbxStyleService);
   readonly dbxFirebaseEmulatorService = inject(DbxFirebaseEmulatorService);
+
+  readonly isDemoRouteActive$ = isLatestSuccessfulRoute({
+    dbxRouterService: inject(DbxRouterService),
+    dbxRouterTransitionService: inject(DbxRouterTransitionService),
+    routes: ['demo']
+  }).pipe(distinctUntilChanged(), shareReplay(1));
+
+  readonly showToggleDarkThemeButton$ = this.isDemoRouteActive$.pipe(map((x) => !x));
 
   readonly landing: ClickableAnchor = {
     ref: 'landing'

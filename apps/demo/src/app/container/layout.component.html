@@ -19,7 +19,7 @@
       <button mat-flat-button color="accent">Emulator Enabled</button>
     </dbx-anchor>
     <span class="spacer"></span>
-    <dbx-anchor [anchor]="toggleDarkTheme">
+    <dbx-anchor [anchor]="toggleDarkTheme" *ngIf="showToggleDarkThemeButton$ | async">
       <button mat-button>Toggle Dark Theme</button>
     </dbx-anchor>
     <dbx-anchor [anchor]="github">

@@ -24,7 +24,7 @@ export type LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction = (failedUp
 export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) {
   console.warn(`mergeZohoAccountsAccessTokenCacheServices(): failed updating ${failedUpdates.length} caches.`);
   failedUpdates.forEach(([x, e], i) => {
-    console.warn(`Cache write failure ${i + 1}: - ${e}`);
+    console.warn(`Cache update failure ${i + 1}: - ${e}`);
   });
 }
 

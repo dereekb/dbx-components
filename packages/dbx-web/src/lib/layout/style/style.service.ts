@@ -23,9 +23,9 @@ export interface DbxStyleConfig {
   providedIn: 'root'
 })
 export class DbxStyleService implements Destroyable {
-  private _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DBX_STYLE_DEFAULT_CONFIG_TOKEN));
-  private _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
-  private _suffix = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DBX_STYLE_DEFAULT_CONFIG_TOKEN));
+  private readonly _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
+  private readonly _suffix = new BehaviorSubject<Maybe<string>>(undefined);
 
   readonly config$ = this._config.pipe(
     switchMap((x) => {
@@ -40,7 +40,7 @@ export class DbxStyleService implements Destroyable {
     shareReplay(1)
   );
 
-  readonly suffix$ = this._suffix.pipe(distinctUntilChanged());
+  readonly suffix$ = this._suffix.pipe(distinctUntilChanged(), shareReplay(1));
   readonly style$ = this.getStyleWithConfig(this.config$);
 
   get suffix(): Maybe<string> {
@@ -66,7 +66,8 @@ export class DbxStyleService implements Destroyable {
 
         return style;
       }),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      shareReplay(1)
     );
   }
 
