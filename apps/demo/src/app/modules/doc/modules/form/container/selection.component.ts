@@ -1,6 +1,6 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
-import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit, inject } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, pickableValueFieldValuesConfigForStaticLabeledValues, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, sourceSelectField, SourceSelectLoadSource, valueSelectionField, ValueSelectionOptionWithValue } from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
@@ -94,6 +94,8 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
   templateUrl: './selection.component.html'
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
 
@@ -561,8 +563,6 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       refreshDisplayValues$: this._refreshDisplayValues
     })
   ];
-
-  constructor(readonly cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.loadMore();

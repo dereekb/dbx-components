@@ -1,6 +1,6 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, Injector, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, Injector, NgZone, OnDestroy, OnInit, Optional, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
@@ -100,6 +100,14 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
   styleUrls: ['../mapbox.field.component.scss']
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+  private readonly _geolocationService = inject(GeolocationService);
+
+  readonly compact = inject(CompactContextStore, { optional: true });
+  readonly dbxMapboxInjectionStore = inject(DbxMapboxInjectionStore, { optional: true });
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  readonly ngZone = inject(NgZone);
+  readonly injector = inject(Injector);
+
   private _latLngStringFunction!: LatLngStringFunction;
   private _latLngPointFunction!: LatLngPointFunction;
 
@@ -148,18 +156,6 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     switchMap((x) => x),
     shareReplay(1)
   );
-
-  constructor(
-    //
-    @Optional() readonly compact: CompactContextStore,
-    @Optional() readonly dbxMapboxInjectionStore: DbxMapboxInjectionStore,
-    private readonly geolocation$: GeolocationService,
-    readonly dbxMapboxMapStore: DbxMapboxMapStore,
-    readonly ngZone: NgZone,
-    readonly injector: Injector
-  ) {
-    super();
-  }
 
   get zoom(): MapboxZoomLevel {
     return Math.min(this.field.props.zoom || 12, 18);
@@ -309,7 +305,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   }
 
   useCurrentLocation() {
-    this._geoSub.subscription = this.geolocation$.pipe(first()).subscribe({
+    this._geoSub.subscription = this._geolocationService.pipe(first()).subscribe({
       next: (position) => {
         if (position) {
           const { latitude: lat, longitude: lng } = position.coords;

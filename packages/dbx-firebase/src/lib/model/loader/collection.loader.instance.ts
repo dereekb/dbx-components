@@ -127,7 +127,12 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
-  constructor(private readonly _initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) {}
+  constructor(private readonly _initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) {
+    this._collection.next(this._initConfig?.collection);
+    this._maxPages.next(this._initConfig?.maxPages);
+    this._itemsPerPage.next(this._initConfig?.itemsPerPage);
+    this._constraints.next(this._initConfig?.constraints);
+  }
 
   init(): void {
     // When max pages changes, update the iteration's max page limit.

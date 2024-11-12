@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { switchMap, tap, merge, Subject, throttleTime } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
@@ -10,6 +10,8 @@ import { DbxMapboxMapStore } from './mapbox.store';
   providedIn: null
 })
 export class DbxMapboxChangeService implements OnDestroy {
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+
   private _markerDestroyed = new Subject<void>();
   private _applyChanges = new Subject<void>();
 
@@ -29,8 +31,6 @@ export class DbxMapboxChangeService implements OnDestroy {
       )
       .subscribe()
   );
-
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
 
   applyChanges() {
     this._applyChanges.next();

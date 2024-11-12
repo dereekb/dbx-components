@@ -1,4 +1,4 @@
-import { Component, NgZone, Type, OnDestroy } from '@angular/core';
+import { Component, NgZone, Type, OnDestroy, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe, PixelsString } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
@@ -53,6 +53,9 @@ export interface DbxPopupComponentConfig<O, I, T> {
   ]
 })
 export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
+  private popoverRef = inject(NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>);
+  private compactContextState = inject(CompactContextStore);
+
   private _position: PopupGlobalPositionStrategy;
 
   readonly contentConfig: DbxInjectionComponentConfig = {
@@ -74,9 +77,8 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
 
   getClosingValueFn?: (value?: I) => Promise<O>;
 
-  constructor(private popoverRef: NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>, private compactContextState: CompactContextStore, dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone) {
-    super(dbxRouterTransitionService, ngZone);
-
+  constructor() {
+    super();
     this.compactContextState.setMode(CompactMode.COMPACT);
     this._position = new PopupGlobalPositionStrategy(this.config.position, this.config.offset);
     this.popoverRef.overlay.updatePositionStrategy(this._position);

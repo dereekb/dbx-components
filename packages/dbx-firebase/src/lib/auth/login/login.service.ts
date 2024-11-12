@@ -1,5 +1,5 @@
 import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from '@dereekb/util';
-import { Inject, Injectable, InjectionToken, Optional, Type } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional, Type, inject } from '@angular/core';
 import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from './login';
 import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
 import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from './login.password';
@@ -75,13 +75,15 @@ export interface DbxFirebaseAuthLoginProviderAssets {
   providedIn: 'root'
 })
 export class DbxFirebaseAuthLoginService {
+  readonly termsComponentClass = inject<Type<unknown>>(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) ?? DbxFirebaseLoginTermsSimpleComponent;
+
   private _enableAll = false;
   private _passwordConfig: DbxFirebaseAuthLoginPasswordConfig;
   private _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
   private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
 
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[], @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig, @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<unknown> = DbxFirebaseLoginTermsSimpleComponent) {
+  constructor(@Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[], @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig) {
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));
     }

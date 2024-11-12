@@ -16,6 +16,10 @@ export class DbxFormLoadingSourceDirective<T extends object = object> extends Ab
 
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
+  constructor() {
+    super();
+  }
+
   @Input('dbxFormLoadingSourceMode')
   get mode(): DbxFormSourceDirectiveMode {
     return this._mode.value;

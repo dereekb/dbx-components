@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Actions, ofType, createEffect } from '@ngrx/effects';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs';
 import { onDbxAppAuth } from '@dereekb/dbx-core';
@@ -10,7 +10,8 @@ import { onDbxModel } from '..';
  */
 @Injectable()
 export class DbxModelTrackerEffects {
-  constructor(private readonly actions$: Actions, private readonly dbxModelTrackerService: DbxModelTrackerService) {}
+  private readonly actions$ = inject(Actions);
+  private readonly dbxModelTrackerService = inject(DbxModelTrackerService);
 
   readonly trackModelViewed$ = createEffect(
     () =>

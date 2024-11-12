@@ -1,5 +1,5 @@
 import { Maybe, maybeModifierMapToFunction, ModifierFunction } from '@dereekb/util';
-import { OnDestroy, Input, Directive, Optional } from '@angular/core';
+import { OnDestroy, Input, Directive, Optional, inject } from '@angular/core';
 import { filterMaybe, mapForEach } from '@dereekb/rxjs';
 import { BehaviorSubject, distinctUntilChanged, shareReplay, combineLatest, switchMap, map, Observable, of } from 'rxjs';
 import { DbxListView } from './list.view';
@@ -11,6 +11,9 @@ import { DbxValueListItemModifier } from './list.view.value.modifier';
  */
 @Directive()
 export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends AbstractDbxValueListViewConfig<T, I, V> = AbstractDbxValueListViewConfig<T, I, V>> implements DbxValueListView<T, I>, OnDestroy {
+  readonly dbxListView = inject(DbxListView<T>);
+  readonly dbxValueListViewModifier = inject(DbxValueListItemModifier<T, I>, { optional: true });
+
   private _config = new BehaviorSubject<Maybe<C>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), distinctUntilChanged());
 
@@ -20,8 +23,6 @@ export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueLis
     switchMap(([listViewConfig, values, modifyFn]) => mapValuesToValuesListItemConfigObs<T, I, V>(listViewConfig, values).pipe(mapForEach(modifyFn)) as Observable<DbxValueListItemConfig<T, I>[]>),
     shareReplay(1)
   );
-
-  constructor(readonly dbxListView: DbxListView<T>, @Optional() readonly dbxValueListViewModifier: DbxValueListItemModifier<T, I>) {}
 
   ngOnDestroy(): void {
     this._config.complete();

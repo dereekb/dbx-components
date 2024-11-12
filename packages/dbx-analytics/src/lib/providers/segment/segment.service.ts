@@ -1,4 +1,4 @@
-import { Injectable, InjectionToken, Inject } from '@angular/core';
+import { Injectable, InjectionToken, Inject, inject } from '@angular/core';
 import { AbstractAsyncWindowLoadedService } from '@dereekb/browser';
 import { poll } from '@dereekb/util';
 
@@ -22,10 +22,12 @@ type SegmentAnalyticsInvoked = SegmentAnalytics.AnalyticsJS & { invoked?: boolea
  */
 @Injectable()
 export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedService<SegmentAnalytics.AnalyticsJS> {
+  private readonly _config = inject(DbxAnalyticsSegmentApiServiceConfig);
+
   static readonly SEGMENT_API_WINDOW_KEY = 'analytics';
   static readonly SEGMENT_READY_KEY = 'SegmentReady';
 
-  constructor(private _config: DbxAnalyticsSegmentApiServiceConfig, @Inject(PRELOAD_SEGMENT_TOKEN) preload: boolean = true) {
+  constructor(@Inject(PRELOAD_SEGMENT_TOKEN) preload: boolean = true) {
     super(DbxAnalyticsSegmentApiService.SEGMENT_API_WINDOW_KEY, undefined, 'Segment', preload);
   }
 

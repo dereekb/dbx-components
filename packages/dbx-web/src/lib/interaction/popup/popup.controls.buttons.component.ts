@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { map } from 'rxjs';
 import { DbxPopupController, DbxPopupWindowState } from './popup';
 
@@ -25,28 +25,28 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
   }
 })
 export class DbxPopupControlButtonsComponent {
-  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map((x) => x === DbxPopupWindowState.MINIMIZED));
-  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map((x) => x === DbxPopupWindowState.FULLSCREEN));
+  private readonly _appPopupController = inject(DbxPopupController);
 
-  constructor(private appPopupController: DbxPopupController) {}
+  readonly isMinimized$ = this._appPopupController.windowState$.pipe(map((x) => x === DbxPopupWindowState.MINIMIZED));
+  readonly isFullscreen$ = this._appPopupController.windowState$.pipe(map((x) => x === DbxPopupWindowState.FULLSCREEN));
 
   minimizeClicked(): void {
-    this.appPopupController.minimize();
+    this._appPopupController.minimize();
   }
 
   maximizeClicked(): void {
-    this.appPopupController.normalscreen();
+    this._appPopupController.normalscreen();
   }
 
   fullscreenClicked(): void {
-    this.appPopupController.fullscreen();
+    this._appPopupController.fullscreen();
   }
 
   normalscreenClicked(): void {
-    this.appPopupController.normalscreen();
+    this._appPopupController.normalscreen();
   }
 
   closeClicked(): void {
-    this.appPopupController.close();
+    this._appPopupController.close();
   }
 }

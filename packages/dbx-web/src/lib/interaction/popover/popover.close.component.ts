@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxPopoverComponent } from './popover.component';
 
 /**
@@ -11,5 +11,5 @@ import { DbxPopoverComponent } from './popover.component';
   `
 })
 export class DbxPopoverCloseButtonComponent {
-  constructor(readonly dbxPopoverComponent: DbxPopoverComponent) {}
+  readonly dbxPopoverComponent = inject(DbxPopoverComponent);
 }

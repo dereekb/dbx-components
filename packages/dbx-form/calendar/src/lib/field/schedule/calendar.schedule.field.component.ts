@@ -1,6 +1,6 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore } from '@dereekb/dbx-web';
-import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, Optional, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
@@ -77,6 +77,10 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
 })
 export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateCellScheduleRangeFieldProps = DbxFormCalendarDateCellScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+  readonly compact = inject(CompactContextStore, { optional: true });
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+  readonly ngZone = inject(NgZone);
+
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
   private _timezoneSub = new SubscriptionObject();
@@ -98,10 +102,6 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor(@Optional() readonly compact: CompactContextStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, readonly ngZone: NgZone) {
-    super();
-  }
 
   get formGroupName(): string {
     return this.field.key as string;

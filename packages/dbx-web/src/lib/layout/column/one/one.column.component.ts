@@ -1,4 +1,4 @@
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Inject, Input, inject } from '@angular/core';
 import { TwoColumnsContextStore } from '../two';
 
 /**
@@ -18,8 +18,10 @@ import { TwoColumnsContextStore } from '../two';
   providers: [TwoColumnsContextStore]
 })
 export class DbxOneColumnComponent {
-  constructor(@Inject(TwoColumnsContextStore) public readonly twoColumnsContextStore: TwoColumnsContextStore) {
-    twoColumnsContextStore.setFullLeft(true);
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
+  constructor() {
+    this.twoColumnsContextStore.setFullLeft(true);
   }
 
   @Input()

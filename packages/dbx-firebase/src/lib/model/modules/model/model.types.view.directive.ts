@@ -1,6 +1,6 @@
 import { distinctUntilModelKeyChange } from '@dereekb/rxjs';
 import { DbxModelObjectStateService, ModelViewContext } from '@dereekb/dbx-web';
-import { Directive, Input, NgZone, OnInit } from '@angular/core';
+import { Directive, Input, NgZone, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { combineLatestWith, first, map, switchMap } from 'rxjs';
 import { DbxFirebaseDocumentStoreDirective } from '../store/store.document.directive';
@@ -14,12 +14,13 @@ import { ModelKeyTypeNamePair } from '@dereekb/util';
   selector: '[dbxFirebaseModelViewedEvent]'
 })
 export class DbxfirebaseModelViewedEventDirective extends AbstractSubscriptionDirective implements OnInit {
+  readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective);
+  readonly dbxModelObjectStateService = inject(DbxModelObjectStateService);
+  readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);
+  readonly ngZone = inject(NgZone);
+
   @Input('dbxFirebaseModelViewedEvent')
   context?: ModelViewContext | undefined;
-
-  constructor(readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective, readonly dbxModelObjectStateService: DbxModelObjectStateService, readonly dbxFirebaseModelTypesService: DbxFirebaseModelTypesService, readonly ngZone: NgZone) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.data$

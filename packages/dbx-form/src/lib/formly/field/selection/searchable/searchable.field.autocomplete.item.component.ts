@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, map, Observable, shareReplay } from 'rxjs';
-import { Component, Directive, Inject, InjectionToken, Input, OnDestroy } from '@angular/core';
+import { Component, Directive, inject, Inject, InjectionToken, Input, OnDestroy } from '@angular/core';
 import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { Maybe, mergeArraysIntoArray } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -53,7 +53,7 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy
 // MARK: Default
 @Directive()
 export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
-  constructor(@Inject(DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN) readonly displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) {}
+  readonly displayValue = inject<ConfiguredSearchableValueFieldDisplayValue<T>>(DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN);
 }
 
 @Component({

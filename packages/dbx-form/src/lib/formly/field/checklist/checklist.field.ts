@@ -27,9 +27,11 @@ export interface ChecklistItemFieldDataSetItem<D, T extends ChecklistType<D>> {
 export class ChecklistItemFieldDataSetBuilder<D extends object, C extends ChecklistType<D> = ChecklistType<D>> {
   private _fields = new Map<ChecklistItemFieldDataSetFieldKey<C>, ChecklistItemFieldDataSetItem<D, ChecklistType<D>>>();
 
-  readonly dataObs$ = this.dataObs;
+  readonly dataObs$: Observable<D>;
 
-  constructor(readonly dataObs: Observable<D>) {}
+  constructor(dataObs: Observable<D>) {
+    this.dataObs$ = dataObs;
+  }
 
   /**
    * Merges the input config with existing configuration.

@@ -3,7 +3,7 @@ import { MediaMatcher } from '@angular/cdk/layout';
 import { ObservableOrValue, asObservable, initialize } from '@dereekb/rxjs';
 import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest } from 'rxjs';
 import { ScreenMediaWidthType, ScreenMediaHeightType, screenMediaWidthTypeIsActive } from './screen';
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, inject } from '@angular/core';
 
 /**
  * ScreenMediaService configuration.
@@ -44,6 +44,8 @@ export const DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG: DbxScreenMediaServiceConfig = 
  */
 @Injectable()
 export class DbxScreenMediaService implements Destroyable {
+  private readonly _media = inject(MediaMatcher);
+
   private _microQuery: MediaQueryList;
   private _smallQuery: MediaQueryList;
   private _tabletQuery: MediaQueryList;
@@ -70,7 +72,7 @@ export class DbxScreenMediaService implements Destroyable {
     shareReplay(1)
   );
 
-  constructor(private readonly _media: MediaMatcher, config: DbxScreenMediaServiceConfig) {
+  constructor(@Inject(DbxScreenMediaServiceConfig) config: DbxScreenMediaServiceConfig) {
     const { microScreenWidthMax, smallScreenWidthMax, tabletScreenWidthMax, largeScreenWidthMax } = config;
 
     this._microQuery = this._media.matchMedia(`screen and (max-width:${microScreenWidthMax}px)`);

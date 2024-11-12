@@ -1,6 +1,6 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxFirebaseAuthLoginService } from './login.service';
 
 @Component({
@@ -13,9 +13,9 @@ import { DbxFirebaseAuthLoginService } from './login.service';
   }
 })
 export class DbxFirebaseLoginTermsComponent {
+  readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+
   readonly config: DbxInjectionComponentConfig = {
     componentClass: this.dbxFirebaseAuthLoginService.termsComponentClass
   };
-
-  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) {}
 }

@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, Output, OnInit } from '@angular/core';
+import { Directive, EventEmitter, Output, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 
@@ -9,12 +9,10 @@ import { TwoColumnsContextStore } from './two.column.store';
   selector: '[dbxTwoColumnBack]'
 })
 export class DbxTwoColumnBackDirective extends AbstractSubscriptionDirective implements OnInit {
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
   @Output('dbxTwoColumnBack')
   public back = new EventEmitter();
-
-  constructor(public readonly twoColumnsContextStore: TwoColumnsContextStore) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.twoColumnsContextStore.back$.subscribe(() => this.back.emit());

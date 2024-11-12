@@ -1,5 +1,5 @@
 import { first, Observable } from 'rxjs';
-import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angular/core';
 import { DbxActionContextStoreSourceInstance, AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
@@ -15,6 +15,8 @@ export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, M
   selector: '[dbxActionDialog]'
 })
 export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+  readonly elementRef = inject(ElementRef);
+
   @Input('dbxActionDialog')
   fn?: DbxActionDialogFunction<T>;
 
@@ -23,8 +25,9 @@ export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValu
     this.isModifiedFunction = isModifiedFunction;
   }
 
-  constructor(readonly elementRef: ElementRef, source: DbxActionContextStoreSourceInstance<T, unknown>) {
-    super(source, () => this._getDataFromDialog());
+  constructor() {
+    super();
+    this.valueGetter = () => this._getDataFromDialog();
   }
 
   protected _getDataFromDialog(): Observable<Maybe<T>> {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Injectable, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injectable, OnDestroy, OnInit, inject } from '@angular/core';
 import { DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
 import { DbxTableStore } from '../table.store';
 import { MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY } from '@angular/material/datepicker';
@@ -12,7 +12,8 @@ import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 @Injectable()
 export class DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
-  constructor(private _dateAdapter: DateAdapter<D>, private dbxTableDateRangeDayDistanceInputCellInputComponent: DbxTableDateRangeDayDistanceInputCellInputComponent) {}
+  private readonly _dateAdapter = inject(DateAdapter<D>);
+  private readonly dbxTableDateRangeDayDistanceInputCellInputComponent = inject(DbxTableDateRangeDayDistanceInputCellInputComponent);
 
   selectionFinished(date: D | null): DateRange<D> {
     return this._createFiveDayRange(date);
@@ -73,6 +74,8 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnInit, OnDestroy {
+  readonly tableStore = inject(DbxTableStore<DateRangeDayDistanceInput>);
+
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
@@ -103,8 +106,6 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnIn
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor(readonly tableStore: DbxTableStore<DateRangeDayDistanceInput>) {}
 
   ngOnInit(): void {
     this._syncSub.subscription = this.tableStore.input$.subscribe((x) => {

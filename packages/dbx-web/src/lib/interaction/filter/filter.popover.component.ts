@@ -1,5 +1,5 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, ElementRef, Type, OnInit, OnDestroy } from '@angular/core';
+import { Component, ElementRef, Type, OnInit, OnDestroy, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, BehaviorSubject, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
@@ -155,10 +155,6 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
         closeOnFilterChange
       } as DbxFilterComponentParams<F>
     });
-  }
-
-  constructor(popover: DbxPopoverComponent<unknown, DbxFilterComponentParams<F>>) {
-    super(popover);
   }
 
   get config(): DbxFilterComponentParams<F> {

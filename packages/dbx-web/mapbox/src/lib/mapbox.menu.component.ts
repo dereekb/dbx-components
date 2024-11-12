@@ -1,7 +1,7 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, BehaviorSubject, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Host, Input, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Host, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
 import { Maybe, DestroyFunctionObject } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
@@ -23,6 +23,11 @@ import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  readonly matMenuTrigger = inject(MatMenuTrigger, { host: true });
+  readonly ngZone = inject(NgZone);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   private _pos = { x: `0`, y: `0` };
   private _active = new BehaviorSubject<boolean>(true);
 
@@ -33,7 +38,7 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
     return this._pos;
   }
 
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, @Host() readonly matMenuTrigger: MatMenuTrigger, readonly ngZone: NgZone, readonly cdRef: ChangeDetectorRef) {
+  constructor() {
     super();
   }
 

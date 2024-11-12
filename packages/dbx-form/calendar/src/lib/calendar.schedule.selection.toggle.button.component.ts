@@ -1,4 +1,4 @@
-import { Component, Injector, Input, OnDestroy } from '@angular/core';
+import { Component, Injector, Input, OnDestroy, inject } from '@angular/core';
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { BehaviorSubject, distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -15,6 +15,10 @@ import { Maybe } from '@dereekb/util';
   `
 })
 export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implements OnDestroy {
+  readonly popoverService = inject(DbxPopoverService);
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+  readonly injector = inject(Injector);
+
   private _disabled = new BehaviorSubject<Maybe<boolean>>(false);
 
   readonly disableButton$ = this._disabled.pipe(
@@ -57,8 +61,6 @@ export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implemen
     }),
     shareReplay(1)
   );
-
-  constructor(readonly popoverService: DbxPopoverService, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, readonly injector: Injector) {}
 
   ngOnDestroy(): void {
     this._disabled.complete();

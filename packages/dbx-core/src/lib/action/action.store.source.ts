@@ -44,7 +44,6 @@ export function useActionStore<T = unknown, O = unknown>(source: ActionContextSt
 /**
  * Service that wraps a ActionContextStoreSource.
  */
-@Injectable()
 export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, OnDestroy {
   readonly lockSet = new LockSet();
 

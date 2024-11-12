@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
@@ -43,6 +43,8 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
   providers: provideDbxListView(DbxPickableListFieldItemListViewComponent)
 })
 export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<any> {
+  readonly dbxPickableListFieldComponent = inject(DbxPickableListFieldComponent<T>);
+
   // TODO: any belongs here for now, but item list typings need to be updated.
 
   readonly config: DbxInjectionComponentConfig = {
@@ -68,10 +70,6 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
     map((x) => addConfigToValueListItems(this.config, x)),
     shareReplay(1)
   );
-
-  constructor(readonly dbxPickableListFieldComponent: DbxPickableListFieldComponent<T>) {
-    super();
-  }
 }
 
 @Component({

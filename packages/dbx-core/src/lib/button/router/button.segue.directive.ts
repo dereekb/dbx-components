@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, OnInit, OnDestroy, Input } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { shareReplay, distinctUntilChanged, switchMap, tap, BehaviorSubject } from 'rxjs';
@@ -11,6 +11,9 @@ import { SegueRef, DbxRouterService } from '../../router';
   selector: '[dbxButtonSegue]'
 })
 export class DbxButtonSegueDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly dbxButton = inject(DbxButton);
+  readonly dbxRouterService = inject(DbxRouterService);
+
   private _segueRef = new BehaviorSubject<Maybe<SegueRef>>(undefined);
   readonly segueRef$ = this._segueRef.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
@@ -23,7 +26,7 @@ export class DbxButtonSegueDirective extends AbstractSubscriptionDirective imple
     this._segueRef.next(segueRef);
   }
 
-  constructor(readonly dbxButton: DbxButton, readonly dbxRouterService: DbxRouterService) {
+  constructor() {
     super();
   }
 

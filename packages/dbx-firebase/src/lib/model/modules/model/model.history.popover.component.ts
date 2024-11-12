@@ -57,10 +57,6 @@ export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDire
     });
   }
 
-  constructor(popover: DbxPopoverComponent<unknown, DbxFirebaseModelHistoryPopoverParams>) {
-    super(popover);
-  }
-
   get params(): DbxFirebaseModelHistoryPopoverParams {
     return this.popover.data as DbxFirebaseModelHistoryPopoverParams;
   }

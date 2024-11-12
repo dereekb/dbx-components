@@ -1,6 +1,6 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkUsingObservable , LoadingState, filterMaybe, loadingStateContext, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { WorkUsingObservable, LoadingState, filterMaybe, loadingStateContext, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { MS_IN_SECOND, Maybe } from '@dereekb/util';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, first, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -16,6 +16,10 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
   selector: 'dbx-download-text-view'
 })
 export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective {
+  private readonly _clipboard = inject(Clipboard);
+  private readonly _matSnackbar = inject(MatSnackBar);
+  private readonly _sanitizer = inject(DomSanitizer);
+
   @Input()
   loadingText?: Maybe<string>;
 
@@ -71,10 +75,6 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor(private readonly _clipboard: Clipboard, private readonly _matSnackbar: MatSnackBar, private readonly _sanitizer: DomSanitizer) {
-    super();
-  }
 
   @Input()
   set content(content: Maybe<DownloadTextContent>) {

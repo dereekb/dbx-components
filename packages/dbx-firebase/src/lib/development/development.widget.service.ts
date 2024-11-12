@@ -1,5 +1,5 @@
 import { iterableToArray } from '@dereekb/util';
-import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
 import { DbxWidgetService, DbxWidgetType } from '@dereekb/dbx-web';
 import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 
@@ -17,9 +17,11 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new Injection
   providedIn: 'root'
 })
 export class DbxFirebaseDevelopmentWidgetService {
+  readonly dbxWidgetService = inject(DbxWidgetService);
+
   private _entries = new Map<DbxWidgetType, DbxFirebaseDevelopmentWidgetEntry>();
 
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN) defaultEntries: DbxFirebaseDevelopmentWidgetEntry[], readonly dbxWidgetService: DbxWidgetService) {
+  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN) defaultEntries: DbxFirebaseDevelopmentWidgetEntry[]) {
     if (defaultEntries) {
       defaultEntries.forEach((x) => this.register(x, false));
     }

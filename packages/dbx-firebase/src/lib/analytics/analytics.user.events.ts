@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { DbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { Destroyable, Initialized } from '@dereekb/util';
@@ -13,10 +13,12 @@ import { DbxFirebaseAnalyticsUserSource } from './analytics.user.source';
   providedIn: 'root'
 })
 export class DbxFirebaseAnalyticsUserEventsListener implements Initialized, Destroyable {
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
+  readonly dbxFirebaseAnalyticsUserSource = inject(DbxFirebaseAnalyticsUserSource);
+  readonly dbxAnalyticsService = inject(DbxAnalyticsService);
+
   private _loginSub = new SubscriptionObject();
   private _logoutSub = new SubscriptionObject();
-
-  constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService, readonly dbxFirebaseAnalyticsUserSource: DbxFirebaseAnalyticsUserSource, readonly dbxAnalyticsService: DbxAnalyticsService) {}
 
   init(): void {
     this._loginSub.subscription = this.dbxFirebaseAuthService.onLogIn$.subscribe(() => {

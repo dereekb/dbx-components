@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
@@ -15,6 +15,8 @@ import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service'
   `
 })
 export class DbxFirebaseModelHistoryComponent implements OnDestroy {
+  readonly dbxFirebaseModelTrackerService = inject(DbxFirebaseModelTrackerService);
+
   private _historyFilter = new BehaviorSubject<Maybe<DbxFirebaseModelTrackerHistoryFilter>>(undefined);
 
   @Input()
@@ -37,8 +39,6 @@ export class DbxFirebaseModelHistoryComponent implements OnDestroy {
   );
 
   readonly state$ = loadingStateFromObs(this.historyPairs$);
-
-  constructor(readonly dbxFirebaseModelTrackerService: DbxFirebaseModelTrackerService) {}
 
   ngOnDestroy(): void {
     this._historyFilter.complete();

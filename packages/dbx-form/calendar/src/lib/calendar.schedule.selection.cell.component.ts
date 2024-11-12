@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CalendarMonthViewDay } from 'angular-calendar';
 import { first } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -16,6 +16,8 @@ import { CalendarScheduleSelectionCellContent, CalendarScheduleSelectionMetadata
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxScheduleSelectionCalendarCellComponent {
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+
   content: CalendarScheduleSelectionCellContent = {};
 
   get icon() {
@@ -25,8 +27,6 @@ export class DbxScheduleSelectionCalendarCellComponent {
   get text() {
     return this.content.text;
   }
-
-  constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   @Input()
   set day(day: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>) {

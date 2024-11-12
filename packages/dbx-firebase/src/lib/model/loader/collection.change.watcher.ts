@@ -18,7 +18,7 @@ export type DbxFirebaseCollectionChangeWatcherEvent = Pick<IterationQueryDocChan
 export interface DbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>> {
   readonly store: S;
   /**
-   * Current mode
+   * Current mode observable
    */
   readonly mode$: Observable<DbxFirebaseCollectionChangeWatcherTriggerMode>;
   /**
@@ -34,19 +34,25 @@ export interface DbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollect
    * Trigger emitter. Only emits when triggered$ is/becomes true.
    */
   readonly trigger$: Observable<void>;
-  mode: DbxFirebaseCollectionChangeWatcherTriggerMode;
 }
 
 /**
- * DbxFirebaseCollectionChangeWatcher instance
+ * DbxFirebaseCollectionChangeWatcher instance that can be destroyed and the mode changed.
  */
-export class DbxFirebaseCollectionChangeWatcherInstance<S extends DbxFirebaseCollectionLoaderAccessor<any>> implements Destroyable {
-  private readonly _mode = new BehaviorSubject<DbxFirebaseCollectionChangeWatcherTriggerMode>(this._initialMode);
-  private readonly _sub = new SubscriptionObject();
+export interface DbxFirebaseCollectionChangeWatcherInstance<S extends DbxFirebaseCollectionLoaderAccessor<any>> extends DbxFirebaseCollectionChangeWatcher<S>, Destroyable {
+  /**
+   * Changes the mode
+   */
+  setMode(mode: DbxFirebaseCollectionChangeWatcherTriggerMode): void;
+}
 
-  readonly mode$ = this._mode.pipe(distinctUntilChanged());
+export function dbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>>(store: S, initialMode?: DbxFirebaseCollectionChangeWatcherTriggerMode): DbxFirebaseCollectionChangeWatcherInstance<S> {
+  const _mode = new BehaviorSubject<DbxFirebaseCollectionChangeWatcherTriggerMode>(initialMode ?? 'off');
+  const _sub = new SubscriptionObject();
 
-  readonly event$: Observable<DbxFirebaseCollectionChangeWatcherEvent> = this.store.queryChangeWatcher$.pipe(
+  const mode$ = _mode.pipe(distinctUntilChanged());
+
+  const event$: Observable<DbxFirebaseCollectionChangeWatcherEvent> = store.queryChangeWatcher$.pipe(
     switchMap((x) =>
       x.event$.pipe(
         filter((x) => x.type !== 'none'), // do not share 'none' events.
@@ -60,34 +66,37 @@ export class DbxFirebaseCollectionChangeWatcherInstance<S extends DbxFirebaseCol
     shareReplay(1)
   );
 
-  readonly hasChangeAvailable$: Observable<boolean> = this.event$.pipe(
+  const hasChangeAvailable$: Observable<boolean> = event$.pipe(
     map((x) => x.type !== 'none'),
     shareReplay(1)
   );
 
-  readonly triggered$: Observable<boolean> = combineLatest([this.mode$, this.hasChangeAvailable$]).pipe(map(([mode, hasChange]) => mode === 'auto' && hasChange));
+  const triggered$: Observable<boolean> = combineLatest([mode$, hasChangeAvailable$]).pipe(map(([mode, hasChange]) => mode === 'auto' && hasChange));
 
-  readonly trigger$: Observable<void> = this.triggered$.pipe(
+  const trigger$: Observable<void> = triggered$.pipe(
     filter((triggered) => triggered),
     map(() => undefined)
   );
 
-  constructor(readonly store: S, private _initialMode: DbxFirebaseCollectionChangeWatcherTriggerMode = 'off') {}
-
-  destroy(): void {
-    this._sub.destroy();
-    this._mode.complete();
+  function destroy() {
+    _sub.destroy();
+    _mode.complete();
   }
 
-  get mode(): DbxFirebaseCollectionChangeWatcherTriggerMode {
-    return this._mode.value;
+  function setMode(mode: DbxFirebaseCollectionChangeWatcherTriggerMode) {
+    _mode.next(mode);
   }
 
-  set mode(mode: DbxFirebaseCollectionChangeWatcherTriggerMode) {
-    this._mode.next(mode);
-  }
-}
+  const instance: DbxFirebaseCollectionChangeWatcherInstance<S> = {
+    store,
+    mode$,
+    event$,
+    hasChangeAvailable$,
+    triggered$,
+    trigger$,
+    destroy,
+    setMode
+  };
 
-export function dbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>>(store: S, mode?: DbxFirebaseCollectionChangeWatcherTriggerMode): DbxFirebaseCollectionChangeWatcherInstance<S> {
-  return new DbxFirebaseCollectionChangeWatcherInstance(store, mode);
+  return instance;
 }

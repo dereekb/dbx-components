@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy, inject } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { CalendarEvent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';
@@ -11,6 +11,8 @@ import { DbxCalendarEvent, prepareAndSortCalendarEvents } from './calendar';
   templateUrl: './calendar.component.html'
 })
 export class DbxCalendarComponent<T> implements OnDestroy {
+  readonly calendarStore = inject(DbxCalendarStore<T>);
+
   @Output()
   readonly clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
@@ -32,8 +34,6 @@ export class DbxCalendarComponent<T> implements OnDestroy {
   );
 
   readonly displayType$ = this.calendarStore.displayType$;
-
-  constructor(readonly calendarStore: DbxCalendarStore<T>) {}
 
   ngOnDestroy(): void {
     this.clickEvent.complete();

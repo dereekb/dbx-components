@@ -1,5 +1,5 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
-import { Input, Component, TemplateRef, ViewChild, OnDestroy, HostListener } from '@angular/core';
+import { Input, Component, TemplateRef, ViewChild, OnDestroy, HostListener, inject } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { map, distinctUntilChanged, shareReplay, BehaviorSubject } from 'rxjs';
@@ -17,6 +17,8 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
   }
 })
 export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements OnDestroy {
+  private readonly dbNgxRouterWebProviderConfig = inject(DbxRouterWebProviderConfig);
+
   private _templateRef = new BehaviorSubject<Maybe<TemplateRef<unknown>>>(undefined);
   readonly templateRef$ = this._templateRef.pipe(skipFirstMaybe(), shareReplay(1));
 
@@ -48,10 +50,6 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
     map((selected) => (selected ? 'dbx-anchor-selected' : '')),
     shareReplay(1)
   );
-
-  constructor(private readonly dbNgxRouterWebProviderConfig: DbxRouterWebProviderConfig) {
-    super();
-  }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();

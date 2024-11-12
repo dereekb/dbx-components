@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, OnDestroy, OnInit, Optional, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
@@ -25,16 +25,14 @@ export type TextEditorComponentFieldProps = FormlyFieldProps;
   `
 })
 export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldProps = TextEditorComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+  private readonly _compactContextStore = inject(CompactContextStore, { optional: true });
+
   private _editor?: Editor;
   private _sub = new SubscriptionObject();
 
-  readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
+  readonly compactClass$ = mapCompactModeObs(this._compactContextStore?.mode$, {
     compact: 'dbx-texteditor-field-compact'
   });
-
-  constructor(@Optional() readonly compact: CompactContextStore) {
-    super();
-  }
 
   get formGroupName(): string {
     return this.field.key as string;

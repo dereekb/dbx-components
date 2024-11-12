@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 
 /**
@@ -12,7 +12,7 @@ import { DbxMapboxMapStore } from './mapbox.store';
   }
 })
 export class DbxMapboxLayoutDrawerComponent {
-  readonly config$ = this.dbxMapboxMapStore.content$;
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
 
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
+  readonly config$ = this.dbxMapboxMapStore.content$;
 }

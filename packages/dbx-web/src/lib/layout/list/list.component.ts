@@ -1,5 +1,5 @@
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first } from 'rxjs';
-import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive } from '@angular/core';
+import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive, inject } from '@angular/core';
 import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
 import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, loadingStateHasFinishedLoading, startWithBeginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
@@ -76,6 +76,8 @@ export interface DbxListConfig<T = unknown, V extends DbxListView<T> = DbxListVi
   }
 })
 export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+
   readonly DEFAULT_SCROLL_DISTANCE = 1.5;
   readonly DEFAULT_THROTTLE_SCROLL = 50;
 
@@ -230,8 +232,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     })
   );
 
-  constructor(readonly cdRef: ChangeDetectorRef) {}
-
   ngOnDestroy(): void {
     delete this._content; // remove parent-child relation.
     this._scrollTrigger.complete();
@@ -351,10 +351,13 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   }
 })
 export class DbxListInternalContentDirective {
+  private readonly parent = inject(DbxListComponent);
+  readonly elementRef = inject(ElementRef);
+
   @Input()
   hide: Maybe<boolean> = false;
 
-  constructor(private readonly parent: DbxListComponent, readonly elementRef: ElementRef) {
+  constructor() {
     this.parent.__content = this;
   }
 

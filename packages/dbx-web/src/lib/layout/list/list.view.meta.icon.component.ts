@@ -1,4 +1,4 @@
-import { Component, Inject, InjectionToken, Optional } from '@angular/core';
+import { Component, Inject, InjectionToken, Optional, inject } from '@angular/core';
 import { DBX_VALUE_LIST_VIEW_ITEM, DbxValueListItem } from './list.view.value';
 import { Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -16,11 +16,10 @@ export interface DbxListViewMetaIconConfig {
   `
 })
 export class DbxListViewMetaIconComponent {
-  readonly icon: Maybe<string>;
+  readonly item = inject<DbxValueListItem<unknown, DbxListViewMetaIconConfig>>(DBX_VALUE_LIST_VIEW_ITEM, { optional: true });
+  readonly defaultIcon = inject<Maybe<string>>(DBX_LIST_VIEW_DEFAULT_META_ICON, { optional: true });
 
-  constructor(@Optional() @Inject(DBX_VALUE_LIST_VIEW_ITEM) item: DbxValueListItem<unknown, DbxListViewMetaIconConfig>, @Optional() @Inject(DBX_LIST_VIEW_DEFAULT_META_ICON) defaultIcon: Maybe<string>) {
-    this.icon = item.meta?.icon ?? defaultIcon;
-  }
+  readonly icon: Maybe<string> = this.item?.meta?.icon ?? this.defaultIcon;
 
   static metaConfig(defaultIcon?: Maybe<string>): DbxInjectionComponentConfig<DbxListViewMetaIconConfig> {
     return {

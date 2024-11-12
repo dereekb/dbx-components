@@ -1,6 +1,6 @@
 import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, MapboxFitPositions, DbxMapboxInjectionStore } from '@dereekb/dbx-web/mapbox';
@@ -15,6 +15,9 @@ import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY } from '../component/mapbox.marker
   providers: [DbxMapboxMapStore, DbxMapboxInjectionStore, DbxMapboxChangeService]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   drawerIsOpen = false;
 
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
@@ -221,8 +224,6 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     map((x) => x.map((y) => ({ label: y.label, center: y.latLng }))),
     shareReplay(1)
   );
-
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.dbxMapboxMapStore.setContent({

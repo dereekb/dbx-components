@@ -1,7 +1,7 @@
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
+import { OnInit, OnDestroy, Directive, Input, inject } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
 import { Maybe } from '@dereekb/util';
 import { DbxFormDisabledKey } from '../form/form';
@@ -11,6 +11,8 @@ import { DbxFormDisabledKey } from '../form/form';
  */
 @Directive()
 export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
+  readonly context = inject(DbxFormlyContext<T>);
+
   @Input()
   get disabled(): boolean {
     return this.context.isDisabled();
@@ -19,8 +21,6 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
   set disabled(disabled: boolean) {
     this.context.setDisabled(undefined, disabled);
   }
-
-  constructor(public readonly context: DbxFormlyContext<T>) {}
 
   ngOnDestroy(): void {
     this.context.destroy();

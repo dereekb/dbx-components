@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type, inject } from '@angular/core';
 import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { switchMapMaybeObs } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, BehaviorSubject } from 'rxjs';
@@ -24,7 +24,6 @@ export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProp
 })
 export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<FieldTypeConfig<DbxChecklistItemFieldProps<T>>> implements OnInit, OnDestroy {
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
-
   readonly displayContent$ = this._displayContent.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
 
   readonly anchor$ = this.displayContent$.pipe(
@@ -86,11 +85,10 @@ export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<Field
   `
 })
 export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective implements OnInit {
-  config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
+  readonly cdRef = inject(ChangeDetectorRef);
+  readonly checklistItemFieldComponent = inject(DbxChecklistItemFieldComponent<T>);
 
-  constructor(readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>, readonly cdRef: ChangeDetectorRef) {
-    super();
-  }
+  config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
 
   ngOnInit(): void {
     this.config = {

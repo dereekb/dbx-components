@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ClickableUrl } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
@@ -7,6 +7,8 @@ import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
   providedIn: 'root'
 })
 export class DbxFirebaseEmulatorService {
+  readonly emulatorsConfig = inject(DbxFirebaseParsedEmulatorsConfig);
+
   get useEmulators(): boolean {
     return this.emulatorsConfig.useEmulators || false;
   }
@@ -27,6 +29,4 @@ export class DbxFirebaseEmulatorService {
         }
       : undefined;
   }
-
-  constructor(readonly emulatorsConfig: DbxFirebaseParsedEmulatorsConfig) {}
 }

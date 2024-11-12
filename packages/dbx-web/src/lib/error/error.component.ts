@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableError, Configurable } from '@dereekb/util';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxErrorPopoverComponent } from './error.popover.component';
@@ -37,6 +37,10 @@ interface DbxReadableErrorComponentState {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
+  readonly popoverService = inject(DbxPopoverService);
+  readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   @Output()
   readonly popoverOpen = new EventEmitter<NgPopoverRef>();
 
@@ -97,7 +101,7 @@ export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
     shareReplay(1)
   );
 
-  constructor(readonly popoverService: DbxPopoverService, readonly dbxErrorWidgetService: DbxErrorWidgetService, readonly cdRef: ChangeDetectorRef) {
+  constructor() {
     super();
   }
 

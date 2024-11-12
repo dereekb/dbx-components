@@ -28,8 +28,9 @@ export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
 export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>;
 
 @Directive()
-export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy, DbxListViewWrapper<T, S> {
+export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy, DbxListViewWrapper<T, S> {
   private readonly _init = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
+
   readonly config$ = this._init.pipe(
     filterMaybe(),
     valueFromObservableOrValue(),
@@ -52,9 +53,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   @Output()
   readonly loadMore = new EventEmitter<void>();
 
-  constructor(readonly initConfig: ObservableOrValue<C>) {}
-
-  ngOnInit(): void {
+  constructor(readonly initConfig: ObservableOrValue<C>) {
     this._init.next(this.initConfig);
   }
 

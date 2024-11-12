@@ -1,5 +1,5 @@
 import { DbxPopupComponent, DbxPopupComponentConfig, APP_POPUP_NORMAL_HEIGHT, APP_POPUP_NORMAL_WIDTH } from './popup.component';
-import { Injectable, Injector } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import { NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
@@ -12,11 +12,9 @@ export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T
  */
 @Injectable()
 export class DbxPopupService {
-  private _overlayContainerService: NgOverlayContainerService;
-
-  constructor(private _overlay: Overlay, private _injector: Injector) {
-    this._overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
-  }
+  private _overlay = inject(Overlay);
+  private _injector = inject(Injector);
+  private _overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
 
   open<O, I, T>(config: DbxPopupConfig<O, I, T>): NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O> {
     const service = config.injector ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;

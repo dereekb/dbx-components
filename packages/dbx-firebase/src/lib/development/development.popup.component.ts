@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { DbxPopupComponent, DbxPopupKey, AbstractPopupDirective, DbxPopupService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
@@ -14,14 +14,12 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_POPUP_KEY = 'devpopup';
   `
 })
 export class DbxFirebaseDevelopmentPopupComponent extends AbstractPopupDirective {
+  private readonly popupService = inject(DbxPopupService);
+
   @ViewChild(DbxFirebaseDevelopmentPopupContentComponent, { static: true })
   content!: DbxFirebaseDevelopmentPopupContentComponent;
 
   readonly header = 'Development Tools';
-
-  constructor(popup: DbxPopupComponent, private readonly popupService: DbxPopupService) {
-    super(popup);
-  }
 
   static openPopup(popupService: DbxPopupService, popupKey?: DbxPopupKey): NgPopoverRef {
     return popupService.open({

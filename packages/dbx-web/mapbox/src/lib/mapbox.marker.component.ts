@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional, inject } from '@angular/core';
 import { getValueFromGetter, latLngPointFunction, Maybe } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
@@ -21,11 +21,11 @@ import { DbxMapboxMarker } from './mapbox.marker';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxMapboxMarkerComponent implements OnDestroy {
+  private readonly _dbxMapboxChangeService = inject(DbxMapboxChangeService, { optional: true });
+
   private static _latLngPoint = latLngPointFunction({ wrap: true });
 
   private _marker: Maybe<DbxMapboxMarker>;
-
-  constructor(@Optional() private readonly _dbxMapboxChangeService?: DbxMapboxChangeService) {}
 
   @Input()
   get marker() {

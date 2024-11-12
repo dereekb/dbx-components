@@ -1,7 +1,7 @@
 import { Destroyable, Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
-import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
 
 export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 
@@ -23,7 +23,7 @@ export interface DbxStyleConfig {
   providedIn: 'root'
 })
 export class DbxStyleService implements Destroyable {
-  private _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(undefined);
+  private _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DBX_STYLE_DEFAULT_CONFIG_TOKEN));
   private _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
   private _suffix = new BehaviorSubject<Maybe<string>>(undefined);
 
@@ -42,10 +42,6 @@ export class DbxStyleService implements Destroyable {
 
   readonly suffix$ = this._suffix.pipe(distinctUntilChanged());
   readonly style$ = this.getStyleWithConfig(this.config$);
-
-  constructor(@Optional() @Inject(DBX_STYLE_DEFAULT_CONFIG_TOKEN) defaultConfig?: DbxStyleConfig) {
-    this._defaultConfig.next(defaultConfig);
-  }
 
   get suffix(): Maybe<string> {
     return this._suffix.value;

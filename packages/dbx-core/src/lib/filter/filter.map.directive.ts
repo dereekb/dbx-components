@@ -1,4 +1,4 @@
-import { Directive, OnDestroy } from '@angular/core';
+import { Directive, OnDestroy, inject } from '@angular/core';
 import { FilterMap } from '@dereekb/rxjs';
 
 /**
@@ -10,7 +10,7 @@ import { FilterMap } from '@dereekb/rxjs';
   providers: [FilterMap]
 })
 export class DbxFilterMapDirective<F> implements OnDestroy {
-  constructor(readonly filterMap: FilterMap<F>) {}
+  readonly filterMap = inject(FilterMap<F>);
 
   ngOnDestroy(): void {
     this.filterMap.destroy();

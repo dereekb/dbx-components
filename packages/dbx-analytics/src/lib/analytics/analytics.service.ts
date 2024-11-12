@@ -1,5 +1,5 @@
 import { Observable, Subject, BehaviorSubject, of, Subscription, first, shareReplay, switchMap, distinctUntilChanged } from 'rxjs';
-import { Inject, Injectable, Optional } from '@angular/core';
+import { Inject, Injectable, Optional, inject } from '@angular/core';
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { DbxAnalyticsEvent, DbxAnalyticsEventData, DbxAnalyticsEventName, DbxAnalyticsUser, NewUserAnalyticsEventData, DbxUserAnalyticsEvent } from './analytics';
 import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
@@ -83,8 +83,9 @@ export class DbxAnalyticsStreamEventAnalyticsEventWrapper implements DbxAnalytic
  */
 @Injectable()
 export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxAnalyticsEventEmitterService, Destroyable {
-  // TODO: Make these configurable.
+  private _config = inject(DbxAnalyticsServiceConfiguration);
 
+  // TODO: Make these configurable.
   static readonly USER_REGISTRATION_EVENT_NAME = 'User Registered';
   static readonly USER_LOGIN_EVENT_NAME = 'User Login';
   static readonly USER_LOGOUT_EVENT_NAME = 'User Logout';
@@ -104,10 +105,10 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   private _userIdEventSub = new SubscriptionObject();
   private _loggerSub = new SubscriptionObject();
 
-  constructor(private _config: DbxAnalyticsServiceConfiguration, @Optional() @Inject(DbxAnalyticsUserSource) userSource?: Maybe<DbxAnalyticsUserSource>) {
+  constructor(@Optional() @Inject(DbxAnalyticsUserSource) userSource?: Maybe<DbxAnalyticsUserSource>) {
     this._init();
 
-    userSource = userSource || _config.userSource;
+    userSource = userSource || this._config.userSource;
     if (userSource) {
       this.setUserSource(userSource);
     }

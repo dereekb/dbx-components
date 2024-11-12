@@ -1,4 +1,4 @@
-import { Component, Injector, Input } from '@angular/core';
+import { Component, Injector, Input, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxScheduleSelectionCalendarDateDialogComponent, DbxScheduleSelectionCalendarDatePopupContentConfig } from './calendar.schedule.selection.dialog.component';
 import { Maybe } from '@dereekb/util';
@@ -10,6 +10,9 @@ import { Maybe } from '@dereekb/util';
   `
 })
 export class DbxScheduleSelectionCalendarDateDialogButtonComponent {
+  readonly injector = inject(Injector);
+  readonly matDialog = inject(MatDialog);
+
   @Input()
   buttonText = 'Customize';
 
@@ -18,8 +21,6 @@ export class DbxScheduleSelectionCalendarDateDialogButtonComponent {
 
   @Input()
   contentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
-
-  constructor(readonly matDialog: MatDialog, readonly injector: Injector) {}
 
   clickCustomize() {
     DbxScheduleSelectionCalendarDateDialogComponent.openDialog(this.matDialog, { injector: this.injector, contentConfig: this.contentConfig });

@@ -1,5 +1,5 @@
 import { BehaviorSubject, shareReplay, Observable, distinctUntilChanged, map, switchMap, combineLatest, of } from 'rxjs';
-import { OnDestroy, Component, Input, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { OnDestroy, Component, Input, ChangeDetectorRef, ChangeDetectionStrategy, inject } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { LoadingContext } from '@dereekb/rxjs';
@@ -29,6 +29,8 @@ export interface DbxLoadingComponentState {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxLoadingComponent implements OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+
   private _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
   private _inputLoading = new BehaviorSubject<Maybe<boolean>>(true);
   private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
@@ -84,8 +86,6 @@ export class DbxLoadingComponent implements OnDestroy {
    */
   @Input()
   padding?: Maybe<boolean>;
-
-  constructor(readonly cdRef: ChangeDetectorRef) {}
 
   ngOnDestroy() {
     this._context.complete();

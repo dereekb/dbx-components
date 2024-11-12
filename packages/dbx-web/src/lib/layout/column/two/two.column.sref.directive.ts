@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, Input, inject } from '@angular/core';
 import { asSegueRef, SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { TwoColumnsContextStore } from './two.column.store';
@@ -10,7 +10,7 @@ import { TwoColumnsContextStore } from './two.column.store';
   selector: '[dbxTwoColumnSref]'
 })
 export class DbxTwoColumnSrefDirective {
-  constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore) {}
+  private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);
 
   @Input('dbxTwoColumnSref')
   public set ref(ref: Maybe<SegueRefOrSegueRefRouterLink | ''>) {

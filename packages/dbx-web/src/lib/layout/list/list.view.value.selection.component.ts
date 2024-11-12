@@ -65,10 +65,9 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
   @Input()
   selectionMode: Maybe<DbxListSelectionMode>;
 
-  constructor(dbxListView: DbxListView<T>, @Optional() @Inject(DbxValueListViewGroupDelegate) inputDbxListGroupDelegate: Maybe<DbxValueListViewGroupDelegate<any, T, I>>) {
-    super(dbxListView, inputDbxListGroupDelegate);
-
-    if (!dbxListView.selectionChange) {
+  constructor() {
+    super();
+    if (!this.dbxListView.selectionChange) {
       throw new Error('Parent dbxListView to DbxSelectionValueListViewComponent has no selectionChange emitter.');
     }
   }

@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
 import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginMode, FirebaseLoginMethodType, FirebaseLoginMethodCategory } from './login';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { containsStringAnyCase, Maybe, ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
@@ -20,6 +20,8 @@ import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
   }
 })
 export class DbxFirebaseLoginListComponent implements OnDestroy {
+  readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+
   private _loginMode = new BehaviorSubject<DbxFirebaseLoginMode>('login');
   private _inputProviderCategories = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>(undefined);
   private _omitProviderTypes = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>(undefined);
@@ -54,8 +56,6 @@ export class DbxFirebaseLoginListComponent implements OnDestroy {
       return providers.map(mapFn);
     })
   );
-
-  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) {}
 
   ngOnDestroy(): void {
     this._loginMode.complete();

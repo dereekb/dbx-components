@@ -1,4 +1,4 @@
-import { OnInit, Directive, Input, OnDestroy } from '@angular/core';
+import { OnInit, Directive, Input, OnDestroy, inject } from '@angular/core';
 import { isNotNullOrEmptyString, Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
@@ -10,6 +10,8 @@ import { TwoColumnsContextStore } from './two.column.store';
   selector: '[dbxTwoColumnFullLeft]'
 })
 export class DbxTwoColumnFullLeftDirective implements OnInit, OnDestroy {
+  private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);
+
   private _fullLeft = new BehaviorSubject<boolean>(true);
 
   @Input('dbxTwoColumnFullLeft')
@@ -23,8 +25,6 @@ export class DbxTwoColumnFullLeftDirective implements OnInit, OnDestroy {
       this._fullLeft.next(Boolean(fullLeft));
     }
   }
-
-  constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore) {}
 
   ngOnInit(): void {
     this._twoColumnsContextStore.setFullLeft(this._fullLeft);

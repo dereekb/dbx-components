@@ -1,5 +1,5 @@
 import { exhaustMap, filter } from 'rxjs';
-import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
@@ -20,8 +20,10 @@ export const DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN = new InjectionToken('DbxAppAuthR
  */
 @Injectable()
 export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects<fromDbxAppAuth.State> {
-  constructor(@Inject(DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN) @Optional() activeStates: Maybe<ArrayOrValue<DbxAppContextState>>, actions$: Actions, store: Store<fromDbxAppAuth.State>, readonly dbxAppAuthRouterService: DbxAppAuthRouterService) {
-    super(activeStates ?? DBX_KNOWN_APP_CONTEXT_STATES, actions$, store);
+  readonly dbxAppAuthRouterService = inject(DbxAppAuthRouterService);
+
+  constructor() {
+    super(inject<Maybe<ArrayOrValue<DbxAppContextState>>>(DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN, { optional: true }) ?? DBX_KNOWN_APP_CONTEXT_STATES);
   }
 
   /**

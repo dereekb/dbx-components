@@ -67,6 +67,10 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   protected _buttonClick = new Subject<void>();
   protected _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
 
+  constructor() {
+    super();
+  }
+
   ngOnInit(): void {
     this.sub = this._buttonClick
       .pipe(

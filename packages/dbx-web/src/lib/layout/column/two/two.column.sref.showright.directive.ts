@@ -1,4 +1,4 @@
-import { Directive, OnInit, OnDestroy } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxRouterService, isSegueRefActive } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { shareReplay, distinctUntilChanged, Subscription } from 'rxjs';
@@ -11,6 +11,9 @@ import { isNot } from '@dereekb/rxjs';
   selector: '[dbxTwoColumnSrefShowRight]'
 })
 export class DbxTwoColumnSrefShowRightDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);
+  private readonly _dbxRouterService = inject(DbxRouterService);
+
   readonly showRight$ = this._twoColumnsContextStore.backRef$.pipe(
     // Only show right when the backRef is not exactly active
     isSegueRefActive({ dbxRouterService: this._dbxRouterService, activeExactly: true }),
@@ -18,10 +21,6 @@ export class DbxTwoColumnSrefShowRightDirective extends AbstractSubscriptionDire
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore, private readonly _dbxRouterService: DbxRouterService) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this._twoColumnsContextStore.setShowRight(this.showRight$) as Subscription;

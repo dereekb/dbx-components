@@ -1,4 +1,4 @@
-import { Directive, Injectable, Injector, Optional, Provider, SkipSelf } from '@angular/core';
+import { Directive, Injectable, Injector, Optional, Provider, SkipSelf, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 
 /**
@@ -6,7 +6,7 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
  */
 @Injectable()
 export class DbxCalendarScheduleSelectionStoreProviderBlock {
-  constructor(@SkipSelf() readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore, { skipSelf: true });
 }
 
 @Directive({

@@ -36,6 +36,10 @@ export class DbxSetStyleDirective extends AbstractSubscriptionDirective implemen
 
   outputStyle = '';
 
+  constructor() {
+    super();
+  }
+
   ngOnInit(): void {
     this.styleService.setConfig(this.config$);
     this.sub = this.outputStyle$.pipe(delay(0)).subscribe((style) => {

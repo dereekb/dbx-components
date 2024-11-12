@@ -1,7 +1,7 @@
-import { Directive, OnInit, OnDestroy, Input, ViewContainerRef } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, ViewContainerRef, inject } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HookResult, Transition, TransitionService } from '@uirouter/core';
-import { Observable, of, race, delay, first, map, mergeMap, tap } from 'rxjs';
+import { Observable, of, race, delay, first, map, mergeMap, tap, firstValueFrom } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
 import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
 
@@ -28,13 +28,17 @@ type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | un
   selector: '[dbxActionTransitionSafety]'
 })
 export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
+  protected readonly transitionService = inject(TransitionService);
+  protected readonly viewContainerRef = inject(ViewContainerRef);
+  protected readonly dialog = inject(MatDialog);
+
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>);
+
   @Input('dbxActionTransitionSafety')
   inputSafetyType?: DbxActionTransitionSafetyType;
 
   private _dialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
   private stopWatchingTransition?: () => void;
-
-  constructor(public readonly source: DbxActionContextStoreSourceInstance<T, O>, protected readonly transitionService: TransitionService, protected readonly viewContainerRef: ViewContainerRef, protected readonly dialog: MatDialog) {}
 
   get safetyType(): DbxActionTransitionSafetyType {
     return this.inputSafetyType ?? 'dialog';
@@ -60,8 +64,8 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   protected _handleOnBeforeTransition(transition: Transition): HookResult {
-    return this.source.isModified$
-      .pipe(
+    return firstValueFrom(
+      this.source.isModified$.pipe(
         first(),
         mergeMap((isModified) => {
           if (isModified) {
@@ -91,8 +95,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
           }
         })
       )
-      .toPromise()
-      .then((x) => x); // Resolve/Flatten potential promise result.
+    ).then((x) => x); // Resolve/Flatten potential promise result.
   }
 
   protected _handleIsModifiedState(transition: Transition): Observable<HookResult> {

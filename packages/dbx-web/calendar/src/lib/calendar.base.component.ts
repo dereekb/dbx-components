@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
 import { map, withLatestFrom } from 'rxjs';
@@ -9,6 +9,8 @@ import { MatButtonToggleChange } from '@angular/material/button-toggle';
   templateUrl: './calendar.base.component.html'
 })
 export class DbxCalendarBaseComponent<T> {
+  readonly calendarStore = inject(DbxCalendarStore<T>);
+
   readonly viewDate$ = this.calendarStore.date$;
 
   readonly showTodayButton$ = this.calendarStore.showTodayButton$;
@@ -32,8 +34,6 @@ export class DbxCalendarBaseComponent<T> {
   );
 
   readonly displayType$ = this.calendarStore.displayType$;
-
-  constructor(public readonly calendarStore: DbxCalendarStore<T>) {}
 
   todayClicked(): void {
     this.calendarStore.tapDay(new Date());

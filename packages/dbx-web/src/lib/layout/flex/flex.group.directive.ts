@@ -1,6 +1,6 @@
 import { ScreenMediaWidthType } from '../../screen/screen';
 import { DbxScreenMediaService } from '../../screen/screen.service';
-import { Directive, ChangeDetectorRef, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, ChangeDetectorRef, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged, delay } from 'rxjs';
 import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
@@ -18,6 +18,9 @@ import { Maybe } from '@dereekb/util';
   }
 })
 export class DbxFlexGroupDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   @Input()
   breakToColumn = false;
 
@@ -41,7 +44,7 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
     return this._small;
   }
 
-  constructor(private readonly _dbxScreenMediaService: DbxScreenMediaService, readonly cdRef: ChangeDetectorRef) {
+  constructor() {
     super();
   }
 

@@ -1,6 +1,6 @@
 import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
-import { Inject, Injectable, InjectionToken, Optional, Type } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional, Type, inject } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
 import { Milliseconds, Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarType } from './action.snackbar';
@@ -29,7 +29,16 @@ export interface DbxActionSnackbarServiceConfig<C = unknown> {
   providedIn: 'root'
 })
 export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
-  readonly config: DbxActionSnackbarServiceConfig<C>;
+  readonly matSnackBar = inject(MatSnackBar);
+
+  readonly config: DbxActionSnackbarServiceConfig<C> = ((inputConfig) => {
+    return {
+      ...inputConfig,
+      componentClass: inputConfig.componentClass ?? (DbxActionSnackbarComponent as unknown as Type<C>),
+      defaultDuration: inputConfig.defaultDuration || DEFAULT_SNACKBAR_DIRECTIVE_DURATION,
+      eventTypeConfigs: mergeObjects([DBX_ACTION_SNACKBAR_DEFAULTS, inputConfig.eventTypeConfigs]) as DbxActionSnackbarEventMakeConfig
+    };
+  })(inject<Partial<DbxActionSnackbarServiceConfig<C>>>(DBX_ACTION_SNACKBAR_SERVICE_CONFIG, { optional: true }) ?? {});
 
   get componentClass(): Type<C> {
     return this.config.componentClass;
@@ -37,17 +46,6 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
 
   get eventTypeConfigs(): DbxActionSnackbarEventMakeConfig {
     return this.config.eventTypeConfigs;
-  }
-
-  constructor(readonly matSnackBar: MatSnackBar, @Optional() @Inject(DBX_ACTION_SNACKBAR_SERVICE_CONFIG) inputConfig: Partial<DbxActionSnackbarServiceConfig<C>>) {
-    inputConfig = inputConfig ?? {};
-
-    this.config = {
-      ...inputConfig,
-      componentClass: inputConfig.componentClass ?? (DbxActionSnackbarComponent as unknown as Type<C>),
-      defaultDuration: inputConfig.defaultDuration || DEFAULT_SNACKBAR_DIRECTIVE_DURATION,
-      eventTypeConfigs: mergeObjects([DBX_ACTION_SNACKBAR_DEFAULTS, inputConfig.eventTypeConfigs]) as DbxActionSnackbarEventMakeConfig
-    };
   }
 
   /**

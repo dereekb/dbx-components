@@ -1,7 +1,7 @@
 import { ArrayOrValue, DecisionFunction, Maybe, asArray, invertDecision } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
 import { map, Observable, switchMap, shareReplay, startWith, of } from 'rxjs';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { allDbxModelViewTrackerEventModelKeys, DbxModelTrackerService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 import { filterItemsWithObservableDecision, invertObservableDecision, mapEachAsync, ObservableDecisionFunction } from '@dereekb/rxjs';
@@ -30,6 +30,9 @@ export interface DbxFirebaseModelTrackerHistoryFilter {
   providedIn: 'root'
 })
 export class DbxFirebaseModelTrackerService {
+  readonly dbxModelTrackerService = inject(DbxModelTrackerService);
+  readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);
+
   readonly historyKeys$ = this.dbxModelTrackerService.newEvent$.pipe(
     startWith(null),
     switchMap(() => this.loadHistoryKeys()),
@@ -88,6 +91,4 @@ export class DbxFirebaseModelTrackerService {
     const historyKeys$ = this.loadHistoryKeys();
     return historyKeys$.pipe(switchMap((x) => this.dbxFirebaseModelTypesService.instancePairsForKeys(x)));
   }
-
-  constructor(readonly dbxModelTrackerService: DbxModelTrackerService, readonly dbxFirebaseModelTypesService: DbxFirebaseModelTypesService) {}
 }

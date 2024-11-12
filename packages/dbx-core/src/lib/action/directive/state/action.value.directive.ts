@@ -19,15 +19,6 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   private _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
 
-  @Input('dbxActionValue')
-  get valueOrFunction(): Maybe<GetterOrValue<T>> {
-    return this._valueOrFunction.value;
-  }
-
-  set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
-    this._valueOrFunction.next(valueOrFunction);
-  }
-
   constructor() {
     super();
   }
@@ -52,5 +43,14 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
       super.ngOnDestroy();
       this._valueOrFunction.complete();
     });
+  }
+
+  @Input('dbxActionValue')
+  get valueOrFunction(): Maybe<GetterOrValue<T>> {
+    return this._valueOrFunction.value;
+  }
+
+  set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
+    this._valueOrFunction.next(valueOrFunction);
   }
 }

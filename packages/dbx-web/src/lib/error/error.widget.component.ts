@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject, map } from 'rxjs';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { Maybe, ReadableError, ReadableErrorWithCode } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxErrorWidgetService } from './error.widget.service';
@@ -17,6 +17,8 @@ import { DbxErrorWidgetService } from './error.widget.service';
   }
 })
 export class DbxErrorWidgetViewComponent implements OnDestroy {
+  readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
+
   private _errorWithCode = new BehaviorSubject<Maybe<ReadableErrorWithCode>>(undefined);
 
   readonly config$: Observable<Maybe<DbxInjectionComponentConfig>> = this._errorWithCode.pipe(
@@ -51,8 +53,6 @@ export class DbxErrorWidgetViewComponent implements OnDestroy {
       return config;
     })
   );
-
-  constructor(readonly dbxErrorWidgetService: DbxErrorWidgetService) {}
 
   ngOnDestroy(): void {
     this._errorWithCode.complete();

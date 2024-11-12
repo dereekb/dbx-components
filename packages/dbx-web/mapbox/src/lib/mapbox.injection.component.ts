@@ -1,5 +1,5 @@
 import { Observable, shareReplay } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Injector } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, inject } from '@angular/core';
 import { DbxInjectionArrayEntry } from '@dereekb/dbx-core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 
@@ -14,7 +14,7 @@ import { DbxMapboxInjectionStore } from './mapbox.injection.store';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxMapboxInjectionComponent {
-  readonly entries$: Observable<DbxInjectionArrayEntry[]> = this.dbxMapboxMapKeyInjectionStore.allInjectionConfigs$.pipe(shareReplay(1));
+  readonly dbxMapboxMapKeyInjectionStore = inject(DbxMapboxInjectionStore);
 
-  constructor(readonly dbxMapboxMapKeyInjectionStore: DbxMapboxInjectionStore, readonly injector: Injector) {}
+  readonly entries$: Observable<DbxInjectionArrayEntry[]> = this.dbxMapboxMapKeyInjectionStore.allInjectionConfigs$.pipe(shareReplay(1));
 }

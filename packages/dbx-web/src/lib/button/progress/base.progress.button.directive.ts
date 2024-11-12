@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, OnDestroy, OnInit, Optional, Directive, Input, Output, HostListener, EventEmitter, Inject } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, OnInit, Optional, Directive, Input, Output, HostListener, EventEmitter, Inject, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { CssClass, Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
@@ -7,6 +7,9 @@ import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressBut
 
 @Directive()
 export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+  private readonly globalConfig = inject<DbxProgressButtonGlobalConfig>(DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, { optional: true }) ?? [];
+
   private _computedOptions: Maybe<DbxProgressButtonOptions> = undefined;
 
   private _working = new BehaviorSubject<boolean>(false);
@@ -69,7 +72,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
   @Output()
   readonly btnClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
-  constructor(@Optional() @Inject(DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG) private globalConfig: DbxProgressButtonGlobalConfig = [], readonly cdRef: ChangeDetectorRef) {
+  constructor() {
     super();
   }
 

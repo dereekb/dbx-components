@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
 import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
@@ -23,8 +23,7 @@ export function developmentFirebaseServerSchedulerWidgetEntry(): DbxFirebaseDeve
   `
 })
 export class DbxFirebaseDevelopmentSchedulerWidgetComponent {
+  readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);
   readonly entries$ = this.dbxFirebaseDevelopmentSchedulerService.schedulerList$;
   readonly state$ = loadingStateFromObs(this.entries$);
-
-  constructor(readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService) {}
 }

@@ -22,15 +22,6 @@ export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscription
   private _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
   readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));
 
-  @Input('dbxActionSuccessHandler')
-  get successFunction(): Maybe<DbxActionSuccessHandlerFunction<O>> {
-    return this._successFunction.value;
-  }
-
-  set successFunction(successFunction: Maybe<DbxActionSuccessHandlerFunction<O>>) {
-    this._successFunction.next(successFunction);
-  }
-
   constructor() {
     super();
   }
@@ -53,5 +44,14 @@ export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscription
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._successFunction.complete();
+  }
+
+  @Input('dbxActionSuccessHandler')
+  get successFunction(): Maybe<DbxActionSuccessHandlerFunction<O>> {
+    return this._successFunction.value;
+  }
+
+  set successFunction(successFunction: Maybe<DbxActionSuccessHandlerFunction<O>>) {
+    this._successFunction.next(successFunction);
   }
 }

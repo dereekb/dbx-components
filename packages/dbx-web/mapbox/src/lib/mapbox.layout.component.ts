@@ -1,5 +1,5 @@
 import { tap, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable } from 'rxjs';
-import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '@dereekb/dbx-web';
@@ -7,6 +7,7 @@ import { ResizedEvent } from 'angular-resize-event';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawerContainer } from '@angular/material/sidenav';
 import { MapboxEaseTo } from './mapbox';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 
 export type DbxMapboxLayoutSide = 'left' | 'right';
 
@@ -24,7 +25,9 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
   templateUrl: './mapbox.layout.component.html',
   styleUrls: ['./mapbox.layout.component.scss']
 })
-export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnInit, OnDestroy {
+export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+
   @Output()
   readonly openedChange = new EventEmitter<boolean>();
 
@@ -91,12 +94,12 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
     })
   );
 
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {
+  constructor() {
     super();
   }
 
   ngOnInit(): void {
-    this.subscription = (
+    this.sub = (
       this.side$.pipe(
         switchMap(() =>
           this._resized.pipe(
@@ -182,7 +185,8 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
       .subscribe();
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     this.openedChange.complete();
     this._resized.complete();
     this._updateMargins.complete();

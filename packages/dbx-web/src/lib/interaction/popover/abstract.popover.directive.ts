@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxPopoverComponent } from './popover.component';
 
 /**
@@ -6,7 +6,7 @@ import { DbxPopoverComponent } from './popover.component';
  */
 @Directive()
 export abstract class AbstractPopoverDirective<O = unknown, I = unknown, T = unknown> {
-  constructor(public readonly popover: DbxPopoverComponent<O, I, T>) {}
+  readonly popover = inject(DbxPopoverComponent<O, I, T>);
 
   close(): void {
     this.popover.close();

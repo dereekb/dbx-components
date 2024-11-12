@@ -32,7 +32,7 @@ export interface DbxFirebaseCollectionChangeTriggerInstanceConfig<S extends DbxF
 
 export interface DbxFirebaseCollectionChangeTrigger<S extends DbxFirebaseCollectionLoaderAccessor<any>> {
   readonly watcher: DbxFirebaseCollectionChangeWatcher<S>;
-  triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>;
+  setTriggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>;
 }
 
 export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCollectionLoaderAccessor<any>> implements DbxFirebaseCollectionChangeTrigger<S>, Initialized, Destroyable {

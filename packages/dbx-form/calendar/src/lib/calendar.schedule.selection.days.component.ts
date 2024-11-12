@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
-import { WorkUsingObservable , IsModifiedFunction } from '@dereekb/rxjs';
+import { WorkUsingObservable, IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { map, shareReplay, Observable, of } from 'rxjs';
 import { DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
@@ -15,6 +15,9 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
   `
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
+  readonly dbxCalendarStore = inject(DbxCalendarStore);
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+
   readonly template$: Observable<DbxScheduleSelectionCalendarDateDaysFormValue> = this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map(enabledDaysFromDateCellScheduleDayCodes), shareReplay(1));
 
   readonly isFormModified: IsModifiedFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value: DbxScheduleSelectionCalendarDateDaysFormValue) => {
@@ -26,8 +29,6 @@ export class DbxScheduleSelectionCalendarDateDaysComponent {
       })
     );
   };
-
-  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   readonly updateScheduleDays: WorkUsingObservable<DbxScheduleSelectionCalendarDateDaysFormValue> = (value) => {
     this.dbxCalendarScheduleSelectionStore.setScheduleDays(new Set(dateCellScheduleDayCodesFromEnabledDays(value)));

@@ -12,6 +12,8 @@ export abstract class AbstractSubscriptionDirective implements OnDestroy {
 
   constructor(@Inject(null) @Optional() subscription?: Subscription) {
     this.sub = subscription;
+
+    // TODO: Remove this constructor in a future release with breaking changes. It rarely gets used and the sub class requires a constructor set to avoid injection.
   }
 
   ngOnDestroy(): void {
@@ -29,6 +31,10 @@ export abstract class AbstractSubscriptionDirective implements OnDestroy {
 @Directive()
 export abstract class AbstractLockSetSubscriptionDirective extends AbstractSubscriptionDirective implements OnDestroy {
   readonly lockSet = new LockSet();
+
+  constructor() {
+    super();
+  }
 
   override ngOnDestroy(): void {
     this.lockSet.onNextUnlock(() => this.onLockSetDestroy());

@@ -12,6 +12,10 @@ export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDire
 
   private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
 
+  constructor() {
+    super();
+  }
+
   @Input('dbxActionAutoModify')
   get autoModifyEnabled(): boolean {
     return this._autoModifyEnabled.value;

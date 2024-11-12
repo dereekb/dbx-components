@@ -1,4 +1,4 @@
-import { Component, Input, Optional } from '@angular/core';
+import { Component, Input, OnInit, Optional, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
@@ -20,16 +20,18 @@ import { DbxPopoverContentComponent } from './popover.content.component';
     <mat-divider></mat-divider>
   `
 })
-export class DbxPopoverHeaderComponent {
+export class DbxPopoverHeaderComponent implements OnInit {
+  readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });
+
   @Input()
   header?: string;
 
   @Input()
   icon?: string;
 
-  constructor(@Optional() appPopoverContentComponent: DbxPopoverContentComponent) {
-    if (appPopoverContentComponent) {
-      appPopoverContentComponent.hasHeader = true;
+  ngOnInit() {
+    if (this.appPopoverContentComponent) {
+      this.appPopoverContentComponent.hasHeader = true;
     }
   }
 }

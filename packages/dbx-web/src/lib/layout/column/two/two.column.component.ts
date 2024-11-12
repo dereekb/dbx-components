@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Inject, Input, ElementRef } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Inject, Input, ElementRef, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { ResizedEvent } from 'angular-resize-event';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
@@ -30,6 +30,10 @@ export interface DbxTwoColumnViewState {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  private readonly _elementRef = inject(ElementRef);
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   private _view: DbxTwoColumnViewState = { showRight: false, showFullLeft: true, hideLeftColumn: false, reverseSizing: false, inSectionPage: false };
 
   private _inSectionPage = new BehaviorSubject<boolean>(false);
@@ -41,7 +45,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
   readonly hideRight$: Observable<boolean> = this.twoColumnsContextStore.hideRight$;
 
-  constructor(@Inject(TwoColumnsContextStore) public readonly twoColumnsContextStore: TwoColumnsContextStore, private elementRef: ElementRef, readonly cdRef: ChangeDetectorRef) {
+  constructor() {
     super();
   }
 
@@ -79,7 +83,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
   }
 
   onResized(event: ResizedEvent): void {
-    const totalWidth = (this.elementRef.nativeElement as HTMLElement).clientWidth;
+    const totalWidth = (this._elementRef.nativeElement as HTMLElement).clientWidth;
     this.twoColumnsContextStore.setTotalWidth(totalWidth);
   }
 }

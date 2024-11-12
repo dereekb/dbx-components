@@ -17,7 +17,7 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
   private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _dialogPromise?: Promise<boolean>;
 
-  config?: Maybe<DbxPromptConfirmConfig>;
+  abstract config?: Maybe<DbxPromptConfirmConfig>;
 
   showDialog(): Observable<boolean> {
     if (!this._dialogPromise) {

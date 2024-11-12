@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
@@ -18,12 +18,11 @@ export const DEFAULT_DBX_SIDENAV_MENU_ICON = 'view_sidebar';
   `
 })
 export class DbxSidenavButtonComponent {
+  readonly parent = inject(DbxSidenavComponent);
   readonly mode$ = this.parent.mode$;
   readonly showMenuButton$ = this.mode$.pipe(map((x) => x === SideNavDisplayMode.MOBILE));
 
   private _sidenavMenuIcon: string = DEFAULT_DBX_SIDENAV_MENU_ICON;
-
-  constructor(readonly parent: DbxSidenavComponent) {}
 
   toggleNav() {
     this.parent.toggleNav();
