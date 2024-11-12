@@ -44,7 +44,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule, DbxTextCompatModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 import { DbxAppContextStateModule, DbxCoreAuthModule, DbxPipesModule } from '@dereekb/dbx-core';
 import { DbxAnalyticsActionModule } from '@dereekb/dbx-analytics';

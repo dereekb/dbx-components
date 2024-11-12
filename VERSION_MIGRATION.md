@@ -1,3 +1,5 @@
+## Migration of v9.x.x to v10.x.x
+Migration/Upgrade info is available in the `setup/v9-to-v10-upgrade-info.md` document.
 
 ## Migration of v10.x.x to v11.x.x
 ### Overview
