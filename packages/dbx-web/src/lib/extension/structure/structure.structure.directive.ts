@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Directive, ElementRef, Injector } from '@angular/core';
+import { ChangeDetectorRef, Directive, ElementRef, Injector, inject } from '@angular/core';
 
 /**
  * Used to reference a cdRef, injector, and element at the given element.
@@ -9,5 +9,7 @@ import { ChangeDetectorRef, Directive, ElementRef, Injector } from '@angular/cor
   selector: '[dbxStructure]'
 })
 export class DbxStructureDirective {
-  constructor(readonly cdRef: ChangeDetectorRef, readonly injector: Injector, readonly element: ElementRef) {}
+  readonly cdRef = inject(ChangeDetectorRef);
+  readonly injector = inject(Injector);
+  readonly element = inject(ElementRef);
 }

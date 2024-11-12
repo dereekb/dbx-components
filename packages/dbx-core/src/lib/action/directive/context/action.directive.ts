@@ -1,4 +1,4 @@
-import { Directive, Optional, OnDestroy, Host } from '@angular/core';
+import { Directive, OnDestroy, inject } from '@angular/core';
 import { SecondaryActionContextStoreSource } from '../../action.store.source';
 import { provideActionStoreSource } from '../../action.store.source.provide';
 import { DbxActionContextBaseSource } from '../../action.holder';
@@ -12,8 +12,8 @@ import { DbxActionContextBaseSource } from '../../action.holder';
   providers: provideActionStoreSource(DbxActionDirective)
 })
 export class DbxActionDirective<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements OnDestroy {
-  constructor(@Optional() @Host() inputSource: SecondaryActionContextStoreSource<T, O>) {
-    super(inputSource);
+  constructor() {
+    super(inject(SecondaryActionContextStoreSource<T, O>, { optional: true, host: true }));
   }
 
   ngOnDestroy(): void {

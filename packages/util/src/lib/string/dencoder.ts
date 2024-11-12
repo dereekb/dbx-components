@@ -346,4 +346,4 @@ export function numberStringDencoderDecodedNumberValueFunction(dencoder: NumberS
   };
 }
 
-// TODO: can add a function that can encode/decode fractions by splitting at the decimal point and encoding twice.
+// TODO(FUTURE): can add a function that can encode/decode fractions by splitting at the decimal point and encoding twice.

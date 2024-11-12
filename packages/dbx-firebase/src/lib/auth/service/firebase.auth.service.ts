@@ -1,5 +1,5 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
-import { Injectable, Optional } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier, NoAuthUserIdentifier } from '@dereekb/dbx-core';
 import { reauthenticateWithPopup, Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY } from 'rxjs';
@@ -43,6 +43,9 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
 // MARK: Service
 @Injectable()
 export class DbxFirebaseAuthService implements DbxAuthService {
+  readonly firebaseAuth = inject(Auth);
+  readonly delegate = inject(DbxFirebaseAuthServiceDelegate, { optional: true }) ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
+
   readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
 
   readonly currentAuthUser$: Observable<Maybe<User>> = this._authState$.pipe(timeoutStartWith(null as Maybe<User>, 1000), distinctUntilChanged(), shareReplay(1));
@@ -104,26 +107,19 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   );
   readonly authContextInfo$: Observable<Maybe<DbxFirebaseAuthContextInfo>> = this.currentAuthContextInfo$.pipe(filterMaybe());
 
-  readonly authUserState$: Observable<AuthUserState>;
-  readonly authRoles$: Observable<AuthRoleSet>;
-  readonly isOnboarded$: Observable<boolean>;
-
-  private _authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>>;
-  readonly isAdminInAuthRoleSet: (authRoleSet: AuthRoleSet) => boolean;
-
-  constructor(readonly firebaseAuth: Auth, @Optional() delegate: DbxFirebaseAuthServiceDelegate) {
-    delegate = delegate ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
-
-    const delegateAuthUserStateObs = delegate.authUserStateObs(this).pipe(
+  readonly authUserState$: Observable<AuthUserState> = (() => {
+    const delegateAuthUserStateObs: Observable<AuthUserState> = this.delegate.authUserStateObs(this).pipe(
       catchError(() => of('error' as AuthUserState)),
       distinctUntilChanged(),
       shareReplay(1)
     );
 
-    if (delegate.fullControlOfAuthUserState) {
-      this.authUserState$ = delegateAuthUserStateObs;
+    let obs: Observable<AuthUserState>;
+
+    if (this.delegate.fullControlOfAuthUserState) {
+      obs = delegateAuthUserStateObs;
     } else {
-      this.authUserState$ = this._authState$.pipe(
+      obs = this._authState$.pipe(
         distinctUntilChanged(),
         switchMap((x) => {
           if (x != null) {
@@ -135,11 +131,14 @@ export class DbxFirebaseAuthService implements DbxAuthService {
       );
     }
 
-    this.authRoles$ = delegate.authRolesObs(this);
-    this.isOnboarded$ = delegate.isOnboarded(this);
-    this._authRoleClaimsService = delegate.authRoleClaimsService;
-    this.isAdminInAuthRoleSet = delegate.isAdminInAuthRoleSet;
-  }
+    return obs;
+  })();
+
+  readonly authRoles$: Observable<AuthRoleSet> = this.delegate.authRolesObs(this);
+  readonly isOnboarded$: Observable<boolean> = this.delegate.isOnboarded(this);
+
+  private _authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>> = this.delegate.authRoleClaimsService;
+  readonly isAdminInAuthRoleSet: (authRoleSet: AuthRoleSet) => boolean = this.delegate.isAdminInAuthRoleSet;
 
   async refreshToken(): Promise<IdTokenResult> {
     const user = this.firebaseAuth.currentUser;

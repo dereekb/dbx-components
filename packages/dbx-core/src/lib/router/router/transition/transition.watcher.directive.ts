@@ -1,6 +1,5 @@
-import { Directive, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { Directive, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { DbxRouterTransitionService } from '../service/router.transition.service';
 import { AbstractTransitionDirective } from './transition.directive';
 
 /**
@@ -10,6 +9,8 @@ import { AbstractTransitionDirective } from './transition.directive';
 export abstract class AbstractTransitionWatcherDirective extends AbstractTransitionDirective implements OnInit, OnDestroy {
   private _transitionSub = new SubscriptionObject();
 
+  protected readonly ngZone = inject(NgZone);
+
   ngOnInit(): void {
     this._transitionSub.subscription = this.transitionSuccess$.subscribe(() => {
       this.updateForSuccessfulTransition();
@@ -18,10 +19,6 @@ export abstract class AbstractTransitionWatcherDirective extends AbstractTransit
 
   ngOnDestroy(): void {
     this._transitionSub.destroy();
-  }
-
-  constructor(dbxRouterTransitionService: DbxRouterTransitionService, protected readonly ngZone: NgZone) {
-    super(dbxRouterTransitionService);
   }
 
   // MARK: Action

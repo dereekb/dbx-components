@@ -1,7 +1,7 @@
 import { first, Observable, map } from 'rxjs';
-import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxActionContextStoreSourceInstance, AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
+import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
@@ -19,6 +19,8 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
   selector: '[dbxActionPopover]'
 })
 export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+  readonly elementRef = inject(ElementRef);
+
   @Input('dbxActionPopover')
   fn?: DbxActionPopoverFunction<T>;
 
@@ -27,8 +29,9 @@ export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionVal
     this.isModifiedFunction = isModifiedFunction;
   }
 
-  constructor(readonly elementRef: ElementRef, source: DbxActionContextStoreSourceInstance<T, unknown>) {
-    super(source, () => this._getDataFromPopover());
+  constructor() {
+    super();
+    this.valueGetter = () => this._getDataFromPopover();
   }
 
   protected _getDataFromPopover(): Observable<Maybe<T>> {

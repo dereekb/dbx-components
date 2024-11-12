@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnDestroy, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy, Input, OnInit, inject } from '@angular/core';
 import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
 import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
@@ -94,6 +94,9 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
   providers: [DbxCalendarStore]
 })
 export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestroy {
+  readonly calendarStore = inject(DbxCalendarStore<T>);
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+
   private _inputReadonly = new BehaviorSubject<Maybe<boolean>>(undefined);
   private _config = new BehaviorSubject<DbxScheduleSelectionCalendarComponentConfig>({});
   private _centerRangeSub = new SubscriptionObject();
@@ -144,7 +147,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   );
 
   @Output()
-  clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
+  readonly clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
   // refresh any time the selected day function updates
   readonly state$ = this.dbxCalendarScheduleSelectionStore.state$;
@@ -171,8 +174,6 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
 
   readonly events$ = this.calendarStore.visibleEvents$.pipe(map(prepareAndSortCalendarEvents), shareReplay(1));
   readonly viewDate$ = this.calendarStore.date$;
-
-  constructor(readonly calendarStore: DbxCalendarStore<T>, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   ngOnInit(): void {
     this.dbxCalendarScheduleSelectionStore.setViewReadonlyState(this.readonly$); // sync the readonly state

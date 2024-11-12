@@ -95,5 +95,5 @@ describe('transformAndValidateObjectResult()', () => {
     expect(result.validationErrors[0].property).toBe('valid'); // missing
   });
 
-  // TODO: Add context/groups for validation tests
+  // TODO(TEST): Add context/groups for validation tests
 });

@@ -1,6 +1,6 @@
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { switchMap, mergeMap, map, withLatestFrom, shareReplay, BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe, isDefinedAndNotFalse } from '@dereekb/util';
 import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 
@@ -11,6 +11,8 @@ import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
   selector: '[dbxActionValueStream]'
 })
 export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
   private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFunction<T>>>(undefined);
 
@@ -55,8 +57,6 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
       )
     )
   );
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
 
   ngOnInit(): void {
     // Update Modified value.

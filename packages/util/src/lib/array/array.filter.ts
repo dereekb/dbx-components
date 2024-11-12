@@ -10,7 +10,7 @@ import { forEachInIterable } from '../iterable/iterable';
  * If order is irrelevant, use filterValuesByDistanceNoOrder().
  */
 export function filterValuesByDistance<T>(input: T[], minDistance: number, getValue: (value: T) => number | null): T[] {
-  // TODO: Implement if needed.
+  // TODO(FUTURE): Implement if needed.
 
   throw new Error('Incomplete implementation!');
 }
@@ -26,7 +26,7 @@ export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number
   return _filterValuesByDistance(values, minDistance, (x) => x[0]);
 }
 
-// TODO: Can add a "mergeValuesByDistance" too to merge together values that are too close together.
+// TODO(FUTURE): Can add a "mergeValuesByDistance" too to merge together values that are too close together.
 
 function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: number, toOutputValue: (value: [T, number]) => Y): Y[] {
   // Exit if nothing to do.

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, Optional, TrackByFunction } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, TrackByFunction, inject } from '@angular/core';
 import { shareReplay, map, Observable, BehaviorSubject, switchMap } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
@@ -46,7 +46,9 @@ export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxVal
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
-  readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I>;
+  readonly dbxListView = inject(DbxListView<T>);
+
+  readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I> = inject<Maybe<DbxValueListViewGroupDelegate<any, T, I>>>(DbxValueListViewGroupDelegate, { optional: true }) ?? defaultDbxValueListViewGroupDelegate();
 
   private _items = new BehaviorSubject<Maybe<DbxValueListItemConfig<T, I>[]>>(undefined);
 
@@ -65,9 +67,8 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
     return v.id; // track by the id
   };
 
-  constructor(readonly dbxListView: DbxListView<T>, @Optional() @Inject(DbxValueListViewGroupDelegate) inputDbxListGroupDelegate: Maybe<DbxValueListViewGroupDelegate<any, T, I>>) {
-    this._dbxListGroupDelegate = inputDbxListGroupDelegate ?? defaultDbxValueListViewGroupDelegate();
-    const trackBy = dbxListView.trackBy;
+  constructor() {
+    const trackBy = this.dbxListView.trackBy;
     this.trackByFunction = trackBy ? (index: number, item: DbxValueListItemConfig<T, I>) => trackBy(index, item.itemValue) : () => undefined;
   }
 
@@ -134,6 +135,9 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
+  readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   private _group: Maybe<DbxValueListItemGroup<G, T, I>>;
   private _cssClasses: Maybe<SpaceSeparatedCssClasses>;
 
@@ -153,13 +157,8 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
     return this._group?.footerConfig;
   }
 
-  readonly disabled$: Observable<boolean>;
-  readonly trackByFunction: TrackByFunction<DbxValueListItemConfig<T, I>>;
-
-  constructor(readonly dbxValueListViewContentComponent: DbxValueListViewContentComponent<T>, readonly cdRef: ChangeDetectorRef) {
-    this.disabled$ = this.dbxValueListViewContentComponent.disabled$;
-    this.trackByFunction = this.dbxValueListViewContentComponent.trackByFunction;
-  }
+  readonly disabled$: Observable<boolean> = this.dbxValueListViewContentComponent.disabled$;
+  readonly trackByFunction: TrackByFunction<DbxValueListItemConfig<T, I>> = this.dbxValueListViewContentComponent.trackByFunction;
 
   @Input()
   get group() {

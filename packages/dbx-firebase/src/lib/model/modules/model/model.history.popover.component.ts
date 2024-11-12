@@ -1,6 +1,6 @@
 import { Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverComponent, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 import { DbxFirebaseModelTrackerHistoryFilter } from './model.tracker.service';
@@ -55,10 +55,6 @@ export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDire
         anchorForItem
       } as DbxFirebaseModelHistoryPopoverParams
     });
-  }
-
-  constructor(popover: DbxPopoverComponent<unknown, DbxFirebaseModelHistoryPopoverParams>) {
-    super(popover);
   }
 
   get params(): DbxFirebaseModelHistoryPopoverParams {

@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxAppContextService } from './context.service';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxAppContextState } from './context';
@@ -13,9 +13,11 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxAppContextState]'
 })
 export class DbxAppContextStateDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _state = new BehaviorSubject<Maybe<DbxAppContextState>>(undefined);
+  readonly dbxAppContextStateService = inject(DbxAppContextService);
 
-  constructor(readonly dbxAppContextStateService: DbxAppContextService) {
+  private readonly _state = new BehaviorSubject<Maybe<DbxAppContextState>>(undefined);
+
+  constructor() {
     super();
   }
 

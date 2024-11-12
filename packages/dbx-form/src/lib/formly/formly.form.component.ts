@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
@@ -31,6 +31,8 @@ export interface DbxFormlyFormState {
   }
 })
 export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
+  private readonly _dbxFormlyContext = inject(DbxFormlyContext<T>);
+
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
   private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
@@ -121,12 +123,8 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
     shareReplay(1)
   );
 
-  constructor(private readonly context: DbxFormlyContext<T>) {
-    super();
-  }
-
   ngOnInit(): void {
-    this.context.setDelegate(this);
+    this._dbxFormlyContext.setDelegate(this);
 
     const resyncDisabledState = () => {
       const isDisabled = BooleanStringKeyArrayUtilityInstance.isTrue(this._disabled.value);
@@ -157,9 +155,9 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   override ngOnDestroy(): void {
-    this.context.lockSet.onNextUnlock(() => {
+    this._dbxFormlyContext.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
-      this.context.clearDelegate(this);
+      this._dbxFormlyContext.clearDelegate(this);
       this._events.complete();
       this._fields.complete();
       this._reset.complete();

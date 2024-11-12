@@ -1,5 +1,5 @@
-import { DbxButtonDirective, DbxButtonInterceptor } from '@dereekb/dbx-core';
-import { Directive, Host, OnInit } from '@angular/core';
+import { DbxButton, DbxButtonInterceptor } from '@dereekb/dbx-core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { DbxPromptConfirm } from './prompt.confirm';
 
@@ -10,13 +10,14 @@ import { DbxPromptConfirm } from './prompt.confirm';
   selector: '[dbxPromptConfirmButton]'
 })
 export class DbxPromptConfirmButtonDirective implements OnInit, DbxButtonInterceptor {
+  readonly button = inject(DbxButton, { host: true });
+  readonly prompt = inject(DbxPromptConfirm, { host: true });
+
   readonly interceptButtonClick: () => Observable<boolean> = () => {
     return this.prompt.showDialog().pipe(map((x) => Boolean(x)));
   };
 
-  constructor(@Host() readonly appButton: DbxButtonDirective, @Host() readonly prompt: DbxPromptConfirm) {}
-
   ngOnInit(): void {
-    this.appButton.setButtonInterceptor(this);
+    this.button.setButtonInterceptor(this);
   }
 }

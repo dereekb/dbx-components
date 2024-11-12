@@ -2,8 +2,8 @@ import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctU
 import { ScreenMediaWidthType } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, findNext, Maybe } from '@dereekb/util';
-import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, TrackByFunction } from '@angular/core';
-import { ClickableAnchorLinkSegueRef, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, TrackByFunction, inject } from '@angular/core';
+import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 
 interface NavAnchorLink {
@@ -27,6 +27,10 @@ export type NavbarButtonMode = 'menu' | 'rotate';
   }
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
+  private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);
+  private readonly _dbxRouterService = inject(DbxRouterService);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   /**
    * Whether or not to show the dropwdown caret for a menu
    */
@@ -119,10 +123,6 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   readonly trackByFunction: TrackByFunction<NavAnchorLink> = (index: number, item: NavAnchorLink) => item.anchor;
 
   // TODO: potentially make the caret depending on the current button display.
-
-  constructor(dbxRouterTransitionService: DbxRouterTransitionService, private cdRef: ChangeDetectorRef, private readonly _dbxScreenMediaService: DbxScreenMediaService, private readonly _dbxRouterService: DbxRouterService) {
-    super(dbxRouterTransitionService);
-  }
 
   ngOnDestroy(): void {
     this._icon.complete();

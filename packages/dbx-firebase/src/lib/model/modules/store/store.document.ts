@@ -24,7 +24,7 @@ import {
   flatFirestoreModelKey,
   twoWayFlatFirestoreModelKey
 } from '@dereekb/firebase';
-import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue, loadingStateIsLoading } from '@dereekb/rxjs';
+import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue, isLoadingStateLoading } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../../error';
@@ -275,7 +275,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly isLoadingData$ = this.dataLoadingState$.pipe(map(loadingStateIsLoading), distinctUntilChanged(), shareReplay(1));
+  readonly isLoadingData$ = this.dataLoadingState$.pipe(map(isLoadingStateLoading), distinctUntilChanged(), shareReplay(1));
 
   /**
    * Returns false while hasRef$ is false, and then returns exists$.

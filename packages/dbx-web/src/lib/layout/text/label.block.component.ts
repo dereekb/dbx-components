@@ -7,7 +7,7 @@ import { Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-label-block',
   template: `
-    <dbx-label class="d-block dbx-label-padded">{{ header }}</dbx-label>
+    <span class="d-block dbx-label dbx-label-padded">{{ header }}</span>
     <ng-content></ng-content>
   `,
   host: {

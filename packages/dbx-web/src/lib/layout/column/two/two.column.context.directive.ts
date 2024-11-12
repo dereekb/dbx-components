@@ -1,4 +1,4 @@
-import { Input, OnDestroy, Directive, OnInit } from '@angular/core';
+import { Input, OnDestroy, Directive, OnInit, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
@@ -11,9 +11,9 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.s
   providers: provideTwoColumnsContext()
 })
 export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
-  private _showRight = new BehaviorSubject<Maybe<boolean>>(undefined);
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
-  constructor(readonly twoColumnsContextStore: TwoColumnsContextStore) {}
+  private _showRight = new BehaviorSubject<Maybe<boolean>>(undefined);
 
   ngOnInit(): void {
     this.twoColumnsContextStore.setShowRight(this._showRight);

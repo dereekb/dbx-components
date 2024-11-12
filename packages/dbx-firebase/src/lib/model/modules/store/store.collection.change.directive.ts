@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { FirestoreDocument } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
@@ -14,6 +14,8 @@ import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../../loader/colle
   selector: '[dbxFirebaseCollectionChange]'
 })
 export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeWatcher<S>, OnInit, OnDestroy {
+  readonly dbxFirebaseCollectionStoreDirective = inject(DbxFirebaseCollectionStoreDirective<T, D, S>);
+
   private _watcher = dbxFirebaseCollectionChangeWatcher(this.dbxFirebaseCollectionStoreDirective.store);
   private _trigger = dbxFirebaseCollectionChangeTriggerForWatcher(this._watcher, () => this.restart());
 
@@ -27,8 +29,6 @@ export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends Firesto
     return this._watcher.store;
   }
 
-  constructor(readonly dbxFirebaseCollectionStoreDirective: DbxFirebaseCollectionStoreDirective<T, D, S>) {}
-
   ngOnInit(): void {
     this._trigger.init();
   }
@@ -39,12 +39,8 @@ export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends Firesto
   }
 
   @Input('dbxFirebaseCollectionChange')
-  get mode(): DbxFirebaseCollectionChangeWatcherTriggerMode {
-    return this._watcher.mode;
-  }
-
   set mode(mode: Maybe<DbxFirebaseCollectionChangeWatcherTriggerMode | ''>) {
-    this._watcher.mode = mode || 'off';
+    this._watcher.setMode(mode || 'off');
   }
 
   restart() {

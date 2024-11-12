@@ -1,7 +1,7 @@
 import { ArrayOrValue, Maybe, convertMaybeToArray, lastValue, PrimativeKey, separateValues, asArray, filterUniqueValues } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
-import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
@@ -87,6 +87,8 @@ export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends Prima
  */
 @Directive()
 export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFieldProps<T, M, H> = SearchableValueFieldsFieldProps<T, M, H>> extends FieldType<FieldTypeConfig<C>> implements OnInit, OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+
   /**
    * Whether or not to allow syncing to
    */
@@ -301,10 +303,6 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
         return obs;
       })
     );
-  }
-
-  constructor(readonly cdRef: ChangeDetectorRef) {
-    super();
   }
 
   ngOnInit(): void {

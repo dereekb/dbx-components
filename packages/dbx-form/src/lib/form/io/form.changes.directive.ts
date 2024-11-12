@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, Host, Output, OnInit, OnDestroy } from '@angular/core';
+import { Directive, EventEmitter, Output, OnInit, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { first, mergeMap, delay, map } from 'rxjs';
@@ -13,12 +13,10 @@ import { DbxForm } from '../form';
   selector: '[dbxFormValueChange]'
 })
 export class DbxFormValueChangesDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly form = inject(DbxForm<T>, { host: true });
+
   @Output()
   readonly dbxFormValueChange = new EventEmitter<Maybe<T>>();
-
-  constructor(@Host() public readonly form: DbxForm<T>) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.form.stream$

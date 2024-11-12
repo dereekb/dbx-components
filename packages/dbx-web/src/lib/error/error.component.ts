@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableError, Configurable } from '@dereekb/util';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxErrorPopoverComponent } from './error.popover.component';
@@ -37,6 +37,10 @@ interface DbxReadableErrorComponentState {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
+  readonly popoverService = inject(DbxPopoverService);
+  readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
+  readonly cdRef = inject(ChangeDetectorRef);
+
   @Output()
   readonly popoverOpen = new EventEmitter<NgPopoverRef>();
 
@@ -44,8 +48,8 @@ export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
     viewType: 'none'
   };
 
-  private _iconOnly = new BehaviorSubject<Maybe<boolean>>(undefined);
-  private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
+  private readonly _iconOnly = new BehaviorSubject<Maybe<boolean>>(undefined);
+  private readonly _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
 
   readonly state$ = combineLatest([this._inputError, this._iconOnly.pipe(distinctUntilChanged())]).pipe(
     map(([rawError, iconOnly]) => {
@@ -96,10 +100,6 @@ export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
     }),
     shareReplay(1)
   );
-
-  constructor(readonly popoverService: DbxPopoverService, readonly dbxErrorWidgetService: DbxErrorWidgetService, readonly cdRef: ChangeDetectorRef) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.state$.subscribe((state) => {

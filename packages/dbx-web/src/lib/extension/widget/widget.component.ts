@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject, map } from 'rxjs';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxWidgetDataPair } from './widget';
@@ -18,6 +18,8 @@ import { DbxWidgetService } from './widget.service';
   }
 })
 export class DbxWidgetViewComponent implements OnDestroy {
+  readonly dbxWidgetService = inject(DbxWidgetService);
+
   private _config = new BehaviorSubject<Maybe<DbxWidgetDataPair>>(undefined);
 
   readonly config$: Observable<Maybe<DbxInjectionComponentConfig>> = this._config.pipe(
@@ -38,8 +40,6 @@ export class DbxWidgetViewComponent implements OnDestroy {
       return config;
     })
   );
-
-  constructor(readonly dbxWidgetService: DbxWidgetService) {}
 
   ngOnDestroy(): void {
     this._config.complete();

@@ -1,5 +1,5 @@
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, startWith, first } from 'rxjs';
-import { Directive, Input, OnDestroy } from '@angular/core';
+import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { filterUndefinedValues, firstValue, getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
 
@@ -8,6 +8,8 @@ import { filterUndefinedValues, firstValue, getValueFromGetter, Maybe, objectHas
  */
 @Directive()
 export abstract class AbstractDbxPartialPresetFilterMenuDirective<F> implements OnDestroy {
+  readonly filterSourceDirective = inject(FilterSourceDirective<F>);
+
   private _partialPresets = new BehaviorSubject<ClickablePartialFilterPreset<F>[]>([]);
 
   readonly filter$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged(), shareReplay(1));
@@ -48,8 +50,6 @@ export abstract class AbstractDbxPartialPresetFilterMenuDirective<F> implements 
   set partialPresets(partialPresets: ClickablePartialFilterPreset<F>[]) {
     this._partialPresets.next(partialPresets);
   }
-
-  constructor(readonly filterSourceDirective: FilterSourceDirective<F>) {}
 
   selectPartialPreset(preset: ClickablePartialFilterPreset<F>) {
     const presetValue = preset.partialPresetValue;

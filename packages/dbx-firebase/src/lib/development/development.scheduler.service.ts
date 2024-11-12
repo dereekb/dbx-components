@@ -1,7 +1,7 @@
 import { DbxAuthService } from '@dereekb/dbx-core';
 import { tap, switchMap, BehaviorSubject, Observable, interval, combineLatest, map, exhaustMap, distinctUntilChanged, shareReplay } from 'rxjs';
 import { Initialized, Milliseconds, runAsyncTasksForValues } from '@dereekb/util';
-import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { lazyFrom, SubscriptionObject, switchMapWhileTrue } from '@dereekb/rxjs';
 import { FirebaseDevelopmentFunctions, ScheduledFunctionDevelopmentFirebaseFunctionListEntry, ScheduledFunctionDevelopmentFirebaseFunctionListResult, ScheduledFunctionDevelopmentFunctionTypeEnum } from '@dereekb/firebase';
 
@@ -17,8 +17,12 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_SCHEDULER_ENABLED_TOKEN = new Injectio
   providedIn: 'root'
 })
 export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
+  readonly dbxAuthService = inject(DbxAuthService);
+  readonly firebaseDevelopmentFunctions = inject(FirebaseDevelopmentFunctions);
+
   private _sub = new SubscriptionObject();
-  private _enabled = new BehaviorSubject<boolean>(this._startEnabled !== false);
+  private _enabled = new BehaviorSubject<boolean>(inject<boolean>(DEFAULT_FIREBASE_DEVELOPMENT_SCHEDULER_ENABLED_TOKEN, { optional: true }) !== false);
+
   private _timerInterval = new BehaviorSubject<Milliseconds>(60 * 1000);
   private _error = new BehaviorSubject<boolean>(false);
 
@@ -43,8 +47,6 @@ export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
         throw e;
       });
   });
-
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_SCHEDULER_ENABLED_TOKEN) private _startEnabled: boolean, readonly dbxAuthService: DbxAuthService, readonly firebaseDevelopmentFunctions: FirebaseDevelopmentFunctions) {}
 
   init(): void {
     this._sub.subscription = this.running$

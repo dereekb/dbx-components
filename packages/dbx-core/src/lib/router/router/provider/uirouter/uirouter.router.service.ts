@@ -3,7 +3,7 @@ import { Subject, BehaviorSubject, Observable, firstValueFrom, map } from 'rxjs'
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
 
@@ -12,13 +12,17 @@ import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
  */
 @Injectable()
 export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService, OnDestroy {
+  readonly state = inject(StateService);
+  readonly transitionService = inject(TransitionService);
+  readonly uiRouterGlobals = inject(UIRouterGlobals);
+
   private readonly _params = new BehaviorSubject<SegueRefRawSegueParams>(this.uiRouterGlobals.params);
   readonly params$ = this._params.asObservable();
 
   private readonly _transitions = new Subject<DbxRouterTransitionEvent>();
   readonly transitions$ = this._transitions.asObservable();
 
-  constructor(readonly state: StateService, readonly transitionService: TransitionService, readonly uiRouterGlobals: UIRouterGlobals) {
+  constructor() {
     const emitTransition = (type: DbxRouterTransitionEventType) => {
       this._transitions.next({
         type

@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 
 /**
@@ -8,7 +8,8 @@ import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
   selector: '[dbxFilterConnectSource]'
 })
 export class DbxFilterConnectSourceDirective<F = unknown> implements OnInit {
-  constructor(@Host() readonly filterSource: FilterSource<F>, readonly filterSourceConnector: FilterSourceConnector<F>) {}
+  readonly filterSource = inject(FilterSource<F>, { host: true });
+  readonly filterSourceConnector = inject(FilterSourceConnector<F>);
 
   ngOnInit(): void {
     this.filterSourceConnector.connectWithSource(this.filterSource);

@@ -5,7 +5,7 @@ import { accumulatorFlattenPageListLoadingState, flattenAccumulatorResultItemArr
 import { filter, first, skip } from 'rxjs';
 import { itemAccumulator, type ItemAccumulatorInstance } from './iteration.accumulator';
 import { type PageItemIteration } from './iteration';
-import { loadingStateHasFinishedLoading } from '../loading';
+import { isLoadingStateFinishedLoading } from '../loading';
 
 describe('iteration.rxjs', () => {
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
@@ -99,11 +99,11 @@ describe('iteration.rxjs', () => {
 
         obs
           .pipe(
-            filter((x) => loadingStateHasFinishedLoading(x)),
+            filter((x) => isLoadingStateFinishedLoading(x)),
             first()
           )
           .subscribe((state) => {
-            expect(loadingStateHasFinishedLoading(state)).toBe(true);
+            expect(isLoadingStateFinishedLoading(state)).toBe(true);
             expect(state.value).toBeDefined();
             expect(Array.isArray(state.value)).toBe(true);
             expect(state.page).toBe(testPagesToLoad - 1);
@@ -122,7 +122,7 @@ describe('iteration.rxjs', () => {
             skip(1)
           )
           .subscribe((state) => {
-            if (!loadingStateHasFinishedLoading(state)) {
+            if (!isLoadingStateFinishedLoading(state)) {
               expect(state.value).toBeDefined();
               expect(Array.isArray(state.value)).toBe(true);
             } else {

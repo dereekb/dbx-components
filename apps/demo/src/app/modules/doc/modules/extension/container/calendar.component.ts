@@ -1,4 +1,4 @@
-import { OnInit, Component } from '@angular/core';
+import { OnInit, Component, inject } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
@@ -19,6 +19,8 @@ export interface TestCalendarEventData extends DateCell {
   providers: [DbxCalendarStore]
 })
 export class DocExtensionCalendarComponent implements OnInit {
+  readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);
+
   private _timezone = new BehaviorSubject<Maybe<TimezoneString>>(undefined);
 
   readonly timezone$ = this._timezone.asObservable();
@@ -176,8 +178,6 @@ export class DocExtensionCalendarComponent implements OnInit {
     }),
     shareReplay(1)
   );
-
-  constructor(readonly calendarStore: DbxCalendarStore<TestCalendarEventData>) {}
 
   ngOnInit(): void {
     function makeEvents(name: string, iFilter = 1, minutes = 90) {

@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { OnDestroy, Directive, Host, Input, OnInit } from '@angular/core';
+import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
 import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
@@ -13,13 +13,13 @@ import { dbxFirebaseIdRouteParamRedirect } from '../../../router';
   selector: '[dbxFirebaseDocumentStoreRouteId]'
 })
 export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _redirectInstance = dbxFirebaseIdRouteParamRedirect(this.dbxRouterService);
+  readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T>, { host: true });
+  readonly dbxRouterService = inject(DbxRouterService);
+
+  private readonly _redirectInstance = dbxFirebaseIdRouteParamRedirect(this.dbxRouterService);
+
   readonly idFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly id$: Observable<Maybe<ModelKey>> = this._redirectInstance.value$;
-
-  constructor(@Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>, readonly dbxRouterService: DbxRouterService) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.store.setId(this.idFromParams$); // use from the params, as the params should get updated eventually to the id$ value
@@ -34,11 +34,11 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
   // MARK: Input
   @Input('dbxFirebaseDocumentStoreRouteId')
   get idParam() {
-    return this._redirectInstance.paramKey;
+    return this._redirectInstance.getParamKey();
   }
 
   set idParam(idParam: string) {
-    this._redirectInstance.paramKey = idParam;
+    this._redirectInstance.setParamKey(idParam);
   }
 
   @Input()

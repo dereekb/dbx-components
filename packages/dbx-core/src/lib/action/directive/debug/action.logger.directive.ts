@@ -1,4 +1,4 @@
-import { Directive, OnInit, Host } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
@@ -9,9 +9,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   selector: '[dbxActionLogger],[dbxActionContextLogger]'
 })
 export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
-    super();
-  }
+  readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
 
   ngOnInit(): void {
     this.sub = this.source.state$.subscribe((state) => {

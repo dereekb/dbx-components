@@ -1,4 +1,4 @@
-import { OnDestroy, HostListener, AfterViewInit, Directive } from '@angular/core';
+import { OnDestroy, HostListener, AfterViewInit, Directive, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DbxPopupService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
@@ -12,9 +12,11 @@ import { DbxFirebaseDevelopmentService } from './development.service';
   selector: '[dbxFirebaseDevelopment]'
 })
 export class DbxFirebaseDevelopmentDirective implements OnDestroy, AfterViewInit {
-  ref?: NgPopoverRef<any, any>;
+  readonly popupService = inject(DbxPopupService);
+  readonly matSnackBar = inject(MatSnackBar);
+  readonly dbxFirebaseDevelopmentService = inject(DbxFirebaseDevelopmentService);
 
-  constructor(readonly popupService: DbxPopupService, readonly matSnackBar: MatSnackBar, readonly dbxFirebaseDevelopmentService: DbxFirebaseDevelopmentService) {}
+  ref?: NgPopoverRef<any, any>;
 
   get enabled() {
     return this.dbxFirebaseDevelopmentService.enabled;

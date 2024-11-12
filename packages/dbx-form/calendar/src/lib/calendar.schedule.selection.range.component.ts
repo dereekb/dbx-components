@@ -1,5 +1,5 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, Inject, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
@@ -20,6 +20,10 @@ interface RangeValue {
   templateUrl: './calendar.schedule.selection.range.component.html'
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
+  readonly dbxCalendarStore = inject(DbxCalendarStore);
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+  readonly matFormFieldDefaultOptions = inject<MatFormFieldDefaultOptions>(MAT_FORM_FIELD_DEFAULT_OPTIONS, { optional: true });
+
   private _required = new BehaviorSubject<boolean>(false);
 
   readonly required$ = this._required.asObservable();
@@ -123,8 +127,6 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
     }),
     shareReplay(1)
   );
-
-  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, @Inject(MAT_FORM_FIELD_DEFAULT_OPTIONS) readonly matFormFieldDefaultOptions: MatFormFieldDefaultOptions) {}
 
   ngOnInit(): void {
     this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.currentInputRange$.subscribe((x) => {

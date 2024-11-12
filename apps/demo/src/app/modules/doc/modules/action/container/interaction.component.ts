@@ -1,6 +1,6 @@
 import { MatDialog } from '@angular/material/dialog';
 import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig } from '@dereekb/dbx-web';
-import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
 import { DbxActionContextMachine, safeDetectChanges } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
@@ -13,6 +13,10 @@ import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
   templateUrl: './interaction.component.html'
 })
 export class DocActionInteractionComponent implements OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+  readonly dbxPopoverService = inject(DbxPopoverService);
+  readonly matDialog = inject(MatDialog);
+
   successValue: any;
   undoValue: any;
 
@@ -41,8 +45,6 @@ export class DocActionInteractionComponent implements OnDestroy {
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
   readonly value$ = this._value.asObservable();
-
-  constructor(readonly dbxPopoverService: DbxPopoverService, readonly matDialog: MatDialog, readonly cdRef: ChangeDetectorRef) {}
 
   ngOnDestroy(): void {
     this._value.complete();

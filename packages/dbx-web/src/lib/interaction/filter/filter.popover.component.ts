@@ -3,7 +3,6 @@ import { Component, ElementRef, Type, OnInit, OnDestroy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, BehaviorSubject, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
-import { DbxPopoverComponent } from '../popover/popover.component';
 import { DbxPopoverConfigSizing, DbxPopoverService } from '../popover/popover.service';
 import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
@@ -155,10 +154,6 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
         closeOnFilterChange
       } as DbxFilterComponentParams<F>
     });
-  }
-
-  constructor(popover: DbxPopoverComponent<unknown, DbxFilterComponentParams<F>>) {
-    super(popover);
   }
 
   get config(): DbxFilterComponentParams<F> {

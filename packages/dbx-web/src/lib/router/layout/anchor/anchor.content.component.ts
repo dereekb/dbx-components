@@ -1,5 +1,5 @@
 import { BehaviorSubject, combineLatest, map, Observable, of, shareReplay } from 'rxjs';
-import { Component, Input, Optional, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
@@ -18,8 +18,10 @@ import { DbxAnchorComponent } from './anchor.component';
   }
 })
 export class DbxAnchorContentComponent implements OnDestroy {
+  readonly parent = inject(DbxAnchorComponent, { optional: true });
+
+  private readonly _inputAnchor = new BehaviorSubject<Maybe<Partial<ClickableAnchorLink>>>(undefined);
   private readonly _parentAnchor: Observable<Maybe<ClickableAnchor | ClickableAnchorLink>> = this.parent ? this.parent.anchor$ : of(undefined);
-  private _inputAnchor = new BehaviorSubject<Maybe<Partial<ClickableAnchorLink>>>(undefined);
 
   readonly anchor$: Observable<Maybe<Partial<ClickableAnchorLink>>> = combineLatest([this._inputAnchor, this._parentAnchor]).pipe(
     map(([input, parent]) => input ?? parent),
@@ -33,8 +35,6 @@ export class DbxAnchorContentComponent implements OnDestroy {
   set anchor(anchor: Maybe<Partial<ClickableAnchorLink>>) {
     this._inputAnchor.next(anchor);
   }
-
-  constructor(@Optional() readonly parent?: DbxAnchorComponent) {}
 
   ngOnDestroy(): void {
     this._inputAnchor.complete();

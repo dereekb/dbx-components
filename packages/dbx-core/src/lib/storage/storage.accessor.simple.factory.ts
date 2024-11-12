@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { StorageAccessor } from './storage.accessor';
 import { SimpleStorageAccessorConfig, SimpleStorageAccessor, SimpleStorageAccessorConverter, StringifySimpleStorageAccessorConverter, WrapperSimpleStorageAccessorDelegate } from './storage.accessor.simple';
 import { StringStorageAccessor } from './storage.accessor.string';
@@ -15,7 +15,7 @@ export interface StorageAccessorFactoryConfig<T> extends SimpleStorageAccessorCo
  */
 @Injectable()
 export class SimpleStorageAccessorFactory {
-  constructor(@Inject(DEFAULT_STORAGE_OBJECT_TOKEN) readonly storageObject: FullStorageObject) {}
+  readonly storageObject = inject<FullStorageObject>(DEFAULT_STORAGE_OBJECT_TOKEN);
 
   createStorageAccessor<T>(config: StorageAccessorFactoryConfig<T>): SimpleStorageAccessor<T> {
     const storage = config.storage ?? new StringStorageAccessor(this.storageObject);

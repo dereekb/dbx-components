@@ -1,7 +1,7 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, BehaviorSubject, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Host, Input, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
 import { Maybe, DestroyFunctionObject } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
@@ -23,18 +23,19 @@ import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _pos = { x: `0`, y: `0` };
-  private _active = new BehaviorSubject<boolean>(true);
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  readonly matMenuTrigger = inject(MatMenuTrigger, { host: true });
+  readonly ngZone = inject(NgZone);
+  readonly cdRef = inject(ChangeDetectorRef);
 
-  private _menuCloseSub = new SubscriptionObject();
-  private _preventRightClick = new DestroyFunctionObject();
+  private _pos = { x: `0`, y: `0` };
+
+  private readonly _active = new BehaviorSubject<boolean>(true);
+  private readonly _menuCloseSub = new SubscriptionObject();
+  private readonly _preventRightClick = new DestroyFunctionObject();
 
   get pos() {
     return this._pos;
-  }
-
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, @Host() readonly matMenuTrigger: MatMenuTrigger, readonly ngZone: NgZone, readonly cdRef: ChangeDetectorRef) {
-    super();
   }
 
   @Input()
@@ -88,8 +89,8 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._active.complete();
-    this._preventRightClick.destroy();
     this._menuCloseSub.destroy();
+    this._preventRightClick.destroy();
 
     if (this.matMenuTrigger) {
       this.matMenuTrigger.closeMenu();

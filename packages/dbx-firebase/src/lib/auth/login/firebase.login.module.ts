@@ -3,7 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { DbxFirebaseLoginAppleComponent } from './login.apple.component';
 import { DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent } from './login.button.component';
-import { ModuleWithProviders, NgModule, Type } from '@angular/core';
+import { Inject, ModuleWithProviders, NgModule, Type, inject } from '@angular/core';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxActionModule, DbxRouterAnchorModule, DbxButtonModule, DbxReadableErrorModule } from '@dereekb/dbx-web';
 import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY, DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
@@ -188,11 +188,13 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
   providers: []
 })
 export class DbxFirebaseLoginModule {
-  constructor(config: DbxFirebaseLoginModuleRootConfig, dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) {
+  readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+
+  constructor(@Inject(DbxFirebaseLoginModuleRootConfig) config: DbxFirebaseLoginModuleRootConfig) {
     if (config.enabledLoginMethods === true) {
-      dbxFirebaseAuthLoginService.setEnableAll();
+      this.dbxFirebaseAuthLoginService.setEnableAll();
     } else {
-      dbxFirebaseAuthLoginService.enable(config.enabledLoginMethods); // enable the types in the service.
+      this.dbxFirebaseAuthLoginService.enable(config.enabledLoginMethods); // enable the types in the service.
     }
   }
 

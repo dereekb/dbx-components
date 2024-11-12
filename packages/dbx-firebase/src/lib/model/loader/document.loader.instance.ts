@@ -12,7 +12,7 @@ export interface DbxFirebaseDocumentLoaderInstanceInitConfig<T, D extends Firest
  * DbxLimitedFirebaseDocumentLoader implementation within an instance.
  */
 export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> implements DbxLimitedFirebaseDocumentLoader<T>, Destroyable {
-  readonly accessor: A = this._initConfig.accessor;
+  readonly accessor: A;
 
   protected readonly _documents = new BehaviorSubject<Maybe<D[]>>(undefined);
   protected readonly _restart = new Subject<void>();
@@ -54,7 +54,9 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = pageLoadingStateFromObs(this.data$, false);
   readonly pageLoadingStateStream$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = pageLoadingStateFromObs(this.dataStream$, false);
 
-  constructor(private readonly _initConfig: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>) {}
+  constructor(private readonly _initConfig: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>) {
+    this.accessor = this._initConfig.accessor;
+  }
 
   destroy(): void {
     this._documents.complete();

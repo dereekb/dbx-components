@@ -1,4 +1,4 @@
-import { Component, Directive, Input, OnInit } from '@angular/core';
+import { Component, Directive, Input, OnInit, inject } from '@angular/core';
 import { WorkUsingObservable } from '@dereekb/rxjs';
 import { from } from 'rxjs';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
@@ -89,11 +89,13 @@ export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
 
 @Directive()
 export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implements OnInit {
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
+  readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+  readonly dbxFirebaseLoginContext = inject(DbxFirebaseLoginContext);
+
   private _config!: DbxFirebaseLoginButtonConfig;
 
   abstract readonly loginProvider: FirebaseLoginMethodType;
-
-  constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService, readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService, readonly dbxFirebaseLoginContext: DbxFirebaseLoginContext) {}
 
   ngOnInit(): void {
     const assets = this.assetConfig;

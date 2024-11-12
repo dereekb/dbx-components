@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
@@ -10,12 +10,11 @@ import { DbxActionContextStoreSourceInstance } from '../../action/action.store.s
   selector: '[dbxActionButtonTrigger]'
 })
 export class DbxActionButtonTriggerDirective extends AbstractSubscriptionDirective implements OnInit {
-  constructor(@Host() public readonly button: DbxButton, public readonly source: DbxActionContextStoreSourceInstance) {
-    super();
-  }
+  readonly dbxButton = inject(DbxButton, { host: true });
+  readonly source = inject(DbxActionContextStoreSourceInstance);
 
   ngOnInit(): void {
-    this.sub = this.button.clicked$.subscribe(() => {
+    this.sub = this.dbxButton.clicked$.subscribe(() => {
       this._buttonClicked();
     });
   }

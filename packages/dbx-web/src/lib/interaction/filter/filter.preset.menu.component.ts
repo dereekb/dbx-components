@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { Component, Input } from '@angular/core';
 import { FilterWithPreset } from '@dereekb/rxjs';
-import { AbstractDbxPresetFilterMenuComponent } from './filter.preset';
+import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
 import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextObservable, DbxPresetFilterMenuConfig } from './filter.menu';
 
 /**
@@ -11,7 +11,7 @@ import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextO
   selector: 'dbx-preset-filter-menu',
   templateUrl: './filter.preset.menu.component.html'
 })
-export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuComponent<F> {
+export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {
   private _config = new BehaviorSubject<DbxPresetFilterMenuConfig>({});
 
   readonly buttonText$ = dbxPresetFilterMenuButtonTextObservable(this._config, this.selectedPreset$);

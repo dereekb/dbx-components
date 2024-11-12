@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
@@ -13,28 +13,26 @@ export type TextEditorComponentFieldProps = FormlyFieldProps;
 @Component({
   template: `
     <div class="dbx-texteditor-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
-      <dbx-label *ngIf="label">{{ label }}</dbx-label>
+      <span class="dbx-label" *ngIf="label">{{ label }}</span>
       <div class="dbx-texteditor-field-input">
         <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholder" [formControlName]="formGroupName"></ngx-editor>
       </div>
       <div class="dbx-texteditor-field-menu">
         <ngx-editor-menu [editor]="editor"></ngx-editor-menu>
       </div>
-      <dbx-form-description *ngIf="description">{{ description }}</dbx-form-description>
+      <div class="dbx-form-description" *ngIf="description">{{ description }}</div>
     </div>
   `
 })
 export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldProps = TextEditorComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+  private readonly _compactContextStore = inject(CompactContextStore, { optional: true });
+
   private _editor?: Editor;
   private _sub = new SubscriptionObject();
 
-  readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
+  readonly compactClass$ = mapCompactModeObs(this._compactContextStore?.mode$, {
     compact: 'dbx-texteditor-field-compact'
   });
-
-  constructor(@Optional() readonly compact: CompactContextStore) {
-    super();
-  }
 
   get formGroupName(): string {
     return this.field.key as string;

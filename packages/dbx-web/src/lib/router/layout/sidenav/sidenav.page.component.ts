@@ -1,5 +1,5 @@
 import { BehaviorSubject, switchMap, shareReplay, map, of } from 'rxjs';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { DbxSidenavComponent } from './sidenav.component';
 import { Maybe } from '@dereekb/util';
 import { DbxBarColor } from '../../../layout/bar/bar';
@@ -25,6 +25,8 @@ import { SideNavDisplayMode } from './sidenav';
   `
 })
 export class DbxSidenavPageComponent implements OnDestroy {
+  readonly parent = inject(DbxSidenavComponent);
+
   @Input()
   sidenavMenuIcon: Maybe<string>;
 
@@ -37,8 +39,6 @@ export class DbxSidenavPageComponent implements OnDestroy {
     switchMap((mobileOnly) => (mobileOnly ? this.parent.mode$.pipe(map((x) => x !== SideNavDisplayMode.MOBILE)) : of(false))),
     shareReplay(1)
   );
-
-  constructor(readonly parent: DbxSidenavComponent) {}
 
   ngOnDestroy(): void {
     this._mobileOnly.complete();

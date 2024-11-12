@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { DbxAnalyticsUser, DbxAnalyticsUserProperties, DbxAnalyticsUserSource } from '@dereekb/dbx-analytics';
 import { FactoryWithRequiredInput, Maybe } from '@dereekb/util';
 import { BehaviorSubject, map, Observable, of, switchMap, shareReplay, combineLatest } from 'rxjs';
@@ -26,6 +26,8 @@ export const DEFAULT_DBX_FIREBASE_ANALYTICS_USER_PROPERTIES_FACTORY: DbxFirebase
   providedIn: 'root'
 })
 export class DbxFirebaseAnalyticsUserSource implements DbxAnalyticsUserSource {
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
+
   private _userPropertiesFactory = new BehaviorSubject<DbxFirebaseAnalyticsUserPropertiesFactory>(DEFAULT_DBX_FIREBASE_ANALYTICS_USER_PROPERTIES_FACTORY);
 
   readonly analyticsUser$: Observable<Maybe<DbxAnalyticsUser>> = combineLatest([this._userPropertiesFactory, this.dbxFirebaseAuthService.currentAuthUserInfo$]).pipe(
@@ -47,8 +49,6 @@ export class DbxFirebaseAnalyticsUserSource implements DbxAnalyticsUserSource {
     }),
     shareReplay(1)
   );
-
-  constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService) {}
 
   get userPropertiesFactory() {
     return this._userPropertiesFactory.value;

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { DbxAuthService } from '../../service';
@@ -11,7 +11,9 @@ import * as fromDbxAppAuth from '../reducer';
  */
 @Injectable()
 export class DbxAppAuthEffects {
-  constructor(private readonly actions$: Actions, private readonly store: Store<fromDbxAppAuth.State>, private readonly dbxAuthService: DbxAuthService) {}
+  private readonly dbxAuthService = inject(DbxAuthService);
+  protected readonly actions$ = inject(Actions);
+  protected readonly store = inject(Store<fromDbxAppAuth.State>);
 
   // MARK: Auth
   readonly emitLoggedIn = createEffect(() => this.dbxAuthService.onLogIn$.pipe(map(() => onDbxAppAuth.DbxAppAuthActions.loggedIn())));

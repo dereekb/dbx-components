@@ -3,7 +3,7 @@ import { DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerF
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap, BehaviorSubject } from 'rxjs';
-import { Component, EventEmitter, OnDestroy, Inject } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, inject } from '@angular/core';
 import { DbxFirebaseLoginContext } from './login.context';
 import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
@@ -20,6 +20,9 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
   templateUrl: './login.email.content.component.html'
 })
 export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
+  readonly config = inject<DbxFirebaseLoginEmailContentComponentConfig>(DBX_INJECTION_COMPONENT_DATA);
+
   readonly formConfig: DbxFirebaseEmailFormConfig = {
     loginMode: this.config.loginMode,
     passwordConfig: this.config.passwordConfig
@@ -38,8 +41,6 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
   };
 
   readonly doneOrCancelled = new EventEmitter<boolean>();
-
-  constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService, @Inject(DBX_INJECTION_COMPONENT_DATA) readonly config: DbxFirebaseLoginEmailContentComponentConfig) {}
 
   static openEmailLoginContext(dbxFirebaseLoginContext: DbxFirebaseLoginContext, config: DbxFirebaseLoginEmailContentComponentConfig): Promise<boolean> {
     return dbxFirebaseLoginContext.showContext({

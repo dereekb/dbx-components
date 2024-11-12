@@ -1,6 +1,6 @@
 import { map, tap, shareReplay, switchMap, BehaviorSubject } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -17,21 +17,10 @@ export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
   selector: '[dbxActionSuccessHandler]'
 })
 export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
+  private readonly _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
   readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));
-
-  @Input('dbxActionSuccessHandler')
-  get successFunction(): Maybe<DbxActionSuccessHandlerFunction<O>> {
-    return this._successFunction.value;
-  }
-
-  set successFunction(successFunction: Maybe<DbxActionSuccessHandlerFunction<O>>) {
-    this._successFunction.next(successFunction);
-  }
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.successFunction$
@@ -51,5 +40,14 @@ export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscription
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._successFunction.complete();
+  }
+
+  @Input('dbxActionSuccessHandler')
+  get successFunction(): Maybe<DbxActionSuccessHandlerFunction<O>> {
+    return this._successFunction.value;
+  }
+
+  set successFunction(successFunction: Maybe<DbxActionSuccessHandlerFunction<O>>) {
+    this._successFunction.next(successFunction);
   }
 }

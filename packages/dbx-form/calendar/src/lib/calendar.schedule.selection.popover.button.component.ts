@@ -1,5 +1,5 @@
 import { DbxScheduleSelectionCalendarDatePopoverComponent } from './calendar.schedule.selection.popover.component';
-import { Component, ElementRef, Injector, ViewChild } from '@angular/core';
+import { Component, ElementRef, Injector, ViewChild, inject } from '@angular/core';
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { map, shareReplay } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
@@ -12,6 +12,10 @@ import { formatToMonthDayString } from '@dereekb/date';
   `
 })
 export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
+  readonly injector = inject(Injector);
+  readonly popoverService = inject(DbxPopoverService);
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+
   @ViewChild('buttonPopoverOrigin', { read: ElementRef })
   buttonPopoverOrigin!: ElementRef;
 
@@ -29,8 +33,6 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
     }),
     shareReplay(1)
   );
-
-  constructor(readonly popoverService: DbxPopoverService, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, readonly injector: Injector) {}
 
   openPopover() {
     DbxScheduleSelectionCalendarDatePopoverComponent.openPopover(this.popoverService, { origin: this.buttonPopoverOrigin, injector: this.injector });

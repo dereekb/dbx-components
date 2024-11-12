@@ -68,15 +68,19 @@ export class DbxActionContextMapDirective implements ActionContextStoreSourceMap
 }
 
 export class DbxActionContextMapDirectiveSourceInstance implements ActionContextStoreSource {
-  readonly _source$ = this.parent.map$.pipe(
-    map((x) => x.get(this.key)),
-    distinctUntilChanged()
-  );
-  readonly _store$ = this._source$.pipe(
-    switchMap((x) => x?.store$ ?? of(undefined)),
-    shareReplay(1)
-  );
-  readonly store$ = actionContextStoreSourcePipe(this._store$);
+  readonly store$: Observable<ActionContextStore>;
 
-  constructor(private readonly parent: DbxActionContextMapDirective, readonly key: ActionKey) {}
+  constructor(private readonly parent: DbxActionContextMapDirective, readonly key: ActionKey) {
+    const _source$ = this.parent.map$.pipe(
+      map((x) => x.get(this.key)),
+      distinctUntilChanged()
+    );
+
+    const _store$ = _source$.pipe(
+      switchMap((x) => x?.store$ ?? of(undefined)),
+      shareReplay(1)
+    );
+
+    this.store$ = actionContextStoreSourcePipe(_store$);
+  }
 }

@@ -1,0 +1,35 @@
+{
+  "name": "firebase-server-zoho",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/firebase-server/zoho/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/firebase-server/zoho",
+        "tsConfig": "packages/firebase-server/zoho/tsconfig.lib.json",
+        "packageJson": "packages/firebase-server/zoho/package.json",
+        "main": "packages/firebase-server/zoho/src/index.ts",
+        "assets": []
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/firebase-server/zoho/**/*.ts", "packages/firebase-server/zoho/package.json", "packages/firebase-server/zoho/project.json"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/zoho"],
+      "options": {
+        "jestConfig": "packages/firebase-server/zoho/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

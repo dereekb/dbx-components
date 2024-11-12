@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -17,6 +17,8 @@ import { Maybe } from '@dereekb/util';
   }
 })
 export class DbxLinkifyComponent implements OnDestroy {
+  private readonly sanitizer = inject(DomSanitizer);
+
   private _text = new BehaviorSubject<Maybe<string>>(undefined);
 
   readonly linkifiedText$ = this._text.pipe(
@@ -40,8 +42,6 @@ export class DbxLinkifyComponent implements OnDestroy {
     }),
     shareReplay(1)
   );
-
-  constructor(private readonly sanitizer: DomSanitizer) {}
 
   ngOnDestroy(): void {
     this._text.complete();

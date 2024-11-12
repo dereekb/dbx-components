@@ -77,7 +77,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
       return prevQueryResult$.pipe(
         exhaustMap((prevResult) => {
           if (prevResult?.snapshot.empty === true) {
-            // TODO: Shouldn't happen. Remove this later.
+            // TODO(REMOVE): Shouldn't happen. Remove this later.
             return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
           } else {
             const constraints: FirestoreQueryConstraint[] = [];

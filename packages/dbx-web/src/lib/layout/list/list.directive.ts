@@ -1,6 +1,6 @@
 import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
-import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from '@angular/core';
+import { Output, EventEmitter, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Maybe } from '@dereekb/util';
@@ -28,8 +28,9 @@ export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
 export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>;
 
 @Directive()
-export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy, DbxListViewWrapper<T, S> {
+export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy, DbxListViewWrapper<T, S> {
   private readonly _init = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
+
   readonly config$ = this._init.pipe(
     filterMaybe(),
     valueFromObservableOrValue(),
@@ -47,14 +48,12 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   state$?: Maybe<Observable<S>>;
 
   @Output()
-  clickItem = new EventEmitter<T>();
+  readonly clickItem = new EventEmitter<T>();
 
   @Output()
-  loadMore = new EventEmitter<void>();
+  readonly loadMore = new EventEmitter<void>();
 
-  constructor(readonly initConfig: ObservableOrValue<C>) {}
-
-  ngOnInit(): void {
+  constructor(readonly initConfig: ObservableOrValue<C>) {
     this._init.next(this.initConfig);
   }
 

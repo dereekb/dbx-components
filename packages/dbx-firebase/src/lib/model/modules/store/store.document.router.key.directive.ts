@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { OnDestroy, Directive, Host, Input, OnInit } from '@angular/core';
+import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
 import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
@@ -14,13 +14,13 @@ import { TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
   selector: '[dbxFirebaseDocumentStoreRouteKey]'
 })
 export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _redirectInstance = dbxFirebaseKeyRouteParamRedirect(this.dbxRouterService);
+  readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T>, { host: true });
+  readonly dbxRouterService = inject(DbxRouterService);
+
+  private readonly _redirectInstance = dbxFirebaseKeyRouteParamRedirect(this.dbxRouterService);
+
   readonly keyFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly key$: Observable<Maybe<TwoWayFlatFirestoreModelKey>> = this._redirectInstance.value$;
-
-  constructor(@Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>, readonly dbxRouterService: DbxRouterService) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.store.setFlatKey(this.keyFromParams$); // use from the params, as the params should get updated eventually to the key$ value
@@ -35,11 +35,11 @@ export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends Abst
   // MARK: Input
   @Input('dbxFirebaseDocumentStoreRouteKey')
   get keyParam() {
-    return this._redirectInstance.paramKey;
+    return this._redirectInstance.getParamKey();
   }
 
-  set keyParam(keyParam: string) {
-    this._redirectInstance.paramKey = keyParam;
+  set keyParam(idParam: string) {
+    this._redirectInstance.setParamKey(idParam);
   }
 
   @Input()

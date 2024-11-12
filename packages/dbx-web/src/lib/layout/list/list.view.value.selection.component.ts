@@ -1,12 +1,11 @@
 import { Observable, map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { ChangeDetectionStrategy, Component, EventEmitter, Inject, Input, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
-import { DbxListSelectionMode, DbxListView, ListSelectionState, ListSelectionStateItem } from './list.view';
+import { DbxListSelectionMode, ListSelectionState, ListSelectionStateItem } from './list.view';
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe } from '@dereekb/util';
 import { DbxValueListViewContentComponent } from './list.view.value.component';
-import { DbxValueListViewGroupDelegate } from './list.view.value.group';
 
 export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   readonly multiple?: boolean;
@@ -65,10 +64,9 @@ export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueList
   @Input()
   selectionMode: Maybe<DbxListSelectionMode>;
 
-  constructor(dbxListView: DbxListView<T>, @Optional() @Inject(DbxValueListViewGroupDelegate) inputDbxListGroupDelegate: Maybe<DbxValueListViewGroupDelegate<any, T, I>>) {
-    super(dbxListView, inputDbxListGroupDelegate);
-
-    if (!dbxListView.selectionChange) {
+  constructor() {
+    super();
+    if (!this.dbxListView.selectionChange) {
       throw new Error('Parent dbxListView to DbxSelectionValueListViewComponent has no selectionChange emitter.');
     }
   }

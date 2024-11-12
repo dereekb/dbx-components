@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [11.0.0](https://github.com/dereekb/dbx-components/compare/v10.2.0-dev...v11.0.0) (2024-11-12)
+
+
+### Code Refactoring
+
+* revisited some todos ([4902b4b](https://github.com/dereekb/dbx-components/commit/4902b4bcffde7174c37b72d84fd4473e3b975769))
+
+
+### BREAKING CHANGES
+
+* all breaking changes are documented in VERSION_MIGRATION.md
+
+
+
 # [10.2.0](https://github.com/dereekb/dbx-components/compare/v10.1.30-dev...v10.2.0) (2024-11-07)
 
 

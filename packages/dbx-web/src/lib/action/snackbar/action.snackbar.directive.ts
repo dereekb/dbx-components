@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit } from '@angular/core';
+import { Directive, Input, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
@@ -13,6 +13,9 @@ import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs'
   selector: '[dbxActionSnackbar]'
 })
 export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit {
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+  readonly dbxActionSnackbarService = inject(DbxActionSnackbarService);
+
   private _snackbarFunction?: Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>;
 
   @Input('dbxActionSnackbar')
@@ -31,10 +34,6 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
 
   @Input()
   dbxActionSnackbarUndo?: DbxActionSnackbarGeneratorUndoInput<T, O>;
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>, readonly dbxActionSnackbarService: DbxActionSnackbarService) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.source

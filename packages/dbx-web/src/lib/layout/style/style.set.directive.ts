@@ -1,7 +1,7 @@
 import { splitCommaSeparatedStringToSet, Maybe } from '@dereekb/util';
 import { Observable, distinctUntilChanged, map, shareReplay, BehaviorSubject, delay, combineLatest } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, Input, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Directive, Input, OnDestroy, ChangeDetectorRef, OnInit, inject } from '@angular/core';
 import { DbxStyleConfig, DbxStyleService } from './style.service';
 import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 
@@ -18,8 +18,11 @@ import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-c
   }
 })
 export class DbxSetStyleDirective extends AbstractSubscriptionDirective implements OnDestroy, OnInit {
-  private _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
-  private _style = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _style = new BehaviorSubject<Maybe<string>>(undefined);
+
+  readonly styleService = inject(DbxStyleService);
+  readonly cdRef = inject(ChangeDetectorRef);
 
   readonly style$ = this._style.pipe(filterMaybe());
   readonly suffixes$ = this._suffixes.pipe(distinctUntilChanged(), map(splitCommaSeparatedStringToSet));
@@ -30,9 +33,10 @@ export class DbxSetStyleDirective extends AbstractSubscriptionDirective implemen
   );
 
   readonly outputStyle$ = this.styleService.getStyleWithConfig(this.config$);
+
   outputStyle = '';
 
-  constructor(readonly styleService: DbxStyleService, readonly cdRef: ChangeDetectorRef) {
+  constructor() {
     super();
   }
 

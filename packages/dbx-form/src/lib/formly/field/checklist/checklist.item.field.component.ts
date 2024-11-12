@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type, inject } from '@angular/core';
 import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { switchMapMaybeObs } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, BehaviorSubject } from 'rxjs';
@@ -23,8 +23,7 @@ export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProp
   templateUrl: 'checklist.item.field.component.html'
 })
 export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<FieldTypeConfig<DbxChecklistItemFieldProps<T>>> implements OnInit, OnDestroy {
-  private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
-
+  private readonly _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
   readonly displayContent$ = this._displayContent.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
 
   readonly anchor$ = this.displayContent$.pipe(
@@ -85,22 +84,17 @@ export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<Field
     <dbx-injection [config]="config"></dbx-injection>
   `
 })
-export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective implements OnInit {
-  config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
+export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective {
+  readonly cdRef = inject(ChangeDetectorRef);
+  readonly checklistItemFieldComponent = inject(DbxChecklistItemFieldComponent<T>);
 
-  constructor(readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>, readonly cdRef: ChangeDetectorRef) {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.config = {
-      componentClass: this.checklistItemFieldComponent.componentClass,
-      init: (instance) => {
-        this.checklistItemFieldComponent.displayContent$.subscribe((x) => {
-          instance.displayContent = x;
-          safeDetectChanges(this.cdRef);
-        });
-      }
-    };
-  }
+  readonly config: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>> = {
+    componentClass: this.checklistItemFieldComponent.componentClass,
+    init: (instance) => {
+      this.sub = this.checklistItemFieldComponent.displayContent$.subscribe((x) => {
+        instance.displayContent = x;
+        safeDetectChanges(this.cdRef);
+      });
+    }
+  };
 }

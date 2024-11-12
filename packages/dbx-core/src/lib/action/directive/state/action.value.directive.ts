@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, shareReplay, switchMap, tap } from 'rxjs';
@@ -14,19 +14,12 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   selector: '[dbxActionValue]'
 })
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
+  private readonly _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
 
-  @Input('dbxActionValue')
-  get valueOrFunction(): Maybe<GetterOrValue<T>> {
-    return this._valueOrFunction.value;
-  }
-
-  set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
-    this._valueOrFunction.next(valueOrFunction);
-  }
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
+  constructor() {
     super();
   }
 
@@ -50,5 +43,14 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
       super.ngOnDestroy();
       this._valueOrFunction.complete();
     });
+  }
+
+  @Input('dbxActionValue')
+  get valueOrFunction(): Maybe<GetterOrValue<T>> {
+    return this._valueOrFunction.value;
+  }
+
+  set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
+    this._valueOrFunction.next(valueOrFunction);
   }
 }

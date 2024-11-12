@@ -8,7 +8,7 @@ import { type FirestoreModelIdentity, type FirestoreModelTypes } from '../../com
 import { type FirebaseFunctionTypeMap, type FirebaseFunctionMap, type FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { type FirebaseFunctionTypeConfigMap, firebaseFunctionMapFactory } from './function.factory';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, type OnCallCreateModelResult, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, onCallTypedModelParams, CALL_MODEL_APP_FUNCTION_KEY } from '../../common/model/function';
+import { type OnCallCreateModelResult, CALL_MODEL_APP_FUNCTION_KEY, onCallTypedModelParamsFunction } from '../../common/model/function';
 
 /**
  * Used to specify which function to direct requests to.
@@ -36,8 +36,6 @@ export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFire
 
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
 export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
-
-// TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is...
 
 export type ModelFirebaseCrudFunctionCreateTypeConfig = {
   readonly create: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
@@ -125,7 +123,7 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
     const _callFn = cachedGetter(() => httpsCallable(functionsInstance, CALL_MODEL_APP_FUNCTION_KEY));
 
     function makeCallFunction(call: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifier?: string) {
-      return mapHttpsCallable(fn(), { mapInput: (data) => onCallTypedModelParams(modelType, data, specifier, call) }, true);
+      return mapHttpsCallable(fn(), { mapInput: (data) => onCallTypedModelParamsFunction(call)(modelType, data, specifier) }, true);
     }
 
     function makeCallSpecifiers(call: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifierKeys: string[]): { [key: string]: HttpsCallable<unknown, unknown> } {
@@ -201,111 +199,6 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
 
           // tslint:disable-next-line
           (x as any)[modelType] = modelTypeCalls;
-        });
-      }
-    });
-
-    return result;
-  };
-}
-
-// MARK: Compat
-/**
- * @deprecated move to using callModelFirebaseFunctionMapFactory instead and the call configuration in general.
- *
- * This will be removed in the next release.
- *
- * @param configMap
- * @param crudConfigMap
- * @returns
- */
-export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>, crudConfigMap: ModelFirebaseCrudFunctionConfigMap<U, FirestoreModelIdentity>): ModelFirebaseFunctionMapFactory<M, U> {
-  const functionFactory = firebaseFunctionMapFactory(configMap);
-
-  return (functionsInstance: Functions) => {
-    const functionMap: FirebaseFunctionMap<M> = functionFactory(functionsInstance);
-
-    const _readFn = cachedGetter(() => httpsCallable(functionsInstance, READ_MODEL_APP_FUNCTION_KEY));
-    const _createFn = cachedGetter(() => httpsCallable(functionsInstance, CREATE_MODEL_APP_FUNCTION_KEY));
-    const _updateFn = cachedGetter(() => httpsCallable(functionsInstance, UPDATE_MODEL_APP_FUNCTION_KEY));
-    const _deleteFn = cachedGetter(() => httpsCallable(functionsInstance, DELETE_MODEL_APP_FUNCTION_KEY));
-
-    function makeCrudFunction(fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifier?: string) {
-      return mapHttpsCallable(fn(), { mapInput: (data) => onCallTypedModelParams(modelType, data, specifier) }, true);
-    }
-
-    function makeCrudSpecifiers(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifierKeys: string[]): { [key: string]: HttpsCallable<unknown, unknown> } {
-      const modelTypeSuffix = capitalizeFirstLetter(modelType);
-      const specifiers: Record<string, HttpsCallable<unknown, unknown>> = {};
-
-      specifierKeys.forEach((inputSpecifier) => {
-        const specifier = inputSpecifier === MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT ? '' : inputSpecifier;
-        const specifierFn = makeCrudFunction(fn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
-
-        const fullSpecifierName = `${crud}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;
-        specifiers[fullSpecifierName] = specifierFn;
-
-        const shortSpecifierName = lowercaseFirstLetter(specifier) || crud;
-        specifiers[shortSpecifierName] = specifierFn;
-      });
-
-      return specifiers;
-    }
-
-    const result = build<ModelFirebaseFunctionMap<M, U>>({
-      base: functionMap as unknown as ModelFirebaseFunctionMap<M, U>,
-      build: (x) => {
-        Object.entries(crudConfigMap).forEach(([modelType, config]) => {
-          const modelTypeSuffix = capitalizeFirstLetter(modelType);
-          const { included: crudFunctionKeys, excluded: specifiedCrudFunctionKeys } = separateValues(config as string[], (x) => x.indexOf(':') === -1);
-
-          const crudFunctions = new Set(crudFunctionKeys);
-          const specifiedCrudFunctionTuples = specifiedCrudFunctionKeys.map((x) => {
-            const [crud, functionsSplit] = x.split(':', 2);
-            const functions = functionsSplit.split(MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER);
-            return [crud, functions] as [string, string[]];
-          });
-
-          // check that there isn't a repeat crud key configured, which disallowed configuration and would cause some functions to be ignored
-          const encounteredCruds = new Set<string>();
-
-          function assertCrudKeyNotEncountered(crud: string) {
-            if (encounteredCruds.has(crud)) {
-              throw new Error(`Cannot have multiple declarations of the same crud. Found repeat for crud: ${crud}`);
-            } else {
-              encounteredCruds.add(crud);
-            }
-          }
-
-          crudFunctions.forEach(assertCrudKeyNotEncountered);
-          specifiedCrudFunctionTuples.forEach(([crud]) => assertCrudKeyNotEncountered(crud));
-
-          // build and add the functions
-          const specifierFunctions = new Map<string, string[]>(specifiedCrudFunctionTuples);
-
-          function addFunctions(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string): void {
-            let crudFns: unknown;
-
-            if (crudFunctions.has(crud)) {
-              crudFns = makeCrudFunction(fn, modelType);
-            } else if (specifierFunctions.has(crud)) {
-              crudFns = makeCrudSpecifiers(crud, fn, modelType, specifierFunctions.get(crud) as string[]);
-            }
-
-            if (crudFns) {
-              (modelTypeCruds as any)[`${crud}${modelTypeSuffix}`] = crudFns;
-            }
-          }
-
-          const modelTypeCruds = {};
-
-          addFunctions('create', _createFn, modelType);
-          addFunctions('read', _readFn, modelType);
-          addFunctions('update', _updateFn, modelType);
-          addFunctions('delete', _deleteFn, modelType);
-
-          // tslint:disable-next-line
-          (x as any)[modelType] = modelTypeCruds;
         });
       }
     });

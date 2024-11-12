@@ -4,8 +4,8 @@
     "outDir": "../../../dist/out-tsc",
     "declaration": true,
     "types": [],
-    "target": "es2021"
+    "target": "ES2022"
   },
   "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["jest.config.ts", "**/*.spec.ts"]
 }

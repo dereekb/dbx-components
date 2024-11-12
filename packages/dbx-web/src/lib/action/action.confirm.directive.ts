@@ -1,5 +1,4 @@
-import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
@@ -26,14 +25,12 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
   selector: '[dbxActionConfirm]'
 })
 export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   @Input('dbxActionConfirm')
   override config?: Maybe<DbxActionConfirmConfig<T>>;
 
   private _sourceSubscription = new SubscriptionObject();
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>, dialog: MatDialog) {
-    super(dialog);
-  }
 
   ngOnInit(): void {
     this._sourceSubscription.subscription = this.source.triggered$.subscribe(() => {

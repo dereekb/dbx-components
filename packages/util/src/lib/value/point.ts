@@ -31,7 +31,7 @@ export interface LatLngPoint {
 /**
  * A point decorated as LonLat.
  *
- * NOTE: This library prefers the use of LatLngPoint over LonLatPoint. This is only provided as compatability for libraries (like Mapbox) that have LonLat-like points
+ * NOTE: This library (dbx-components) prefers the use of LatLngPoint over LonLatPoint. This is only provided as compatability for libraries (like Mapbox) that have LonLat-like points
  */
 export interface LonLatPoint {
   lat: Latitude;

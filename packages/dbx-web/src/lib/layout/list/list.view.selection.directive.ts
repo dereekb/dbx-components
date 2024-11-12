@@ -12,7 +12,7 @@ export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = '<dbx-selecti
 @Directive()
 export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractDbxListViewDirective<T> {
   @Output()
-  selectionChange = new EventEmitter<ListSelectionState<T>>();
+  readonly selectionChange = new EventEmitter<ListSelectionState<T>>();
 
   selectionChanged(selection: ListSelectionState<T>): void {
     this.selectionChange.emit(selection);

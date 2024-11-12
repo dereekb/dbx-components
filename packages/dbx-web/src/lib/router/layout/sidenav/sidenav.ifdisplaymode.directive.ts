@@ -1,4 +1,4 @@
-import { OnDestroy, Input, TemplateRef, ViewContainerRef, Directive } from '@angular/core';
+import { OnDestroy, Input, Directive, inject } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
 import { ArrayOrValue, Maybe, asArray, filterMaybeValues } from '@dereekb/util';
 import { shareReplay, BehaviorSubject, switchMap, distinctUntilChanged, map } from 'rxjs';
@@ -14,6 +14,7 @@ import { SideNavDisplayMode } from './sidenav';
 export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective implements OnDestroy {
   private _sidenavModes = new BehaviorSubject<Set<SideNavDisplayMode>>(new Set([SideNavDisplayMode.NONE]));
 
+  readonly dbxSidenavComponent = inject(DbxSidenavComponent);
   readonly show$ = this._sidenavModes.pipe(
     switchMap((modes) => {
       return this.dbxSidenavComponent.mode$.pipe(map((mode) => modes.has(mode)));
@@ -21,10 +22,6 @@ export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective implem
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly dbxSidenavComponent: DbxSidenavComponent) {
-    super(templateRef, viewContainer);
-  }
 
   @Input('dbxIfSidenavDisplayMode')
   get modes() {

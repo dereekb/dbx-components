@@ -1,5 +1,5 @@
 import { Observable, startWith } from 'rxjs';
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxRouterTransitionService } from '../service/router.transition.service';
 import { successTransition } from './transition.rxjs';
 
@@ -8,8 +8,8 @@ import { successTransition } from './transition.rxjs';
  */
 @Directive()
 export abstract class AbstractTransitionDirective {
+  protected readonly dbxRouterTransitionService = inject(DbxRouterTransitionService);
+
   readonly transitionSuccess$ = successTransition(this.dbxRouterTransitionService.transitions$);
   readonly initAndUpdateOnTransitionSuccess$: Observable<void> = this.transitionSuccess$.pipe(startWith(undefined)) as Observable<void>;
-
-  constructor(protected readonly dbxRouterTransitionService: DbxRouterTransitionService) {}
 }

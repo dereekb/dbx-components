@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { switchMap, tap, shareReplay, BehaviorSubject, merge, Observable, of } from 'rxjs';
-import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxAnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
@@ -22,7 +22,10 @@ export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
   selector: '[dbxActionAnalytics]'
 })
 export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig<T, O>>>(undefined);
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+  readonly analyticsService = inject(DbxAnalyticsService);
+
+  private readonly _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig<T, O>>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
   @Input('dbxActionAnalytics')
@@ -32,10 +35,6 @@ export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirec
 
   set config(config: Maybe<DbxActionAnalyticsConfig<T, O>>) {
     this._config.next(config);
-  }
-
-  constructor(@Host() readonly source: DbxActionContextStoreSourceInstance<T, O>, readonly analyticsService: DbxAnalyticsService) {
-    super();
   }
 
   ngOnInit(): void {

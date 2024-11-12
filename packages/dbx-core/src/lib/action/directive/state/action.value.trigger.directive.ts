@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { Directive, ElementRef, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -9,39 +9,36 @@ import { DbxActionValueOnTriggerFunction, DbxActionValueOnTriggerInstance } from
  */
 @Directive()
 export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
-  private readonly _instance: DbxActionValueOnTriggerInstance<T>;
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, unknown>);
+
+  private readonly _triggerInstance: DbxActionValueOnTriggerInstance<T> = new DbxActionValueOnTriggerInstance<T>({
+    source: this.source
+  });
 
   private _triggeredSub = new SubscriptionObject();
 
-  constructor(readonly source: DbxActionContextStoreSourceInstance<T, unknown>, valueGetter?: Maybe<DbxActionValueOnTriggerFunction<T>>) {
-    this._instance = new DbxActionValueOnTriggerInstance<T>({
-      source: this.source,
-      valueGetter
-    });
-  }
-
   get valueGetter(): Maybe<DbxActionValueOnTriggerFunction<T>> {
-    return this._instance.valueGetter;
+    return this._triggerInstance.valueGetter;
   }
 
   set valueGetter(valueGetter: Maybe<DbxActionValueOnTriggerFunction<T>>) {
-    this._instance.valueGetter = valueGetter;
+    this._triggerInstance.valueGetter = valueGetter;
   }
 
   get isModifiedFunction(): Maybe<IsModifiedFunction<T>> {
-    return this._instance.isModifiedFunction;
+    return this._triggerInstance.isModifiedFunction;
   }
 
   set isModifiedFunction(isModifiedFunction: Maybe<IsModifiedFunction<T>>) {
-    this._instance.isModifiedFunction = isModifiedFunction;
+    this._triggerInstance.isModifiedFunction = isModifiedFunction;
   }
 
   ngOnInit(): void {
-    this._instance.init();
+    this._triggerInstance.init();
   }
 
   ngOnDestroy(): void {
-    this._instance.destroy();
+    this._triggerInstance.destroy();
     this._triggeredSub.destroy();
   }
 }
@@ -54,6 +51,8 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnI
   selector: '[dbxActionValueOnTrigger]'
 })
 export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+  readonly elementRef = inject(ElementRef);
+
   @Input()
   set dbxActionValueOnTrigger(dbxActionValueTrigger: Maybe<DbxActionValueOnTriggerFunction<T>>) {
     this.valueGetter = dbxActionValueTrigger;
@@ -64,7 +63,7 @@ export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActio
     this.isModifiedFunction = isModifiedFunction;
   }
 
-  constructor(readonly elementRef: ElementRef, source: DbxActionContextStoreSourceInstance<T, unknown>) {
-    super(source);
+  constructor() {
+    super();
   }
 }

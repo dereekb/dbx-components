@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, TrackByFunction } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, TrackByFunction, inject } from '@angular/core';
 import { DbxTableStore } from './table.store';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { shareReplay, map, Observable } from 'rxjs';
@@ -15,6 +15,8 @@ export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTableViewComponent<I, C, T> implements OnDestroy {
+  readonly tableStore = inject(DbxTableStore<I, C, T>);
+
   readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
     return index;
   };
@@ -47,8 +49,6 @@ export class DbxTableViewComponent<I, C, T> implements OnDestroy {
 
   readonly context = loadingStateContext({ obs: this.tableStore.dataState$ });
   readonly dataLoadingContext = loadingStateContext({ obs: this.tableStore.itemsState$ });
-
-  constructor(readonly tableStore: DbxTableStore<I, C, T>) {}
 
   ngOnDestroy(): void {
     this.context.destroy();

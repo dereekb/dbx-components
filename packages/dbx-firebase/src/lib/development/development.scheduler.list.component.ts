@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DBX_VALUE_LIST_VIEW_ITEM, DbxValueListItem } from '@dereekb/dbx-web';
+import { Component, inject } from '@angular/core';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from '@dereekb/dbx-web';
 import { from, of } from 'rxjs';
 import { ScheduledFunctionDevelopmentFirebaseFunctionListEntry } from '@dereekb/firebase';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
@@ -37,17 +37,15 @@ export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDb
   template: `
     <div dbxAction dbxActionValue fastTrigger [dbxActionHandler]="handleRun">
       <dbx-button dbxActionButton [text]="'Run ' + name"></dbx-button>
-      <dbx-success *dbxActionHasSuccess="3000" dbxActionSuccess>Success</dbx-success>
+      <div *dbxActionHasSuccess="3000" class="dbx-success" dbxActionSuccess>Success</div>
     </div>
   `
 })
 export class DbxFirebaseDevelopmentSchedulerListViewItemComponent extends AbstractDbxValueListViewItemComponent<ScheduledFunctionDevelopmentFirebaseFunctionListEntry> {
+  readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);
+
   get name() {
     return this.itemValue.name;
-  }
-
-  constructor(@Inject(DBX_VALUE_LIST_VIEW_ITEM) item: DbxValueListItem<ScheduledFunctionDevelopmentFirebaseFunctionListEntry>, readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService) {
-    super(item);
   }
 
   readonly handleRun: WorkUsingContext<unknown, unknown> = (value, context) => {

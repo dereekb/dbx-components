@@ -28,7 +28,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * @param _windowKey Key that is attached to the window for the object that is the service when finished loading.
    * @param _callbackKey Optional key attached to window that is a function that is executed when the setup is complete.
    */
-  constructor(private _windowKey: string, private _callbackKey?: string, private _serviceName: string = _windowKey, preload: boolean = true) {
+  constructor(private _windowKey: string, private _callbackKey?: string, private _serviceName: string = _windowKey, preload?: Maybe<boolean>) {
     if (preload) {
       // Begin loading the service immediately.
       setTimeout(() => this.loadService().catch());

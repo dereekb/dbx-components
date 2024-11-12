@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, Input, inject } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
@@ -12,12 +12,12 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
  */
 @Directive()
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
-  config?: Maybe<DbxPromptConfirmConfig>;
+  protected readonly matDialog = inject(MatDialog);
 
   private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _dialogPromise?: Promise<boolean>;
 
-  constructor(protected readonly matDialog: MatDialog) {}
+  abstract config?: Maybe<DbxPromptConfirmConfig>;
 
   showDialog(): Observable<boolean> {
     if (!this._dialogPromise) {
@@ -50,8 +50,4 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
 export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
   @Input('dbxPromptConfirm')
   override config?: Maybe<DbxPromptConfirmConfig>;
-
-  constructor(dialog: MatDialog) {
-    super(dialog);
-  }
 }

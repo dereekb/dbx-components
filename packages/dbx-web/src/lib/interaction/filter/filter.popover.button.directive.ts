@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input } from '@angular/core';
+import { Directive, ElementRef, Input, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxPopoverService } from '../popover/popover.service';
 import { DbxFilterPopoverComponent, DbxFilterComponentParams } from './filter.popover.component';
@@ -11,12 +11,10 @@ export type DbxFilterButtonConfigWithPresetFilter<F extends object, PF extends P
 
 @Directive()
 export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractPopoverRefDirective<unknown, unknown> {
+  private readonly popupService = inject(DbxPopoverService);
+
   @Input()
   config?: DbxFilterComponentParams<F, any, any, any>;
-
-  constructor(private readonly popupService: DbxPopoverService) {
-    super();
-  }
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
     const config = this.config;

@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnDestroy } from '@angular/core';
+import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { ActionContextStoreSource } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';
@@ -11,9 +11,10 @@ import { ActionKey } from './action.map';
   selector: '[dbxActionMapSource]'
 })
 export class DbxActionMapSourceDirective implements OnDestroy {
-  private _key: Maybe<ActionKey>;
+  private readonly _map = inject(DbxActionContextMapDirective);
+  readonly source = inject(ActionContextStoreSource, { host: true });
 
-  constructor(@Host() public readonly source: ActionContextStoreSource, private readonly _map: DbxActionContextMapDirective) {}
+  private _key: Maybe<ActionKey>;
 
   ngOnDestroy(): void {
     this._removeFromToStore();

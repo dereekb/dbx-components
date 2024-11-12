@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { ErrorInput, MS_IN_MINUTE, TimerInstance, toggleTimerRunning } from '@dereekb/util';
@@ -27,6 +27,9 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
   templateUrl: './error.snackbar.component.html'
 })
 export class DbxErrorSnackbarComponent implements OnDestroy {
+  readonly snackBarRef = inject(MatSnackBarRef<DbxErrorSnackbarComponent>);
+  readonly data = inject<DbxErrorSnackbarData>(MAT_SNACK_BAR_DATA);
+
   private _allowAutoDismiss = Boolean(this.data.duration);
 
   private _popoverOpen = new BehaviorSubject<boolean>(false);
@@ -39,8 +42,6 @@ export class DbxErrorSnackbarComponent implements OnDestroy {
   get error() {
     return this.data.error;
   }
-
-  constructor(readonly snackBarRef: MatSnackBarRef<DbxErrorSnackbarComponent>, @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxErrorSnackbarData) {}
 
   ngOnInit(): void {
     if (!this._allowAutoDismiss) {

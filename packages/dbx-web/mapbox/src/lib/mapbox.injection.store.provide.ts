@@ -1,4 +1,4 @@
-import { Directive, Injectable, Injector, Optional, Provider, SkipSelf } from '@angular/core';
+import { Directive, Injectable, Injector, Optional, Provider, SkipSelf, inject } from '@angular/core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 
 /**
@@ -6,7 +6,7 @@ import { DbxMapboxInjectionStore } from './mapbox.injection.store';
  */
 @Injectable()
 export class DbxMapboxInjectionStoreProviderBlock {
-  constructor(@SkipSelf() readonly dbxMapboxInjectionStore: DbxMapboxInjectionStore) {}
+  readonly dbxMapboxInjectionStore = inject(DbxMapboxInjectionStore, { skipSelf: true });
 }
 
 @Directive({

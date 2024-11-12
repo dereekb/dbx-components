@@ -1,9 +1,9 @@
-import { beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, loadingStatesHaveEquivalentMetadata, mapLoadingStateResults, mergeLoadingStates, successResult } from './loading.state';
+import { beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, isPageLoadingStateMetadataEqual, mapLoadingStateResults, mergeLoadingStates, successResult, isLoadingStateInSuccessState } from './loading.state';
 
 describe('beginLoading()', () => {
   it('should return a loading state that is loading.', () => {
     const state = beginLoading();
-    expect(loadingStateIsLoading(state)).toBe(true);
+    expect(isLoadingStateLoading(state)).toBe(true);
   });
 });
 
@@ -16,12 +16,12 @@ describe('successResult()', () => {
 
   it('should return a loading state that is not loading.', () => {
     const state = successResult({});
-    expect(loadingStateIsLoading(state)).toBe(false);
+    expect(isLoadingStateLoading(state)).toBe(false);
   });
 
   it('should return a loading state that is not loading even if the value is undefined.', () => {
     const state = successResult(undefined);
-    expect(loadingStateIsLoading(state)).toBe(false);
+    expect(isLoadingStateLoading(state)).toBe(false);
   });
 });
 
@@ -35,12 +35,12 @@ describe('errorResult()', () => {
 
   it('should return a loading state that is not loading.', () => {
     const state = errorResult({ message: '' });
-    expect(loadingStateIsLoading(state)).toBe(false);
+    expect(isLoadingStateLoading(state)).toBe(false);
   });
 
   it('should return a loading state that is not loading even if the error is undefined.', () => {
     const state = errorResult(undefined);
-    expect(loadingStateIsLoading(state)).toBe(false);
+    expect(isLoadingStateLoading(state)).toBe(false);
   });
 });
 
@@ -50,7 +50,7 @@ describe('mergeLoadingStates()', () => {
       const a = beginLoading<object>();
       const b = beginLoading<object>();
       const state = mergeLoadingStates(a, b);
-      expect(loadingStateIsLoading(state)).toBe(true);
+      expect(isLoadingStateLoading(state)).toBe(true);
     });
   });
 
@@ -62,7 +62,7 @@ describe('mergeLoadingStates()', () => {
       const d = beginLoading<object>();
       const e = beginLoading<object>();
       const state = mergeLoadingStates(a, b, c, d, e, () => 1);
-      expect(loadingStateIsLoading(state)).toBe(true);
+      expect(isLoadingStateLoading(state)).toBe(true);
     });
 
     describe('encounters an error', () => {
@@ -75,7 +75,7 @@ describe('mergeLoadingStates()', () => {
         const d = beginLoading<object>();
         const e = beginLoading<object>();
         const state = mergeLoadingStates(a, b, c, d, e, () => 1);
-        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(isLoadingStateLoading(state)).toBe(false);
         expect(state.error?._error).toBe(expectedError);
       });
 
@@ -88,7 +88,7 @@ describe('mergeLoadingStates()', () => {
         const d = beginLoading<object>();
         const e = beginLoading<object>();
         const state = mergeLoadingStates(a, b, c, d, e, () => 1);
-        expect(loadingStateIsLoading(state)).toBe(true);
+        expect(isLoadingStateLoading(state)).toBe(true);
         expect(state.error?._error).toBe(expectedError);
       });
 
@@ -101,8 +101,8 @@ describe('mergeLoadingStates()', () => {
         const d = successResult({ d: true });
         const e = successResult({ e: true });
         const state = mergeLoadingStates(a, b, c, d, e, () => 1);
-        expect(loadingStateIsLoading(state)).toBe(false);
-        expect(loadingStateHasError(state)).toBe(true);
+        expect(isLoadingStateLoading(state)).toBe(false);
+        expect(isLoadingStateWithError(state)).toBe(true);
         expect(state.error?._error).toBe(expectedError);
       });
     });
@@ -114,7 +114,7 @@ describe('mergeLoadingStates()', () => {
       const d = successResult({ d: true });
       const e = successResult({ e: true });
       const state = mergeLoadingStates(a, b, c, d, e);
-      expect(loadingStateIsLoading(state)).toBe(false);
+      expect(isLoadingStateLoading(state)).toBe(false);
       expect(state.loading).toBe(false);
       expect(state.error).toBeUndefined();
       expect(state.value?.a).toBe(true);
@@ -146,7 +146,7 @@ describe('mergeLoadingStates()', () => {
         return expectedValue;
       });
 
-      expect(loadingStateIsLoading(state)).toBe(false);
+      expect(isLoadingStateLoading(state)).toBe(false);
       expect(state.loading).toBe(false);
       expect(state.error).toBeUndefined();
       expect(state.value).toBe(expectedValue);
@@ -154,123 +154,175 @@ describe('mergeLoadingStates()', () => {
   });
 });
 
-describe('loadingStateIsLoading()', () => {
+describe('isLoadingStateLoading()', () => {
   it('should return true if a loading state has loading = true.', () => {
-    const result = loadingStateIsLoading({ loading: true });
+    const result = isLoadingStateLoading(beginLoading());
     expect(result).toBe(true);
   });
 
   it('should return true if a loading state has loading = true even if a value is present.', () => {
-    const result = loadingStateIsLoading({ loading: true, value: 'value' });
+    const result = isLoadingStateLoading({ loading: true, value: 'value' });
     expect(result).toBe(true);
   });
 
   it('should return false if a loading state has loading = false.', () => {
-    const result = loadingStateIsLoading({ loading: false });
+    const result = isLoadingStateLoading({ loading: false });
     expect(result).toBe(false);
   });
 
   it('should return false if a loading state has loading=undefined, and value is set.', () => {
-    const result = loadingStateIsLoading({ loading: undefined, value: 'value' });
+    const result = isLoadingStateLoading({ loading: undefined, value: 'value' });
     expect(result).toBe(false);
   });
 
   it('should return true if a loading state has value=undefined', () => {
-    const result = loadingStateIsLoading({ value: undefined });
+    const result = isLoadingStateLoading({ value: undefined });
     expect(result).toBe(true);
   });
 
   it('should return false if a loading state has value=null', () => {
-    const result = loadingStateIsLoading({ value: null });
+    const result = isLoadingStateLoading({ value: null });
     expect(result).toBe(false);
   });
 
   it('should return false if a loading state has loading=undefined, and error is set.', () => {
-    const result = loadingStateIsLoading({ loading: undefined, error: { message: '' } });
+    const result = isLoadingStateLoading({ loading: undefined, error: { message: '' } });
     expect(result).toBe(false);
   });
 
   it('should return true if a loading state is an empty object.', () => {
-    const result = loadingStateIsLoading({ loading: undefined });
+    const result = isLoadingStateLoading({ loading: undefined });
     expect(result).toBe(true);
   });
 
   it('should return true if a loading state has loading=undefined, and value=undefined.', () => {
-    const result = loadingStateIsLoading({ loading: undefined, value: undefined });
+    const result = isLoadingStateLoading({ loading: undefined, value: undefined });
     expect(result).toBe(true);
   });
 
   it('should return true if a loading state has loading=undefined, and error=undefined.', () => {
-    const result = loadingStateIsLoading({ loading: undefined, error: undefined });
+    const result = isLoadingStateLoading({ loading: undefined, error: undefined });
     expect(result).toBe(true);
   });
 });
 
-describe('loadingStateHasFinishedLoading()', () => {
+describe('isLoadingStateInSuccessState()', () => {
   it('should return false if a loading state has loading = true.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: true });
+    const result = isLoadingStateInSuccessState(beginLoading());
     expect(result).toBe(false);
   });
 
   it('should return false if a loading state has loading = true even if a value is present.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: true, value: 'value' });
+    const result = isLoadingStateInSuccessState(beginLoading({ value: 'value' }));
     expect(result).toBe(false);
   });
 
-  it('should return false if a loading state has loading = true even if an error is present.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: true, error: { message: '' } });
+  it('should return false if a loading state has loading = false.', () => {
+    const result = isLoadingStateInSuccessState({ loading: false });
     expect(result).toBe(false);
-  });
-
-  it('should return true if a loading state has loading = false.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: false });
-    expect(result).toBe(true);
   });
 
   it('should return true if a loading state has loading=undefined, and value is set.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined, value: 'value' });
+    const result = isLoadingStateInSuccessState({ loading: undefined, value: 'value' });
     expect(result).toBe(true);
   });
 
-  it('should return true if a loading state has loading=undefined, and error is set.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined, error: { message: '' } });
+  it('should return false if a loading state has value=undefined', () => {
+    const result = isLoadingStateInSuccessState({ value: undefined });
+    expect(result).toBe(false);
+  });
+
+  it('should return true if a loading state has value=null', () => {
+    const result = isLoadingStateInSuccessState({ value: null });
     expect(result).toBe(true);
+  });
+
+  it('should return false if a loading state has loading=undefined, and error is set.', () => {
+    const result = isLoadingStateInSuccessState({ loading: undefined, error: { message: '' } });
+    expect(result).toBe(false);
   });
 
   it('should return false if a loading state is an empty object.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined });
+    const result = isLoadingStateInSuccessState({ loading: undefined });
     expect(result).toBe(false);
   });
 
   it('should return false if a loading state has loading=undefined, and value=undefined.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined, value: undefined });
+    const result = isLoadingStateInSuccessState({ loading: undefined, value: undefined });
     expect(result).toBe(false);
   });
 
   it('should return false if a loading state has loading=undefined, and error=undefined.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined, error: undefined });
+    const result = isLoadingStateInSuccessState({ loading: undefined, error: undefined });
     expect(result).toBe(false);
   });
 });
 
-describe('loadingStatesHaveEquivalentMetadata()', () => {
+describe('isLoadingStateFinishedLoading()', () => {
+  it('should return false if a loading state has loading = true.', () => {
+    const result = isLoadingStateFinishedLoading(beginLoading());
+    expect(result).toBe(false);
+  });
+
+  it('should return false if a loading state has loading = true even if a value is present.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: true, value: 'value' });
+    expect(result).toBe(false);
+  });
+
+  it('should return false if a loading state has loading = true even if an error is present.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: true, error: { message: '' } });
+    expect(result).toBe(false);
+  });
+
+  it('should return true if a loading state has loading = false.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: false });
+    expect(result).toBe(true);
+  });
+
+  it('should return true if a loading state has loading=undefined, and value is set.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: undefined, value: 'value' });
+    expect(result).toBe(true);
+  });
+
+  it('should return true if a loading state has loading=undefined, and error is set.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: undefined, error: { message: '' } });
+    expect(result).toBe(true);
+  });
+
+  it('should return false if a loading state is an empty object.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: undefined });
+    expect(result).toBe(false);
+  });
+
+  it('should return false if a loading state has loading=undefined, and value=undefined.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: undefined, value: undefined });
+    expect(result).toBe(false);
+  });
+
+  it('should return false if a loading state has loading=undefined, and error=undefined.', () => {
+    const result = isLoadingStateFinishedLoading({ loading: undefined, error: undefined });
+    expect(result).toBe(false);
+  });
+});
+
+describe('isPageLoadingStateMetadataEqual()', () => {
   it('should return true if two loading states have equivalent metadata.', () => {
-    const result = loadingStatesHaveEquivalentMetadata({ loading: true }, { loading: true, error: null });
+    const result = isPageLoadingStateMetadataEqual(beginLoading(), { loading: true, error: null });
     expect(result).toBe(true);
   });
 
   it('should return true for two empty loading states', () => {
-    const result = loadingStatesHaveEquivalentMetadata({}, {});
+    const result = isPageLoadingStateMetadataEqual({}, {});
     expect(result).toBe(true);
   });
 
   it('should return false if two loading states have different pages.', () => {
-    const result = loadingStatesHaveEquivalentMetadata({ page: 1 }, { page: 2 });
+    const result = isPageLoadingStateMetadataEqual({ page: 1 }, { page: 2 });
     expect(result).toBe(false);
   });
 
   it('should return false if only one loading state has a page.', () => {
-    const result = loadingStatesHaveEquivalentMetadata({ page: 1 }, {});
+    const result = isPageLoadingStateMetadataEqual({ page: 1 }, {});
     expect(result).toBe(false);
   });
 });

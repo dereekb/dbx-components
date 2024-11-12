@@ -8,14 +8,14 @@ import { DbxFormSectionWrapperComponent } from './section.wrapper.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { DbxFormFlexWrapperComponent } from './flex.wrapper.component';
 import { DbxFormSubsectionWrapperComponent } from './subsection.wrapper.component';
-import { DbxFormExpandWrapperComponent } from './expandable.wrapper.component';
+import { DbxFormExpandWrapperComponent } from './expand.wrapper.component';
 import { AutoTouchFieldWrapperComponent } from './autotouch.wrapper.component';
 import { DbxFormToggleWrapperComponent } from './toggle.wrapper.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DbxSectionLayoutModule, DbxTextModule, DbxFlexLayoutModule, DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxFormStyleWrapperComponent } from './style.wrapper.component';
 import { DbxFormWorkingWrapperComponent } from './working.wrapper.component';
-import { AUTO_TOUCH_WRAPPER_KEY, EXPANDABLE_WRAPPER_KEY, FLEX_WRAPPER_KEY, INFO_WRAPPER_KEY, SECTION_WRAPPER_KEY, STYLE_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
+import { AUTO_TOUCH_WRAPPER_KEY, EXPAND_WRAPPER_KEY, FLEX_WRAPPER_KEY, INFO_WRAPPER_KEY, SECTION_WRAPPER_KEY, STYLE_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
 
 @NgModule({
   imports: [
@@ -31,7 +31,7 @@ import { AUTO_TOUCH_WRAPPER_KEY, EXPANDABLE_WRAPPER_KEY, FLEX_WRAPPER_KEY, INFO_
     FormlyModule.forChild({
       wrappers: [
         { name: AUTO_TOUCH_WRAPPER_KEY, component: AutoTouchFieldWrapperComponent },
-        { name: EXPANDABLE_WRAPPER_KEY, component: DbxFormExpandWrapperComponent },
+        { name: EXPAND_WRAPPER_KEY, component: DbxFormExpandWrapperComponent },
         { name: TOGGLE_WRAPPER_KEY, component: DbxFormToggleWrapperComponent },
         { name: SECTION_WRAPPER_KEY, component: DbxFormSectionWrapperComponent },
         { name: SUBSECTION_WRAPPER_KEY, component: DbxFormSubsectionWrapperComponent },

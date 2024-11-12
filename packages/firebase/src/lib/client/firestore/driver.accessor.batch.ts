@@ -1,5 +1,5 @@
 import { type DocumentReference, type WriteBatch as FirebaseFirestoreWriteBatch, type UpdateData as FirestoreUpdateData } from 'firebase/firestore';
-import { type FirestoreDocumentContext, type UpdateData, type WithFieldValue, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
+import { type FirestoreDocumentContext, type UpdateData, type DocumentData, type WithFieldValue, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
 // MARK: Accessor
@@ -43,9 +43,11 @@ export function writeBatchAccessorFactory<T>(writeBatch: FirebaseFirestoreWriteB
 // MARK: Context
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
   readonly contextType = FirestoreDocumentContextType.BATCH;
-  readonly accessorFactory = writeBatchAccessorFactory<T>(this.batch);
+  readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T, DocumentData>;
 
-  constructor(readonly batch: FirebaseFirestoreWriteBatch) {}
+  constructor(readonly batch: FirebaseFirestoreWriteBatch) {
+    this.accessorFactory = writeBatchAccessorFactory<T>(this.batch);
+  }
 }
 
 export function writeBatchDocumentContext<T>(batch: FirebaseFirestoreWriteBatch): WriteBatchFirestoreDocumentContext<T> {

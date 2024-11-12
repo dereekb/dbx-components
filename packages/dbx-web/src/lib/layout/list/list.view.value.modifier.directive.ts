@@ -1,5 +1,5 @@
 import { BehaviorSubject, map, Observable, shareReplay, combineLatest } from 'rxjs';
-import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxValueListItem } from './list.view.value';
 import { addModifiers, ArrayOrValue, combineMaps, Maybe, Modifier, ModifierMap, removeModifiers } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
@@ -48,12 +48,12 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
  */
 @Directive()
 export abstract class AbstractDbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements OnInit, OnDestroy {
+  readonly dbxValueListItemModifier = inject(DbxValueListItemModifier<T, I>);
+
   abstract readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<I>>>>;
 
   private _linkedModifiers: Maybe<ArrayOrValue<Modifier<I>>>;
   private _modifiersSub = new SubscriptionObject();
-
-  constructor(readonly dbxValueListItemModifier: DbxValueListItemModifier<T, I>) {}
 
   ngOnInit(): void {
     this._modifiersSub.subscription = this.modifiers$.subscribe((modifiers) => {

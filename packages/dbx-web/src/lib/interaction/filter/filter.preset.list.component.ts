@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FilterWithPreset } from '@dereekb/rxjs';
-import { AbstractDbxPresetFilterMenuComponent } from './filter.preset';
+import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
 
 @Component({
   selector: 'dbx-preset-filter-list',
@@ -8,4 +8,4 @@ import { AbstractDbxPresetFilterMenuComponent } from './filter.preset';
     <dbx-anchor-list [anchors]="presetAnchors$ | async"></dbx-anchor-list>
   `
 })
-export class DbxPresetFilterListComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuComponent<F> {}
+export class DbxPresetFilterListComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {}

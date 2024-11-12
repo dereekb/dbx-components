@@ -1,7 +1,7 @@
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { ModuleWithProviders, NgModule } from '@angular/core';
+import { ModuleWithProviders, NgModule, inject } from '@angular/core';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxActionModule, DbxRouterAnchorModule, DbxButtonModule, DbxReadableErrorModule, DbxPopupInteractionModule, DbxTwoColumnLayoutModule, DbxBlockLayoutModule, DbxWidgetModule, DbxListLayoutModule, DbxTextModule } from '@dereekb/dbx-web';
 import { DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN } from './development.widget.service';
@@ -50,8 +50,10 @@ export abstract class DbxFirebaseDevelopmentModuleRootConfig {
   ]
 })
 export class DbxFirebaseDevelopmentModule {
-  constructor(readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService) {
-    dbxFirebaseDevelopmentSchedulerService.init();
+  readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);
+
+  constructor() {
+    this.dbxFirebaseDevelopmentSchedulerService.init();
   }
 
   static forRoot(config: DbxFirebaseDevelopmentModuleRootConfig): ModuleWithProviders<DbxFirebaseDevelopmentModule> {

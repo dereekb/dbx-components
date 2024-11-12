@@ -1,4 +1,4 @@
-import { OnInit, Component, Inject, OnDestroy, AfterViewInit } from '@angular/core';
+import { OnInit, Component, OnDestroy, AfterViewInit, inject } from '@angular/core';
 import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
 import { distinctUntilChanged, Observable, shareReplay, BehaviorSubject, switchMap, startWith, Subject, of, filter, map } from 'rxjs';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
@@ -13,8 +13,11 @@ import { DbxActionContextSourceReference, AbstractSubscriptionDirective } from '
   templateUrl: './action.snackbar.component.html'
 })
 export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective implements OnInit, AfterViewInit, OnDestroy {
-  private _durationTimeout = new Subject<void>();
-  private _actionRef = new BehaviorSubject<Maybe<DbxActionContextSourceReference>>(undefined);
+  readonly snackbarRef = inject(MatSnackBarRef<DbxActionSnackbarComponent>);
+  readonly data = inject<DbxActionSnackbarDisplayConfig>(MAT_SNACK_BAR_DATA);
+
+  private readonly _durationTimeout = new Subject<void>();
+  private readonly _actionRef = new BehaviorSubject<Maybe<DbxActionContextSourceReference>>(this.data.action?.reference);
 
   readonly value$ = of(0); // value passed to the action.
   readonly sourceInstance$ = this._actionRef.pipe(
@@ -53,7 +56,7 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
     shareReplay(1)
   );
 
-  readonly button: Maybe<string>;
+  readonly button: Maybe<string> = this.data.action?.button ?? this.data.button;
 
   get action() {
     return this.data.action;
@@ -69,12 +72,6 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
 
   get actionConfig(): Maybe<DbxActionSnackbarActionConfig> {
     return this.data.action;
-  }
-
-  constructor(readonly snackbarRef: MatSnackBarRef<DbxActionSnackbarComponent>, @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig) {
-    super();
-    this.button = this.data.action?.button ?? this.data.button;
-    this._actionRef.next(this.data.action?.reference);
   }
 
   ngOnInit(): void {

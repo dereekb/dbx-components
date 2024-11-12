@@ -1,6 +1,6 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, shareReplay, startWith, switchMap, Observable } from 'rxjs';
@@ -55,6 +55,11 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
   styleUrls: ['../mapbox.field.component.scss']
 })
 export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponentFieldProps = DbxFormMapboxZoomComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+  readonly compact = inject(CompactContextStore, { optional: true });
+  readonly dbxMapboxService = inject(DbxMapboxService);
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
+  readonly ngZone = inject(NgZone);
+
   private _undoZoomLimit = false;
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
@@ -74,10 +79,6 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
 
   readonly zoom$: Observable<MapboxZoomLevel> = this.value$.pipe(filterMaybe(), shareReplay(1));
   readonly center$ = this._center.pipe(filterMaybe());
-
-  constructor(@Optional() readonly compact: CompactContextStore, readonly dbxMapboxService: DbxMapboxService, readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly ngZone: NgZone) {
-    super();
-  }
 
   get center(): LatLngPoint {
     return this.field.props.center || latLngPoint(this.dbxMapboxService.defaultCenter);

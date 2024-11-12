@@ -1,4 +1,4 @@
-import { Directive, Input, OnInit } from '@angular/core';
+import { Directive, Input, OnInit, inject } from '@angular/core';
 import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxErrorSnackbarService } from './error.snackbar.service';
 import { Maybe, Milliseconds, toReadableError } from '@dereekb/util';
@@ -12,12 +12,11 @@ import { filterMaybe } from '@dereekb/rxjs';
   selector: '[dbxActionSnackbarError]'
 })
 export class DbxActionSnackbarErrorDirective extends AbstractSubscriptionDirective implements OnInit {
+  readonly dbxErrorSnackbarService = inject(DbxErrorSnackbarService);
+  readonly source = inject(DbxActionContextStoreSourceInstance);
+
   @Input('dbxActionSnackbarError')
   config?: Maybe<DbxErrorSnackbarConfig> | Milliseconds | '';
-
-  constructor(readonly dbxErrorSnackbarService: DbxErrorSnackbarService, public readonly source: DbxActionContextStoreSourceInstance) {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.source.error$.pipe(filterMaybe()).subscribe((inputError) => {

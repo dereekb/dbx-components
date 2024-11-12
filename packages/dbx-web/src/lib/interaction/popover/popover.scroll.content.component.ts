@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
@@ -15,6 +15,8 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   }
 })
 export class DbxPopoverScrollContentComponent {
+  readonly appPopoverContentComponent = inject(DbxPopoverContentComponent);
+
   get sizingClasses(): string {
     const hasHeader = this.hasHeader;
     const hasControls = this.hasControls;
@@ -39,6 +41,4 @@ export class DbxPopoverScrollContentComponent {
   get hasControls(): boolean {
     return this.appPopoverContentComponent.hasControls;
   }
-
-  constructor(readonly appPopoverContentComponent: DbxPopoverContentComponent) {}
 }

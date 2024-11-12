@@ -1,4 +1,4 @@
-import { Directive, Optional } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
@@ -11,9 +11,11 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   }
 })
 export class DbxPopoverControlsDirective {
-  constructor(@Optional() appPopoverContentComponent: DbxPopoverContentComponent) {
-    if (appPopoverContentComponent) {
-      appPopoverContentComponent.hasControls = true;
+  readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });
+
+  ngOnInit() {
+    if (this.appPopoverContentComponent) {
+      this.appPopoverContentComponent.hasControls = true;
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Directive, Input, OnInit, OnDestroy, Host } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { distinctUntilChanged, filter, combineLatest, BehaviorSubject } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -8,6 +8,8 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxActionAutoModify]'
 })
 export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+
   private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
 
   @Input('dbxActionAutoModify')
@@ -17,10 +19,6 @@ export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDire
 
   set autoModifyEnabled(autoModifyEnabled: Maybe<boolean | ''>) {
     this._autoModifyEnabled.next(autoModifyEnabled !== false);
-  }
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
-    super();
   }
 
   ngOnInit(): void {

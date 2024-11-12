@@ -1,4 +1,4 @@
-import { Component, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { map } from 'rxjs';
@@ -10,6 +10,9 @@ import { DemoGuestbookEntryPopupComponent } from './guestbook.entry.popup.compon
   templateUrl: './guestbook.view.component.html'
 })
 export class DemoGuestbookViewComponent implements OnDestroy {
+  readonly guestbookStore = inject(GuestbookDocumentStore);
+  readonly matDialog = inject(MatDialog);
+
   @ViewChild(GuestbookEntryDocumentStore)
   readonly documentStore!: GuestbookEntryDocumentStore;
 
@@ -17,8 +20,6 @@ export class DemoGuestbookViewComponent implements OnDestroy {
   readonly data$ = this.guestbookStore.data$;
 
   readonly name$ = this.data$.pipe(map((x) => x?.name));
-
-  constructor(readonly guestbookStore: GuestbookDocumentStore, readonly matDialog: MatDialog) {}
 
   ngOnDestroy(): void {
     this.context.destroy();

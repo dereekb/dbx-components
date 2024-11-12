@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { shareReplay, map, Observable, combineLatest } from 'rxjs';
 import { DbxMapboxMarker } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldComponent } from './latlng.field.component';
@@ -11,6 +11,8 @@ import { Maybe } from '@dereekb/util';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFormMapboxLatLngFieldMarkerComponent {
+  readonly fieldComponent = inject(DbxFormMapboxLatLngFieldComponent);
+
   readonly marker$: Observable<Maybe<DbxMapboxMarker>> = combineLatest([this.fieldComponent.latLng$, this.fieldComponent.markerConfig$]).pipe(
     map(([latLng, markerConfig]) => {
       if (markerConfig !== false) {
@@ -21,6 +23,4 @@ export class DbxFormMapboxLatLngFieldMarkerComponent {
     }),
     shareReplay(1)
   );
-
-  constructor(readonly fieldComponent: DbxFormMapboxLatLngFieldComponent) {}
 }

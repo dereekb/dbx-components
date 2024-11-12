@@ -1,8 +1,8 @@
 <div class="dbx-list-item-field" [dbxListItemModifier] [dbxListItemIsSelectedModifier]="isSelectedModifierFunction$ | async">
-  <dbx-label class="dbx-label-padded" *ngIf="label">{{ label }}</dbx-label>
+  <span class="dbx-label dbx-label-padded" *ngIf="label">{{ label }}</span>
   <div class="dbx-list-item-field-content">
     <dbx-injection [config]="config$ | async"></dbx-injection>
   </div>
   <mat-divider></mat-divider>
-  <dbx-form-description *ngIf="description">{{ description }}</dbx-form-description>
+  <div class="dbx-form-description" *ngIf="description">{{ description }}</div>
 </div>

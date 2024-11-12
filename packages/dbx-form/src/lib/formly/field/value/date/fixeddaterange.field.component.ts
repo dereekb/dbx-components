@@ -1,7 +1,7 @@
 import { type Maybe, type DecisionFunction, type Milliseconds, type TimezoneString, type DateMonth, type DayOfMonth, type YearNumber, isMonthDaySlashDate, MS_IN_MINUTE } from '@dereekb/util';
 import { guessCurrentTimezone, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer } from 'rxjs';
-import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild, forwardRef } from '@angular/core';
+import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild, forwardRef, inject } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
@@ -145,6 +145,8 @@ interface SelectedDateEvent {
   ]
 })
 export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<DbxFixedDateRangeFieldProps>> implements OnInit, OnDestroy {
+  private readonly dbxDateTimeFieldMenuPresetsService = inject(DbxDateTimeFieldMenuPresetsService);
+
   private _sub = new SubscriptionObject();
 
   private _inputRangeFormSub = new SubscriptionObject();
@@ -514,10 +516,6 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
   readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
 
-  constructor(private readonly dbxDateTimeFieldConfigService: DbxDateTimeFieldMenuPresetsService) {
-    super();
-  }
-
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
@@ -658,7 +656,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     if (this.presets != null) {
       this._presets.next(asObservableFromGetter(this.presets));
     } else {
-      this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
+      this._presets.next(this.dbxDateTimeFieldMenuPresetsService.configurations$);
     }
 
     this._activeDateSub.subscription = this.calendarFocusDate$.subscribe((x) => {
@@ -700,7 +698,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
 @Injectable()
 export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
-  constructor(private _dateAdapter: DateAdapter<D>, readonly dbxFixedDateRangeFieldComponent: DbxFixedDateRangeFieldComponent) {}
+  private readonly _dateAdapter = inject(DateAdapter<D>);
+  readonly dbxFixedDateRangeFieldComponent = inject(DbxFixedDateRangeFieldComponent);
 
   selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
     // unused

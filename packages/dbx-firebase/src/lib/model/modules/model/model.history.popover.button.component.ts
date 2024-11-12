@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild, inject } from '@angular/core';
 import { AbstractPopoverRefDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseModelHistoryPopoverComponent, DbxFirebaseModelHistoryPopoverParams } from './model.history.popover.component';
@@ -13,15 +13,13 @@ export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistory
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
+  private readonly _dbxPopoverService = inject(DbxPopoverService);
+
   @ViewChild('button', { read: ElementRef, static: false })
   buttonElement!: ElementRef;
 
   @Input()
   config?: DbxFirebaseModelHistoryPopoverButtonConfig;
-
-  constructor(private readonly dbxPopoverService: DbxPopoverService) {
-    super();
-  }
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
     const config = this.config;
@@ -30,7 +28,7 @@ export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopov
       throw new Error('Missing origin.');
     }
 
-    return DbxFirebaseModelHistoryPopoverComponent.openPopover(this.dbxPopoverService, {
+    return DbxFirebaseModelHistoryPopoverComponent.openPopover(this._dbxPopoverService, {
       origin,
       ...config
     });

@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, inject } from '@angular/core';
 import { shareReplay, map, BehaviorSubject, combineLatest, of, Observable } from 'rxjs';
 import { DbxValueListItem } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe, mergeObjects } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DbxValueListViewConfig } from './list.view.value.component';
-import { DbxListView } from './list.view';
 
 export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
   grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
@@ -90,7 +89,8 @@ export class DbxValueListGridSizeDirective implements OnDestroy {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> implements OnDestroy {
-  private _defaultGrid = new BehaviorSubject<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>(undefined);
+  private readonly _gridSizeOverride = inject(DbxValueListGridSizeDirective, { optional: true });
+  private readonly _defaultGrid = new BehaviorSubject<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>(undefined);
 
   readonly grid$: Observable<DbxValueListGridItemViewGridSizeConfig> = combineLatest([this._defaultGrid, this._gridSizeOverride?.gridSize$ ?? of(undefined)]).pipe(
     map(([defaultGrid, overrideGrid]) => {
@@ -102,10 +102,6 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
 
   readonly gap$ = this.grid$.pipe(map((x) => x.gap));
   readonly columns$ = this.grid$.pipe(map((x) => x.columns));
-
-  constructor(dbxListView: DbxListView<T>, @Optional() private _gridSizeOverride?: DbxValueListGridSizeDirective) {
-    super(dbxListView, undefined);
-  }
 
   @Input()
   set grid(grid: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>) {

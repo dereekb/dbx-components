@@ -5,7 +5,7 @@ import { Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { filterMaybe } from '@dereekb/rxjs';
 
-export interface AbstractFormExpandableSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
+export interface AbstractFormExpandSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
   expandLabel?: string;
   /**
    * Optional function to use for checking value existence.
@@ -16,11 +16,11 @@ export interface AbstractFormExpandableSectionConfig<T extends object = object> 
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 
 @Directive()
-export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit, OnDestroy {
-  protected _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
-  readonly formControl$ = this._formControlObs.pipe(filterMaybe());
+export class AbstractFormExpandSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandSectionConfig<T> = AbstractFormExpandSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit, OnDestroy {
+  protected readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  protected readonly _toggleOpen = new BehaviorSubject<Maybe<boolean>>(undefined);
 
-  protected _toggleOpen = new BehaviorSubject<Maybe<boolean>>(undefined);
+  readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly show$ = this._toggleOpen.pipe(
     switchMap((toggleOpen: Maybe<boolean>) => {
@@ -46,16 +46,16 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
     )
   );
 
-  get expandableSection(): S {
+  get expandSection(): S {
     return this.props;
   }
 
   get hasValueFn(): (value: T) => boolean {
-    return this.expandableSection.hasValueFn ?? (DEFAULT_HAS_VALUE_FN as (value: T) => boolean);
+    return this.expandSection.hasValueFn ?? (DEFAULT_HAS_VALUE_FN as (value: T) => boolean);
   }
 
   get expandLabel(): Maybe<string> {
-    let label: Maybe<string> = this.expandableSection.expandLabel ?? this.field.props?.label;
+    let label: Maybe<string> = this.expandSection.expandLabel ?? this.field.props?.label;
 
     if (label == null) {
       const firstFieldGroup = this.field.fieldGroup?.[0];

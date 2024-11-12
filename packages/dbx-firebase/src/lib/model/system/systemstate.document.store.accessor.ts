@@ -2,11 +2,15 @@ import { SystemState, SystemStateStoredData, SystemStateTypeIdentifier } from '@
 import { LoadingState, mapLoadingState } from '@dereekb/rxjs';
 import { map, Observable, shareReplay } from 'rxjs';
 import { SystemStateDocumentStore } from './systemstate.document.store';
+import { Injectable, inject } from '@angular/core';
 
 /**
  * Abstract class used for accessing a SystemStateDocumentStore's data.
  */
+@Injectable()
 export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemStateStoredData = SystemStateStoredData> {
+  readonly systemStateDocumentStore = inject(SystemStateDocumentStore<T>);
+
   readonly documentData$ = this.systemStateDocumentStore.data$;
   readonly data$: Observable<T> = this.documentData$.pipe(
     map((x) => x.data),
@@ -16,7 +20,7 @@ export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemS
   readonly exists$ = this.systemStateDocumentStore.exists$;
   readonly doesNotExist$ = this.systemStateDocumentStore.doesNotExist$;
 
-  constructor(readonly systemStateDocumentStore: SystemStateDocumentStore<T>, readonly type: SystemStateTypeIdentifier) {
-    systemStateDocumentStore.setId(type);
+  constructor(readonly type: SystemStateTypeIdentifier) {
+    this.systemStateDocumentStore.setId(type);
   }
 }

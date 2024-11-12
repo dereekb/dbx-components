@@ -1,7 +1,7 @@
-import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild } from '@angular/core';
+import { OnDestroy, OnInit, Component, Input, ViewChild, inject } from '@angular/core';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { DbxScreenMediaService } from '../../../screen';
-import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { distinctUntilChanged, map, shareReplay, Observable, first } from 'rxjs';
@@ -22,6 +22,8 @@ export interface DbxSidenavSidebarState {
   templateUrl: './sidenav.component.html'
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
+  private _screenMediaService = inject(DbxScreenMediaService);
+
   @Input()
   anchors?: Maybe<ClickableAnchorLinkTree[]>;
 
@@ -98,10 +100,6 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
   private _watcherSub = new SubscriptionObject();
   private _stateSub = new SubscriptionObject();
-
-  constructor(dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone, private _screenMediaService: DbxScreenMediaService) {
-    super(dbxRouterTransitionService, ngZone);
-  }
 
   override ngOnInit(): void {
     super.ngOnInit();

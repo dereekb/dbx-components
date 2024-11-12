@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { LatLngPointInput, Milliseconds } from '@dereekb/util';
 import { MapboxOptions } from 'mapbox-gl';
 import { KnownMapboxStyle, MapboxZoomLevel } from './mapbox';
@@ -19,11 +19,7 @@ export const DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD: Milliseconds = 200;
   providedIn: 'root'
 })
 export class DbxMapboxService {
-  private readonly _config: DbxMapboxConfig;
-
-  constructor(@Optional() config: DbxMapboxConfig) {
-    this._config = config ?? {};
-  }
+  private readonly _config = inject(DbxMapboxConfig, { optional: true }) ?? {};
 
   get defaultStyle() {
     return this._config.defaultStyle ?? DEFAULT_MAPBOX_STYLE;

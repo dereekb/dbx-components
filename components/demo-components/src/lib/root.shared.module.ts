@@ -73,7 +73,6 @@ const ANGULAR_MATERIAL_MODULES = [
   MatSortModule,
   MatToolbarModule,
   MatTreeModule,
-  // TODO: Need to verify updated Angular Material css
   MatDialogModule,
   MatButtonModule,
   MatSnackBarModule,
@@ -91,7 +90,6 @@ const ANGULAR_MATERIAL_MODULES = [
   MatFormFieldModule,
   MatCardModule,
   MatTabsModule,
-  // TODO: Update/Replace Legacy Angular Material
   MatChipsModule,
   MatListModule,
   OverlayModule,

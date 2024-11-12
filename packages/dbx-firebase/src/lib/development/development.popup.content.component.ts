@@ -1,5 +1,5 @@
 import { ClickableAnchor, DbxAuthService } from '@dereekb/dbx-core';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxWidgetDataPair, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
 import { WorkUsingContext, filterMaybe, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
@@ -19,6 +19,12 @@ import { DbxFirebaseEmulatorService } from '../firebase';
   providers: [TwoColumnsContextStore]
 })
 export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDestroy {
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+  readonly dbxAuthService = inject(DbxAuthService);
+  readonly dbxFirebaseDevelopmentWidgetService = inject(DbxFirebaseDevelopmentWidgetService);
+  readonly dbxFirebaseDevelopmentSchedulerService = inject(DbxFirebaseDevelopmentSchedulerService);
+  readonly dbxFirebaseEmulatorService = inject(DbxFirebaseEmulatorService);
+
   private readonly _backSub = new SubscriptionObject();
 
   readonly showEmulatorButton = this.dbxFirebaseEmulatorService.useEmulators === true;
@@ -66,8 +72,6 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
     distinctUntilChanged(),
     map((specifier) => ({ specifier }))
   );
-
-  constructor(readonly twoColumnsContextStore: TwoColumnsContextStore, readonly dbxAuthService: DbxAuthService, readonly dbxFirebaseDevelopmentWidgetService: DbxFirebaseDevelopmentWidgetService, readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService, readonly dbxFirebaseEmulatorService: DbxFirebaseEmulatorService) {}
 
   ngOnInit(): void {
     this.twoColumnsContextStore.setShowRight(this.showRight$);

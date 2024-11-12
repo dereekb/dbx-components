@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { combineLatest } from 'rxjs';
 import { AbstractDbxAnalyticsServiceListener, DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType, DbxAnalyticsUser } from '../../analytics';
@@ -7,9 +7,13 @@ import { DbxAnalyticsSegmentApiService } from './segment.service';
 /**
  * DbxAnalyticsServiceListener adapter for Segment.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServiceListener {
-  constructor(private _segmentApi: DbxAnalyticsSegmentApiService) {
+  private _segmentApi = inject(DbxAnalyticsSegmentApiService);
+
+  constructor() {
     super();
 
     if (this._segmentApi.config.logging) {

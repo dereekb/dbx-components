@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { Maybe, forEachKeyValue, Configurable } from '@dereekb/util';
+import { Maybe, forEachKeyValue, Configurable, filterMaybeValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
 import { dirname } from 'path';
 import { readFile, writeFile, rm, mkdirSync } from 'fs';
 
@@ -17,6 +17,86 @@ export abstract class ZohoAccountsAccessTokenCacheService {
    * @param service
    */
   abstract loadZohoAccessTokenCache(service: ZohoServiceAccessTokenKey): ZohoAccessTokenCache;
+}
+
+export type LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction = (failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) => void;
+
+export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) {
+  console.warn(`mergeZohoAccountsAccessTokenCacheServices(): failed updating ${failedUpdates.length} caches.`);
+  failedUpdates.forEach(([x, e], i) => {
+    console.warn(`Cache write failure ${i + 1}: - ${e}`);
+  });
+}
+
+/**
+ * Merges the input services in order to use some as a backup source.
+ *
+ * If once source fails retrieval, the next will be tried.
+ *
+ * When updating a cached token, it will update the token across all services.
+ *
+ * @param servicesToMerge Must include atleast one service. Empty arrays will throw an error.
+ */
+export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: ZohoAccountsAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction>): ZohoAccountsAccessTokenCacheService {
+  const services = [...inputServicesToMerge];
+  const logErrorFunction = typeof logError === 'function' ? logError : logError !== false ? logMergeZohoAccountsAccessTokenCacheServiceErrorFunction : undefined;
+
+  if (services.length === 0) {
+    throw new Error('mergeZohoAccountsAccessTokenCacheServices() input cannot be empty.');
+  }
+
+  const service: ZohoAccountsAccessTokenCacheService = {
+    loadZohoAccessTokenCache: function (service: string): ZohoAccessTokenCache {
+      const accessCachesForServices = services.map((x) => x.loadZohoAccessTokenCache(service));
+      const loadCachedTokenFromFirstService = tryWithPromiseFactoriesFunction<void, ZohoAccessToken>({
+        promiseFactories: accessCachesForServices.map(
+          (x) => () =>
+            x.loadCachedToken().then((x) => {
+              let result: Maybe<ZohoAccessToken> = undefined;
+
+              if (x && !isPast(x.expiresAt)) {
+                result = x; // only return from cache if it is not expired
+              }
+
+              return result;
+            })
+        ),
+        successOnMaybe: false,
+        throwErrors: false
+      });
+
+      const cacheForService: ZohoAccessTokenCache = {
+        loadCachedToken: function (): Promise<Maybe<ZohoAccessToken>> {
+          return loadCachedTokenFromFirstService();
+        },
+        updateCachedToken: async function (accessToken: ZohoAccessToken): Promise<void> {
+          return Promise.allSettled(
+            accessCachesForServices.map((x) =>
+              x
+                .updateCachedToken(accessToken)
+                .then(() => null)
+                .catch((e) => {
+                  return [x, e] as const;
+                })
+            )
+          ).then((x) => {
+            // only find the failures if we're logging
+            if (logErrorFunction != null) {
+              const failedUpdates = filterMaybeValues(x.map((y) => (y as PromiseFulfilledResult<any>).value)) as unknown as (readonly [ZohoAccessTokenCache, unknown])[];
+
+              if (failedUpdates.length) {
+                logErrorFunction(failedUpdates);
+              }
+            }
+          });
+        }
+      };
+
+      return cacheForService;
+    }
+  };
+
+  return service;
 }
 
 // MARK: Memory Access Token Cache

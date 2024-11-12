@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { AbstractDbxActionHandlerDirective, DbxActionContextStoreSourceInstance, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
+import { Component, Input, inject } from '@angular/core';
+import { AbstractDbxActionHandlerDirective, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
 import { of } from 'rxjs';
 
 /**
@@ -13,6 +13,8 @@ import { of } from 'rxjs';
   providers: [provideActionStoreSource(null)]
 })
 export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHandlerDirective<F> {
+  readonly filterSourceDirective = inject(FilterSourceDirective<F>);
+
   @Input()
   showButtons = true;
 
@@ -25,8 +27,9 @@ export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHan
   @Input()
   applyText = 'Filter';
 
-  constructor(source: DbxActionContextStoreSourceInstance<F>, readonly filterSourceDirective: FilterSourceDirective<F>) {
-    super(source);
+  constructor() {
+    super();
+
     // configure handler function
     this._dbxActionHandlerInstance.handlerFunction = (filter: F) => {
       this.filterSourceDirective.setFilter(filter);

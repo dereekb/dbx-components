@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { OnDestroy, Input, Directive } from '@angular/core';
+import { OnDestroy, Input, Directive, inject } from '@angular/core';
 import { distinctUntilChanged, BehaviorSubject } from 'rxjs';
 import { DbxTableStore } from './table.store';
 import { Maybe } from '@dereekb/util';
@@ -9,10 +9,11 @@ import { Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractDbxTableElementDirective<T, C = unknown> implements OnDestroy {
-  private readonly _element = new BehaviorSubject<Maybe<T>>(undefined);
-  readonly element$ = this._element.pipe(filterMaybe(), distinctUntilChanged());
+  readonly tableStore = inject(DbxTableStore<unknown, C, T>);
 
-  constructor(readonly tableStore: DbxTableStore<unknown, C, T>) {}
+  private readonly _element = new BehaviorSubject<Maybe<T>>(undefined);
+
+  readonly element$ = this._element.pipe(filterMaybe(), distinctUntilChanged());
 
   @Input()
   set element(element: Maybe<T>) {

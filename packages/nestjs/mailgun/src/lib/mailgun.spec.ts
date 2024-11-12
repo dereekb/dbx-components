@@ -6,9 +6,8 @@ const testEmail2 = 'test2.components@dereekb.com';
 const templateName = 'test';
 
 // provided in Environment Variables
-// TODO: Don't commit these values!
-const apiKey = 'key-d7e36a9ead3fdb61983587832bd75b42'; // process.env['MAILGUN_SANDBOX_API_KEY'] as string;
-const domain = 'sandboxac03c39a759d4cf1b3511eb72715b996.mailgun.org' ?? (process.env['MAILGUN_SANDBOX_DOMAIN'] as string);
+// const apiKey = process.env['MAILGUN_SANDBOX_API_KEY'] as string;
+// const domain = process.env['MAILGUN_SANDBOX_DOMAIN'] as string;
 
 describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
   describe('single recipient', () => {

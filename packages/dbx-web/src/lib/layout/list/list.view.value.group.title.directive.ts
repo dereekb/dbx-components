@@ -1,4 +1,4 @@
-import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, Inject, StaticProvider } from '@angular/core';
+import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, StaticProvider, inject } from '@angular/core';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { BehaviorSubject, map } from 'rxjs';
@@ -6,6 +6,13 @@ import { Building, Maybe, PrimativeKey, compareWithMappedValuesFunction, makeVal
 import { DbxListTitleGroupData, DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
 
 export const DBX_LIST_TITLE_GROUP_DATA = new InjectionToken<unknown>('DbxListTitleGroupData');
+
+/**
+ * Abstract DbxListTitleGroupHeaderComponent that already has the data injected.
+ */
+export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> {
+  readonly data = inject<D>(DBX_LIST_TITLE_GROUP_DATA);
+}
 
 /**
  * Delegate used to for grouping DbxValueListItemConfig<T, I> values.
@@ -105,7 +112,7 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
     class: 'dbx-list-title-group-header'
   }
 })
-export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> {
+export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> extends AbstractDbxListTitleGroupHeaderComponent<O, D> {
   get icon() {
     return this.data.icon;
   }
@@ -117,6 +124,4 @@ export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends 
   get hint() {
     return this.data.hint;
   }
-
-  constructor(@Inject(DBX_LIST_TITLE_GROUP_DATA) readonly data: D) {}
 }

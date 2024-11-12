@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FirebaseStorageContext, FirebaseStorageAccessor, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StoragePathInput } from '@dereekb/firebase';
 import { DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
 
@@ -9,7 +9,7 @@ import { DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
   providedIn: 'root'
 })
 export class DbxFirebaseStorageService implements FirebaseStorageAccessor {
-  constructor(@Inject(DBX_FIREBASE_STORAGE_CONTEXT_TOKEN) readonly storageContext: FirebaseStorageContext) {}
+  readonly storageContext = inject<FirebaseStorageContext>(DBX_FIREBASE_STORAGE_CONTEXT_TOKEN);
 
   defaultBucket() {
     return this.storageContext.defaultBucket();

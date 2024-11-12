@@ -21,8 +21,6 @@ export class DbxInjectionArrayComponent implements OnDestroy {
 
   readonly trackByKeyFn: TrackByFunction<DbxInjectionArrayEntry> = (index, item) => item.key;
 
-  constructor() {}
-
   ngOnDestroy(): void {
     this._entries.complete();
   }

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FirestoreContext } from '@dereekb/firebase';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 
@@ -9,5 +9,5 @@ import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
   providedIn: 'root'
 })
 export class DbxFirestoreContextService {
-  constructor(@Inject(DBX_FIRESTORE_CONTEXT_TOKEN) readonly firestoreContext: FirestoreContext) {}
+  readonly firestoreContext = inject<FirestoreContext>(DBX_FIRESTORE_CONTEXT_TOKEN);
 }

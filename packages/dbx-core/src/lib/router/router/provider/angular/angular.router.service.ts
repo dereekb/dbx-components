@@ -4,7 +4,7 @@ import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { isArray } from 'class-validator';
 import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 
@@ -13,6 +13,9 @@ import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
  */
 @Injectable()
 export class DbxAngularRouterService implements DbxRouterService, DbxRouterTransitionService {
+  readonly router = inject(Router);
+  readonly activatedRoute = inject(ActivatedRoute);
+
   readonly params$: Observable<SegueRefRawSegueParams> = this.activatedRoute.params;
 
   readonly transitions$ = this.router.events.pipe(
@@ -33,8 +36,6 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
     }),
     filterMaybe()
   );
-
-  constructor(readonly router: Router, readonly activatedRoute: ActivatedRoute) {}
 
   go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>>): Promise<boolean> {
     const inputObs = asObservable(input);

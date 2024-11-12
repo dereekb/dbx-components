@@ -1,6 +1,6 @@
 import { DbxMapboxService } from './mapbox.service';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { Directive, Host, OnInit, Optional } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { MapComponent, MapService } from 'ngx-mapbox-gl';
 import { latLngPoint } from '@dereekb/util';
 
@@ -11,13 +11,10 @@ import { latLngPoint } from '@dereekb/util';
   selector: '[dbxMapboxMap]'
 })
 export class DbxMapboxMapDirective implements OnInit {
-  constructor(
-    //
-    @Host() readonly mapService: MapService,
-    @Host() readonly mapboxMap: MapComponent,
-    readonly dbxMapboxService: DbxMapboxService,
-    @Optional() readonly dbxMapboxMapStore: DbxMapboxMapStore
-  ) {}
+  readonly mapService = inject(MapService, { host: true });
+  readonly mapboxMap = inject(MapComponent, { host: true });
+  readonly dbxMapboxService = inject(DbxMapboxService);
+  readonly dbxMapboxMapStore = inject(DbxMapboxMapStore, { optional: true });
 
   ngOnInit(): void {
     // style must be provided first before the map will load.

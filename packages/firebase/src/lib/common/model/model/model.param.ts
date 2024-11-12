@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional } from 'class-validator';
-import { type FirestoreModelKeyRef } from '../../firestore/collection/collection';
+import { type FirestoreModelKey, type FirestoreModelKeyRef } from '../../firestore/collection/collection';
 import { IsFirestoreModelId, IsFirestoreModelKey } from './model.validator';
 
 /**
@@ -10,7 +10,7 @@ export class TargetModelParams implements FirestoreModelKeyRef {
   @Expose()
   @IsNotEmpty()
   @IsFirestoreModelKey()
-  key!: string; // FirestoreModelKey // TODO: Replace once Jest importing issue is fixed. https://github.com/nrwl/nx/issues/13615
+  key!: FirestoreModelKey;
 }
 
 export class InferredTargetModelParams implements Partial<FirestoreModelKeyRef> {
@@ -18,7 +18,7 @@ export class InferredTargetModelParams implements Partial<FirestoreModelKeyRef> 
   @IsOptional()
   @IsNotEmpty()
   @IsFirestoreModelKey()
-  key?: string; // FirestoreModelKey
+  key?: FirestoreModelKey;
 }
 
 /**
@@ -28,7 +28,7 @@ export class TargetModelIdParams implements FirestoreModelKeyRef {
   @Expose()
   @IsNotEmpty()
   @IsFirestoreModelId()
-  key!: string; // FirestoreModelId;
+  key!: FirestoreModelKey;
 }
 
 export class InferredTargetModelIdParams implements Partial<FirestoreModelKeyRef> {
@@ -36,5 +36,5 @@ export class InferredTargetModelIdParams implements Partial<FirestoreModelKeyRef
   @IsOptional()
   @IsNotEmpty()
   @IsFirestoreModelId()
-  key?: string; // FirestoreModelId;
+  key?: FirestoreModelKey;
 }

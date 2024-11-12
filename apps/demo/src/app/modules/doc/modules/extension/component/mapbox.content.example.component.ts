@@ -1,4 +1,4 @@
-import { Inject, Optional, Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 
 export interface DocExtensionMapboxContentExampleData {}
@@ -14,5 +14,5 @@ export interface DocExtensionMapboxContentExampleData {}
   `
 })
 export class DocExtensionMapboxContentExampleComponent {
-  constructor(@Optional() @Inject(DBX_INJECTION_COMPONENT_DATA) readonly data?: DocExtensionMapboxContentExampleData) {}
+  readonly data? = inject<DocExtensionMapboxContentExampleData>(DBX_INJECTION_COMPONENT_DATA, { optional: true });
 }

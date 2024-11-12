@@ -9,8 +9,14 @@ import { DbxButton, DbxButtonDisplayContent, DbxButtonDisplayContentType, dbxBut
  */
 @Directive()
 export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDirective implements DbxButton, OnInit, OnDestroy {
-  private _disabled = new BehaviorSubject<boolean>(false);
-  private _working = new BehaviorSubject<boolean>(false);
+  private readonly _disabled = new BehaviorSubject<boolean>(false);
+  private readonly _working = new BehaviorSubject<boolean>(false);
+
+  /**
+   * Pre-interceptor button click.
+   */
+  protected readonly _buttonClick = new Subject<void>();
+  protected readonly _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
 
   readonly disabled$ = this._disabled.asObservable();
   readonly working$ = this._working.asObservable();
@@ -60,16 +66,6 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   readonly buttonClick = new EventEmitter();
 
   readonly clicked$ = this.buttonClick.asObservable();
-
-  constructor() {
-    super();
-  }
-
-  /**
-   * Pre-interceptor button click.
-   */
-  protected _buttonClick = new Subject<void>();
-  protected _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
 
   ngOnInit(): void {
     this.sub = this._buttonClick

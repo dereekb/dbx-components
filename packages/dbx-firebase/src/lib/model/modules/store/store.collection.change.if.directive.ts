@@ -1,4 +1,4 @@
-import { OnDestroy, TemplateRef, ViewContainerRef, Directive, Input } from '@angular/core';
+import { OnDestroy, Directive, Input, inject } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
 import { shareReplay, BehaviorSubject, combineLatest, Observable, map } from 'rxjs';
 import { DbxFirebaseCollectionChangeDirective } from './store.collection.change.directive';
@@ -18,6 +18,7 @@ export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQuery
 export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective implements OnDestroy {
   private _mode = new BehaviorSubject<DbxFirebaseCollectionHasChangeDirectiveMode>('addedAndRemoved');
 
+  readonly directive = inject(DbxFirebaseCollectionChangeDirective);
   readonly show$: Observable<boolean> = combineLatest([this._mode, this.directive.event$]).pipe(
     map(([mode, event]) => {
       let show = false;
@@ -40,10 +41,6 @@ export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective
     }),
     shareReplay(1)
   );
-
-  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly directive: DbxFirebaseCollectionChangeDirective<unknown>) {
-    super(templateRef, viewContainer);
-  }
 
   @Input('dbxFirebaseCollectionHasChange')
   get mode(): DbxFirebaseCollectionHasChangeDirectiveMode {

@@ -1,4 +1,4 @@
-import { OnDestroy, Input, TemplateRef, ViewContainerRef, Directive } from '@angular/core';
+import { OnDestroy, Input, Directive, inject } from '@angular/core';
 import { emitDelayObs } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
@@ -17,7 +17,7 @@ export class DbxActionHasSuccessDirective extends AbstractIfDirective implements
   @Input('dbxActionHasSuccess')
   hideAfter?: Maybe<number> | '';
 
-  readonly show$ = this.source.isSuccess$.pipe(
+  readonly show$ = inject(DbxActionContextStoreSourceInstance).isSuccess$.pipe(
     exhaustMap((success) => {
       if (success) {
         return emitDelayObs(true, false, this.hideAfter || undefined);
@@ -27,8 +27,4 @@ export class DbxActionHasSuccessDirective extends AbstractIfDirective implements
     }),
     shareReplay(1)
   );
-
-  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
-    super(templateRef, viewContainer);
-  }
 }

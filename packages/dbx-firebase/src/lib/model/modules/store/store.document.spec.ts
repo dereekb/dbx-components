@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { DocumentReference } from '@dereekb/firebase';
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
-import { loadingStateIsLoading, SubscriptionObject } from '@dereekb/rxjs';
+import { isLoadingStateLoading, SubscriptionObject } from '@dereekb/rxjs';
 import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 
@@ -79,21 +79,21 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
       describe('before loading the document', () => {
         it('documentLoadingState$ should be loading.', (done) => {
           sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
-            expect(loadingStateIsLoading(x)).toBe(true);
+            expect(isLoadingStateLoading(x)).toBe(true);
             done();
           });
         });
 
         it('snapshotLoadingState$ should be loading.', (done) => {
           sub.subscription = store.snapshotLoadingState$.pipe(first()).subscribe((x) => {
-            expect(loadingStateIsLoading(x)).toBe(true);
+            expect(isLoadingStateLoading(x)).toBe(true);
             done();
           });
         });
 
         it('dataLoadingState$ should be loading.', (done) => {
           sub.subscription = store.dataLoadingState$.pipe(first()).subscribe((x) => {
-            expect(loadingStateIsLoading(x)).toBe(true);
+            expect(isLoadingStateLoading(x)).toBe(true);
             done();
           });
         });
@@ -118,7 +118,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
       it('documentLoadingState$ should have a document.', (done) => {
 
         sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
-          expect(loadingStateIsLoading(x)).toBe(false);
+          expect(isLoadingStateLoading(x)).toBe(false);
           expect(x.value).toBeDefined();
           expect(x.value?.documentRef).toBe(testDoc.documentRef);
           done();
@@ -128,8 +128,8 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
       it('snapshotLoadingState$ should have a snapshot.', (done) => {
 
-        sub.subscription = store.snapshotLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe((x) => {
-          expect(loadingStateIsLoading(x)).toBe(false);
+        sub.subscription = store.snapshotLoadingState$.pipe(filter(x => !isLoadingStateLoading(x)), first()).subscribe((x) => {
+          expect(isLoadingStateLoading(x)).toBe(false);
           expect(x.value).toBeDefined();
           expect(x.value?.id).toBe(testDoc.id);
           done();
@@ -154,7 +154,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
         it('dataLoadingState$ should return an error state.', (done) => {
 
-          sub.subscription = store.dataLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe({
+          sub.subscription = store.dataLoadingState$.pipe(filter(x => !isLoadingStateLoading(x)), first()).subscribe({
             next: (state) => {
               expect(state.error).toBeDefined();
               done();
@@ -178,7 +178,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
         it('dataLoadingState$ should return a success state', (done) => {
 
-          sub.subscription = store.dataLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe({
+          sub.subscription = store.dataLoadingState$.pipe(filter(x => !isLoadingStateLoading(x)), first()).subscribe({
             next: (state) => {
               expect(state.value).toBeDefined();
               expect(state.value?.test).toBe(testValue);

@@ -1,7 +1,7 @@
 import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup, ValidationErrors } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
@@ -236,6 +236,9 @@ export const DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR = 'dateTimeFieldTimeNot
   templateUrl: 'datetime.field.component.html'
 })
 export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDateTimeFieldProps>> implements OnInit, OnDestroy {
+  private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly dbxDateTimeFieldConfigService = inject(DbxDateTimeFieldMenuPresetsService);
+
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
   private _autoFillDateSync = new SubscriptionObject();
@@ -758,10 +761,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor(private readonly cdRef: ChangeDetectorRef, private readonly dbxDateTimeFieldConfigService: DbxDateTimeFieldMenuPresetsService) {
-    super();
-  }
 
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);

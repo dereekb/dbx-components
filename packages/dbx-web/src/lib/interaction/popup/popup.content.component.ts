@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { map } from 'rxjs';
 import { DbxPopupController, DbxPopupWindowState } from './popup';
 
@@ -18,7 +18,7 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
   }
 })
 export class DbxPopupContentComponent {
-  readonly showContent$ = this.appPopupController.windowState$.pipe(map((x) => x !== DbxPopupWindowState.MINIMIZED));
+  private readonly appPopupController = inject(DbxPopupController);
 
-  constructor(private appPopupController: DbxPopupController) {}
+  readonly showContent$ = this.appPopupController.windowState$.pipe(map((x) => x !== DbxPopupWindowState.MINIMIZED));
 }

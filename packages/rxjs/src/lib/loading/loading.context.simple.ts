@@ -1,11 +1,11 @@
-import { type Maybe, type ReadableError } from '@dereekb/util';
+import { type Destroyable, type Maybe, type ReadableError } from '@dereekb/util';
 import { BehaviorSubject, type Observable } from 'rxjs';
 import { type LoadingContext, type LoadingContextEvent } from './loading.context';
 
 /**
  * Simple LoadingContext implementation
  */
-export class SimpleLoadingContext implements LoadingContext {
+export class SimpleLoadingContext implements LoadingContext, Destroyable {
   private _subject: BehaviorSubject<LoadingContextEvent>;
   private _error: Maybe<ReadableError>;
 

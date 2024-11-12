@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
-import { AbstractFormExpandableSectionConfig, AbstractFormExpandableSectionWrapperDirective } from './expandable.wrapper.delegate';
+import { AbstractFormExpandSectionConfig, AbstractFormExpandSectionWrapperDirective } from './expand.wrapper.delegate';
 
-export interface DbxFormToggleWrapperConfig<T extends object = object> extends AbstractFormExpandableSectionConfig<T> {
+export interface DbxFormToggleWrapperConfig<T extends object = object> extends AbstractFormExpandSectionConfig<T> {
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
 }
 
 /**
- * Section that is expandable by a button until a value is set, or the button is pressed.
+ * Section that can be expanded by a button until a value is set, or the button is pressed.
  */
 @Component({
   template: `
@@ -22,11 +22,11 @@ export interface DbxFormToggleWrapperConfig<T extends object = object> extends A
     </div>
   `
 })
-export class DbxFormToggleWrapperComponent<T extends object = object> extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormToggleWrapperConfig> {
+export class DbxFormToggleWrapperComponent<T extends object = object> extends AbstractFormExpandSectionWrapperDirective<T, DbxFormToggleWrapperConfig> {
   readonly slideLabel$ = this._toggleOpen.pipe(
     switchMap((x) => {
-      if (this.expandableSection?.toggleLabelObs) {
-        return this.expandableSection?.toggleLabelObs(x);
+      if (this.expandSection?.toggleLabelObs) {
+        return this.expandSection?.toggleLabelObs(x);
       } else {
         return of(this.expandLabel);
       }

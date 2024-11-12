@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
 import { first, Observable } from 'rxjs';
 import { DbxModelViewTrackerEvent, DbxModelViewTrackerEventSet } from './model.tracker';
@@ -11,11 +11,11 @@ import { DbxModelViewTrackerStorage } from './model.tracker.view.storage';
   providedIn: 'root'
 })
 export class DbxModelTrackerService {
+  private readonly _viewTrackerStorage = inject(DbxModelViewTrackerStorage);
+
   private _defaultFolder: Maybe<string>;
 
-  readonly newEvent$ = this.viewTrackerStorage.newEvent$;
-
-  constructor(private readonly viewTrackerStorage: DbxModelViewTrackerStorage) {}
+  readonly newEvent$ = this._viewTrackerStorage.newEvent$;
 
   get defaultFolder(): Maybe<string> {
     return this._defaultFolder;
@@ -27,7 +27,7 @@ export class DbxModelTrackerService {
 
   // MARK: View
   trackViewedObject(modelKeyTypeNamePair: ModelKeyTypeNamePair, context?: string, folder: Maybe<string> = this._defaultFolder): void {
-    this.viewTrackerStorage
+    this._viewTrackerStorage
       .addTrackerEvent({
         m: modelKeyTypeNamePair,
         c: context,
@@ -38,10 +38,10 @@ export class DbxModelTrackerService {
   }
 
   getAllViewEvents(folder: Maybe<string> = this._defaultFolder): Observable<DbxModelViewTrackerEvent[]> {
-    return this.viewTrackerStorage.getAllEvents(folder);
+    return this._viewTrackerStorage.getAllEvents(folder);
   }
 
   getViewEventSet(folder: Maybe<string> = this._defaultFolder): Observable<DbxModelViewTrackerEventSet> {
-    return this.viewTrackerStorage.getEventSet(folder);
+    return this._viewTrackerStorage.getEventSet(folder);
   }
 }

@@ -1,7 +1,5 @@
 import { safeDetectChanges } from '../../util/view';
-import { Directive, Host, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { DbxButton } from '../button';
-import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
+import { Directive, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { SubscriptionObject } from '@dereekb/rxjs';
 
@@ -12,23 +10,21 @@ import { SubscriptionObject } from '@dereekb/rxjs';
   selector: '[dbxActionButton]'
 })
 export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective implements OnInit, OnDestroy {
+  private readonly cdRef = inject(ChangeDetectorRef);
+
   private _workingSub = new SubscriptionObject();
   private _disabledSub = new SubscriptionObject();
-
-  constructor(@Host() button: DbxButton, source: DbxActionContextStoreSourceInstance, private readonly cdRef: ChangeDetectorRef) {
-    super(button, source);
-  }
 
   override ngOnInit(): void {
     super.ngOnInit();
 
     this._workingSub.subscription = this.source.isWorking$.subscribe((working) => {
-      this.button.working = working;
+      this.dbxButton.working = working;
       safeDetectChanges(this.cdRef);
     });
 
     this._disabledSub.subscription = this.source.isDisabled$.subscribe((disabled) => {
-      this.button.disabled = disabled;
+      this.dbxButton.disabled = disabled;
       safeDetectChanges(this.cdRef);
     });
   }

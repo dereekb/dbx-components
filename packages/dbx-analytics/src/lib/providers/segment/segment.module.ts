@@ -1,5 +1,5 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-import { PRELOAD_SEGMENT_TOKEN, DbxAnalyticsSegmentApiService } from './segment.service';
+import { PRELOAD_SEGMENT_TOKEN } from './segment.service';
 
 @NgModule({
   declarations: [],
@@ -13,8 +13,7 @@ export class DbxAnalyticsSegmentModule {
         {
           provide: PRELOAD_SEGMENT_TOKEN,
           useValue: preloadService
-        },
-        DbxAnalyticsSegmentApiService
+        }
       ]
     };
   }

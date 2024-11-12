@@ -85,7 +85,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
         const stringFormat = parsedStringFormat === 'raw' ? 'utf-8' : parsedStringFormat;
 
         if (stringFormat === 'data_url') {
-          // todo: support this later if necessary. Server should really never see this type.
+          // TODO(FUTURE): support this later if necessary. Server should really never see this type.
           throw new Error('"data_url" is unsupported.');
         }
 

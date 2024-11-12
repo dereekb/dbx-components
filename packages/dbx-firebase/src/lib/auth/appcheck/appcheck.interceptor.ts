@@ -3,7 +3,7 @@ import { DBX_FIREBASE_OPTIONS_TOKEN, DbxFirebaseOptions } from '../../firebase/o
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { getToken } from 'firebase/app-check';
 import { Observable, switchMap, first, map, from } from 'rxjs';
-import { Inject, Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AppCheck } from '@angular/fire/app-check';
 
 interface EnabledAppCheckRoute {
@@ -16,14 +16,15 @@ interface EnabledAppCheckRoute {
  */
 @Injectable()
 export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
-  private _isEnabled: boolean;
-  private _appCheckRoutes: EnabledAppCheckRoute[];
+  private appCheck = inject(AppCheck);
 
-  constructor(@Inject(DBX_FIREBASE_OPTIONS_TOKEN) private dbxFirebaseOptions: DbxFirebaseOptions, private appCheck: AppCheck) {
+  private _appCheckRoutes: EnabledAppCheckRoute[] = ((dbxFirebaseOptions: DbxFirebaseOptions) => {
+    const { appCheck } = dbxFirebaseOptions;
+
     let routes: EnabledAppCheckRoute[] = [];
 
-    if (appCheck != null) {
-      routes = (this.dbxFirebaseOptions.appCheck?.appCheckRoutes ?? ['/api/*']).map((route) => {
+    if (appCheck?.disabled !== false) {
+      routes = (appCheck?.appCheckRoutes ?? ['/api/*']).map((route) => {
         const wildcardIndex = route.indexOf('*');
         const isWildcard = wildcardIndex === route.length - 1;
         const match = isWildcard ? route.substring(0, wildcardIndex) : route;
@@ -35,9 +36,10 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
       });
     }
 
-    this._appCheckRoutes = routes;
-    this._isEnabled = routes.length > 0;
-  }
+    return routes;
+  })(inject<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN));
+
+  private _isEnabled: boolean = this._appCheckRoutes.length > 0;
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     let obs: Observable<HttpEvent<unknown>>;

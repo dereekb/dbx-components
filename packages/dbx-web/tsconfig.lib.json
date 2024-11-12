@@ -7,8 +7,8 @@
     "inlineSources": true,
     "types": [],
     "target": "ES2022",
-    "useDefineForClassFields": false
+    "useDefineForClassFields": true
   },
-  "exclude": ["mapbox/**", "calendar/**", "table/**", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
+  "exclude": ["mapbox/**", "calendar/**", "table/**", "**/*.spec.ts", "jest.config.ts"],
   "include": ["**/*.ts"]
 }

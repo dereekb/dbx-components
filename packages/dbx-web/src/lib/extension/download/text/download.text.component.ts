@@ -1,6 +1,6 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkUsingObservable , LoadingState, filterMaybe, loadingStateContext, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { WorkUsingObservable, LoadingState, filterMaybe, loadingStateContext, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { MS_IN_SECOND, Maybe } from '@dereekb/util';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, first, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -16,6 +16,10 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
   selector: 'dbx-download-text-view'
 })
 export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective {
+  private readonly _clipboard = inject(Clipboard);
+  private readonly _matSnackbar = inject(MatSnackBar);
+  private readonly _sanitizer = inject(DomSanitizer);
+
   @Input()
   loadingText?: Maybe<string>;
 
@@ -28,10 +32,10 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
   @Input()
   showPreview: boolean = true;
 
-  private _downloadButton = new BehaviorSubject<Maybe<ElementRef>>(undefined);
+  private readonly _downloadButton = new BehaviorSubject<Maybe<ElementRef>>(undefined);
   readonly downloadButton$ = this._downloadButton.asObservable();
 
-  private _contentLoadingState = new BehaviorSubject<Maybe<LoadingState<DownloadTextContent>>>(undefined);
+  private readonly _contentLoadingState = new BehaviorSubject<Maybe<LoadingState<DownloadTextContent>>>(undefined);
   readonly contentLoadingState$ = this._contentLoadingState.pipe(filterMaybe(), shareReplay(1));
 
   readonly content$ = this._contentLoadingState.pipe(
@@ -52,6 +56,7 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
     map((x) => x?.name ?? 'File'),
     shareReplay(1)
   );
+
   readonly fileUrl$: Observable<Maybe<SafeResourceUrl>> = this.content$.pipe(
     map((content) => {
       let fileUrl: Maybe<SafeResourceUrl> = undefined;
@@ -72,10 +77,6 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
     shareReplay(1)
   );
 
-  constructor(private readonly _clipboard: Clipboard, private readonly _matSnackbar: MatSnackBar, private readonly _sanitizer: DomSanitizer) {
-    super();
-  }
-
   @Input()
   set content(content: Maybe<DownloadTextContent>) {
     this._contentLoadingState.next(content ? successResult(content) : undefined);
@@ -93,6 +94,7 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._downloadButton.complete();
     this._contentLoadingState.complete();
   }
 

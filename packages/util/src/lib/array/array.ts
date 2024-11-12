@@ -238,19 +238,3 @@ export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (val
 export function countAllInNestedArray<T>(array: T[][]): number {
   return array.reduce((acc, curr) => acc + curr.length, 0);
 }
-
-// MARK: Compat
-/**
- * @deprecated Use mergeArraysIntoArray() instead. Will be removed in v10.1.
- */
-export const mergeIntoArray = mergeArraysIntoArray;
-
-/**
- * @deprecated Use pushArrayItemsIntoArray() instead. Will be removed in v10.1.
- */
-export const mergeArrayIntoArray = pushArrayItemsIntoArray;
-
-/**
- * @deprecated Use pushArrayItemsOrItemIntoArray() instead. Will be removed in v10.1.
- */
-export const mergeArrayOrValueIntoArray = pushItemOrArrayItemsIntoArray;

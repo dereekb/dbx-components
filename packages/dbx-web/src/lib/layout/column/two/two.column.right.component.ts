@@ -1,4 +1,4 @@
-import { AfterViewInit, OnDestroy, Component, Inject, Input } from '@angular/core';
+import { AfterViewInit, OnDestroy, Component, Input, inject } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
@@ -17,6 +17,8 @@ import { Maybe } from '@dereekb/util';
   }
 })
 export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
   @Input()
   full: boolean = false;
 
@@ -34,8 +36,6 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
     this._showBack,
     this.ref$.pipe(map((x) => !x)) // TODO: Is this correct? Show back if ref is not defined?
   ]).pipe(map(([a, b]: [boolean, boolean]) => a && b));
-
-  constructor(@Inject(TwoColumnsContextStore) private readonly twoColumnsContextStore: TwoColumnsContextStore) {}
 
   ngAfterViewInit(): void {
     setTimeout(() => {

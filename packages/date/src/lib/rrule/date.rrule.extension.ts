@@ -97,10 +97,11 @@ export class LastIterResult extends BaseRRuleIter {
 }
 
 export class NextIterResult extends BaseRRuleIter {
-  override readonly maxDate = this.minDate;
+  override readonly maxDate: Date;
 
   constructor(override readonly minDate: Date, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
     super();
+    this.maxDate = minDate;
   }
 
   accept(date: Date): boolean {

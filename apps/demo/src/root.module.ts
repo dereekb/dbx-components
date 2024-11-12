@@ -1,4 +1,4 @@
-import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
+import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -49,9 +49,7 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
   return undefined;
 }
 
-export function analyticsServiceConfigurationFactory(segmentApi: DbxAnalyticsSegmentApiService, dbxFirebaseAnalyticsUserSource: DbxFirebaseAnalyticsUserSource): DbxAnalyticsServiceConfiguration {
-  const segmentListener = new DbxAnalyticsSegmentServiceListener(segmentApi);
-
+export function analyticsServiceConfigurationFactory(segmentListener: DbxAnalyticsSegmentServiceListener, dbxFirebaseAnalyticsUserSource: DbxFirebaseAnalyticsUserSource): DbxAnalyticsServiceConfiguration {
   const config: DbxAnalyticsServiceConfiguration = {
     isProduction: environment.production,
     logEvents: environment.testing,
@@ -85,7 +83,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       analyticsConfigurationProvider: {
         provide: DbxAnalyticsServiceConfiguration,
         useFactory: analyticsServiceConfigurationFactory,
-        deps: [DbxAnalyticsSegmentApiService, DbxFirebaseAnalyticsUserSource]
+        deps: [DbxAnalyticsSegmentServiceListener, DbxFirebaseAnalyticsUserSource]
       }
     }),
     DbxAppContextStateModule,

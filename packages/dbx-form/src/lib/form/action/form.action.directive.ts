@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, DbxActionValueOnTriggerResult } from '@dereekb/dbx-core';
@@ -21,6 +21,9 @@ export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrVal
   selector: '[dbxActionForm]'
 })
 export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDestroy {
+  readonly form = inject(DbxMutableForm<T>, { host: true });
+  readonly source = inject(DbxActionContextStoreSourceInstance<O, unknown>);
+
   readonly lockSet = new LockSet();
 
   /**
@@ -48,12 +51,12 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
   private _isCompleteSub = new SubscriptionObject();
   private _isWorkingSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbxMutableForm<T>, public readonly source: DbxActionContextStoreSourceInstance<O, unknown>) {
-    if (form.lockSet) {
-      this.lockSet.addChildLockSet(form.lockSet, 'form');
+  constructor() {
+    if (this.form.lockSet) {
+      this.lockSet.addChildLockSet(this.form.lockSet, 'form');
     }
 
-    this.lockSet.addChildLockSet(source.lockSet, 'source');
+    this.lockSet.addChildLockSet(this.source.lockSet, 'source');
   }
 
   @Input()
