@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '@dereekb/dbx-firebase';
 import { Profile, ProfileDocument } from '@dereekb/demo-firebase';
 import { ProfileDocumentStore } from './profile.document.store';
@@ -8,7 +8,7 @@ import { ProfileDocumentStore } from './profile.document.store';
   providers: provideDbxFirebaseDocumentStoreDirective(DemoProfileDocumentStoreDirective, ProfileDocumentStore)
 })
 export class DemoProfileDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<Profile, ProfileDocument, ProfileDocumentStore> {
-  constructor(store: ProfileDocumentStore) {
-    super(store);
+  constructor() {
+    super(inject(ProfileDocumentStore));
   }
 }

@@ -1,50 +1,71 @@
-import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, Input, OnDestroy, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store.document';
+import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
+import { filterMaybe, useFirst } from '@dereekb/rxjs';
 
 /**
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> {
-  constructor(readonly store: S) {}
+export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> implements OnDestroy {
+  private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
+  readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
 
-  readonly exists$ = this.store.exists$;
+  readonly exists$ = this.store$.pipe(switchMap((x) => x.exists$));
+  readonly document$ = this.store$.pipe(switchMap((x) => x.document$));
+  readonly documentLoadingState$ = this.store$.pipe(switchMap((x) => x.documentLoadingState$));
 
-  readonly document$ = this.store.document$;
-  readonly documentLoadingState$ = this.store.documentLoadingState$;
+  readonly id$ = this.store$.pipe(switchMap((x) => x.id$));
+  readonly key$ = this.store$.pipe(switchMap((x) => x.key$));
+  readonly ref$ = this.store$.pipe(switchMap((x) => x.ref$));
 
-  readonly id$ = this.store.id$;
-  readonly key$ = this.store.key$;
-  readonly ref$ = this.store.ref$;
+  readonly snapshot$ = this.store$.pipe(switchMap((x) => x.snapshot$));
+  readonly snapshotLoadingState$ = this.store$.pipe(switchMap((x) => x.snapshotLoadingState$));
 
-  readonly snapshot$ = this.store.snapshot$;
-  readonly snapshotLoadingState$ = this.store.snapshotLoadingState$;
+  readonly modelIdentity$ = this.store$.pipe(switchMap((x) => x.modelIdentity$));
+  readonly data$ = this.store$.pipe(switchMap((x) => x.data$));
+  readonly loadingState$ = this.store$.pipe(switchMap((x) => x.dataLoadingState$));
 
-  readonly modelIdentity$ = this.store.modelIdentity$;
-  readonly data$ = this.store.data$;
-  readonly loadingState$ = this.store.dataLoadingState$;
+  constructor(store: S) {
+    this.replaceStore(store);
+  }
+
+  ngOnDestroy(): void {
+    this._store.complete();
+  }
+
+  /**
+   * Replaces the internal store.
+   */
+  replaceStore(store: S) {
+    this._store.next(store);
+  }
 
   // MARK: Inputs
+  get store() {
+    return this._store.value as S;
+  }
+
   @Input()
   set documentId(documentId: Maybe<FirestoreModelId>) {
-    this.store.setId(documentId);
+    useFirst(this.store$, (x) => x.setId(documentId));
   }
 
   @Input()
   set key(key: Maybe<FirestoreModelKey>) {
-    this.store.setKey(key);
+    useFirst(this.store$, (x) => x.setKey(key));
   }
 
   @Input()
   set ref(ref: Maybe<DocumentReference<T>>) {
-    this.store.setRef(ref);
+    useFirst(this.store$, (x) => x.setRef(ref));
   }
 
   @Input()
   set streamMode(streamMode: FirestoreAccessorStreamMode) {
-    this.store.setStreamMode(streamMode);
+    useFirst(this.store$, (x) => x.setStreamMode(streamMode));
   }
 }
 

@@ -7,7 +7,9 @@ import { Maybe } from '@dereekb/util';
   providedIn: 'root'
 })
 export class DemoProfileService {
-  constructor(readonly collections: DemoFirestoreCollections) {}
+  constructor(readonly collections: DemoFirestoreCollections) {
+    // TODO: Also pull in the current auth and return true for isUsernameAvailable if the current user owns that username.
+  }
 
   isUsernameAvailable(username: string): Observable<boolean> {
     return this.profileWithUsername(username).pipe(map((x) => !x));
