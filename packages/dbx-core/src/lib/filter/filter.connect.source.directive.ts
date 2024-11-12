@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit, inject } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 
 /**

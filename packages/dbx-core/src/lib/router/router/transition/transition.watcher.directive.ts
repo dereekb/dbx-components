@@ -1,6 +1,5 @@
 import { Directive, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { DbxRouterTransitionService } from '../service/router.transition.service';
 import { AbstractTransitionDirective } from './transition.directive';
 
 /**

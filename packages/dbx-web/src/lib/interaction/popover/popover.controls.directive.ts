@@ -1,4 +1,4 @@
-import { Directive, Optional, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**

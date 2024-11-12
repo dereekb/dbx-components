@@ -1,4 +1,4 @@
-import { Directive, Host, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxInjectionContext, DbxInjectionContextConfig } from './injection.context';
 
 /**

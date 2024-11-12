@@ -1,4 +1,4 @@
-import { Directive, Host, Input, inject } from '@angular/core';
+import { Directive, Input, inject } from '@angular/core';
 import { LoadingContext } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxReadableErrorComponent } from './error.component';

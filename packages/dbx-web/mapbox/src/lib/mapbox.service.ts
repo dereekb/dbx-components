@@ -1,4 +1,4 @@
-import { Injectable, Optional, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { LatLngPointInput, Milliseconds } from '@dereekb/util';
 import { MapboxOptions } from 'mapbox-gl';
 import { KnownMapboxStyle, MapboxZoomLevel } from './mapbox';

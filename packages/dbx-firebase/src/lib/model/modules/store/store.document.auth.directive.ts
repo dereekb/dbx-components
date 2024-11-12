@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit, inject } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { FirestoreDocument } from '@dereekb/firebase';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';

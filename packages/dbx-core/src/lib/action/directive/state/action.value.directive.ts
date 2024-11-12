@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, shareReplay, switchMap, tap } from 'rxjs';

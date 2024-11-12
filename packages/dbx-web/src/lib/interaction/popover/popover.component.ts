@@ -1,6 +1,6 @@
-import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef, inject } from '@angular/core';
+import { Component, Type, OnInit, OnDestroy, ElementRef, inject } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';

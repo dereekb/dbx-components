@@ -6,7 +6,7 @@ import { StoreModule } from '@ngrx/store';
 import { DbxListLayoutModule } from '../../layout/list/list.layout.module';
 import { DbxModelViewTrackerEventSet } from './model.tracker';
 import { DbxModelTrackerService } from './model.tracker.service';
-import { DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN, DbxModelViewTrackerStorage } from './model.tracker.view.storage';
+import { DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN } from './model.tracker.view.storage';
 import { fromDbxModel } from './state';
 import { DbxModelTrackerEffects } from './state/effects/tracker.effects';
 

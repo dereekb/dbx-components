@@ -1,5 +1,5 @@
 import { DbxAnalyticsModule } from '@dereekb/dbx-analytics';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsUserSource, AbstractDbxAnalyticsServiceListener } from './analytics.service';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { DbxAnalyticsUser } from './analytics';

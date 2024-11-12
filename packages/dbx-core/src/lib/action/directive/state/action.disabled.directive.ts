@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';

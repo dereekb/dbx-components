@@ -1,6 +1,6 @@
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxListViewWrapper } from '@dereekb/dbx-web';
-import { Directive, Host, OnInit, inject } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 
 /**

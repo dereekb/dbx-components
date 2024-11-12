@@ -67,8 +67,7 @@ import {
   filterNullAndUndefinedValues,
   type ModelMapToFunction,
   MAP_IDENTITY,
-  Filter,
-  FilterFunction
+  type FilterFunction
 } from '@dereekb/util';
 import { type FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { type FirebaseAuthUserId } from '../../auth/auth';

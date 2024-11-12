@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, Optional, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, inject } from '@angular/core';
 import { shareReplay, map, BehaviorSubject, combineLatest, of, Observable } from 'rxjs';
 import { DbxValueListItem } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe, mergeObjects } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DbxValueListViewConfig } from './list.view.value.component';
-import { DbxListView } from './list.view';
 
 export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
   grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;

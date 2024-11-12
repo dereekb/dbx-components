@@ -1,4 +1,4 @@
-import { Directive, Host, Input, NgZone, inject } from '@angular/core';
+import { Directive, Input, NgZone, inject } from '@angular/core';
 import { LoadingContext } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxButton } from './button';

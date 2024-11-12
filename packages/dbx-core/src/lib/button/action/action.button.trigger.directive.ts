@@ -1,4 +1,4 @@
-import { Directive, Host, OnInit, inject } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';

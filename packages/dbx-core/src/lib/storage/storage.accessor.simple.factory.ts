@@ -1,4 +1,4 @@
-import { Inject, Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { StorageAccessor } from './storage.accessor';
 import { SimpleStorageAccessorConfig, SimpleStorageAccessor, SimpleStorageAccessorConverter, StringifySimpleStorageAccessorConverter, WrapperSimpleStorageAccessorDelegate } from './storage.accessor.simple';
 import { StringStorageAccessor } from './storage.accessor.string';

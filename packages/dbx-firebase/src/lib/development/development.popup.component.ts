@@ -1,5 +1,5 @@
 import { Component, ViewChild, inject } from '@angular/core';
-import { DbxPopupComponent, DbxPopupKey, AbstractPopupDirective, DbxPopupService } from '@dereekb/dbx-web';
+import { DbxPopupKey, AbstractPopupDirective, DbxPopupService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
 

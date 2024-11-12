@@ -1,4 +1,4 @@
-import { Component, Inject, Input, inject } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { TwoColumnsContextStore } from '../two';
 
 /**

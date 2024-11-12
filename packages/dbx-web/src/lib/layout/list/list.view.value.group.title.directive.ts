@@ -1,4 +1,4 @@
-import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, Inject, StaticProvider, inject } from '@angular/core';
+import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, StaticProvider, inject } from '@angular/core';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { BehaviorSubject, map } from 'rxjs';

@@ -1,5 +1,5 @@
-import { FactoryWithInput, FactoryWithRequiredInput } from '../getter/getter';
-import { Maybe } from '../value/maybe.type';
+import { type FactoryWithRequiredInput } from '../getter/getter';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * Function that uses an array of Factories to produce Promises, one after the other, to attempt to return the value.

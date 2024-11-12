@@ -1,4 +1,4 @@
-import { AfterViewInit, OnDestroy, Component, Inject, Input, inject } from '@angular/core';
+import { AfterViewInit, OnDestroy, Component, Input, inject } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';

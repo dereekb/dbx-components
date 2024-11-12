@@ -1,4 +1,4 @@
-import { Directive, Inject, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 
 @Directive()

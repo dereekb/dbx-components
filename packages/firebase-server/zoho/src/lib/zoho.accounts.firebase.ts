@@ -1,8 +1,8 @@
-import { SystemState, SystemStateFirestoreCollection } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
-import { ZohoAccessToken, ZohoAccessTokenCache } from '@dereekb/zoho';
-import { ZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
-import { ZohoAccessTokenSystemStateData, loadZohoAccessTokenSystemState } from './zoho.accounts.firebase.system';
+import { type SystemState, type SystemStateFirestoreCollection } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import { type ZohoAccessToken, type ZohoAccessTokenCache } from '@dereekb/zoho';
+import { type ZohoAccountsAccessTokenCacheService } from '@dereekb/zoho/nestjs';
+import { type ZohoAccessTokenSystemStateData, loadZohoAccessTokenSystemState } from './zoho.accounts.firebase.system';
 
 /**
  * Creates a ZohoAccountsAccessTokenCacheService from the input SystemStateFirestoreCollection.

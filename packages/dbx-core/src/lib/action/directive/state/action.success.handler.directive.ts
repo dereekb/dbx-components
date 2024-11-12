@@ -1,6 +1,6 @@
 import { map, tap, shareReplay, switchMap, BehaviorSubject } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, Host, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';

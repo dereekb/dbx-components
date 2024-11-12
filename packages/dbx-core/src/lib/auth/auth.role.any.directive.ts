@@ -1,6 +1,6 @@
 import { AuthRole, ArrayOrValue, Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { authRolesSetContainsAnyRoleFrom, DbxAuthService } from './service';
 import { AbstractIfDirective } from '../view/if.directive';
 

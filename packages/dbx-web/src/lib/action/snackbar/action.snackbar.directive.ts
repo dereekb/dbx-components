@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, inject } from '@angular/core';
+import { Directive, Input, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';

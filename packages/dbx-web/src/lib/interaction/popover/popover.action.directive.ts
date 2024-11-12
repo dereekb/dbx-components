@@ -1,7 +1,7 @@
 import { first, Observable, map } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxActionContextStoreSourceInstance, AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
+import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 

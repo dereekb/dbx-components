@@ -1,7 +1,7 @@
 import { DbxAuthService } from '@dereekb/dbx-core';
 import { tap, switchMap, BehaviorSubject, Observable, interval, combineLatest, map, exhaustMap, distinctUntilChanged, shareReplay } from 'rxjs';
 import { Initialized, Milliseconds, runAsyncTasksForValues } from '@dereekb/util';
-import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { lazyFrom, SubscriptionObject, switchMapWhileTrue } from '@dereekb/rxjs';
 import { FirebaseDevelopmentFunctions, ScheduledFunctionDevelopmentFirebaseFunctionListEntry, ScheduledFunctionDevelopmentFirebaseFunctionListResult, ScheduledFunctionDevelopmentFunctionTypeEnum } from '@dereekb/firebase';
 

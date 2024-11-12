@@ -1,4 +1,4 @@
-import { Directive, Inject, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxValueListItem, DBX_VALUE_LIST_VIEW_ITEM } from './list.view.value';
 
 @Directive()

@@ -1,6 +1,6 @@
 import { DbxMapboxService } from './mapbox.service';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { Directive, Host, OnInit, Optional, inject } from '@angular/core';
+import { Directive, OnInit, inject } from '@angular/core';
 import { MapComponent, MapService } from 'ngx-mapbox-gl';
 import { latLngPoint } from '@dereekb/util';
 

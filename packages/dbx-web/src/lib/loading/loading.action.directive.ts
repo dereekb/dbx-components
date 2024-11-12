@@ -1,5 +1,5 @@
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { Directive, Host, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject } from '@angular/core';
 import { LoadingStateContextInstance } from '@dereekb/rxjs';
 import { DbxLoadingComponent } from './loading.component';
 

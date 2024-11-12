@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
 import { DateTimePresetConfiguration } from './datetime';
-import { Inject, Injectable, InjectionToken, Optional, inject } from '@angular/core';
+import { Injectable, InjectionToken, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
 export const DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN = new InjectionToken('DbxDateTimeFieldMenuPresetsServicePresets');

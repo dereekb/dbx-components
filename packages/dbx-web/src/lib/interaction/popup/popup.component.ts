@@ -1,10 +1,10 @@
-import { Component, NgZone, Type, OnDestroy, inject } from '@angular/core';
+import { Component, Type, OnDestroy, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe, PixelsString } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
-import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig, DbxRouterTransitionService } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxPopupController, DbxPopupKey, DbxPopupWindowState } from './popup';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';

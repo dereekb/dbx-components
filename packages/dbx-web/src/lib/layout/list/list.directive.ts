@@ -1,6 +1,6 @@
 import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
-import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from '@angular/core';
+import { Output, EventEmitter, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Maybe } from '@dereekb/util';

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormlyContext } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DemoProfileService } from '../profile.service';
 import { profileUsernameFields } from './profile.form';

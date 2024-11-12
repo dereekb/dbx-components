@@ -1,5 +1,5 @@
 import { addMinutes } from 'date-fns';
-import { Pipe, PipeTransform, Inject, LOCALE_ID, inject } from '@angular/core';
+import { Pipe, PipeTransform, LOCALE_ID, inject } from '@angular/core';
 import { formatDate } from '@angular/common';
 import { Maybe, DateOrDateString } from '@dereekb/util';
 import { formatToTimeString, toJsDate } from '@dereekb/date';

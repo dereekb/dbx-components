@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { OnDestroy, Directive, Host, Input, OnInit, inject } from '@angular/core';
+import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
 import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';

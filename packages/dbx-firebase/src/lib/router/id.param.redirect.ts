@@ -1,5 +1,5 @@
 import { Observable, BehaviorSubject, map, shareReplay, of, switchMap } from 'rxjs';
-import { DbxRouterService, DbxRouteParamReaderInstance, DbxRouteParamDefaultRedirectInstance, DbxRouteParamReader, dbxRouteParamReaderInstance } from '@dereekb/dbx-core';
+import { DbxRouterService, DbxRouteParamDefaultRedirectInstance, DbxRouteParamReader, dbxRouteParamReaderInstance } from '@dereekb/dbx-core';
 import { Destroyable, Initialized, Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 

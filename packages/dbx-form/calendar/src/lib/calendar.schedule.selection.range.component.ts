@@ -1,5 +1,5 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, Inject, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';

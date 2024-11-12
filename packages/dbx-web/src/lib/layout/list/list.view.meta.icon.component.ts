@@ -1,4 +1,4 @@
-import { Component, Inject, InjectionToken, Optional, inject } from '@angular/core';
+import { Component, InjectionToken, inject } from '@angular/core';
 import { DBX_VALUE_LIST_VIEW_ITEM, DbxValueListItem } from './list.view.value';
 import { Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';

@@ -1,4 +1,4 @@
-import { Inject, Optional, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 
 export interface DocExtensionMapboxContentExampleData {}

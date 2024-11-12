@@ -1,6 +1,6 @@
 import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
-import { Inject, Injectable, InjectionToken, Optional, Type, inject } from '@angular/core';
+import { Injectable, InjectionToken, Type, inject } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
 import { Milliseconds, Maybe, mergeObjects, MS_IN_SECOND } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarType } from './action.snackbar';

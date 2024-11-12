@@ -1,5 +1,5 @@
 import { Maybe, maybeModifierMapToFunction, ModifierFunction } from '@dereekb/util';
-import { OnDestroy, Input, Directive, Optional, inject } from '@angular/core';
+import { OnDestroy, Input, Directive, inject } from '@angular/core';
 import { filterMaybe, mapForEach } from '@dereekb/rxjs';
 import { BehaviorSubject, distinctUntilChanged, shareReplay, combineLatest, switchMap, map, Observable, of } from 'rxjs';
 import { DbxListView } from './list.view';

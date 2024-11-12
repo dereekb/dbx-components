@@ -1,5 +1,5 @@
 import { Observable, shareReplay } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Injector, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxInjectionArrayEntry } from '@dereekb/dbx-core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 

@@ -1,4 +1,4 @@
-import { OnDestroy, TemplateRef, ViewContainerRef, Directive, Input, inject } from '@angular/core';
+import { OnDestroy, Directive, Input, inject } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
 import { shareReplay, BehaviorSubject, combineLatest, Observable, map } from 'rxjs';
 import { DbxFirebaseCollectionChangeDirective } from './store.collection.change.directive';

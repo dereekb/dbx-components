@@ -1,4 +1,4 @@
-import { Directive, Host, HostListener, Input, inject } from '@angular/core';
+import { Directive, HostListener, Input, inject } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 

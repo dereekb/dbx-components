@@ -3,7 +3,7 @@ import { DBX_FIREBASE_OPTIONS_TOKEN, DbxFirebaseOptions } from '../../firebase/o
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { getToken } from 'firebase/app-check';
 import { Observable, switchMap, first, map, from } from 'rxjs';
-import { Inject, Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AppCheck } from '@angular/fire/app-check';
 
 interface EnabledAppCheckRoute {

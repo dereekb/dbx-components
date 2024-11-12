@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Optional, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
