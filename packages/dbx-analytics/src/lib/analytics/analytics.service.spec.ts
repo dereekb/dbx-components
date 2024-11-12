@@ -1,3 +1,5 @@
+import { DbxAnalyticsModule } from '@dereekb/dbx-analytics';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsUserSource, AbstractDbxAnalyticsServiceListener } from './analytics.service';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { DbxAnalyticsUser } from './analytics';
@@ -22,14 +24,30 @@ describe('DbxAnalyticsService', () => {
 
   let analyticsService: DbxAnalyticsService;
 
-  beforeEach(() => {
-    const configuration: DbxAnalyticsServiceConfiguration = {
+  function analyticsServiceConfigurationFactory(): DbxAnalyticsServiceConfiguration {
+    const config: DbxAnalyticsServiceConfiguration = {
       listeners: [testListener],
       isProduction: true,
       userSource: testUserSource
     };
 
-    analyticsService = new DbxAnalyticsService(configuration);
+    return config;
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        DbxAnalyticsModule.forRoot({
+          analyticsConfigurationProvider: {
+            provide: DbxAnalyticsServiceConfiguration,
+            useFactory: analyticsServiceConfigurationFactory
+          }
+        })
+      ],
+      declarations: []
+    }).compileComponents();
+
+    analyticsService = TestBed.inject(DbxAnalyticsService);
   });
 
   afterEach(() => {

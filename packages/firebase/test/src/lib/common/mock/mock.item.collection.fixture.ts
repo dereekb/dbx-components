@@ -68,6 +68,6 @@ export function testWithMockItemCollectionFixture(config?: MockItemCollectionFir
     wrapFixture: (fixture) => new MockItemCollectionFixture(fixture),
     makeInstance: (wrap) => new MockItemCollectionFixtureInstance(wrap),
     teardownInstance: (instance: MockItemCollectionFixtureInstance) => {}
-    // TODO: Utilize config here using the setup/teardown later if needed.
+    // TODO(FUTURE): Utilize config here using the setup/teardown later if needed.
   });
 }

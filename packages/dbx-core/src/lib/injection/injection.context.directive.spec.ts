@@ -12,7 +12,7 @@ const EXISTING_CONTENT = 'Existing Content';
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';
 
-// todo: add tests showing AbstractForwardDbxInjectionContextDirective usage.
+// TODO(TEST): add tests showing AbstractForwardDbxInjectionContextDirective usage.
 
 @Component({
   template: `

@@ -129,7 +129,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
             // NOTE: File extends Blob, so above test should cover it ok.
           });
 
-          // TODO: Test uploading other types.
+          // TODO(TEST): Test uploading other types.
         });
 
         describe('uploadStream()', () => {
@@ -156,7 +156,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
             }
           });
 
-          // TODO: Upload using a nodejs stream
+          // TODO(TEST): Upload using a nodejs stream
         });
       });
 

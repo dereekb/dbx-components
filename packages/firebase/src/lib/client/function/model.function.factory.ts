@@ -37,8 +37,6 @@ export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFire
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
 export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
 
-// TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is...
-
 export type ModelFirebaseCrudFunctionCreateTypeConfig = {
   readonly create: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };

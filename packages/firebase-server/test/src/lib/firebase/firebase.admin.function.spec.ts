@@ -6,7 +6,7 @@ describe('firebaseAdminFunctionContext', () => {
   initFirebaseServerAdminTestEnvironment();
   setupFirebaseAdminFunctionTestSingleton();
 
-  // TODO: Test singleton mode vs non-singleton mode.
+  // TODO(TEST): Test singleton mode vs non-singleton mode.
 
   firebaseAdminFunctionTestContextFactory((f) => {
     // Example of only using the firestore fixture

@@ -20,7 +20,7 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeR
   /**
    * Call sub-function specifier.
    */
-  readonly specifier?: Maybe<string>;
+  readonly specifier?: string;
   /**
    * Call data
    */

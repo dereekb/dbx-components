@@ -50,9 +50,7 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
   return undefined;
 }
 
-export function analyticsServiceConfigurationFactory(segmentApi: DbxAnalyticsSegmentApiService): DbxAnalyticsServiceConfiguration {
-  const segmentListener = new DbxAnalyticsSegmentServiceListener(segmentApi);
-
+export function analyticsServiceConfigurationFactory(segmentListener: DbxAnalyticsSegmentServiceListener): DbxAnalyticsServiceConfiguration {
   const config: DbxAnalyticsServiceConfiguration = {
     isProduction: environment.production,
     logEvents: environment.testing,
@@ -87,7 +85,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       analyticsConfigurationProvider: {
         provide: DbxAnalyticsServiceConfiguration,
         useFactory: analyticsServiceConfigurationFactory,
-        deps: [DbxAnalyticsSegmentApiService]
+        deps: [DbxAnalyticsSegmentServiceListener]
       }
     }),
     DbxAppContextStateModule,

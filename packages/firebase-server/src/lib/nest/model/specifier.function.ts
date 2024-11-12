@@ -6,7 +6,8 @@ import { badRequestError } from '../../function';
 export type OnCallSpecifierHandlerNestContextRequest<N, I = unknown> = NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
 export type OnCallSpecifierHandlerFunction<N, I = unknown, O = void> = (request: OnCallSpecifierHandlerNestContextRequest<N, I>) => PromiseOrValue<O>;
 
-// TODO: Add typings to ensure all expected function keys are present here.
+// TODO(FUTURE): Add typing magic to ensure all expected function keys are present here.
+
 export type OnCallSpecifierHandlerConfig<N> = {
   /**
    * The default handler function.

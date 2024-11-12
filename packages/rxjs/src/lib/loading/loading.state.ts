@@ -148,14 +148,14 @@ export function idleLoadingState<T>(): LoadingState<T> {
   return { loading: false };
 }
 
-export function beginLoading<T = unknown>(): LoadingState<T>;
-export function beginLoading<T = unknown>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
-export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T>;
-export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T> {
+export function beginLoading<T>(): LoadingState<T>;
+export function beginLoading<T>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
+export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<T>;
+export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<T> {
   return state ? { ...state, loading: true } : { loading: true };
 }
 
-export function beginLoadingPage<T = unknown>(page: PageNumber, state?: Partial<PageLoadingState<T>>): PageLoadingState<T> {
+export function beginLoadingPage<T>(page: PageNumber, state?: Partial<PageLoadingState<T>>): PageLoadingState<T> {
   return state ? { page, ...state, loading: true } : { page, loading: true };
 }
 
@@ -167,7 +167,7 @@ export function successPageResult<T>(page: PageNumber, value: T): PageLoadingSta
   return { ...successResult(value), page };
 }
 
-export function errorResult<T = unknown>(error?: Maybe<ErrorInput>): LoadingState<T> {
+export function errorResult<T>(error?: Maybe<ErrorInput>): LoadingState<T> {
   return { error: toReadableError(error), loading: false };
 }
 
@@ -306,7 +306,7 @@ export function isPageLoadingStateMetadataEqual(a: Partial<PageLoadingState>, b:
   return valuesAreBothNullishOrEquivalent(a.page, b.page) && a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
 }
 
-// TODO: Fix all LoadingState types to use the LoadingStateValue inference
+// TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
 /**
  * Merges the input LoadingStates.

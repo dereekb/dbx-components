@@ -34,6 +34,6 @@ export function testWithMockItemStorageFixture(config?: MockItemStorageFirebaseS
     wrapFixture: (fixture) => new MockItemStorageFixture(fixture),
     makeInstance: (wrap) => new MockItemStorageFixtureInstance(wrap),
     teardownInstance: (instance: MockItemStorageFixtureInstance) => {}
-    // TODO: Utilize config here using the setup/teardown later if needed.
+    // TODO(FUTURE): Utilize config here using the setup/teardown later if needed.
   });
 }

@@ -30,6 +30,6 @@ export type FirestoreCollectionWithParentFactory<T, PT, D extends FirestoreDocum
 export function makeFirestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD> {
   const result = makeFirestoreCollection(config) as FirestoreCollection<T, D> & { parent: PD };
   result.parent = config.parent;
-  // todo: consider throwing an exception if parent is not provided.
+  // TODO: consider throwing an exception if parent is not provided.
   return result;
 }

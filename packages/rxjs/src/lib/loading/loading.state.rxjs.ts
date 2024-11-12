@@ -3,7 +3,7 @@ import { type MonoTypeOperatorFunction, type OperatorFunction, startWith, type O
 import { timeoutStartWith } from '../rxjs/timeout';
 import { successResult, type LoadingState, type PageLoadingState, beginLoading, isLoadingStateFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, isLoadingStateWithDefinedValue, LoadingStateType, loadingStateType, isLoadingStateLoading, isLoadingStateWithError, type LoadingStateWithValueType, errorResult, type LoadingStateWithDefinedValue, isPageLoadingStateMetadataEqual } from './loading.state';
 
-// TODO: Fix all LoadingState types to use the LoadingStateValue inference
+// TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
 /**
  * Wraps an observable output and maps the value to a LoadingState.
@@ -16,9 +16,9 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
   }
 
   return obs.pipe(
-    map((value) => ({ loading: false, value, error: undefined })),
-    catchError((error) => of({ loading: false, error })),
-    timeoutStartWith({ loading: true }, 50),
+    map((value) => successResult(value)),
+    catchError((error) => of(errorResult<T>(error))),
+    timeoutStartWith(beginLoading<T>(), 50),
     shareReplay(1)
   );
 }

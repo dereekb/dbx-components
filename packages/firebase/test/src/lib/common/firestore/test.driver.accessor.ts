@@ -835,7 +835,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         await expectFail(() => accessor.update({}));
       });
 
-      // todo: test that update does not call the converter when setting values.
+      // TODO(TEST): test that update does not call the converter when setting values.
     });
 
     describe('set()', () => {
@@ -887,7 +887,7 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         });
       });
 
-      // todo: test that set calls the converter when setting values.
+      // TODO(TEST): test that set calls the converter when setting values.
     });
 
     describe('delete()', () => {

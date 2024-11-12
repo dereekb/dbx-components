@@ -189,7 +189,7 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PromiseAsyncTaskFn<I, O
  */
 export type PerformTasksInParallelTaskUniqueKey = string;
 
-export type PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> = Omit<PerformTasksFromFactoryInParallelFunctionConfig<I, K>, 'waitBetweenTaskInputRequests'>
+export type PerformTasksInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> = Omit<PerformTasksFromFactoryInParallelFunctionConfig<I, K>, 'waitBetweenTaskInputRequests'>;
 
 /**
  * Function that awaits a promise generated from each of the input values.
@@ -270,7 +270,7 @@ export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends Pr
   /**
    * Whether or not to wait for all tasks to complete before returning.
    */
-  // readonly waitForTaskArrayToComplete?: boolean; // TODO: implement
+  // readonly waitForTaskArrayToComplete?: boolean; // TODO(FUTURE): implement
 }
 
 export type PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I> = () => PromiseOrValue<ArrayOrValue<I> | null>;

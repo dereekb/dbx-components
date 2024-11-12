@@ -276,7 +276,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                 expect(result.totalSnapshotsVisited).toBe(allMockUserItems.length);
               });
 
-              // TODO: Case where a document was visited twice via iteration after it was updated. Assumed
+              // TODO(TEST): Case where a document was visited twice via iteration after it was updated. Assumed
               // to occur when the updated item matches an "or" case or other value when using "in". Cannot
               // reproduce at the moment.
               /*
@@ -628,7 +628,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           result.docs.forEach((x) => expect(x.ref.parent?.parent?.parent?.parent?.path).toBe(parentA.documentRef.path));
         });
 
-        // TODO: Add tests for allChildDocumentsUnderRelativePath
+        // TODO(TEST): Add tests for allChildDocumentsUnderRelativePath
       });
 
       describe('sub item', () => {

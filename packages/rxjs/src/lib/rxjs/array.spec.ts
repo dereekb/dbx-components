@@ -89,4 +89,4 @@ describe('distinctUntilArrayLengthChanges()', () => {
   });
 });
 
-// todo: add tests for scanBuildArray
+// TODO(TEST): add tests for scanBuildArray

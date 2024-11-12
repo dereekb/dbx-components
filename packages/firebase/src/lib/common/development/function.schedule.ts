@@ -24,7 +24,7 @@ export class ScheduledFunctionDevelopmentFirebaseFunctionParams {
 
 export class ScheduledFunctionDevelopmentFirebaseFunctionListEntry {
   name!: string;
-  // TODO: Add priority to use for choosing execution order.
+  // TODO(FUTURE): Add priority to use for choosing execution order, probably with the move to v2 scheduled functions.
 }
 
 export interface ScheduledFunctionDevelopmentFirebaseFunctionListResult {

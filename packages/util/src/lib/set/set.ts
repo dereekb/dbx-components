@@ -341,8 +341,6 @@ export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: It
   return setContainsAnyValue(set, valuesToFind, emptyValuesToFindArrayResult);
 }
 
-// TODO: Continue checking all values
-
 /**
  * Returns true if one or more of the input values are contained within the input set.
  *

@@ -17,7 +17,7 @@ describe('fitDateRangeToDayPeriodFunction()', () => {
               const dateRange = { start: daylightSavingsLastDayActive, end: timezoneInstance.transformDateInTimezoneNormalFunction('systemDateToTargetDate')(daylightSavingsLastDayActive, (x) => addHours(x, 48)) };
               const result = fitDateRangeToDayPeriod(dateRange, timezone);
 
-              // TODO: ...
+              // TODO(TEST): complete this test
             });
           });
 
