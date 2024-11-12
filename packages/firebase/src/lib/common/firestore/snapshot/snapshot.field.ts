@@ -1185,14 +1185,3 @@ export function firestoreBitwiseObjectMap<T extends object, K extends string = s
     decoder: dencoder
   });
 }
-
-// MARK: Compat
-/**
- * @deprecated use TransformStringFunctionConfigInput instead.
- */
-export type FirestoreStringTransformOptions<S extends string = string> = TransformStringFunctionConfigInput<S>;
-
-/**
- * @deprecated use TransformNumberFunctionConfigInput instead.
- */
-export type FirestoreNumberTransformOptions<N extends number = number> = TransformNumberFunctionConfigInput<N>;

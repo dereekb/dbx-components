@@ -6,6 +6,4 @@ export const INFO_WRAPPER_KEY = 'info';
 export const FLEX_WRAPPER_KEY = 'flex';
 export const STYLE_WRAPPER_KEY = 'style';
 export const WORKING_WRAPPER_KEY = 'working';
-
-// COMPAT: todo: rename to EXPAND_WRAPPER_KEY and update all references in the next update
-export const EXPANDABLE_WRAPPER_KEY = 'expandable';
+export const EXPAND_WRAPPER_KEY = 'expand';

@@ -21,19 +21,3 @@ export class DbxActionWorkInstanceDelegate<T = unknown, O = unknown> implements 
     this.source.reject(error);
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated use Work instead.
- */
-export type HandleActionWithFunctionOrContext<T = unknown, O = unknown> = Work<T, O>;
-
-/**
- * @deprecated use WorkUsingObservable instead.
- */
-export type HandleActionFunction<T = unknown, O = unknown> = WorkUsingObservable<T, O>;
-
-/**
- * @deprecated use WorkUsingContext instead.
- */
-export type HandleActionWithContext<T = unknown, O = unknown> = WorkUsingContext<T, O>;

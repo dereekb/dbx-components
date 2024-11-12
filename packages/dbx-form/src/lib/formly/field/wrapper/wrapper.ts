@@ -5,10 +5,10 @@ import { DbxFormToggleWrapperConfig } from './toggle.wrapper.component';
 import { DbxFormSectionConfig } from './section.wrapper.component';
 import { DbxFormSubsectionConfig } from './subsection.wrapper.component';
 import { DbxFormInfoConfig } from './info.wrapper.component';
-import { DbxFormExpandWrapperConfig } from './expandable.wrapper.component';
+import { DbxFormExpandWrapperConfig } from './expand.wrapper.component';
 import { DbxFlexSize } from '@dereekb/dbx-web';
 import { DbxFormWorkingWrapperConfig } from './working.wrapper.component';
-import { AUTO_TOUCH_WRAPPER_KEY, EXPANDABLE_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, SECTION_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, INFO_WRAPPER_KEY, STYLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
+import { AUTO_TOUCH_WRAPPER_KEY, EXPAND_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, SECTION_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, INFO_WRAPPER_KEY, STYLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
 
 export type WrapperFormlyFieldConfig<P, C extends FormlyFieldConfig> = FormlyFieldConfig<P> & {
   wrappers: string[];
@@ -29,7 +29,7 @@ export function autoTouchWrapper<T extends object, C extends FormlyFieldConfig>(
 }
 
 export function expandWrapper<T extends object, C extends FormlyFieldConfig>(fieldConfig: C, expandWrapper: DbxFormExpandWrapperConfig<T> = {}) {
-  return addWrapperToFormlyFieldConfig<C, DbxFormExpandWrapperConfig<T>>(fieldConfig, EXPANDABLE_WRAPPER_KEY, expandWrapper);
+  return addWrapperToFormlyFieldConfig<C, DbxFormExpandWrapperConfig<T>>(fieldConfig, EXPAND_WRAPPER_KEY, expandWrapper);
 }
 
 export function toggleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, toggleWrapper: DbxFormToggleWrapperConfig = {}) {

@@ -8,9 +8,7 @@ import { FilterWithPreset } from '@dereekb/rxjs';
  * Displays a button and menu for filtering presets.
  */
 @Directive()
-export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithPreset> implements OnDestroy {
-  //TODO: Rename to AbstractDbxPresetFilterMenuDirective with next breaking changes
-
+export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithPreset> implements OnDestroy {
   readonly filterSourceDirective = inject(FilterSourceDirective<F>);
 
   @Output()
