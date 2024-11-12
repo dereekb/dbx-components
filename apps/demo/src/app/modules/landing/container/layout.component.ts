@@ -81,7 +81,7 @@ export class LandingLayoutComponent {
     },
     {
       name: '@dereekb/firebase-server',
-      description: 'Extension of @dereekb/firebase for firebase server projects. Provides patterns and tooling for using nestjs in Firebase.',
+      description: 'Extension of @dereekb/firebase for firebase server projects. Provides patterns and tooling for using Nestjs in Firebase.',
       packages: [
         {
           title: 'firebase',

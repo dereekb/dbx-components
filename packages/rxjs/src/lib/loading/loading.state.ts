@@ -181,7 +181,7 @@ export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError
  * @param states
  * @returns
  */
-export function isAnyLoadingStatesLoading(states: LoadingState[]): boolean {
+export function isAnyLoadingStateInLoadingState(states: LoadingState[]): boolean {
   return reduceBooleansWithOr(states.map(isLoadingStateLoading), false);
 }
 
@@ -221,6 +221,11 @@ export const isLoadingStateInIdleState = isLoadingStateWithStateType(LoadingStat
  * @returns
  */
 export const isLoadingStateLoading = isLoadingStateWithStateType(LoadingStateType.LOADING);
+
+/**
+ * Alias of isLoadingStateLoading.
+ */
+export const isLoadingStateInLoadingState = isLoadingStateLoading;
 
 /**
  * Returns true if the input LoadingState passed to loadingStateType() returns SUCCESS.
@@ -409,7 +414,7 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
 
 export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
   const { mapValues, mapState } = config;
-  const loading = isAnyLoadingStatesLoading(input);
+  const loading = isAnyLoadingStateInLoadingState(input);
   const error = input.map((x) => x?.error).filter((x) => Boolean(x))[0];
   let result: Maybe<R>;
 
@@ -487,7 +492,7 @@ export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = L
 /**
  * @deprecated use unknownLoadingStatesIsLoading instead.
  */
-export const unknownLoadingStatesIsLoading = isAnyLoadingStatesLoading;
+export const unknownLoadingStatesIsLoading = isAnyLoadingStateInLoadingState;
 
 /**
  * @deprecated use areAllLoadingStatesFinishedLoading instead.
@@ -503,6 +508,11 @@ export const loadingStateIsIdle = isLoadingStateInIdleState;
  * @deprecated use isLoadingStateInSuccessState instead.
  */
 export const isSuccessLoadingState = isLoadingStateInSuccessState;
+
+/**
+ * @deprecated use isLoadingStateInErrorState instead.
+ */
+export const isErrorLoadingState = isLoadingStateInErrorState;
 
 /**
  * @deprecated Use isLoadingStateLoading instead.

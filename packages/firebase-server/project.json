@@ -87,6 +87,6 @@
       }
     }
   },
-  "implicitDependencies": ["!util-test", "!firebase-server-test", "!firebase-test"],
+  "implicitDependencies": ["zoho", "!util-test", "!firebase-server-test", "!firebase-test"],
   "tags": []
 }
