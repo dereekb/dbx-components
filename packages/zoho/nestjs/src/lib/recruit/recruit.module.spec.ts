@@ -13,7 +13,8 @@ const cacheService = fileZohoAccountsAccessTokenCacheService();
       provide: ZohoAccountsAccessTokenCacheService,
       useValue: cacheService
     }
-  ]
+  ],
+  exports: [ZohoAccountsAccessTokenCacheService]
 })
 export class TestZohoDependencyModule {}
 
@@ -21,7 +22,7 @@ export class TestZohoDependencyModule {}
 @Module(appZohoRecruitModuleMetadata({ dependencyModule: TestZohoDependencyModule }))
 export class TestZohoRecruitModule {}
 
-describe('ZohoRecruitModule', () => {
+describe('appZohoRecruitModuleMetadata()', () => {
   let nest: TestingModule;
 
   beforeEach(async () => {
