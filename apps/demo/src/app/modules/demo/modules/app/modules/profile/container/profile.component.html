@@ -12,7 +12,7 @@
         <demo-profile-form [formDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormModified]="isProfileModified"></demo-profile-form>
         <dbx-error dbxActionError></dbx-error>
         <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
-        <dbx-success *dbxActionHasSuccess="3000" dbxActionSuccess>Saved Changes</dbx-success>
+        <div *dbxActionHasSuccess="3000" class="dbx-success" dbxActionSuccess>Saved Changes</div>
       </dbx-section>
     </dbx-content-box>
   </dbx-loading>

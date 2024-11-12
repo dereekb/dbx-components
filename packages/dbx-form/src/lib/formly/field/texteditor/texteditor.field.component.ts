@@ -13,14 +13,14 @@ export type TextEditorComponentFieldProps = FormlyFieldProps;
 @Component({
   template: `
     <div class="dbx-texteditor-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
-      <dbx-label *ngIf="label">{{ label }}</dbx-label>
+      <span class="dbx-label" *ngIf="label">{{ label }}</span>
       <div class="dbx-texteditor-field-input">
         <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholder" [formControlName]="formGroupName"></ngx-editor>
       </div>
       <div class="dbx-texteditor-field-menu">
         <ngx-editor-menu [editor]="editor"></ngx-editor-menu>
       </div>
-      <dbx-form-description *ngIf="description">{{ description }}</dbx-form-description>
+      <div class="dbx-form-description" *ngIf="description">{{ description }}</div>
     </div>
   `
 })
