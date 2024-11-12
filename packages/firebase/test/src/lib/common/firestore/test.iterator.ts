@@ -1,4 +1,4 @@
-import { flattenAccumulatorResultItemArray, accumulatorCurrentPageListLoadingState, iteratorNextPageUntilPage, loadingStateHasFinishedLoading, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
+import { flattenAccumulatorResultItemArray, accumulatorCurrentPageListLoadingState, iteratorNextPageUntilPage, isLoadingStateFinishedLoading, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
 import { QueryDocumentSnapshot, makeDocuments, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, firebaseQueryItemAccumulator, FirebaseQueryItemAccumulator, firebaseQuerySnapshotAccumulator, FirebaseQuerySnapshotAccumulator } from '@dereekb/firebase';
 import { filter, first, from, switchMap } from 'rxjs';
 import { mockItemWithValue, MockItemCollectionFixture, MockItemDocument, MockItem } from '../mock';
@@ -174,7 +174,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
               accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
                 const value = state.value;
 
-                expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                expect(isLoadingStateFinishedLoading(state)).toBe(true);
                 expect(value).toBeDefined();
                 expect(Array.isArray(value)).toBe(true);
                 expect(Array.isArray(value![0])).toBe(true);
@@ -241,7 +241,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
               accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
                 const value = state.value;
 
-                expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                expect(isLoadingStateFinishedLoading(state)).toBe(true);
                 expect(value).toBeDefined();
                 expect(Array.isArray(value)).toBe(true);
                 expect(Array.isArray(value![0])).toBe(false);
@@ -258,7 +258,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
               accumulatorSub.subscription = obs.pipe(filter((x) => !x.loading)).subscribe((state) => {
                 const value = state.value;
 
-                expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                expect(isLoadingStateFinishedLoading(state)).toBe(true);
                 expect(value).toBeDefined();
                 expect(Array.isArray(value)).toBe(true);
                 expect(Array.isArray(value![0])).toBe(true);

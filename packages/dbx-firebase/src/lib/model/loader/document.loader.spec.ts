@@ -3,7 +3,7 @@
  */
 // use the node environment, as the jsdom environment breaks for tests that use the firestore.
 
-import { loadingStateHasFinishedLoading, SubscriptionObject } from '@dereekb/rxjs';
+import { isLoadingStateFinishedLoading, SubscriptionObject } from '@dereekb/rxjs';
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument } from '@dereekb/firebase/test';
 import { Subject, filter, first } from 'rxjs';
 import { DbxFirebaseDocumentLoaderInstance, dbxFirebaseDocumentLoaderInstanceWithAccessor } from './document.loader.instance';
@@ -74,7 +74,7 @@ describe('DbxFirebaseDocumentLoaderInstance', () => {
         it('pageLoadingState$ should return the current state.', (done) => {
           sub.subscription = instance.pageLoadingState$
             .pipe(
-              filter((x) => loadingStateHasFinishedLoading(x)),
+              filter((x) => isLoadingStateFinishedLoading(x)),
               first()
             )
             .subscribe((x) => {

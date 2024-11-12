@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
 import { Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
@@ -30,6 +30,8 @@ import { map } from 'rxjs';
   providers: [DbxCalendarScheduleSelectionStore]
 })
 export class DocExtensionCalendarScheduleSelectionComponent {
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+
   @Input()
   config?: Maybe<DbxScheduleSelectionCalendarComponentConfig>;
 
@@ -38,8 +40,6 @@ export class DocExtensionCalendarScheduleSelectionComponent {
   readonly selectionValueSelectedIndexes$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(map((x) => Array.from(x)));
   readonly selectionValueSelectedDates$ = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedDates$.pipe(map((x) => Array.from(x)));
   readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
-
-  constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   @Input()
   set selectionMode(selectionMode: DbxCalendarScheduleSelectionStoreSelectionMode) {

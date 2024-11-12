@@ -1,6 +1,6 @@
 import { FIRST_PAGE, type PageNumber, range } from '@dereekb/util';
 import { ItemPageIterator, type ItemPageIteratorDelegate, type ItemPageIterationInstance, type ItemPageIteratorRequest, type ItemPageIteratorResult } from './iterator.page';
-import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
+import { isLoadingStateFinishedLoading, isLoadingStateLoading } from '../loading';
 import { skip, delay, filter, first, of, type Observable, tap } from 'rxjs';
 
 export interface TestPageIteratorFilter {
@@ -82,7 +82,7 @@ describe('ItemPageIterator', () => {
     it('should return the first page without calling next().', (done) => {
       instance.latestSuccessfulPageResults$.pipe(first()).subscribe((state) => {
         expect(state).toBeDefined();
-        expect(loadingStateHasFinishedLoading(state)).toBe(true);
+        expect(isLoadingStateFinishedLoading(state)).toBe(true);
         expect(state.page).toBe(FIRST_PAGE);
         expect(state.value).toBeDefined();
 
@@ -159,7 +159,7 @@ describe('ItemPageIterator', () => {
 
       it('should not emit a value until the state has finished loading after next() is called.', (done) => {
         instance._nextFinished$.pipe(first()).subscribe((state) => {
-          expect(loadingStateHasFinishedLoading(state.current)).toBe(true);
+          expect(isLoadingStateFinishedLoading(state.current)).toBe(true);
           done();
         });
 
@@ -174,7 +174,7 @@ describe('ItemPageIterator', () => {
 
         instance.latestSuccessfulPageResults$.pipe(first()).subscribe((state) => {
           expect(state).toBeDefined();
-          expect(loadingStateHasFinishedLoading(state)).toBe(true);
+          expect(isLoadingStateFinishedLoading(state)).toBe(true);
           expect(state.page).toBe(FIRST_PAGE);
           expect(state.value).toBeDefined();
 
@@ -189,12 +189,12 @@ describe('ItemPageIterator', () => {
 
         instance.currentPageResultState$
           .pipe(
-            filter((x) => loadingStateIsLoading(x)),
+            filter((x) => isLoadingStateLoading(x)),
             first()
           )
           .subscribe((state) => {
             expect(state).toBeDefined();
-            expect(loadingStateHasFinishedLoading(state)).toBe(false);
+            expect(isLoadingStateFinishedLoading(state)).toBe(false);
 
             // Call next
             instance.next();
@@ -202,12 +202,12 @@ describe('ItemPageIterator', () => {
             of(0).subscribe(() => {
               instance.currentPageResultState$
                 .pipe(
-                  filter((x) => loadingStateHasFinishedLoading(x)),
+                  filter((x) => isLoadingStateFinishedLoading(x)),
                   first()
                 )
                 .subscribe((state) => {
                   expect(state).toBeDefined();
-                  expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                  expect(isLoadingStateFinishedLoading(state)).toBe(true);
                   expect(state.page).toBe(FIRST_PAGE);
                   expect(state.value).toBeDefined();
 
@@ -220,18 +220,18 @@ describe('ItemPageIterator', () => {
       it('should trigger loading the next page if the current page is done being loaded.', (done) => {
         instance.currentPageResultState$
           .pipe(
-            filter((x) => loadingStateHasFinishedLoading(x)),
+            filter((x) => isLoadingStateFinishedLoading(x)),
             first()
           )
           .subscribe((state) => {
             // First page loads upon first subscription.
 
             expect(state).toBeDefined();
-            expect(loadingStateHasFinishedLoading(state)).toBe(true);
+            expect(isLoadingStateFinishedLoading(state)).toBe(true);
 
             instance.currentPageResultState$
               .pipe(
-                filter((x) => x.page === FIRST_PAGE && loadingStateHasFinishedLoading(x)),
+                filter((x) => x.page === FIRST_PAGE && isLoadingStateFinishedLoading(x)),
                 tap(() => {
                   // Call when loading is finished.
                   instance.next();
@@ -241,7 +241,7 @@ describe('ItemPageIterator', () => {
               .subscribe(() => {
                 instance.currentPageResultState$.pipe(first()).subscribe((state) => {
                   expect(state).toBeDefined();
-                  expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                  expect(isLoadingStateFinishedLoading(state)).toBe(true);
                   expect(state.page).toBe(FIRST_PAGE + 1);
                   expect(state.value).toBeDefined();
 
@@ -273,7 +273,7 @@ describe('ItemPageIterator', () => {
       it('should trigger loading the next page.', (done) => {
         instance.latestPageResultState$
           .pipe(
-            filter((x) => loadingStateHasFinishedLoading(x)),
+            filter((x) => isLoadingStateFinishedLoading(x)),
             first()
           )
           .subscribe((state) => {
@@ -284,7 +284,7 @@ describe('ItemPageIterator', () => {
 
               instance.currentPageResultState$
                 .pipe(
-                  filter((x) => loadingStateHasFinishedLoading(x)),
+                  filter((x) => isLoadingStateFinishedLoading(x)),
                   first()
                 )
                 .subscribe((currentState) => {

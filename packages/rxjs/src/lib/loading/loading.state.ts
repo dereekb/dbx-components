@@ -29,7 +29,7 @@ export interface LoadingState<T = unknown> extends LoadingErrorPair {
 export type LoadingStateValue<L extends LoadingState> = L extends LoadingState<infer T> ? T : never;
 
 /**
- * Replaces the value type of the input loading state.
+ * Replaces the value type of the input LoadingState.
  */
 export type LoadingStateWithValueType<L extends LoadingState, T> = L extends LoadingState ? Omit<L, 'value'> & LoadingState<T> : never;
 
@@ -43,7 +43,7 @@ export type LoadingStateWithValue<T = unknown> = LoadingState<T> & {
 /**
  * Loading state with a value key and a non-maybe value.
  */
-export type LoadingStateWithMaybeSoValue<T = unknown> = LoadingState<T> & {
+export type LoadingStateWithDefinedValue<T = unknown> = LoadingState<T> & {
   value: T;
 };
 
@@ -109,14 +109,35 @@ export enum LoadingStateType {
  * @returns
  */
 export function loadingStateType(loadingState: LoadingState): LoadingStateType {
-  if (loadingState.loading) {
-    return LoadingStateType.LOADING;
-  } else if (objectHasKey(loadingState, 'value')) {
-    return LoadingStateType.SUCCESS;
-  } else if (objectHasKey(loadingState, 'error')) {
-    return LoadingStateType.ERROR;
+  const isLoading = !isLoadingStateFinishedLoading(loadingState);
+  let type: LoadingStateType;
+
+  if (isLoading) {
+    type = LoadingStateType.LOADING;
   } else {
-    return LoadingStateType.IDLE;
+    if (objectHasKey(loadingState, 'value')) {
+      type = LoadingStateType.SUCCESS;
+    } else if (objectHasKey(loadingState, 'error')) {
+      type = LoadingStateType.ERROR;
+    } else {
+      type = LoadingStateType.IDLE;
+    }
+  }
+
+  return type;
+}
+
+export function isLoadingStateFinishedLoading<L extends LoadingState>(state: Maybe<L>): boolean {
+  if (state) {
+    const loading = state.loading;
+
+    if (loading === true) {
+      return false;
+    } else {
+      return loading === false || Boolean(state.value || state.error) || state.value === null;
+    }
+  } else {
+    return false;
   }
 }
 
@@ -154,63 +175,76 @@ export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError
   return { ...errorResult(error), page };
 }
 
-export function unknownLoadingStatesIsLoading(states: LoadingState[]): boolean {
-  return reduceBooleansWithOr(states.map(loadingStateIsLoading), false);
-}
-
-export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boolean {
-  return reduceBooleansWithAnd(states.map(loadingStateHasFinishedLoading), true);
-}
-
-export function loadingStateIsIdle<L extends LoadingState>(state: Maybe<L>): boolean {
-  if (state) {
-    return loadingStateType(state) === LoadingStateType.IDLE;
-  } else {
-    return true;
-  }
-}
-
-export function loadingStateIsLoading<L extends LoadingState>(state: Maybe<L>): boolean {
-  return !loadingStateHasFinishedLoading(state);
-}
-
-export function isSuccessLoadingState<L extends LoadingState>(state: Maybe<L>): boolean {
-  if (state) {
-    return loadingStateType(state) === LoadingStateType.SUCCESS;
-  } else {
-    return false;
-  }
-}
-
-export function isErrorLoadingState<L extends LoadingState>(state: Maybe<L>): boolean {
-  if (state) {
-    return loadingStateType(state) === LoadingStateType.ERROR;
-  } else {
-    return false;
-  }
-}
-
-export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Maybe<L>): boolean {
-  if (state) {
-    const loading = state.loading;
-
-    if (loading === true) {
-      return false;
-    } else {
-      return loading === false || Boolean(state.value || state.error) || state.value === null;
-    }
-  } else {
-    return false;
-  }
+/**
+ * Returns true if any of the input LoadingStates return true for isLoadingStateLoading().
+ *
+ * @param states
+ * @returns
+ */
+export function isAnyLoadingStatesLoading(states: LoadingState[]): boolean {
+  return reduceBooleansWithOr(states.map(isLoadingStateLoading), false);
 }
 
 /**
- * Whether or not the input loading state has a non-undefined value.
+ * Returns true if all input LoadingStates return true for isLoadingStateLoading().
+ *
+ * @param states
+ * @returns
+ */
+export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): boolean {
+  return reduceBooleansWithAnd(states.map(isLoadingStateFinishedLoading), true);
+}
+
+export function isLoadingStateWithStateType(type: LoadingStateType) {
+  const defaultResult = type === LoadingStateType.IDLE ? true : false;
+  return <L extends LoadingState>(state: Maybe<L>) => {
+    if (state) {
+      return loadingStateType(state) === type;
+    } else {
+      return defaultResult;
+    }
+  };
+}
+
+/**
+ * Returns true if the input LoadingState passed to loadingStateType() returns IDLE.
  *
  * @param state
  * @returns
  */
-export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithMaybeSoValue<LoadingStateValue<L>>): state is LoadingStateWithMaybeSoValue<LoadingStateValue<L>> {
+export const isLoadingStateInIdleState = isLoadingStateWithStateType(LoadingStateType.IDLE);
+
+/**
+ * Returns true if the input LoadingState passed to loadingStateType() returns LOADING.
+ *
+ * @param state
+ * @returns
+ */
+export const isLoadingStateLoading = isLoadingStateWithStateType(LoadingStateType.LOADING);
+
+/**
+ * Returns true if the input LoadingState passed to loadingStateType() returns SUCCESS.
+ *
+ * @param state
+ * @returns
+ */
+export const isLoadingStateInSuccessState = isLoadingStateWithStateType(LoadingStateType.SUCCESS);
+
+/**
+ * Returns true if the input LoadingState passed to loadingStateType() returns ERROR.
+ *
+ * @param state
+ * @returns
+ */
+export const isLoadingStateInErrorState = isLoadingStateWithStateType(LoadingStateType.ERROR);
+
+/**
+ * Whether or not the input LoadingState has a non-undefined value.
+ *
+ * @param state
+ * @returns
+ */
+export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
   if (state) {
     return state.value !== undefined;
   } else {
@@ -219,12 +253,12 @@ export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L> | L
 }
 
 /**
- * Whether or not the input loading state has a non-null error.
+ * Whether or not the input LoadingState has a non-null error defined. It may be loading.
  *
  * @param state
  * @returns
  */
-export function loadingStateHasError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
+export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
   if (state) {
     return state.error != null;
   } else {
@@ -233,28 +267,28 @@ export function loadingStateHasError<L extends LoadingState>(state: Maybe<L> | L
 }
 
 /**
- * Whether or not the input loading state is not loading and has a non-null value.
+ * Whether or not the input LoadingState is not loading and has a non-null value.
  *
  * @param state
  * @returns
  */
-export function loadingStateHasFinishedLoadingWithValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithMaybeSoValue<LoadingStateValue<L>>): state is LoadingStateWithMaybeSoValue<LoadingStateValue<L>> {
+export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
   if (state) {
-    return loadingStateHasFinishedLoading(state) && state.value !== undefined;
+    return isLoadingStateFinishedLoading(state) && state.value !== undefined;
   } else {
     return false;
   }
 }
 
 /**
- * Whether or not the input loading state is not loading and has an error defined.
+ * Whether or not the input LoadingState is not loading and has an error defined.
  *
  * @param state
  * @returns
  */
-export function loadingStateHasFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
+export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
   if (state) {
-    return loadingStateHasFinishedLoading(state) && state.error != null;
+    return isLoadingStateFinishedLoading(state) && state.error != null;
   } else {
     return false;
   }
@@ -268,14 +302,14 @@ export function loadingStateHasFinishedLoadingWithError<L extends LoadingState>(
  * @param a
  * @param b
  */
-export function loadingStatesHaveEquivalentMetadata(a: Partial<PageLoadingState>, b: Partial<PageLoadingState>) {
+export function isPageLoadingStateMetadataEqual(a: Partial<PageLoadingState>, b: Partial<PageLoadingState>) {
   return valuesAreBothNullishOrEquivalent(a.page, b.page) && a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
 }
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
 
 /**
- * Merges the input loading states.
+ * Merges the input LoadingStates.
  *
  * If one is unavailable, it is considered loading.
  * If one is loading, will return the loading state.
@@ -311,7 +345,7 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
       error
     };
   } else {
-    const loading = reduceBooleansWithOr(loadingStates.map(loadingStateIsLoading));
+    const loading = reduceBooleansWithOr(loadingStates.map(isLoadingStateLoading));
 
     if (loading) {
       result = {
@@ -332,9 +366,9 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
 }
 
 /**
- * Updates the input state to start loading.
+ * Returns a new merged state to be loading or idle, and clears the current/error value. It will have a LoadingStateType of LOADING if loading is true.
  */
-export function updatedStateForSetLoading<S extends LoadingState>(state: S, loading = true): S {
+export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, loading = true): S {
   return {
     ...state,
     value: undefined,
@@ -344,9 +378,9 @@ export function updatedStateForSetLoading<S extends LoadingState>(state: S, load
 }
 
 /**
- * Updates the input state with the input error.
+ * Returns a new merged state with the input value. It will have a LoadingStateType of SUCCESS now.
  */
-export function updatedStateForSetValue<S extends LoadingState>(state: S, value: LoadingStateValue<S> | undefined): S {
+export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: LoadingStateValue<S> | undefined): S {
   return {
     ...state,
     value: value ?? undefined,
@@ -356,9 +390,9 @@ export function updatedStateForSetValue<S extends LoadingState>(state: S, value:
 }
 
 /**
- * Updates the input state with the input error.
+ * Returns a new merged state with the input error. It will have a LoadingStateType of ERROR now.
  */
-export function updatedStateForSetError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): S {
+export function mergeLoadingStateWithError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): S {
   return {
     ...state,
     loading: false,
@@ -375,7 +409,7 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
 
 export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
   const { mapValues, mapState } = config;
-  const loading = unknownLoadingStatesIsLoading(input);
+  const loading = isAnyLoadingStatesLoading(input);
   const error = input.map((x) => x?.error).filter((x) => Boolean(x))[0];
   let result: Maybe<R>;
 
@@ -448,3 +482,79 @@ export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = L
     return result;
   };
 }
+
+// MARK: Compat
+/**
+ * @deprecated use unknownLoadingStatesIsLoading instead.
+ */
+export const unknownLoadingStatesIsLoading = isAnyLoadingStatesLoading;
+
+/**
+ * @deprecated use areAllLoadingStatesFinishedLoading instead.
+ */
+export const allLoadingStatesHaveFinishedLoading = areAllLoadingStatesFinishedLoading;
+
+/**
+ * @deprecated use isLoadingStateInIdleState instead.
+ */
+export const loadingStateIsIdle = isLoadingStateInIdleState;
+
+/**
+ * @deprecated use isLoadingStateInSuccessState instead.
+ */
+export const isSuccessLoadingState = isLoadingStateInSuccessState;
+
+/**
+ * @deprecated Use isLoadingStateLoading instead.
+ */
+export const loadingStateIsLoading = isLoadingStateLoading;
+
+/**
+ * @deprecated use isLoadingStateFinishedLoading instead.
+ */
+export const loadingStateHasFinishedLoading = isLoadingStateFinishedLoading;
+
+/**
+ * @deprecated use isLoadingStateWithError instead.
+ */
+export const loadingStateHasError = isLoadingStateWithError;
+
+/**
+ * @deprecated use isLoadingStateWithDefinedValue instead.
+ */
+export const loadingStateHasValue = isLoadingStateWithDefinedValue;
+
+/**
+ * @deprecated use isLoadingStateFinishedLoadingWithDefinedValue instead.
+ */
+export const loadingStateHasFinishedLoadingWithValue = isLoadingStateFinishedLoadingWithDefinedValue;
+
+/**
+ * @deprecated use isLoadingStateFinishedLoadingWithError instead.
+ */
+export const loadingStateHasFinishedLoadingWithError = isLoadingStateFinishedLoadingWithError;
+
+/**
+ * @deprecated use isPageLoadingStateMetadataEqual instead.
+ */
+export const loadingStatesHaveEquivalentMetadata = isPageLoadingStateMetadataEqual;
+
+/**
+ * @deprecated use LoadingStateWithDefinedValue instead.
+ */
+export type LoadingStateWithMaybeSoValue = LoadingStateWithDefinedValue;
+
+/**
+ * @deprecated use mergeLoadingStateWithLoading instead.
+ */
+export const updatedStateForSetLoading = mergeLoadingStateWithLoading;
+
+/**
+ * @deprecated use updatedStateForSetValue instead.
+ */
+export const updatedStateForSetValue = mergeLoadingStateWithValue;
+
+/**
+ * @deprecated use mergeLoadingStateWithError instead.
+ */
+export const updatedStateForSetError = mergeLoadingStateWithError;

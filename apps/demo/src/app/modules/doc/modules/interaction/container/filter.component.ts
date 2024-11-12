@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
@@ -12,6 +12,8 @@ import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../compo
   providers: [FilterMap]
 })
 export class DocInteractionFilterComponent implements OnDestroy {
+  readonly filterMap = inject(FilterMap<DocInteractionTestFilter>);
+
   readonly presets = DOC_INTERACTION_TEST_PRESETS;
 
   readonly buttonFilterKey: FilterMapKey = 'button';
@@ -73,7 +75,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
     })
   );
 
-  constructor(readonly filterMap: FilterMap<DocInteractionTestFilter>) {
+  constructor() {
     this.filterMap.addDefaultFilterObs(this.buttonFilterKey, of({}));
     this.filterMap.addDefaultFilterObs(this.menuFilterKey, of({ date: startOfDay(new Date()) }));
     this.filterMap.addDefaultFilterObs(this.listFilterKey, of({}));

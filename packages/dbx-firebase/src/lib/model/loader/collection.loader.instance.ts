@@ -17,11 +17,11 @@ export type DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocume
  * DbxFirebaseModelLoader implementation within an instance.
  */
 export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoaderWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
-  protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollectionLike<T, D>>>(this._initConfig?.collection);
+  protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollectionLike<T, D>>>(undefined);
 
-  protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(this._initConfig?.maxPages);
-  protected readonly _itemsPerPage = new BehaviorSubject<Maybe<number>>(this._initConfig?.itemsPerPage);
-  protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(this._initConfig?.constraints);
+  protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(undefined);
+  protected readonly _itemsPerPage = new BehaviorSubject<Maybe<number>>(undefined);
+  protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
   protected readonly _restart = new Subject<void>();
 
   private readonly _maxPagesSub = new SubscriptionObject();

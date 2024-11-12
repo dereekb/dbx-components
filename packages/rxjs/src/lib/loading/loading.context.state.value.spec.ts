@@ -1,6 +1,6 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { LoadingStateContextInstance } from './loading.context.state.value';
-import { loadingStateIsLoading, successResult } from './loading.state';
+import { isLoadingStateLoading, successResult } from './loading.state';
 import { delay, first, timeout, of } from 'rxjs';
 
 describe('LoadingStateContextInstance', () => {
@@ -101,7 +101,7 @@ describe('LoadingStateContextInstance', () => {
           const value = undefined;
           const state = successResult(value);
 
-          expect(loadingStateIsLoading(state)).toBe(false);
+          expect(isLoadingStateLoading(state)).toBe(false);
 
           const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoValue: true });
 
@@ -119,7 +119,7 @@ describe('LoadingStateContextInstance', () => {
           const value = undefined;
           const state = successResult(value);
 
-          expect(loadingStateIsLoading(state)).toBe(false);
+          expect(isLoadingStateLoading(state)).toBe(false);
 
           const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoValue: false });
 

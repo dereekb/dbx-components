@@ -1,6 +1,6 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { DbxFilterButtonConfigWithPresetFilter } from '@dereekb/dbx-web';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
@@ -13,6 +13,9 @@ import { DocInteractionTestDateFilterPresetFilterComponent } from './filter.date
   `
 })
 export class DocInteractionTestDateFilterPopoverButtonComponent {
+  readonly filterSourceConnector = inject(FilterSourceConnector);
+  readonly filterSource = inject(FilterSource<DocInteractionTestFilter>);
+
   readonly config: DbxFilterButtonConfigWithPresetFilter<DocInteractionTestFilter, DocInteractionTestDateFilterPresetFilterComponent> = {
     icon: 'event',
     header: 'Filter Date Range',
@@ -25,8 +28,6 @@ export class DocInteractionTestDateFilterPopoverButtonComponent {
     connector: this.filterSourceConnector,
     initialFilterObs: this.filterSource.filter$
   };
-
-  constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource<DocInteractionTestFilter>) {}
 
   @Input()
   buttonDisplay?: Maybe<DbxButtonDisplayContent>;

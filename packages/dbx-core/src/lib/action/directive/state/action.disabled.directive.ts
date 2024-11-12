@@ -15,7 +15,7 @@ export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
 export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private _disabled = new BehaviorSubject<boolean>(false);
+  private readonly _disabled = new BehaviorSubject<boolean>(false);
   readonly disabled$ = this._disabled.pipe(distinctUntilChanged());
 
   ngOnInit(): void {

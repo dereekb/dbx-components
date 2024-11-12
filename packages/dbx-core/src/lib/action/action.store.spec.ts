@@ -1,7 +1,7 @@
 import { canReadyValue, ActionContextStore } from './action.store';
 import { of, first, timeout } from 'rxjs';
 import { containsStringAnyCase } from '@dereekb/util';
-import { isErrorLoadingState, isSuccessLoadingState, loadingStateHasValue, loadingStateIsIdle, LoadingStateType } from '@dereekb/rxjs';
+import { isErrorLoadingState, isLoadingStateInSuccessState, isLoadingStateWithDefinedValue, isLoadingStateInIdleState, LoadingStateType } from '@dereekb/rxjs';
 
 describe('ActionContextStore', () => {
   let contextStore: ActionContextStore;
@@ -93,7 +93,7 @@ describe('ActionContextStore', () => {
       contextStore.reset();
 
       contextStore.loadingState$.pipe(first()).subscribe((x) => {
-        expect(loadingStateIsIdle(x)).toBe(true);
+        expect(isLoadingStateInIdleState(x)).toBe(true);
       });
 
       contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
@@ -106,8 +106,8 @@ describe('ActionContextStore', () => {
       contextStore.resolve(value);
 
       contextStore.loadingState$.pipe(first()).subscribe((x) => {
-        expect(loadingStateHasValue(x)).toBe(true);
-        expect(isSuccessLoadingState(x)).toBe(true);
+        expect(isLoadingStateWithDefinedValue(x)).toBe(true);
+        expect(isLoadingStateInSuccessState(x)).toBe(true);
         expect(x.value).toBe(value);
       });
 

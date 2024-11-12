@@ -1,6 +1,6 @@
 import { DbxStyleService } from '@dereekb/dbx-web';
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 
 @Component({
@@ -8,6 +8,9 @@ import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
   styleUrls: ['./layout.component.scss']
 })
 export class AppLayoutComponent {
+  readonly dbxStyleService = inject(DbxStyleService);
+  readonly dbxFirebaseEmulatorService = inject(DbxFirebaseEmulatorService);
+
   readonly landing: ClickableAnchor = {
     ref: 'landing'
   };
@@ -31,6 +34,4 @@ export class AppLayoutComponent {
 
   readonly showEmulatorButton = this.dbxFirebaseEmulatorService.useEmulators === true;
   readonly emulator: ClickableAnchor = this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
-
-  constructor(readonly dbxStyleService: DbxStyleService, readonly dbxFirebaseEmulatorService: DbxFirebaseEmulatorService) {}
 }

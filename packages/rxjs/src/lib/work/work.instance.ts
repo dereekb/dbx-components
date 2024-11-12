@@ -1,6 +1,6 @@
 import { type Maybe, type Destroyable, type ReadableError, type ErrorInput } from '@dereekb/util';
 import { filter, map, BehaviorSubject, type Observable, of, first, shareReplay, switchMap, delay, from, tap } from 'rxjs';
-import { beginLoading, errorResult, type LoadingState, loadingStateHasFinishedLoading, loadingStateIsLoading, promiseFromLoadingState, successResult } from '../loading';
+import { beginLoading, errorResult, type LoadingState, isLoadingStateFinishedLoading, isLoadingStateLoading, promiseFromLoadingState, successResult } from '../loading';
 import { filterMaybe, preventComplete } from '../rxjs';
 import { SubscriptionObject } from '../subscription';
 
@@ -30,7 +30,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
     shareReplay(1)
   );
   protected readonly _isComplete$ = this.loadingState$.pipe(
-    map((x) => loadingStateHasFinishedLoading(x)),
+    map((x) => isLoadingStateFinishedLoading(x)),
     shareReplay(1)
   );
 
@@ -51,7 +51,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   }
 
   get isComplete(): boolean {
-    return this._done || loadingStateHasFinishedLoading(this._loadingState.value);
+    return this._done || isLoadingStateFinishedLoading(this._loadingState.value);
   }
 
   get isComplete$(): Observable<boolean> {
@@ -89,7 +89,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
       .subscribe(() => {
         this.startWorkingWithObservable(
           obs.pipe(
-            filter((x) => x && !loadingStateIsLoading(x)), // don't return until it has finished loading.
+            filter((x) => x && !isLoadingStateLoading(x)), // don't return until it has finished loading.
             map((x) => {
               if (x.error) {
                 throw x.error;

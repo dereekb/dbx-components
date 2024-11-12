@@ -2,7 +2,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { Directive, Host, Input, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxMutableForm } from '../../form/form';
-import { LoadingState, loadingStateHasFinishedLoading } from '@dereekb/rxjs';
+import { LoadingState, isLoadingStateFinishedLoading } from '@dereekb/rxjs';
 import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from './form.input.directive';
 
 /**
@@ -38,7 +38,7 @@ export class DbxFormLoadingSourceDirective<T extends object = object> extends Ab
 
     if (inputObs) {
       subscription = dbxFormSourceObservableFromStream(this.form.stream$, inputObs, this._mode).subscribe((x) => {
-        if (loadingStateHasFinishedLoading(x)) {
+        if (isLoadingStateFinishedLoading(x)) {
           this.form.setValue(x.value);
         }
       });

@@ -21,10 +21,14 @@ export interface DbxRouteParamReader<T> {
   readonly value$: Observable<Maybe<T>>;
 
   /**
-   * Param key getter/setters.
+   * Returns the current param key.
    */
-  get paramKey(): string;
-  set paramKey(paramKey: Maybe<string>);
+  getParamKey(): string;
+
+  /**
+   * Sets a new param key. If the value is undefined, the param reader will use the default key.
+   */
+  setParamKey(paramKey: Maybe<string>): void;
 
   /**
    * Sets the default value source.
@@ -32,6 +36,7 @@ export interface DbxRouteParamReader<T> {
    * @param defaultValue
    */
   setDefaultValue(defaultValue: MaybeObservableOrValueGetter<T>): void;
+
   /**
    * Updates the value on the current route for the paramKey.
    *
@@ -40,65 +45,69 @@ export interface DbxRouteParamReader<T> {
   setParamValue(value: MaybeObservableOrValueGetter<T>): void;
 }
 
-/**
- * Utility class used for reading a single value from the DbxRouterService.
- */
-export class DbxRouteParamReaderInstance<T> implements DbxRouteParamReader<T>, Destroyable {
-  private _paramKey: BehaviorSubject<string>;
-  private _defaultValue: BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>;
-
+export interface DbxRouteParamReaderInstance<T> extends DbxRouteParamReader<T>, Destroyable {
+  readonly dbxRouterService: DbxRouterService;
   readonly paramKey$: Observable<string>;
-  readonly paramValue$: Observable<Maybe<T>>;
   readonly nextDefaultValue$: Observable<Maybe<T>>;
-  readonly defaultValue$: Observable<Maybe<T>>;
   readonly value$: Observable<Maybe<T>>;
+}
 
-  constructor(readonly dbxRouterService: DbxRouterService, readonly defaultParamKey: string, readonly defaultValue?: MaybeObservableOrValueGetter<T>) {
-    this._paramKey = new BehaviorSubject<string>(this.defaultParamKey);
-    this._defaultValue = new BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>(this.defaultValue);
+/**
+ * Creates a new DbxRouteParamReaderInstance from the input.
+ *
+ * @param dbxRouterService
+ * @param defaultParamKey
+ * @param defaultValue
+ * @returns
+ */
+export function dbxRouteParamReaderInstance<T>(dbxRouterService: DbxRouterService, defaultParamKey: string, defaultValue?: MaybeObservableOrValueGetter<T>) {
+  const _paramKey = new BehaviorSubject<string>(defaultParamKey);
+  const _defaultValue = new BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>(defaultValue);
 
-    this.paramKey$ = this._paramKey.asObservable();
+  const paramKey$ = _paramKey.asObservable();
 
-    this.paramValue$ = combineLatest([this.paramKey$, this.dbxRouterService.params$]).pipe(
-      map(([key, params]) => {
-        return (params[key] as Maybe<T>) ?? undefined;
-      }),
-      distinctUntilChanged(),
-      shareReplay(1)
-    );
+  const paramValue$ = combineLatest([paramKey$, dbxRouterService.params$]).pipe(
+    map(([key, params]) => (params[key] as Maybe<T>) ?? undefined),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
-    this.nextDefaultValue$ = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
-    this.defaultValue$ = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
-    this.value$ = this.paramValue$.pipe(switchMapToDefault(this.defaultValue$), shareReplay(1));
-  }
+  const nextDefaultValue$ = _defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
+  const defaultValue$ = _defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
+  const value$ = paramValue$.pipe(switchMapToDefault(defaultValue$), shareReplay(1));
 
-  destroy(): void {
-    this._paramKey.complete();
-    this._defaultValue.complete();
-  }
+  const result: DbxRouteParamReaderInstance<T> = {
+    dbxRouterService,
 
-  get paramKey(): string {
-    return this._paramKey.value;
-  }
+    paramKey$,
+    paramValue$,
+    nextDefaultValue$,
+    defaultValue$,
+    value$,
 
-  set paramKey(paramKey: Maybe<string>) {
-    this._paramKey.next(paramKey || this.defaultParamKey);
-  }
+    destroy() {
+      _paramKey.complete();
+      _defaultValue.complete();
+    },
 
-  setDefaultValue(defaultValue: MaybeObservableOrValueGetter<T>): void {
-    this._defaultValue.next(defaultValue ?? this.defaultValue);
-  }
+    getParamKey(): string {
+      return _paramKey.value;
+    },
 
-  /**
-   * Convenience function to set the param value on the router.
-   *
-   * @param value
-   */
-  setParamValue(value: MaybeObservableOrValueGetter<T>): void {
-    combineLatest([this.paramKey$, asObservableFromGetter(value)])
-      .pipe(first())
-      .subscribe(([paramKey, value]) => {
-        this.dbxRouterService.updateParams({ [paramKey]: value });
-      });
-  }
+    setParamKey(paramKey: Maybe<string>) {
+      _paramKey.next(paramKey || defaultParamKey);
+    },
+
+    setDefaultValue(newValue: MaybeObservableOrValueGetter<T>) {
+      _defaultValue.next(newValue ?? defaultValue);
+    },
+
+    setParamValue(value: MaybeObservableOrValueGetter<T>) {
+      combineLatest([paramKey$, asObservableFromGetter(value)])
+        .pipe(first())
+        .subscribe(([paramKey, value]) => dbxRouterService.updateParams({ [paramKey]: value }));
+    }
+  };
+
+  return result;
 }

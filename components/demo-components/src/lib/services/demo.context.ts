@@ -1,7 +1,7 @@
 import { map, Observable } from 'rxjs';
 import { inContextFirebaseModelsServiceFactory } from '@dereekb/firebase';
 import { DbxFirebaseAuthService, DbxFirebaseInContextFirebaseModelServiceInstance, dbxFirebaseInContextFirebaseModelServiceInstanceFactory, DbxFirebaseModelContextService, dbxFirebaseModelContextServiceInfoInstanceFactory, firebaseContextServiceEntityMap } from '@dereekb/dbx-firebase';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ModelKey } from '@dereekb/util';
 import { ObservableOrValue } from '@dereekb/rxjs';
 import { DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollections, GuestbookDocument, GuestbookRoles } from '@dereekb/demo-firebase';
@@ -13,6 +13,9 @@ import { DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollec
   providedIn: 'root'
 })
 export class DemoFirebaseContextService implements DbxFirebaseModelContextService {
+  readonly demoFirestoreCollections = inject(DemoFirestoreCollections);
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
+
   readonly baseContext$: Observable<DemoFirebaseBaseContext> = this.dbxFirebaseAuthService.currentAuthContextInfo$.pipe(
     map((auth) => {
       const result: DemoFirebaseBaseContext = {
@@ -30,8 +33,6 @@ export class DemoFirebaseContextService implements DbxFirebaseModelContextServic
   readonly entityMap$ = this.context$.pipe(firebaseContextServiceEntityMap());
 
   readonly modelInfoInstance = dbxFirebaseModelContextServiceInfoInstanceFactory({ modelService: this.modelService, entityMap$: this.entityMap$ });
-
-  constructor(readonly demoFirestoreCollections: DemoFirestoreCollections, readonly dbxFirebaseAuthService: DbxFirebaseAuthService) {}
 
   guestbook(key$: ObservableOrValue<ModelKey>) {
     return this.modelService('guestbook', key$) as DbxFirebaseInContextFirebaseModelServiceInstance<GuestbookDocument, GuestbookRoles>;

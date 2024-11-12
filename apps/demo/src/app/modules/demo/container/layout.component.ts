@@ -1,5 +1,5 @@
 import { ClickableAnchorLinkSegueRef, ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -10,6 +10,8 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
   encapsulation: ViewEncapsulation.None
 })
 export class DemoLayoutComponent {
+  readonly dbxAuthService = inject(DbxFirebaseAuthService);
+
   readonly everyoneAnchors = [
     {
       title: 'Public Home',
@@ -52,8 +54,6 @@ export class DemoLayoutComponent {
     map((x) => [...this.everyoneAnchors, ...x]),
     shareReplay(1)
   );
-
-  constructor(readonly dbxAuthService: DbxFirebaseAuthService) {}
 
   readonly noUserBottomAnchors: ClickableAnchorLink[] = [
     {

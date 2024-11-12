@@ -1,7 +1,7 @@
 import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeValues, type EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
 import { type MonoTypeOperatorFunction, type OperatorFunction, startWith, type Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, type ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
-import { successResult, type LoadingState, type PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, type LoadingStateWithValueType, errorResult, type LoadingStateWithMaybeSoValue, loadingStatesHaveEquivalentMetadata } from './loading.state';
+import { successResult, type LoadingState, type PageLoadingState, beginLoading, isLoadingStateFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, isLoadingStateWithDefinedValue, LoadingStateType, loadingStateType, isLoadingStateLoading, isLoadingStateWithError, type LoadingStateWithValueType, errorResult, type LoadingStateWithDefinedValue, isPageLoadingStateMetadataEqual } from './loading.state';
 
 // TODO: Fix all LoadingState types to use the LoadingStateValue inference
 
@@ -73,7 +73,7 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
       if (firstErrorState) {
         result = errorResult(firstErrorState.error);
       } else {
-        const oneOrMoreStatesAreCurrentlyLoading = allLoadingStates.findIndex(loadingStateIsLoading) !== -1;
+        const oneOrMoreStatesAreCurrentlyLoading = allLoadingStates.findIndex(isLoadingStateLoading) !== -1;
 
         if (oneOrMoreStatesAreCurrentlyLoading) {
           result = beginLoading(); // still loading
@@ -109,7 +109,7 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
 export function valueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
-      filter(loadingStateHasValue),
+      filter(isLoadingStateWithDefinedValue),
       map((x) => x.value as LoadingStateValue<L>)
     );
   };
@@ -121,7 +121,7 @@ export function valueFromLoadingState<L extends LoadingState>(): OperatorFunctio
 export function errorFromLoadingState<L extends LoadingState>(): OperatorFunction<L, ReadableError> {
   return (obs: Observable<L>) => {
     return obs.pipe(
-      filter(loadingStateHasError),
+      filter(isLoadingStateWithError),
       map((x) => x.error as ReadableError)
     );
   };
@@ -133,7 +133,7 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
 export function valueFromFinishedLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
-      filter(loadingStateHasFinishedLoading),
+      filter(isLoadingStateFinishedLoading),
       map((x) => x.value as Maybe<LoadingStateValue<L>>)
     );
   };
@@ -151,7 +151,7 @@ export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => 
   let decisionFunction: DecisionFunction<L>;
 
   if (type === LoadingStateType.LOADING) {
-    decisionFunction = loadingStateIsLoading;
+    decisionFunction = isLoadingStateLoading;
   } else {
     decisionFunction = (state) => loadingStateType(state) === type;
   }
@@ -197,9 +197,9 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
       switchMap((state: L) => {
         let mappedObs: Observable<LoadingStateWithValueType<L, O>>;
 
-        if (loadingStateHasValue(state) || (mapOnUndefined && loadingStateHasFinishedLoading(state) && !loadingStateHasError(state))) {
+        if (isLoadingStateWithDefinedValue(state) || (mapOnUndefined && isLoadingStateFinishedLoading(state) && !isLoadingStateWithError(state))) {
           // map the value
-          mappedObs = of((state as LoadingStateWithMaybeSoValue<LoadingStateValue<L>>).value).pipe(
+          mappedObs = of((state as LoadingStateWithDefinedValue<LoadingStateValue<L>>).value).pipe(
             operator,
             map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>)),
             // if the operator does not return nearly instantly, then return the current state, minus a value
@@ -207,7 +207,7 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
           );
         } else {
           // only pass through if there is an error, otherwise show loading.
-          if (loadingStateHasError(state)) {
+          if (isLoadingStateWithError(state)) {
             mappedObs = of({ ...state, value: undefined }) as unknown as Observable<LoadingStateWithValueType<L, O>>;
           } else {
             // never pass through the non-mapped state's value as-is.
@@ -237,7 +237,7 @@ export interface DistinctLoadingStateConfig<L extends LoadingState> {
    */
   valueComparator: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>>;
   /**
-   * Used for comparing the metadata values of the LoadingState. By default uses loadingStatesHaveEquivalentMetadata.
+   * Used for comparing the metadata values of the LoadingState. By default uses isPageLoadingStateMetadataEqual.
    */
   metadataComparator?: EqualityComparatorFunction<Maybe<Partial<L>>>;
 }
@@ -265,7 +265,7 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(config
 export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputConfig: EqualityComparatorFunction<Maybe<LoadingStateValue<L>>> | DistinctLoadingStateConfig<L>): MonoTypeOperatorFunction<L> {
   const { compareOnUndefinedValue, valueComparator, metadataComparator: inputMetadataComparator, passRetainedValue: inputPassRetainedValue } = typeof inputConfig === 'function' ? ({ valueComparator: inputConfig } as DistinctLoadingStateConfig<L>) : inputConfig;
   const passRetainedValue = inputPassRetainedValue ?? ((x) => x !== null);
-  const metadataComparator = inputMetadataComparator ?? (loadingStatesHaveEquivalentMetadata as EqualityComparatorFunction<Maybe<Partial<L>>>);
+  const metadataComparator = inputMetadataComparator ?? (isPageLoadingStateMetadataEqual as EqualityComparatorFunction<Maybe<Partial<L>>>);
 
   return (obs: Observable<L>) => {
     return obs.pipe(
@@ -276,7 +276,7 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
           // determine the value change
           let isSameValue = false;
 
-          if (loadingStateHasValue(state) || (compareOnUndefinedValue && loadingStateHasFinishedLoading(state) && !loadingStateHasError(state))) {
+          if (isLoadingStateWithDefinedValue(state) || (compareOnUndefinedValue && isLoadingStateFinishedLoading(state) && !isLoadingStateWithError(state))) {
             // if the value is the same, then
             isSameValue = valueComparator(nextValue, acc.value);
           } else if (passRetainedValue(nextValue as Maybe<LoadingStateValue<L>>, acc.value, state, acc.previous)) {
@@ -325,7 +325,7 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
  * @returns
  */
 export function promiseFromLoadingState<T>(obs: Observable<LoadingState<T>>): Promise<T> {
-  return firstValueFrom(obs.pipe(filter(loadingStateHasFinishedLoading))).then((x) => {
+  return firstValueFrom(obs.pipe(filter(isLoadingStateFinishedLoading))).then((x) => {
     let result: T;
 
     if (x.error) {

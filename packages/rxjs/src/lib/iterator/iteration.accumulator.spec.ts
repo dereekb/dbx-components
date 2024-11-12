@@ -1,6 +1,6 @@
 import { SubscriptionObject } from './../subscription';
 import { ItemPageIterator, type ItemPageIterationInstance } from './iterator.page';
-import { loadingStateHasFinishedLoading } from '../loading';
+import { isLoadingStateFinishedLoading } from '../loading';
 import { filter, first, map, skip } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { itemAccumulator, itemAccumulatorNextPageUntilResultsCount, type ItemAccumulatorInstance } from './iteration.accumulator';
@@ -35,7 +35,7 @@ describe('ItemPageIterator', () => {
         it('should return 1 after the first result has been loaded.', (done) => {
           instance.currentPageResultState$
             .pipe(
-              filter((x) => loadingStateHasFinishedLoading(x)),
+              filter((x) => isLoadingStateFinishedLoading(x)),
               first()
             )
             .subscribe(() => {

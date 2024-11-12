@@ -55,7 +55,7 @@ export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Des
 
   protected redirectWithValue(value: Maybe<T>): Promise<boolean> {
     return this.instance.dbxRouterService.updateParams({
-      [this.instance.paramKey]: value
+      [this.instance.getParamKey()]: value
     });
   }
 

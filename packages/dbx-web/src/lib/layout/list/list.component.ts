@@ -1,7 +1,7 @@
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive, inject } from '@angular/core';
 import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, loadingStateHasFinishedLoading, startWithBeginLoading } from '@dereekb/rxjs';
+import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 
@@ -213,7 +213,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly hideContent$: Observable<boolean> = this.context.stateChange$.pipe(
     switchMap(() =>
       this.context.state$.pipe(
-        filter((x) => loadingStateHasFinishedLoading(x)),
+        filter((x) => isLoadingStateFinishedLoading(x)),
         first(),
         startWithBeginLoading()
       )

@@ -1,4 +1,4 @@
-import { filterMaybe, LoadingState, loadingStateHasValue, loadingStateIsLoading, LoadingStateWithMaybeSoValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState , WorkUsingContext } from '@dereekb/rxjs';
+import { filterMaybe, LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState, WorkUsingContext } from '@dereekb/rxjs';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, Observable, combineLatest, of } from 'rxjs';
 import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -110,8 +110,8 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
           } else {
             return combineLatest(sourceObs).pipe(
               map((x) => {
-                const statesWithValues = x.filter((y) => loadingStateHasValue(y));
-                const loading = x.findIndex(loadingStateIsLoading) !== -1;
+                const statesWithValues = x.filter((y) => isLoadingStateWithDefinedValue(y));
+                const loading = x.findIndex(isLoadingStateLoading) !== -1;
                 const value: SourceSelectValueGroup<T, M>[] = statesWithValues.map((y) => {
                   const group: SourceSelectValueGroup<T, M> = {
                     label: y.label,
@@ -146,12 +146,12 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     shareReplay(1)
   );
 
-  readonly valueGroupsFromSourcesState$: Observable<LoadingStateWithMaybeSoValue<SourceSelectValueGroup<T, M>[]>> = combineLatest([this.fromOpenSource$, this.loadSources$]).pipe(
+  readonly valueGroupsFromSourcesState$: Observable<LoadingStateWithDefinedValue<SourceSelectValueGroup<T, M>[]>> = combineLatest([this.fromOpenSource$, this.loadSources$]).pipe(
     map(([fromOpenSourceGroup, loadSources]) => {
       const loadSourcesValue = loadSources.value ?? [];
       const value: SourceSelectValueGroup<T, M>[] = [fromOpenSourceGroup, ...loadSourcesValue];
 
-      const result: LoadingStateWithMaybeSoValue<SourceSelectValueGroup<T, M>[]> = {
+      const result: LoadingStateWithDefinedValue<SourceSelectValueGroup<T, M>[]> = {
         loading: loadSources.loading,
         value
       };
@@ -163,7 +163,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   readonly allValueGroupsState$: Observable<LoadingState<SourceSelectValueGroup<T, M>[]>> = this.sourceSelectValuesFromValuesState$.pipe(
     switchMap((sourceSelectValuesFromValues: LoadingState<SourceSelectValue<T, M>[]>) => {
-      if (loadingStateHasValue(sourceSelectValuesFromValues)) {
+      if (isLoadingStateWithDefinedValue(sourceSelectValuesFromValues)) {
         const valuesFromValuesGroup: SourceSelectValueGroup<T, M> = {
           label: '',
           values: sourceSelectValuesFromValues.value

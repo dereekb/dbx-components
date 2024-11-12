@@ -3,7 +3,7 @@ import { startWith, map, type Observable, shareReplay, skipWhile, distinctUntilC
 import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue, timeoutStartWith } from '../rxjs';
 import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef, type GetterOrValue, asGetter, performTaskLoop, type MapFunction, type PromiseOrValue, asPromise, type PageNumber, type Page } from '@dereekb/util';
 import { type ItemIteration, type PageItemIteration } from './iteration';
-import { type LoadingState, loadingStateHasError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
+import { type LoadingState, isLoadingStateWithError, mapLoadingStateValueFunction, type MapLoadingStateValueMapFunction } from '../loading';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
 export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O, I>;
@@ -97,7 +97,7 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
   );
 
   const latestSuccessfulState$: Observable<LoadingState<I>> = itemIteration.latestState$.pipe(
-    filter((x) => !loadingStateHasError(x)),
+    filter((x) => !isLoadingStateWithError(x)),
     distinctUntilChanged(),
     shareReplay(1)
   );

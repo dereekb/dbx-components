@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxFirebaseAuthLoginService, DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 
 @Component({
   templateUrl: './firebase.component.html'
 })
 export class DocAuthFirebaseComponent {
-  readonly authUserInfo$ = this.dbxFirebaseAuthService.currentAuthUserInfo$;
+  readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
+  readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
-  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService, readonly dbxFirebaseAuthService: DbxFirebaseAuthService) {}
+  readonly authUserInfo$ = this.dbxFirebaseAuthService.currentAuthUserInfo$;
 
   logOut() {
     this.dbxFirebaseAuthService.logOut();

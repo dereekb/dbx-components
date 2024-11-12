@@ -1,7 +1,7 @@
 import { type Maybe, objectKeysEqualityComparatorFunction } from '@dereekb/util';
 import { BehaviorSubject, map, of, first, switchMap, delay } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
-import { type LoadingState, beginLoading, errorResult, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateHasValue, loadingStateIsLoading, successResult } from './loading.state';
+import { type LoadingState, beginLoading, errorResult, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateWithDefinedValue, isLoadingStateLoading, successResult } from './loading.state';
 import { combineLoadingStates, combineLoadingStatesStatus, distinctLoadingState, mapLoadingStateValueWithOperator } from './loading.state.rxjs';
 
 jest.setTimeout(1000);
@@ -53,7 +53,7 @@ describe('mapLoadingStateValueWithOperator()', () => {
 
       obs.pipe(first()).subscribe((state) => {
         expect(mapAttempted).toBe(false);
-        expect(loadingStateIsLoading(state)).toBe(true); // waiting for loading=false
+        expect(isLoadingStateLoading(state)).toBe(true); // waiting for loading=false
         expect(state.value).toBeUndefined();
         done();
       });
@@ -76,7 +76,7 @@ describe('mapLoadingStateValueWithOperator()', () => {
 
       obs.pipe(first()).subscribe((state) => {
         expect(mapAttempted).toBe(true);
-        expect(loadingStateIsLoading(state)).toBe(false); // finished
+        expect(isLoadingStateLoading(state)).toBe(false); // finished
         expect(state.value).toBe(expectedValue);
         done();
       });
@@ -98,7 +98,7 @@ describe('mapLoadingStateValueWithOperator()', () => {
 
     obs.pipe(first()).subscribe((state) => {
       expect(mapAttempted).toBe(false);
-      expect(loadingStateIsLoading(state)).toBe(true);
+      expect(isLoadingStateLoading(state)).toBe(true);
       expect(state.value).toBe(undefined);
       done();
     });
@@ -119,7 +119,7 @@ describe('mapLoadingStateValueWithOperator()', () => {
     );
 
     obs.pipe(first()).subscribe((state) => {
-      expect(loadingStateIsLoading(state)).toBe(false);
+      expect(isLoadingStateLoading(state)).toBe(false);
       expect(state.value).toBe(undefined);
       expect(state.error).toBe(error);
       done();
@@ -137,7 +137,7 @@ describe('mapLoadingStateValueWithOperator()', () => {
       const { value } = state;
 
       expect(value).toBeUndefined();
-      expect(loadingStateIsLoading(state)).toBe(true);
+      expect(isLoadingStateLoading(state)).toBe(true);
 
       done();
     });
@@ -204,7 +204,7 @@ describe('combineLoadingStates()', () => {
       const obs = combineLoadingStates(a, b);
 
       obs.pipe(first()).subscribe((state) => {
-        expect(loadingStateIsLoading(state)).toBe(true);
+        expect(isLoadingStateLoading(state)).toBe(true);
         done();
       });
     });
@@ -220,7 +220,7 @@ describe('combineLoadingStates()', () => {
       const obs = combineLoadingStates(a, b, c, d, e, () => 1);
 
       obs.pipe(first()).subscribe((state) => {
-        expect(loadingStateIsLoading(state)).toBe(true);
+        expect(isLoadingStateLoading(state)).toBe(true);
         done();
       });
     });
@@ -237,8 +237,8 @@ describe('combineLoadingStates()', () => {
         const obs = combineLoadingStates(a, b, c, d, e, () => 1);
 
         obs.pipe(first()).subscribe((state) => {
-          expect(loadingStateIsLoading(state)).toBe(false);
-          expect(loadingStateHasError(state)).toBe(true);
+          expect(isLoadingStateLoading(state)).toBe(false);
+          expect(isLoadingStateWithError(state)).toBe(true);
           expect(state.error?._error).toBe(expectedError);
           done();
         });
@@ -255,8 +255,8 @@ describe('combineLoadingStates()', () => {
         const obs = combineLoadingStates(a, b, c, d, e, () => 1);
 
         obs.pipe(first()).subscribe((state) => {
-          expect(loadingStateIsLoading(state)).toBe(true);
-          expect(loadingStateHasError(state)).toBe(true);
+          expect(isLoadingStateLoading(state)).toBe(true);
+          expect(isLoadingStateWithError(state)).toBe(true);
           expect(state.error?._error).toBe(expectedError);
           done();
         });
@@ -273,8 +273,8 @@ describe('combineLoadingStates()', () => {
         const obs = combineLoadingStates(a, b, c, d, e, () => 1);
 
         obs.pipe(first()).subscribe((state) => {
-          expect(loadingStateIsLoading(state)).toBe(false);
-          expect(loadingStateHasError(state)).toBe(true);
+          expect(isLoadingStateLoading(state)).toBe(false);
+          expect(isLoadingStateWithError(state)).toBe(true);
           expect(state.error?._error).toBe(expectedError);
           done();
         });
@@ -291,7 +291,7 @@ describe('combineLoadingStates()', () => {
       const obs = combineLoadingStates(a, b, c, d, e);
 
       obs.pipe(first()).subscribe((state) => {
-        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(isLoadingStateLoading(state)).toBe(false);
         expect(state.loading).toBe(false);
         expect(state.error).toBeUndefined();
         expect(state.value?.a).toBe(true);
@@ -326,7 +326,7 @@ describe('combineLoadingStates()', () => {
       });
 
       obs.pipe(first()).subscribe((state) => {
-        expect(loadingStateIsLoading(state)).toBe(false);
+        expect(isLoadingStateLoading(state)).toBe(false);
         expect(state.loading).toBe(false);
         expect(state.error).toBeUndefined();
         expect(state.value).toBe(expectedValue);
@@ -346,8 +346,8 @@ describe('combineLoadingStatesStatus()', () => {
 
       obs.pipe(first()).subscribe((x) => {
         expect(x.value).toBe(true);
-        expect(loadingStateHasFinishedLoading(x)).toBe(true);
-        expect(loadingStateHasValue(x)).toBe(true);
+        expect(isLoadingStateFinishedLoading(x)).toBe(true);
+        expect(isLoadingStateWithDefinedValue(x)).toBe(true);
         done();
       });
     });
@@ -361,7 +361,7 @@ describe('combineLoadingStatesStatus()', () => {
 
       obs.pipe(first()).subscribe((x) => {
         expect(x.loading).toBe(true);
-        expect(loadingStateIsLoading(x)).toBe(true);
+        expect(isLoadingStateLoading(x)).toBe(true);
         done();
       });
     });
@@ -374,11 +374,11 @@ describe('combineLoadingStatesStatus()', () => {
 
       obs.subscribe((x) => {
         if (x.loading) {
-          expect(loadingStateIsLoading(x)).toBe(true);
+          expect(isLoadingStateLoading(x)).toBe(true);
           state.next(successResult(1)); // trigger loading completion
         } else {
           expect(x.loading).toBe(false);
-          expect(loadingStateIsLoading(x)).toBe(false);
+          expect(isLoadingStateLoading(x)).toBe(false);
           state.complete();
           done();
         }
@@ -396,7 +396,7 @@ describe('combineLoadingStatesStatus()', () => {
       obs.pipe(first()).subscribe((x) => {
         expect(x.error).toBeDefined();
         expect(x.error?._error).toBe(errorValue);
-        expect(loadingStateHasError(x)).toBe(true);
+        expect(isLoadingStateWithError(x)).toBe(true);
         done();
       });
     });
@@ -414,8 +414,8 @@ describe('combineLoadingStatesStatus()', () => {
 
       obs.pipe(first()).subscribe((x) => {
         expect(x.value).toBe(true);
-        expect(loadingStateHasFinishedLoading(x)).toBe(true);
-        expect(loadingStateHasValue(x)).toBe(true);
+        expect(isLoadingStateFinishedLoading(x)).toBe(true);
+        expect(isLoadingStateWithDefinedValue(x)).toBe(true);
         done();
       });
     });
@@ -455,19 +455,19 @@ describe('distinctLoadingState()', () => {
               case 1:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 values$.next({ loading: true }); // is loading again, retain the value by default
                 break;
               case 2:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(true);
                 values$.next({ value: ['b'] }); // loading changed
                 break;
               case 3:
                 expect(value).toBeDefined();
                 expect(value).toContain('b');
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 done();
                 break;
             }
@@ -493,19 +493,19 @@ describe('distinctLoadingState()', () => {
               case 1:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 values$.next({ loading: true }); // is loading again, retain the value by default
                 break;
               case 2:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(true);
                 values$.next({ value: ['a'] }); // pass the same value again
                 break;
               case 3:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 done();
                 break;
             }
@@ -531,20 +531,20 @@ describe('distinctLoadingState()', () => {
               case 1:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 values$.next({ error: new Error() }); // is loading again, retain the value by default
                 break;
               case 2:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(false);
-                expect(loadingStateHasError(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(false);
+                expect(isLoadingStateWithError(state)).toBe(true);
                 values$.next({ loading: true }); // clear the error and begin loading again.
                 break;
               case 3:
                 expect(value).toBeDefined();
                 expect(value).toContain('a'); // value should still be retained
-                expect(loadingStateIsLoading(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(true);
                 done();
                 break;
             }
@@ -570,17 +570,17 @@ describe('distinctLoadingState()', () => {
               case 1:
                 expect(value).toBeDefined();
                 expect(value).toContain('a');
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 values$.next({ value: null }); // is loading again, retain the value by default
                 break;
               case 2:
                 expect(value).toBeNull();
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 values$.next({ loading: true }); // clear the error and begin loading again.
                 break;
               case 3:
                 expect(value).toBeNull();
-                expect(loadingStateIsLoading(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(true);
                 done();
                 break;
             }
@@ -600,15 +600,15 @@ describe('distinctLoadingState()', () => {
 
             switch (c) {
               case 0:
-                expect(loadingStateIsLoading(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(true);
                 break;
               case 1:
-                expect(loadingStateIsLoading(state)).toBe(false);
+                expect(isLoadingStateLoading(state)).toBe(false);
                 expect(value).toBeDefined();
                 break;
               default:
                 expect(counter).toBe(endCounter);
-                expect(loadingStateIsLoading(state)).toBe(true);
+                expect(isLoadingStateLoading(state)).toBe(true);
                 done();
                 break;
             }

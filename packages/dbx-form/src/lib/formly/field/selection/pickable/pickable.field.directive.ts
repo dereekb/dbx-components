@@ -1,5 +1,5 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading, SubscriptionObject } from '@dereekb/rxjs';
+import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject } from '@dereekb/rxjs';
 import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues } from '@dereekb/util';
 import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
@@ -238,7 +238,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
    */
   readonly filterResultsContext = new ListLoadingStateContextInstance({ obs: this.filteredSearchResultsState$, showLoadingOnNoValue: true });
 
-  readonly noItemsAvailable$ = this.filterItemsLoadingState$.pipe(isListLoadingStateEmpty(), distinctUntilChanged());
+  readonly noItemsAvailable$ = this.filterItemsLoadingState$.pipe(mapIsListLoadingStateWithEmptyValue(), distinctUntilChanged());
 
   get readonly(): Maybe<boolean> {
     return this.props.readonly;

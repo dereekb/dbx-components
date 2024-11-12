@@ -1,6 +1,6 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
 import { DocInteractionTestFilter } from './filter';
@@ -14,6 +14,9 @@ import { Maybe } from '@dereekb/util';
   `
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
+  readonly filterSourceConnector = inject(FilterSourceConnector);
+  readonly filterSource = inject(FilterSource<DocInteractionTestFilter>);
+
   @Input()
   disabled?: Maybe<boolean>;
 
@@ -25,8 +28,6 @@ export class DocInteractionTestFilterPopoverButtonComponent {
     connector: this.filterSourceConnector,
     initialFilterObs: this.filterSource.filter$
   };
-
-  constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource<DocInteractionTestFilter>) {}
 
   @Input()
   buttonDisplay?: Maybe<DbxButtonDisplayContent>;

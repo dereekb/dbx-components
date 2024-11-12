@@ -35,11 +35,11 @@ export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends Abst
   // MARK: Input
   @Input('dbxFirebaseDocumentStoreRouteKey')
   get keyParam() {
-    return this._redirectInstance.paramKey;
+    return this._redirectInstance.getParamKey();
   }
 
-  set keyParam(keyParam: string) {
-    this._redirectInstance.paramKey = keyParam;
+  set keyParam(idParam: string) {
+    this._redirectInstance.setParamKey(idParam);
   }
 
   @Input()

@@ -2,7 +2,7 @@ import { hasNonNullValue, type Maybe } from '@dereekb/util';
 import { map, shareReplay, filter, type Observable } from 'rxjs';
 import { type LoadingContextEvent } from './loading.context';
 import { type AbstractLoadingEventForLoadingPairConfig, type AbstractLoadingStateContext, AbstractLoadingStateContextInstance, type LoadingStateContextInstanceInputConfig } from './loading.context.state';
-import { loadingStateIsLoading, type LoadingState } from './loading.state';
+import { isLoadingStateLoading, type LoadingState } from './loading.state';
 
 export interface LoadingStateContextEvent<T = unknown> extends LoadingContextEvent {
   value?: Maybe<T>;
@@ -40,7 +40,7 @@ export class LoadingStateContextInstance<T = unknown, S extends LoadingState<T> 
       if (showLoadingOnNoValue) {
         loading = !hasNonNullValue(value);
       } else {
-        loading = loadingStateIsLoading(pair);
+        loading = isLoadingStateLoading(pair);
       }
     }
 

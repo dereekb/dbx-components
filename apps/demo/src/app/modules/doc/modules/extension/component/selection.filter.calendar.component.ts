@@ -1,5 +1,5 @@
 import { addDays, startOfDay } from 'date-fns';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
 import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
@@ -46,6 +46,8 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
   providers: [DbxCalendarScheduleSelectionStore]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
+  readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
+
   readonly config: DbxScheduleSelectionCalendarComponentConfig = {
     buttonInjectionConfig: {
       componentClass: DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent
@@ -60,10 +62,10 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   readonly selectionValueWithTimezoneDateCellDurationSpanExpansion$ = this.dbxCalendarScheduleSelectionStore.selectionValueWithTimezoneDateCellDurationSpanExpansion$;
   readonly selectedDaysOfWeek$ = this.currentSelectionValueDateCellDurationSpanExpansion$.pipe(map((x) => readDaysOfWeekNames(x, (y) => y.startsAt, daysOfWeekNameFunction({ abbreviation: true }))));
 
-  constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {
-    dbxCalendarScheduleSelectionStore.setFilter(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER);
-    dbxCalendarScheduleSelectionStore.setMinMaxDateRange({ start: addDays(startOfDay(new Date()), 4) });
-    dbxCalendarScheduleSelectionStore.setInitialSelectionState('all');
+  constructor() {
+    this.dbxCalendarScheduleSelectionStore.setFilter(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER);
+    this.dbxCalendarScheduleSelectionStore.setMinMaxDateRange({ start: addDays(startOfDay(new Date()), 4) });
+    this.dbxCalendarScheduleSelectionStore.setInitialSelectionState('all');
   }
 
   setEvenSelection() {

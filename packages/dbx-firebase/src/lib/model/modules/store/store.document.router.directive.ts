@@ -34,11 +34,11 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
   // MARK: Input
   @Input('dbxFirebaseDocumentStoreRouteId')
   get idParam() {
-    return this._redirectInstance.paramKey;
+    return this._redirectInstance.getParamKey();
   }
 
   set idParam(idParam: string) {
-    this._redirectInstance.paramKey = idParam;
+    this._redirectInstance.setParamKey(idParam);
   }
 
   @Input()

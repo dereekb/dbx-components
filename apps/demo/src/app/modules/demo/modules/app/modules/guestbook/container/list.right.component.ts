@@ -1,4 +1,4 @@
-import { OnDestroy, Component } from '@angular/core';
+import { OnDestroy, Component, inject } from '@angular/core';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { GuestbookDocumentStore } from '@dereekb/demo-components';
 
@@ -6,9 +6,9 @@ import { GuestbookDocumentStore } from '@dereekb/demo-components';
   templateUrl: './list.right.component.html'
 })
 export class DemoGuestbookListPageRightComponent implements OnDestroy {
-  readonly context = loadingStateContext({ obs: this.guestbookStore.dataLoadingState$ });
+  readonly guestbookStore = inject(GuestbookDocumentStore);
 
-  constructor(readonly guestbookStore: GuestbookDocumentStore) {}
+  readonly context = loadingStateContext({ obs: this.guestbookStore.dataLoadingState$ });
 
   ngOnDestroy(): void {
     this.context.destroy();
