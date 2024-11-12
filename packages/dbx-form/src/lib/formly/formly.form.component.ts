@@ -123,10 +123,6 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
     shareReplay(1)
   );
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this._dbxFormlyContext.setDelegate(this);
 

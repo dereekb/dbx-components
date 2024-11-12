@@ -15,12 +15,8 @@ export const APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY = 'dbx_action_disabled
 export class DbxActionDisabledOnSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private _disableOnSuccess = new BehaviorSubject<boolean>(true);
+  private readonly _disableOnSuccess = new BehaviorSubject<boolean>(true);
   readonly disableOnSuccess$ = this._disableOnSuccess.pipe(distinctUntilChanged());
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = combineLatest([this.disableOnSuccess$, this.source.isSuccess$]).subscribe(([disableOnSuccess, success]) => {

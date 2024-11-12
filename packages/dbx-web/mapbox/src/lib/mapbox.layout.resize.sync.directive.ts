@@ -27,10 +27,6 @@ export class DbxMapboxLayoutVirtualResizeSyncComponent extends AbstractSubscript
     shareReplay(1)
   );
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.dbxMapboxLayoutComponent.dbxMapboxMapStore.setMinimumVirtualViewportSize(this.resizedVector$) ?? undefined;
   }

@@ -21,12 +21,12 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective im
     super.ngOnInit();
 
     this._workingSub.subscription = this.source.isWorking$.subscribe((working) => {
-      this.button.working = working;
+      this.dbxButton.working = working;
       safeDetectChanges(this.cdRef);
     });
 
     this._disabledSub.subscription = this.source.isDisabled$.subscribe((disabled) => {
-      this.button.disabled = disabled;
+      this.dbxButton.disabled = disabled;
       safeDetectChanges(this.cdRef);
     });
   }

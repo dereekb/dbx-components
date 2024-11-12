@@ -16,10 +16,6 @@ export class DbxFirebaseDocumentAuthIdDirective<T, D extends FirestoreDocument<T
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T, D>, { host: true });
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.store.setId(this.dbxFirebaseAuthService.userIdentifier$);
   }

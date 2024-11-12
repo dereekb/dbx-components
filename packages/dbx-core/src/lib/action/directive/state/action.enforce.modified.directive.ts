@@ -15,11 +15,7 @@ export const APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY = 'dbx_action_enforce_mod
 export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
 
-  private _enabled = new BehaviorSubject<boolean>(true);
-
-  constructor() {
-    super();
-  }
+  private readonly _enabled = new BehaviorSubject<boolean>(true);
 
   ngOnInit(): void {
     this.sub = combineLatest([this.source.isModified$, this._enabled])

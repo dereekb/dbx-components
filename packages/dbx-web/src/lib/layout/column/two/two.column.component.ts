@@ -36,7 +36,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
   private _view: DbxTwoColumnViewState = { showRight: false, showFullLeft: true, hideLeftColumn: false, reverseSizing: false, inSectionPage: false };
 
-  private _inSectionPage = new BehaviorSubject<boolean>(false);
+  private readonly _inSectionPage = new BehaviorSubject<boolean>(false);
 
   readonly reverseSizing$ = this.twoColumnsContextStore.reverseSizing$;
   readonly hideLeftColumn$: Observable<boolean> = this.twoColumnsContextStore.hideLeft$;

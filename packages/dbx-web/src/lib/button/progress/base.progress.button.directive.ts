@@ -12,11 +12,11 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
 
   private _computedOptions: Maybe<DbxProgressButtonOptions> = undefined;
 
-  private _working = new BehaviorSubject<boolean>(false);
-  private _disabled = new BehaviorSubject<boolean>(false);
+  private readonly _working = new BehaviorSubject<boolean>(false);
+  private readonly _disabled = new BehaviorSubject<boolean>(false);
 
-  private _buttonId = new BehaviorSubject<Maybe<string>>(undefined);
-  private _options = new BehaviorSubject<Maybe<DbxProgressButtonOptions>>(undefined);
+  private readonly _buttonId = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _options = new BehaviorSubject<Maybe<DbxProgressButtonOptions>>(undefined);
 
   readonly globalOptions$: Observable<Maybe<DbxProgressButtonOptions>> = this._buttonId.pipe(map((buttonId: Maybe<string>) => (buttonId ? this.globalConfig.find((config: DbxProgressButtonTargetedConfig) => config.id === buttonId) : undefined)));
 
@@ -71,10 +71,6 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
 
   @Output()
   readonly btnClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.options$.subscribe((options) => {

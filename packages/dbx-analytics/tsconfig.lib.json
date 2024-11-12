@@ -7,7 +7,7 @@
     "inlineSources": true,
     "types": ["segment-analytics"],
     "target": "ES2022",
-    "useDefineForClassFields": false
+    "useDefineForClassFields": true
   },
   "exclude": ["**/*.spec.ts", "jest.config.ts"],
   "include": ["**/*.ts"]

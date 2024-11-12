@@ -16,7 +16,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
+  private readonly _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
 
   constructor() {

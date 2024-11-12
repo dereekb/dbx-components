@@ -15,7 +15,7 @@ import { Maybe } from '@dereekb/util';
 export class DbxAppContextStateDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly dbxAppContextStateService = inject(DbxAppContextService);
 
-  private _state = new BehaviorSubject<Maybe<DbxAppContextState>>(undefined);
+  private readonly _state = new BehaviorSubject<Maybe<DbxAppContextState>>(undefined);
 
   constructor() {
     super();

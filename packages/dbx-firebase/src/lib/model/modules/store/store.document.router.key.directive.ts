@@ -17,14 +17,10 @@ export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends Abst
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T>, { host: true });
   readonly dbxRouterService = inject(DbxRouterService);
 
-  private _redirectInstance = dbxFirebaseKeyRouteParamRedirect(this.dbxRouterService);
+  private readonly _redirectInstance = dbxFirebaseKeyRouteParamRedirect(this.dbxRouterService);
 
   readonly keyFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly key$: Observable<Maybe<TwoWayFlatFirestoreModelKey>> = this._redirectInstance.value$;
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.store.setFlatKey(this.keyFromParams$); // use from the params, as the params should get updated eventually to the key$ value

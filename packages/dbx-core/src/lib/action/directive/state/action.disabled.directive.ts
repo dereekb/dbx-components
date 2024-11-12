@@ -18,10 +18,6 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
   private _disabled = new BehaviorSubject<boolean>(false);
   readonly disabled$ = this._disabled.pipe(distinctUntilChanged());
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.disabled$.subscribe((x) => {
       this.source.disable(APP_ACTION_DISABLED_DIRECTIVE_KEY, x);

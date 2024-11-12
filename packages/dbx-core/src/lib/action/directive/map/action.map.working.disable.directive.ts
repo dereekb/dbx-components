@@ -17,10 +17,6 @@ export class DbxActionMapWorkingDisableDirective extends AbstractSubscriptionDir
   private readonly _map = inject(DbxActionContextMapDirective);
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
 
-  constructor() {
-    super();
-  }
-
   @Input('dbxActionMapWorkingDisable')
   disabledKey: Maybe<DbxActionDisabledKey>;
 

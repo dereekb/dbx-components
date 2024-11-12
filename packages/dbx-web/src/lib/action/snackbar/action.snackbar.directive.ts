@@ -35,10 +35,6 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
   @Input()
   dbxActionSnackbarUndo?: DbxActionSnackbarGeneratorUndoInput<T, O>;
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.source
       .pipeStore((store) => store.loadingState$)

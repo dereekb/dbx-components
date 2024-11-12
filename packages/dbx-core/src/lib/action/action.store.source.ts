@@ -1,7 +1,7 @@
 import { first, switchMap, Observable, Subscription } from 'rxjs';
 import { Injectable, OnDestroy } from '@angular/core';
 import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
-import { Maybe, ReadableError } from '@dereekb/util';
+import { Destroyable, Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
 import { DbxActionDisabledKey, DbxActionState } from './action';
 
@@ -44,7 +44,7 @@ export function useActionStore<T = unknown, O = unknown>(source: ActionContextSt
 /**
  * Service that wraps a ActionContextStoreSource.
  */
-export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, OnDestroy {
+export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, Destroyable {
   readonly lockSet = new LockSet();
 
   constructor(readonly source: ActionContextStoreSource<T, O>) {
@@ -53,7 +53,7 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
     }
   }
 
-  public ngOnDestroy(): void {
+  public destroy(): void {
     this.lockSet.destroyOnNextUnlock();
   }
 

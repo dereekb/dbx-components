@@ -16,14 +16,10 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T>, { host: true });
   readonly dbxRouterService = inject(DbxRouterService);
 
-  private _redirectInstance = dbxFirebaseIdRouteParamRedirect(this.dbxRouterService);
+  private readonly _redirectInstance = dbxFirebaseIdRouteParamRedirect(this.dbxRouterService);
 
   readonly idFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly id$: Observable<Maybe<ModelKey>> = this._redirectInstance.value$;
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.store.setId(this.idFromParams$); // use from the params, as the params should get updated eventually to the id$ value

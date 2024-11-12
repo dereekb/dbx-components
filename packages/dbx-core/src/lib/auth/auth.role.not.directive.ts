@@ -8,9 +8,9 @@ import { AbstractIfDirective } from '../view/if.directive';
  * Structural decorator directive similar to ngIf that embeds content if the current auth user has none of the target role(s).
  */
 @Directive({
-  selector: '[dbxAuthNotAnyRoles]'
+  selector: '[dbxAuthNotAnyRole]'
 })
-export class DbxAuthNotAnyRolesDirective extends AbstractIfDirective implements OnDestroy {
+export class DbxAuthNotAnyRoleDirective extends AbstractIfDirective implements OnDestroy {
   private _targetRoles = new BehaviorSubject<Maybe<ArrayOrValue<AuthRole>>>(undefined);
 
   readonly targetRoles$ = this._targetRoles.asObservable();
@@ -21,7 +21,7 @@ export class DbxAuthNotAnyRolesDirective extends AbstractIfDirective implements 
     this._targetRoles.complete();
   }
 
-  @Input('dbxAuthNotAnyRoles')
+  @Input('dbxAuthNotAnyRole')
   set targetRoles(roles: Maybe<ArrayOrValue<AuthRole>>) {
     this._targetRoles.next(roles);
   }

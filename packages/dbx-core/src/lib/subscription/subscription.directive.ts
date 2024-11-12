@@ -1,4 +1,4 @@
-import { OnDestroy, Directive, Inject, Optional } from '@angular/core';
+import { OnDestroy, Directive } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
@@ -8,13 +8,7 @@ import { Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractSubscriptionDirective implements OnDestroy {
-  private _subscriptionObject = new SubscriptionObject();
-
-  constructor(@Inject(null) @Optional() subscription?: Subscription) {
-    this.sub = subscription;
-
-    // TODO: Remove this constructor in a future release with breaking changes. It rarely gets used and the sub class requires a constructor set to avoid injection.
-  }
+  private readonly _subscriptionObject = new SubscriptionObject();
 
   ngOnDestroy(): void {
     this._subscriptionObject.destroy();
@@ -31,10 +25,6 @@ export abstract class AbstractSubscriptionDirective implements OnDestroy {
 @Directive()
 export abstract class AbstractLockSetSubscriptionDirective extends AbstractSubscriptionDirective implements OnDestroy {
   readonly lockSet = new LockSet();
-
-  constructor() {
-    super();
-  }
 
   override ngOnDestroy(): void {
     this.lockSet.onNextUnlock(() => this.onLockSetDestroy());

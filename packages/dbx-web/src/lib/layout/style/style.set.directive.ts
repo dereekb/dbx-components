@@ -18,8 +18,8 @@ import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-c
   }
 })
 export class DbxSetStyleDirective extends AbstractSubscriptionDirective implements OnDestroy, OnInit {
-  private _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
-  private _style = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _style = new BehaviorSubject<Maybe<string>>(undefined);
 
   readonly styleService = inject(DbxStyleService);
   readonly cdRef = inject(ChangeDetectorRef);

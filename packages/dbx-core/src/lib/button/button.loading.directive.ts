@@ -12,12 +12,8 @@ import { DbxButton } from './button';
   selector: '[dbxLoadingButton]'
 })
 export class DbxLoadingButtonDirective extends AbstractSubscriptionDirective {
-  readonly button = inject(DbxButton, { host: true });
+  readonly dbxButton = inject(DbxButton, { host: true });
   readonly ngZone = inject(NgZone);
-
-  constructor() {
-    super();
-  }
 
   /**
    * Sets a LoadingContext that is watched for the loading state.
@@ -28,7 +24,7 @@ export class DbxLoadingButtonDirective extends AbstractSubscriptionDirective {
 
     if (context) {
       subscription = context.stream$.subscribe((x) => {
-        this.ngZone.run(() => (this.button.working = x.loading));
+        this.ngZone.run(() => (this.dbxButton.working = x.loading));
       });
     }
 

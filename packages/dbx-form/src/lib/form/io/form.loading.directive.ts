@@ -14,11 +14,7 @@ import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from '.
 export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
-  private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
-
-  constructor() {
-    super();
-  }
+  private readonly _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
   @Input('dbxFormLoadingSourceMode')
   get mode(): DbxFormSourceDirectiveMode {

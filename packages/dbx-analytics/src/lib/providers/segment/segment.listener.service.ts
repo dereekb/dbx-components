@@ -7,7 +7,9 @@ import { DbxAnalyticsSegmentApiService } from './segment.service';
 /**
  * DbxAnalyticsServiceListener adapter for Segment.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServiceListener {
   private _segmentApi = inject(DbxAnalyticsSegmentApiService);
 

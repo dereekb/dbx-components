@@ -139,10 +139,6 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     map(() => undefined as void)
   );
 
-  constructor() {
-    super();
-  }
-
   get isEnabled(): boolean {
     return this.triggerEnabled !== false;
   }

@@ -12,10 +12,6 @@ export class DbxActionErrorDirective extends AbstractSubscriptionDirective imple
   readonly error = inject(DbxReadableErrorComponent, { host: true });
   readonly source = inject(DbxActionContextStoreSourceInstance);
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.source.error$.subscribe((error) => {
       this.error.error = error;

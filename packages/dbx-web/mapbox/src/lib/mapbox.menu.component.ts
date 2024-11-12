@@ -29,17 +29,13 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
   readonly cdRef = inject(ChangeDetectorRef);
 
   private _pos = { x: `0`, y: `0` };
-  private _active = new BehaviorSubject<boolean>(true);
 
-  private _menuCloseSub = new SubscriptionObject();
-  private _preventRightClick = new DestroyFunctionObject();
+  private readonly _active = new BehaviorSubject<boolean>(true);
+  private readonly _menuCloseSub = new SubscriptionObject();
+  private readonly _preventRightClick = new DestroyFunctionObject();
 
   get pos() {
     return this._pos;
-  }
-
-  constructor() {
-    super();
   }
 
   @Input()
@@ -93,8 +89,8 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._active.complete();
-    this._preventRightClick.destroy();
     this._menuCloseSub.destroy();
+    this._preventRightClick.destroy();
 
     if (this.matMenuTrigger) {
       this.matMenuTrigger.closeMenu();

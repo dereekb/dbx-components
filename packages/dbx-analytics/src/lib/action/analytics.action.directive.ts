@@ -25,7 +25,7 @@ export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirec
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
   readonly analyticsService = inject(DbxAnalyticsService);
 
-  private _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig<T, O>>>(undefined);
+  private readonly _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig<T, O>>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
   @Input('dbxActionAnalytics')

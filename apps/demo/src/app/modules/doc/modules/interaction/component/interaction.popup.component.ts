@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
 import { DbxPopupComponent, DbxPopupKey, AbstractPopupDirective, DbxPopupService, PopupPosition } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DocInteractionExamplePopupContentComponent } from './interaction.popup.content.component';
@@ -19,6 +19,8 @@ export interface DocInteractionPopupConfig {
   `
 })
 export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> implements OnInit, OnDestroy {
+  private readonly popupService = inject(DbxPopupService);
+
   @ViewChild(DocInteractionExamplePopupContentComponent, { static: true })
   content!: DocInteractionExamplePopupContentComponent;
 
@@ -26,10 +28,6 @@ export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirecti
 
   get config(): DocInteractionPopupConfig {
     return this.popup.data as DocInteractionPopupConfig;
-  }
-
-  constructor(popup: DbxPopupComponent<O, DocInteractionPopupConfig>, private readonly popupService: DbxPopupService) {
-    super(popup);
   }
 
   static openPopup(popupService: DbxPopupService, config: DocInteractionPopupConfig, popupKey?: DbxPopupKey): NgPopoverRef {

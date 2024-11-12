@@ -4,7 +4,7 @@
     "outDir": "../../dist/out-tsc",
     "types": ["segment-analytics", "jest"],
     "target": "ES2022",
-    "useDefineForClassFields": false
+    "useDefineForClassFields": true
   },
   "files": ["src/main.ts"],
   "include": ["src/**/*.d.ts"],

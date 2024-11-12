@@ -34,7 +34,7 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
   destroy(): void {
     if (this._store) {
       this._store.ngOnDestroy();
-      this._instance.ngOnDestroy();
+      this._instance.destroy();
     }
   }
 

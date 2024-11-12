@@ -19,12 +19,8 @@ export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
 export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
+  private readonly _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
   readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.successFunction$

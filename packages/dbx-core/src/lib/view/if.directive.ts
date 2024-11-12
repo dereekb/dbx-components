@@ -15,10 +15,6 @@ export abstract class AbstractIfDirective extends AbstractSubscriptionDirective 
    */
   abstract readonly show$: Observable<boolean>;
 
-  constructor() {
-    super();
-  }
-
   ngOnInit() {
     this.sub = this.show$.pipe(distinctUntilChanged()).subscribe((show) => {
       if (show) {

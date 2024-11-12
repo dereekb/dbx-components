@@ -48,8 +48,8 @@ export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
     viewType: 'none'
   };
 
-  private _iconOnly = new BehaviorSubject<Maybe<boolean>>(undefined);
-  private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
+  private readonly _iconOnly = new BehaviorSubject<Maybe<boolean>>(undefined);
+  private readonly _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
 
   readonly state$ = combineLatest([this._inputError, this._iconOnly.pipe(distinctUntilChanged())]).pipe(
     map(([rawError, iconOnly]) => {
@@ -100,10 +100,6 @@ export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
     }),
     shareReplay(1)
   );
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this.state$.subscribe((state) => {

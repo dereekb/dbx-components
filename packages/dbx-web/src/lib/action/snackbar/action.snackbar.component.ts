@@ -16,8 +16,8 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
   readonly snackbarRef = inject(MatSnackBarRef<DbxActionSnackbarComponent>);
   readonly data = inject<DbxActionSnackbarDisplayConfig>(MAT_SNACK_BAR_DATA);
 
-  private _durationTimeout = new Subject<void>();
-  private _actionRef = new BehaviorSubject<Maybe<DbxActionContextSourceReference>>(this.data.action?.reference);
+  private readonly _durationTimeout = new Subject<void>();
+  private readonly _actionRef = new BehaviorSubject<Maybe<DbxActionContextSourceReference>>(this.data.action?.reference);
 
   readonly value$ = of(0); // value passed to the action.
   readonly sourceInstance$ = this._actionRef.pipe(
@@ -72,10 +72,6 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
 
   get actionConfig(): Maybe<DbxActionSnackbarActionConfig> {
     return this.data.action;
-  }
-
-  constructor() {
-    super();
   }
 
   ngOnInit(): void {

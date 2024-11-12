@@ -40,14 +40,14 @@ export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective impl
   @ViewChild('content', { read: ElementRef, static: true })
   readonly content!: ElementRef;
 
-  private _resized = new Subject<ResizedEvent>();
-  private _updateMargins = new Subject<void>();
-  private _forceHasContent = new BehaviorSubject<boolean>(false);
-  private _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
-  private _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
-  private _isOpen = new BehaviorSubject<boolean>(true);
-  private _color = new BehaviorSubject<Maybe<DbxThemeColor>>('background');
-  private _toggleSub = new SubscriptionObject();
+  private readonly _resized = new Subject<ResizedEvent>();
+  private readonly _updateMargins = new Subject<void>();
+  private readonly _forceHasContent = new BehaviorSubject<boolean>(false);
+  private readonly _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
+  private readonly _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
+  private readonly _isOpen = new BehaviorSubject<boolean>(true);
+  private readonly _color = new BehaviorSubject<Maybe<DbxThemeColor>>('background');
+  private readonly _toggleSub = new SubscriptionObject();
 
   readonly resized$ = this._resized.asObservable();
   readonly side$ = this._side.pipe(distinctUntilChanged(), shareReplay(1));
@@ -93,10 +93,6 @@ export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective impl
       return opened ? icons[0] : icons[1];
     })
   );
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = (

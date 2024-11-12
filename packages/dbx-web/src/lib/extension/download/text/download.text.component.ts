@@ -32,10 +32,10 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
   @Input()
   showPreview: boolean = true;
 
-  private _downloadButton = new BehaviorSubject<Maybe<ElementRef>>(undefined);
+  private readonly _downloadButton = new BehaviorSubject<Maybe<ElementRef>>(undefined);
   readonly downloadButton$ = this._downloadButton.asObservable();
 
-  private _contentLoadingState = new BehaviorSubject<Maybe<LoadingState<DownloadTextContent>>>(undefined);
+  private readonly _contentLoadingState = new BehaviorSubject<Maybe<LoadingState<DownloadTextContent>>>(undefined);
   readonly contentLoadingState$ = this._contentLoadingState.pipe(filterMaybe(), shareReplay(1));
 
   readonly content$ = this._contentLoadingState.pipe(
@@ -56,6 +56,7 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
     map((x) => x?.name ?? 'File'),
     shareReplay(1)
   );
+
   readonly fileUrl$: Observable<Maybe<SafeResourceUrl>> = this.content$.pipe(
     map((content) => {
       let fileUrl: Maybe<SafeResourceUrl> = undefined;
@@ -93,6 +94,7 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._downloadButton.complete();
     this._contentLoadingState.complete();
   }
 

@@ -18,10 +18,6 @@ export class DbxActionSnackbarErrorDirective extends AbstractSubscriptionDirecti
   @Input('dbxActionSnackbarError')
   config?: Maybe<DbxErrorSnackbarConfig> | Milliseconds | '';
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.source.error$.pipe(filterMaybe()).subscribe((inputError) => {
       const error = toReadableError(inputError);

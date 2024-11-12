@@ -14,7 +14,7 @@ export class DbxButtonSegueDirective extends AbstractSubscriptionDirective imple
   readonly dbxButton = inject(DbxButton);
   readonly dbxRouterService = inject(DbxRouterService);
 
-  private _segueRef = new BehaviorSubject<Maybe<SegueRef>>(undefined);
+  private readonly _segueRef = new BehaviorSubject<Maybe<SegueRef>>(undefined);
   readonly segueRef$ = this._segueRef.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   @Input('dbxButtonSegue')
@@ -24,10 +24,6 @@ export class DbxButtonSegueDirective extends AbstractSubscriptionDirective imple
 
   set segueRef(segueRef: Maybe<SegueRef>) {
     this._segueRef.next(segueRef);
-  }
-
-  constructor() {
-    super();
   }
 
   ngOnInit(): void {

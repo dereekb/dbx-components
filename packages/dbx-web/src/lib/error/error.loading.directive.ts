@@ -14,10 +14,6 @@ import { DbxReadableErrorComponent } from './error.component';
 export class DbxLoadingErrorDirective extends AbstractSubscriptionDirective {
   readonly error = inject(DbxReadableErrorComponent, { host: true });
 
-  constructor() {
-    super();
-  }
-
   /**
    * Sets a LoadingContext that is watched for the loading state.
    */

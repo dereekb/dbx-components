@@ -13,8 +13,7 @@ export class DbxAnalyticsSegmentModule {
         {
           provide: PRELOAD_SEGMENT_TOKEN,
           useValue: preloadService
-        },
-        DbxAnalyticsSegmentApiService
+        }
       ]
     };
   }

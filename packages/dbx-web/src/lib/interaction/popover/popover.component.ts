@@ -76,6 +76,9 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   }
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
+  private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);
+  private readonly compactContextState = inject(CompactContextStore);
+
   readonly lockSet = new LockSet();
 
   readonly contentConfig: DbxInjectionComponentConfig = {
@@ -94,12 +97,10 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
     startWith(false),
     shareReplay(1)
   );
+
   readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
   getClosingValueFn?: (value: Maybe<I>, closeType: NgPopoverCloseType) => PromiseOrValue<O | undefined>;
-
-  private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);
-  private readonly compactContextState = inject(CompactContextStore);
 
   constructor() {
     super();

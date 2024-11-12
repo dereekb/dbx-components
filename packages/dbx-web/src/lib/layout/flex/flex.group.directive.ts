@@ -32,7 +32,7 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
 
   private _small = false;
 
-  private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('tablet');
+  private readonly _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('tablet');
 
   readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint).pipe(
     map((x) => !x),

@@ -11,10 +11,6 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });
 
-  constructor() {
-    super();
-  }
-
   ngOnInit(): void {
     this.sub = this.source.state$.subscribe((state) => {
       console.log('dbxActionLogger - state: ', state);
