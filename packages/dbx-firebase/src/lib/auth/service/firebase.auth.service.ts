@@ -7,7 +7,7 @@ import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
-import { FirebaseAuthContextInfo, FirebaseAuthToken } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo } from '@dereekb/firebase';
 
 /**
  * Returns an observable that returns the state of the
@@ -172,7 +172,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
     if (user) {
       const jwtToken: IdTokenResult = await user.getIdTokenResult();
-      result = new DbxFirebaseAuthContextInfo(this, user, jwtToken);
+      result = dbxFirebaseAuthContextInfo(this, user, jwtToken);
     }
 
     return result;
@@ -250,30 +250,43 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 /**
  * FirebaseAuthContextInfo implementation from DbxFirebaseAuthService.
  */
-export class DbxFirebaseAuthContextInfo implements FirebaseAuthContextInfo {
-  private _token = cachedGetter(() => firebaseAuthTokenFromUser(this.user));
-  private _roles = cachedGetter(() => this.service.rolesForClaims(this.getClaims()));
-  private _isAdmin = cachedGetter(() => this.service.isAdminInAuthRoleSet(this._roles()));
+export interface DbxFirebaseAuthContextInfo extends FirebaseAuthContextInfo {
+  readonly service: DbxFirebaseAuthService;
+  readonly user: User;
+  readonly jwtToken: IdTokenResult;
+}
 
-  constructor(readonly service: DbxFirebaseAuthService, readonly user: User, readonly jwtToken: IdTokenResult) {}
-
-  get uid() {
-    return this.user.uid;
+/**
+ * Creates a new DbxFirebaseAuthContextInfo instance.
+ *
+ * @param service
+ * @param user
+ * @param jwtToken
+ * @returns
+ */
+export function dbxFirebaseAuthContextInfo(service: DbxFirebaseAuthService, user: User, jwtToken: IdTokenResult): DbxFirebaseAuthContextInfo {
+  function getClaims<T extends AuthClaimsObject = AuthClaimsObject>(): AuthClaims<T> {
+    return jwtToken.claims as AuthClaims<T>;
   }
 
-  isAdmin(): boolean {
-    return this._isAdmin();
-  }
+  const { uid } = user;
+  const token = firebaseAuthTokenFromUser(user);
+  const getAuthRoles = cachedGetter(() => service.rolesForClaims(getClaims()));
+  const isAdmin = cachedGetter(() => service.isAdminInAuthRoleSet(getAuthRoles()));
 
-  getClaims<T extends AuthClaimsObject = AuthClaimsObject>(): AuthClaims<T> {
-    return this.jwtToken.claims as AuthClaims<T>;
-  }
+  const result: DbxFirebaseAuthContextInfo = {
+    service,
+    user,
+    jwtToken,
 
-  getAuthRoles(): AuthRoleSet {
-    return this._roles();
-  }
+    uid,
 
-  get token(): FirebaseAuthToken {
-    return this._token();
-  }
+    isAdmin,
+    getClaims,
+    getAuthRoles,
+
+    token
+  };
+
+  return result;
 }

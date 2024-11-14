@@ -9,7 +9,16 @@ import { type FirestoreAccessorIncrementUpdate, type FirestoreDocumentDataAccess
  * Forwards all non-overridden accessor functions to the wrapped accessor by default.
  */
 export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = DocumentData> implements FirestoreDocumentDataAccessor<T, D> {
-  constructor(readonly accessor: FirestoreDocumentDataAccessor<T, D>) {}
+  private readonly _accessor: FirestoreDocumentDataAccessor<T, D>;
+
+  constructor(accessor: FirestoreDocumentDataAccessor<T, D>) {
+    this._accessor = accessor;
+  }
+
+  get accessor(): FirestoreDocumentDataAccessor<T, D> {
+    return this._accessor;
+  }
+
   get documentRef(): DocumentReference<T> {
     return this.accessor.documentRef;
   }

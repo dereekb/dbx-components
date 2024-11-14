@@ -111,9 +111,22 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
 }
 
 export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseServerAuthService> implements FirebaseServerAuthUserContext {
-  private readonly _loadRecord = cachedGetter(() => this.service.auth.getUser(this.uid));
+  private readonly _service: S;
+  private readonly _uid: FirebaseAuthUserId;
+  private readonly _loadRecord = cachedGetter(() => this._service.auth.getUser(this._uid));
 
-  constructor(readonly service: S, readonly uid: FirebaseAuthUserId) {}
+  constructor(service: S, uid: FirebaseAuthUserId) {
+    this._service = service;
+    this._uid = uid;
+  }
+
+  get service() {
+    return this._service;
+  }
+
+  get uid() {
+    return this._uid;
+  }
 
   async exists(): Promise<boolean> {
     return getAuthUserOrUndefined(this._loadRecord()).then((x) => Boolean(x));
@@ -298,12 +311,26 @@ export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserConte
 }
 
 export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServerAuthContext, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, S extends FirebaseServerAuthService<U, C> = FirebaseServerAuthService<U, C>> implements FirebaseServerAuthContext {
+  private readonly _service: S;
+  private readonly _context: CallableContextWithAuthData;
+
   private readonly _authRoles = cachedGetter(() => this.service.readRoles(this.claims));
   private readonly _isAdmin = cachedGetter(() => this.service.isAdminInRoles(this._authRoles()));
   private readonly _hasSignedTos = cachedGetter(() => this.service.hasSignedTosInRoles(this._authRoles()));
   private readonly _userContext = cachedGetter(() => this.service.userContext(this.context.auth.uid));
 
-  constructor(readonly service: S, readonly context: CallableContextWithAuthData) {}
+  constructor(service: S, context: CallableContextWithAuthData) {
+    this._service = service;
+    this._context = context;
+  }
+
+  get service() {
+    return this._service;
+  }
+
+  get context() {
+    return this._context;
+  }
 
   get userContext() {
     return this._userContext();
@@ -445,9 +472,17 @@ export function userContextFromUid<U extends FirebaseServerAuthUserContext = Fir
 }
 
 export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D, U> {
+  private readonly _authService: FirebaseServerAuthService<U, C>;
+
   protected setupThrottleTime: Milliseconds = DEFAULT_SETUP_COM_THROTTLE_TIME;
 
-  constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
+  constructor(authService: FirebaseServerAuthService<U, C>) {
+    this._authService = authService;
+  }
+
+  get authService() {
+    return this._authService;
+  }
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
     const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, data, sendDetailsInTestEnvironment } = input;
@@ -716,7 +751,15 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
  * Abstract FirebaseServerAuthService implementation.
  */
 export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext<U> = FirebaseServerAuthContext<U>> implements FirebaseServerAuthService<U, C> {
-  constructor(readonly auth: admin.auth.Auth) {}
+  private readonly _auth: admin.auth.Auth;
+
+  constructor(auth: admin.auth.Auth) {
+    this._auth = auth;
+  }
+
+  get auth(): admin.auth.Auth {
+    return this._auth;
+  }
 
   context(context: functions.https.CallableContext): C {
     assertIsContextWithAuthData(context);

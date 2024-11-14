@@ -14,7 +14,7 @@ export class DataDoesNotExistError extends StoredDataError {
 }
 
 export class DataIsExpiredError<T> extends StoredDataError {
-  constructor(public readonly data: ReadStoredData<T>, message?: string) {
+  constructor(readonly data: ReadStoredData<T>, message?: string) {
     super(message);
   }
 }

@@ -16,8 +16,8 @@ import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../../loader/colle
 export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeWatcher<S>, OnInit, OnDestroy {
   readonly dbxFirebaseCollectionStoreDirective = inject(DbxFirebaseCollectionStoreDirective<T, D, S>);
 
-  private _watcher = dbxFirebaseCollectionChangeWatcher(this.dbxFirebaseCollectionStoreDirective.store);
-  private _trigger = dbxFirebaseCollectionChangeTriggerForWatcher(this._watcher, () => this.restart());
+  private readonly _watcher = dbxFirebaseCollectionChangeWatcher(this.dbxFirebaseCollectionStoreDirective.store);
+  private readonly _trigger = dbxFirebaseCollectionChangeTriggerForWatcher(this._watcher, () => this.restart());
 
   readonly mode$: Observable<DbxFirebaseCollectionChangeWatcherTriggerMode> = this._watcher.mode$;
   readonly event$: Observable<DbxFirebaseCollectionChangeWatcherEvent> = this._watcher.event$;

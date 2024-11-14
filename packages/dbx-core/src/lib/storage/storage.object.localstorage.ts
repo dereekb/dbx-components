@@ -4,7 +4,11 @@ import { FullStorageObject, Maybe, StorageObject, StorageObjectUtility, StoredDa
  * StorageObject using LocalStorage.
  */
 export class FullLocalStorageObject implements FullStorageObject {
-  constructor(private _localStorage: StorageObject) {}
+  private readonly _localStorage: StorageObject;
+
+  constructor(localStorage: StorageObject) {
+    this._localStorage = localStorage;
+  }
 
   get isPersistant(): boolean {
     return true;

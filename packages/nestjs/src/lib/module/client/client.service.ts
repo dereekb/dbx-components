@@ -7,7 +7,15 @@ import { ClientAppServiceConfig } from './client.config';
  */
 @Injectable()
 export class ClientAppService {
-  constructor(readonly config: ClientAppServiceConfig) {}
+  private _config: ClientAppServiceConfig;
+
+  constructor(config: ClientAppServiceConfig) {
+    this._config = config;
+  }
+
+  get config() {
+    return this._config;
+  }
 
   get webAppUrl(): ClientWebAppUrl {
     return this.config.client.clientWebAppUrl;

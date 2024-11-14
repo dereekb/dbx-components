@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilC
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {
   fields: Observable<FormlyFieldConfig[]>;
@@ -110,7 +110,7 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
   }
 
   isDisabled(): boolean {
-    return BooleanStringKeyArrayUtilityInstance.isTrue(this.disabled);
+    return BooleanStringKeyArrayUtility.isTrue(this.disabled);
   }
 
   get disabled(): BooleanStringKeyArray {
@@ -122,7 +122,7 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
   }
 
   setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
-    const nextDisabled = BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled);
+    const nextDisabled = BooleanStringKeyArrayUtility.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled);
     this._disabled.next(nextDisabled);
 
     if (this._delegate.value) {

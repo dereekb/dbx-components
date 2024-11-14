@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '@dereekb/dbx-firebase';
 import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions } from '@dereekb/demo-firebase';
 
 @Injectable()
 export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profile, ProfileDocument> {
-  constructor(readonly profileFunctions: ProfileFunctions, collections: DemoFirestoreCollections) {
+  readonly profileFunctions = inject(ProfileFunctions);
+
+  constructor(collections: DemoFirestoreCollections) {
     super({ firestoreCollection: collections.profileCollection });
   }
 

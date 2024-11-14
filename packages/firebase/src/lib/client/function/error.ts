@@ -2,6 +2,8 @@ import { type Maybe, type ServerError, ServerErrorResponse, type ServerErrorResp
 import { type FirebaseError } from 'firebase/app';
 
 export class FirebaseServerError<T extends ServerErrorResponseData = ServerErrorResponseData> extends ServerErrorResponse<T> {
+  readonly firebaseError: FirebaseError;
+
   static fromFirebaseError(error: FirebaseError): FirebaseServerError {
     let details: Maybe<ServerError<ServerErrorResponseData>> = (error as Partial<{ details: ServerError }>).details;
 
@@ -15,8 +17,9 @@ export class FirebaseServerError<T extends ServerErrorResponseData = ServerError
     return new FirebaseServerError(error, details);
   }
 
-  constructor(readonly firebaseError: FirebaseError, serverError: ServerError<T>) {
+  constructor(firebaseError: FirebaseError, serverError: ServerError<T>) {
     super(serverError);
+    this.firebaseError = firebaseError;
   }
 
   get _error() {

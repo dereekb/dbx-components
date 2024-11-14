@@ -1,16 +1,38 @@
-import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, Input, OnDestroy, Provider, Type } from '@angular/core';
 import { FirestoreDocument, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
+import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 
 /**
  * Abstract directive that contains a DbxFirebaseCollectionStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
-  constructor(readonly store: S) {}
+export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements OnDestroy {
+  private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
+  readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
 
-  readonly pageLoadingState$ = this.store.pageLoadingState$;
+  readonly pageLoadingState$ = this.store$.pipe(switchMap((x) => x.pageLoadingState$));
+
+  constructor(store: S) {
+    this.replaceStore(store);
+  }
+
+  get store() {
+    return this._store.value as S;
+  }
+
+  ngOnDestroy(): void {
+    this._store.complete();
+  }
+
+  /**
+   * Replaces the internal store.
+   */
+  replaceStore(store: S) {
+    this._store.next(store);
+  }
 
   // MARK: Inputs
   @Input()

@@ -9,11 +9,15 @@ const DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY = defaultForwardFunctionFactory<
  * Utility class used in conjuction with a DbxRouteParamReaderInstance to redirect when the default param is not valid.
  */
 export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Destroyable {
-  private _enabled = new BehaviorSubject<boolean>(true);
-  private _useDefaultFilter = new BehaviorSubject<Maybe<SwitchMapToDefaultFilterFunction<T>>>(undefined);
-  private _sub = new SubscriptionObject();
+  private readonly instance: DbxRouteParamReaderInstance<T>;
 
-  constructor(readonly instance: DbxRouteParamReaderInstance<T>) {}
+  private readonly _enabled = new BehaviorSubject<boolean>(true);
+  private readonly _useDefaultFilter = new BehaviorSubject<Maybe<SwitchMapToDefaultFilterFunction<T>>>(undefined);
+  private readonly _sub = new SubscriptionObject();
+
+  constructor(instance: DbxRouteParamReaderInstance<T>) {
+    this.instance = instance;
+  }
 
   init(): void {
     this._sub.subscription = this._enabled

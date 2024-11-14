@@ -30,7 +30,7 @@ describe('iteration.next', () => {
 
       const testMaxPagesToLoad = 100;
       const expectedFinalPage = 0;
-      instance.maxPageLoadLimit = testMaxPagesToLoad;
+      instance.setMaxPageLoadLimit(testMaxPagesToLoad);
 
       iteratorNextPageUntilPage(instance, 10).then((page) => {
         expect(page).toBe(expectedFinalPage);
@@ -63,13 +63,13 @@ describe('iteration.next', () => {
     it(`should call next up until the iterator's limit is reached, even if target page is after.`, (done) => {
       const testMaxPagesToLoad = 5;
       const targetPage = 10;
-      instance.maxPageLoadLimit = testMaxPagesToLoad;
+      instance.setMaxPageLoadLimit(testMaxPagesToLoad);
 
       iteratorNextPageUntilPage(instance, targetPage).then((page) => {
         expect(page).toBe(testMaxPagesToLoad - 1);
 
         instance.numberOfPagesLoaded$.pipe(first()).subscribe((page) => {
-          expect(page).toBe(instance.maxPageLoadLimit);
+          expect(page).toBe(instance.getMaxPageLoadLimit());
           done();
         });
       });
@@ -102,13 +102,13 @@ describe('iteration.next', () => {
   describe('iteratorNextPageUntilMaxPageLoadLimit()', () => {
     it(`should call next up until the iterator's limit is reached.`, (done) => {
       const testMaxPagesToLoad = 15;
-      instance.maxPageLoadLimit = testMaxPagesToLoad;
+      instance.setMaxPageLoadLimit(testMaxPagesToLoad);
 
       iteratorNextPageUntilMaxPageLoadLimit(instance).then((page) => {
         expect(page).toBe(testMaxPagesToLoad - 1);
 
         instance.numberOfPagesLoaded$.pipe(first()).subscribe((page) => {
-          expect(page).toBe(instance.maxPageLoadLimit);
+          expect(page).toBe(instance.getMaxPageLoadLimit());
           done();
         });
       });

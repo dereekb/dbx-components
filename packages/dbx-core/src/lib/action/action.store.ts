@@ -1,16 +1,16 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe, ReadableError } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe, ReadableError } from '@dereekb/util';
 import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
 import { DbxActionDisabledKey, DbxActionState, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {
-  return BooleanStringKeyArrayUtilityInstance.isFalse(state.disabled);
+  return BooleanStringKeyArrayUtility.isFalse(state.disabled);
 }
 
 export function isActionContextDisabled(state: ActionContextState): boolean {
-  return BooleanStringKeyArrayUtilityInstance.isTrue(state.disabled);
+  return BooleanStringKeyArrayUtility.isTrue(state.disabled);
 }
 
 export function isDisabledActionContextState(state: ActionContextState): boolean {
@@ -232,7 +232,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    */
   readonly disable = this.updater((state, key?: void | DbxActionDisabledKey) => ({
     ...state,
-    disabled: BooleanStringKeyArrayUtilityInstance.insert(state.disabled, (key as string) ?? DEFAULT_ACTION_DISABLED_KEY)
+    disabled: BooleanStringKeyArrayUtility.insert(state.disabled, (key as string) ?? DEFAULT_ACTION_DISABLED_KEY)
   }));
 
   /**
@@ -240,7 +240,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    */
   readonly enable = this.updater((state, key?: void | DbxActionDisabledKey) => ({
     ...state,
-    disabled: BooleanStringKeyArrayUtilityInstance.remove(state.disabled, (key as string) ?? DEFAULT_ACTION_DISABLED_KEY)
+    disabled: BooleanStringKeyArrayUtility.remove(state.disabled, (key as string) ?? DEFAULT_ACTION_DISABLED_KEY)
   }));
 
   /**

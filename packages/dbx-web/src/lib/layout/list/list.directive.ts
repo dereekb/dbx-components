@@ -29,9 +29,9 @@ export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> =
 
 @Directive()
 export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy, DbxListViewWrapper<T, S> {
-  private readonly _init = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
+  private readonly _initialConfig = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
 
-  readonly config$ = this._init.pipe(
+  readonly config$ = this._initialConfig.pipe(
     filterMaybe(),
     valueFromObservableOrValue(),
     map((x: C) => this._buildListConfig(x)),
@@ -53,12 +53,12 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   @Output()
   readonly loadMore = new EventEmitter<void>();
 
-  constructor(readonly initConfig: ObservableOrValue<C>) {
-    this._init.next(this.initConfig);
+  constructor(initConfig: ObservableOrValue<C>) {
+    this._initialConfig.next(initConfig);
   }
 
   ngOnDestroy(): void {
-    this._init.complete();
+    this._initialConfig.complete();
     this.clickItem.complete();
     this.loadMore.complete();
   }

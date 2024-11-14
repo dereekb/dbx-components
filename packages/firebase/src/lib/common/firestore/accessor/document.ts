@@ -37,10 +37,24 @@ export type FirestoreDocumentData<D extends FirestoreDocument<any>> = D extends 
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
 export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, I>, I extends FirestoreModelIdentity = FirestoreModelIdentity> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
-  readonly stream$ = lazyFrom(() => this.accessor.stream());
+  private readonly _accessor: FirestoreDocumentDataAccessor<T>;
+  private readonly _documentAccessor: LimitedFirestoreDocumentAccessor<T, D>;
+
+  readonly stream$ = lazyFrom(() => this._accessor.stream());
   readonly data$: Observable<T> = lazyFrom(() => dataFromSnapshotStream(this.stream$));
 
-  constructor(readonly accessor: FirestoreDocumentDataAccessor<T>, readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {}
+  constructor(accessor: FirestoreDocumentDataAccessor<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {
+    this._accessor = accessor;
+    this._documentAccessor = documentAccessor;
+  }
+
+  get accessor(): FirestoreDocumentDataAccessor<T> {
+    return this._accessor;
+  }
+
+  get documentAccessor(): LimitedFirestoreDocumentAccessor<T, D> {
+    return this._documentAccessor;
+  }
 
   abstract get modelIdentity(): I;
 

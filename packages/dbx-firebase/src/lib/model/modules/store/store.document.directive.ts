@@ -36,6 +36,10 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
     this._store.complete();
   }
 
+  get store() {
+    return this._store.value as S;
+  }
+
   /**
    * Replaces the internal store.
    */
@@ -44,10 +48,6 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   }
 
   // MARK: Inputs
-  get store() {
-    return this._store.value as S;
-  }
-
   @Input()
   set documentId(documentId: Maybe<FirestoreModelId>) {
     useFirst(this.store$, (x) => x.setId(documentId));

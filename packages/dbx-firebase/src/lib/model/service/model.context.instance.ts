@@ -15,101 +15,127 @@ export function dbxFirebaseInContextFirebaseModelServiceInstanceFactory<S extend
       switchMap((service) => key$.pipe(map((key) => service(key))))
     ) as unknown as Observable<InModelContextFirebaseModelService<C, FirestoreDocumentData<D>, D, R>>;
 
-    return new DbxFirebaseInContextFirebaseModelServiceInstance<D, R, C>(modelServiceObs);
+    return dbxFirebaseInContextFirebaseModelServiceInstance<D, R, C>(modelServiceObs);
   };
 }
 
+export interface DbxFirebaseInContextFirebaseModelServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> extends DbxFirebaseInContextFirebaseModelInfoServiceInstance<D, R> {
+  readonly modelService$: Observable<InModelContextFirebaseModelService<C, FirestoreDocumentData<D>, D, R>>;
+}
+
 /**
+ * Creates a new DbxFirebaseInContextFirebaseModelServiceInstance.
+ *
  * Wraps an InModelContextFirebaseModelService observable and provides different piped observables.
  */
-export class DbxFirebaseInContextFirebaseModelServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> implements DbxFirebaseInContextFirebaseModelInfoServiceInstance<D, R> {
-  constructor(readonly modelService$: Observable<InModelContextFirebaseModelService<C, FirestoreDocumentData<D>, D, R>>) {}
-
-  readonly key$ = this.modelService$.pipe(map((x) => x.model.key));
+export function dbxFirebaseInContextFirebaseModelServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext>(modelService$: Observable<InModelContextFirebaseModelService<C, FirestoreDocumentData<D>, D, R>>) {
+  const key$ = modelService$.pipe(map((x) => x.model.key));
 
   // MARK: Model
-  readonly modelType$ = this.modelService$.pipe(
+  const modelType$ = modelService$.pipe(
     map((x) => x.model.modelType),
     distinctUntilChanged()
   );
 
-  readonly model$ = this.modelService$.pipe(
+  const model$ = modelService$.pipe(
     map((x) => x.model),
     distinctUntilChanged((a, b) => a.key === b.key),
     shareReplay(1)
   );
 
-  readonly snapshotData$ = this.model$.pipe(
+  const snapshotData$ = model$.pipe(
     switchMap((x) => x.snapshotData()),
     shareReplay(1)
   );
 
-  snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<FirestoreDocumentData<D>>> {
-    return this.model$.pipe(
+  function snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<FirestoreDocumentData<D>>> {
+    return model$.pipe(
       switchMap((x) => x.snapshotStream(mode)),
       shareReplay(1)
     );
   }
 
-  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<FirestoreDocumentData<D>> {
-    return this.model$.pipe(
+  function snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<FirestoreDocumentData<D>> {
+    return model$.pipe(
       switchMap((x) => x.snapshotDataStream(mode)),
       shareReplay(1)
     );
   }
 
   // MARK: Roles
-  readonly roleReader$ = this.modelService$.pipe(
+  const roleReader$ = modelService$.pipe(
     switchMap((x) => x.roleReader()),
     shareReplay(1)
   );
 
-  readonly roleMap$ = this.roleReader$.pipe(
+  const roleMap$ = roleReader$.pipe(
     map((x) => x.roleMap),
     shareReplay(1)
   );
 
-  readonly hasNoAccess$ = this.roleReader$.pipe(
+  const hasNoAccess$ = roleReader$.pipe(
     map((x) => x.hasNoAccess()),
     shareReplay(1)
   );
 
-  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): Observable<GrantedRoleTruthMap<M>> {
-    return this.roleReader$.pipe(
+  function truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): Observable<GrantedRoleTruthMap<M>> {
+    return roleReader$.pipe(
       map((x) => x.truthMap(input)),
       shareReplay(1)
     );
   }
 
-  hasAnyRoles(roles: IterableOrValue<R>): Observable<boolean> {
-    return this.hasRoles('any', roles);
+  function hasAnyRoles(roles: IterableOrValue<R>): Observable<boolean> {
+    return hasRoles('any', roles);
   }
 
-  hasAllRoles(roles: IterableOrValue<R>): Observable<boolean> {
-    return this.hasRoles('all', roles);
+  function hasAllRoles(roles: IterableOrValue<R>): Observable<boolean> {
+    return hasRoles('all', roles);
   }
 
-  hasRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean> {
-    return this.roleReader$.pipe(
+  function hasRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean> {
+    return roleReader$.pipe(
       map((x) => x.hasRoles(setIncludes, roles)),
       distinctUntilChanged(),
       shareReplay(1)
     );
   }
 
-  containsAnyRoles(roles: IterableOrValue<R>): Observable<boolean> {
-    return this.containsRoles('any', roles);
+  function containsAnyRoles(roles: IterableOrValue<R>): Observable<boolean> {
+    return containsRoles('any', roles);
   }
 
-  containsAllRoles(roles: IterableOrValue<R>): Observable<boolean> {
-    return this.containsRoles('all', roles);
+  function containsAllRoles(roles: IterableOrValue<R>): Observable<boolean> {
+    return containsRoles('all', roles);
   }
 
-  containsRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean> {
-    return this.roleReader$.pipe(
+  function containsRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean> {
+    return roleReader$.pipe(
       map((x) => x.containsRoles(setIncludes, roles)),
       distinctUntilChanged(),
       shareReplay(1)
     );
   }
+
+  const result: DbxFirebaseInContextFirebaseModelServiceInstance<D, R, C> = {
+    modelService$,
+    key$,
+    modelType$,
+    model$,
+    snapshotData$,
+    snapshotStream,
+    snapshotDataStream,
+    roleReader$,
+    roleMap$,
+    hasNoAccess$,
+    truthMap,
+    hasAnyRoles,
+    hasAllRoles,
+    hasRoles,
+    containsAnyRoles,
+    containsAllRoles,
+    containsRoles
+  };
+
+  return result;
 }

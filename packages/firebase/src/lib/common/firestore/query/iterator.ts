@@ -1,4 +1,4 @@
-import { type PageLoadingState, ItemPageIterator, type ItemPageIterationInstance, type ItemPageIterationConfig, type ItemPageIteratorDelegate, type ItemPageIteratorRequest, type ItemPageIteratorResult, MappedPageItemIterationInstance, type ItemPageLimit } from '@dereekb/rxjs';
+import { type PageLoadingState, ItemPageIterator, type ItemPageIterationInstance, type ItemPageIterationConfig, type ItemPageIteratorDelegate, type ItemPageIteratorRequest, type ItemPageIteratorResult, type MappedPageItemIterationInstance, type ItemPageLimit, mappedPageItemIteration } from '@dereekb/rxjs';
 import { type QueryDocumentSnapshotArray, type QuerySnapshot, type SnapshotListenOptions } from '../types';
 import { asArray, type Maybe, lastValue, mergeArraysIntoArray, type ArrayOrValue } from '@dereekb/util';
 import { from, type Observable, of, exhaustMap } from 'rxjs';
@@ -52,7 +52,7 @@ export interface FirestoreItemPageQueryResult<T> {
 }
 
 export interface FirestoreItemPageQueryResultStreamOptions {
-  options?: Maybe<SnapshotListenOptions>;
+  readonly options?: Maybe<SnapshotListenOptions>;
 }
 
 export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
@@ -133,21 +133,11 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
   };
 }
 
-export class FirestoreItemPageIterationInstance<T> extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
-  constructor(snapshotIteration: InternalFirestoreItemPageIterationInstance<T>) {
-    super(snapshotIteration, {
-      forwardDestroy: true,
-      mapValue: (x: FirestoreItemPageQueryResult<T>) => x.docs
-    });
-  }
-
-  get snapshotIteration(): InternalFirestoreItemPageIterationInstance<T> {
-    return this.itemIterator;
-  }
+export interface FirestoreItemPageIterationInstance<T> extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
+  readonly snapshotIteration: InternalFirestoreItemPageIterationInstance<T>;
 }
 
-// MARK: Iterator
-
+// MARK: Iteration Factory
 /**
  * FirestoreItemPageIteration factory.
  */
@@ -184,6 +174,17 @@ export const FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE: FirestoreItemPageIteratorDel
 export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPageQueryResult<unknown>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<unknown>>(FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE);
 
 export function firestoreItemPageIteration<T>(config: FirestoreItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
-  const iterator: InternalFirestoreItemPageIterationInstance<T> = FIRESTORE_ITEM_PAGE_ITERATOR.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
-  return new FirestoreItemPageIterationInstance<T>(iterator);
+  const snapshotIteration: InternalFirestoreItemPageIterationInstance<T> = FIRESTORE_ITEM_PAGE_ITERATOR.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
+
+  const mappedIteration = mappedPageItemIteration(snapshotIteration, {
+    forwardDestroy: true,
+    mapValue: (x: FirestoreItemPageQueryResult<T>) => x.docs
+  });
+
+  const result: FirestoreItemPageIterationInstance<T> = {
+    ...mappedIteration,
+    snapshotIteration
+  };
+
+  return result;
 }

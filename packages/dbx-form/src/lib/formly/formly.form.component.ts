@@ -6,7 +6,7 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, iterablesAreSetEquivalent, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, iterablesAreSetEquivalent, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyFormState {
   changesSinceLastResetCount: number;
@@ -127,7 +127,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
     this._dbxFormlyContext.setDelegate(this);
 
     const resyncDisabledState = () => {
-      const isDisabled = BooleanStringKeyArrayUtilityInstance.isTrue(this._disabled.value);
+      const isDisabled = BooleanStringKeyArrayUtility.isTrue(this._disabled.value);
       let change = false;
 
       if (this.form.disabled !== isDisabled) {
@@ -212,7 +212,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   get isDisabled(): boolean {
-    return BooleanStringKeyArrayUtilityInstance.isTrue(this.disabled);
+    return BooleanStringKeyArrayUtility.isTrue(this.disabled);
   }
 
   get disabled(): BooleanStringKeyArray {
@@ -224,7 +224,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
-    const next = BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled);
+    const next = BooleanStringKeyArrayUtility.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled);
     this._disabled.next(next);
   }
 

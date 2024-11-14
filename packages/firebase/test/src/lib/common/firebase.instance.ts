@@ -3,7 +3,7 @@ import { FirebaseStorage, Firestore } from '@dereekb/firebase';
 import { TestFirestoreContext } from './firestore/firestore';
 import { TestFirestoreInstance } from './firestore/firestore.instance';
 import { TestFirebaseStorageContext } from './storage/storage';
-import { TestFirebaseStorageInstance } from './storage/storage.instance';
+import { TestFirebaseStorage, TestFirebaseStorageInstance } from './storage/storage.instance';
 
 export class TestFirebaseInstance implements TestFirestoreInstance, TestFirebaseStorageInstance {
   constructor(readonly firestoreContext: TestFirestoreContext, readonly storageContext: TestFirebaseStorageContext) {}

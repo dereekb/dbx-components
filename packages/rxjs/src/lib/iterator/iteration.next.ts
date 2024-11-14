@@ -34,7 +34,7 @@ export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): 
  */
 export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteration, defaultLimit: Maybe<number> = 100): Promise<number> {
   return iteratorNextPageUntilPage(iterator, () => {
-    const limit: Maybe<number> = iterator.maxPageLoadLimit ?? defaultLimit;
+    const limit: Maybe<number> = iterator.getMaxPageLoadLimit() ?? defaultLimit;
 
     if (isMaybeNot(limit)) {
       throw new Error('iteratorNextPageUntilMaxPageLoadLimit() failed. There was no maximum defined.');
@@ -58,7 +58,7 @@ export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: Ge
 
   function checkPageLimit(page: PageNumber): boolean {
     const pageLimit = getPageLimit();
-    const maxLimit = Math.min(pageLimit, iteration.maxPageLoadLimit ?? Number.MAX_SAFE_INTEGER);
+    const maxLimit = Math.min(pageLimit, iteration.getMaxPageLoadLimit() ?? Number.MAX_SAFE_INTEGER);
     return page + 1 < maxLimit;
   }
 

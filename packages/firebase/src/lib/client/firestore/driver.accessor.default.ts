@@ -6,7 +6,15 @@ import { firestoreClientIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-  constructor(readonly documentRef: DocumentReference<T>) {}
+  private readonly _documentRef: DocumentReference<T>;
+
+  constructor(documentRef: DocumentReference<T>) {
+    this._documentRef = documentRef;
+  }
+
+  get documentRef(): DocumentReference<T> {
+    return this._documentRef;
+  }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return streamFromOnSnapshot(({ next, error }) => onSnapshot(this.documentRef, next, error));

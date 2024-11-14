@@ -1,6 +1,7 @@
 {
   "typescript.preferences.quoteStyle": "single",
   "typescript.tsdk": "node_modules/typescript/lib",
+  "search.followSymlinks": false,
   "files.watcherExclude": {
     "**/.angular/**": true,
     "**/.reports/**": true,

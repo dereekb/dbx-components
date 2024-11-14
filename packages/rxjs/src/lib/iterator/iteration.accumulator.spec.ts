@@ -475,7 +475,7 @@ describe('ItemPageIterator', () => {
             const expectedNumberOfPageLoads = 1;
             const expectedFinalPageNumber = expectedNumberOfPageLoads - 1;
 
-            instance.maxPageLoadLimit = 1000;
+            instance.setMaxPageLoadLimit(1000);
 
             itemAccumulatorNextPageUntilResultsCount({
               accumulator,
@@ -501,7 +501,7 @@ describe('ItemPageIterator', () => {
             const expectedNumberOfLoadedItems = expectedNumberOfPageLoads * TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE;
             const expectedFinalPageNumber = expectedNumberOfPageLoads - 1;
 
-            instance.maxPageLoadLimit = 1000;
+            instance.setMaxPageLoadLimit(1000);
 
             itemAccumulatorNextPageUntilResultsCount({
               accumulator,

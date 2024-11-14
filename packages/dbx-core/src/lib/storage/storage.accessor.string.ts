@@ -6,7 +6,11 @@ import { StorageAccessor } from './storage.accessor';
  * Simple StorageAccessor implementation that wraps a FullStorageObject.
  */
 export class StringStorageAccessor implements StorageAccessor<StoredDataString> {
-  constructor(private readonly _storage: FullStorageObject) {}
+  private readonly _storage: FullStorageObject;
+
+  constructor(storage: FullStorageObject) {
+    this._storage = storage;
+  }
 
   get(key: string): Observable<Maybe<StoredDataString>> {
     return new Observable((x) => {

@@ -47,40 +47,47 @@ export function removeByKeyFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, key
   return array ? removeModelsWithKey(array, key, readBooleanKeySafetyWrap(readKey)) : array;
 }
 
-export class BooleanKeyArrayUtilityInstance<T> {
-  constructor(readonly readKey: ReadModelKeyFunction<T>) {}
+export type BooleanKeyArrayUtility<T> = ReturnType<typeof booleanKeyArrayUtility<T>>;
 
-  isFalse(value: BooleanKeyArray): boolean {
+export function booleanKeyArrayUtility<T>(readKey: ReadModelKeyFunction<T>) {
+  const isFalse = (value: BooleanKeyArray): boolean => {
     return isFalseBooleanKeyArray(value);
-  }
+  };
 
-  isTrue(value: BooleanKeyArray): boolean {
+  const isTrue = (value: BooleanKeyArray): boolean => {
     return isTrueBooleanKeyArray(value);
-  }
+  };
 
-  set(array: BooleanKeyArray<T>, value: T, enable = true): BooleanKeyArray<T> {
-    let result: BooleanKeyArray<T>;
+  const set = (array: BooleanKeyArray<T>, value: T, enable: boolean = true): BooleanKeyArray<T> => {
+    return enable ? insert(array, value) : remove(array, value);
+  };
 
-    if (enable) {
-      result = this.insert(array, value);
-    } else {
-      result = this.remove(array, value);
-    }
+  const insert = (array: BooleanKeyArray<T>, value: T): BooleanKeyArray<T> => {
+    return insertIntoBooleanKeyArray(array, value, readKey);
+  };
 
-    return result;
-  }
+  const remove = (array: BooleanKeyArray<T>, value: T): BooleanKeyArray<T> => {
+    return removeFromBooleanKeyArray(array, value, readKey);
+  };
 
-  insert(array: BooleanKeyArray<T>, value: T): BooleanKeyArray<T> {
-    return insertIntoBooleanKeyArray(array, value, this.readKey);
-  }
+  const removeByKey = (array: BooleanKeyArray<T>, key: string): BooleanKeyArray<T> => {
+    return removeByKeyFromBooleanKeyArray(array, key, readKey);
+  };
 
-  remove(array: BooleanKeyArray<T>, value: T): BooleanKeyArray<T> {
-    return removeFromBooleanKeyArray(array, value, this.readKey);
-  }
-
-  removeByKey(array: BooleanKeyArray<T>, key: string): BooleanKeyArray<T> {
-    return removeByKeyFromBooleanKeyArray(array, key, this.readKey);
-  }
+  return {
+    isFalse,
+    isTrue,
+    set,
+    insert,
+    remove,
+    removeByKey
+  };
 }
 
-export const BooleanStringKeyArrayUtilityInstance = new BooleanKeyArrayUtilityInstance<BooleanStringKey>((x) => (x ? x : undefined));
+export const BooleanStringKeyArrayUtility = booleanKeyArrayUtility<BooleanStringKey>((x) => (x ? x : undefined));
+
+// MARK: Compat
+/**
+ * @Deprecated use BooleanStringKeyArrayUtility instead
+ */
+export const BooleanStringKeyArrayUtilityInstance = BooleanStringKeyArrayUtility;

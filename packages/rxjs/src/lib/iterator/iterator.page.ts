@@ -87,7 +87,17 @@ export const DEFAULT_ITEM_PAGE_ITERATOR_MAX = 100;
  * Used for generating new iterations.
  */
 export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
+  private readonly _delegate: ItemPageIteratorDelegate<V, F, C>;
+
   protected _maxPageLoadLimit: Maybe<number>;
+
+  constructor(delegate: ItemPageIteratorDelegate<V, F, C>) {
+    this._delegate = delegate;
+  }
+
+  get delegate() {
+    return this._delegate;
+  }
 
   get maxPageLoadLimit() {
     return this._maxPageLoadLimit;
@@ -97,7 +107,13 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemP
     this._maxPageLoadLimit = maxPageLoadLimit;
   }
 
-  constructor(readonly delegate: ItemPageIteratorDelegate<V, F, C>) {}
+  getMaxPageLoadLimit(): Maybe<number> {
+    return this.maxPageLoadLimit;
+  }
+
+  setMaxPageLoadLimit(maxPageLoadLimit: Maybe<number>): void {
+    this._maxPageLoadLimit = maxPageLoadLimit;
+  }
 
   /**
    * Creates a new instance based on the input config.
@@ -115,29 +131,42 @@ export interface ItemPageIterationInstanceState<V> {
   /**
    * Used for tracking the start/end of a specific next call.
    */
-  n: number;
-  current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  readonly n: number;
+  readonly current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   /**
    * The first finished state. May not always be the same as firstSuccessful if the first state has an error.
    */
-  firstFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
-  latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
-  firstSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
-  lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  readonly firstFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  readonly latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  readonly firstSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  readonly lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
 }
 
 /**
  * Configured Iterator instance.
  */
 export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V, PageLoadingState<V>>, Destroyable {
+  private readonly _iterator: ItemPageIterator<V, F, C>;
+  private readonly _config: C;
+
   /**
    * Used for triggering loading of more content.
    */
   private readonly _next = new BehaviorSubject<InternalItemPageIteratorNext>({ n: 0 });
   private readonly _maxPageLoadLimit = new BehaviorSubject<Maybe<number>>(undefined);
 
-  constructor(readonly iterator: ItemPageIterator<V, F, C>, readonly config: C) {
-    this._maxPageLoadLimit.next(this.config.maxPageLoadLimit ?? this.iterator.maxPageLoadLimit);
+  constructor(iterator: ItemPageIterator<V, F, C>, config: C) {
+    this._iterator = iterator;
+    this._config = config;
+    this._maxPageLoadLimit.next(config.maxPageLoadLimit ?? iterator.getMaxPageLoadLimit());
+  }
+
+  get iterator() {
+    return this._iterator;
+  }
+
+  get config() {
+    return this._config;
   }
 
   // MARK: State
@@ -150,11 +179,11 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         mergeMap(([shouldLoadNextPage, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) => {
           if (shouldLoadNextPage) {
             const nextPageNumber = nextIteratorPageNumber(prevResult); // retry number if error occured
-            const page = filteredPage(nextPageNumber, this.config);
+            const page = filteredPage(nextPageNumber, this._config);
 
-            const iteratorResultObs = this.iterator.delegate
+            const iteratorResultObs = this._iterator.delegate
               .loadItemsForPage({
-                iteratorConfig: this.config,
+                iteratorConfig: this._config,
                 page: nextPageNumber,
                 lastItem$: this._lastFinishedPageResultItem$,
                 lastResult$: this._lastFinishedPageResult$,
@@ -327,11 +356,11 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   );
 
   // MARK: PageItemIteration
-  get maxPageLoadLimit(): Maybe<number> {
+  getMaxPageLoadLimit(): Maybe<number> {
     return this._maxPageLoadLimit.value;
   }
 
-  set maxPageLoadLimit(maxPageLoadLimit: Maybe<number>) {
+  setMaxPageLoadLimit(maxPageLoadLimit: Maybe<number>): void {
     const limit = isMaybeNot(maxPageLoadLimit) ? undefined : Math.max(0, Math.ceil(maxPageLoadLimit));
     this._maxPageLoadLimit.next(limit);
   }

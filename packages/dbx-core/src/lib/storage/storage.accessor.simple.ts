@@ -31,7 +31,13 @@ export class StringifySimpleStorageAccessorConverter<T> implements SimpleStorage
 }
 
 export class WrapperSimpleStorageAccessorDelegate<T> implements SimpleStorageAccessorDelegate<T> {
-  constructor(private _delegate: StorageAccessor<StoredDataString>, private _converter: SimpleStorageAccessorConverter<T>) {}
+  private readonly _delegate: StorageAccessor<StoredDataString>;
+  private readonly _converter: SimpleStorageAccessorConverter<T>;
+
+  constructor(delegate: StorageAccessor<StoredDataString>, converter: SimpleStorageAccessorConverter<T>) {
+    this._delegate = delegate;
+    this._converter = converter;
+  }
 
   get(key: string): Observable<Maybe<StoredDataString>> {
     return this._delegate.get(key);
@@ -86,26 +92,51 @@ interface ConfiguredSimpleStorageAccessorConfig extends SimpleStorageAccessorCon
   readonly fullPrefix: string;
 }
 
+export function assertValidStorageKeyPrefix(prefix: string, prefixSplitter: string): void {
+  if (!prefixSplitter) {
+    throw new Error('Invalid storage key prefix splitter. Must be defined and not empty.'); // TODO(FUTURE): Consider changing to a concrete error type
+  }
+
+  if (!isValidStorageKeyPrefix(prefix, prefixSplitter)) {
+    throw new Error('Invalid storage key prefix.');
+  }
+}
+
+export function isValidStorageKeyPrefix(prefix: string, prefixSpltter: string): boolean {
+  return Boolean(prefix && prefix.indexOf(prefixSpltter) === -1);
+}
+
 /**
  * LimitedStorageAccessor implementation that uses a Delegate
  */
 export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   static readonly PREFIX_SPLITTER = '::';
 
+  private readonly _delegate: SimpleStorageAccessorDelegate<T>;
   protected readonly _config: ConfiguredSimpleStorageAccessorConfig;
 
-  constructor(private readonly _delegate: SimpleStorageAccessorDelegate<T>, config: SimpleStorageAccessorConfig) {
+  constructor(delegate: SimpleStorageAccessorDelegate<T>, config: SimpleStorageAccessorConfig) {
     const prefix = config.prefix;
     const prefixSplitter = config.prefixSplitter ?? SimpleStorageAccessor.PREFIX_SPLITTER;
 
-    this.assertValidStorageKeyPrefix(prefix, prefixSplitter);
+    assertValidStorageKeyPrefix(prefix, prefixSplitter);
 
     const fullPrefix = `${prefix}${prefixSplitter}`;
+
+    this._delegate = delegate;
     this._config = {
       ...config,
       prefixSplitter,
       fullPrefix
     };
+  }
+
+  get delegate() {
+    return this._delegate;
+  }
+
+  get config() {
+    return this._config;
   }
 
   // MARK: LimitedStorageAccessor
@@ -200,20 +231,6 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   }
 
   // MARK: Internal
-  protected assertValidStorageKeyPrefix(prefix: string, prefixSplitter: string): void {
-    if (!prefixSplitter) {
-      throw new Error('Invalid storage key prefix splitter. Must be defined and not empty.');
-    }
-
-    if (!this.isValidStorageKeyPrefix(prefix, prefixSplitter)) {
-      throw new Error('Invalid storage key prefix.');
-    }
-  }
-
-  protected isValidStorageKeyPrefix(prefix: string, prefixSpltter: string): boolean {
-    return Boolean(prefix && prefix.indexOf(prefixSpltter) === -1);
-  }
-
   protected makeStorageKey(key: string): StoredDataStorageKey {
     return `${this._config.prefix}${this._config.prefixSplitter}${String(key)}`;
   }

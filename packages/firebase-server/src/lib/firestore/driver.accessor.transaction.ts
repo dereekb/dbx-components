@@ -8,7 +8,21 @@ import { firestoreServerIncrementUpdateToUpdateData } from './increment';
  * FirestoreDocumentDataAccessor implementation for a transaction.
  */
 export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-  constructor(readonly transaction: GoogleCloudTransaction, readonly documentRef: DocumentReference<T>) {}
+  private readonly _transaction: GoogleCloudTransaction;
+  private readonly _documentRef: DocumentReference<T>;
+
+  constructor(transaction: GoogleCloudTransaction, documentRef: DocumentReference<T>) {
+    this._transaction = transaction;
+    this._documentRef = documentRef;
+  }
+
+  get transaction(): GoogleCloudTransaction {
+    return this._transaction;
+  }
+
+  get documentRef(): DocumentReference<T> {
+    return this._documentRef;
+  }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());
@@ -70,11 +84,18 @@ export function transactionAccessorFactory<T>(transaction: GoogleCloudTransactio
 
 // MARK: Context
 export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
+  private readonly _transaction: GoogleCloudTransaction;
+
   readonly contextType = FirestoreDocumentContextType.TRANSACTION;
   readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T, DocumentData>;
 
-  constructor(readonly transaction: GoogleCloudTransaction) {
-    this.accessorFactory = transactionAccessorFactory<T>(this.transaction);
+  constructor(transaction: GoogleCloudTransaction) {
+    this._transaction = transaction;
+    this.accessorFactory = transactionAccessorFactory<T>(transaction);
+  }
+
+  get transaction(): GoogleCloudTransaction {
+    return this._transaction;
   }
 }
 

@@ -8,13 +8,15 @@ import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
  * Instance used by components to inject content based on the configuration into the view.
  */
 export class DbxInjectionInstance<T> implements Initialized, Destroyable {
-  private _subscriptionObject = new SubscriptionObject();
+  private readonly _subscriptionObject = new SubscriptionObject();
 
-  private _config = new BehaviorSubject<Maybe<DbxInjectionComponentConfig<T>>>(undefined);
-  private _template = new BehaviorSubject<Maybe<DbxInjectionTemplateConfig<T>>>(undefined);
+  private readonly _config = new BehaviorSubject<Maybe<DbxInjectionComponentConfig<T>>>(undefined);
+  private readonly _template = new BehaviorSubject<Maybe<DbxInjectionTemplateConfig<T>>>(undefined);
 
-  private _content = new BehaviorSubject<Maybe<ViewContainerRef>>(undefined);
-  private _componentRef = new BehaviorSubject<Maybe<ComponentRef<T>>>(undefined);
+  private readonly _content = new BehaviorSubject<Maybe<ViewContainerRef>>(undefined);
+  private readonly _componentRef = new BehaviorSubject<Maybe<ComponentRef<T>>>(undefined);
+
+  private readonly _injector: Injector;
 
   readonly config$ = this._config.pipe(distinctUntilChanged());
   readonly template$ = this._template.pipe(distinctUntilChanged());
@@ -52,7 +54,9 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     this._componentRef.next(componentRef);
   }
 
-  constructor(private readonly _injector: Injector) {}
+  constructor(injector: Injector) {
+    this._injector = injector;
+  }
 
   init(): void {
     // Wait until the first of either of the two inputs comes in as not defined, and then emit.
@@ -84,6 +88,7 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
   }
 
   destroy(): void {
+    this._subscriptionObject.destroy();
     this._config.complete();
     this._template.complete();
     this._content.complete();

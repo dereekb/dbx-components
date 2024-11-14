@@ -4,7 +4,7 @@ import { AbstractDbxFirebaseDocumentStore } from '../modules/store/store.documen
 
 @Injectable()
 export class SystemStateDocumentStore<T extends SystemStateStoredData = SystemStateStoredData> extends AbstractDbxFirebaseDocumentStore<SystemState<T>, SystemStateDocument<T>> {
-  constructor(readonly collections: SystemStateFirestoreCollections) {
+  constructor(collections: SystemStateFirestoreCollections) {
     super({ firestoreCollection: collections.systemStateCollection as SystemStateFirestoreCollection<T> });
   }
 }

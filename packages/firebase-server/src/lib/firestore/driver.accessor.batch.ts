@@ -8,7 +8,15 @@ import { firestoreServerIncrementUpdateToUpdateData } from './increment';
  * FirestoreDocumentDataAccessor implementation for a batch.
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-  constructor(readonly batch: GoogleCloudWriteBatch, readonly documentRef: DocumentReference<T>) {}
+  private readonly _batch: GoogleCloudWriteBatch;
+
+  constructor(batch: GoogleCloudWriteBatch, readonly documentRef: DocumentReference<T>) {
+    this._batch = batch;
+  }
+
+  get batch(): GoogleCloudWriteBatch {
+    return this._batch;
+  }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get()); // todo
@@ -70,11 +78,18 @@ export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch):
 
 // MARK: Context
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
+  private readonly _batch: GoogleCloudWriteBatch;
+
   readonly contextType = FirestoreDocumentContextType.BATCH;
   readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T, DocumentData>;
 
-  constructor(readonly batch: GoogleCloudWriteBatch) {
-    this.accessorFactory = writeBatchAccessorFactory<T>(this.batch);
+  constructor(batch: GoogleCloudWriteBatch) {
+    this._batch = batch;
+    this.accessorFactory = writeBatchAccessorFactory<T>(batch);
+  }
+
+  get batch() {
+    return this._batch;
   }
 }
 

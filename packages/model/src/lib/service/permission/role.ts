@@ -156,7 +156,11 @@ export function grantedRoleMapReader<R extends GrantedRole = string>(map: Grante
 }
 
 export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implements GrantedRoleMapReader<R> {
-  constructor(private readonly _map: GrantedRoleMap<R>) {}
+  private readonly _map: GrantedRoleMap<R>;
+
+  constructor(map: GrantedRoleMap<R>) {
+    this._map = map;
+  }
 
   hasNoAccess(): boolean {
     return (this._map as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY];

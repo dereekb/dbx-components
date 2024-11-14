@@ -28,4 +28,8 @@ Some related threads to the useDefineForClassFields usage:
 - Removed mergeIntoArray and related types
 - Renamed `DbxFormExpandWrapperComponent` and related values. The function was always `expandWrapper()` so this change most likely causes no issues.
 - Removed `ZohoRecruitModule` and replaced it will `appZohoRecruitModuleMetadata()`
+- Most `PageItemIteration` and related implementations are now functional. `maxPageLoadLimit` is now split into a getter and setter function, instead of a get/set on the variable.
+- `MappedItemIterationInstance` and related types are now interfaces with functional implementations. 
+- `BooleanKeyArrayUtilityInstance` was removed and replaced with a functional implementation, `booleanKeyArrayUtility`. The `BooleanStringKeyArrayUtility` is now deprecated.
+- `DbxAnalyticsStreamEventAnalyticsEventWrapper` is now an interface
 - 

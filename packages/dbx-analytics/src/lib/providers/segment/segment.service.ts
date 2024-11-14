@@ -5,9 +5,12 @@ import { Maybe, poll } from '@dereekb/util';
 export const PRELOAD_SEGMENT_TOKEN = new InjectionToken<string>('DbxAnalyticsSegmentApiServicePreload');
 
 export class DbxAnalyticsSegmentApiServiceConfig {
+  writeKey: string;
   logging = true;
   active = true;
-  constructor(public writeKey: string) {}
+  constructor(writeKey: string) {
+    this.writeKey = writeKey;
+  }
 }
 
 /**

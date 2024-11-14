@@ -59,14 +59,22 @@ export interface LimitDateTimeConfig {
  * Used for deriving a limit for the current instant in time.
  */
 export class LimitDateTimeInstance {
-  constructor(readonly config: LimitDateTimeConfig = {}) {}
+  private readonly _config: LimitDateTimeConfig;
+
+  constructor(config: LimitDateTimeConfig = {}) {
+    this._config = config;
+  }
+
+  get config() {
+    return this._config;
+  }
 
   get instant(): LogicalDate {
-    return this.config.instant || 'now';
+    return this._config.instant || 'now';
   }
 
   get minimumMinutesIntoFuture(): Maybe<Minutes> {
-    const { limits = {} } = this.config;
+    const { limits = {} } = this._config;
     const { future } = limits;
     let minutes: Maybe<Minutes>;
 
@@ -86,7 +94,7 @@ export class LimitDateTimeInstance {
   }
 
   get min(): Maybe<LogicalDate> {
-    const { instant = new Date(), limits = {} } = this.config;
+    const { instant = new Date(), limits = {} } = this._config;
     const { isFuture, future, min } = limits;
 
     let limit: Maybe<LogicalDate> = min;
@@ -104,7 +112,7 @@ export class LimitDateTimeInstance {
   }
 
   get max(): Maybe<LogicalDate> {
-    const { instant = new Date(), limits = {} } = this.config;
+    const { instant = new Date(), limits = {} } = this._config;
     const { isPast, max } = limits;
 
     let limit: Maybe<LogicalDate> = max;
@@ -124,7 +132,7 @@ export class LimitDateTimeInstance {
    * @returns
    */
   dateRange(): Partial<DateRange> {
-    const { instant = new Date() } = this.config;
+    const { instant = new Date() } = this._config;
     return this.dateRangeForInstant(instant);
   }
 
@@ -145,9 +153,9 @@ export class LimitDateTimeInstance {
     const dateRange = this.dateRange();
     result = clampDateToDateRange(date, dateRange);
 
-    if (this.config.takeNextUpcomingTime) {
-      result = takeNextUpcomingTime(result, this.config.roundDownToMinute ?? false);
-    } else if (this.config.roundDownToMinute) {
+    if (this._config.takeNextUpcomingTime) {
+      result = takeNextUpcomingTime(result, this._config.roundDownToMinute ?? false);
+    } else if (this._config.roundDownToMinute) {
       result = roundDownToMinute(result);
     }
 
