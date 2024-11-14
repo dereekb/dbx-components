@@ -1,7 +1,6 @@
 import { type PageLoadingState } from '../loading';
-import { type Observable } from 'rxjs';
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
-import { type MappedItemIteration, MappedItemIterationInstance, type MappedItemIterationInstanceMapConfig, mapItemIteration } from './iteration.mapped';
+import { type MappedItemIteration, type MappedItemIterationInstance, type MappedItemIterationInstanceMapConfig, mapItemIteration } from './iteration.mapped';
 import { type Maybe } from '@dereekb/util';
 
 /**

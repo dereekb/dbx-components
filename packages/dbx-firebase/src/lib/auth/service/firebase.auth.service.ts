@@ -7,7 +7,7 @@ import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
-import { FirebaseAuthContextInfo, FirebaseAuthToken } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo } from '@dereekb/firebase';
 
 /**
  * Returns an observable that returns the state of the
