@@ -68,21 +68,7 @@ function convertParamsToParsedJsonObjectAndBack<T = unknown>(object: T): T {
 }
 
 export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements AuthorizedUserTestContext {
-  private readonly _uid: FirebaseAuthUserId;
-  private readonly _testContext: PI;
-
-  constructor(uid: FirebaseAuthUserId, testContext: PI) {
-    this._uid = uid;
-    this._testContext = testContext;
-  }
-
-  get uid(): FirebaseAuthUserId {
-    return this._uid;
-  }
-
-  get testContext(): PI {
-    return this._testContext;
-  }
+  constructor(readonly uid: FirebaseAuthUserId, readonly testContext: PI) {}
 
   loadUserRecord(): Promise<UserRecord> {
     return this.testContext.auth.getUser(this.uid);

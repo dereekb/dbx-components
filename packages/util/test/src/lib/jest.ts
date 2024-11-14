@@ -59,15 +59,8 @@ export abstract class AbstractJestTestContextFixture<I> implements JestTestConte
  * Abstract JestTestContextFixture instance with a parent.
  */
 export abstract class AbstractChildJestTestContextFixture<I, P extends JestTestContextFixture<any>> extends AbstractJestTestContextFixture<I> {
-  private readonly _parent: P;
-
-  constructor(parent: P) {
+  constructor(readonly parent: P) {
     super();
-    this._parent = parent;
-  }
-
-  get parent() {
-    return this._parent;
   }
 }
 

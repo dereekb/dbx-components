@@ -99,16 +99,10 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestCon
 }
 
 export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
-  private readonly _instance: FeaturesList;
-  private readonly _fnWrapper = cachedGetter(() => firebaseAdminCloudFunctionWrapper(this._instance));
+  private _fnWrapper = cachedGetter(() => firebaseAdminCloudFunctionWrapper(this.instance));
 
-  constructor(instance: FeaturesList, app: admin.app.App) {
+  constructor(readonly instance: FeaturesList, app: admin.app.App) {
     super(app);
-    this._instance = instance;
-  }
-
-  get instance() {
-    return this._instance;
   }
 
   override get fnWrapper() {

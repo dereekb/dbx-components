@@ -4,8 +4,8 @@ import { jestTestContextBuilder } from '@dereekb/util/test';
 import { TestEnvironmentConfig, initializeTestEnvironment, RulesTestEnvironment, RulesTestContext, TokenOptions, EmulatorConfig } from '@firebase/rules-unit-testing';
 import { firebaseFirestoreClientDrivers, FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
-import { makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestingFirebaseStorageDrivers } from '../common';
-import { TestFirebase, TestFirebaseContextFixture } from '../common/firebase.instance';
+import { makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestFirebaseStorageInstance, TestingFirebaseStorageDrivers } from '../common';
+import { TestFirebaseContextFixture, TestFirebaseInstance } from '../common/firebase.instance';
 
 export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 
@@ -60,31 +60,11 @@ export function makeRulesTestFirebaseStorageContext(drivers: TestingFirebaseStor
   return context;
 }
 
-export class RulesUnitTestTestFirebaseInstance implements TestFirebase {
-  private readonly _drivers: TestingFirebaseDrivers;
-  private readonly _rulesTestEnvironment: RulesTestEnvironment;
-  private readonly _rulesTestContext: RulesTestContext;
+export class RulesUnitTestTestFirebaseInstance implements TestFirebaseInstance, TestFirebaseStorageInstance {
+  readonly _firestoreContext = cachedGetter(() => makeRulesTestFirestoreContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
+  readonly _storageContext = cachedGetter(() => makeRulesTestFirebaseStorageContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
 
-  private readonly _firestoreContext = cachedGetter(() => makeRulesTestFirestoreContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
-  private readonly _storageContext = cachedGetter(() => makeRulesTestFirebaseStorageContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
-
-  constructor(drivers: TestingFirebaseDrivers, rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext) {
-    this._drivers = drivers;
-    this._rulesTestEnvironment = rulesTestEnvironment;
-    this._rulesTestContext = rulesTestContext;
-  }
-
-  get drivers(): TestingFirebaseDrivers {
-    return this._drivers;
-  }
-
-  get rulesTestEnvironment(): RulesTestEnvironment {
-    return this._rulesTestEnvironment;
-  }
-
-  get rulesTestContext(): RulesTestContext {
-    return this._rulesTestContext;
-  }
+  constructor(readonly drivers: TestingFirebaseDrivers, readonly rulesTestEnvironment: RulesTestEnvironment, readonly rulesTestContext: RulesTestContext) {}
 
   get firestoreContext(): TestFirestoreContext {
     return this._firestoreContext();

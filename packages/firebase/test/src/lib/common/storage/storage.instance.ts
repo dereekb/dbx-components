@@ -8,22 +8,14 @@ export interface TestFirebaseStorage {
 }
 
 export class TestFirebaseStorageInstance implements TestFirebaseStorage {
-  private _storageContext: TestFirebaseStorageContext;
-
-  constructor(storageContext: TestFirebaseStorageContext) {
-    this._storageContext = storageContext;
-  }
-
-  get storageContext(): TestFirebaseStorageContext {
-    return this._storageContext;
-  }
+  constructor(readonly storageContext: TestFirebaseStorageContext) {}
 
   get storage(): FirebaseStorage {
     return this.storageContext.storage;
   }
 }
 
-export class TestFirebaseStorageContextFixture<F extends TestFirebaseStorageInstance = TestFirebaseStorageInstance> extends AbstractJestTestContextFixture<F> implements TestFirebaseStorage {
+export class TestFirebaseStorageContextFixture<F extends TestFirebaseStorageInstance = TestFirebaseStorageInstance> extends AbstractJestTestContextFixture<F> {
   get storage(): FirebaseStorage {
     return this.instance.storage;
   }

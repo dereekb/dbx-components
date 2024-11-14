@@ -6,26 +6,11 @@ import { MockItemCollections, makeMockItemCollections } from './mock.item.servic
 
 // MARK: Test Item Testing Fixture
 export class MockItemCollectionFixtureInstance {
-  private readonly _fixture: MockItemCollectionFixture;
-  private readonly _collections: MockItemCollections;
-
-  constructor(fixture: MockItemCollectionFixture) {
-    this._fixture = fixture;
-    this._collections = makeMockItemCollections(fixture.parent.firestoreContext);
-  }
-
-  get collections() {
-    return this._collections;
-  }
-
-  get fixture() {
-    return this._fixture;
-  }
+  readonly collections: MockItemCollections;
 
   get collection(): CollectionReference<MockItem> {
     return this.firestoreCollection.collection;
   }
-
   get firestoreCollection(): MockItemFirestoreCollection {
     return this.collections.mockItemCollection;
   }
@@ -64,6 +49,10 @@ export class MockItemCollectionFixtureInstance {
 
   get mockItemSystemState() {
     return this.collections.mockItemSystemStateCollection;
+  }
+
+  constructor(readonly fixture: MockItemCollectionFixture) {
+    this.collections = makeMockItemCollections(fixture.parent.firestoreContext);
   }
 }
 

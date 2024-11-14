@@ -2,16 +2,8 @@ import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilde
 import { TestFirebaseStorage, TestFirebaseStorageContextFixture, TestFirebaseStorageInstance } from '../storage/storage.instance';
 
 // MARK: Test Item Testing Fixture
-export class MockItemStorageFixtureInstance implements TestFirebaseStorage {
-  private readonly _fixture: MockItemStorageFixture;
-
-  constructor(fixture: MockItemStorageFixture) {
-    this._fixture = fixture;
-  }
-
-  get fixture() {
-    return this._fixture;
-  }
+export class MockItemStorageFixtureInstance implements TestFirebaseStorageInstance {
+  constructor(readonly fixture: MockItemStorageFixture) {}
 
   get storage() {
     return this.fixture.parent.storage;

@@ -9,6 +9,8 @@ import { DbxActionDisabledKey } from './action';
  * Abstract class that can either use SecondaryActionContextStoreSource or create it's own.
  */
 export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, Destroyable {
+  private readonly _inputSource: Maybe<SecondaryActionContextStoreSource<T, O>>;
+
   private readonly _store?: ActionContextStore<T, O>;
   private readonly _store$: Observable<ActionContextStore<T, O>>;
   private readonly _instance: DbxActionContextStoreSourceInstance<T, O>;
@@ -18,6 +20,8 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
   readonly success$: Observable<Maybe<O>>;
 
   constructor(inputSource?: Maybe<SecondaryActionContextStoreSource<T, O>>) {
+    this._inputSource = inputSource;
+
     if (inputSource) {
       this._store$ = inputSource.store$;
     } else {
@@ -36,6 +40,10 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
       this._store.ngOnDestroy();
       this._instance.destroy();
     }
+  }
+
+  get inputSource() {
+    return this._inputSource;
   }
 
   get lockSet(): LockSet {
