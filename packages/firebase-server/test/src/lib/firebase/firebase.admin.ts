@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
-import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance, makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestFirebaseStorageInstance } from '@dereekb/firebase/test';
+import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance, makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirestore } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers, googleCloudFirestoreDrivers, googleCloudStorageFromFirebaseAdminStorage } from '@dereekb/firebase-server';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
@@ -65,6 +65,8 @@ export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixt
 
 // MARK: FirebaseAdminTestBuilder
 export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContext {
+  private readonly _app: admin.app.App;
+
   readonly getTestFirestoreInstance = cachedGetter(() => {
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
     return new GoogleCloudTestFirestoreInstance(drivers, this.firestore);
@@ -72,12 +74,17 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
 
   readonly getTestFirebaseStorageInstance = cachedGetter(() => {
     const drivers = makeTestingFirebaseStorageDrivers(googleCloudFirebaseStorageDrivers());
-
     const defaultBucketId = this.app.options.storageBucket;
     return new GoogleCloudTestFirebaseStorageInstance(drivers, this.storage, defaultBucketId);
   });
 
-  constructor(readonly app: admin.app.App) {}
+  constructor(app: admin.app.App) {
+    this._app = app;
+  }
+
+  get app(): admin.app.App {
+    return this._app;
+  }
 
   get auth(): Auth {
     return this.app.auth();
@@ -113,7 +120,15 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
 }
 
 export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
-  constructor(readonly parent: F) {}
+  private readonly _parent: F;
+
+  constructor(parent: F) {
+    this._parent = parent;
+  }
+
+  get parent() {
+    return this._parent;
+  }
 
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
@@ -196,13 +211,13 @@ export const firebaseAdminTestContextFactory: FirebaseAdminTestContextFactory = 
  * @returns
  */
 export function firebaseAdminFirestoreContextFixture(factory: JestTestContextFactory<JestTestContextFixture<FirebaseAdminTestContextInstance>>): JestTestFirestoreContextFactory {
-  return (buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture>) => {
+  return (buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance>>) => {
     factory((f) => firebaseAdminFirestoreContextWithFixture(f, buildTests));
   };
 }
 
-export function firebaseAdminFirestoreContextWithFixture(f: JestTestContextFixture<FirebaseAdminTestContextInstance>, buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture>) {
-  useJestContextFixture({
+export function firebaseAdminFirestoreContextWithFixture(f: JestTestContextFixture<FirebaseAdminTestContextInstance>, buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance>>) {
+  useJestContextFixture<TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance>, GoogleCloudTestFirestoreInstance>({
     fixture: new TestFirestoreContextFixture(),
     /**
      * Build tests by passing the fixture to the testing functions.

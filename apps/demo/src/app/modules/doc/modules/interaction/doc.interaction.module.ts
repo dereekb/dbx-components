@@ -7,7 +7,7 @@ import { DocInteractionPromptComponent } from './container/prompt.component';
 import { DocInteractionPopoverComponent } from './container/popover.component';
 import { DocInteractionPopupComponent } from './container/popup.component';
 import { DocInteractionLayoutComponent } from './container/layout.component';
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DocInteractionHomeComponent } from './container/home.component';
 import { DocSharedModule } from '../shared/doc.shared.module';
@@ -69,7 +69,9 @@ import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidget
   ]
 })
 export class DocInteractionModule {
-  constructor(readonly dbxErrorWidgetService: DbxErrorWidgetService) {
+  readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
+
+  constructor() {
     this.dbxErrorWidgetService.register({
       code: CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE,
       widgetComponentClass: DocInteractionCustomErrorWidgetComponent

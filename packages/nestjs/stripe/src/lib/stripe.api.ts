@@ -6,9 +6,9 @@ import { StripeServiceConfig } from './stripe.config';
 
 @Injectable()
 export class StripeApi {
-  public readonly stripe: Stripe;
+  readonly stripe: Stripe;
 
-  constructor(@Inject(StripeServiceConfig) public readonly config: StripeServiceConfig) {
+  constructor(@Inject(StripeServiceConfig) readonly config: StripeServiceConfig) {
     this.stripe = new Stripe(config.stripe.secret, config.stripe.config);
   }
 

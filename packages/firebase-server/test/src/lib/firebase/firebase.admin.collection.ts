@@ -43,7 +43,27 @@ export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = Firesto
 }
 
 export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements ModelTestContext<T, D> {
-  constructor(readonly collection: FirestoreCollectionLike<T, D>, readonly ref: DocumentReference<T>, readonly testContext: PI) {}
+  private readonly _collection: FirestoreCollectionLike<T, D>;
+  private readonly _ref: DocumentReference<T>;
+  private readonly _testContext: PI;
+
+  constructor(collection: FirestoreCollectionLike<T, D>, ref: DocumentReference<T>, testContext: PI) {
+    this._collection = collection;
+    this._ref = ref;
+    this._testContext = testContext;
+  }
+
+  get testContext(): PI {
+    return this._testContext;
+  }
+
+  get collection(): FirestoreCollectionLike<T, D> {
+    return this._collection;
+  }
+
+  get ref(): DocumentReference<T> {
+    return this._ref;
+  }
 
   get documentId(): FirestoreModelId {
     return this.ref.id;

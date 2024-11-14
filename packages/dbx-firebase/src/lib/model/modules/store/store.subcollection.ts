@@ -30,7 +30,7 @@ export interface DbxFirebaseCollectionWithParentStore<T, PT, D extends Firestore
  */
 @Injectable()
 export class AbstractDbxFirebaseCollectionWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseCollectionWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseCollectionWithParentStoreContextState<T, PT, D, PD>> extends AbstractDbxFirebaseCollectionStore<T, D, C> implements DbxFirebaseCollectionWithParentStore<T, PT, D, PD> {
-  constructor(@Inject(null) @Optional() state: C, @Inject(null) @Optional() defaultSourceMode?: DbxFirebaseComponentStoreWithParentSourceMode) {
+  constructor(state: C, defaultSourceMode?: DbxFirebaseComponentStoreWithParentSourceMode) {
     super(state);
     this.setSourceMode(defaultSourceMode || 'parent');
   }

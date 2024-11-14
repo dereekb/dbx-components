@@ -1,15 +1,15 @@
 import { DbxPromptConfirmDialogComponent } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { first } from 'rxjs';
 
 @Component({
   templateUrl: './prompt.component.html'
 })
 export class DocInteractionPromptComponent {
-  result?: boolean;
+  readonly matDialog = inject(MatDialog);
 
-  constructor(readonly matDialog: MatDialog) {}
+  result?: boolean;
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePrompt(), 100);

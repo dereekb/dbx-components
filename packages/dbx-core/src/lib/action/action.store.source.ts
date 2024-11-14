@@ -46,10 +46,18 @@ export function useActionStore<T = unknown, O = unknown>(source: ActionContextSt
 export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, Destroyable {
   readonly lockSet = new LockSet();
 
-  constructor(readonly source: ActionContextStoreSource<T, O>) {
+  private readonly _source: ActionContextStoreSource<T, O>;
+
+  constructor(source: ActionContextStoreSource<T, O>) {
     if (!source) {
       throw new Error('Source is required.');
     }
+
+    this._source = source;
+  }
+
+  get source(): ActionContextStoreSource<T, O> {
+    return this._source;
   }
 
   public destroy(): void {

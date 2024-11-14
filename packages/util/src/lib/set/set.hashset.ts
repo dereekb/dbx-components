@@ -11,12 +11,19 @@ export interface HashSetConfig<K extends PrimativeKey, T> {
  * Useful for cases, such as Date, that are unique by a value, but not self.
  */
 export class HashSet<K extends PrimativeKey, T> implements Set<T> {
-  private _map = new Map<Maybe<K>, T>();
+  private readonly _map = new Map<Maybe<K>, T>();
+  private readonly _config: HashSetConfig<K, T>;
 
-  constructor(readonly config: HashSetConfig<K, T>, values?: T[]) {
+  constructor(config: HashSetConfig<K, T>, values?: T[]) {
+    this._config = config;
+
     if (values) {
       values.forEach((x) => this.add(x));
     }
+  }
+
+  get config() {
+    return this._config;
   }
 
   get size(): number {

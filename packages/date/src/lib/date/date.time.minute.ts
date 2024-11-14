@@ -81,16 +81,22 @@ export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
  * Can step the date forward/backwards, and validate.
  */
 export class DateTimeMinuteInstance {
+  private _config: DateTimeMinuteConfig;
   private _date: Date;
   private _step: Minutes;
   private _limit: LimitDateTimeInstance;
   private _dateFilter: Maybe<DateCellScheduleDateFilter>;
 
-  constructor(readonly config: DateTimeMinuteConfig = {}, dateOverride?: Date | null) {
+  constructor(config: DateTimeMinuteConfig = {}, dateOverride?: Date | null) {
+    this._config = config;
     this._date = (dateOverride == undefined ? config.date : dateOverride) || new Date();
     this._step = config.step ?? 1;
     this._limit = new LimitDateTimeInstance(config);
     this._dateFilter = config.schedule ? dateCellScheduleDateFilter(config.schedule) : undefined;
+  }
+
+  get config() {
+    return this._config;
   }
 
   get date(): Date {
@@ -317,7 +323,7 @@ export class DateTimeMinuteInstance {
   }
 
   protected _takeMinimumBoundedDate(date = this.date): Date {
-    if (this.config.behavior?.capToMinLimit !== false) {
+    if (this._config.behavior?.capToMinLimit !== false) {
       const min = dateFromLogicalDate(this._limit.min);
 
       if (min && isBefore(date, min)) {
@@ -329,7 +335,7 @@ export class DateTimeMinuteInstance {
   }
 
   protected _takeMaximumBoundedDate(date = this.date): Date {
-    if (this.config.behavior?.capToMaxLimit !== false) {
+    if (this._config.behavior?.capToMaxLimit !== false) {
       const max = dateFromLogicalDate(this._limit.max);
 
       if (max && isAfter(date, max)) {

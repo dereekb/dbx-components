@@ -17,14 +17,14 @@ export type DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocume
  * DbxFirebaseModelLoader implementation within an instance.
  */
 export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoaderWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
+  private readonly _maxPagesSub = new SubscriptionObject();
+
   protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollectionLike<T, D>>>(undefined);
 
   protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(undefined);
   protected readonly _itemsPerPage = new BehaviorSubject<Maybe<number>>(undefined);
   protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
   protected readonly _restart = new Subject<void>();
-
-  private readonly _maxPagesSub = new SubscriptionObject();
 
   readonly collection$ = this._collection.pipe(distinctUntilChanged());
   readonly constraints$ = this._constraints.pipe(distinctUntilChanged());
@@ -127,11 +127,11 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
-  constructor(private readonly _initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) {
-    this._collection.next(this._initConfig?.collection);
-    this._maxPages.next(this._initConfig?.maxPages);
-    this._itemsPerPage.next(this._initConfig?.itemsPerPage);
-    this._constraints.next(this._initConfig?.constraints);
+  constructor(initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) {
+    this._collection.next(initConfig?.collection);
+    this._maxPages.next(initConfig?.maxPages);
+    this._itemsPerPage.next(initConfig?.itemsPerPage);
+    this._constraints.next(initConfig?.constraints);
   }
 
   init(): void {
@@ -143,7 +143,7 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
         switchMap((maxPageLoadLimit) =>
           this.firestoreIteration$.pipe(
             tap((iteration) => {
-              iteration.maxPageLoadLimit = maxPageLoadLimit;
+              iteration.setMaxPageLoadLimit(maxPageLoadLimit);
             })
           )
         )

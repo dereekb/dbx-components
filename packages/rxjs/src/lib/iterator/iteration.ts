@@ -60,7 +60,7 @@ export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingS
  */
 export interface PageItemIteration<V = unknown, L extends PageLoadingState<V> = PageLoadingState<V>> extends ItemIteration<V, L> {
   /**
-   * The maximum number of pages allowed to be loaded.
+   * Returns the maximum number of pages allowed to be loaded.
    *
    * A page of 15 means that pages 0-14 can be loaded, but not page 15.
    *
@@ -68,7 +68,12 @@ export interface PageItemIteration<V = unknown, L extends PageLoadingState<V> = 
    *
    * For most cases you should always have a maxPageLoadLimit set to avoid iterating too munknown unused items.
    */
-  maxPageLoadLimit: Maybe<PageNumber>;
+  getMaxPageLoadLimit(): Maybe<PageNumber>;
+
+  /**
+   * Sets the maximum page load limit on the iteration.
+   */
+  setMaxPageLoadLimit(maxPageLoadLimit: Maybe<PageNumber>): void;
 
   /**
    * Attempts to loads the next page of results and returns a promise.

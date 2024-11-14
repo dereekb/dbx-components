@@ -42,7 +42,15 @@ export type MakeNestContext<C> = (nest: INestApplicationContext) => C;
  * Abstract class that wraps an INestApplicationContext value.
  */
 export abstract class AbstractNestContext {
-  constructor(readonly nest: INestApplicationContext) {}
+  private readonly _nest: INestApplicationContext;
+
+  constructor(nest: INestApplicationContext) {
+    this._nest = nest;
+  }
+
+  get nest(): INestApplicationContext {
+    return this._nest;
+  }
 }
 
 export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerEnvServiceRef, FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {

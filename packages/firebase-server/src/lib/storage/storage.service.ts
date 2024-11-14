@@ -12,7 +12,15 @@ export interface FirebaseServerStorageServiceRef<S extends FirebaseServerStorage
  * Basic service that implements FirebaseStorageAccessor and provides a FirebaseStorageContext.
  */
 export class FirebaseServerStorageService implements FirebaseStorageAccessor {
-  constructor(readonly storageContext: FirebaseStorageContext) {}
+  private readonly _storageContext: FirebaseStorageContext;
+
+  constructor(storageContext: FirebaseStorageContext) {
+    this._storageContext = storageContext;
+  }
+
+  get storageContext(): FirebaseStorageContext {
+    return this._storageContext;
+  }
 
   defaultBucket() {
     return this.storageContext.defaultBucket();

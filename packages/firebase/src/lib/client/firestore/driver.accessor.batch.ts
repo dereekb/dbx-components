@@ -1,3 +1,4 @@
+import { batch } from '@dereekb/util';
 import { type DocumentReference, type WriteBatch as FirebaseFirestoreWriteBatch, type UpdateData as FirestoreUpdateData } from 'firebase/firestore';
 import { type FirestoreDocumentContext, type UpdateData, type DocumentData, type WithFieldValue, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
@@ -7,8 +8,15 @@ import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default'
  * FirestoreDocumentDataAccessor implementation for a batch.
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-  constructor(readonly batch: FirebaseFirestoreWriteBatch, documentRef: DocumentReference<T>) {
+  private readonly _batch: FirebaseFirestoreWriteBatch;
+
+  constructor(batch: FirebaseFirestoreWriteBatch, documentRef: DocumentReference<T>) {
     super(documentRef);
+    this._batch = batch;
+  }
+
+  get batch(): FirebaseFirestoreWriteBatch {
+    return this._batch;
   }
 
   override delete(): Promise<void> {
@@ -42,11 +50,18 @@ export function writeBatchAccessorFactory<T>(writeBatch: FirebaseFirestoreWriteB
 
 // MARK: Context
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
+  private readonly _batch: FirebaseFirestoreWriteBatch;
+
   readonly contextType = FirestoreDocumentContextType.BATCH;
   readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T, DocumentData>;
 
-  constructor(readonly batch: FirebaseFirestoreWriteBatch) {
-    this.accessorFactory = writeBatchAccessorFactory<T>(this.batch);
+  constructor(batch: FirebaseFirestoreWriteBatch) {
+    this._batch = batch;
+    this.accessorFactory = writeBatchAccessorFactory<T>(batch);
+  }
+
+  get batch() {
+    return this._batch;
   }
 }
 

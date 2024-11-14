@@ -2,15 +2,28 @@ import { AbstractJestTestContextFixture, JestTestContextFactory } from '@dereekb
 import { Firestore } from '@dereekb/firebase';
 import { TestFirestoreContext } from './firestore';
 
-export class TestFirestoreInstance {
-  constructor(readonly firestoreContext: TestFirestoreContext) {}
+export interface TestFirestore {
+  readonly firestoreContext: TestFirestoreContext;
+  readonly firestore: Firestore;
+}
+
+export class TestFirestoreInstance implements TestFirestore {
+  private readonly _firestoreContext: TestFirestoreContext;
+
+  constructor(firestoreContext: TestFirestoreContext) {
+    this._firestoreContext = firestoreContext;
+  }
+
+  get firestoreContext(): TestFirestoreContext {
+    return this._firestoreContext;
+  }
 
   get firestore(): Firestore {
     return this.firestoreContext.firestore;
   }
 }
 
-export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestFirestoreInstance> extends AbstractJestTestContextFixture<F> {
+export class TestFirestoreContextFixture<F extends TestFirestore = TestFirestore> extends AbstractJestTestContextFixture<F> implements TestFirestore {
   get firestore(): Firestore {
     return this.instance.firestore;
   }

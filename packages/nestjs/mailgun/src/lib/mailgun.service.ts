@@ -5,7 +5,21 @@ import { MailgunApi } from './mailgun.api';
 
 @Injectable()
 export class MailgunService {
-  constructor(public readonly mailgunApi: MailgunApi, readonly serverEnvironmentService: ServerEnvironmentService) {}
+  private readonly _mailgunApi: MailgunApi;
+  private readonly _serverEnvironmentService: ServerEnvironmentService;
+
+  constructor(mailgunApi: MailgunApi, serverEnvironmentService: ServerEnvironmentService) {
+    this._mailgunApi = mailgunApi;
+    this._serverEnvironmentService = serverEnvironmentService;
+  }
+
+  get mailgunApi() {
+    return this._mailgunApi;
+  }
+
+  get serverEnvironmentService() {
+    return this._serverEnvironmentService;
+  }
 
   async sendTemplateEmail(request: MailgunTemplateEmailRequest): Promise<MailgunEmailMessageSendResult> {
     const domain = this.mailgunApi.domain;

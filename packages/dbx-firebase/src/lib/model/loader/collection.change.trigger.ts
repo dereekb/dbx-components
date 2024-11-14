@@ -38,12 +38,18 @@ export interface DbxFirebaseCollectionChangeTrigger<S extends DbxFirebaseCollect
 export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCollectionLoaderAccessor<any>> implements DbxFirebaseCollectionChangeTrigger<S>, Initialized, Destroyable {
   readonly watcher: DbxFirebaseCollectionChangeWatcher<S>;
 
-  private _triggerFunction = new BehaviorSubject<Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>>(undefined);
-  private _sub = new SubscriptionObject();
+  private readonly _config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>;
+  private readonly _triggerFunction = new BehaviorSubject<Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>>(undefined);
+  private readonly _sub = new SubscriptionObject();
 
-  constructor(readonly config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>) {
+  constructor(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>) {
+    this._config = config;
     this.watcher = config.watcher;
     this.triggerFunction = config.triggerFunction ?? DEFAULT_FIREBASE_COLLECTION_CHANGE_TRIGGER_FUNCTION;
+  }
+
+  get config() {
+    return this._config;
   }
 
   init(): void {
@@ -66,7 +72,7 @@ export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCol
   destroy(): void {
     this._triggerFunction.complete();
 
-    if (this.config.destroyWatcherOnDestroy === true) {
+    if (this._config.destroyWatcherOnDestroy === true) {
       (this.watcher as unknown as Destroyable)?.destroy();
     }
   }

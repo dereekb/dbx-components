@@ -5,10 +5,14 @@ import { StripeWebhookService } from './webhook.stripe.service';
 
 @Controller('/webhook/stripe')
 export class StripeWebhookController {
-  constructor(private readonly stripeWebhookService: StripeWebhookService) {}
+  private readonly _stripeWebhookService: StripeWebhookService;
+
+  constructor(stripeWebhookService: StripeWebhookService) {
+    this._stripeWebhookService = stripeWebhookService;
+  }
 
   @Post()
   async handleStripeWebhook(@Req() req: Request, @RawBody() rawBody: RawBodyBuffer) {
-    await this.stripeWebhookService.updateForWebhook(req, rawBody);
+    await this._stripeWebhookService.updateForWebhook(req, rawBody);
   }
 }

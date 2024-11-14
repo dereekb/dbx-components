@@ -5,13 +5,13 @@ import { ZohoAccountsApi } from '../accounts/accounts.api';
 
 @Injectable()
 export class ZohoRecruitApi {
-  public readonly zohoRecruit: ZohoRecruit;
+  readonly zohoRecruit: ZohoRecruit;
 
   get recruitContext(): ZohoRecruitContext {
     return this.zohoRecruit.recruitContext;
   }
 
-  constructor(@Inject(ZohoRecruitServiceConfig) public readonly config: ZohoRecruitServiceConfig, @Inject(ZohoAccountsApi) public readonly zohoAccountsApi: ZohoAccountsApi) {
+  constructor(@Inject(ZohoRecruitServiceConfig) readonly config: ZohoRecruitServiceConfig, @Inject(ZohoAccountsApi) readonly zohoAccountsApi: ZohoAccountsApi) {
     this.zohoRecruit = zohoRecruitFactory({
       ...config.factoryConfig,
       accountsContext: zohoAccountsApi.accountsContext

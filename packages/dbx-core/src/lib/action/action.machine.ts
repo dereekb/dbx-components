@@ -34,11 +34,13 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
  */
 export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements DbxActionContextSourceReference<T, O>, Destroyable {
   private _isShutdown = true;
-  private _handleValueReadySub = new SubscriptionObject();
-  private _successSub = new SubscriptionObject();
+  private readonly _config: DbxActionContextMachineConfig<T, O>;
+  private readonly _handleValueReadySub = new SubscriptionObject();
+  private readonly _successSub = new SubscriptionObject();
 
-  constructor(readonly config: DbxActionContextMachineConfig<T, O>, source?: ActionContextStoreSource<T, O>) {
+  constructor(config: DbxActionContextMachineConfig<T, O>, source?: ActionContextStoreSource<T, O>) {
     super(source);
+    this._config = config;
 
     // Handle Value Ready
     if (config.handleValueReady !== false) {
@@ -53,14 +55,14 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
     }
 
     // If this is a one-time use, then destroy it after the first success comes through.
-    if (this.config.oneTimeUse) {
+    if (config.oneTimeUse) {
       this.sourceInstance.success$.pipe(first(), delay(1000)).subscribe(() => {
         this.destroy();
       });
     }
 
-    if (this.config.onSuccess) {
-      this._successSub.subscription = this.sourceInstance.success$.subscribe(this.config.onSuccess);
+    if (config.onSuccess) {
+      this._successSub.subscription = this.sourceInstance.success$.subscribe(config.onSuccess);
     }
   }
 
@@ -69,6 +71,10 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
     this._handleValueReadySub.destroy();
     this._successSub.destroy();
     this._isShutdown = true;
+  }
+
+  get config() {
+    return this._config;
   }
 
   get isShutdown(): boolean {

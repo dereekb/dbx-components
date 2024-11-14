@@ -17,12 +17,16 @@ export interface WorkInstanceDelegate<O = unknown> {
  * Instance that tracks doing an arbitrary piece of asynchronous work that has an input value and an output value.
  */
 export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
+  private readonly _value: I;
+  private readonly _delegate: WorkInstanceDelegate<O>;
+
   private _done = false;
   private _doneActionBegan = false;
 
   private _result: Maybe<LoadingState<O>>;
-  private _loadingState = new BehaviorSubject<Maybe<LoadingState<O>>>(undefined);
-  private _sub = new SubscriptionObject();
+
+  private readonly _loadingState = new BehaviorSubject<Maybe<LoadingState<O>>>(undefined);
+  private readonly _sub = new SubscriptionObject();
 
   readonly loadingState$ = this._loadingState.pipe(filterMaybe());
   protected readonly _hasStarted$ = this._loadingState.pipe(
@@ -34,12 +38,23 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
     shareReplay(1)
   );
 
-  constructor(public readonly value: I, readonly delegate: WorkInstanceDelegate<O>) {
+  constructor(value: I, delegate: WorkInstanceDelegate<O>) {
+    this._value = value;
+    this._delegate = delegate;
+
     // Schedule to cleanup self once isComplete is true.
     this.result$.subscribe((loadingState) => {
       this._result = loadingState;
       this.destroy();
     });
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  get delegate() {
+    return this._delegate;
   }
 
   get hasStarted(): boolean {

@@ -262,7 +262,7 @@ class BasicLoadingWithContentComponent {
   public error?: ErrorInput;
 
   @ViewChild(DbxBasicLoadingComponent, { static: true })
-  public readonly component?: DbxBasicLoadingComponent;
+  readonly component?: DbxBasicLoadingComponent;
 }
 
 @Component({
@@ -278,7 +278,7 @@ class BasicLoadingWithCustomErrorComponent {
   public error?: ErrorInput;
 
   @ViewChild(DbxBasicLoadingComponent, { static: true })
-  public readonly component?: DbxBasicLoadingComponent;
+  readonly component?: DbxBasicLoadingComponent;
 }
 
 @Component({
@@ -295,5 +295,5 @@ class BasicLoadingWithCustomLoadingComponent {
   public loading = true;
 
   @ViewChild(DbxBasicLoadingComponent, { static: true })
-  public readonly component?: DbxBasicLoadingComponent;
+  readonly component?: DbxBasicLoadingComponent;
 }

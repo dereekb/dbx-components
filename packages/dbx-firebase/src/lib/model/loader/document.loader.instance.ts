@@ -54,8 +54,8 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = pageLoadingStateFromObs(this.data$, false);
   readonly pageLoadingStateStream$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = pageLoadingStateFromObs(this.dataStream$, false);
 
-  constructor(private readonly _initConfig: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>) {
-    this.accessor = this._initConfig.accessor;
+  constructor(initConfig: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>) {
+    this.accessor = initConfig.accessor;
   }
 
   destroy(): void {

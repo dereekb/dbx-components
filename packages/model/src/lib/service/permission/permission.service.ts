@@ -36,7 +36,15 @@ export interface KeyOnlyModelPermissionService<C, T, R extends string = string, 
  * Abstract ModelPermissionService implementation.
  */
 export abstract class AbstractModelPermissionService<C, T, R extends string = string, O = T> implements ModelPermissionService<C, T, R, O> {
-  constructor(readonly modelLoader: ModelLoader<C, T>) {}
+  private readonly _modelLoader: ModelLoader<C, T>;
+
+  constructor(modelLoader: ModelLoader<C, T>) {
+    this._modelLoader = modelLoader;
+  }
+
+  get modelLoader() {
+    return this._modelLoader;
+  }
 
   async roleMapForKeyContext(key: string, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
     const model = await this.modelLoader.loadModelForKey(key, context);

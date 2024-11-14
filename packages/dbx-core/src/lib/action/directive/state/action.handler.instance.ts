@@ -10,9 +10,11 @@ export const DBX_ACTION_HANDLER_LOCK_KEY = 'dbxActionHandler';
  * Context used for defining a function that performs an action using the input function to handle valueReady$ events from an action context.
  */
 export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initialized, Destroyable {
-  private _sub = new SubscriptionObject();
-  private _handlerFunction = new BehaviorSubject<Maybe<Work<T, O>>>(undefined);
-  private _handlerValue = new BehaviorSubject<Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>>(undefined);
+  private readonly _delegate: DbxActionWorkInstanceDelegate<T, O>;
+
+  private readonly _sub = new SubscriptionObject();
+  private readonly _handlerFunction = new BehaviorSubject<Maybe<Work<T, O>>>(undefined);
+  private readonly _handlerValue = new BehaviorSubject<Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>>(undefined);
 
   readonly handlerFunction$ = combineLatest([this._handlerValue, this._handlerFunction]).pipe(
     map(([handlerValue, handlerFunction]) => {
@@ -50,10 +52,12 @@ export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initi
     this._handlerValue.next(handlerValue);
   }
 
-  private _delegate: DbxActionWorkInstanceDelegate<T, O>;
+  constructor(source: DbxActionContextStoreSourceInstance<T, O>) {
+    this._delegate = new DbxActionWorkInstanceDelegate<T, O>(source);
+  }
 
-  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) {
-    this._delegate = new DbxActionWorkInstanceDelegate<T, O>(this.source);
+  get source(): DbxActionContextStoreSourceInstance<T, O> {
+    return this._delegate.source;
   }
 
   init(): void {

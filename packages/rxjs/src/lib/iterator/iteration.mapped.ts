@@ -20,7 +20,10 @@ export interface MappedItemIterationInstanceMapConfig<O, I, M extends LoadingSta
   forwardDestroy?: boolean;
 }
 
-export class MappedItemIterationInstance<O, I = unknown, M extends LoadingState<O> = LoadingState<O>, L extends LoadingState<I> = LoadingState<I>, N extends ItemIteration<I, L> = ItemIteration<I, L>> implements ItemIteration<O>, Destroyable {
+export interface MappedItemIterationInstance<O, I = unknown, M extends LoadingState<O> = LoadingState<O>, L extends LoadingState<I> = LoadingState<I>, N extends ItemIteration<I, L> = ItemIteration<I, L>> extends ItemIteration<O>, Destroyable {
+  readonly itemIterator: N;
+  readonly config: MappedItemIterationInstanceMapConfig<O, I, M, L>;
+
   readonly hasNext$: Observable<boolean>;
   readonly canLoadMore$: Observable<boolean>;
 
@@ -28,35 +31,7 @@ export class MappedItemIterationInstance<O, I = unknown, M extends LoadingState<
   readonly latestState$: Observable<M>;
   readonly currentState$: Observable<M>;
 
-  constructor(readonly itemIterator: N, readonly config: MappedItemIterationInstanceMapConfig<O, I, M, L>) {
-    this.hasNext$ = this.itemIterator.hasNext$;
-    this.canLoadMore$ = this.itemIterator.canLoadMore$;
-
-    this.firstState$ = this.itemIterator.firstState$.pipe(
-      map((state) => mapLoadingStateResults(state, this.config)),
-      shareReplay(1)
-    );
-
-    this.latestState$ = this.itemIterator.latestState$.pipe(
-      map((state) => mapLoadingStateResults(state, this.config)),
-      shareReplay(1)
-    );
-
-    this.currentState$ = this.itemIterator.currentState$.pipe(
-      map((state) => mapLoadingStateResults<I, O, L, M>(state, this.config)),
-      shareReplay(1)
-    );
-  }
-
-  next(request?: ItemIteratorNextRequest): void {
-    return this.itemIterator.next(request);
-  }
-
-  destroy() {
-    if (this.config.forwardDestroy !== false) {
-      this.itemIterator.destroy();
-    }
-  }
+  next(request?: ItemIteratorNextRequest): void;
 }
 
 /**
@@ -66,6 +41,49 @@ export class MappedItemIterationInstance<O, I = unknown, M extends LoadingState<
  * @param config
  * @returns
  */
-export function mapItemIteration<O, I = unknown, M extends LoadingState<O> = LoadingState<O>, L extends LoadingState<I> = LoadingState<I>, N extends ItemIteration<I, L> = ItemIteration<I, L>>(itemIteration: N, config: MappedItemIterationInstanceMapConfig<O, I, M, L>): MappedItemIterationInstance<O, I, M, L, N> {
-  return new MappedItemIterationInstance<O, I, M, L, N>(itemIteration, config);
+export function mapItemIteration<O, I = unknown, M extends LoadingState<O> = LoadingState<O>, L extends LoadingState<I> = LoadingState<I>, N extends ItemIteration<I, L> = ItemIteration<I, L>>(itemIterator: N, config: MappedItemIterationInstanceMapConfig<O, I, M, L>): MappedItemIterationInstance<O, I, M, L, N> {
+  const hasNext$: Observable<boolean> = itemIterator.hasNext$;
+  const canLoadMore$: Observable<boolean> = itemIterator.canLoadMore$;
+
+  const firstState$: Observable<M> = itemIterator.firstState$.pipe(
+    map((state) => mapLoadingStateResults(state, config)),
+    shareReplay(1)
+  );
+
+  const latestState$: Observable<M> = itemIterator.latestState$.pipe(
+    map((state) => mapLoadingStateResults(state, config)),
+    shareReplay(1)
+  );
+
+  const currentState$: Observable<M> = itemIterator.currentState$.pipe(
+    map((state) => mapLoadingStateResults<I, O, L, M>(state, config)),
+    shareReplay(1)
+  );
+
+  function next(request?: ItemIteratorNextRequest): void {
+    return itemIterator.next(request);
+  }
+
+  function destroy() {
+    if (config.forwardDestroy !== false) {
+      itemIterator.destroy();
+    }
+  }
+
+  const result: MappedItemIterationInstance<O, I, M, L, N> = {
+    itemIterator,
+    config,
+
+    hasNext$,
+    canLoadMore$,
+
+    firstState$,
+    latestState$,
+    currentState$,
+
+    next,
+    destroy
+  };
+
+  return result;
 }

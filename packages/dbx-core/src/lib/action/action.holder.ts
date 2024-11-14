@@ -17,9 +17,9 @@ export abstract class DbxActionContextBaseSource<T = unknown, O = unknown> imple
   readonly triggered$: Observable<boolean>;
   readonly success$: Observable<Maybe<O>>;
 
-  constructor(readonly inputSource?: Maybe<SecondaryActionContextStoreSource<T, O>>) {
-    if (this.inputSource) {
-      this._store$ = this.inputSource.store$;
+  constructor(inputSource?: Maybe<SecondaryActionContextStoreSource<T, O>>) {
+    if (inputSource) {
+      this._store$ = inputSource.store$;
     } else {
       this._store = new ActionContextStore();
       this._store$ = of(this._store);

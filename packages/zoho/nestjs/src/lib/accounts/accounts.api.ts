@@ -5,13 +5,13 @@ import { ZohoAccountsAccessTokenCacheService } from './accounts.service';
 
 @Injectable()
 export class ZohoAccountsApi {
-  public readonly zohoAccounts: ZohoAccounts;
+  readonly zohoAccounts: ZohoAccounts;
 
   get accountsContext(): ZohoAccountsContext {
     return this.zohoAccounts.accountsContext;
   }
 
-  constructor(@Inject(ZohoAccountsServiceConfig) public readonly config: ZohoAccountsServiceConfig, @Inject(ZohoAccountsAccessTokenCacheService) public readonly cacheService: ZohoAccountsAccessTokenCacheService) {
+  constructor(@Inject(ZohoAccountsServiceConfig) readonly config: ZohoAccountsServiceConfig, @Inject(ZohoAccountsAccessTokenCacheService) readonly cacheService: ZohoAccountsAccessTokenCacheService) {
     const accessTokenCache = config.zohoAccounts.accessTokenCache ? config.zohoAccounts.accessTokenCache : cacheService.loadZohoAccessTokenCache(config.zohoAccounts.serviceAccessTokenKey);
     this.zohoAccounts = zohoAccountsFactory(config.factoryConfig ?? {})({
       accessTokenCache,

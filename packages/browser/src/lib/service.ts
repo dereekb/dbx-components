@@ -11,7 +11,22 @@ export type ServiceCallbackInWindow = Record<string, () => void>;
  * Used for loading services in the browser that are imported from other scripts, such as Facebook, Segment, Stripe, etc.
  */
 export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable {
-  private _loading = new BehaviorSubject<Maybe<Promise<T>>>(undefined);
+  private readonly _loading = new BehaviorSubject<Maybe<Promise<T>>>(undefined);
+
+  /**
+   * Key that is attached to the window for the object that is the service when finished loading.
+   */
+  private readonly _windowKey: string;
+
+  /**
+   * Optional key attached to window that is a function that is executed when the setup is complete.
+   */
+  private readonly _callbackKey?: Maybe<string>;
+
+  /**
+   * Service name used in logging. Defaults to the windowKey.
+   */
+  private readonly _serviceName: string;
 
   readonly loading$: Observable<Promise<T>> = this._loading.pipe(
     tapFirst(() => this.loadService()),
@@ -25,10 +40,14 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
   );
 
   /**
-   * @param _windowKey Key that is attached to the window for the object that is the service when finished loading.
-   * @param _callbackKey Optional key attached to window that is a function that is executed when the setup is complete.
+   * @param windowKey
+   * @param callbackKey
    */
-  constructor(private _windowKey: string, private _callbackKey?: string, private _serviceName: string = _windowKey, preload?: Maybe<boolean>) {
+  constructor(windowKey: string, callbackKey?: string, serviceName?: Maybe<string>, preload?: Maybe<boolean>) {
+    this._windowKey = windowKey;
+    this._callbackKey = callbackKey;
+    this._serviceName = serviceName ?? windowKey;
+
     if (preload) {
       // Begin loading the service immediately.
       setTimeout(() => this.loadService().catch());

@@ -16,9 +16,9 @@ export interface PageCalculatorConfig {
  * @deprecated
  */
 export class PageCalculator {
-  public readonly pageSize: number;
-  public readonly limitKey: string;
-  public readonly skipKey: string;
+  readonly pageSize: number;
+  readonly limitKey: string;
+  readonly skipKey: string;
 
   constructor(config: PageCalculatorConfig) {
     this.pageSize = config.pageSize;

@@ -66,10 +66,17 @@ abstract class BaseRRuleIter {
  * Used by DateRRule to find the last result.
  */
 export class LastIterResult extends BaseRRuleIter {
+  private readonly _maxIterationsAllowed: number;
+
   override readonly maxDate = maxFutureDate();
 
-  constructor(readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
+  constructor(maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
     super();
+    this._maxIterationsAllowed = maxIterationsAllowed;
+  }
+
+  get maxIterationsAllowed() {
+    return this._maxIterationsAllowed;
   }
 
   accept(date: Date): boolean {
@@ -81,7 +88,7 @@ export class LastIterResult extends BaseRRuleIter {
       return false;
     } else {
       this.add(date);
-      const maxIterationReached = this.total >= this.maxIterationsAllowed;
+      const maxIterationReached = this.total >= this._maxIterationsAllowed;
       return !maxIterationReached;
     }
   }
@@ -92,7 +99,7 @@ export class LastIterResult extends BaseRRuleIter {
   }
 
   clone() {
-    return new LastIterResult(this.maxIterationsAllowed);
+    return new LastIterResult(this._maxIterationsAllowed);
   }
 }
 

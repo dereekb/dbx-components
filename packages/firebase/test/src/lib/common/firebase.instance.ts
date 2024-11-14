@@ -1,12 +1,28 @@
 import { AbstractJestTestContextFixture, JestTestContextFactory } from '@dereekb/util/test';
 import { FirebaseStorage, Firestore } from '@dereekb/firebase';
 import { TestFirestoreContext } from './firestore/firestore';
-import { TestFirestoreInstance } from './firestore/firestore.instance';
+import { TestFirestore, TestFirestoreInstance } from './firestore/firestore.instance';
 import { TestFirebaseStorageContext } from './storage/storage';
-import { TestFirebaseStorageInstance } from './storage/storage.instance';
+import { TestFirebaseStorage, TestFirebaseStorageInstance } from './storage/storage.instance';
 
-export class TestFirebaseInstance implements TestFirestoreInstance, TestFirebaseStorageInstance {
-  constructor(readonly firestoreContext: TestFirestoreContext, readonly storageContext: TestFirebaseStorageContext) {}
+export interface TestFirebase extends TestFirestore, TestFirebaseStorage {}
+
+export class TestFirebaseInstance implements TestFirebase {
+  private readonly _firestoreContext: TestFirestoreContext;
+  private readonly _storageContext: TestFirebaseStorageContext;
+
+  constructor(firestoreContext: TestFirestoreContext, storageContext: TestFirebaseStorageContext) {
+    this._firestoreContext = firestoreContext;
+    this._storageContext = storageContext;
+  }
+
+  get firestoreContext(): TestFirestoreContext {
+    return this._firestoreContext;
+  }
+
+  get storageContext(): TestFirebaseStorageContext {
+    return this._storageContext;
+  }
 
   get firestore(): Firestore {
     return this.firestoreContext.firestore;
@@ -17,7 +33,7 @@ export class TestFirebaseInstance implements TestFirestoreInstance, TestFirebase
   }
 }
 
-export class TestFirebaseContextFixture<F extends TestFirebaseInstance = TestFirebaseInstance> extends AbstractJestTestContextFixture<F> {
+export class TestFirebaseContextFixture<F extends TestFirebase = TestFirebase> extends AbstractJestTestContextFixture<F> {
   get firestore(): Firestore {
     return this.instance.firestore;
   }

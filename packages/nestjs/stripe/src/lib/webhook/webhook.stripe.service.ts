@@ -11,14 +11,17 @@ import { Handler } from '@dereekb/util';
 @Injectable()
 export class StripeWebhookService {
   private readonly logger = new Logger('StripeWebhookService');
+  private readonly _stripeApi: StripeApi;
 
   readonly handler: Handler<Stripe.Event> = stripeEventHandlerFactory();
   readonly configure = stripeEventHandlerConfigurerFactory(this.handler);
 
-  constructor(private readonly stripeApi: StripeApi) {}
+  constructor(stripeApi: StripeApi) {
+    this._stripeApi = stripeApi;
+  }
 
   public async updateForWebhook(req: Request, rawBody: Buffer): Promise<boolean> {
-    const event = this.stripeApi.readStripeEventFromWebhookRequest(req, rawBody);
+    const event = this._stripeApi.readStripeEventFromWebhookRequest(req, rawBody);
     return this.updateForStripeEvent(event);
   }
 

@@ -67,10 +67,23 @@ export class FilterMap<F> implements Destroyable {
 }
 
 export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, FilterSource<F> {
+  private readonly _dbxFilterMap: FilterMap<F>;
+  private readonly _key: FilterMapKey;
+
   readonly filter$: Observable<F>;
 
-  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) {
-    this.filter$ = this.dbxFilterMap.filterForKey(this.key);
+  constructor(dbxFilterMap: FilterMap<F>, key: FilterMapKey) {
+    this._dbxFilterMap = dbxFilterMap;
+    this._key = key;
+    this.filter$ = this._dbxFilterMap.filterForKey(this._key);
+  }
+
+  get dbxFilterMap(): FilterMap<F> {
+    return this._dbxFilterMap;
+  }
+
+  get key(): FilterMapKey {
+    return this._key;
   }
 
   initWithFilter(filterObs: Observable<F>): void {
@@ -88,18 +101,32 @@ interface FilterMapItemObs<F> extends IndexRef {
 }
 
 class FilterMapItem<F> {
-  private _i = 0;
-  private _source = new FilterSourceInstance<F>();
-  private _obs = new BehaviorSubject<FilterMapItemObs<F>[]>([]);
+  private readonly _dbxFilterMap: FilterMap<F>;
+  private readonly _key: FilterMapKey;
 
-  private obs$: Observable<F> = this._obs.pipe(
+  private _i = 0;
+  private readonly _source = new FilterSourceInstance<F>();
+  private readonly _obs = new BehaviorSubject<FilterMapItemObs<F>[]>([]);
+
+  private readonly _obs$: Observable<F> = this._obs.pipe(
     switchMap((x) => merge(...x.map((y) => y.obs))),
     distinctUntilChanged()
   );
 
   readonly filter$ = this._source.initialFilter$;
 
-  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) {}
+  constructor(dbxFilterMap: FilterMap<F>, key: FilterMapKey) {
+    this._dbxFilterMap = dbxFilterMap;
+    this._key = key;
+  }
+
+  get dbxFilterMap(): FilterMap<F> {
+    return this._dbxFilterMap;
+  }
+
+  get key(): FilterMapKey {
+    return this._key;
+  }
 
   setDefaultFilterObs(obs: Maybe<ObservableOrValue<F>>): void {
     this._source.setDefaultFilter(obs);
@@ -127,7 +154,7 @@ class FilterMapItem<F> {
         /**
          * MapItem uses the behavior of the DefaultFilterSource to provide a default filter value.
          */
-        this._source.initWithFilter(this.obs$);
+        this._source.initWithFilter(this._obs$);
       }
     }
   }

@@ -1,12 +1,12 @@
 import { DocInteractionExamplePopupComponent } from './../component/interaction.popup.component';
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, inject } from '@angular/core';
 import { DbxPopupService, PopupPosition } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './popup.component.html'
 })
 export class DocInteractionPopupComponent implements AfterViewInit {
-  constructor(readonly popupService: DbxPopupService) {}
+  readonly popupService = inject(DbxPopupService);
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePopup(), 100);

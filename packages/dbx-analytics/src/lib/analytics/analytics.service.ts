@@ -66,16 +66,23 @@ export abstract class DbxAnalyticsServiceConfiguration {
   userSource?: DbxAnalyticsUserSource;
 }
 
-export class DbxAnalyticsStreamEventAnalyticsEventWrapper implements DbxAnalyticsStreamEvent {
-  constructor(public readonly event: DbxUserAnalyticsEvent, public readonly type: DbxAnalyticsStreamEventType = DbxAnalyticsStreamEventType.Event) {}
+export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyticsStreamEvent {
+  readonly event: DbxUserAnalyticsEvent;
+  readonly type: DbxAnalyticsStreamEventType;
+  readonly user: Maybe<DbxAnalyticsUser>;
+  readonly userId: string | undefined;
+}
 
-  public get user(): Maybe<DbxAnalyticsUser> {
-    return this.event.user;
-  }
+export function dbxAnalyticsStreamEventAnalyticsEventWrapper(event: DbxUserAnalyticsEvent, type: DbxAnalyticsStreamEventType = DbxAnalyticsStreamEventType.Event) {
+  const { user } = event;
+  const userId = user ? user.user : undefined;
 
-  public get userId(): string | undefined {
-    return this.user ? this.user.user : undefined;
-  }
+  return {
+    event,
+    type,
+    user,
+    userId
+  };
 }
 
 /**
@@ -232,7 +239,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   }
 
   protected nextEvent(event: DbxUserAnalyticsEvent, type: DbxAnalyticsStreamEventType): void {
-    const wrapper = new DbxAnalyticsStreamEventAnalyticsEventWrapper(event, type);
+    const wrapper = dbxAnalyticsStreamEventAnalyticsEventWrapper(event, type);
     this._subject.next(wrapper);
   }
 

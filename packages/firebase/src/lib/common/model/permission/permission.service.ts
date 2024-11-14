@@ -15,8 +15,15 @@ export interface FirebasePermissionServiceInstanceDelegate<C extends FirebaseMod
  * Abstract AbstractModelPermissionService implementation for FirebaseModelsPermissionService.
  */
 export class FirebaseModelPermissionServiceInstance<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> extends AbstractModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>> implements FirebaseModelPermissionService<C, T, D, R> {
-  constructor(readonly delegate: FirebasePermissionServiceInstanceDelegate<C, T, D, R>) {
+  private readonly _delegate: FirebasePermissionServiceInstanceDelegate<C, T, D, R>;
+
+  constructor(delegate: FirebasePermissionServiceInstanceDelegate<C, T, D, R>) {
     super(delegate);
+    this._delegate = delegate;
+  }
+
+  get delegate(): FirebasePermissionServiceInstanceDelegate<C, T, D, R> {
+    return this._delegate;
   }
 
   roleMapForModel(output: FirebasePermissionServiceModel<T, D>, context: C, model: D): PromiseOrValue<GrantedRoleMap<R>> {

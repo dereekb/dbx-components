@@ -7,9 +7,9 @@ import * as FormData from 'form-data';
 
 @Injectable()
 export class MailgunApi {
-  public readonly client: MailgunClient;
+  readonly client: MailgunClient;
 
-  constructor(@Inject(MailgunServiceConfig) public readonly config: MailgunServiceConfig) {
+  constructor(@Inject(MailgunServiceConfig) readonly config: MailgunServiceConfig) {
     this.client = new Mailgun(FormData).client({
       ...config.mailgun
     });

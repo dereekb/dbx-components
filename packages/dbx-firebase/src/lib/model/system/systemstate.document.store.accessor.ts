@@ -20,7 +20,9 @@ export abstract class AbstractSystemStateDocumentStoreAccessor<T extends SystemS
   readonly exists$ = this.systemStateDocumentStore.exists$;
   readonly doesNotExist$ = this.systemStateDocumentStore.doesNotExist$;
 
-  constructor(readonly type: SystemStateTypeIdentifier) {
+  readonly type$: Observable<SystemStateTypeIdentifier> = this.systemStateDocumentStore.id$;
+
+  constructor(type: SystemStateTypeIdentifier) {
     this.systemStateDocumentStore.setId(type);
   }
 }

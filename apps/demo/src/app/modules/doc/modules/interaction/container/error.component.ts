@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Maybe, randomNumber, readableError, ReadableError, serverError } from '@dereekb/util';
 import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
@@ -11,6 +11,8 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
   templateUrl: './error.component.html'
 })
 export class DocInteractionErrorComponent {
+  readonly dbxErrorSnackbarService = inject(DbxErrorSnackbarService);
+
   readonly blankReadableError: ReadableError = {};
 
   readonly readableErrorWithoutCode: ReadableError = { message: 'This is an error without an error code.' };
@@ -40,8 +42,6 @@ export class DocInteractionErrorComponent {
     message: 'This error has a custom widget associated with it.',
     status: 200
   });
-
-  constructor(readonly dbxErrorSnackbarService: DbxErrorSnackbarService) {}
 
   showErrorSnackbar(errorNumber?: Maybe<number>) {
     if (errorNumber == null) {

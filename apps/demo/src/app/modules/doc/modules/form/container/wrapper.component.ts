@@ -1,5 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper, toggleField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
@@ -7,6 +7,8 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
   templateUrl: './wrapper.component.html'
 })
 export class DocFormWrapperComponent {
+  readonly matDialog = inject(MatDialog);
+
   readonly expandField: FormlyFieldConfig[] = [
     expandWrapper(nameField(), {
       expandLabel: 'Add Name',
@@ -91,6 +93,4 @@ export class DocFormWrapperComponent {
   ];
 
   readonly flexFiveField: FormlyFieldConfig[] = [flexLayoutWrapper([nameField(), cityField(), stateField(), zipCodeField(), countryField()], { breakpoint: 'large', size: 1, relative: true })];
-
-  constructor(readonly matDialog: MatDialog) {}
 }

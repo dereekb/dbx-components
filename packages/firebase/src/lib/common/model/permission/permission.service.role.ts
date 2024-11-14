@@ -16,10 +16,16 @@ export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErro
 }
 
 export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> implements ContextGrantedModelRolesReader<C, T, D, R> {
-  private _roleReader: GrantedRoleMapReader<R>;
+  private readonly _contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>;
+  private readonly _roleReader: GrantedRoleMapReader<R>;
 
-  constructor(readonly contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>) {
+  constructor(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>) {
+    this._contextGrantedModelRoles = contextGrantedModelRoles;
     this._roleReader = grantedRoleMapReader(contextGrantedModelRoles.roleMap);
+  }
+
+  get contextGrantedModelRoles(): FirebaseContextGrantedModelRoles<C, T, D, R> {
+    return this._contextGrantedModelRoles;
   }
 
   get permissionServiceModel(): FirebasePermissionServiceModel<T, D> {
