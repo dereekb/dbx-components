@@ -158,7 +158,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   constructor(iterator: ItemPageIterator<V, F, C>, config: C) {
     this._iterator = iterator;
     this._config = config;
-    this._maxPageLoadLimit.next(config.maxPageLoadLimit ?? iterator.maxPageLoadLimit);
+    this._maxPageLoadLimit.next(config.maxPageLoadLimit ?? iterator.getMaxPageLoadLimit());
   }
 
   get iterator() {

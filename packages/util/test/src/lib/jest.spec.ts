@@ -5,10 +5,10 @@ export interface TestConfig {
 }
 
 export class TestInstance {
-  constructor(readonly config?: TestConfig) { }
+  constructor(readonly config?: TestConfig) {}
 }
 
-export class TestJestTestContextFixture extends AbstractJestTestContextFixture<TestInstance> { }
+export class TestJestTestContextFixture extends AbstractJestTestContextFixture<TestInstance> {}
 
 export function makeTestBuilder() {
   return jestTestContextBuilder<TestInstance, TestJestTestContextFixture, TestConfig>({
