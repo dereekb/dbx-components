@@ -1,5 +1,4 @@
-import { AbstractType, Inject, Injector, Provider, Type } from '@angular/core';
-import { ClassType } from '@dereekb/util';
+import { AbstractType, Injector, Provider, Type } from '@angular/core';
 
 export type InjectableType<T> = (Type<T> | AbstractType<T>) & Provider;
 
