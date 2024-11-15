@@ -170,18 +170,21 @@ export function authorizedUserContext<PI extends FirebaseAdminTestContext = Fire
 export type AuthorizedUserTestContextFactoryConfig<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>> = Omit<AuthorizedUserTestContextParams<PI, PF, I, F>, 'f'>;
 
 export interface AuthorizedUserTestContextFactoryParams<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> {
-  f: PF;
-  user?: CreateRequest;
+  readonly f: PF;
+  /**
+   * User details. Can provide either a value or a getter.
+   */
+  readonly user?: GetterOrValue<PromiseOrValue<CreateRequest>>;
   /**
    * Whether or not to add contact info. Is false by default.
    *
    * Any generated contact info will be overwritten by the input template.
    */
-  addContactInfo?: boolean;
+  readonly addContactInfo?: GetterOrValue<PromiseOrValue<boolean>>;
   /**
    * Optional template details.
    */
-  template?: AuthorizedUserTestContextDetailsTemplate;
+  readonly template?: GetterOrValue<AuthorizedUserTestContextDetailsTemplate>;
 }
 
 export const AUTHORIZED_USER_RANDOM_EMAIL_FACTORY = randomEmailFactory();
@@ -197,14 +200,21 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
   const makeUid = uidGetter ? asGetter(uidGetter) : testUidFactory;
 
   return (params: C, buildTests: (u: F) => void) => {
-    const { f, user: inputUser, addContactInfo: inputAddContactInfo } = params;
+    const { f, user: inputUserGetterOrValue, addContactInfo: inputAddContactInfoGetterOrValue, template: inputTemplateGetterOrValue } = params;
+    const inputAddContactInfoGetter = asGetter(inputAddContactInfoGetterOrValue);
+    const inputUserGetter = asGetter(inputUserGetterOrValue);
+    const templateGetter = asGetter(inputTemplateGetterOrValue);
 
     return useJestContextFixture<F, I>({
       fixture: makeFixture(f) as F,
       buildTests,
       initInstance: async () => {
+        const inputAddContactInfo = await inputAddContactInfoGetter();
+        const inputUser = await inputUserGetter();
+        const inputTemplate = await templateGetter();
+
         const uid = inputUser?.uid || makeUid();
-        const { details, claims, addContactInfo: userDetailsAddContactInfo } = { ...makeUserDetails(uid, params), ...params.template };
+        const { details, claims, addContactInfo: userDetailsAddContactInfo } = { ...makeUserDetails(uid, params), ...inputTemplate };
         const { phoneNumber: detailsPhoneNumber, email: detailsEmail } = details ?? {}; // keep details if provided
 
         const addContactInfo = inputAddContactInfo || userDetailsAddContactInfo;
