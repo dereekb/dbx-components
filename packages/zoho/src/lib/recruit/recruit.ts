@@ -1,4 +1,4 @@
-import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId } from '@dereekb/util';
+import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
 /**
  * Zoho Recruit module name.
@@ -65,6 +65,20 @@ export type UpdateZohoRecruitRecordData = UniqueModelWithId & ZohoRecruitRecordF
  * A ZohoRecruit record containing record details.
  */
 export type ZohoRecruitRecord = UniqueModelWithId & ZohoRecruitRecordFieldsData;
+
+/**
+ * Zoho Recruit only allows URLs that can be resolved via the internet (I.E. uses a normal tdl)
+ *
+ * The following are considered invalid:
+ * - localhost:8080
+ * - ht://dereekb.com
+ */
+export type ZohoRecruitValidUrl = WebsiteUrl;
+
+/**
+ * Returns true if it is a valid ZohoRecruitValidUrl.
+ */
+export const isZohoRecruitValidUrl: (input: WebsiteUrl) => input is ZohoRecruitValidUrl = isStandardInternetAccessibleWebsiteUrl;
 
 /**
  * Update details returned by the server for an updated object.

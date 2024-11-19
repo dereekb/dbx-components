@@ -1,10 +1,15 @@
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths, isWebsiteUrlWithPrefix, isWebsiteUrl, hasPortNumber, readPortNumber } from './url';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths, isWebsiteUrlWithPrefix, isWebsiteUrl, hasPortNumber, readPortNumber, readWebsiteProtocol, hasWebsiteTopLevelDomain, isStandardInternetAccessibleWebsiteUrl } from './url';
 
 const domain = 'dereekb.com';
 
 describe('hasWebsiteDomain()', () => {
   it('should return true for website domains', () => {
     const result = hasWebsiteDomain('dereekb.com');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for a website domain with a different protocol', () => {
+    const result = hasWebsiteDomain('test://dereekb.com');
     expect(result).toBe(true);
   });
 
@@ -20,6 +25,48 @@ describe('hasWebsiteDomain()', () => {
 
   it('should return false for strings without a tld', () => {
     const result = hasWebsiteDomain('dereekb');
+    expect(result).toBe(false);
+  });
+});
+
+describe('hasWebsiteTopLevelDomain()', () => {
+  it('should return true for a website domain with a tld', () => {
+    const result = hasWebsiteTopLevelDomain('dereekb.com');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for a website domain with a tld and port number', () => {
+    const result = hasWebsiteTopLevelDomain('dereekb.com:8080');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for a website domain with a tld and port number and route', () => {
+    const result = hasWebsiteTopLevelDomain('dereekb.com:8080/a/b/c');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for a website domain with a tld and port number and route and http prefix', () => {
+    const result = hasWebsiteTopLevelDomain('http://dereekb.com:8080/a/b/c');
+    expect(result).toBe(true);
+  });
+
+  it('should return false an invalid domain input', () => {
+    const result = hasWebsiteTopLevelDomain('dereekb test.com test');
+    expect(result).toBe(false);
+  });
+
+  it('should return true for a website domain with a two string tld', () => {
+    const result = hasWebsiteTopLevelDomain('test.au.tz');
+    expect(result).toBe(true);
+  });
+
+  it('should return false for localhost', () => {
+    const result = hasWebsiteTopLevelDomain('localhost');
+    expect(result).toBe(false);
+  });
+
+  it('should return false for localhost witha  port', () => {
+    const result = hasWebsiteTopLevelDomain('localhost:8080');
     expect(result).toBe(false);
   });
 });
@@ -70,6 +117,12 @@ describe('readPortNumber()', () => {
 });
 
 describe('baseWebsiteUrl()', () => {
+  it('should return the base url from a website with http with a port number', () => {
+    const expected = 'http://dereekb.com:8080/';
+    const result = baseWebsiteUrl(expected);
+    expect(result).toBe(expected);
+  });
+
   it('should return the base url from a website with a port number', () => {
     const expected = 'https://dereekb.com:8080/';
     const result = baseWebsiteUrl(expected);
@@ -143,13 +196,67 @@ describe('isWebsiteUrlWithPrefix()', () => {
   });
 
   it('should return true for a valid website url with a prefix', () => {
-    expect(isWebsiteUrlWithPrefix('https://dereek.com')).toBe(true);
+    expect(isWebsiteUrlWithPrefix('https://dereekb.com')).toBe(true);
+  });
+});
+
+describe('isStandardInternetAccessibleWebsiteUrl()', () => {
+  it('should return false for localhost', () => {
+    expect(isStandardInternetAccessibleWebsiteUrl('localhost')).toBe(false);
+  });
+
+  it('should return false for localhost:8080', () => {
+    expect(isStandardInternetAccessibleWebsiteUrl('localhost:8080')).toBe(false);
+  });
+
+  it('should return true for a website url', () => {
+    expect(isStandardInternetAccessibleWebsiteUrl('dereekb.com')).toBe(true);
+  });
+
+  it('should return true for a website url with a port number', () => {
+    expect(isStandardInternetAccessibleWebsiteUrl('dereekb.com:8080')).toBe(true);
+  });
+
+  it('should return true for a website url with an https prefix and port number', () => {
+    expect(isStandardInternetAccessibleWebsiteUrl('https://dereekb.com:8080')).toBe(true);
+  });
+
+  it('should return false for a website url with a non-http prefix and port number', () => {
+    expect(isStandardInternetAccessibleWebsiteUrl('test://dereekb.com:8080')).toBe(false);
   });
 });
 
 describe('websiteUrlFromPaths()', () => {
+  it('should create a full url from a base path that has no http prefix', () => {
+    const baseUrl = 'localhost:8080';
+    const path = '/hello/world';
+
+    const expected = `${baseUrl}${path}`;
+    const result = websiteUrlFromPaths(baseUrl, path);
+    expect(result).toBe(expected);
+  });
+
+  it('should create a full url from a base path and append a default protocol', () => {
+    const defaultProtocol = 'https';
+    const baseUrl = 'localhost:8080';
+    const path = '/hello/world';
+
+    const expected = setWebProtocolPrefix(`${baseUrl}${path}`, defaultProtocol);
+    const result = websiteUrlFromPaths(baseUrl, path, defaultProtocol);
+    expect(result).toBe(expected);
+  });
+
   it('should create a full url from a base path', () => {
     const baseUrl = 'https://localhost:8080';
+    const path = '/hello/world';
+
+    const expected = `${baseUrl}${path}`;
+    const result = websiteUrlFromPaths(baseUrl, path);
+    expect(result).toBe(expected);
+  });
+
+  it('should create a full url from a base path and retain http', () => {
+    const baseUrl = 'http://localhost:8080';
     const path = '/hello/world';
 
     const expected = `${baseUrl}${path}`;
@@ -307,12 +414,31 @@ describe('websitePathFromWebsiteDomainAndPath()', () => {
   });
 });
 
+describe('readWebProtocol()', () => {
+  const domain = 'dereekb.com';
+
+  it('should return http:// from the string with http://', () => {
+    const expectedProtocol = `http`;
+
+    const input = setWebProtocolPrefix(domain, expectedProtocol);
+    expect(input).toBe(`${expectedProtocol}://${domain}`);
+
+    const protocol = readWebsiteProtocol(input);
+    expect(protocol).toBe(expectedProtocol);
+  });
+});
+
 describe('setWebProtocolPrefix()', () => {
   const domain = 'dereekb.com';
 
   it('should replace http:// from the string with https://', () => {
     const result = setWebProtocolPrefix(`http://${domain}`, 'https');
     expect(result).toBe(`https://${domain}`);
+  });
+
+  it('should remove http:// from the string with http://', () => {
+    const result = setWebProtocolPrefix(`http://${domain}`);
+    expect(result).toBe(domain);
   });
 });
 
