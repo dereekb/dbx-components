@@ -131,6 +131,18 @@ export function unavailableError(messageOrError?: ErrorMessageOrPartialServerErr
   });
 }
 
+export const UNAVAILABLE_OR_DEACTIVATED_FUNCTION_ERROR_CODE = 'UNAVAILABLE_OR_DEACTIVATED_FUNCTION';
+
+export function unavailableOrDeactivatedFunctionError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
+  return new functions.https.HttpsError('unimplemented', serverError?.message || 'the requested function is not available or has been deactivated for use', {
+    status: 501,
+    code: UNAVAILABLE_OR_DEACTIVATED_FUNCTION_ERROR_CODE,
+    ...serverError,
+    _error: undefined
+  });
+}
+
 export const INTERNAL_SERVER_ERROR_CODE = 'INTERNAL_ERROR';
 
 export function internalServerError(messageOrError?: ErrorMessageOrPartialServerError) {
