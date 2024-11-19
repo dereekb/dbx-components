@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-form",
-  "version": "11.0.2",
+  "version": "11.0.3",
   "peerDependencies": {
     "@angular/common": "^16.2.12",
     "@angular/core": "^16.2.12",
