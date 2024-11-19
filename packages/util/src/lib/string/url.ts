@@ -23,6 +23,15 @@ export type HttpsWebsiteProtocol = 'https';
 export type KnownHttpWebsiteProtocol = HttpWebsiteProtocol | HttpsWebsiteProtocol;
 
 /**
+ * Returns true if the input string is a KnownHttpWebsiteProtocol.
+ *
+ * @param input
+ */
+export function isKnownHttpWebsiteProtocol(input: string): input is KnownHttpWebsiteProtocol {
+  return input === 'http' || input === 'https';
+}
+
+/**
  * A website domain.
  *
  * Examples:
@@ -41,6 +50,7 @@ export const HAS_WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
  *
  * Examples where it will return true:
  * - dereekb.com
+ * - test://dereekb.com
  * - https://components.dereekb.com
  * - https://components.dereekb.com/
  * - https://components.dereekb.com/doc/home
@@ -50,6 +60,30 @@ export const HAS_WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
  */
 export function hasWebsiteDomain(input: string): input is WebsiteDomain {
   return HAS_WEBSITE_DOMAIN_NAME_REGEX.test(input);
+}
+
+/**
+ * The top-level domain (tld).
+ *
+ * Examples:
+ * - com
+ * - net
+ */
+export type WebsiteTopLevelDomain = string;
+
+/**
+ * This Regex is really only reliable for detecting that the TLD exists, but due to the nature of tld's
+ * it cannot always be determined whether or not the part of the url is part of the tld or a subdomain.
+ */
+export const WEBSITE_TLD_DETECTION_REGEX = /[^\/.\s]([^.\s]+)\.([^.\s]+)$/;
+
+/**
+ * Returns true if the input url has a website top level domain.
+ *
+ * It does not check whether or not the tld is a recognized tld.
+ */
+export function hasWebsiteTopLevelDomain(input: string): boolean {
+  return WEBSITE_TLD_DETECTION_REGEX.test(input);
 }
 
 /**
@@ -175,6 +209,34 @@ export function isWebsiteUrlWithPrefix(input: string): input is WebsiteUrl {
 }
 
 /**
+ * A "standard" internet accessible website url with a tld (.com/.net/etc) and optionally has the http/https protocol, but no other protocol.
+ *
+ * Examples:
+ * - dereekb.com
+ * - dereekb.com:8080
+ * - components.dereekb.com/
+ * - components.dereekb.com/doc/home
+ * - http://dereekb.com
+ * - https://components.dereekb.com/
+ * - https://components.dereekb.com/doc/home
+ *
+ * Non-examples:
+ * - localhost:8080       // not internet-accessible
+ * - test://dereekb.com   // non-http/https protocol
+ */
+export type StandardInternetAccessibleWebsiteUrl = string;
+
+/**
+ * Returns true if the input is a StandardInternetAccessibleWebsiteUrl.
+ *
+ * @param input
+ */
+export function isStandardInternetAccessibleWebsiteUrl(input: string): input is StandardInternetAccessibleWebsiteUrl {
+  const protocol = readWebsiteProtocol(input);
+  return hasWebsiteTopLevelDomain(input) && (protocol != null ? isKnownHttpWebsiteProtocol(protocol) : true);
+}
+
+/**
  * A website's domain and path combined, without the BaseWebsiteUrl
  *
  * Examples:
@@ -200,9 +262,11 @@ export type WebsitePath = `/${string}`;
  * @param paths
  * @returns
  */
-export function websiteUrlFromPaths(basePath: BaseWebsiteUrlInput, paths: ArrayOrValue<Maybe<WebsitePath>>): WebsiteUrl {
-  const basePathWithoutHttp = removeHttpFromUrl(baseWebsiteUrl(basePath));
-  return addHttpToUrl(mergeSlashPaths([basePathWithoutHttp, ...asArray(paths)]));
+export function websiteUrlFromPaths(basePath: BaseWebsiteUrlInput, paths: ArrayOrValue<Maybe<WebsitePath>>, defaultProtocol?: WebsiteProtocol): WebsiteUrl {
+  const protocol = readWebsiteProtocol(basePath) ?? defaultProtocol;
+  const baseWebUrl = removeWebProtocolPrefix(baseWebsiteUrl(basePath)); // remove prefix to prevent issues with slash paths
+  const webUrl = mergeSlashPaths([baseWebUrl, ...asArray(paths)]);
+  return setWebProtocolPrefix(webUrl, protocol);
 }
 
 /**
@@ -371,16 +435,31 @@ export function websiteDomainAndPathPair(input: WebsiteDomainAndPath): WebsiteDo
 }
 
 export const HTTP_OR_HTTPS_REGEX: RegExp = /^https:\/\/|http:\/\//;
-export const WEB_PROTOCOL_PREFIX_REGEX: RegExp = /^(.)+:\/\//;
+export const WEB_PROTOCOL_PREFIX_REGEX: RegExp = /^(.+):\/\//;
+
+/**
+ * Reads the website protocol from the input string, if it exists.
+ *
+ * Does not include the "://" components.
+ *
+ * @param input
+ */
+export function readWebsiteProtocol(input: string): Maybe<WebsiteProtocol> {
+  const result = WEB_PROTOCOL_PREFIX_REGEX.exec(input);
+  return result ? result[1] : undefined;
+}
 
 /**
  * Removes any existing protocol and sets the protocol to match the input.
  *
+ * If no protcol is input, then it is removed from the input.
+ *
  * @param url
  * @param protocol
  */
-export function setWebProtocolPrefix(input: string, protocol: WebsiteProtocol): string {
-  return `${protocol}://${removeWebProtocolPrefix(input)}`;
+export function setWebProtocolPrefix(input: string, protocol?: Maybe<WebsiteProtocol>): string {
+  const basePath = removeWebProtocolPrefix(input);
+  return protocol ? `${protocol}://${basePath}` : basePath;
 }
 
 /**
