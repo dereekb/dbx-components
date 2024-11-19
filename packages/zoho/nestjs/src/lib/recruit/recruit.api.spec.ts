@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
-import { ZOHO_DUPLICATE_DATA_ERROR_CODE, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, NewZohoRecruitRecordData, ZohoRecruitRecordCrudDuplicateDataError, ZohoRecruitRecordCrudMandatoryFieldNotFoundError, ZohoRecruitRecordNoContentError, ZohoRecruitRecord, ZohoRecruitRecordCrudNoMatchingRecordError, ZOHO_INVALID_DATA_ERROR_CODE, ZohoInvalidQueryError } from '@dereekb/zoho';
+import { ZOHO_DUPLICATE_DATA_ERROR_CODE, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, NewZohoRecruitRecordData, ZohoRecruitRecordCrudDuplicateDataError, ZohoRecruitRecordCrudMandatoryFieldNotFoundError, ZohoRecruitRecordNoContentError, ZohoRecruitRecord, ZohoRecruitRecordCrudNoMatchingRecordError, ZOHO_INVALID_DATA_ERROR_CODE, ZohoInvalidQueryError, ZohoRecruitRecordId } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
 // NOTE: Should have test canidates available on the Zoho Sandbox that is being used. Use test_candidates.csv to generate if needed.
@@ -403,15 +403,23 @@ describe('recruit.api', () => {
     });
 
     describe('read', () => {
+      let testRecordId: ZohoRecruitRecordId;
+
+      beforeEach(async () => {
+        const testRecords = await loadTestRecords();
+        const recordToUpdate = testRecords[0];
+        testRecordId = recordToUpdate.id;
+      });
+
       describe('getRecordById()', () => {
         it('should return a record', async () => {
           const result = await api.getRecordById({
             module: 'Candidates',
-            id: TEST_CANDIDATE_ID
+            id: testRecordId
           });
 
           expect(result).toBeDefined();
-          expect(result.id).toBe(TEST_CANDIDATE_ID);
+          expect(result.id).toBe(testRecordId);
         });
 
         itShouldFail('if the record does not exist.', async () => {

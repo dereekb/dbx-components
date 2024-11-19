@@ -1,4 +1,4 @@
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths, isWebsiteUrlWithPrefix, isWebsiteUrl } from './url';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters, removeWebProtocolPrefix, setWebProtocolPrefix, baseWebsiteUrl, websiteUrlFromPaths, isWebsiteUrlWithPrefix, isWebsiteUrl, hasPortNumber, readPortNumber } from './url';
 
 const domain = 'dereekb.com';
 
@@ -24,7 +24,58 @@ describe('hasWebsiteDomain()', () => {
   });
 });
 
+describe('hasPortNumber()', () => {
+  it('should return false for urls without a port number', () => {
+    const result = hasPortNumber('dereekb.com');
+    expect(result).toBe(false);
+  });
+
+  it('should return true for domains with a port number', () => {
+    const result = hasPortNumber('dereekb.com:8080');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for domains with a two number port number', () => {
+    const result = hasPortNumber('dereekb.com:80');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for domains with a six number port number', () => {
+    const result = hasPortNumber('dereekb.com:808080');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for website domains with http prefix and a port number', () => {
+    const result = hasPortNumber('https://dereekb.com:8080');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for sub-domains with a port number', () => {
+    const result = hasPortNumber('components.dereekb.com:8080');
+    expect(result).toBe(true);
+  });
+});
+
+describe('readPortNumber()', () => {
+  it('should read the port number', () => {
+    const expectedPortNumber = 8080;
+    const result = readPortNumber(`dereekb.com:${expectedPortNumber}`);
+    expect(result).toBe(expectedPortNumber);
+  });
+
+  it('should return null if there is no port number', () => {
+    const result = readPortNumber(`dereekb.com`);
+    expect(result).toBeUndefined();
+  });
+});
+
 describe('baseWebsiteUrl()', () => {
+  it('should return the base url from a website with a port number', () => {
+    const expected = 'https://dereekb.com:8080/';
+    const result = baseWebsiteUrl(expected);
+    expect(result).toBe(expected);
+  });
+
   it('should return the base url from a website url', () => {
     const expected = 'https://dereekb.com';
     const result = baseWebsiteUrl(expected);
@@ -39,6 +90,13 @@ describe('baseWebsiteUrl()', () => {
 
   it('should return the base url from a website domain', () => {
     const domain = 'dereekb.com';
+    const expected = `https://${domain}`;
+    const result = baseWebsiteUrl(domain);
+    expect(result).toBe(expected);
+  });
+
+  it('should return the base url from a website domain with a port number', () => {
+    const domain = 'dereekb.com:8080';
     const expected = `https://${domain}`;
     const result = baseWebsiteUrl(domain);
     expect(result).toBe(expected);
@@ -90,6 +148,15 @@ describe('isWebsiteUrlWithPrefix()', () => {
 });
 
 describe('websiteUrlFromPaths()', () => {
+  it('should create a full url from a base path', () => {
+    const baseUrl = 'https://localhost:8080';
+    const path = '/hello/world';
+
+    const expected = `${baseUrl}${path}`;
+    const result = websiteUrlFromPaths(baseUrl, path);
+    expect(result).toBe(expected);
+  });
+
   it('should create a full url from a base path', () => {
     const baseUrl = 'https://dereekb.com';
     const path = '/hello/world';
