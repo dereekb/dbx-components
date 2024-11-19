@@ -53,6 +53,47 @@ export function hasWebsiteDomain(input: string): input is WebsiteDomain {
 }
 
 /**
+ * Simple website domain regex that looks for a period in the string between the domain and the tld
+ */
+export const HAS_PORT_NUMBER_REGEX = /\:(\d+)/;
+
+/**
+ * A connection port number.
+ *
+ * Example:
+ * - 443
+ * - 8080
+ */
+export type PortNumber = number;
+
+/**
+ * Returns true if the input has a port number attached to it
+ *
+ * Examples where it will return true:
+ * - localhost:8080
+ * - dereekb.com:8080
+ * - https://components.dereekb.com:8080
+ * - https://components.dereekb.com:8080/
+ * - https://components.dereekb.com:8080/doc/home
+ *
+ * @param input
+ * @returns
+ */
+export function hasPortNumber(input: string): boolean {
+  return HAS_PORT_NUMBER_REGEX.test(input);
+}
+
+/**
+ * Reads the port number from the input, if possible.
+ *
+ * @param input
+ */
+export function readPortNumber(input: string): Maybe<PortNumber> {
+  const execResult = HAS_PORT_NUMBER_REGEX.exec(input);
+  return execResult ? Number(execResult[1]) : undefined;
+}
+
+/**
  * A website url that starts with http:// or https://
  *
  * May or may not end with a slash.
@@ -79,7 +120,7 @@ export function baseWebsiteUrl(input: BaseWebsiteUrlInput, defaultTld = 'com'): 
     base = addHttpToUrl(input);
   }
 
-  if (!hasWebsiteDomain(base)) {
+  if (!hasWebsiteDomain(base) && !hasPortNumber(base)) {
     base = `${base}.${defaultTld || 'com'}`;
   }
 
