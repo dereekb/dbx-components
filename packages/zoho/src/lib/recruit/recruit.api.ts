@@ -1,4 +1,3 @@
-import { IdBatchFactory } from './../../../../../.nx/cache/16897024058713557124/outputs/dist/packages/util/src/lib/model/id.batch.d';
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult } from './../zoho.api.page';
 import { FetchJsonBody, FetchJsonInput } from '@dereekb/util/fetch';
 import { ZohoRecruitContext } from './recruit.config';
@@ -10,14 +9,12 @@ import {
   ZohoRecruitCustomViewId,
   ZohoRecruitDraftOrSaveState,
   ZohoRecruitFieldName,
-  ZohoRecruitModuleName,
   ZohoRecruitModuleNameRef,
   ZohoRecruitChangeObjectDetails,
   ZohoRecruitRecord,
   ZohoRecruitRecordFieldsData,
   ZohoRecruitRecordId,
   ZohoRecruitRecordNote,
-  ZohoRecruitRecordUpdateDetails,
   ZohoRecruitSearchRecordsCriteriaTreeElement,
   ZohoRecruitTerritoryId,
   ZohoRecruitTrueFalseBoth,
@@ -214,7 +211,7 @@ export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRec
 }
 
 // MARK: Notes
-export interface ZohoRecruitGetNotesPageFilter extends ZohoPageFilter {}
+export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter
 
 export interface ZohoRecruitCreateNotesRequest {
   readonly data: ZohoRecruitCreateNotesRequestEntry[];
@@ -237,7 +234,7 @@ export interface ZohoRecruitGetNotesForRecordRequest extends ZohoRecruitGetRecor
   filter?: Maybe<ZohoRecruitGetNotesPageFilter>;
 }
 
-export interface ZohoRecruitGetNotesForRecordResponse extends ZohoPageResult<ZohoRecruitRecordNote> {}
+export type ZohoRecruitGetNotesForRecordResponse = ZohoPageResult<ZohoRecruitRecordNote>
 export type ZohoRecruitGetNotesForRecordFunction = (input: ZohoRecruitGetNotesForRecordRequest) => Promise<ZohoRecruitGetNotesForRecordResponse>;
 
 export function getNotesForRecord(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordFunction {

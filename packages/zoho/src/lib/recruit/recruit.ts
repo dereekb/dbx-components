@@ -307,4 +307,4 @@ export type ZohoRecruitNoteFileSize = number;
 
 export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId {}
 
-export interface ZohoRecruitRecordNote extends ZohoRecruitNote {}
+export type ZohoRecruitRecordNote = ZohoRecruitNote
