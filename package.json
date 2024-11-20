@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "11.0.5",
+  "version": "11.0.6",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
