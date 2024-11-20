@@ -1,5 +1,6 @@
 import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
+// MARK: Data Types
 /**
  * Zoho Recruit module name.
  *
@@ -8,11 +9,35 @@ import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersF
 export type ZohoRecruitModuleName = string;
 
 /**
+ * Candidates module name
+ */
+export const ZOHO_RECRUIT_CANDIDATES_MODULE = 'Candidates';
+
+/**
+ * Contains a reference to a module.
+ */
+export interface ZohoRecruitModuleNameRef {
+  readonly module: ZohoRecruitModuleName;
+}
+
+/**
+ * An identifier in Zoho Recruit.
+ */
+export type ZohoRecruitId = string;
+
+/**
  * Zoho Recruit record id
  *
  * Example "576214000000569001"
  */
 export type ZohoRecruitRecordId = string;
+
+/**
+ * Zoho Recruit type id
+ *
+ * Example "576214000000820595"
+ */
+export type ZohoRecruitTypeId = string;
 
 /**
  * Zoho Recruit custom view id
@@ -38,11 +63,42 @@ export type ZohoRecruitCommaSeparateFieldNames = CommaSeparatedString;
 
 export type ZohoRecruitTrueFalseBoth = 'true' | 'false' | 'both';
 
-export interface ZohoRecruitCreatedByData {
+export interface ZohoRecruitReferenceData {
   name: string;
-  id: string; // TODO: figure out what kind of id this is
+  id: ZohoRecruitId;
 }
 
+export interface ZohoRecruitReferenceDataWithModule extends ZohoRecruitReferenceData, ZohoRecruitModuleNameRef {}
+
+export type ZohoRecruitCreatedByData = ZohoRecruitReferenceData;
+
+export interface ZohoRecruitModifiedByData extends ZohoRecruitReferenceData {
+  zuid: ZohoRecruitId;
+}
+
+export type ZohoRecruitParentReferenceData = ZohoRecruitReferenceDataWithModule;
+
+/**
+ * Zoho Recruit only allows URLs that can be resolved via the internet (I.E. uses a normal tdl)
+ *
+ * The following are considered invalid:
+ * - localhost:8080
+ * - ht://dereekb.com
+ */
+export type ZohoRecruitValidUrl = WebsiteUrl;
+
+/**
+ * Update details returned by the server for a created/updated object.
+ */
+export interface ZohoRecruitChangeObjectDetails {
+  id: ZohoRecruitRecordId;
+  Modified_Time: ISO8601DateString;
+  Modified_By: ZohoRecruitCreatedByData;
+  Created_Time: ISO8601DateString;
+  Created_By: ZohoRecruitCreatedByData;
+}
+
+// MARK: Zoho Recruit Record
 export type ZohoRecruitRecordFieldsData = Record<ZohoRecruitFieldName, any>;
 
 export interface ZohoRecordDraftStateData {
@@ -67,29 +123,16 @@ export type UpdateZohoRecruitRecordData = UniqueModelWithId & ZohoRecruitRecordF
 export type ZohoRecruitRecord = UniqueModelWithId & ZohoRecruitRecordFieldsData;
 
 /**
- * Zoho Recruit only allows URLs that can be resolved via the internet (I.E. uses a normal tdl)
- *
- * The following are considered invalid:
- * - localhost:8080
- * - ht://dereekb.com
- */
-export type ZohoRecruitValidUrl = WebsiteUrl;
-
-/**
  * Returns true if it is a valid ZohoRecruitValidUrl.
  */
 export const isZohoRecruitValidUrl: (input: WebsiteUrl) => input is ZohoRecruitValidUrl = isStandardInternetAccessibleWebsiteUrl;
 
 /**
- * Update details returned by the server for an updated object.
+ * Update details returned by the server for an updated record.
+ *
+ * @deprecated use ZohoRecruitChangeObjectDetails instead.
  */
-export interface ZohoRecruitRecordUpdateDetails {
-  id: ZohoRecruitRecordId;
-  Modified_Time: ISO8601DateString;
-  Modified_By: ZohoRecruitCreatedByData;
-  Created_Time: ISO8601DateString;
-  Created_By: ZohoRecruitCreatedByData;
-}
+export type ZohoRecruitRecordUpdateDetails = ZohoRecruitChangeObjectDetails;
 
 /**
  * Encoded criteria string.
@@ -213,3 +256,55 @@ export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T extends 
   const escapedValue = escapeZohoFieldValueForCriteriaString(entry.value);
   return `(${entry.field}:${entry.filter}:${escapedValue})`;
 }
+
+// MARK: Notes
+export type ZohoRecruitNoteId = string;
+
+export interface ZohoRecruitNoteAction {
+  $is_system_action: boolean;
+}
+
+export type ZohoRecruitNoteSourceName = 'NORMAL_USER';
+export type ZohoRecruitNoteSourceType = number;
+
+export interface ZohoRecruitNoteSource {
+  name: ZohoRecruitNoteSourceName;
+  type: ZohoRecruitNoteSourceType;
+}
+
+export type ZohoRecruitNoteOwnerData = ZohoRecruitReferenceData;
+
+export interface ZohoRecruitNoteData {
+  Note_Title: string;
+  Note_Content: string;
+  Parent_Id: ZohoRecruitParentReferenceData;
+  Created_Time: ISO8601DateString;
+  Modified_Time: ISO8601DateString;
+  $attachments: null;
+  $is_edit_allowed: boolean;
+  $editable: boolean;
+  $type_id: ZohoRecruitTypeId;
+  $is_delete_allowed: boolean;
+  $note_action: ZohoRecruitNoteAction;
+  $source: ZohoRecruitNoteSource;
+  $se_module: ZohoRecruitModuleName;
+  $is_shared_to_client: boolean;
+  Note_Owner: ZohoRecruitNoteOwnerData;
+  Created_By: ZohoRecruitCreatedByData;
+  Modified_By: ZohoRecruitModifiedByData;
+  $size: ZohoRecruitNoteFileSize | null;
+  $voice_note: boolean;
+  $status: ZohoRecruitNoteStatus;
+}
+
+export interface NewZohoRecruitNewNoteData extends Pick<ZohoRecruitNoteData, 'Note_Title' | 'Note_Content'> {
+  Parent_Id: Pick<ZohoRecruitParentReferenceData, 'id'> | ZohoRecruitId;
+  se_module: ZohoRecruitModuleName;
+}
+
+export type ZohoRecruitNoteStatus = string; // TODO
+export type ZohoRecruitNoteFileSize = number;
+
+export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId {}
+
+export interface ZohoRecruitRecordNote extends ZohoRecruitNote {}

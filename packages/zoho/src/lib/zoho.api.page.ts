@@ -1,5 +1,13 @@
 import { PageNumber } from '@dereekb/util';
 
+/**
+ * Base page filter
+ */
+export interface ZohoPageFilter {
+  readonly page?: number;
+  readonly per_page?: number;
+}
+
 export interface ZohoDataArrayResultRef<T> {
   /**
    * Array of data returned.
@@ -10,11 +18,11 @@ export interface ZohoDataArrayResultRef<T> {
 /**
  * Page result that contains an array of data and page information.
  */
-export interface ZohoPageResult<T> extends ZohoDataArrayResultRef<T> {
+export interface ZohoPageResult<T, I extends ZohoPageResultInfo = ZohoPageResultInfo> extends ZohoDataArrayResultRef<T> {
   /**
    * Current page information
    */
-  readonly info: ZohoPageResultInfo;
+  readonly info: I;
 }
 
 /**
