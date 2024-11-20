@@ -297,7 +297,7 @@ export interface ZohoRecruitNoteData {
   $status: ZohoRecruitNoteStatus;
 }
 
-export interface NewZohoRecruitNewNoteData extends Pick<ZohoRecruitNoteData, 'Note_Title' | 'Note_Content'> {
+export interface NewZohoRecruitNoteData extends Pick<ZohoRecruitNoteData, 'Note_Title' | 'Note_Content'> {
   Parent_Id: Pick<ZohoRecruitParentReferenceData, 'id'> | ZohoRecruitId;
   se_module: ZohoRecruitModuleName;
 }
@@ -307,4 +307,10 @@ export type ZohoRecruitNoteFileSize = number;
 
 export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId {}
 
-export type ZohoRecruitRecordNote = ZohoRecruitNote
+export type ZohoRecruitRecordNote = ZohoRecruitNote;
+
+// MARK: Compat
+/**
+ * @deprecated use NewZohoRecruitNewNoteData instead.
+ */
+export type NewZohoRecruitNewNoteData = NewZohoRecruitNoteData;

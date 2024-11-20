@@ -2,7 +2,7 @@ import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult } from './../zoh
 import { FetchJsonBody, FetchJsonInput } from '@dereekb/util/fetch';
 import { ZohoRecruitContext } from './recruit.config';
 import {
-  NewZohoRecruitNewNoteData,
+  NewZohoRecruitNoteData,
   NewZohoRecruitRecordData,
   UpdateZohoRecruitRecordData,
   ZohoRecruitCommaSeparateFieldNames,
@@ -211,7 +211,7 @@ export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRec
 }
 
 // MARK: Notes
-export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter
+export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter;
 
 export interface ZohoRecruitCreateNotesRequest {
   readonly data: ZohoRecruitCreateNotesRequestEntry[];
@@ -219,7 +219,7 @@ export interface ZohoRecruitCreateNotesRequest {
 
 export type ZohoRecruitCreateNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitCreateNotesRequestEntry, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
 
-export type ZohoRecruitCreateNotesRequestEntry = NewZohoRecruitNewNoteData;
+export type ZohoRecruitCreateNotesRequestEntry = NewZohoRecruitNoteData;
 export type ZohoRecruitCreateNotesResponse = ZohoRecruitChangeObjectResponse;
 export type ZohoRecruitCreateNotesFunction = (input: ZohoRecruitCreateNotesRequest) => Promise<ZohoRecruitCreateNotesResult>;
 
@@ -234,7 +234,7 @@ export interface ZohoRecruitGetNotesForRecordRequest extends ZohoRecruitGetRecor
   filter?: Maybe<ZohoRecruitGetNotesPageFilter>;
 }
 
-export type ZohoRecruitGetNotesForRecordResponse = ZohoPageResult<ZohoRecruitRecordNote>
+export type ZohoRecruitGetNotesForRecordResponse = ZohoPageResult<ZohoRecruitRecordNote>;
 export type ZohoRecruitGetNotesForRecordFunction = (input: ZohoRecruitGetNotesForRecordRequest) => Promise<ZohoRecruitGetNotesForRecordResponse>;
 
 export function getNotesForRecord(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordFunction {
@@ -243,7 +243,7 @@ export function getNotesForRecord(context: ZohoRecruitContext): ZohoRecruitGetNo
 
 export interface ZohoRecruitCreateNotesForRecordRequest extends ZohoRecruitModuleNameRef {
   readonly id: ZohoRecruitRecordId;
-  readonly notes: ArrayOrValue<Omit<NewZohoRecruitNewNoteData, 'se_module' | 'Parent_Id'>>;
+  readonly notes: ArrayOrValue<Omit<NewZohoRecruitNoteData, 'se_module' | 'Parent_Id'>>;
 }
 
 export type ZohoRecruitCreateNotesForRecordFunction = (input: ZohoRecruitCreateNotesForRecordRequest) => Promise<ZohoRecruitCreateNotesResult>;

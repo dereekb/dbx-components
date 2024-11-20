@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, JestDoneCallback, JestExpeectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
+import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, JestDoneCallback, JestExpectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
 
 class TestError extends BaseError {}
 
@@ -75,7 +75,7 @@ describe('expectFail', () => {
       }
     });
 
-    it('should throw a JestExpeectedErrorOfSpecificTypeError if the assertion returns false.', async () => {
+    it('should throw a JestExpectedErrorOfSpecificTypeError if the assertion returns false.', async () => {
       try {
         await expectFail(
           async () => {
@@ -84,7 +84,7 @@ describe('expectFail', () => {
           () => false
         );
       } catch (e) {
-        expect(e).toBeInstanceOf(JestExpeectedErrorOfSpecificTypeError);
+        expect(e).toBeInstanceOf(JestExpectedErrorOfSpecificTypeError);
       }
     });
 
