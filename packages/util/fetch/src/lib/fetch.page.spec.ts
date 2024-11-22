@@ -1,5 +1,5 @@
 import { type PromiseOrValue, type Maybe, randomNumber } from '@dereekb/util';
-import { type FetchPage, FetchPageLimitReachedError, type FetchPageResultInfo, type FetchPageResults, fetchPageFactory } from './fetch.page';
+import { type FetchPage, FetchPageLimitReachedError, type FetchPageResultInfo, type FetchPageResult, fetchPageFactory } from './fetch.page';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 
 interface FetchPageTestRequestObject {
@@ -33,7 +33,7 @@ describe('fetchPageFactory()', () => {
       readFetchPageResultInfo: function (result: FetchPageTestResultObject): PromiseOrValue<Omit<FetchPageResultInfo, 'page'>> {
         return result.info;
       },
-      buildInputForNextPage: function (pageResult: Partial<FetchPageResults<FetchPageTestResultObject>>, input: FetchPageTestRequestObject): PromiseOrValue<Maybe<Partial<FetchPageTestRequestObject>>> {
+      buildInputForNextPage: function (pageResult: Partial<FetchPageResult<FetchPageTestResultObject>>, input: FetchPageTestRequestObject): PromiseOrValue<Maybe<Partial<FetchPageTestRequestObject>>> {
         return {
           page: pageResult?.page != null ? pageResult.page + 1 : 0
         };

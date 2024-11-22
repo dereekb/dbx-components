@@ -257,13 +257,13 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsConfig<T, R> {
   /**
    * Filter function that can be used to filter out snapshots.
    *
-   * If all snapshots are filtered out the the iteration will continue with final item of the snapshot regardless of filtering. The filtering does not impact the continuation decision.
+   * If all snapshots are filtered out then the iteration will continue with final item of the snapshot regardless of filtering. The filtering does not impact the continuation decision.
    * Use the handleRepeatCursor to properly exit the loop in unwanted repeat cursor cases.
    *
    * @param snapshot
    * @returns
    */
-  filterCheckpointSnapshots?: IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T>;
+  readonly filterCheckpointSnapshots?: IterateFirestoreDocumentSnapshotCheckpointsFilterCheckpointSnapshotsFunction<T>;
   /**
    * The iterate function per each snapshot.
    */
