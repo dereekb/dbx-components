@@ -28,14 +28,14 @@ export interface Page {
 }
 
 // MARK: Utility
-export function getPageNumber(page: Maybe<Page>): number {
+export function getPageNumber(page: Maybe<Partial<Page>>): number {
   return page?.page ?? UNLOADED_PAGE;
 }
 
-export function getNextPageNumber(page: Maybe<Page>): number {
+export function getNextPageNumber(page: Maybe<Partial<Page>>): number {
   return getPageNumber(page) + 1;
 }
 
-export function isFinalPage(page: Maybe<Page>): boolean {
+export function isFinalPage(page: Maybe<Partial<Page>>): boolean {
   return page?.page === FINAL_PAGE;
 }

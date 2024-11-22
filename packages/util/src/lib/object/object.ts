@@ -3,6 +3,10 @@ import { type FieldOfType } from '../key';
 import { type SetIncludesMode } from '../set/set.mode';
 import { type KeyAsString } from '../type';
 
+/**
+ * Key of an object.
+ */
+export type ObjectKey = string;
 export type EmptyObject = Record<string, never>;
 
 export function objectHasNoKeys(obj: object): obj is EmptyObject {
@@ -23,9 +27,9 @@ export function objectHasKey<T>(obj: T, key: string): boolean {
  * @param keys
  */
 export function objectHasKeys<T>(obj: T, keys: KeyAsString<keyof T>[], mode?: SetIncludesMode): boolean;
-export function objectHasKeys(obj: unknown, keys: string[], mode?: SetIncludesMode): boolean;
+export function objectHasKeys(obj: unknown, keys: ObjectKey[], mode?: SetIncludesMode): boolean;
 export function objectHasKeys<T, K extends keyof T>(obj: T, keys: K[], mode?: SetIncludesMode): boolean;
-export function objectHasKeys<T>(obj: T, keys: string[], mode?: SetIncludesMode): boolean {
+export function objectHasKeys<T>(obj: T, keys: ObjectKey[], mode?: SetIncludesMode): boolean {
   return arrayDecision(keys, (key) => objectHasKey(obj, key), mode ?? 'all');
 }
 

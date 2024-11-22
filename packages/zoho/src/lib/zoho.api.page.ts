@@ -1,4 +1,5 @@
-import { PageNumber } from '@dereekb/util';
+import { Maybe, PageNumber, PromiseOrValue, getNextPageNumber } from '@dereekb/util';
+import { fetchPageFactory, ReadFetchPageResultInfo, FetchPageResult, FetchPageFactoryInputOptions, FetchPageFactoryConfigDefaults } from '@dereekb/util/fetch';
 
 /**
  * Base page filter
@@ -45,4 +46,36 @@ export interface ZohoPageResultInfo {
    * Whether or not there are more records to return.
    */
   readonly more_records: boolean;
+}
+
+/**
+ * Reference to a ZohoPageResultInfo value
+ */
+export interface ZohoPageResultInfoRef {
+  readonly info: ZohoPageResultInfo;
+}
+
+// MARK: Page Factory
+export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoPageResult<any>> = (input: I) => Promise<R>;
+
+/**
+ * Creates a FetchPageFactory using the input ZohoFetchPageFetchFunction.
+ *
+ * @param fetch
+ * @param defaults
+ * @returns
+ */
+export function zohoFetchPageFactory<I extends ZohoPageFilter, R extends ZohoPageResult<any>>(fetch: ZohoFetchPageFetchFunction<I, R>, defaults?: FetchPageFactoryConfigDefaults) {
+  return fetchPageFactory<I, R>({
+    ...defaults,
+    fetch,
+    readFetchPageResultInfo: function (result: R): PromiseOrValue<ReadFetchPageResultInfo> {
+      return {
+        hasNext: result.info?.more_records ?? false // if no info is returned, assume something wrong and there are no more records
+      };
+    },
+    buildInputForNextPage: function (pageResult: Partial<FetchPageResult<R>>, input: I, options: FetchPageFactoryInputOptions): PromiseOrValue<Maybe<Partial<I>>> {
+      return { ...input, page: getNextPageNumber(pageResult), per_page: options.maxItemsPerPage ?? input.per_page };
+    }
+  });
 }
