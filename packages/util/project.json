@@ -24,6 +24,7 @@
     },
     "build-base": {
       "executor": "@nx/rollup:rollup",
+      "inputs": ["{projectRoot}/src"],
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {

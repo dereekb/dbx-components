@@ -6,4 +6,5 @@ export * from './firebase.admin.nest.function';
 export * from './firebase.admin.nest';
 export * from './firebase.admin.test.server';
 export * from './firebase.admin';
+export * from './firebase.jest';
 export * from './firebase';

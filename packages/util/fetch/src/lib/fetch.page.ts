@@ -50,24 +50,44 @@ export interface FetchPageResultInfo extends Page {
   readonly hasNext?: Maybe<boolean>;
 }
 
-export interface FetchPageResults<O> extends FetchPageResultInfo {
+export interface FetchPageResult<O> extends FetchPageResultInfo {
   /**
    * Result for this page.
    */
   readonly result: O;
+  /**
+   * Whether or not the max page has been reached.
+   */
+  readonly isAtMaxPage?: boolean;
 }
 
-export interface FetchNextPage<I, O> extends FetchPageResults<O>, FetchPage<I, O> {
+export interface FetchPageResultWithInput<I, O> extends FetchPageResult<O> {
+  /**
+   * Input for this page.
+   */
+  readonly input: I;
+}
+
+export interface FetchNextPage<I, O> extends FetchPageResult<O>, FetchPage<I, O> {
   /**
    * Previous page.
    *
    * Undefined if this is the first page.
    */
   readonly previous?: Maybe<FetchNextPage<I, O>>;
+}
+
+export interface FetchPageFactoryInputOptions {
   /**
-   * Whether or not the max page has been reached.
+   * The max number of pages to load.
+   *
+   * Pass null to disable the max page amount.
    */
-  readonly isAtMaxPage?: boolean;
+  readonly maxPage?: Maybe<number>;
+  /**
+   * The maximum number of items to load per page.
+   */
+  readonly maxItemsPerPage?: Maybe<number>;
 }
 
 export interface FetchPageFactoryConfig<I, O> {
@@ -92,23 +112,20 @@ export interface FetchPageFactoryConfig<I, O> {
    * @param result
    * @returns
    */
-  readonly buildInputForNextPage: (pageResult: Partial<FetchPageResults<O>>, input: I) => PromiseOrValue<Maybe<Partial<I>>>;
+  readonly buildInputForNextPage: (pageResult: Partial<FetchPageResult<O>>, input: I, options: FetchPageFactoryInputOptions) => PromiseOrValue<Maybe<Partial<I>>>;
   /**
    * The default max page to load up to.
    *
    * Defaults to 100. Pass null to disable the max page amount.
    */
   readonly defaultMaxPage?: Maybe<number>;
+  /**
+   * The default maximum number of items to load per page.
+   */
+  readonly defaultMaxItemsPerPage?: Maybe<number>;
 }
 
-export interface FetchPageFactoryOptions<I, O> {
-  /**
-   * The max number of pages to load.
-   *
-   * Pass null to disable the max page amount.
-   */
-  readonly maxPage?: Maybe<number>;
-}
+export type FetchPageFactoryOptions<I, O> = FetchPageFactoryInputOptions
 
 /**
  * Creates a new FetchPage instance.
@@ -127,10 +144,11 @@ export const FETCH_PAGE_FACTORY_DEFAULT_MAX_PAGE = 100;
  * @returns
  */
 export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): FetchPageFactory<I, O> {
-  const { fetch, readFetchPageResultInfo, buildInputForNextPage, defaultMaxPage } = config;
+  const { fetch, readFetchPageResultInfo, buildInputForNextPage, defaultMaxPage, defaultMaxItemsPerPage } = config;
 
   return (initalInput: I, options?: FetchPageFactoryOptions<I, O>) => {
-    const { maxPage: inputMaxPage = defaultMaxPage } = options ?? {};
+    const { maxPage: inputMaxPage = defaultMaxPage, maxItemsPerPage: inputMaxItemsPerPage } = options ?? {};
+    const maxItemsPerPage = inputMaxItemsPerPage ?? defaultMaxItemsPerPage;
     const maxPage = inputMaxPage === null ? Number.MAX_SAFE_INTEGER : inputMaxPage ?? FETCH_PAGE_FACTORY_DEFAULT_MAX_PAGE;
 
     function fetchNextWithInput(input: I, previous: Maybe<FetchNextPage<I, O>> = undefined): () => Promise<FetchNextPage<I, O>> {
@@ -156,7 +174,7 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
             }
 
             // assert next page
-            const nextPageInfo = hasNext ? await buildInputForNextPage(nextPageResult, input) : undefined;
+            const nextPageInfo = hasNext ? await buildInputForNextPage(nextPageResult, input, { maxPage, maxItemsPerPage }) : undefined;
 
             if (!nextPageInfo) {
               throw new FetchPageNoNextPageError(nextPageResult);
@@ -178,3 +196,9 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
     return page;
   };
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use FetchPageResult instead.
+ */
+export type FetchPageResults<T> = FetchPageResult<T>;
