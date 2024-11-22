@@ -1,5 +1,5 @@
-import { PromiseOrValue, Maybe, Page, randomNumberFactory, randomArrayFactory, makeWithFactory, arrayFactory, reduceNumbersWithAdd } from '@dereekb/util';
-import { FetchPage, FetchPageFactory, FetchPageFactoryInputOptions, FetchPageResult, FetchPageResultInfo, fetchPageFactory } from './fetch.page';
+import { type PromiseOrValue, type Maybe, type Page, randomNumberFactory, arrayFactory, reduceNumbersWithAdd } from '@dereekb/util';
+import { type FetchPageFactory, type FetchPageFactoryInputOptions, type FetchPageResult, type FetchPageResultInfo, fetchPageFactory } from './fetch.page';
 import { iterateFetchPages, iterateFetchPagesByItems } from './fetch.page.iterate';
 
 export const DEFAULT_ITEMS_PER_PAGE = 20;

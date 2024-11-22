@@ -125,7 +125,7 @@ export interface FetchPageFactoryConfig<I, O> {
   readonly defaultMaxItemsPerPage?: Maybe<number>;
 }
 
-export interface FetchPageFactoryOptions<I, O> extends FetchPageFactoryInputOptions {}
+export type FetchPageFactoryOptions<I, O> = FetchPageFactoryInputOptions
 
 /**
  * Creates a new FetchPage instance.
