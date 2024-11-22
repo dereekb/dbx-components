@@ -24,6 +24,7 @@
     },
     "build-base": {
       "executor": "@nx/js:tsc",
+      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/mailgun/**/*.ts", "!{projectRoot}/stripe/**/*.ts", "!{projectRoot}/twilio/**/*.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/nestjs",

@@ -24,6 +24,7 @@
     },
     "build-base": {
       "executor": "@nx/angular:package",
+      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/dist/packages/dbx-core"],
       "options": {
         "project": "packages/dbx-core/ng-package.json"

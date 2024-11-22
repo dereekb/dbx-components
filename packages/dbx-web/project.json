@@ -46,6 +46,7 @@
     },
     "build-base": {
       "executor": "@nx/angular:package",
+      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/calendar/**/*.ts", "!{projectRoot}/mapbox/**/*.ts", "!{projectRoot}/table/**/*.ts"],
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web"],
       "options": {
         "project": "packages/dbx-web/ng-package.json"

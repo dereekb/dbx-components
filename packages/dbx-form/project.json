@@ -37,6 +37,7 @@
     },
     "build-base": {
       "executor": "@nx/angular:package",
+      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/calendar/**/*.ts", "!{projectRoot}/mapbox/**/*.ts"],
       "outputs": ["{workspaceRoot}/dist/packages/dbx-form"],
       "options": {
         "project": "packages/dbx-form/ng-package.json"
