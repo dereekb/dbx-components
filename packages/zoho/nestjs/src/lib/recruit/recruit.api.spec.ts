@@ -608,6 +608,31 @@ describe('recruit.api', () => {
             await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_RECRUIT_CANDIDATES_MODULE }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
           });
         });
+
+        describe('deleteNotes()', () => {
+          it('should delete a note from the record', async () => {
+            const result = await api.createNotesForRecord({
+              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              id: testRecordId,
+              notes: {
+                Note_Title: 'Test Note For Deleting',
+                Note_Content: `Test Note at ${new Date()}`
+              }
+            });
+
+            expect(result.errorItems).toHaveLength(0);
+            expect(result.successItems).toHaveLength(1);
+
+            const newNoteId = result.successItems[0].result.details.id;
+
+            const deleteResult = await api.deleteNotes({
+              ids: newNoteId
+            });
+
+            expect(deleteResult.errorItems).toHaveLength(0);
+            expect(deleteResult.successItems).toHaveLength(1);
+          });
+        });
       });
     });
   });

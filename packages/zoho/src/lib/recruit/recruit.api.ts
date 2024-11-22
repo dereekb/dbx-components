@@ -1,5 +1,5 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
-import { FetchJsonBody, FetchJsonInput, FetchPageFactory } from '@dereekb/util/fetch';
+import { FetchJsonBody, FetchJsonInput, FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { ZohoRecruitContext } from './recruit.config';
 import {
   NewZohoRecruitNoteData,
@@ -18,7 +18,8 @@ import {
   ZohoRecruitSearchRecordsCriteriaTreeElement,
   ZohoRecruitTerritoryId,
   ZohoRecruitTrueFalseBoth,
-  zohoRecruitSearchRecordsCriteriaString
+  zohoRecruitSearchRecordsCriteriaString,
+  ZohoRecruitNoteId
 } from './recruit';
 import { ArrayOrValue, EmailAddress, IterableOrValue, Maybe, ObjectKey, PhoneNumber, SortingOrder, asArray, mergeObjects, useIterableOrValue } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
@@ -217,8 +218,6 @@ export function searchRecordsPageFactory<T extends ZohoRecruitRecordFieldsData =
 }
 
 // MARK: Notes
-export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter;
-
 export interface ZohoRecruitCreateNotesRequest {
   readonly data: ZohoRecruitCreateNotesRequestEntry[];
 }
@@ -236,6 +235,23 @@ export function createNotes(context: ZohoRecruitContext) {
     });
 }
 
+export interface ZohoRecruitDeleteNotesRequest {
+  readonly ids: ArrayOrValue<ZohoRecruitNoteId>;
+}
+
+export type ZohoRecruitDeleteNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
+
+export type ZohoRecruitDeleteNotesResponse = ZohoRecruitChangeObjectResponse;
+export type ZohoRecruitDeleteNotesFunction = (input: ZohoRecruitDeleteNotesRequest) => Promise<ZohoRecruitDeleteNotesResult>;
+
+export function deleteNotes(context: ZohoRecruitContext) {
+  return (input: ZohoRecruitDeleteNotesRequest) =>
+    context.fetchJson<ZohoRecruitDeleteNotesResponse>(`/v2/Notes?${makeUrlSearchParams({ ids: input.ids })}`, zohoRecruitApiFetchJsonInput('DELETE')).then((x) => {
+      return zohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(input.ids), x.data);
+    });
+}
+
+export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter;
 export interface ZohoRecruitGetNotesForRecordRequest extends ZohoRecruitGetRecordByIdInput, ZohoRecruitGetNotesPageFilter {
   /**
    * @deprecated use variables on request instead of this filter.
@@ -281,23 +297,17 @@ export function createNotesForRecord(context: ZohoRecruitContext): ZohoRecruitCr
 
 // MARK: Util
 export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
-  return zohoRecruitUrlSearchParams(input, 'module');
+  return makeUrlSearchParams(input, { omitKeys: 'module' });
 }
 
 export function zohoRecruitUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
-  return zohoRecruitUrlSearchParams(input, ['id', 'module']);
+  return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
 }
 
-export function zohoRecruitUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, omitKeys?: Maybe<IterableOrValue<ObjectKey>>) {
-  const mergedInput = Array.isArray(input) ? mergeObjects(input) : input;
-  const searchParams = new URLSearchParams(mergedInput as unknown as Record<string, string>);
-
-  if (omitKeys) {
-    useIterableOrValue(omitKeys, (key) => searchParams.delete(key));
-  }
-
-  return searchParams;
-}
+/**
+ * @deprecated use makeUrlSearchParams instead.
+ */
+export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
 
 export function zohoRecruitApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
   const result = {
