@@ -1,6 +1,6 @@
 import { type PromiseOrValue, type Maybe, type Page, randomNumberFactory, arrayFactory, reduceNumbersWithAdd } from '@dereekb/util';
 import { type FetchPageFactory, type FetchPageFactoryInputOptions, type FetchPageResult, type FetchPageResultInfo, fetchPageFactory } from './fetch.page';
-import { IterateFetchPagesByEachItemFunction, iterateFetchPages, iterateFetchPagesByEachItem, iterateFetchPagesByItems } from './fetch.page.iterate';
+import { type IterateFetchPagesByEachItemFunction, iterateFetchPages, iterateFetchPagesByEachItem, iterateFetchPagesByItems } from './fetch.page.iterate';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import { BaseError } from 'make-error';
 
