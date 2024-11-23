@@ -21,7 +21,7 @@ import {
   zohoRecruitSearchRecordsCriteriaString,
   ZohoRecruitNoteId
 } from './recruit';
-import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, asArray } from '@dereekb/util';
+import { ArrayOrValue, EmailAddress, IterableOrValue, Maybe, ObjectKey, PhoneNumber, SortingOrder, asArray, mergeObjects, useIterableOrValue } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
 
