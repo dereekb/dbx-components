@@ -517,6 +517,25 @@ describe('recruit.api', () => {
             );
           });
         });
+
+        describe('searchRecordsPageFactory()', () => {
+          it('should search the pages', async () => {
+            const itemsPerPage = 1;
+            const fetchPage = api.searchRecordsPageFactory({
+              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              criteria: [{ field: 'Last_Name', filter: 'starts_with', value: UPSERT_TEST_LAST_NAME }],
+              per_page: itemsPerPage
+            });
+
+            const firstPage = await fetchPage.fetchNext();
+            expect(firstPage.page).toBe(0);
+            expect(firstPage.result.data).toHaveLength(itemsPerPage);
+
+            const secondPage = await firstPage.fetchNext();
+            expect(secondPage.page).toBe(1);
+            expect(secondPage.result.data).toHaveLength(itemsPerPage);
+          });
+        });
       });
     });
 
@@ -557,8 +576,6 @@ describe('recruit.api', () => {
 
             expect(result.errorItems).toHaveLength(1);
             expect(result.successItems).toHaveLength(0);
-
-            console.log({ error: result.errorItems[0].result });
           });
         });
 
@@ -589,6 +606,31 @@ describe('recruit.api', () => {
 
           itShouldFail('if a record that does not exist is referenced', async () => {
             await expectFail(() => api.getNotesForRecord({ id: '0', module: ZOHO_RECRUIT_CANDIDATES_MODULE }), jestExpectFailAssertErrorType(ZohoServerFetchResponseError));
+          });
+        });
+
+        describe('deleteNotes()', () => {
+          it('should delete a note from the record', async () => {
+            const result = await api.createNotesForRecord({
+              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              id: testRecordId,
+              notes: {
+                Note_Title: 'Test Note For Deleting',
+                Note_Content: `Test Note at ${new Date()}`
+              }
+            });
+
+            expect(result.errorItems).toHaveLength(0);
+            expect(result.successItems).toHaveLength(1);
+
+            const newNoteId = result.successItems[0].result.details.id;
+
+            const deleteResult = await api.deleteNotes({
+              ids: newNoteId
+            });
+
+            expect(deleteResult.errorItems).toHaveLength(0);
+            expect(deleteResult.successItems).toHaveLength(1);
           });
         });
       });

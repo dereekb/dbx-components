@@ -1,5 +1,5 @@
-import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult } from './../zoho.api.page';
-import { FetchJsonBody, FetchJsonInput } from '@dereekb/util/fetch';
+import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
+import { FetchJsonBody, FetchJsonInput, FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { ZohoRecruitContext } from './recruit.config';
 import {
   NewZohoRecruitNoteData,
@@ -18,7 +18,8 @@ import {
   ZohoRecruitSearchRecordsCriteriaTreeElement,
   ZohoRecruitTerritoryId,
   ZohoRecruitTrueFalseBoth,
-  zohoRecruitSearchRecordsCriteriaString
+  zohoRecruitSearchRecordsCriteriaString,
+  ZohoRecruitNoteId
 } from './recruit';
 import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, asArray } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
@@ -207,12 +208,16 @@ export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRec
     return urlParams;
   }
 
-  return (<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [] })) as ZohoRecruitSearchRecordsFunction;
+  return (<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
+}
+
+export type SearchRecordsPageFactory<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = FetchPageFactory<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>;
+
+export function searchRecordsPageFactory<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(context: ZohoRecruitContext): SearchRecordsPageFactory<T> {
+  return zohoFetchPageFactory(searchRecords(context));
 }
 
 // MARK: Notes
-export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter;
-
 export interface ZohoRecruitCreateNotesRequest {
   readonly data: ZohoRecruitCreateNotesRequestEntry[];
 }
@@ -230,15 +235,41 @@ export function createNotes(context: ZohoRecruitContext) {
     });
 }
 
-export interface ZohoRecruitGetNotesForRecordRequest extends ZohoRecruitGetRecordByIdInput {
-  filter?: Maybe<ZohoRecruitGetNotesPageFilter>;
+export interface ZohoRecruitDeleteNotesRequest {
+  readonly ids: ArrayOrValue<ZohoRecruitNoteId>;
+}
+
+export type ZohoRecruitDeleteNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
+
+export type ZohoRecruitDeleteNotesResponse = ZohoRecruitChangeObjectResponse;
+export type ZohoRecruitDeleteNotesFunction = (input: ZohoRecruitDeleteNotesRequest) => Promise<ZohoRecruitDeleteNotesResult>;
+
+export function deleteNotes(context: ZohoRecruitContext) {
+  return (input: ZohoRecruitDeleteNotesRequest) =>
+    context.fetchJson<ZohoRecruitDeleteNotesResponse>(`/v2/Notes?${makeUrlSearchParams({ ids: input.ids })}`, zohoRecruitApiFetchJsonInput('DELETE')).then((x) => {
+      return zohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(input.ids), x.data);
+    });
+}
+
+export type ZohoRecruitGetNotesPageFilter = ZohoPageFilter;
+export interface ZohoRecruitGetNotesForRecordRequest extends ZohoRecruitGetRecordByIdInput, ZohoRecruitGetNotesPageFilter {
+  /**
+   * @deprecated use variables on request instead of this filter.
+   */
+  readonly filter?: Maybe<ZohoRecruitGetNotesPageFilter>;
 }
 
 export type ZohoRecruitGetNotesForRecordResponse = ZohoPageResult<ZohoRecruitRecordNote>;
 export type ZohoRecruitGetNotesForRecordFunction = (input: ZohoRecruitGetNotesForRecordRequest) => Promise<ZohoRecruitGetNotesForRecordResponse>;
 
 export function getNotesForRecord(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordFunction {
-  return (input: ZohoRecruitGetNotesForRecordRequest) => context.fetchJson<ZohoRecruitGetNotesForRecordResponse>(`/v2/${input.module}/${input.id}/Notes?${zohoRecruitUrlSearchParamsMinusModule(input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET'));
+  return (input: ZohoRecruitGetNotesForRecordRequest) => context.fetchJson<ZohoRecruitGetNotesForRecordResponse>(`/v2/${input.module}/${input.id}/Notes?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET'));
+}
+
+export type GetNotesForRecordPageFactory = FetchPageFactory<ZohoRecruitGetNotesForRecordRequest, ZohoRecruitGetNotesForRecordResponse>;
+
+export function getNotesForRecordPageFactory(context: ZohoRecruitContext): GetNotesForRecordPageFactory {
+  return zohoFetchPageFactory(getNotesForRecord(context));
 }
 
 export interface ZohoRecruitCreateNotesForRecordRequest extends ZohoRecruitModuleNameRef {
@@ -265,15 +296,18 @@ export function createNotesForRecord(context: ZohoRecruitContext): ZohoRecruitCr
 }
 
 // MARK: Util
-export function zohoRecruitUrlSearchParamsMinusModule(input: Maybe<object | Record<string, string | number>>) {
-  const searchParams = new URLSearchParams(input as unknown as Record<string, string>);
-
-  if (searchParams) {
-    searchParams.delete('module');
-  }
-
-  return searchParams;
+export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
+  return makeUrlSearchParams(input, { omitKeys: 'module' });
 }
+
+export function zohoRecruitUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
+  return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
+}
+
+/**
+ * @deprecated use makeUrlSearchParams instead.
+ */
+export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
 
 export function zohoRecruitApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
   const result = {
@@ -286,7 +320,7 @@ export function zohoRecruitApiFetchJsonInput(method: string, body?: FetchJsonBod
 
 // MARK: Results
 export type ZohoRecruitChangeObjectResponse<T extends ZohoRecruitChangeObjectResponseEntry = ZohoRecruitChangeObjectResponseEntry> = ZohoDataArrayResultRef<T>;
-export type ZohoRecruitChangeObjectResponseEntry<E extends ZohoRecruitChangeObjectResponseSuccessEntry = ZohoRecruitChangeObjectResponseSuccessEntry> = E | ZohoRecruitUpdateRecordResponseErrorEntry;
+export type ZohoRecruitChangeObjectResponseEntry<E extends ZohoRecruitChangeObjectResponseSuccessEntry = ZohoRecruitChangeObjectResponseSuccessEntry> = E | ZohoRecruitChangeObjectResponseErrorEntry;
 
 export interface ZohoRecruitChangeObjectResponseSuccessEntry<D extends ZohoRecruitChangeObjectDetails = ZohoRecruitChangeObjectDetails> {
   readonly code: ZohoServerSuccessCode;

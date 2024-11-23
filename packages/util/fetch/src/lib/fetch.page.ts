@@ -90,29 +90,9 @@ export interface FetchPageFactoryInputOptions {
   readonly maxItemsPerPage?: Maybe<number>;
 }
 
-export interface FetchPageFactoryConfig<I, O> {
-  /**
-   * The configured Fetch function that takes in the input and returns a results.
-   */
-  readonly fetch: (input: I) => Promise<O>;
-  /**
-   * Returns the page results from the result.
-   *
-   * The page number is ignored as it is inferred from the previous page.
-   *
-   * @param result
-   * @returns
-   */
-  readonly readFetchPageResultInfo: (result: O) => PromiseOrValue<Omit<FetchPageResultInfo, 'page'>>;
-  /**
-   * Creates new input for the next page that is merged with the previous input.
-   *
-   * Returns undefined if the next page should not be loaded.
-   *
-   * @param result
-   * @returns
-   */
-  readonly buildInputForNextPage: (pageResult: Partial<FetchPageResult<O>>, input: I, options: FetchPageFactoryInputOptions) => PromiseOrValue<Maybe<Partial<I>>>;
+export type ReadFetchPageResultInfo = Omit<FetchPageResultInfo, 'page'>;
+
+export interface FetchPageFactoryConfigDefaults {
   /**
    * The default max page to load up to.
    *
@@ -125,7 +105,32 @@ export interface FetchPageFactoryConfig<I, O> {
   readonly defaultMaxItemsPerPage?: Maybe<number>;
 }
 
-export type FetchPageFactoryOptions<I, O> = FetchPageFactoryInputOptions
+export interface FetchPageFactoryConfig<I, O> extends FetchPageFactoryConfigDefaults {
+  /**
+   * The configured Fetch function that takes in the input and returns a results.
+   */
+  readonly fetch: (input: I) => Promise<O>;
+  /**
+   * Returns the page results from the result.
+   *
+   * The page number is ignored as it is inferred from the previous page.
+   *
+   * @param result
+   * @returns
+   */
+  readonly readFetchPageResultInfo: (result: O) => PromiseOrValue<ReadFetchPageResultInfo>;
+  /**
+   * Creates new input for the next page that is merged with the previous input.
+   *
+   * Returns undefined if the next page should not be loaded.
+   *
+   * @param result
+   * @returns
+   */
+  readonly buildInputForNextPage: (pageResult: Partial<FetchPageResult<O>>, input: I, options: FetchPageFactoryInputOptions) => PromiseOrValue<Maybe<Partial<I>>>;
+}
+
+export type FetchPageFactoryOptions<I, O> = FetchPageFactoryInputOptions;
 
 /**
  * Creates a new FetchPage instance.

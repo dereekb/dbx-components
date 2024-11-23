@@ -25,6 +25,7 @@ jobs:
         default: true
     environment:
       CYPRESS_INSTALL_BINARY: 0
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       # install node packages
@@ -58,6 +59,7 @@ jobs:
     <<: *defaults
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -87,6 +89,7 @@ jobs:
     <<: *defaults
     environment:
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -120,6 +123,7 @@ jobs:
       DETECT_GCP_RETRIES: 0
       METADATA_SERVER_DETECTION: none
       NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -148,6 +152,9 @@ jobs:
   # Runs tests for the projects that require the firebase emulators.
   test-setup-script:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -186,6 +193,9 @@ jobs:
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -218,6 +228,8 @@ jobs:
     <<: *defaults
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -239,7 +251,8 @@ jobs:
   publish-to-npm:
     <<: *defaults
     environment:
-      NX_SKIP_NX_CACHE: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
