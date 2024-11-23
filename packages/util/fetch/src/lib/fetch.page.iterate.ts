@@ -1,5 +1,60 @@
-import { type DecisionFunction, type IndexNumber, type IndexRef, type Maybe, type Milliseconds, type PromiseOrValue, mapIdentityFunction, performTasksFromFactoryInParallelFunction } from '@dereekb/util';
+import { type DecisionFunction, type IndexNumber, type IndexRef, type Maybe, type Milliseconds, type PromiseOrValue, mapIdentityFunction, performTasksFromFactoryInParallelFunction, performAsyncTasks, type PerformAsyncTasksConfig, type PerformAsyncTasksResult } from '@dereekb/util';
 import { type FetchNextPage, type FetchPage, type FetchPageFactory, type FetchPageFactoryInputOptions, type FetchPageResult, type FetchPageResultWithInput } from './fetch.page';
+
+// MARK: IterateFetchPagesByEachItem
+/**
+ * Function called for each item that was fetched, along with the index and fetch results.
+ *
+ * The index is the overall index this item is from the returned items.
+ */
+export type IterateFetchPagesByEachItemFunction<I, O, T, R> = (item: T, i: IndexNumber, fetchPageResult: FetchPageResultWithInput<I, O>) => Promise<R>;
+
+export type IterateFetchPagesByEachItemPair<T> = readonly [T, IndexNumber];
+
+export interface IterateFetchPagesByEachItemConfig<I, O, T, R> extends Omit<IterateFetchPagesByItemsConfig<I, O, T, IterateFetchPagesByEachItemResult<T, R>>, 'iteratePageItems'> {
+  /**
+   * The iterate function per each page result.
+   */
+  readonly iterateEachPageItem: IterateFetchPagesByEachItemFunction<I, O, T, R>;
+  /**
+   * Optional additional configuration to pass to the
+   *
+   * By default, sequential is true.
+   */
+  readonly iteratePerformTasksConfig?: Partial<PerformAsyncTasksConfig<IterateFetchPagesByEachItemPair<T>>>;
+}
+
+export type IterateFetchPagesByEachItemResult<T, R> = PerformAsyncTasksResult<IterateFetchPagesByEachItemPair<T>, R>;
+
+/**
+ * Iterates through the pages of a created FetchPage instance by each item individually.
+ *
+ * @param config
+ * @returns
+ */
+export async function iterateFetchPagesByEachItem<I, O, T, R>(config: IterateFetchPagesByEachItemConfig<I, O, T, R>) {
+  const { iterateEachPageItem, iteratePerformTasksConfig } = config;
+
+  return iterateFetchPagesByItems({
+    ...config,
+    iteratePageItems: async (items, fetchPageResult, startIndex) => {
+      const itemIndexPairs = items.map((x, i) => [x, i + startIndex] as const);
+
+      const performTasksResults = await performAsyncTasks(
+        itemIndexPairs,
+        ([item, i]) => {
+          return iterateEachPageItem(item, i, fetchPageResult);
+        },
+        {
+          sequential: true, // sequential by default
+          ...iteratePerformTasksConfig
+        }
+      );
+
+      return performTasksResults;
+    }
+  });
+}
 
 // MARK: IterateFetchPagesByItems
 /**
@@ -8,9 +63,11 @@ import { type FetchNextPage, type FetchPage, type FetchPageFactory, type FetchPa
  * @param snapshot
  * @returns
  */
-export type IterateFetchPagesByItemsFilterFunction<I, O, T> = (items: T[], pageResult: FetchPageResult<O>) => PromiseOrValue<T[]>;
+export type IterateFetchPagesByItemsFilterFunction<I, O, T> = (items: T[], pageResult: FetchPageResultWithInput<I, O>) => PromiseOrValue<T[]>;
 
-export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<IterateFetchPagesConfig<I, O, R[]>, 'iteratePage'> {
+export type IterateFetchPagesByItemsFunction<I, O, T, R> = (items: T[], fetchPageResult: FetchPageResultWithInput<I, O>, totalItemsVisited: number) => Promise<R>;
+
+export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<IterateFetchPagesConfig<I, O, R>, 'iteratePage'> {
   /**
    * Read individual items from page result.
    *
@@ -45,7 +102,7 @@ export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<Iterate
   /**
    * The iterate function per each page result.
    */
-  iteratePageItems(items: T[], fetchPageResult: FetchPageResult<O>): Promise<R[]>;
+  readonly iteratePageItems: IterateFetchPagesByItemsFunction<I, O, T, R>;
 }
 
 /**
@@ -69,8 +126,7 @@ export async function iterateFetchPagesByItems<I, O, T, R>(config: IterateFetchP
     iteratePage: async (fetchPageResult) => {
       const items = readItemsFromPageResult(fetchPageResult);
       const filteredItems = await filterPageItems(items, fetchPageResult);
-
-      const results = await iteratePageItems(filteredItems, fetchPageResult);
+      const results = await iteratePageItems(filteredItems, fetchPageResult, totalItemsVisited);
 
       totalItemsLoaded += items.length;
       totalItemsVisited += filteredItems.length;
@@ -121,7 +177,7 @@ export interface BaseIterateFetchPagesConfig<I, O, R> extends FetchPageFactoryIn
   /**
    * The iterate function per each page result.
    */
-  iteratePage(result: FetchPageResult<O>): Promise<R>;
+  iteratePage(result: FetchPageResultWithInput<I, O>): Promise<R>;
   /**
    * (Optional) Called at the end of each page.
    */
