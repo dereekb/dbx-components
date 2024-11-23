@@ -1,4 +1,4 @@
-import { Maybe, ArrayOrValue, IterableOrValue, ObjectKey, mergeObjects, useIterableOrValue, FilterKeyValueTuplesInput } from '@dereekb/util';
+import { type Maybe, type ArrayOrValue, type IterableOrValue, type ObjectKey, mergeObjects, useIterableOrValue, type FilterKeyValueTuplesInput } from '@dereekb/util';
 
 /**
  * Options for makeUrlSearchParams()

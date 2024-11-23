@@ -193,6 +193,9 @@ jobs:
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
