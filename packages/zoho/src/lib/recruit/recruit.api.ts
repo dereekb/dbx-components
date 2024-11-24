@@ -1,61 +1,44 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
 import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { ZohoRecruitContext } from './recruit.config';
-import {
-  NewZohoRecruitNoteData,
-  ZohoRecruitCommaSeparateFieldNames,
-  ZohoRecruitCustomViewId,
-  ZohoRecruitDraftOrSaveState,
-  ZohoRecruitFieldName,
-  ZohoRecruitModuleNameRef,
-  ZohoRecruitChangeObjectDetails,
-  ZohoRecruitRecord,
-  ZohoRecruitRecordFieldsData,
-  ZohoRecruitRecordId,
-  ZohoRecruitRecordNote,
-  ZohoRecruitSearchRecordsCriteriaTreeElement,
-  ZohoRecruitTerritoryId,
-  ZohoRecruitTrueFalseBoth,
-  zohoRecruitSearchRecordsCriteriaString,
-  ZohoRecruitNoteId
-} from './recruit';
+import { NewZohoRecruitNoteData, ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordFieldsData, ZohoRecruitRecordId, ZohoRecruitRecordNote, ZohoRecruitSearchRecordsCriteriaTreeElement, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, zohoRecruitSearchRecordsCriteriaString, ZohoRecruitNoteId } from './recruit';
 import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, asArray } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
 
 // MARK: Insert/Update/Upsert Response
-export type ZohoRecruitUpdateRecordResult<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> = ZohoRecruitMultiRecordResult<RECORD_INPUT_TYPE, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
+export type ZohoRecruitUpdateRecordResult<T> = ZohoRecruitMultiRecordResult<T, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
 export type ZohoRecruitUpdateRecordResponse = ZohoRecruitChangeObjectResponse;
 
-export type ZohoRecruitCreateRecordInput<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> = ZohoRecruitCreateSingleRecordInput<RECORD_INPUT_TYPE> | ZohoRecruitCreateMultiRecordInput<RECORD_INPUT_TYPE>;
+export type ZohoRecruitCreateRecordData<T> = Omit<T, 'id'>;
 
-export interface ZohoRecruitCreateSingleRecordInput<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> extends ZohoRecruitModuleNameRef {
-  readonly data: RECORD_INPUT_TYPE;
+export interface ZohoRecruitCreateSingleRecordInput<T> extends ZohoRecruitModuleNameRef {
+  readonly data: ZohoRecruitCreateRecordData<T>;
 }
 
-export interface ZohoRecruitCreateMultiRecordInput<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> extends ZohoRecruitModuleNameRef {
-  readonly data: RECORD_INPUT_TYPE[];
+export interface ZohoRecruitCreateMultiRecordInput<T> extends ZohoRecruitModuleNameRef {
+  readonly data: ZohoRecruitCreateRecordData<T>[];
 }
 
 export type ZohoRecruitCreateRecordLikeFunction = ZohoRecruitCreateMultiRecordFunction & ZohoRecruitCreateSingleRecordFunction;
-export type ZohoRecruitCreateSingleRecordFunction = <RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData>(input: ZohoRecruitCreateSingleRecordInput<RECORD_INPUT_TYPE>) => Promise<ZohoRecruitChangeObjectDetails>;
-export type ZohoRecruitCreateMultiRecordFunction = <RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData>(input: ZohoRecruitCreateMultiRecordInput<RECORD_INPUT_TYPE>) => Promise<ZohoRecruitUpdateRecordResult<RECORD_INPUT_TYPE>>;
+export type ZohoRecruitCreateSingleRecordFunction = <T>(input: ZohoRecruitCreateSingleRecordInput<T>) => Promise<ZohoRecruitChangeObjectDetails>;
+export type ZohoRecruitCreateMultiRecordFunction = <T>(input: ZohoRecruitCreateMultiRecordInput<T>) => Promise<ZohoRecruitUpdateRecordResult<T>>;
 
-export type ZohoRecruitUpdateRecordInput<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> = ZohoRecruitUpdateSingleRecordInput<RECORD_INPUT_TYPE> | ZohoRecruitUpdateMultiRecordInput<RECORD_INPUT_TYPE>;
+export type ZohoRecruitUpdateRecordInput<T> = ZohoRecruitUpdateSingleRecordInput<T> | ZohoRecruitUpdateMultiRecordInput<T>;
 
-export type ZohoRecruitUpdateRecordData<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> = UniqueModelWithId & Partial<RECORD_INPUT_TYPE>;
+export type ZohoRecruitUpdateRecordData<T> = UniqueModelWithId & Partial<T>;
 
-export interface ZohoRecruitUpdateSingleRecordInput<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> extends ZohoRecruitModuleNameRef {
-  readonly data: ZohoRecruitUpdateRecordData<RECORD_INPUT_TYPE>;
+export interface ZohoRecruitUpdateSingleRecordInput<T> extends ZohoRecruitModuleNameRef {
+  readonly data: ZohoRecruitUpdateRecordData<T>;
 }
 
-export interface ZohoRecruitUpdateMultiRecordInput<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData> extends ZohoRecruitModuleNameRef {
-  readonly data: ZohoRecruitUpdateRecordData<RECORD_INPUT_TYPE>[];
+export interface ZohoRecruitUpdateMultiRecordInput<T> extends ZohoRecruitModuleNameRef {
+  readonly data: ZohoRecruitUpdateRecordData<T>[];
 }
 
 export type ZohoRecruitUpdateRecordLikeFunction = ZohoRecruitUpdateMultiRecordFunction & ZohoRecruitUpdateSingleRecordFunction;
-export type ZohoRecruitUpdateMultiRecordFunction = <RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData>(input: ZohoRecruitUpdateMultiRecordInput<RECORD_INPUT_TYPE>) => Promise<ZohoRecruitUpdateRecordResult<RECORD_INPUT_TYPE>>;
-export type ZohoRecruitUpdateSingleRecordFunction = <RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData>(input: ZohoRecruitUpdateSingleRecordInput<RECORD_INPUT_TYPE>) => Promise<ZohoRecruitChangeObjectDetails>;
+export type ZohoRecruitUpdateMultiRecordFunction = <T>(input: ZohoRecruitUpdateMultiRecordInput<T>) => Promise<ZohoRecruitUpdateRecordResult<T>>;
+export type ZohoRecruitUpdateSingleRecordFunction = <T>(input: ZohoRecruitUpdateSingleRecordInput<T>) => Promise<ZohoRecruitChangeObjectDetails>;
 
 /**
  * The APIs for Insert, Upsert, and Update have the same structure.
@@ -63,10 +46,10 @@ export type ZohoRecruitUpdateSingleRecordFunction = <RECORD_INPUT_TYPE extends Z
  * @returns
  */
 function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoRecruitUpdateRecordLikeFunction {
-  return (<RECORD_INPUT_TYPE extends ZohoRecruitRecordFieldsData>({ data, module }: ZohoRecruitUpdateRecordInput<RECORD_INPUT_TYPE>) =>
+  return (<T>({ data, module }: ZohoRecruitUpdateRecordInput<T>) =>
     context.fetchJson<ZohoRecruitUpdateRecordResponse>(`/v2/${module}${fetchUrlPrefix}`, zohoRecruitApiFetchJsonInput(fetchMethod, { data: asArray(data) })).then((x) => {
       const isInputMultipleItems = Array.isArray(data);
-      const result = zohoRecruitMultiRecordResult<Partial<RECORD_INPUT_TYPE>, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(data), x.data);
+      const result = zohoRecruitMultiRecordResult<Partial<T>, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(data), x.data);
 
       if (isInputMultipleItems) {
         return result;
@@ -98,6 +81,9 @@ export function insertRecord(context: ZohoRecruitContext): ZohoRecruitInsertReco
 }
 
 // MARK: Upsert Record
+/**
+ * Upsert function that can do either an insert or and update ased on the input.
+ */
 export type ZohoRecruitUpsertRecordFunction = ZohoRecruitCreateRecordLikeFunction & ZohoRecruitUpdateRecordLikeFunction;
 
 /**
@@ -132,10 +118,10 @@ export interface ZohoRecruitGetRecordByIdInput extends ZohoRecruitModuleNameRef 
   readonly id: ZohoRecruitRecordId;
 }
 
-export type ZohoRecruitGetRecordByIdResponse<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = ZohoDataArrayResultRef<T>;
+export type ZohoRecruitGetRecordByIdResponse<T = ZohoRecruitRecord> = ZohoDataArrayResultRef<T>;
 
-export type ZohoRecruitGetRecordByIdResult<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = T;
-export type ZohoRecruitGetRecordByIdFunction = <T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitGetRecordByIdInput) => Promise<ZohoRecruitGetRecordByIdResult<T>>;
+export type ZohoRecruitGetRecordByIdResult<T = ZohoRecruitRecord> = T;
+export type ZohoRecruitGetRecordByIdFunction = <T = ZohoRecruitRecord>(input: ZohoRecruitGetRecordByIdInput) => Promise<ZohoRecruitGetRecordByIdResult<T>>;
 
 /**
  * Retrieves a specific record from the given module.
@@ -146,7 +132,7 @@ export type ZohoRecruitGetRecordByIdFunction = <T extends ZohoRecruitRecordField
  * @returns
  */
 export function getRecordById(context: ZohoRecruitContext): ZohoRecruitGetRecordByIdFunction {
-  return <T extends ZohoRecruitRecordFieldsData>(input: ZohoRecruitGetRecordByIdInput) =>
+  return <T>(input: ZohoRecruitGetRecordByIdInput) =>
     context
       .fetchJson<ZohoRecruitGetRecordByIdResponse<T>>(`/v2/${input.module}/${input.id}`, zohoRecruitApiFetchJsonInput('GET'))
       .then(assertRecordDataArrayResultHasContent(input.module))
@@ -169,8 +155,8 @@ export interface ZohoRecruitGetRecordsInput extends ZohoRecruitModuleNameRef, Zo
   readonly $state?: ZohoRecruitDraftOrSaveState;
 }
 
-export type ZohoRecruitGetRecordsResponse<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = ZohoPageResult<T>;
-export type ZohoRecruitGetRecordsFunction = <T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitGetRecordsInput) => Promise<ZohoRecruitGetRecordsResponse<T>>;
+export type ZohoRecruitGetRecordsResponse<T = ZohoRecruitRecord> = ZohoPageResult<T>;
+export type ZohoRecruitGetRecordsFunction = <T = ZohoRecruitRecord>(input: ZohoRecruitGetRecordsInput) => Promise<ZohoRecruitGetRecordsResponse<T>>;
 
 /**
  * Retrieves records from the given module. Used for paginating across all records.
@@ -190,15 +176,15 @@ export function getRecords(context: ZohoRecruitContext): ZohoRecruitGetRecordsFu
  *
  * Only criteria, email, phone, or word will be used at a single time.
  */
-export interface ZohoRecruitSearchRecordsInput<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> extends ZohoRecruitModuleNameRef, ZohoRecruitGetRecordsPageFilter {
+export interface ZohoRecruitSearchRecordsInput<T = ZohoRecruitRecord> extends ZohoRecruitModuleNameRef, ZohoRecruitGetRecordsPageFilter {
   readonly criteria?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>;
   readonly email?: Maybe<EmailAddress>;
   readonly phone?: Maybe<PhoneNumber>;
   readonly word?: Maybe<string>;
 }
 
-export type ZohoRecruitSearchRecordsResponse<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = ZohoRecruitGetRecordsResponse<T>;
-export type ZohoRecruitSearchRecordsFunction = <T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => Promise<ZohoRecruitSearchRecordsResponse<T>>;
+export type ZohoRecruitSearchRecordsResponse<T = ZohoRecruitRecord> = ZohoRecruitGetRecordsResponse<T>;
+export type ZohoRecruitSearchRecordsFunction = <T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => Promise<ZohoRecruitSearchRecordsResponse<T>>;
 
 /**
  * Searches records from the given module.
@@ -209,7 +195,7 @@ export type ZohoRecruitSearchRecordsFunction = <T extends ZohoRecruitRecordField
  * @returns
  */
 export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRecordsFunction {
-  function searchRecordsUrlSearchParams<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) {
+  function searchRecordsUrlSearchParams<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) {
     const baseInput = { ...input };
     delete baseInput.criteria;
 
@@ -222,10 +208,10 @@ export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRec
     return urlParams;
   }
 
-  return (<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
+  return (<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
 }
 
-export type SearchRecordsPageFactory = <T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>, options?: FetchPageFactoryOptions<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>) => FetchPage<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>;
+export type SearchRecordsPageFactory = <T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>, options?: Maybe<FetchPageFactoryOptions<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>>) => FetchPage<ZohoRecruitSearchRecordsInput<T>, ZohoRecruitSearchRecordsResponse<T>>;
 
 export function searchRecordsPageFactory(context: ZohoRecruitContext): SearchRecordsPageFactory {
   return zohoFetchPageFactory(searchRecords(context));

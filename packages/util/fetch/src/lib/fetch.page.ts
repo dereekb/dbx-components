@@ -135,7 +135,7 @@ export type FetchPageFactoryOptions<I, O> = FetchPageFactoryInputOptions;
 /**
  * Creates a new FetchPage instance.
  */
-export type FetchPageFactory<I, O> = (input: I, options?: FetchPageFactoryOptions<I, O>) => FetchPage<I, O>;
+export type FetchPageFactory<I, O> = (input: I, options?: Maybe<FetchPageFactoryOptions<I, O>>) => FetchPage<I, O>;
 
 /**
  * Default max page for a FetchPageFactory.
@@ -151,7 +151,7 @@ export const FETCH_PAGE_FACTORY_DEFAULT_MAX_PAGE = 100;
 export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): FetchPageFactory<I, O> {
   const { fetch, readFetchPageResultInfo, buildInputForNextPage, defaultMaxPage, defaultMaxItemsPerPage } = config;
 
-  return (initalInput: I, options?: FetchPageFactoryOptions<I, O>) => {
+  return (initalInput: I, options?: Maybe<FetchPageFactoryOptions<I, O>>) => {
     const { maxPage: inputMaxPage = defaultMaxPage, maxItemsPerPage: inputMaxItemsPerPage } = options ?? {};
     const maxItemsPerPage = inputMaxItemsPerPage ?? defaultMaxItemsPerPage;
     const maxPage = inputMaxPage === null ? Number.MAX_SAFE_INTEGER : inputMaxPage ?? FETCH_PAGE_FACTORY_DEFAULT_MAX_PAGE;

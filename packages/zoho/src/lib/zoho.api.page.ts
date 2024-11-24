@@ -65,7 +65,7 @@ export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoP
  * @param defaults
  * @returns
  */
-export function zohoFetchPageFactory<I extends ZohoPageFilter, R extends ZohoPageResult<any>>(fetch: ZohoFetchPageFetchFunction<I, R>, defaults?: FetchPageFactoryConfigDefaults) {
+export function zohoFetchPageFactory<I extends ZohoPageFilter, R extends ZohoPageResult<any>>(fetch: ZohoFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
   return fetchPageFactory<I, R>({
     ...defaults,
     fetch,
