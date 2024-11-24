@@ -1,9 +1,14 @@
-import { ZohoRecruitSearchRecordsCriteriaEntryArray, ZohoRecruitSearchRecordsCriteriaTree, zohoRecruitSearchRecordsCriteriaString } from './recruit';
+import { ZohoRecruitRecordFieldsData, ZohoRecruitSearchRecordsCriteriaEntryArray, ZohoRecruitSearchRecordsCriteriaTree, zohoRecruitSearchRecordsCriteriaString } from './recruit';
+
+export interface TestEntryType extends ZohoRecruitRecordFieldsData {
+  testA: string;
+  testB: string;
+}
 
 describe('zohoRecruitSearchRecordsCriteriaString()', () => {
   describe('entry array', () => {
     it('should convert an array of entries', () => {
-      const tree: ZohoRecruitSearchRecordsCriteriaEntryArray = [
+      const tree: ZohoRecruitSearchRecordsCriteriaEntryArray<TestEntryType> = [
         { field: 'testA', filter: 'contains', value: 'a' },
         { field: 'testB', filter: 'contains', value: 'b' }
       ];

@@ -118,7 +118,7 @@ export interface ZohoRecruitGetRecordByIdInput extends ZohoRecruitModuleNameRef 
   readonly id: ZohoRecruitRecordId;
 }
 
-export type ZohoRecruitGetRecordByIdResponse = ZohoDataArrayResultRef<ZohoRecruitRecord>;
+export type ZohoRecruitGetRecordByIdResponse<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = ZohoDataArrayResultRef<T>;
 
 export type ZohoRecruitGetRecordByIdResult<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord> = T;
 export type ZohoRecruitGetRecordByIdFunction = <T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecord>(input: ZohoRecruitGetRecordByIdInput) => Promise<ZohoRecruitGetRecordByIdResult<T>>;
@@ -134,9 +134,9 @@ export type ZohoRecruitGetRecordByIdFunction = <T extends ZohoRecruitRecordField
 export function getRecordById(context: ZohoRecruitContext): ZohoRecruitGetRecordByIdFunction {
   return <T extends ZohoRecruitRecordFieldsData>(input: ZohoRecruitGetRecordByIdInput) =>
     context
-      .fetchJson<ZohoRecruitGetRecordByIdResponse>(`/v2/${input.module}/${input.id}`, zohoRecruitApiFetchJsonInput('GET'))
+      .fetchJson<ZohoRecruitGetRecordByIdResponse<T>>(`/v2/${input.module}/${input.id}`, zohoRecruitApiFetchJsonInput('GET'))
       .then(assertRecordDataArrayResultHasContent(input.module))
-      .then((x) => x.data[0] as T);
+      .then((x) => x.data[0]);
 }
 
 // MARK: Get Records

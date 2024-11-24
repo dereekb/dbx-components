@@ -1,4 +1,4 @@
-import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
+import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl, PrimativeKey } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -99,7 +99,10 @@ export interface ZohoRecruitChangeObjectDetails {
 }
 
 // MARK: Zoho Recruit Record
-export type ZohoRecruitRecordFieldsData = Record<ZohoRecruitFieldName, any>;
+/**
+ * Base Zoho Recruit field data type.
+ */
+export interface ZohoRecruitRecordFieldsData {}
 
 export interface ZohoRecordDraftStateData {
   /**
@@ -144,7 +147,7 @@ export type ZohoRecruitSearchRecordsCriteriaString = string;
  *
  * If the input tree is empty, returns undefined.
  */
-export function zohoRecruitSearchRecordsCriteriaString<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData>(input: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
+export function zohoRecruitSearchRecordsCriteriaString<T extends ZohoRecruitRecordFieldsData = any>(input: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
   let result: Maybe<ZohoRecruitSearchRecordsCriteriaString>;
 
   if (input != null) {
@@ -169,7 +172,7 @@ export function zohoRecruitSearchRecordsCriteriaString<T extends ZohoRecruitReco
   return result;
 }
 
-export function zohoRecruitSearchRecordsCriteriaStringForTree<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData>(tree: ZohoRecruitSearchRecordsCriteriaTree<T>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
+export function zohoRecruitSearchRecordsCriteriaStringForTree<T extends ZohoRecruitRecordFieldsData = any>(tree: ZohoRecruitSearchRecordsCriteriaTree<T>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
   function convertToString(value: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>> {
     let result: Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>>;
 
@@ -212,7 +215,7 @@ export function zohoRecruitSearchRecordsCriteriaStringForTree<T extends ZohoRecr
  *
  * If both AND and OR values are provided at the root tree, then the will be merged together with AND.
  */
-export interface ZohoRecruitSearchRecordsCriteriaTree<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> {
+export interface ZohoRecruitSearchRecordsCriteriaTree<T extends ZohoRecruitRecordFieldsData = any> {
   /**
    * Items to AND with eachother
    */
@@ -223,14 +226,14 @@ export interface ZohoRecruitSearchRecordsCriteriaTree<T extends ZohoRecruitRecor
   readonly or?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>[]>;
 }
 
-export type ZohoRecruitSearchRecordsCriteriaTreeElement<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaString;
+export type ZohoRecruitSearchRecordsCriteriaTreeElement<T extends ZohoRecruitRecordFieldsData = any> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaString;
 
 export type ZohoRecruitSearchRecordsCriteriaFilterType = 'starts_with' | 'equals' | 'contains';
 
-export type ZohoRecruitSearchRecordsCriteriaEntryArray<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> = ZohoRecruitSearchRecordsCriteriaEntry<T>[];
+export type ZohoRecruitSearchRecordsCriteriaEntryArray<T extends ZohoRecruitRecordFieldsData = any> = ZohoRecruitSearchRecordsCriteriaEntry<T>[];
 
-export interface ZohoRecruitSearchRecordsCriteriaEntry<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> {
-  readonly field: keyof T extends string ? keyof T : never;
+export interface ZohoRecruitSearchRecordsCriteriaEntry<T extends ZohoRecruitRecordFieldsData = any> {
+  readonly field: keyof T extends PrimativeKey ? keyof T : PrimativeKey;
   readonly filter: ZohoRecruitSearchRecordsCriteriaFilterType;
   readonly value: string;
 }
@@ -252,7 +255,7 @@ export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunct
  * @param entry
  * @returns
  */
-export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData>(entry: ZohoRecruitSearchRecordsCriteriaEntry<T>): ZohoRecruitSearchRecordsCriteriaString {
+export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T extends ZohoRecruitRecordFieldsData = any>(entry: ZohoRecruitSearchRecordsCriteriaEntry<T>): ZohoRecruitSearchRecordsCriteriaString {
   const escapedValue = escapeZohoFieldValueForCriteriaString(entry.value);
   return `(${entry.field}:${entry.filter}:${escapedValue})`;
 }
