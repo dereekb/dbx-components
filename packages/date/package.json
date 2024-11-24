@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/date",
-  "version": "11.0.11",
+  "version": "11.0.12",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

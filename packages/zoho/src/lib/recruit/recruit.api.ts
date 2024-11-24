@@ -25,7 +25,6 @@ export type ZohoRecruitCreateSingleRecordFunction = <T>(input: ZohoRecruitCreate
 export type ZohoRecruitCreateMultiRecordFunction = <T>(input: ZohoRecruitCreateMultiRecordInput<T>) => Promise<ZohoRecruitUpdateRecordResult<T>>;
 
 export type ZohoRecruitUpdateRecordInput<T> = ZohoRecruitUpdateSingleRecordInput<T> | ZohoRecruitUpdateMultiRecordInput<T>;
-
 export type ZohoRecruitUpdateRecordData<T> = UniqueModelWithId & Partial<T>;
 
 export interface ZohoRecruitUpdateSingleRecordInput<T> extends ZohoRecruitModuleNameRef {
@@ -39,6 +38,20 @@ export interface ZohoRecruitUpdateMultiRecordInput<T> extends ZohoRecruitModuleN
 export type ZohoRecruitUpdateRecordLikeFunction = ZohoRecruitUpdateMultiRecordFunction & ZohoRecruitUpdateSingleRecordFunction;
 export type ZohoRecruitUpdateMultiRecordFunction = <T>(input: ZohoRecruitUpdateMultiRecordInput<T>) => Promise<ZohoRecruitUpdateRecordResult<T>>;
 export type ZohoRecruitUpdateSingleRecordFunction = <T>(input: ZohoRecruitUpdateSingleRecordInput<T>) => Promise<ZohoRecruitChangeObjectDetails>;
+
+export type ZohoRecruitUpsertRecordData<T> = ZohoRecruitCreateRecordData<T> | ZohoRecruitUpdateRecordData<T>;
+
+export interface ZohoRecruitUpsertSingleRecordInput<T> extends ZohoRecruitModuleNameRef {
+  readonly data: ZohoRecruitUpsertRecordData<T>;
+}
+
+export interface ZohoRecruitUpsertMultiRecordInput<T> extends ZohoRecruitModuleNameRef {
+  readonly data: ZohoRecruitUpsertRecordData<T>[];
+}
+
+export type ZohoRecruitUpsertRecordLikeFunction = ZohoRecruitUpsertMultiRecordFunction & ZohoRecruitUpsertSingleRecordFunction;
+export type ZohoRecruitUpsertMultiRecordFunction = <T>(input: ZohoRecruitUpsertMultiRecordInput<T>) => Promise<ZohoRecruitUpdateRecordResult<T>>;
+export type ZohoRecruitUpsertSingleRecordFunction = <T>(input: ZohoRecruitUpsertSingleRecordInput<T>) => Promise<ZohoRecruitChangeObjectDetails>;
 
 /**
  * The APIs for Insert, Upsert, and Update have the same structure.
@@ -84,7 +97,7 @@ export function insertRecord(context: ZohoRecruitContext): ZohoRecruitInsertReco
 /**
  * Upsert function that can do either an insert or and update ased on the input.
  */
-export type ZohoRecruitUpsertRecordFunction = ZohoRecruitCreateRecordLikeFunction & ZohoRecruitUpdateRecordLikeFunction;
+export type ZohoRecruitUpsertRecordFunction = ZohoRecruitUpsertRecordLikeFunction;
 
 /**
  * Updates or inserts one or more records in Recruit.
