@@ -29,8 +29,8 @@ const UPSERT_TEST_FIRST_NAME_PREFIX = `Upsert`;
 const UPSERT_TEST_LAST_NAME = `Upsert`;
 
 interface TestCandidate extends ZohoRecruitRecord {
-  Email: string;
-  First_Name: string;
+  Email: string; // required field
+  First_Name?: string; // not required
   Last_Name: string;
 }
 
@@ -71,7 +71,7 @@ describe('recruit.api', () => {
      * Cached getter across all test runs. These records should always exist and can be used for updating.
      */
     const loadTestRecords: Getter<Promise<ZohoRecruitRecord[]>> = cachedGetter(async () => {
-      const upsertResult = await api.upsertRecord({
+      const upsertResult = await api.upsertRecord<TestCandidate>({
         module: ZOHO_RECRUIT_CANDIDATES_MODULE,
         data: [
           {
@@ -98,10 +98,10 @@ describe('recruit.api', () => {
       describe('create', () => {
         describe('insertRecord()', () => {
           describe('single record', () => {
-            it('should create a new record and return the data directly', async () => {
+            it('should create a new record and return the change object details result directly', async () => {
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const result = await api.insertRecord({
+              const result = await api.insertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: {
                   First_Name: `Create_${createNumber}`,
@@ -114,15 +114,30 @@ describe('recruit.api', () => {
               expect(result.id).toBeDefined();
             });
 
-            itShouldFail('if the input is invalid.', async () => {
+            it('should mark the object error if the input data is invalud for the object', async () => {
+              const result = await api.insertRecord<TestCandidate>({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                data: [
+                  {
+                    First_Name: `Failure`,
+                    lastNameFieldMissing: 'Candidate' // invalid field
+                  } as any
+                ]
+              });
+
+              expect(result.errorItems).toHaveLength(1);
+              expect(result.errorItems[0].result.code).toBe(ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE);
+            });
+
+            itShouldFail('if the input data is invalid for the object', async () => {
               await expectFail(
                 () =>
-                  api.insertRecord({
+                  api.insertRecord<TestCandidate>({
                     module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                     data: {
                       First_Name: `Failure`,
-                      lastNameFieldMissing: 'Candidate'
-                    }
+                      lastNameFieldMissing: 'Candidate' // invalid field
+                    } as any
                   }),
                 jestExpectFailAssertErrorType(ZohoRecruitRecordCrudMandatoryFieldNotFoundError)
               );
@@ -131,7 +146,7 @@ describe('recruit.api', () => {
             itShouldFail('if the input has a duplicate unique value in Zoho Recruit.', async () => {
               await expectFail(
                 () =>
-                  api.insertRecord({
+                  api.insertRecord<TestCandidate>({
                     module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                     data: {
                       First_Name: `Failure`,
@@ -148,7 +163,7 @@ describe('recruit.api', () => {
             it('should create multiple new records', async () => {
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const result = await api.insertRecord({
+              const result = await api.insertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: [
                   {
@@ -187,7 +202,7 @@ describe('recruit.api', () => {
                 }
               ];
 
-              const result = await api.insertRecord({
+              const result = await api.insertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data
               });
@@ -227,7 +242,7 @@ describe('recruit.api', () => {
             itShouldFail('if attempting to update a value that does not exist', async () => {
               await expectFail(
                 () =>
-                  api.updateRecord({
+                  api.updateRecord<TestCandidate>({
                     module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                     data: {
                       id: NON_EXISTENT_CANDIDATE_ID,
@@ -244,7 +259,7 @@ describe('recruit.api', () => {
 
               await expectFail(
                 () =>
-                  api.updateRecord({
+                  api.updateRecord<TestCandidate>({
                     module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                     data: {
                       id: recordToUpdate.id,
@@ -264,7 +279,7 @@ describe('recruit.api', () => {
               const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
               const First_Name = `Updated For Test ${number}`;
 
-              const updateResult = await api.updateRecord({
+              const updateResult = await api.updateRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: [
                   {
@@ -296,7 +311,7 @@ describe('recruit.api', () => {
                 }
               ];
 
-              const result = await api.updateRecord({
+              const result = await api.updateRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data
               });
@@ -312,6 +327,27 @@ describe('recruit.api', () => {
 
         describe('upsertRecord()', () => {
           describe('single record', () => {
+            it('should create a new record and return the updated record details', async () => {
+              const number = randomNumber({ min: 1000000000000, max: 10000000000000, round: 'ceil' });
+              const Last_Name = `Create For Test ${number}`;
+
+              // inserting a new record, all required fields are required
+              const createResult = await api.upsertRecord<TestCandidate>({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                data: {
+                  Email: `upsert+${number}@${TEST_ACCOUNT_UPSERT_EXPORT_SUFFIX}`,
+                  Last_Name
+                }
+              });
+
+              expect(createResult).toBeDefined();
+              expect(createResult.id).toBeDefined();
+              expect(Array.isArray(createResult)).toBe(false);
+
+              const createdRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: createResult.id });
+              expect(createdRecord.Last_Name).toBe(Last_Name);
+            });
+
             it('should update a record and return the updated record details', async () => {
               const testRecords = await loadTestRecords();
               const recordToUpdate = testRecords[0];
@@ -319,7 +355,7 @@ describe('recruit.api', () => {
               const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
               const First_Name = `Updated For Test ${number}`;
 
-              const updateResult = await api.upsertRecord({
+              const updateResult = await api.upsertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: {
                   id: recordToUpdate.id,
@@ -336,7 +372,7 @@ describe('recruit.api', () => {
             itShouldFail('if attempting to update a value that does not exist', async () => {
               await expectFail(
                 () =>
-                  api.updateRecord({
+                  api.updateRecord<TestCandidate>({
                     module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                     data: {
                       id: NON_EXISTENT_CANDIDATE_ID,
@@ -356,7 +392,7 @@ describe('recruit.api', () => {
               const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
               const First_Name = `Updated For Test ${number}`;
 
-              const updateResult = await api.upsertRecord({
+              const updateResult = await api.upsertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: [
                   {

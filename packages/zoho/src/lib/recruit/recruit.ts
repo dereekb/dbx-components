@@ -113,7 +113,7 @@ export interface ZohoRecordDraftStateData {
   $state?: ZohoRecruitDraftOrSaveState;
 }
 
-export type NewZohoRecruitRecordData<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> = T & ZohoRecordDraftStateData;
+export type NewZohoRecruitRecordData<T = ZohoRecruitRecordFieldsData> = T & ZohoRecordDraftStateData;
 
 /**
  * A ZohoRecruit record containing the corresponding record's id.
@@ -147,7 +147,7 @@ export type ZohoRecruitSearchRecordsCriteriaString = string;
  *
  * If the input tree is empty, returns undefined.
  */
-export function zohoRecruitSearchRecordsCriteriaString<T extends ZohoRecruitRecordFieldsData = any>(input: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
+export function zohoRecruitSearchRecordsCriteriaString<T = any>(input: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
   let result: Maybe<ZohoRecruitSearchRecordsCriteriaString>;
 
   if (input != null) {
@@ -172,7 +172,7 @@ export function zohoRecruitSearchRecordsCriteriaString<T extends ZohoRecruitReco
   return result;
 }
 
-export function zohoRecruitSearchRecordsCriteriaStringForTree<T extends ZohoRecruitRecordFieldsData = any>(tree: ZohoRecruitSearchRecordsCriteriaTree<T>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
+export function zohoRecruitSearchRecordsCriteriaStringForTree<T = any>(tree: ZohoRecruitSearchRecordsCriteriaTree<T>): Maybe<ZohoRecruitSearchRecordsCriteriaString> {
   function convertToString(value: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>): Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>> {
     let result: Maybe<ArrayOrValue<ZohoRecruitSearchRecordsCriteriaString>>;
 
@@ -215,7 +215,7 @@ export function zohoRecruitSearchRecordsCriteriaStringForTree<T extends ZohoRecr
  *
  * If both AND and OR values are provided at the root tree, then the will be merged together with AND.
  */
-export interface ZohoRecruitSearchRecordsCriteriaTree<T extends ZohoRecruitRecordFieldsData = any> {
+export interface ZohoRecruitSearchRecordsCriteriaTree<T = any> {
   /**
    * Items to AND with eachother
    */
@@ -226,13 +226,13 @@ export interface ZohoRecruitSearchRecordsCriteriaTree<T extends ZohoRecruitRecor
   readonly or?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>[]>;
 }
 
-export type ZohoRecruitSearchRecordsCriteriaTreeElement<T extends ZohoRecruitRecordFieldsData = any> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaString;
+export type ZohoRecruitSearchRecordsCriteriaTreeElement<T = any> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaString;
 
 export type ZohoRecruitSearchRecordsCriteriaFilterType = 'starts_with' | 'equals' | 'contains';
 
-export type ZohoRecruitSearchRecordsCriteriaEntryArray<T extends ZohoRecruitRecordFieldsData = any> = ZohoRecruitSearchRecordsCriteriaEntry<T>[];
+export type ZohoRecruitSearchRecordsCriteriaEntryArray<T = any> = ZohoRecruitSearchRecordsCriteriaEntry<T>[];
 
-export interface ZohoRecruitSearchRecordsCriteriaEntry<T extends ZohoRecruitRecordFieldsData = any> {
+export interface ZohoRecruitSearchRecordsCriteriaEntry<T = any> {
   readonly field: keyof T extends PrimativeKey ? keyof T : PrimativeKey;
   readonly filter: ZohoRecruitSearchRecordsCriteriaFilterType;
   readonly value: string;
@@ -255,7 +255,7 @@ export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunct
  * @param entry
  * @returns
  */
-export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T extends ZohoRecruitRecordFieldsData = any>(entry: ZohoRecruitSearchRecordsCriteriaEntry<T>): ZohoRecruitSearchRecordsCriteriaString {
+export function zohoRecruitSearchRecordsCriteriaEntryToCriteriaString<T = any>(entry: ZohoRecruitSearchRecordsCriteriaEntry<T>): ZohoRecruitSearchRecordsCriteriaString {
   const escapedValue = escapeZohoFieldValueForCriteriaString(entry.value);
   return `(${entry.field}:${entry.filter}:${escapedValue})`;
 }
