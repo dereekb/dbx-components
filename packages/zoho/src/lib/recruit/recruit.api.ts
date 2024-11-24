@@ -3,8 +3,6 @@ import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFa
 import { ZohoRecruitContext } from './recruit.config';
 import {
   NewZohoRecruitNoteData,
-  NewZohoRecruitRecordData,
-  UpdateZohoRecruitRecordData,
   ZohoRecruitCommaSeparateFieldNames,
   ZohoRecruitCustomViewId,
   ZohoRecruitDraftOrSaveState,
