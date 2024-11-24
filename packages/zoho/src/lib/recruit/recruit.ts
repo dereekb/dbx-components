@@ -113,7 +113,7 @@ export interface ZohoRecordDraftStateData {
   $state?: ZohoRecruitDraftOrSaveState;
 }
 
-export type NewZohoRecruitRecordData = ZohoRecruitRecordFieldsData & ZohoRecordDraftStateData;
+export type NewZohoRecruitRecordData<T extends ZohoRecruitRecordFieldsData = ZohoRecruitRecordFieldsData> = T & ZohoRecordDraftStateData;
 
 /**
  * A ZohoRecruit record containing the corresponding record's id.

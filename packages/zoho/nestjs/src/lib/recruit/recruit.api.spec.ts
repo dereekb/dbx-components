@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ZohoRecruitApi } from './recruit.api';
 import { fileZohoAccountsAccessTokenCacheService, ZohoAccountsAccessTokenCacheService } from '../accounts/accounts.service';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
-import { ZOHO_DUPLICATE_DATA_ERROR_CODE, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, NewZohoRecruitRecordData, ZohoRecruitRecordCrudDuplicateDataError, ZohoRecruitRecordCrudMandatoryFieldNotFoundError, ZohoRecruitRecordNoContentError, ZohoRecruitRecord, ZohoRecruitRecordCrudNoMatchingRecordError, ZOHO_INVALID_DATA_ERROR_CODE, ZohoInvalidQueryError, ZohoRecruitRecordId, ZOHO_RECRUIT_CANDIDATES_MODULE, ZohoServerFetchResponseError } from '@dereekb/zoho';
+import { ZOHO_DUPLICATE_DATA_ERROR_CODE, ZOHO_MANDATORY_NOT_FOUND_ERROR_CODE, NewZohoRecruitRecordData, ZohoRecruitRecordCrudDuplicateDataError, ZohoRecruitRecordCrudMandatoryFieldNotFoundError, ZohoRecruitRecordNoContentError, ZohoRecruitRecord, ZohoRecruitRecordCrudNoMatchingRecordError, ZOHO_INVALID_DATA_ERROR_CODE, ZohoInvalidQueryError, ZohoRecruitRecordId, ZOHO_RECRUIT_CANDIDATES_MODULE, ZohoServerFetchResponseError, ZohoRecruitUpdateRecordData } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
 // NOTE: Should have test canidates available on the Zoho Sandbox that is being used. Use test_candidates.csv to generate if needed.
@@ -28,7 +28,7 @@ const TEST_CANDIDATE_EMAIL_ADDRESS = 'tester@components.dereekb.com';
 const UPSERT_TEST_FIRST_NAME_PREFIX = `Upsert`;
 const UPSERT_TEST_LAST_NAME = `Upsert`;
 
-interface TestCandidate {
+interface TestCandidate extends ZohoRecruitRecord {
   Email: string;
   First_Name: string;
   Last_Name: string;
@@ -174,12 +174,12 @@ describe('recruit.api', () => {
             it('should return error items for records that could not be created', async () => {
               const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
 
-              const data: NewZohoRecruitRecordData[] = [
+              const data: NewZohoRecruitRecordData<TestCandidate>[] = [
                 {
                   First_Name: `Create_${createNumber}`,
-                  lastNameFieldMissing: 'Candidate', // field missing
+                  lastNameFieldMissing: 'Candidate', // field does not exist!
                   Email: `create+${createNumber}@${TEST_ACCOUNT_INSERT_EXPORT_SUFFIX}`
-                },
+                } as any, // cast to avoid type checking
                 {
                   First_Name: `Create_${createNumber + 1}`,
                   Last_Name: 'Candidate',
@@ -210,7 +210,7 @@ describe('recruit.api', () => {
               const number = randomNumber({ min: 1000000000000, max: 10000000000000 });
               const First_Name = `Updated For Test ${number}`;
 
-              const updateResult = await api.updateRecord({
+              const updateResult = await api.updateRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data: {
                   id: recordToUpdate.id,
@@ -220,7 +220,7 @@ describe('recruit.api', () => {
 
               expect(updateResult.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
 
@@ -277,7 +277,7 @@ describe('recruit.api', () => {
               expect(updateResult.successItems).toHaveLength(1);
               expect(updateResult.successItems[0].result.details.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
 
@@ -285,7 +285,7 @@ describe('recruit.api', () => {
               const testRecords = await loadTestRecords();
               const recordToUpdate = testRecords[0];
 
-              const data = [
+              const data: ZohoRecruitUpdateRecordData<TestCandidate>[] = [
                 {
                   id: NON_EXISTENT_CANDIDATE_ID, // invalid data issue
                   First_Name: 'Failure'
@@ -329,7 +329,7 @@ describe('recruit.api', () => {
 
               expect(updateResult.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
 
@@ -369,7 +369,7 @@ describe('recruit.api', () => {
               expect(updateResult.successItems).toHaveLength(1);
               expect(updateResult.successItems[0].result.details.id).toBe(recordToUpdate.id);
 
-              const updatedRecord = await api.getRecordById({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
+              const updatedRecord = await api.getRecordById<TestCandidate>({ module: ZOHO_RECRUIT_CANDIDATES_MODULE, id: recordToUpdate.id });
               expect(updatedRecord.First_Name).toBe(First_Name);
             });
 
@@ -388,7 +388,7 @@ describe('recruit.api', () => {
                 }
               ];
 
-              const result = await api.upsertRecord({
+              const result = await api.upsertRecord<TestCandidate>({
                 module: ZOHO_RECRUIT_CANDIDATES_MODULE,
                 data
               });
@@ -496,7 +496,7 @@ describe('recruit.api', () => {
           it('should return no values if there are no results', async () => {
             const limit = GURANTEED_NUMBER_OF_UPSERT_TEST_RECORDS;
 
-            const result = await api.searchRecords<TestCandidate>({
+            const result = await api.searchRecords({
               module: ZOHO_RECRUIT_CANDIDATES_MODULE,
               criteria: [{ field: 'Last_Name', filter: 'starts_with', value: 'Should Not Return Any Results' }],
               per_page: limit
@@ -509,9 +509,15 @@ describe('recruit.api', () => {
           itShouldFail('if the criteria is invalid', async () => {
             await expectFail(
               () =>
-                api.searchRecords<TestCandidate>({
+                api.searchRecords({
                   module: ZOHO_RECRUIT_CANDIDATES_MODULE,
-                  criteria: [{ field: 'Last_Name', filter: 'STARTS_WITH_WRONG' as any, value: 'Should Not Return Any Results' }]
+                  criteria: [
+                    {
+                      field: 'Last_Name',
+                      filter: 'STARTS_WITH_WRONG' as any, // invalid filter type
+                      value: 'Should Not Return Any Results'
+                    }
+                  ]
                 }),
               jestExpectFailAssertErrorType(ZohoInvalidQueryError)
             );
