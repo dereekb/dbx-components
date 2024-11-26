@@ -1,5 +1,5 @@
 import { MS_IN_SECOND } from '../date';
-import { exponentialPromiseRateLimiter } from './promise.limit';
+import { resetPeriodPromiseRateLimiter, exponentialPromiseRateLimiter } from './promise.limit';
 import { waitForMs } from './wait';
 
 describe('burstPromiseRateLimiter()', () => {
@@ -98,13 +98,13 @@ describe('burstPromiseRateLimiter()', () => {
     it('should reset the rate limiter', async () => {
       const limiter = exponentialPromiseRateLimiter();
 
-      let a = limiter.waitForRateLimit();
+      const a = limiter.waitForRateLimit();
       limiter.reset(); // reset
 
       const waitTimeA = limiter.getNextWaitTime();
       expect(waitTimeA).toBe(0);
 
-      let b = limiter.waitForRateLimit();
+      const b = limiter.waitForRateLimit();
       limiter.reset(); // reset
 
       const waitTimeB = limiter.getNextWaitTime();
@@ -114,5 +114,108 @@ describe('burstPromiseRateLimiter()', () => {
     });
   });
 
-  describe('maxWaitTime', () => {});
+  describe('maxWaitTime', () => {
+    it('should limit the wait time', async () => {
+      const limiter = exponentialPromiseRateLimiter({ maxWaitTime: 1000 });
+      const a = limiter.waitForRateLimit();
+      const b = limiter.waitForRateLimit();
+      const c = limiter.waitForRateLimit();
+
+      const waitTimeA = limiter.getNextWaitTime();
+      expect(waitTimeA).toBeLessThanOrEqual(1000);
+
+      await Promise.all([a, b, c]);
+    });
+  });
+});
+
+describe('resetPeriodPromiseRateLimiter()', () => {
+  it('should rate limit to the reset period when the limit is reached.', async () => {
+    const resetPeriod = 4000;
+    const limiter = resetPeriodPromiseRateLimiter({
+      limit: 2,
+      resetPeriod,
+      maxWaitTime: 2000 // max wait time is ignored once the remaining limit is reduced
+    });
+    expect(limiter.getRemainingLimit()).toBe(2);
+
+    const a = limiter.waitForRateLimit();
+    expect(limiter.getRemainingLimit()).toBe(1);
+
+    const waitTimeA = limiter.getNextWaitTime();
+    expect(waitTimeA).toBeLessThanOrEqual(MS_IN_SECOND);
+
+    const b = limiter.waitForRateLimit();
+    expect(limiter.getRemainingLimit()).toBe(0);
+
+    const waitTimeB = limiter.getNextWaitTime();
+    expect(waitTimeB).toBeGreaterThan(3.5 * MS_IN_SECOND);
+    expect(waitTimeB).toBeLessThanOrEqual(4 * MS_IN_SECOND);
+
+    await Promise.all([a, b]);
+  });
+
+  describe('reset()', () => {
+    it('resetting the rate limiter resets the remaining limit', async () => {
+      const resetPeriod = 4000;
+      const limiter = resetPeriodPromiseRateLimiter({
+        limit: 2,
+        resetPeriod,
+        maxWaitTime: 2000 // max wait time is ignored once the remaining limit is reduced
+      });
+
+      expect(limiter.getRemainingLimit()).toBe(2);
+
+      const a = limiter.waitForRateLimit();
+
+      expect(limiter.getRemainingLimit()).toBe(1);
+
+      const b = limiter.waitForRateLimit();
+
+      expect(limiter.getRemainingLimit()).toBe(0);
+
+      limiter.reset(); // reset
+
+      expect(limiter.getRemainingLimit()).toBe(2);
+
+      await Promise.all([a, b]);
+    });
+
+    it('resetting the rate limiter does not affect the internal exponential limiter', async () => {
+      const resetPeriod = 4000;
+      const limiter = resetPeriodPromiseRateLimiter({
+        limit: 2,
+        resetPeriod,
+        maxWaitTime: 2000 // max wait time is ignored once the remaining limit is reduced
+      });
+
+      const a = limiter.waitForRateLimit();
+      limiter.reset(); // reset
+
+      const waitTimeA = limiter.getNextWaitTime();
+      expect(waitTimeA).toBeLessThanOrEqual(MS_IN_SECOND);
+
+      const b = limiter.waitForRateLimit();
+      limiter.reset(); // reset
+
+      const waitTimeB = limiter.getNextWaitTime();
+      expect(waitTimeB).toBeLessThanOrEqual(1.5 * MS_IN_SECOND);
+
+      await Promise.all([a, b]);
+    });
+  });
+
+  describe('maxWaitTime', () => {
+    it('should limit the exponential wait time', async () => {
+      const limiter = resetPeriodPromiseRateLimiter({ resetPeriod: 4000, limit: 10, maxWaitTime: 1000 });
+      const a = limiter.waitForRateLimit();
+      const b = limiter.waitForRateLimit();
+      const c = limiter.waitForRateLimit();
+
+      const waitTimeA = limiter.getNextWaitTime();
+      expect(waitTimeA).toBeLessThanOrEqual(1000);
+
+      await Promise.all([a, b, c]);
+    });
+  });
 });

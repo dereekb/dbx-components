@@ -1,4 +1,4 @@
-import { MS_IN_MINUTE, MS_IN_SECOND, Milliseconds } from '../date/date';
+import { MS_IN_MINUTE, MS_IN_SECOND, Milliseconds, isPast } from '../date/date';
 import { RequiredOnKeys } from '../type';
 import { Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
@@ -8,6 +8,12 @@ import { waitForMs } from './wait';
  */
 export interface PromiseRateLimiter {
   /**
+   * Returns the expected wait time for the next wait.
+   *
+   * Can optionally provide an increase that updates the limiter to behave like the number of items is now being waited on.
+   */
+  getNextWaitTime(increase?: number): Milliseconds;
+  /**
    * Waits for the rate limited to allow the promise to continue.
    */
   waitForRateLimit(): Promise<void>;
@@ -16,11 +22,13 @@ export interface PromiseRateLimiter {
 // MARK: Exponential Limiter
 export interface ExponentialPromiseRateLimiterConfig {
   /**
-   * How fast the cooldown occurs. After 1 seco
+   * How fast the cooldown occurs.
+   *
+   * Defaults to 1.
    */
   readonly cooldownRate?: number;
   /**
-   * The maximum amount of wait time to limit requests to, if applicable.
+   * The maximum amount of wait time to limit exponential requests to, if applicable.
    */
   readonly maxWaitTime?: Maybe<Milliseconds>;
   /**
@@ -35,10 +43,6 @@ export type FullExponentialPromiseRateLimiterConfig = Required<Omit<ExponentialP
 
 export interface ExponentialPromiseRateLimiter extends PromiseRateLimiter {
   /**
-   * Returns the expected wait time for the next wait.
-   */
-  getNextWaitTime(): Milliseconds;
-  /**
    * Returns the current config.
    */
   getConfig(): FullExponentialPromiseRateLimiterConfig;
@@ -52,7 +56,7 @@ export interface ExponentialPromiseRateLimiter extends PromiseRateLimiter {
   reset(): void;
 }
 
-export function exponentialPromiseRateLimiter(inputConfig?: Maybe<ExponentialPromiseRateLimiterConfig>): ExponentialPromiseRateLimiter {
+export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialPromiseRateLimiterConfig>): ExponentialPromiseRateLimiter {
   const DEFAULT_COOLDOWN_RATE = 1;
   const DEFAULT_EXPONENT_RATE = 2;
   let config: FullExponentialPromiseRateLimiterConfig = { cooldownRate: DEFAULT_COOLDOWN_RATE, exponentRate: DEFAULT_EXPONENT_RATE };
@@ -75,8 +79,8 @@ export function exponentialPromiseRateLimiter(inputConfig?: Maybe<ExponentialPro
     }
   }
 
-  if (inputConfig) {
-    setConfig(inputConfig);
+  if (initialConfig) {
+    setConfig(initialConfig);
   }
 
   function reset(): void {
@@ -99,8 +103,8 @@ export function exponentialPromiseRateLimiter(inputConfig?: Maybe<ExponentialPro
     return config.maxWaitTime ? Math.min(waitTime, config.maxWaitTime) : waitTime;
   }
 
-  function getNextWaitTime(): Milliseconds {
-    return _nextWaitTime(0);
+  function getNextWaitTime(increase?: number): Milliseconds {
+    return _nextWaitTime(increase ?? 0);
   }
 
   function waitForRateLimit(): Promise<void> {
@@ -114,5 +118,153 @@ export function exponentialPromiseRateLimiter(inputConfig?: Maybe<ExponentialPro
     getConfig,
     setConfig,
     reset
+  };
+}
+
+// MARK: Count Down limiter
+export interface ResetPeriodPromiseRateLimiterConfig extends Partial<ExponentialPromiseRateLimiterConfig> {
+  /**
+   * The number of times the rate limiter can be used before it needs to be reset.
+   */
+  readonly limit: number;
+  /**
+   * Optional specific Date/Time at which to reset the remaining count back to the limit.
+   */
+  readonly resetAt?: Maybe<Date>;
+  /**
+   * Amount of time in milliseconds to set the next resetAt time when reset is called.
+   */
+  readonly resetPeriod: Milliseconds;
+}
+
+/**
+ * A rate limiter that resets every specific period of time and has a limited amount of items that can go out.
+ */
+export interface ResetPeriodPromiseRateLimiter extends PromiseRateLimiter {
+  /**
+   * Returns the current limit details with the amount remaining.
+   */
+  getRemainingLimit(): number;
+  /**
+   * Returns the number of milliseconds until the next reset.
+   */
+  getTimeUntilNextReset(): Milliseconds;
+  /**
+   * Returns the next reset at date/time.
+   */
+  getResetAt(): Date;
+  /**
+   * Sets the new config.
+   *
+   * @param limit
+   */
+  setConfig(config: Partial<ResetPeriodPromiseRateLimiterConfig>, andReset?: boolean): void;
+  /**
+   * Manually resets the "remaining" amount on the limit back to the limit amount.
+   */
+  reset(): void;
+}
+
+/**
+ * Creates a ResetPeriodPromiseRateLimiter.
+ *
+ * @param limit
+ */
+export function resetPeriodPromiseRateLimiter(initialConfig: ResetPeriodPromiseRateLimiterConfig): ResetPeriodPromiseRateLimiter {
+  const DEFAULT_EXPONENT_RATE = 1.5;
+  const exponentialLimiter = exponentialPromiseRateLimiter({ exponentRate: DEFAULT_EXPONENT_RATE, maxWaitTime: MS_IN_SECOND * 8, ...initialConfig });
+
+  let resetPeriod: Milliseconds = MS_IN_MINUTE;
+  let nextResetAt = new Date();
+  let limit = 0;
+  let remaining = 0;
+
+  setConfig(initialConfig, true);
+
+  function _checkRemainingReset() {
+    if (nextResetAt && isPast(nextResetAt)) {
+      reset();
+    }
+  }
+
+  function reset(): void {
+    remaining = limit;
+    nextResetAt = new Date(Date.now() + resetPeriod);
+    // do not reset the exponential limiter
+  }
+
+  function getResetAt() {
+    return nextResetAt;
+  }
+
+  function getTimeUntilNextReset(): Milliseconds {
+    return Math.max(0, nextResetAt.getTime() - Date.now());
+  }
+
+  function getRemainingLimit() {
+    _checkRemainingReset();
+    return remaining;
+  }
+
+  function setConfig(config: Partial<ResetPeriodPromiseRateLimiterConfig>, andReset = false): void {
+    limit = config.limit ?? limit;
+    resetPeriod = config.resetPeriod ?? resetPeriod;
+
+    const exponentialLimiterConfig: ExponentialPromiseRateLimiterConfig = {
+      cooldownRate: config.cooldownRate ?? Math.max(0.1, resetPeriod / MS_IN_SECOND),
+      exponentRate: config.exponentRate ?? DEFAULT_EXPONENT_RATE,
+      maxWaitTime: config.maxWaitTime ?? MS_IN_SECOND * 8
+    };
+
+    exponentialLimiter.setConfig(exponentialLimiterConfig, andReset);
+
+    if (andReset) {
+      reset();
+    }
+
+    nextResetAt = config.resetAt ?? nextResetAt;
+  }
+
+  function _nextWaitTime(increasedExecutions: number): Milliseconds {
+    function computeNextWaitTime(): Milliseconds {
+      remaining -= increasedExecutions;
+      return exponentialLimiter.getNextWaitTime(increasedExecutions);
+    }
+
+    let waitTime: Milliseconds = 0;
+
+    if (remaining > 0) {
+      waitTime = computeNextWaitTime();
+    } else {
+      // if none remaining, try and reset
+      _checkRemainingReset();
+
+      if (remaining > 0) {
+        waitTime = computeNextWaitTime();
+      } else {
+        waitTime = getTimeUntilNextReset();
+      }
+    }
+
+    return waitTime;
+  }
+
+  function getNextWaitTime(increase?: number): Milliseconds {
+    return _nextWaitTime(increase ?? 0);
+  }
+
+  function waitForRateLimit(): Promise<void> {
+    const waitTime = _nextWaitTime(1);
+    return waitForMs(waitTime);
+  }
+
+  return {
+    getRemainingLimit,
+    getTimeUntilNextReset,
+    getResetAt,
+    setConfig,
+    reset,
+    getNextWaitTime,
+    waitForRateLimit
   };
 }
