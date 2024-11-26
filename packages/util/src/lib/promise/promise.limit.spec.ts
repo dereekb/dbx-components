@@ -98,6 +98,9 @@ describe('burstPromiseRateLimiter()', () => {
     it('should reset the rate limiter', async () => {
       const limiter = exponentialPromiseRateLimiter();
 
+      const waitTimeS = limiter.getNextWaitTime();
+      expect(waitTimeS).toBe(0);
+
       const a = limiter.waitForRateLimit();
       limiter.reset(); // reset
 

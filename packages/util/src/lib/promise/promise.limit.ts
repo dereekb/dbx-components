@@ -1,7 +1,7 @@
-import { MS_IN_MINUTE, MS_IN_SECOND, Milliseconds, isPast } from '../date/date';
-import { RequiredOnKeys } from '../type';
+import { MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, Milliseconds, isPast } from '../date/date';
 import { Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
+import { getBaseLog } from '../number/number';
 
 /**
  * Interface for a rate limiter.
@@ -29,8 +29,10 @@ export interface ExponentialPromiseRateLimiterConfig {
   readonly cooldownRate?: number;
   /**
    * The maximum amount of wait time to limit exponential requests to, if applicable.
+   *
+   * Defaults to 1 hour.
    */
-  readonly maxWaitTime?: Maybe<Milliseconds>;
+  readonly maxWaitTime?: Milliseconds;
   /**
    * The base exponent of the growth.
    *
@@ -39,7 +41,7 @@ export interface ExponentialPromiseRateLimiterConfig {
   readonly exponentRate?: number;
 }
 
-export type FullExponentialPromiseRateLimiterConfig = Required<Omit<ExponentialPromiseRateLimiterConfig, 'maxWaitTime'>> & Pick<ExponentialPromiseRateLimiterConfig, 'maxWaitTime'>;
+export type FullExponentialPromiseRateLimiterConfig = Required<ExponentialPromiseRateLimiterConfig>;
 
 export interface ExponentialPromiseRateLimiter extends PromiseRateLimiter {
   /**
@@ -59,28 +61,36 @@ export interface ExponentialPromiseRateLimiter extends PromiseRateLimiter {
 export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialPromiseRateLimiterConfig>): ExponentialPromiseRateLimiter {
   const DEFAULT_COOLDOWN_RATE = 1;
   const DEFAULT_EXPONENT_RATE = 2;
-  let config: FullExponentialPromiseRateLimiterConfig = { cooldownRate: DEFAULT_COOLDOWN_RATE, exponentRate: DEFAULT_EXPONENT_RATE };
+  const DEFAULT_MAX_WAIT_TIME = MS_IN_HOUR;
+
+  let config: FullExponentialPromiseRateLimiterConfig = { cooldownRate: DEFAULT_COOLDOWN_RATE, exponentRate: DEFAULT_EXPONENT_RATE, maxWaitTime: DEFAULT_MAX_WAIT_TIME };
   let currentCount: number = 0;
+  let countForMaxWaitTime: number = Number.MAX_SAFE_INTEGER;
   let timeOfLastExecution: Date = new Date();
+
+  setConfig(initialConfig ?? config);
 
   function getConfig(): FullExponentialPromiseRateLimiterConfig {
     return { ...config };
   }
 
-  function setConfig(limit: Partial<ExponentialPromiseRateLimiterConfig>, andReset = false): void {
+  function setConfig(newConfig: Partial<ExponentialPromiseRateLimiterConfig>, andReset = false): void {
+    const cooldownRate = newConfig.cooldownRate ?? DEFAULT_COOLDOWN_RATE;
+    const maxWaitTime = newConfig.maxWaitTime ?? DEFAULT_MAX_WAIT_TIME;
+    const exponentRate = newConfig.exponentRate ?? DEFAULT_EXPONENT_RATE;
+
     config = {
-      cooldownRate: limit.cooldownRate ?? DEFAULT_COOLDOWN_RATE,
-      maxWaitTime: limit.maxWaitTime,
-      exponentRate: limit.exponentRate ?? DEFAULT_EXPONENT_RATE
+      cooldownRate,
+      maxWaitTime,
+      exponentRate
     };
+
+    // calculate max count for max wait time to use for determining rounding of nextWaitTime
+    countForMaxWaitTime = getBaseLog(exponentRate, maxWaitTime / MS_IN_SECOND + 1);
 
     if (andReset) {
       reset();
     }
-  }
-
-  if (initialConfig) {
-    setConfig(initialConfig);
   }
 
   function reset(): void {
@@ -99,8 +109,11 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
       timeOfLastExecution = new Date();
     }
 
-    const waitTime = count === 0 ? 0 : Math.pow(config.exponentRate, Math.max(count - 1, 0)) * MS_IN_SECOND;
-    return config.maxWaitTime ? Math.min(waitTime, config.maxWaitTime) : waitTime;
+    if (count >= countForMaxWaitTime) {
+      return config.maxWaitTime;
+    } else {
+      return count === 0 ? 0 : Math.pow(config.exponentRate, Math.max(count - 1, 0)) * MS_IN_SECOND;
+    }
   }
 
   function getNextWaitTime(increase?: number): Milliseconds {

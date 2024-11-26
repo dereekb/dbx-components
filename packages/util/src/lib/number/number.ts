@@ -150,3 +150,18 @@ export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => 
 export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResult<number> {
   return minAndMaxFunction(sortCompareNumberFunction)(values);
 }
+
+/**
+ * Returns the lorgathirm of y with base x.
+ *
+ * Example:
+ * - (log2(16)): x = 2, y = 16 -> 4    (2^4 = 16)
+ * - (log10(100)): x = 10, y = 100 -> 2   (10^2 = 100)
+ *
+ * @param x
+ * @param y
+ * @returns
+ */
+export function getBaseLog(x: number, y: number): number {
+  return Math.log(y) / Math.log(x);
+}
