@@ -50,8 +50,8 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
   function configForLimit(limit: number, resetAt?: Date) {
     return {
       limit: defaultLimit,
-      cooldownRate: limit / (defaultResetPeriod / MS_IN_SECOND),
-      exponentRate: 1.12,
+      cooldownRate: 1.2 * (limit / (defaultResetPeriod / MS_IN_SECOND)),
+      exponentRate: 1.08,
       maxWaitTime: MS_IN_SECOND * 10,
       resetPeriod: defaultResetPeriod
     };
