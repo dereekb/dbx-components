@@ -50,6 +50,8 @@ interface TestCandidate extends ZohoRecruitRecord {
   Last_Name: string;
 }
 
+jest.setTimeout(12000);
+
 @Module(appZohoRecruitModuleMetadata({}))
 export class TestZohoRecruitModule {}
 
