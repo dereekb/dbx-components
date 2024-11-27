@@ -1,4 +1,4 @@
-import { MS_IN_SECOND, Maybe, Milliseconds, PromiseOrValue, ResetPeriodPromiseRateLimiter, resetPeriodPromiseRateLimiter } from '@dereekb/util';
+import { MS_IN_SECOND, Maybe, Milliseconds, PromiseOrValue, ResetPeriodPromiseRateLimiter, ResetPeriodPromiseRateLimiterConfig, resetPeriodPromiseRateLimiter } from '@dereekb/util';
 import { FetchResponseError, RateLimitedFetchHandler, rateLimitedFetchHandler } from '@dereekb/util/fetch';
 import { DEFAULT_ZOHO_API_RATE_LIMIT, DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD, ZOHO_RATE_LIMIT_REMAINING_HEADER, ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, ZohoRateLimitHeaderDetails, zohoRateLimitHeaderDetails } from './zoho.error.api';
 
@@ -47,13 +47,15 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOHO_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD;
 
-  function configForLimit(limit: number, resetAt?: Date) {
+  function configForLimit(limit: number, resetAt?: Date): ResetPeriodPromiseRateLimiterConfig {
     return {
       limit: defaultLimit,
-      cooldownRate: 1.2 * (limit / (defaultResetPeriod / MS_IN_SECOND)),
-      exponentRate: 1.08,
+      startLimitAt: Math.ceil(limit / 20), // can do 5% of the requests of the limit before rate limiting begins
+      cooldownRate: 1.1 * (limit / (defaultResetPeriod / MS_IN_SECOND)),
+      exponentRate: 1.1,
       maxWaitTime: MS_IN_SECOND * 10,
-      resetPeriod: defaultResetPeriod
+      resetPeriod: defaultResetPeriod,
+      resetAt
     };
   }
 

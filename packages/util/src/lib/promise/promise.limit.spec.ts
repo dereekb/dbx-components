@@ -13,7 +13,7 @@ describe('burstPromiseRateLimiter()', () => {
     const b = limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
 
-    expect(waitTimeB).toBeGreaterThan(2 / MS_IN_SECOND);
+    expect(waitTimeB).toBeGreaterThan(MS_IN_SECOND / 2);
     expect(waitTimeB).toBeLessThanOrEqual(2 * MS_IN_SECOND);
 
     const c = limiter.waitForRateLimit();
@@ -63,7 +63,7 @@ describe('burstPromiseRateLimiter()', () => {
 
     const b = limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
-    expect(waitTimeB).toBeGreaterThan(2 / MS_IN_SECOND);
+    expect(waitTimeB).toBeGreaterThan(MS_IN_SECOND / 2);
     expect(waitTimeB).toBeLessThanOrEqual(2 * MS_IN_SECOND);
 
     await waitForMs(2 * MS_IN_SECOND); // wait for 2 seconds
@@ -83,7 +83,7 @@ describe('burstPromiseRateLimiter()', () => {
 
     limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
-    expect(waitTimeB).toBeGreaterThan(2 / MS_IN_SECOND);
+    expect(waitTimeB).toBeGreaterThan(MS_IN_SECOND / 2);
     expect(waitTimeB).toBeLessThanOrEqual(2 * MS_IN_SECOND);
 
     await waitForMs(MS_IN_SECOND); // wait for 1 second
@@ -124,6 +124,30 @@ describe('burstPromiseRateLimiter()', () => {
 
       const waitTimeA = limiter.getNextWaitTime();
       expect(waitTimeA).toBeLessThanOrEqual(1000);
+
+      await Promise.all([a, b, c]);
+    });
+  });
+
+  describe('startLimitAt', () => {
+    it('should limit the wait time starting earlier if startLimitAt is negative', async () => {
+      const limiter = exponentialPromiseRateLimiter({ maxWaitTime: 1000, startLimitAt: -1 });
+      const a = limiter.waitForRateLimit();
+
+      const waitTimeA = limiter.getNextWaitTime();
+      expect(waitTimeA).toBeLessThanOrEqual(1000);
+
+      await Promise.all([a]);
+    });
+
+    it('should limit the wait time starting later if startLimitAt is positive', async () => {
+      const limiter = exponentialPromiseRateLimiter({ maxWaitTime: 1000, startLimitAt: 3 });
+      const a = limiter.waitForRateLimit();
+      const b = limiter.waitForRateLimit();
+      const c = limiter.waitForRateLimit();
+
+      const waitTimeA = limiter.getNextWaitTime();
+      expect(waitTimeA).toBeLessThanOrEqual(0);
 
       await Promise.all([a, b, c]);
     });

@@ -38,6 +38,12 @@ export interface EnableTogglePromiseRateLimiter extends PromiseRateLimiter {
 // MARK: Exponential Limiter
 export interface ExponentialPromiseRateLimiterConfig {
   /**
+   * The base count to start limiting requests at. Minimum of 0 allowed.
+   *
+   * Defaults to 0.
+   */
+  readonly startLimitAt?: number;
+  /**
    * How fast the cooldown occurs.
    *
    * Defaults to 1.
@@ -75,11 +81,12 @@ export interface ExponentialPromiseRateLimiter extends EnableTogglePromiseRateLi
 }
 
 export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialPromiseRateLimiterConfig>): ExponentialPromiseRateLimiter {
+  const DEFAULT_START_LIMIT_AT = 1;
   const DEFAULT_COOLDOWN_RATE = 1;
   const DEFAULT_EXPONENT_RATE = 2;
   const DEFAULT_MAX_WAIT_TIME = MS_IN_HOUR;
 
-  let config: FullExponentialPromiseRateLimiterConfig = { cooldownRate: DEFAULT_COOLDOWN_RATE, exponentRate: DEFAULT_EXPONENT_RATE, maxWaitTime: DEFAULT_MAX_WAIT_TIME };
+  let config: FullExponentialPromiseRateLimiterConfig = { startLimitAt: DEFAULT_START_LIMIT_AT, cooldownRate: DEFAULT_COOLDOWN_RATE, exponentRate: DEFAULT_EXPONENT_RATE, maxWaitTime: DEFAULT_MAX_WAIT_TIME };
   let currentCount: number = 0;
   let countForMaxWaitTime: number = Number.MAX_SAFE_INTEGER;
   let timeOfLastExecution: Date = new Date();
@@ -100,11 +107,13 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
   }
 
   function setConfig(newConfig: Partial<ExponentialPromiseRateLimiterConfig>, andReset = false): void {
+    const startLimitAt = Math.max(0, newConfig.startLimitAt ?? DEFAULT_START_LIMIT_AT);
     const cooldownRate = newConfig.cooldownRate ?? DEFAULT_COOLDOWN_RATE;
     const maxWaitTime = newConfig.maxWaitTime ?? DEFAULT_MAX_WAIT_TIME;
     const exponentRate = newConfig.exponentRate ?? DEFAULT_EXPONENT_RATE;
 
     config = {
+      startLimitAt,
       cooldownRate,
       maxWaitTime,
       exponentRate
@@ -132,16 +141,17 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
     const msSinceLastExecution = Date.now() - timeOfLastExecution.getTime();
     const cooldown = (msSinceLastExecution * cooldownRate) / MS_IN_SECOND; // the cooldown amount
     const count = Math.max(currentCount - cooldown, 0);
+    const effectiveCount = Math.max(0, count - config.startLimitAt);
 
     if (increasedExecutions) {
       currentCount = count + increasedExecutions;
       timeOfLastExecution = new Date();
     }
 
-    if (count >= countForMaxWaitTime) {
+    if (effectiveCount >= countForMaxWaitTime) {
       return config.maxWaitTime;
     } else {
-      return (Math.pow(config.exponentRate, Math.max(count - 1, 0)) - 1) * MS_IN_SECOND;
+      return (Math.pow(config.exponentRate, Math.max(effectiveCount, 0)) - 1) * MS_IN_SECOND;
     }
   }
 
