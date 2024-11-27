@@ -1,10 +1,21 @@
 import { MS_IN_SECOND, Maybe, Milliseconds, PromiseOrValue, ResetPeriodPromiseRateLimiter, resetPeriodPromiseRateLimiter } from '@dereekb/util';
 import { FetchResponseError, RateLimitedFetchHandler, rateLimitedFetchHandler } from '@dereekb/util/fetch';
-import { DEFAULT_ZOHO_API_RATE_LIMIT, DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD, ZOHO_RATE_LIMIT_REMAINING_HEADER, ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, zohoRateLimitHeaderDetails } from './zoho.error.api';
+import { DEFAULT_ZOHO_API_RATE_LIMIT, DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD, ZOHO_RATE_LIMIT_REMAINING_HEADER, ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, ZohoRateLimitHeaderDetails, zohoRateLimitHeaderDetails } from './zoho.error.api';
 
 export interface ZohoRateLimiterRef {
   readonly zohoRateLimiter: ResetPeriodPromiseRateLimiter;
 }
+
+/**
+ * Function to execute when too many requests is reached.
+ *
+ * Typically used for logging of some sort. Thrown errors are ignored.
+ */
+export type ZohoRateLimitedTooManyRequestsLogFunction = (headers: ZohoRateLimitHeaderDetails, response: Response, fetchResponseError?: FetchResponseError) => PromiseOrValue<void>;
+
+export const DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION = (headers: ZohoRateLimitHeaderDetails) => {
+  console.warn(`zohoRateLimitedFetchHandler(): Too many requests made. The limit is ${headers.limit} requests per reset period. Will be reset at ${headers.resetAt}.`);
+};
 
 export interface ZohoRateLimitedFetchHandlerConfig {
   /**
@@ -21,11 +32,18 @@ export interface ZohoRateLimitedFetchHandlerConfig {
    * Defaults to 1 minute in milliseconds.
    */
   readonly resetPeriod?: Milliseconds;
+  /**
+   * Optional function to execute when too many requests is reached.t
+   *
+   * Defaults to the default logging function, unless false is passed.
+   */
+  readonly onTooManyRequests?: ZohoRateLimitedTooManyRequestsLogFunction | false;
 }
 
 export type ZohoRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPromiseRateLimiter>;
 
 export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchHandlerConfig>): ZohoRateLimitedFetchHandler {
+  const onTooManyRequests = config?.onTooManyRequests !== false ? config?.onTooManyRequests ?? DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUETS_LOG_FUNCTION : undefined;
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOHO_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD;
 
@@ -65,7 +83,13 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
           enabled = true;
 
           // only retry if it's a TOO MANY REQUESTS error
-          shouldRetry = response.status === ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE;
+          if (response.status === ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
+            shouldRetry = true;
+
+            try {
+              onTooManyRequests?.(headerDetails, response, fetchResponseError);
+            } catch (e) {}
+          }
         }
       }
 
