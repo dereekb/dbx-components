@@ -1,11 +1,11 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { type FetchService, mergeRequestHeaders, mergeRequestInits } from './fetch';
-import { nodeFetchService } from './provider';
+import { fetchApiFetchService } from './provider';
 import { FetchRequestFactoryError } from './error';
 
 // TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.
 
-const testFetch: FetchService = nodeFetchService;
+const testFetch: FetchService = fetchApiFetchService;
 
 jest.setTimeout(30000);
 

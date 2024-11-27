@@ -2,6 +2,7 @@ import { FactoryWithRequiredInput } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
 import { ZohoApiUrl, ZohoRefreshToken, ZohoApiUrlKey, ZohoConfig, ZohoApiServiceName } from '../zoho.config';
 import { ZohoServiceAccessTokenKey } from '../accounts';
+import { ZohoRateLimiterRef } from '../zoho.limit';
 
 export const ZOHO_RECRUIT_SERVICE_NAME: ZohoApiServiceName | ZohoServiceAccessTokenKey = 'recruit';
 
@@ -23,7 +24,7 @@ export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): Zo
   }
 }
 
-export type ZohoRecruitConfig = ZohoConfig
+export type ZohoRecruitConfig = ZohoConfig;
 
 export interface ZohoRecruitFetchFactoryInput {
   readonly apiUrl: ZohoRecruitApiUrl;
@@ -31,7 +32,7 @@ export interface ZohoRecruitFetchFactoryInput {
 
 export type ZohoRecruitFetchFactory = FactoryWithRequiredInput<ConfiguredFetch, ZohoRecruitFetchFactoryInput>;
 
-export interface ZohoRecruitContext {
+export interface ZohoRecruitContext extends ZohoRateLimiterRef {
   readonly fetch: ConfiguredFetch;
   readonly fetchJson: FetchJsonFunction;
   readonly config: ZohoRecruitConfig;

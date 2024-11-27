@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { MS_IN_MINUTE, Maybe, UnixDateTimeNumber } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonInterceptJsonResponseFunction, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
@@ -220,6 +220,67 @@ export const ZOHO_DUPLICATE_DATA_ERROR_CODE = 'DUPLICATE_DATA';
 export const ZOHO_INVALID_DATA_ERROR_CODE = 'INVALID_DATA';
 
 /**
+ * Error when too many requests are made in a short period of time.
+ */
+export const ZOHO_TOO_MANY_REQUESTS_ERROR_CODE = 'TOO_MANY_REQUESTS';
+
+/**
+ * The status code that Zoho uses to indicates that too many requests have been made in a short period of time.
+ */
+export const ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE = 429;
+
+export const ZOHO_RATE_LIMIT_LIMIT_HEADER = 'X-RATELIMIT-LIMIT';
+export const ZOHO_RATE_LIMIT_REMAINING_HEADER = 'X-RATELIMIT-REMAINING';
+export const ZOHO_RATE_LIMIT_RESET_HEADER = 'X-RATELIMIT-RESET';
+
+export const DEFAULT_ZOHO_API_RATE_LIMIT = 100;
+export const DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD = MS_IN_MINUTE;
+
+export interface ZohoRateLimitHeaderDetails {
+  /**
+   * Total limit in a given period.
+   */
+  readonly limit: number;
+  /**
+   * Total number of remaining allowed requests.
+   */
+  readonly remaining: number;
+  /**
+   * The time at which the rate limit will reset.
+   */
+  readonly reset: UnixDateTimeNumber;
+  /**
+   * The time at which the rate limit will reset.
+   */
+  readonly resetAt: Date;
+}
+
+export function zohoRateLimitHeaderDetails(headers: Headers): Maybe<ZohoRateLimitHeaderDetails> {
+  const limitHeader = headers.has(ZOHO_RATE_LIMIT_REMAINING_HEADER);
+  const remainingHeader = headers.get(ZOHO_RATE_LIMIT_REMAINING_HEADER);
+  const resetHeader = headers.get(ZOHO_RATE_LIMIT_RESET_HEADER);
+
+  let result: Maybe<ZohoRateLimitHeaderDetails> = null;
+
+  if (limitHeader != null && remainingHeader != null && resetHeader != null) {
+    const limit = Number(limitHeader);
+    const remaining = Number(remainingHeader);
+    const reset = Number(resetHeader);
+    const resetAt = new Date(reset);
+
+    result = { limit, remaining, reset, resetAt };
+  }
+
+  return result;
+}
+
+export class ZohoTooManyRequestsError extends ZohoServerFetchResponseError {
+  get headerDetails(): Maybe<ZohoRateLimitHeaderDetails> {
+    return zohoRateLimitHeaderDetails(this.responseError.response.headers);
+  }
+}
+
+/**
  * Function that parses/transforms a ZohoServerErrorResponseData into a general ZohoServerError or other known error type.
  *
  * @param errorResponseData
@@ -242,6 +303,9 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
         break;
       case ZOHO_INVALID_QUERY_ERROR_CODE:
         result = new ZohoInvalidQueryError(errorData, responseError);
+        break;
+      case ZOHO_TOO_MANY_REQUESTS_ERROR_CODE:
+        result = new ZohoTooManyRequestsError(errorData, responseError);
         break;
       default:
         result = new ZohoServerFetchResponseError(errorData, responseError);

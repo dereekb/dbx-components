@@ -226,7 +226,7 @@ export interface ZohoRecruitSearchRecordsCriteriaTree<T = any> {
   readonly or?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>[]>;
 }
 
-export type ZohoRecruitSearchRecordsCriteriaTreeElement<T = any> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree | ZohoRecruitSearchRecordsCriteriaString;
+export type ZohoRecruitSearchRecordsCriteriaTreeElement<T = any> = ZohoRecruitSearchRecordsCriteriaEntryArray<T> | ZohoRecruitSearchRecordsCriteriaTree<T> | ZohoRecruitSearchRecordsCriteriaString;
 
 export type ZohoRecruitSearchRecordsCriteriaFilterType = 'starts_with' | 'equals' | 'contains';
 
