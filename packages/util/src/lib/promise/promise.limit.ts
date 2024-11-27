@@ -141,7 +141,7 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
     if (count >= countForMaxWaitTime) {
       return config.maxWaitTime;
     } else {
-      return count === 0 ? 0 : Math.pow(config.exponentRate, Math.max(count - 1, 0)) * MS_IN_SECOND;
+      return (Math.pow(config.exponentRate, Math.max(count - 1, 0)) - 1) * MS_IN_SECOND;
     }
   }
 

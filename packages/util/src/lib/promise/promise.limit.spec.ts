@@ -8,22 +8,22 @@ describe('burstPromiseRateLimiter()', () => {
     const a = limiter.waitForRateLimit();
 
     const waitTimeA = limiter.getNextWaitTime();
-    expect(waitTimeA).toBeGreaterThan(0);
-    expect(waitTimeA).toBeLessThanOrEqual(MS_IN_SECOND);
+    expect(waitTimeA).toBe(0);
 
     const b = limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
+
     expect(waitTimeB).toBeGreaterThan(2 / MS_IN_SECOND);
     expect(waitTimeB).toBeLessThanOrEqual(2 * MS_IN_SECOND);
 
     const c = limiter.waitForRateLimit();
     const waitTimeC = limiter.getNextWaitTime();
-    expect(waitTimeC).toBeGreaterThan(3 * MS_IN_SECOND);
+    expect(waitTimeC).toBeGreaterThan(2.5 * MS_IN_SECOND);
     expect(waitTimeC).toBeLessThanOrEqual(4 * MS_IN_SECOND);
 
     const d = limiter.waitForRateLimit();
     const waitTimeD = limiter.getNextWaitTime();
-    expect(waitTimeD).toBeGreaterThan(7 * MS_IN_SECOND);
+    expect(waitTimeD).toBeGreaterThan(6.5 * MS_IN_SECOND);
     expect(waitTimeD).toBeLessThanOrEqual(8 * MS_IN_SECOND);
 
     await Promise.all([a, b, c, d]);
@@ -39,18 +39,17 @@ describe('burstPromiseRateLimiter()', () => {
     const a = limiter.waitForRateLimit();
 
     const waitTimeA = limiter.getNextWaitTime();
-    expect(waitTimeA).toBeGreaterThan(0);
-    expect(waitTimeA).toBeLessThanOrEqual(MS_IN_SECOND);
+    expect(waitTimeA).toBe(0);
 
     const b = limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
-    expect(waitTimeB).toBeGreaterThan(2 / MS_IN_SECOND);
-    expect(waitTimeB).toBeLessThanOrEqual(2 * MS_IN_SECOND);
+    expect(waitTimeB).toBeGreaterThan(0);
+    expect(waitTimeB).toBeLessThanOrEqual(MS_IN_SECOND);
 
     const c = limiter.waitForRateLimit();
     const waitTimeC = limiter.getNextWaitTime();
-    expect(waitTimeC).toBeGreaterThan(MS_IN_SECOND);
-    expect(waitTimeC).toBeLessThanOrEqual(2 * MS_IN_SECOND);
+    expect(waitTimeC).toBeGreaterThan(MS_IN_SECOND / 3);
+    expect(waitTimeC).toBeLessThanOrEqual(MS_IN_SECOND);
 
     await Promise.all([a, b, c]);
   });
@@ -80,8 +79,7 @@ describe('burstPromiseRateLimiter()', () => {
     limiter.waitForRateLimit();
 
     const waitTimeA = limiter.getNextWaitTime();
-    expect(waitTimeA).toBeGreaterThan(0);
-    expect(waitTimeA).toBeLessThanOrEqual(MS_IN_SECOND);
+    expect(waitTimeA).toBe(0);
 
     limiter.waitForRateLimit();
     const waitTimeB = limiter.getNextWaitTime();
