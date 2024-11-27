@@ -3,6 +3,7 @@ export * from './is';
 export * from './poll';
 export * from './map';
 export * from './promise';
+export * from './promise.limit';
 export * from './promise.loop';
 export * from './promise.ref';
 export * from './promise.factory';

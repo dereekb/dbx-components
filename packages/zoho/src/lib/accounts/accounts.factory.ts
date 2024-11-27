@@ -1,10 +1,11 @@
-import { fetchJsonFunction, nodeFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZohoAccountsConfig, ZohoAccountsContext, ZohoAccountsContextRef, ZohoAccountsFetchFactory, ZohoAccountsFetchFactoryInput, zohoAccountsConfigApiUrl } from './accounts.config';
 import { LogZohoServerErrorFunction } from '../zoho.error.api';
 import { ZohoAccountsAuthFailureError, handleZohoAccountsErrorFetch, interceptZohoAccountsErrorResponse } from './accounts.error.api';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoAccessTokenFactory, ZohoAccessTokenRefresher } from './accounts';
 import { MS_IN_MINUTE, MS_IN_SECOND, Maybe, Milliseconds } from '@dereekb/util';
 import { accessToken } from './accounts.api';
+import { zohoRateLimitedFetchHandler } from '../zoho.limit';
 
 export type ZohoAccounts = ZohoAccountsContextRef;
 
@@ -22,16 +23,19 @@ export interface ZohoAccountsFactoryConfig {
 export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
 
 export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): ZohoAccountsFactory {
+  const fetchHandler = zohoRateLimitedFetchHandler();
+
   const {
     logZohoServerErrorFunction,
     fetchFactory = (input: ZohoAccountsFetchFactoryInput) =>
-      nodeFetchService.makeFetch({
+      fetchApiFetchService.makeFetch({
         baseUrl: input.apiUrl,
         baseRequest: {
           headers: {
             'Content-Type': 'application/json'
           }
         },
+        fetchHandler,
         timeout: 20 * 1000, // 20 second timeout
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout

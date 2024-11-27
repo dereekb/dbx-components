@@ -1,13 +1,19 @@
-import { fetchJsonFunction, nodeFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
+import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZohoRecruitConfig, ZohoRecruitContext, ZohoRecruitContextRef, ZohoRecruitFetchFactory, ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
 import { LogZohoServerErrorFunction } from '../zoho.error.api';
 import { handleZohoRecruitErrorFetch, interceptZohoRecruitErrorResponse } from './recruit.error.api';
 import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
+import { ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
+import { Maybe } from '@dereekb/util';
 
 export type ZohoRecruit = ZohoRecruitContextRef;
 
 export interface ZohoRecruitFactoryConfig extends ZohoAccountsContextRef {
+  /**
+   * Custom ZohoRateLimitedFetchHandlerConfig
+   */
+  rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
    * Creates a new fetch instance to use when making calls.
    */
@@ -23,11 +29,12 @@ export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {
   const { accountsContext } = factoryConfig;
   const accessTokenStringFactory = zohoAccessTokenStringFactory(accountsContext.loadAccessToken);
+  const fetchHandler = zohoRateLimitedFetchHandler(factoryConfig.rateLimiterConfig);
 
   const {
     logZohoServerErrorFunction,
     fetchFactory = (input: ZohoRecruitFetchFactoryInput) =>
-      nodeFetchService.makeFetch({
+      fetchApiFetchService.makeFetch({
         baseUrl: input.apiUrl,
         baseRequest: async () => ({
           headers: {
@@ -35,6 +42,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
             Authorization: `Bearer ${await accessTokenStringFactory()}`
           }
         }),
+        fetchHandler,
         timeout: 20 * 1000, // 20 second timeout
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
@@ -61,7 +69,8 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
       config: {
         ...config,
         apiUrl
-      }
+      },
+      zohoRateLimiter: fetchHandler._rateLimiter
     };
 
     const zohoRecruit: ZohoRecruit = {

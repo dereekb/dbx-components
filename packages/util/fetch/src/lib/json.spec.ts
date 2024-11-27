@@ -1,9 +1,9 @@
 import { type WebsiteDomain, type WebsitePath } from '@dereekb/util';
 import { type FetchService } from './fetch';
 import { fetchJsonFunction } from './json';
-import { nodeFetchService } from './provider';
+import { fetchApiFetchService } from './provider';
 
-const testFetch: FetchService = nodeFetchService;
+const testFetch: FetchService = fetchApiFetchService;
 
 jest.setTimeout(30000);
 

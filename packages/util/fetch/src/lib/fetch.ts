@@ -38,6 +38,11 @@ export function fetchService(config: FetchServiceConfig): FetchService {
 // MARK: Make Fetch
 export type MapFetchResponseFunction = MapFunction<Promise<Response>, Promise<Response>>;
 
+/**
+ * Custom fetch handler that takes in a Request and fetch function and returns a Response.
+ */
+export type FetchHandler = (request: Request, makeFetch: typeof fetch) => Promise<Response>;
+
 export interface ConfigureFetchInput extends FetchRequestFactoryInput {
   makeFetch?: typeof fetch;
   /**
@@ -53,6 +58,10 @@ export interface ConfigureFetchInput extends FetchRequestFactoryInput {
    */
   requireOkResponse?: boolean;
   /**
+   * (Optional) Custom fetch handler.
+   */
+  fetchHandler?: FetchHandler;
+  /**
    * (Optional) MapFetchResponseFunction
    *
    * If requireOkResponse is true, this mapping occurs afterwards.
@@ -61,13 +70,21 @@ export interface ConfigureFetchInput extends FetchRequestFactoryInput {
 }
 
 /**
+ * Default FetchHabdler
+ * @param request
+ * @param makeFetch
+ * @returns
+ */
+export const DEFAULT_FETCH_HANDLER: FetchHandler = (request, makeFetch) => makeFetch(request);
+
+/**
  * Creates a function that wraps fetch and uses a FetchRequestFactory to generate a Request before invoking Fetch.
  *
  * @param config
  * @returns
  */
 export function configureFetch(config: ConfigureFetchInput): ConfiguredFetchWithTimeout {
-  const { makeFetch: inputMakeFetch = fetch, useTimeout, requireOkResponse: inputRequireOkResponse, mapResponse } = config;
+  const { makeFetch: inputMakeFetch = fetch, fetchHandler = DEFAULT_FETCH_HANDLER, useTimeout, requireOkResponse: inputRequireOkResponse, mapResponse } = config;
   let makeFetch = inputMakeFetch;
 
   if (useTimeout) {
@@ -84,7 +101,7 @@ export function configureFetch(config: ConfigureFetchInput): ConfiguredFetchWith
 
   return async (input: RequestInfo | URL, init?: RequestInit | undefined) => {
     const request = await makeFetchRequest(input, init);
-    let response = makeFetch(request);
+    let response = fetchHandler(request, makeFetch);
 
     if (mapResponse) {
       response = mapResponse(response);
@@ -130,8 +147,18 @@ export type FetchRequestInitFactory = (currRequest: PromiseOrValue<Request>, ini
 export type FetchRequestFactory = (input: RequestInfo | URL, init?: RequestInit | undefined) => PromiseOrValue<Request>;
 export type AbortControllerFactory = Factory<AbortController>;
 
+/**
+ * The deafult FetchRequestFactory implementation that uses window/global Request.
+ *
+ * @param input
+ * @param init
+ * @returns
+ */
+export const DEFAULT_FETCH_REQUEST_FACTORY: FetchRequestFactory = (input, init) => new Request(input, init);
+
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
-  const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
+  const { makeRequest = DEFAULT_FETCH_REQUEST_FACTORY, baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
+
   const baseUrl = inputBaseUrl ? new URL(removeTrailingSlashes(inputBaseUrl)) : undefined;
 
   const buildUrl = baseUrl

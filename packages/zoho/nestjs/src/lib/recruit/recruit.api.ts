@@ -11,6 +11,10 @@ export class ZohoRecruitApi {
     return this.zohoRecruit.recruitContext;
   }
 
+  get zohoRateLimiter() {
+    return this.zohoRecruit.recruitContext.zohoRateLimiter;
+  }
+
   constructor(@Inject(ZohoRecruitServiceConfig) readonly config: ZohoRecruitServiceConfig, @Inject(ZohoAccountsApi) readonly zohoAccountsApi: ZohoAccountsApi) {
     this.zohoRecruit = zohoRecruitFactory({
       ...config.factoryConfig,
