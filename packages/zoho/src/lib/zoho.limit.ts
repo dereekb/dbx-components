@@ -1,6 +1,6 @@
-import { MS_IN_MINUTE, MS_IN_SECOND, Maybe, Milliseconds, PromiseOrValue, ResetPeriodPromiseRateLimiter, resetPeriodPromiseRateLimiter } from '@dereekb/util';
+import { MS_IN_SECOND, Maybe, Milliseconds, PromiseOrValue, ResetPeriodPromiseRateLimiter, resetPeriodPromiseRateLimiter } from '@dereekb/util';
 import { FetchResponseError, RateLimitedFetchHandler, rateLimitedFetchHandler } from '@dereekb/util/fetch';
-import { DEFAULT_ZOHO_API_RATE_LIMIT, DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD, ZOHO_RATE_LIMIT_REMAINING_HEADER, ZOHO_RATE_LIMIT_RESET_HEADER, ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, zohoRateLimitHeaderDetails } from './zoho.error.api';
+import { DEFAULT_ZOHO_API_RATE_LIMIT, DEFAULT_ZOHO_API_RATE_LIMIT_RESET_PERIOD, ZOHO_RATE_LIMIT_REMAINING_HEADER, ZOHO_TOO_MANY_REQUESTS_HTTP_STATUS_CODE, zohoRateLimitHeaderDetails } from './zoho.error.api';
 
 export interface ZohoRateLimiterRef {
   readonly zohoRateLimiter: ResetPeriodPromiseRateLimiter;

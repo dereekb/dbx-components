@@ -4,8 +4,8 @@ import { LogZohoServerErrorFunction } from '../zoho.error.api';
 import { handleZohoRecruitErrorFetch, interceptZohoRecruitErrorResponse } from './recruit.error.api';
 import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
-import { ZohoRateLimitedFetchHandlerConfig, ZohoRateLimiterRef, zohoRateLimitedFetchHandler } from '../zoho.limit';
-import { Configurable, Maybe, ResetPeriodPromiseRateLimiter } from '@dereekb/util';
+import { ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
+import { Maybe } from '@dereekb/util';
 
 export type ZohoRecruit = ZohoRecruitContextRef;
 

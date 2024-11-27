@@ -1,5 +1,5 @@
-import { MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, Milliseconds, isPast } from '../date/date';
-import { Maybe } from '../value/maybe.type';
+import { MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, type Milliseconds, isPast } from '../date/date';
+import { type Maybe } from '../value/maybe.type';
 import { waitForMs } from './wait';
 import { getBaseLog } from '../number/number';
 

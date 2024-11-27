@@ -1,7 +1,6 @@
-import { Maybe, PromiseOrValue, PromiseRateLimiter, ResetPeriodPromiseRateLimiter, ResetPeriodPromiseRateLimiterConfig, resetPeriodPromiseRateLimiter } from '@dereekb/util';
-import { FetchHandler, FetchRequestFactory } from './fetch';
-import { ConfiguredFetchWithTimeout } from './fetch.type';
-import { FetchResponseError } from './error';
+import { type Maybe, type PromiseOrValue, type PromiseRateLimiter } from '@dereekb/util';
+import { type FetchHandler } from './fetch';
+import { type FetchResponseError } from './error';
 
 /**
  * A FetchRequestFactory with PromiseRateLimiter
