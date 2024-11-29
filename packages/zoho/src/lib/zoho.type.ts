@@ -1,5 +1,4 @@
 import { Maybe, MaybeNot, WebsitePath } from '@dereekb/util';
-import { isDataView } from 'util/types';
 
 export interface ZohoModel {}
 

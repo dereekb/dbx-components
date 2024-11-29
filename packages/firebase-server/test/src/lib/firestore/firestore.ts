@@ -45,10 +45,10 @@ export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleClou
   },
   buildFixture: () => new GoogleCloudTestFirestoreContextFixture(),
   setupInstance: async (config) => {
-    const random = Math.ceil(Math.random() * 1000000000);
+    const random = Math.floor(Math.random() * 10000);
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
 
-    const projectId = `firebase_server_test-${COUNTER++}-${Date.now()}-${random}`;
+    const projectId = `test-${COUNTER++}-${Date.now()}-${random}`.substring(0, 30);
     const firestore = new Firestore({
       projectId,
       host: config.host,
