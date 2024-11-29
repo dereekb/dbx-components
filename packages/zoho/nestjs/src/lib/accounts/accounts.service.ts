@@ -51,15 +51,18 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
       const loadCachedTokenFromFirstService = tryWithPromiseFactoriesFunction<void, ZohoAccessToken>({
         promiseFactories: accessCachesForServices.map(
           (x) => () =>
-            x.loadCachedToken().then((x) => {
-              let result: Maybe<ZohoAccessToken> = undefined;
+            x
+              .loadCachedToken()
+              .catch(() => null)
+              .then((x) => {
+                let result: Maybe<ZohoAccessToken> = undefined;
 
-              if (x && !isPast(x.expiresAt)) {
-                result = x; // only return from cache if it is not expired
-              }
+                if (x && !isPast(x.expiresAt)) {
+                  result = x; // only return from cache if it is not expired
+                }
 
-              return result;
-            })
+                return result;
+              })
         ),
         successOnMaybe: false,
         throwErrors: false
