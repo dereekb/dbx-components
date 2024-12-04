@@ -40,6 +40,13 @@ export type ZohoRecruitRecordId = string;
 export type ZohoRecruitTypeId = string;
 
 /**
+ * Zoho Recruit user identifier.
+ *
+ * Users can be found in the Users and Controls section in settings.
+ */
+export type ZohoRecruitUserId = string;
+
+/**
  * Zoho Recruit custom view id
  */
 export type ZohoRecruitCustomViewId = string;
@@ -68,9 +75,18 @@ export interface ZohoRecruitReferenceData {
   id: ZohoRecruitId;
 }
 
+/**
+ * Reference pair of a Zoho Recruit user name and id
+ */
+export interface ZohoRecruitUserReferenceData {
+  name: string;
+  id: ZohoRecruitUserId;
+}
+
 export interface ZohoRecruitReferenceDataWithModule extends ZohoRecruitReferenceData, ZohoRecruitModuleNameRef {}
 
-export type ZohoRecruitCreatedByData = ZohoRecruitReferenceData;
+export type ZohoRecruitCreatedByData = ZohoRecruitUserReferenceData;
+export type ZohoRecruitCandidateOwner = ZohoRecruitUserReferenceData;
 
 export interface ZohoRecruitModifiedByData extends ZohoRecruitReferenceData {
   zuid: ZohoRecruitId;
