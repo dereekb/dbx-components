@@ -3,7 +3,7 @@ import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFir
 import { Injector, NgModule } from '@angular/core';
 import { environment } from './environments/environment';
 import { Guestbook, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, guestbookIdentity, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
-import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from '@dereekb/demo-components';
+import { DemoFirebaseContextService, demoSetupDevelopmentWidget, DemoSystemStateAccessor } from '@dereekb/demo-components';
 
 export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
   return defaultDbxFirebaseAuthServiceDelegateWithClaimsService({
@@ -51,7 +51,8 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
     DbxFirebaseDefaultFirebaseProvidersModule.forRoot(environment.firebase),
     DbxFirebaseFirestoreCollectionModule.forRoot({
       appCollectionClass: DemoFirestoreCollections,
-      collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext)
+      collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
+      provideSystemStateFirestoreCollections: true
     }),
     DbxFirebaseFunctionsModule.forRoot({
       functionsGetterToken: DemoFirebaseFunctionsGetter,
