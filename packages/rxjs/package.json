@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/rxjs",
-  "version": "11.0.16",
+  "version": "11.0.17",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
