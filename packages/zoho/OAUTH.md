@@ -6,6 +6,7 @@ https://www.zoho.com/recruit/developer-guide/apiv2/oauth-overview.html
 ## For generating an oauth key, do the following steps:
 
 ### 1. Register the Client
+https://api-console.zoho.com/
 https://www.zoho.com/recruit/developer-guide/apiv2/register-client.html
 
 Create a "Web Based" client. Here's the values used for the demo:
@@ -19,9 +20,9 @@ Copy your clientId and clientSecret
 ### 2. Craft Authorization Url
 Edit the following URL with the specific details:
 
-https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
 
-https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL&client_id=CLIENT_ID&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
 
 - The scope is the list of roles we want to grant this refresh token
 - The clientId is the client id generated in the previous step

@@ -50,9 +50,9 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
   function configForLimit(limit: number, resetAt?: Date): ResetPeriodPromiseRateLimiterConfig {
     return {
       limit: defaultLimit,
-      startLimitAt: Math.ceil(limit / 20), // can do 5% of the requests of the limit before rate limiting begins
-      cooldownRate: 1.1 * (limit / (defaultResetPeriod / MS_IN_SECOND)),
-      exponentRate: 1.1,
+      startLimitAt: Math.ceil(limit / 10), // can do 10% of the requests of the limit before rate limiting begins
+      cooldownRate: 1.2 * (limit / (defaultResetPeriod / MS_IN_SECOND)),
+      exponentRate: 1.08,
       maxWaitTime: MS_IN_SECOND * 10,
       resetPeriod: defaultResetPeriod,
       resetAt

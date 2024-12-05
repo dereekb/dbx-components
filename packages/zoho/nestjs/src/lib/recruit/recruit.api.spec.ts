@@ -822,5 +822,18 @@ describe('recruit.api', () => {
         });
       });
     });
+
+    describe('REST API Functions', () => {
+      // NOTE: Requires the ZohoRecruit.functions.execute.READ to be
+
+      describe('executeRestApiFunction()', () => {
+        it('should execute the function', async () => {
+          const testFunctionName = 'run_kaia_schedule';
+          const result = await api.executeRestApiFunction({ functionName: testFunctionName });
+
+          expect(result).toBeDefined();
+        });
+      });
+    });
   });
 });

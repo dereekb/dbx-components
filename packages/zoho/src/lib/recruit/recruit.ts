@@ -21,6 +21,11 @@ export interface ZohoRecruitModuleNameRef {
 }
 
 /**
+ * The API name of a function that is accessible via the Recruit REST API
+ */
+export type ZohoRecruitRestFunctionApiName = string;
+
+/**
  * An identifier in Zoho Recruit.
  */
 export type ZohoRecruitId = string;
@@ -38,6 +43,13 @@ export type ZohoRecruitRecordId = string;
  * Example "576214000000820595"
  */
 export type ZohoRecruitTypeId = string;
+
+/**
+ * Zoho Recruit user identifier.
+ *
+ * Users can be found in the Users and Controls section in settings.
+ */
+export type ZohoRecruitUserId = string;
 
 /**
  * Zoho Recruit custom view id
@@ -68,9 +80,18 @@ export interface ZohoRecruitReferenceData {
   id: ZohoRecruitId;
 }
 
+/**
+ * Reference pair of a Zoho Recruit user name and id
+ */
+export interface ZohoRecruitUserReferenceData {
+  name: string;
+  id: ZohoRecruitUserId;
+}
+
 export interface ZohoRecruitReferenceDataWithModule extends ZohoRecruitReferenceData, ZohoRecruitModuleNameRef {}
 
-export type ZohoRecruitCreatedByData = ZohoRecruitReferenceData;
+export type ZohoRecruitCreatedByData = ZohoRecruitUserReferenceData;
+export type ZohoRecruitCandidateOwner = ZohoRecruitUserReferenceData;
 
 export interface ZohoRecruitModifiedByData extends ZohoRecruitReferenceData {
   zuid: ZohoRecruitId;
