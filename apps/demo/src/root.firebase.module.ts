@@ -51,7 +51,8 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
     DbxFirebaseDefaultFirebaseProvidersModule.forRoot(environment.firebase),
     DbxFirebaseFirestoreCollectionModule.forRoot({
       appCollectionClass: DemoFirestoreCollections,
-      collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext)
+      collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
+      provideSystemStateFirestoreCollections: true
     }),
     DbxFirebaseFunctionsModule.forRoot({
       functionsGetterToken: DemoFirebaseFunctionsGetter,

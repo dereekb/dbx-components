@@ -1,7 +1,7 @@
 import { FirebaseFunctionGetter, FirebaseFunctionsConfigMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, lazyFirebaseFunctionsFactory } from '@dereekb/firebase';
 import { Functions } from 'firebase/functions';
 import { demoDevelopmentFunctionMap, DemoDevelopmentFunctions, DemoDevelopmentFunctionTypeMap } from './development';
-import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions } from './model';
+import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions, SystemStateFunctions, systemStateFunctionMap, SystemStateFunctionTypeMap } from './model';
 
 /**
  * FirebaseFunctionsMap type for Demo
@@ -9,6 +9,7 @@ import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, Guest
 export type DemoFirebaseFunctionsMap = {
   guestbookFunctions: GuestbookFunctionTypeMap;
   profileFunctions: ProfileFunctionTypeMap;
+  systemStateFunctions: SystemStateFunctionTypeMap;
   [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
 };
 
@@ -22,7 +23,8 @@ export type DemoFirebaseFunctionsMap = {
 export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFirebaseFunctionsMap> = {
   guestbookFunctions: [GuestbookFunctions, guestbookFunctionMap],
   profileFunctions: [ProfileFunctions, profileFunctionMap],
-  developmentFunctions: [DemoDevelopmentFunctions, demoDevelopmentFunctionMap]
+  developmentFunctions: [DemoDevelopmentFunctions, demoDevelopmentFunctionMap],
+  systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap]
 };
 
 /**
@@ -34,6 +36,7 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly guestbookFunctions: FirebaseFunctionGetter<GuestbookFunctions>;
   abstract readonly profileFunctions: FirebaseFunctionGetter<ProfileFunctions>;
   abstract readonly developmentFunctions: FirebaseFunctionGetter<DemoDevelopmentFunctions>;
+  abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;
 }
 
 export function makeDemoFirebaseFunctions(functions: Functions): DemoFirebaseFunctionsGetter {
