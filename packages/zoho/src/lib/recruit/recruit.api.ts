@@ -1,10 +1,12 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
 import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
-import { ZohoRecruitContext } from './recruit.config';
-import { NewZohoRecruitNoteData, ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitRecordNote, ZohoRecruitSearchRecordsCriteriaTreeElement, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, zohoRecruitSearchRecordsCriteriaString, ZohoRecruitNoteId } from './recruit';
+import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
+import { NewZohoRecruitNoteData, ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitRecordNote, ZohoRecruitSearchRecordsCriteriaTreeElement, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, zohoRecruitSearchRecordsCriteriaString, ZohoRecruitNoteId, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId } from './recruit';
 import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, asArray } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
+import { ZohoDateTimeString } from '../zoho.type';
+import { BaseError } from 'make-error';
 
 // MARK: Insert/Update/Upsert Response
 export type ZohoRecruitUpdateRecordResult<T> = ZohoRecruitMultiRecordResult<T, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
@@ -308,6 +310,97 @@ export function createNotesForRecord(context: ZohoRecruitContext): ZohoRecruitCr
   };
 }
 
+// MARK: Function
+export type ZohoRecruitExecuteRestApiFunctionRequest = ZohoRecruitExecuteRestApiFunctionNormalRequest | ZohoRecruitExecuteRestApiFunctionApiSpecificRequest;
+
+export interface ZohoRecruitExecuteRestApiFunctionNormalRequest {
+  readonly functionName: ZohoRecruitRestFunctionApiName;
+  readonly params?: Maybe<ZohoRecruitExecuteRestApiFunctionParams>;
+}
+
+export interface ZohoRecruitExecuteRestApiFunctionApiSpecificRequest extends ZohoRecruitExecuteRestApiFunctionNormalRequest {
+  /**
+   * If provided the function will use the API key provided instead of the internal oauth
+   */
+  readonly apiKey: Maybe<ZohoRecruitRestFunctionApiKey>;
+  /**
+   * If provided, the function will target the given API and not the default. Only used when apiKey is provided.
+   *
+   * Careful when using this, as it might indicate that the target is not environment specific/aware.
+   */
+  readonly apiUrl?: ZohoRecruitConfigApiUrlInput;
+}
+
+export type ZohoRecruitRestFunctionApiKey = string;
+
+export type ZohoRecruitExecuteRestApiFunctionParams = Record<string, string | number | boolean | ZohoDateTimeString>;
+
+export type ZohoRecruitExecuteRestApiFunctionResponse = ZohoRecruitExecuteRestApiFunctionSuccessResponse | ZohoRecruitExecuteRestApiFunctionErrorResponse;
+
+export interface ZohoRecruitExecuteRestApiFunctionSuccessResponse {
+  readonly code: 'success';
+  readonly details: ZohoRecruitExecuteRestApiFunctionSuccessDetails;
+  readonly message: string;
+}
+
+export interface ZohoRecruitExecuteRestApiFunctionSuccessDetails {
+  readonly userMessage: string[];
+  readonly output_type: string;
+  readonly id: ZohoRecruitUserId;
+}
+
+export interface ZohoRecruitExecuteRestApiFunctionErrorResponse {
+  readonly code: string;
+  readonly details: unknown;
+  readonly message: string;
+}
+
+export class ZohoRecruitExecuteRestApiFunctionError extends BaseError {
+  constructor(readonly error: ZohoRecruitExecuteRestApiFunctionErrorResponse) {
+    super(`An error occured during the execution of the function. Code: ${error.code}, Message: ${error.message}`);
+  }
+}
+
+/**
+ * Executes the Zoho Recruit function based on the input.
+ *
+ * If the function fails execution a ZohoRecruitExecuteRestApiFunctionError will be thrown. Other API errors may still be thrown.
+ */
+export type ZohoRecruitExecuteRestApiFunctionFunction = (input: ZohoRecruitExecuteRestApiFunctionRequest) => Promise<ZohoRecruitExecuteRestApiFunctionSuccessDetails>;
+
+/**
+ * Creates a ZohoRecruitExecuteRestApiFunctionFunction
+ *
+ * OAuth Details:
+ * - https://www.zoho.com/crm/developer/docs/functions/serverless-fn-oauth.html#OAuth2
+ * - There is no documentation for ZohoRecruit specifically, but it seems to behave the same way
+ * - You will need the following scopes: ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE
+ *
+ * @param context
+ * @returns
+ */
+export function executeRestApiFunction(context: ZohoRecruitContext): ZohoRecruitExecuteRestApiFunctionFunction {
+  return (input: ZohoRecruitExecuteRestApiFunctionRequest): Promise<ZohoRecruitExecuteRestApiFunctionSuccessDetails> => {
+    const inputSearchParams = makeUrlSearchParams(input.params);
+    const inputSearchParamsString = inputSearchParams.toString();
+
+    const isSpecificRequest = Boolean((input as ZohoRecruitExecuteRestApiFunctionApiSpecificRequest).apiKey);
+
+    const urlParams = (isSpecificRequest ? `auth_type=apikey&zapikey=${(input as ZohoRecruitExecuteRestApiFunctionApiSpecificRequest).apiKey}` : 'auth_type=oauth') + (inputSearchParamsString ? `&${inputSearchParamsString}` : '');
+    const relativeUrl = `/v2/functions/${input.functionName}/actions/execute?${urlParams}`;
+    const baseUrl = isSpecificRequest && (input as ZohoRecruitExecuteRestApiFunctionApiSpecificRequest).apiUrl != null ? zohoRecruitConfigApiUrl((input as ZohoRecruitExecuteRestApiFunctionApiSpecificRequest).apiUrl as string) : '';
+    const url = `${baseUrl}${relativeUrl}`;
+
+    return context.fetchJson<ZohoRecruitExecuteRestApiFunctionResponse>(url, zohoRecruitApiFetchJsonInput('POST')).then((x) => {
+      if (x.code === 'success') {
+        return (x as ZohoRecruitExecuteRestApiFunctionSuccessResponse).details;
+      } else {
+        throw new ZohoRecruitExecuteRestApiFunctionError(x);
+      }
+    });
+  };
+}
+
 // MARK: Util
 export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: 'module' });
@@ -322,10 +415,10 @@ export function zohoRecruitUrlSearchParamsMinusIdAndModule(...input: Maybe<objec
  */
 export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
 
-export function zohoRecruitApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
+export function zohoRecruitApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   const result = {
     method,
-    body
+    body: body ?? undefined
   };
 
   return result;

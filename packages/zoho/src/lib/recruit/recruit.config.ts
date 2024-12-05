@@ -18,7 +18,7 @@ export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): Zo
     case 'sandbox':
       return 'https://recruitsandbox.zoho.com/recruit';
     case 'production':
-      return 'https://recruit.zoho.com/recruit/';
+      return 'https://recruit.zoho.com/recruit';
     default:
       return input;
   }

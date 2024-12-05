@@ -1,4 +1,4 @@
-import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples, type PromiseOrValue, isPromiseLike, type GetterOrValue, asGetter } from '@dereekb/util';
+import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples, type PromiseOrValue, isPromiseLike, type GetterOrValue, asGetter, isWebsiteUrlWithPrefix } from '@dereekb/util';
 import { FetchRequestFactoryError, fetchOk } from './error';
 import { type ConfiguredFetchWithTimeout, type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
@@ -126,6 +126,12 @@ export interface FetchRequestFactoryInput {
    */
   useBaseUrlForConfiguredFetchRequests?: boolean;
   /**
+   * Whether or not to force always using the base url even when a WebsiteUrlWithPrefix value is provided.
+   *
+   * Defaults to useBaseUrlForConfiguredFetchRequests's value.
+   */
+  forceBaseUrlForWebsiteUrlWithPrefix?: boolean;
+  /**
    * Base request info to add to each value.
    */
   baseRequest?: GetterOrValue<PromiseOrValue<RequestInit>>;
@@ -157,15 +163,23 @@ export type AbortControllerFactory = Factory<AbortController>;
 export const DEFAULT_FETCH_REQUEST_FACTORY: FetchRequestFactory = (input, init) => new Request(input, init);
 
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
-  const { makeRequest = DEFAULT_FETCH_REQUEST_FACTORY, baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
+  const { makeRequest = DEFAULT_FETCH_REQUEST_FACTORY, baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false, forceBaseUrlForWebsiteUrlWithPrefix = useBaseUrlForConfiguredFetchRequests } = config;
 
   const baseUrl = inputBaseUrl ? new URL(removeTrailingSlashes(inputBaseUrl)) : undefined;
 
   const buildUrl = baseUrl
     ? (url: string | WebsitePath | URL) => {
-        // retain the origin and any pathname from the base url
-        const urlPath = baseUrl.origin + fixMultiSlashesInSlashPath('/' + baseUrl.pathname + '/' + url);
-        const result = new URL(urlPath, baseUrl);
+        let result: URL;
+        const urlString = url.toString();
+
+        // retain the origin and any pathname from the base url, unless the url contains a prefix
+        if (!forceBaseUrlForWebsiteUrlWithPrefix && isWebsiteUrlWithPrefix(urlString)) {
+          result = new URL(urlString);
+        } else {
+          const urlPath = baseUrl.origin + fixMultiSlashesInSlashPath('/' + baseUrl.pathname + '/' + url);
+          result = new URL(urlPath, baseUrl);
+        }
+
         return result;
       }
     : undefined;
@@ -242,6 +256,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
       const fixedRequest = await buildRequestWithFixedUrl(input);
       init = await buildRequestInit(fixedRequest, init);
       const request = await makeRequest(fixedRequest, init);
+
       (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
       return request;
     } catch (e) {

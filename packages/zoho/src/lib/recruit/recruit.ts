@@ -21,6 +21,11 @@ export interface ZohoRecruitModuleNameRef {
 }
 
 /**
+ * The API name of a function that is accessible via the Recruit REST API
+ */
+export type ZohoRecruitRestFunctionApiName = string;
+
+/**
  * An identifier in Zoho Recruit.
  */
 export type ZohoRecruitId = string;
