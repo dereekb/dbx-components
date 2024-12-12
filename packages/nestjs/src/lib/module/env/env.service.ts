@@ -15,6 +15,10 @@ export class ServerEnvironmentService {
     return this.env.production;
   }
 
+  get isStaging() {
+    return this.env.staging;
+  }
+
   get developerToolsEnabled() {
     return Boolean(!this.isProduction && this.env.developerToolsEnabled);
   }

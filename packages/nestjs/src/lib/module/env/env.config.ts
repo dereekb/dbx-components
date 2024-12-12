@@ -11,6 +11,10 @@ export abstract class ServerEnvironmentConfig {
    */
   abstract production: boolean;
   /**
+   * Whether or not this is a staging environment.
+   */
+  abstract staging?: boolean;
+  /**
    * (Optional) Whether or not custom "developer tools" should be enabled.
    *
    * In general this is referred to in order to check whether or not to allow skipping typical safety checks in order to speed up local development.
