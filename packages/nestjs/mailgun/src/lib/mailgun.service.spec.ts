@@ -29,7 +29,7 @@ describe('MailgunService', () => {
       messages: {}
     };
     mailgunApi = new MailgunApi(mailgunConfig);
-    mailgunService = new MailgunService(mailgunApi, { isTestingEnv: true } as ServerEnvironmentService);
+    mailgunService = new MailgunService(mailgunApi, { isTestingEnv: true, isProduction: false, isStaging: false, developerToolsEnabled: false } as ServerEnvironmentService);
   });
 
   describe('sendTemplateEmail()', () => {

@@ -16,7 +16,7 @@ export class ServerEnvironmentService {
   }
 
   get isStaging() {
-    return this.env.staging;
+    return Boolean(this.env.staging);
   }
 
   get developerToolsEnabled() {
