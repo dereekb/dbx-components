@@ -8,7 +8,7 @@ import { environment } from './environments/environment';
 import { DbxScreenModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
 import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { RootAppModule } from './app/app.module';
-import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
+import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, DbxAppEnviroment } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
@@ -130,22 +130,27 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     }),
     DbxMapboxModule.forRoot(environment.mapbox)
   ],
-  providers: [{
-    provide: DbxAnalyticsSegmentApiServiceConfig,
-    useFactory: makeSegmentConfig
-  }, {
-    provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
-    useValue: {
-      style: 'doc-app',
-      suffixes: new Set(['dark'])
-    }
-  }, {
-    provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
-    useValue: {
-      floatLabel: 'always',
-      appearance: 'outline'
-    }
-  }],
+  providers: [
+    {
+      provide: DbxAppEnviroment,
+      useValue: environment
+    },
+    {
+      provide: DbxAnalyticsSegmentApiServiceConfig,
+      useFactory: makeSegmentConfig
+    }, {
+      provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
+      useValue: {
+        style: 'doc-app',
+        suffixes: new Set(['dark'])
+      }
+    }, {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: {
+        floatLabel: 'always',
+        appearance: 'outline'
+      }
+    }],
   bootstrap: [UIView]
 })
 export class RootModule { }

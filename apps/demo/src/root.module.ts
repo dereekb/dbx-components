@@ -6,7 +6,7 @@ import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirou
 import { environment } from './environments/environment';
 import { DbxScreenModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN, DbxModelInfoModule } from '@dereekb/dbx-web';
 import { RootAppModule } from './app/app.module';
-import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, DbxStorageModule } from '@dereekb/dbx-core';
+import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, DbxStorageModule, DbxAppEnviroment } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS, defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
@@ -132,6 +132,10 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     DbxMapboxModule.forRoot(environment.mapbox)
   ],
   providers: [
+    {
+      provide: DbxAppEnviroment,
+      useValue: environment
+    },
     {
       provide: DbxAnalyticsSegmentApiServiceConfig,
       useFactory: makeSegmentConfig
