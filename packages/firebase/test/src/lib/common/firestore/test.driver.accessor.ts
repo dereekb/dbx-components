@@ -44,7 +44,9 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
         describeFirestoreDocumentAccessorTests<MockItem>(() => ({
           context: f.parent.firestoreContext,
           firestoreDocument: () => itemDocument,
+          dataForFirstOfTwoUpdates: () => ({ test: true, tags: ['a'] }),
           dataForUpdate: () => ({ test: false }),
+          hasRemainingDataFromFirstOfTwoUpdate: (data) => (data.tags?.length || 0) > 0 && data.tags?.[0] === 'a',
           hasDataFromUpdate: (data) => data.test === false,
           loadDocumentForTransaction: (transaction, ref) => f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
           loadDocumentForWriteBatch: (writeBatch, ref) => f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
@@ -333,6 +335,8 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               describeFirestoreDocumentAccessorTests<MockItemPrivate>(() => ({
                 context: f.parent.firestoreContext,
                 firestoreDocument: () => itemPrivateDataDocument,
+                dataForFirstOfTwoUpdates: () => ({ comments: 'not_test_comments', values: ['a'] }),
+                hasRemainingDataFromFirstOfTwoUpdate: (data) => data.values.length > 0 && data.values[0] === 'a',
                 dataForUpdate: () => ({ comments: TEST_COMMENTS }),
                 hasDataFromUpdate: (data) => data.comments === TEST_COMMENTS,
                 loadDocumentForTransaction: (transaction, ref) => mockItemPrivateFirestoreCollection.loadDocumentForTransaction(transaction),
@@ -364,6 +368,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
                 describeFirestoreDocumentAccessorTests<MockItemSubItem>(() => ({
                   context: f.parent.firestoreContext,
                   firestoreDocument: () => subItemDocument,
+                  dataForFirstOfTwoUpdates: () => ({ value: TEST_VALUE - 10 }),
                   dataForUpdate: () => ({ value: TEST_VALUE }),
                   hasDataFromUpdate: (data) => data.value === TEST_VALUE,
                   loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
@@ -387,6 +392,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
                 describeFirestoreDocumentAccessorTests<MockItemSubItem>(() => ({
                   context: f.parent.firestoreContext,
                   firestoreDocument: () => subItemDocument,
+                  dataForFirstOfTwoUpdates: () => ({ value: TEST_VALUE - 10 }),
                   dataForUpdate: () => ({ value: TEST_VALUE }),
                   hasDataFromUpdate: (data) => data.value === TEST_VALUE,
                   loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollectionGroup.documentAccessorForTransaction(transaction).loadDocument(ref!),
@@ -464,7 +470,9 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 export interface DescribeAccessorTests<T> {
   context: FirestoreContext;
   firestoreDocument: Getter<FirestoreDocument<T>>;
+  dataForFirstOfTwoUpdates: () => Partial<T>;
   dataForUpdate: () => Partial<T>;
+  hasRemainingDataFromFirstOfTwoUpdate?: (data: T) => boolean;
   hasDataFromUpdate: (data: T) => boolean;
   loadDocumentForTransaction: (transaction: Transaction, ref?: DocumentReference<T>) => AbstractFirestoreDocument<T, any>;
   loadDocumentForWriteBatch: (writeBatch: WriteBatch, ref?: DocumentReference<T>) => FirestoreDocument<T, any>;
@@ -673,6 +681,30 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
 
           const snapshot = await firestoreDocument.snapshot();
           expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+        });
+
+        describe('multiple updates', () => {
+          it('should merge the updates together and override the values from the first update that are defined in the second update', async () => {
+            await c.context.runTransaction(async (transaction) => {
+              const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+
+              const currentData = await transactionDocument.snapshotData();
+              expect(currentData).toBeDefined();
+
+              const firstData = c.dataForFirstOfTwoUpdates();
+              await transactionDocument.update(firstData);
+
+              const data = c.dataForUpdate();
+              await transactionDocument.update(data);
+            });
+
+            const snapshot = await firestoreDocument.snapshot();
+            expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+
+            if (c.hasRemainingDataFromFirstOfTwoUpdate != null) {
+              expect(c.hasRemainingDataFromFirstOfTwoUpdate(snapshot.data() as T)).toBe(true);
+            }
+          });
         });
       });
     });

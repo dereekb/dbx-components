@@ -82,11 +82,23 @@ export type SourceSelectOpenFunction<M = unknown> = FactoryWithRequiredInput<Obs
  */
 export interface SourceSelectOpenSourceResult<M = unknown> {
   /**
-   * New values to select, if applicable.
+   * The values to set entirely, clearing the current selection.
+   *
+   * If null/undefined, current values will not be replaced.
+   */
+  readonly set?: Maybe<M[]>;
+  /**
+   * New values to add to the selection, if applicable.
+   *
+   * If null/undefined, no values will be added to selection.
+   *
+   * Is ignored if "set" value is provided.
    */
   readonly select?: Maybe<M[]>;
   /**
-   * New options to make available.
+   * New options to make available for selection, but are not automatically selected.
+   *
+   * If null/undefined, no options will be added.
    */
   readonly options?: Maybe<M[]>;
 }

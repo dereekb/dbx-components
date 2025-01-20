@@ -54,14 +54,14 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
   templateUrl: 'sourceselect.field.component.html'
 })
 export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = PrimativeKey, M = unknown> extends FieldType<FieldTypeConfig<SourceSelectFieldProps<T, M>>> implements OnInit, OnDestroy {
-  private _cacheMetaSub = new SubscriptionObject();
-  private _clearDisplayHashMapSub = new SubscriptionObject();
-  private _valueMetaHashMap = new BehaviorSubject<Map<T, SourceSelectValue<T, M>>>(new Map());
-  private _displayHashMap = new BehaviorSubject<Map<T, SourceSelectDisplayValue<T, M>>>(new Map());
+  private readonly _cacheMetaSub = new SubscriptionObject();
+  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
+  private readonly _valueMetaHashMap = new BehaviorSubject<Map<T, SourceSelectValue<T, M>>>(new Map());
+  private readonly _displayHashMap = new BehaviorSubject<Map<T, SourceSelectDisplayValue<T, M>>>(new Map());
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl<T[]>>>(undefined);
-  private _fromOpenSource = new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() });
-  private _loadSources = new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl<T[]>>>(undefined);
+  private readonly _fromOpenSource = new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() });
+  private readonly _loadSources = new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined);
 
   @ViewChild('button', { read: ElementRef, static: false })
   buttonElement!: ElementRef;
@@ -426,6 +426,8 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._cacheMetaSub.destroy();
+    this._clearDisplayHashMapSub.destroy();
     this._valueMetaHashMap.complete();
     this._displayHashMap.complete();
     this._formControlObs.complete();
@@ -450,7 +452,9 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
               this.addToOpenSourceMap(valuesToAdd);
             }
 
-            if (result.select) {
+            if (result.set) {
+              this.setCurrentValue(result.set.map((x) => this.valueReader(x)));
+            } else if (result.select) {
               this.addToCurrentValue(result.select.map((x) => this.valueReader(x)));
             }
           })
@@ -488,8 +492,11 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
   private addToCurrentValue(values: T[]) {
     const currentValue = asArray(this.formControl.value);
     const newValueArray = [...currentValue, ...values];
+    this.setCurrentValue(newValueArray);
+  }
 
-    const value = this.multiple ? values : lastValue(newValueArray); // pick last value, as the last value added is the newest value.
+  private setCurrentValue(newValueArray: T[]) {
+    const value = this.multiple ? newValueArray : lastValue(newValueArray); // pick last value, as the last value added is the newest value.
     this.formControl.setValue(value);
     this.formControl.markAsDirty();
     this.formControl.markAsTouched();
