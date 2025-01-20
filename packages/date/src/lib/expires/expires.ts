@@ -90,3 +90,5 @@ export function hasExpired(expires: Maybe<Expires>): boolean {
 export function getExpiration(expires: Maybe<Expires>): Date {
   return expires?.expiresAt ?? addMinutes(new Date(), -1);
 }
+
+// COMPAT: TODO - Deprecate these classes, and create a new implementation in @dereekb/util with "now" as an option.
