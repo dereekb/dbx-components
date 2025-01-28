@@ -3,7 +3,7 @@ import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe, ReadableError } from '@dereekb/util';
 import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
-import { DbxActionDisabledKey, DbxActionState, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
+import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtility.isFalse(state.disabled);
@@ -123,6 +123,11 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   );
 
   /**
+   * Current value of the state.
+   */
+  readonly currentValue$: Observable<Maybe<T>> = this.state$.pipe(map((x) => x.value));
+
+  /**
    * Maps the current state to true or not when the action state changes to/from disabled.
    */
   readonly isDisabled$ = this.state$.pipe(map(isDisabledActionContextState), distinctUntilChanged(), shareReplay(1));
@@ -148,6 +153,11 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   readonly rejected$ = this.afterDistinctActionState(DbxActionState.REJECTED, (x) => x.error);
 
   /**
+   * Pipes the result when the ActionState becomes rejected.
+   */
+  readonly rejectedPair$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => ({ value: x.value, error: x.error } as DbxActionRejectedPair<T>));
+
+  /**
    * Pipes the result when the ActionState becomes working.
    */
   readonly working$ = this.afterDistinctActionState(DbxActionState.WORKING, () => true);
@@ -170,6 +180,11 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    * Pipes the result when the ActionState becomes success.
    */
   readonly success$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => x.result);
+
+  /**
+   * Pipes the result when the ActionState becomes success.
+   */
+  readonly successPair$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => ({ value: x.value, result: x.result } as DbxActionSuccessPair<T, O>));
 
   /**
    * Whether or not it is currently in a success state.

@@ -1,4 +1,5 @@
 import { LoadingStateType } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Used by ActionContextState to denote what state the action is in.
@@ -36,6 +37,22 @@ export enum DbxActionState {
    * The action resolved without issue.
    */
   RESOLVED = 'resolved'
+}
+
+/**
+ * Contains the input value and the output result from a DbxAction.
+ */
+export interface DbxActionSuccessPair<T, O> {
+  readonly value: T;
+  readonly result: Maybe<O>;
+}
+
+/**
+ * Contains the input value and the output error from a DbxAction.
+ */
+export interface DbxActionRejectedPair<T> {
+  readonly value: T;
+  readonly error: unknown;
 }
 
 /**
