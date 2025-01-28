@@ -2,7 +2,7 @@ import { first, switchMap, Observable, Subscription } from 'rxjs';
 import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
 import { Destroyable, Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
-import { DbxActionDisabledKey, DbxActionState } from './action';
+import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair } from './action';
 
 /**
  * Source that provides a ActionContextStore observable.
@@ -93,12 +93,20 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
     return this.pipeStore((x) => x.success$);
   }
 
+  get successPair$(): Observable<DbxActionSuccessPair<T, O>> {
+    return this.pipeStore((x) => x.successPair$);
+  }
+
   get error$(): Observable<Maybe<ReadableError>> {
     return this.pipeStore((x) => x.error$);
   }
 
   get rejected$(): Observable<Maybe<ReadableError>> {
     return this.pipeStore((x) => x.rejected$);
+  }
+
+  get rejectedPair$(): Observable<DbxActionRejectedPair<T>> {
+    return this.pipeStore((x) => x.rejectedPair$);
   }
 
   get isModified$(): Observable<boolean> {

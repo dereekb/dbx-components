@@ -11,7 +11,7 @@ import { Maybe, ReadableError } from '@dereekb/util';
 export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
   onTriggered?: (service: DbxAnalyticsService) => void;
   onReady?: (service: DbxAnalyticsService, value: T) => void;
-  onSuccess?: (service: DbxAnalyticsService, value: Maybe<O>) => void;
+  onSuccess?: (service: DbxAnalyticsService, result: Maybe<O>, value: T) => void;
   onError?: (service: DbxAnalyticsService, error: Maybe<ReadableError>) => void;
 }
 
@@ -52,7 +52,7 @@ export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirec
           }
 
           if (onSuccess) {
-            triggerObs.push(this.source.success$.pipe(tap((result) => onSuccess(this.analyticsService, result))));
+            triggerObs.push(this.source.successPair$.pipe(tap(({ result, value }) => onSuccess(this.analyticsService, result, value))));
           }
 
           if (onError) {
