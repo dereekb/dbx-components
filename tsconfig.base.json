@@ -38,6 +38,7 @@
       "@dereekb/firebase-server": ["packages/firebase-server/src/index.ts"],
       "@dereekb/firebase-server/mailgun": ["packages/firebase-server/mailgun/src/index.ts"],
       "@dereekb/firebase-server/zoho": ["packages/firebase-server/zoho/src/index.ts"],
+      "@dereekb/firebase-server/model": ["packages/firebase-server/model/src/index.ts"],
       "@dereekb/firebase-server/test": ["packages/firebase-server/test/src/index.ts"],
       "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/zoho": ["packages/zoho/src/index.ts"],

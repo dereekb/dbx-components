@@ -1,0 +1,36 @@
+{
+  "name": "firebase-server-model",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/firebase-server/model/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/firebase-server/model",
+        "tsConfig": "packages/firebase-server/model/tsconfig.lib.json",
+        "packageJson": "packages/firebase-server/model/package.json",
+        "main": "packages/firebase-server/model/src/index.ts",
+        "assets": []
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/firebase-server/model/**/*.ts", "packages/firebase-server/model/package.json", "packages/firebase-server/model/project.json"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/model"],
+      "options": {
+        "jestConfig": "packages/firebase-server/model/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
