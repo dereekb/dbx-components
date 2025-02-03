@@ -1,4 +1,4 @@
-import { Destroyable, Maybe } from '@dereekb/util';
+import { Destroyable, type Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
 import { Injectable, InjectionToken, inject } from '@angular/core';

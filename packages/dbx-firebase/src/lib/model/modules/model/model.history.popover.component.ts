@@ -1,7 +1,7 @@
 import { Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 import { DbxFirebaseModelTrackerHistoryFilter } from './model.tracker.service';
 

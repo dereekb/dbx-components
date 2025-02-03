@@ -2,7 +2,7 @@ import { BehaviorSubject, delay, of, tap } from 'rxjs';
 import { DocActionFormExampleValue } from './../component/action.example.form.component';
 import { Component, OnDestroy } from '@angular/core';
 import { WorkUsingObservable } from '@dereekb/rxjs';
-import { MS_IN_SECOND, Maybe } from '@dereekb/util';
+import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 
 @Component({
   templateUrl: './map.component.html'

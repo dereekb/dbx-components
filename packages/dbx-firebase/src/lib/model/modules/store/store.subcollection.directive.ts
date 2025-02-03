@@ -1,6 +1,6 @@
 import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
 import { FirestoreDocument } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 import { DbxFirebaseCollectionWithParentStore, DbxFirebaseComponentStoreWithParentSourceMode } from './store.subcollection';
 

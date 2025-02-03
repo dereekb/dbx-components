@@ -1,7 +1,7 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { map, distinctUntilChanged, BehaviorSubject, switchMap, combineLatest } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
 import { DbxTableColumn } from './table';
 

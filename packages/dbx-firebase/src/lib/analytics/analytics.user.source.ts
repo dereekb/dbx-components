@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { DbxAnalyticsUser, DbxAnalyticsUserProperties, DbxAnalyticsUserSource } from '@dereekb/dbx-analytics';
-import { FactoryWithRequiredInput, Maybe } from '@dereekb/util';
+import { FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { BehaviorSubject, map, Observable, of, switchMap, shareReplay, combineLatest } from 'rxjs';
 import { AuthUserInfo } from '../auth/auth';
 import { DbxFirebaseAuthService } from '../auth/service/firebase.auth.service';

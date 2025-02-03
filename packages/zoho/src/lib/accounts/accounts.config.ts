@@ -1,4 +1,4 @@
-import { FactoryWithRequiredInput, Maybe } from '@dereekb/util';
+import { FactoryWithRequiredInput, type Maybe } from '@dereekb/util';
 import { ConfiguredFetch, FetchJsonFunction } from '@dereekb/util/fetch';
 import { ZohoApiUrl, ZohoRefreshToken, ZohoConfig, ZohoAuthClientIdAndSecretPair } from '../zoho.config';
 import { ZohoAccessTokenCache, ZohoAccessTokenFactory } from './accounts';

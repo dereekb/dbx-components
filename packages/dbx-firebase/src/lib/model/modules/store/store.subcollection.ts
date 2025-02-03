@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Inject, Injectable, Optional } from '@angular/core';
 import { filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
 import { Observable, shareReplay, distinctUntilChanged, map, Subscription, NEVER, switchMap, tap } from 'rxjs';

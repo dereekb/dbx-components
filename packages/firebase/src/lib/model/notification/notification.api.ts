@@ -2,7 +2,7 @@ import { Type, Expose } from 'class-transformer';
 import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { type E164PhoneNumber, type EmailAddress, type IndexNumber, Maybe } from '@dereekb/util';
+import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationItem, type NotificationItemMetadata, type NotificationTypes } from './notification';
 import { type NotificationBoxRecipientTemplateConfigArrayEntry } from './notification.config';
 import { type NotificationTemplateType } from './notification.id';

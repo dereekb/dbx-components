@@ -3,7 +3,7 @@ import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
 import { Output, EventEmitter, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
 
 export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `

@@ -1,7 +1,7 @@
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { FirestoreCollectionLike, FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
 import { cleanup, ObservableOrValue } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { map, Observable, Subscription } from 'rxjs';
 import { DbxFirebaseDocumentStore } from './store.document';

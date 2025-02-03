@@ -6,7 +6,7 @@ import { AbstractPopoverDirective } from '../popover/abstract.popover.directive'
 import { DbxPopoverConfigSizing, DbxPopoverService } from '../popover/popover.service';
 import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxFilterComponentParams<F extends object = object, P extends string = string, CF extends FilterSource<F> = FilterSource<F>, PF extends PresetFilterSource<F, P> = PresetFilterSource<F, P>> extends DbxPopoverConfigSizing {
   /**

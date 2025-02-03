@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DateRange, formatToDayTimeRangeString } from '@dereekb/date';
 
 @Pipe({ name: 'dateDayTimeRange' })

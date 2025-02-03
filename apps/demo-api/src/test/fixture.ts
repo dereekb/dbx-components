@@ -24,7 +24,7 @@ import { initUserOnCreate } from '../app/function/auth/init.user.function';
 import { DemoApiNestContext } from '../app/function/function';
 import { CleanupSentNotificationsParams, CreateNotificationParams, FirestoreCollection, FirestoreModelKey, InitializeAllApplicableNotificationBoxesParams, InitializeNotificationBoxParams, NotificationBox, NotificationBoxDocument, NotificationBoxFirestoreCollection, Notification, NotificationDocument, NotificationWeek, NotificationWeekDocument, SendNotificationParams, getDocumentSnapshotDataPairs, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';

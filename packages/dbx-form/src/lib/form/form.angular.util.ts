@@ -1,5 +1,5 @@
 import { AbstractControl } from '@angular/forms';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Observable, startWith } from 'rxjs';
 
 /**

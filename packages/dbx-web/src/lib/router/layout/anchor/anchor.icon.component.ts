@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { ClickableIconAnchorLink } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Component that displays an anchor and a mat-button.

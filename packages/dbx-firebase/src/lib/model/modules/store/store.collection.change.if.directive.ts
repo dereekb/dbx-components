@@ -3,7 +3,7 @@ import { AbstractIfDirective } from '@dereekb/dbx-core';
 import { shareReplay, BehaviorSubject, combineLatest, Observable, map } from 'rxjs';
 import { DbxFirebaseCollectionChangeDirective } from './store.collection.change.directive';
 import { IterationQueryDocChangeWatcherChangeType } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQueryDocChangeWatcherChangeType;
 

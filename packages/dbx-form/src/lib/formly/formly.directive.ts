@@ -3,7 +3,7 @@ import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from '
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { OnInit, OnDestroy, Directive, Input, inject } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFormDisabledKey } from '../form/form';
 
 /**

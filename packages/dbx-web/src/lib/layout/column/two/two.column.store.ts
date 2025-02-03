@@ -2,7 +2,7 @@ import { Injectable, OnDestroy, Provider } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Subject, distinct, map } from 'rxjs';
 import { SegueRef } from '@dereekb/dbx-core';
-import { isMaybeNot, Maybe } from '@dereekb/util';
+import { isMaybeNot, type Maybe } from '@dereekb/util';
 
 export interface TwoColumnsState {
   /**

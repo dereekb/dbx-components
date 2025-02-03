@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used to "linkify" the input text.

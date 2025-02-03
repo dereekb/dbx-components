@@ -1,6 +1,6 @@
 import { MonoTypeOperatorFunction, tap } from 'rxjs';
 import { ChangeDetectorRef, ViewRef, ElementRef } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Convenience function used within observables for views that need to detect changes after a value changes.

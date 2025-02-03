@@ -7,7 +7,7 @@ import { DbxActionButtonDirective } from './action.button.directive';
 import { DbxCoreButtonModule } from '../button.module';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { DbxButtonDirective } from '../button.directive';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 describe('Action Button', () => {
   beforeEach(async () => {

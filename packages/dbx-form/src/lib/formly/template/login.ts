@@ -2,7 +2,7 @@ import { TextFieldConfig, textField } from '../field/value/text/text.field';
 import { EmailFieldConfig, emailField } from '../field/value/text/text.additional.field';
 import { fieldValuesAreEqualValidator } from '../../validator/field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { capitalizeFirstLetter, Maybe } from '@dereekb/util';
+import { capitalizeFirstLetter, type Maybe } from '@dereekb/util';
 
 /**
  * Convenience interface for the password parameters configuration for a TextPasswordField.

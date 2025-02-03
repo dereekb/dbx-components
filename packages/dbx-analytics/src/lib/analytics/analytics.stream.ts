@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxAnalyticsUser, DbxUserAnalyticsEvent, DbxAnalyticsUserId } from './analytics';
 
 export enum DbxAnalyticsStreamEventType {

@@ -6,7 +6,7 @@ import { ZOHO_API_URL_CONFIG_KEY, zohoConfigServiceReaderFunction } from '../zoh
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 import { ZohoAccountsServiceConfig, zohoAccountsServiceConfigFromConfigService } from '../accounts/accounts.config';
 import { ZOHO_RECRUIT_SERVICE_NAME } from '@dereekb/zoho';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 // MARK: Provider Factories
 export function zohoRecruitServiceConfigFactory(configService: ConfigService): ZohoRecruitServiceConfig {

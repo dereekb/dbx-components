@@ -1,6 +1,6 @@
 import { Directive, Input, inject } from '@angular/core';
 import { asSegueRef, SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**

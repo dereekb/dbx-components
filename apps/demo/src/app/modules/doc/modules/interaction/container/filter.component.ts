@@ -2,7 +2,7 @@ import { Component, OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { startOfDay } from 'date-fns';
 import { map, of, Observable } from 'rxjs';
 import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';

@@ -2,7 +2,7 @@ import { AfterViewInit, OnDestroy, Component, Input, inject } from '@angular/cor
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Optional responsive component that wraps content on the right side and shows a navigation bar.

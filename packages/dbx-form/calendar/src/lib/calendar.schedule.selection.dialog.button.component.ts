@@ -1,7 +1,7 @@
 import { Component, Injector, Input, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxScheduleSelectionCalendarDateDialogComponent, DbxScheduleSelectionCalendarDatePopupContentConfig } from './calendar.schedule.selection.dialog.component';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-dialog-button',

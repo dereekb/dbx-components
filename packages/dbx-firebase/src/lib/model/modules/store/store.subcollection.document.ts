@@ -2,7 +2,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, Subscription } from 'rxjs';
 import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection, DocumentReference, FirestoreModelId, FirestoreModelKey, SingleItemFirestoreCollection, firestoreModelKeyParentKey } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { AbstractDbxFirebaseDocumentStore, DbxFirebaseDocumentStore, DbxFirebaseDocumentStoreContextState } from './store.document';
 import { DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
 

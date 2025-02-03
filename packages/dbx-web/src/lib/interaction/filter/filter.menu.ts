@@ -1,5 +1,5 @@
 import { ClickableAnchorLink } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { combineLatest, distinctUntilChanged, map, Observable, shareReplay, switchMap } from 'rxjs';
 
 /**

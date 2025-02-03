@@ -1,6 +1,6 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Component, TrackByFunction } from '@angular/core';
-import { asDecisionFunction, cachedGetter, DecisionFunction, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, Maybe } from '@dereekb/util';
+import { asDecisionFunction, cachedGetter, DecisionFunction, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, type Maybe } from '@dereekb/util';
 import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
 export interface DbxFormRepeatArrayPair<T = unknown> extends IndexRef {

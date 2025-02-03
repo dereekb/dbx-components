@@ -2,7 +2,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { OnDestroy, Input, Directive, inject } from '@angular/core';
 import { distinctUntilChanged, BehaviorSubject } from 'rxjs';
 import { DbxTableStore } from './table.store';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Abstract directive that has an element input.

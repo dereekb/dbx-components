@@ -1,6 +1,6 @@
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { Component, Input, OnDestroy, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxWidgetDataPair } from './widget';
 import { DbxWidgetService } from './widget.service';

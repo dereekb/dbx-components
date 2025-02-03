@@ -3,7 +3,7 @@ import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.con
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * DbxActionConfirmDirective configuration.

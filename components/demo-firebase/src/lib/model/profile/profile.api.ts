@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;

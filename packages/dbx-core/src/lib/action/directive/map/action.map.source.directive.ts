@@ -1,5 +1,5 @@
 import { Directive, Input, OnDestroy, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { ActionContextStoreSource } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';
 import { ActionKey } from './action.map';

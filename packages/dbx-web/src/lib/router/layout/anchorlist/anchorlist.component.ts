@@ -1,7 +1,7 @@
 import { OnDestroy, Input, Component } from '@angular/core';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Observable } from 'rxjs';
 import { ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLinkTree {
   classes: string;

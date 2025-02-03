@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxWidgetDataPair, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
 import { WorkUsingContext, filterMaybe, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { first, BehaviorSubject, distinctUntilChanged, map, shareReplay, combineLatest, Observable } from 'rxjs';
 import { DbxFirebaseDevelopmentWidgetService } from './development.widget.service';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';

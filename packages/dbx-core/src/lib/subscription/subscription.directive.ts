@@ -1,7 +1,7 @@
 import { OnDestroy, Directive } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Abstract component that contains a SubscriptionObject and will clean it up automatically.

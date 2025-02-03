@@ -1,5 +1,5 @@
 import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
-import { LAT_LONG_10M_PRECISION, LatLngPointInput, LatLngBound, LatLngBoundCheckFunction, latLngPointFunction, roundNumberToStepFunction, RoundNumberToStepFunctionInput, LatLngPrecision, Maybe } from '@dereekb/util';
+import { LAT_LONG_10M_PRECISION, LatLngPointInput, LatLngBound, LatLngBoundCheckFunction, latLngPointFunction, roundNumberToStepFunction, RoundNumberToStepFunctionInput, LatLngPrecision, type Maybe } from '@dereekb/util';
 import { combineLatestWith, map, Observable, OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { MapboxZoomLevel } from './mapbox';
 import { MapboxViewportBoundFunction } from './mapbox.util';

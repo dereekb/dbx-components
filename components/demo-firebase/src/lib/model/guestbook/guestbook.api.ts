@@ -2,7 +2,7 @@ import { Expose } from 'class-transformer';
 import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsOptional, IsNotEmpty, IsString, MaxLength, IsBoolean } from 'class-validator';
 import { GuestbookTypes } from './guestbook';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 

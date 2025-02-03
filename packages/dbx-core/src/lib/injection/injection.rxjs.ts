@@ -1,4 +1,4 @@
-import { asGetter, GetterOrValue, Maybe } from '@dereekb/util';
+import { asGetter, GetterOrValue, type Maybe } from '@dereekb/util';
 import { switchMapObject } from '@dereekb/rxjs';
 import { DbxInjectionComponentConfig } from './injection';
 import { Type } from '@angular/core';

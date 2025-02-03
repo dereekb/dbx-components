@@ -1,6 +1,6 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
-import { containsStringAnyCase, Maybe } from '@dereekb/util';
+import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.

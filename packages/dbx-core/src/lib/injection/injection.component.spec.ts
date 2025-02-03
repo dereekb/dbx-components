@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, Type, ViewChild, OnDestroy } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { DbxInjectionComponentModule } from './injection.component.module';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';

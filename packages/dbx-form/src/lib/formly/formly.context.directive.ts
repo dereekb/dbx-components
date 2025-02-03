@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Directive, OnDestroy, Input } from '@angular/core';
 import { provideFormlyContext } from './formly.context';
 import { AbstractAsyncFormlyFormDirective } from './formly.directive';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Provides an DbxFormlyContext and has an input for fields.

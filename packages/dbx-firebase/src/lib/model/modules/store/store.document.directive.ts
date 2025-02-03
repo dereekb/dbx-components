@@ -1,6 +1,6 @@
 import { Directive, forwardRef, Input, OnDestroy, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store.document';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe, useFirst } from '@dereekb/rxjs';

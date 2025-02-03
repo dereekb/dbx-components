@@ -1,6 +1,6 @@
 import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithIdAndKey, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
   guestbookCollection: GuestbookFirestoreCollection;

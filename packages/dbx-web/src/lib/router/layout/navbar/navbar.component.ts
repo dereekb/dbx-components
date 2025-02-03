@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { ScreenMediaWidthType } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
-import { applyBestFit, findNext, Maybe } from '@dereekb/util';
+import { applyBestFit, findNext, type Maybe } from '@dereekb/util';
 import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, TrackByFunction, inject } from '@angular/core';
 import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';

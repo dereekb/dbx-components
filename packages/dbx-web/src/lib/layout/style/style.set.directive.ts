@@ -1,4 +1,4 @@
-import { splitCommaSeparatedStringToSet, Maybe } from '@dereekb/util';
+import { splitCommaSeparatedStringToSet, type Maybe } from '@dereekb/util';
 import { Observable, distinctUntilChanged, map, shareReplay, BehaviorSubject, delay, combineLatest } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, Input, OnDestroy, ChangeDetectorRef, OnInit, inject } from '@angular/core';

@@ -1,5 +1,5 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
 export interface ChecklistItemDisplayContent<T = unknown> {

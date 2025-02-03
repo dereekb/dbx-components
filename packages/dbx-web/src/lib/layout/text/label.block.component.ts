@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Combines a dbx-label and arbitrary content.

@@ -1,4 +1,4 @@
-import { filterMaybeValues, StoredDataString, FullStorageObject, StorageObjectUtility, Maybe } from '@dereekb/util';
+import { filterMaybeValues, StoredDataString, FullStorageObject, StorageObjectUtility, type Maybe } from '@dereekb/util';
 import { Observable, map, shareReplay } from 'rxjs';
 import { StorageAccessor } from './storage.accessor';
 

@@ -3,7 +3,7 @@ import { switchMap, first, Observable } from 'rxjs';
 import { Directive, Input } from '@angular/core';
 import { provideFilterSource } from './filter.content';
 import { AbstractDbxFilterMapInstanceDirective } from './filter.map.instance.directive';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Provides a FilterSource from a parent FilterMap.

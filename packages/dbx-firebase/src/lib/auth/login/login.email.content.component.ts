@@ -8,7 +8,7 @@ import { DbxFirebaseLoginContext } from './login.context';
 import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
 import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   loginMode: DbxFirebaseLoginMode;

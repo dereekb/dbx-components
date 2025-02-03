@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Section piece that puts an icon on the left, and arbitrary content on the right with a header.

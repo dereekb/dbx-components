@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { Destroyable, Maybe } from '@dereekb/util';
+import { Destroyable, type Maybe } from '@dereekb/util';
 import { LockSet } from '@dereekb/rxjs';
 import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { ActionContextStore } from './action.store';
