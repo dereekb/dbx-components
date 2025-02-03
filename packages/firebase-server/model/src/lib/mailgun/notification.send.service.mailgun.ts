@@ -1,4 +1,4 @@
-import { Maybe, batch, build, multiValueMapBuilder, PromiseOrValue, useAsync, runAsyncTasksForValues, IndexedBatch } from '@dereekb/util';
+import { Maybe, batch, build, multiValueMapBuilder, PromiseOrValue, useAsync, runAsyncTasksForValues, IndexedBatch, mapObjectKeysToLowercase } from '@dereekb/util';
 import { MailgunRecipient, MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
 import { NotificationMessage, NotificationTemplateType } from '@dereekb/firebase';
 import { NotificationEmailSendService } from '../notification/notification.send.service';
@@ -56,7 +56,8 @@ export type MailgunNotificationEmailSendServiceTemplateBuilder = (input: Mailgun
 export interface MailgunNotificationEmailSendService extends NotificationEmailSendService {}
 
 export function mailgunNotificationEmailSendService(config: MailgunNotificationEmailSendServiceConfig): MailgunNotificationEmailSendService {
-  const { mailgunService, defaultTemplateType, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders } = config;
+  const { mailgunService, defaultTemplateType, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders } = config;
+  const lowercaseKeysMessageBuilders = mapObjectKeysToLowercase(inputMessageBuilders);
   const maxBatchSizePerRequest = inputMaxBatchSizePerRequest ?? MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST;
 
   const sendService: MailgunNotificationEmailSendService = {
@@ -82,7 +83,8 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
       // create the template requests
       const templateRequests = await Promise.all(
         messageSendBatches.map(([templateType, messages]) => {
-          const builderForKey = messageBuilders[templateType as string];
+          const templateTypeToLowercase = templateType.toLowerCase();
+          const builderForKey = lowercaseKeysMessageBuilders[templateTypeToLowercase as any];
 
           if (!builderForKey) {
             throw new Error(`mailgunNotificationEmailSendService(): A template builder was not available for template type "${templateType}".`);

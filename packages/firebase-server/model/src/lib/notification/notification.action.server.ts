@@ -46,7 +46,19 @@ import { yearWeekCode } from '@dereekb/date';
 import { NotificationTemplateServiceInstance, NotificationTemplateServiceRef } from './notification.config.service';
 import { NotificationSendServiceRef } from './notification.send.service';
 import { NotificationSendMessagesInstance } from './notification.send';
+import { InjectionToken } from '@nestjs/common';
 
+/**
+ * Injection token for the BaseNotificationServerActionsContext
+ */
+export const BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'BASE_NOTIFICATION_SERVER_ACTION_CONTEXT';
+
+/**
+ * Injection token for the NotificationServerActionsContext
+ */
+export const NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'NOTIFICATION_SERVER_ACTION_CONTEXT';
+
+export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference {}
 export interface NotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, FirestoreContextReference {}
 
 export abstract class NotificationServerActions {

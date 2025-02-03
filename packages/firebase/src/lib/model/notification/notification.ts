@@ -1,41 +1,40 @@
 import { type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
-import {
-  type CollectionReference,
-  AbstractFirestoreDocument,
-  snapshotConverterFunctions,
-  type FirestoreCollection,
-  type FirestoreContext,
-  firestoreModelIdentity,
-  firestoreDate,
-  AbstractFirestoreDocumentWithParent,
-  type CollectionGroup,
-  type FirestoreCollectionGroup,
-  firestoreObjectArray,
-  firestoreNumber,
-  firestoreModelKeyString,
-  firestoreSubObject,
-  firestoreModelIdString,
-  optionalFirestoreEnum,
-  type FirestoreModelKey,
-  firestorePassThroughField,
-  optionalFirestoreString,
-  firestoreEnum,
-  type UserRelatedById,
-  type UserRelated,
-  firestoreUID,
-  firestoreModelIdArrayField,
-  optionalFirestoreBoolean,
-  firestoreBoolean,
-  firestoreString,
-  type FirebaseAuthUserId,
-  optionalFirestoreUID,
-  type FirestoreCollectionWithParent,
-  SavedToFirestoreIfTrue
-} from '@dereekb/firebase';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type NotificationTemplateType, type NotificationBoxId, type NotificationId } from './notification.id';
 import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
+import { UserRelatedById, type UserRelated } from '../user';
+import {
+  AbstractFirestoreDocument,
+  AbstractFirestoreDocumentWithParent,
+  CollectionGroup,
+  CollectionReference,
+  FirebaseAuthUserId,
+  FirestoreCollection,
+  FirestoreCollectionGroup,
+  FirestoreCollectionWithParent,
+  FirestoreContext,
+  FirestoreModelKey,
+  SavedToFirestoreIfTrue,
+  firestoreBoolean,
+  firestoreDate,
+  firestoreEnum,
+  firestoreModelIdArrayField,
+  firestoreModelIdString,
+  firestoreModelIdentity,
+  firestoreModelKeyString,
+  firestoreNumber,
+  firestoreObjectArray,
+  firestorePassThroughField,
+  firestoreString,
+  firestoreSubObject,
+  firestoreUID,
+  optionalFirestoreBoolean,
+  optionalFirestoreEnum,
+  optionalFirestoreString,
+  optionalFirestoreUID,
+  snapshotConverterFunctions
+} from '../../common';
 
 export interface NotificationFirestoreCollections {
   readonly notificationUserCollection: NotificationUserFirestoreCollection;
@@ -152,7 +151,7 @@ export interface NotificationBox {
    *
    * NOTE: The server can also be configured to automatically delete matching boxes instead of marking them as invalid.
    */
-  f?: Maybe<SavedToFirestoreIfTrue>;
+  fi?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 /**
@@ -179,7 +178,7 @@ export const notificationBoxConverter = snapshotConverterFunctions<NotificationB
     }),
     w: firestoreNumber({ default: () => yearWeekCode(new Date()) }),
     s: optionalFirestoreBoolean({ dontStoreValueIf: false }),
-    f: optionalFirestoreBoolean({ dontStoreValueIf: true })
+    fi: optionalFirestoreBoolean({ dontStoreValueIf: true })
   }
 });
 

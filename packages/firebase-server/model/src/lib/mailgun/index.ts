@@ -1,1 +1,1 @@
-export * from './notification.send.email.mailgun';
+export * from './notification.send.service.mailgun';

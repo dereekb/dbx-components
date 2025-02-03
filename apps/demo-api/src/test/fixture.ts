@@ -1,4 +1,4 @@
-import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument, GuestbookEntryFirestoreCollection } from '@dereekb/demo-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument, GuestbookEntryFirestoreCollection, Profile, ProfileFirestoreCollection } from '@dereekb/demo-firebase';
 import {
   authorizedUserContextFactory,
   AuthorizedUserTestContextFixture,
@@ -22,6 +22,12 @@ import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
 import { DemoApiNestContext } from '../app/function/function';
+import { CleanupSentNotificationsParams, CreateNotificationParams, FirestoreCollection, FirestoreModelKey, InitializeAllApplicableNotificationBoxesParams, InitializeNotificationBoxParams, NotificationBox, NotificationBoxDocument, NotificationBoxFirestoreCollection, Notification, NotificationDocument, NotificationWeek, NotificationWeekDocument, SendNotificationParams, getDocumentSnapshotDataPairs, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { YearWeekCode, yearWeekCode } from '@dereekb/date';
+import { Maybe } from '@dereekb/util';
+import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices } from '../app/common';
+import { MailgunService } from '@dereekb/nestjs/mailgun';
 
 // MARK: Demo Api Testing Fixture
 @Module({
@@ -40,18 +46,76 @@ export function initDemoApiTestEnvironment() {
   setupFirebaseAdminFunctionTestSingleton();
 }
 
-export interface DemoApiContext {}
+export interface DemoApiContext {
+  get demoFirestoreCollections(): DemoFirestoreCollections;
+  get authService(): DemoApiAuthService;
+  get mailgunService(): MailgunService;
+  get notificationServerActions(): NotificationServerActions;
+  get notificationInitServerActions(): NotificationInitServerActions;
+}
 
 // MARK: Admin
-export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextFixture<F, JestTestContextFixture<F>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {}
+export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextFixture<F, JestTestContextFixture<F>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+  get serverActionsContext() {
+    return this.instance.serverActionsContext;
+  }
+
+  get serverActionsContextWithNotificationServices() {
+    return this.instance.serverActionsContextWithNotificationServices;
+  }
+
+  get demoFirestoreCollections() {
+    return this.instance.demoFirestoreCollections;
+  }
+
+  get mailgunService() {
+    return this.instance.mailgunService;
+  }
+
+  get authService() {
+    return this.instance.authService;
+  }
+
+  get notificationServerActions() {
+    return this.instance.notificationServerActions;
+  }
+
+  get notificationInitServerActions() {
+    return this.instance.notificationInitServerActions;
+  }
+}
 
 export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextInstance<F> implements DemoApiContext {
+  get serverActionsContext() {
+    return this.get(DemoFirebaseServerActionsContext);
+  }
+
+  get serverActionsContextWithNotificationServices() {
+    return this.get(DemoFirebaseServerActionsContextWithNotificationServices);
+  }
+
   get apiNestContext(): DemoApiNestContext {
     return new DemoApiNestContext(this.nest);
   }
 
   get demoFirestoreCollections(): DemoFirestoreCollections {
     return this.get(DemoFirestoreCollections);
+  }
+
+  get mailgunService() {
+    return this.get(MailgunService);
+  }
+
+  get authService() {
+    return this.get(DemoApiAuthService);
+  }
+
+  get notificationServerActions() {
+    return this.get(NotificationServerActions);
+  }
+
+  get notificationInitServerActions() {
+    return this.get(NotificationInitServerActions);
   }
 }
 
@@ -62,21 +126,73 @@ const _demoApiContextFactory = firebaseAdminNestContextFactory({
   makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
 });
 
-export const demoApiContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiContextFixture<FirebaseAdminTestContextInstance>>) => {
+export const demoApiContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiContextFixture>) => {
   initDemoApiTestEnvironment();
-  return _demoApiContextFactory(buildTests);
+  return _demoApiContextFactory(buildTests as any);
 };
 
 // MARK: Admin Function
-export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {}
+export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextFixture<FirebaseAdminFunctionTestContextInstance, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiContextFixtureInstance<F>> implements DemoApiContext {
+  get serverActionsContext() {
+    return this.instance.serverActionsContext;
+  }
+
+  get serverActionsContextWithNotificationServices() {
+    return this.instance.serverActionsContextWithNotificationServices;
+  }
+
+  get demoFirestoreCollections() {
+    return this.instance.demoFirestoreCollections;
+  }
+
+  get mailgunService() {
+    return this.instance.mailgunService;
+  }
+
+  get authService() {
+    return this.instance.authService;
+  }
+
+  get notificationServerActions() {
+    return this.instance.notificationServerActions;
+  }
+
+  get notificationInitServerActions() {
+    return this.instance.notificationInitServerActions;
+  }
+}
 
 export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextInstance<F> implements DemoApiContext {
+  get serverActionsContext() {
+    return this.get(DemoFirebaseServerActionsContext);
+  }
+
+  get serverActionsContextWithNotificationServices() {
+    return this.get(DemoFirebaseServerActionsContextWithNotificationServices);
+  }
+
   get apiNestContext(): DemoApiNestContext {
     return new DemoApiNestContext(this.nest);
   }
 
   get demoFirestoreCollections(): DemoFirestoreCollections {
     return this.get(DemoFirestoreCollections);
+  }
+
+  get mailgunService() {
+    return this.get(MailgunService);
+  }
+
+  get authService() {
+    return this.get(DemoApiAuthService);
+  }
+
+  get notificationServerActions() {
+    return this.get(NotificationServerActions);
+  }
+
+  get notificationInitServerActions() {
+    return this.get(NotificationInitServerActions);
   }
 }
 
@@ -89,7 +205,7 @@ const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
 
 export const demoApiFunctionContextFactory = (buildTests: JestBuildTestsWithContextFunction<DemoApiFunctionContextFixture>) => {
   initDemoApiTestEnvironment();
-  return _demoApiFunctionContextFactory(buildTests);
+  return _demoApiFunctionContextFactory(buildTests as any);
 };
 
 // MARK: With Users
@@ -131,6 +247,27 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
 
 export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
 export const demoAuthorizedUserAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
+
+// MARK: With Profile
+export interface DemoApiProfileTestContextParams {
+  u: DemoApiAuthorizedUserTestContextFixture;
+}
+
+export class DemoApiProfileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Profile, ProfileDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiProfileTestContextInstance<F>> {}
+
+export class DemoApiProfileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Profile, ProfileDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+
+export const demoProfileContextFactory = () =>
+  modelTestContextFactory<Profile, ProfileDocument, DemoApiProfileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, ProfileFirestoreCollection>({
+    makeFixture: (f) => new DemoApiProfileTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.profileCollection,
+    makeRef: async (collection: FirestoreCollection<Profile, ProfileDocument>, params, p) => {
+      return collection.documentAccessor().documentRefForId(params.u.uid);
+    },
+    makeInstance: (delegate, ref, testInstance) => new DemoApiProfileTestContextInstance(delegate, ref, testInstance)
+  });
+
+export const demoProfileContext = demoProfileContextFactory();
 
 // MARK: With Guestbook
 export type DemoApiGuestbookTestContextParams = Partial<Guestbook>;
@@ -201,3 +338,240 @@ export const demoGuestbookEntryContextFactory = () =>
   });
 
 export const demoGuestbookEntryContext = demoGuestbookEntryContextFactory();
+
+// MARK: NotificationBox
+export interface DemoApiNotificationBoxTestContextParams {
+  for: ModelTestContextFixture<any, any, any, any, any>;
+  ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
+  /**
+   * Whether or not to initialize the NotificationBox. Defaults to false.
+   */
+  createIfNeeded?: boolean;
+  /**
+   * Whether or not to create and initialize. Defaults to false.
+   */
+  initIfNeeded?: boolean;
+}
+
+export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationBox, NotificationBoxDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationBoxTestContextInstance<F>> {
+  allNotificationsForNotificationBoxQuery() {
+    return this.instance.allNotificationsForNotificationBoxQuery();
+  }
+
+  async initializeAllApplicableNotificationBoxes() {
+    return this.instance.initializeAllApplicableNotificationBoxes();
+  }
+
+  async loadAllNotificationsForNotificationBox() {
+    return this.instance.loadAllNotificationsForNotificationBox();
+  }
+
+  async loadAllNotificationWeeksForNotificationBox() {
+    return this.instance.loadAllNotificationWeeksForNotificationBox();
+  }
+
+  async deleteAllNotificationsForNotificationBox() {
+    return this.instance.deleteAllNotificationsForNotificationBox();
+  }
+
+  async initializeNotificationBox(params?: Omit<InitializeNotificationBoxParams, 'key'>) {
+    return this.instance.initializeNotificationBox(params);
+  }
+}
+
+export class DemoApiNotificationBoxTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationBox, NotificationBoxDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  allNotificationsForNotificationBoxQuery() {
+    const query = this.testContext.demoFirestoreCollections.notificationCollectionFactory(this.document).queryDocument();
+    return query;
+  }
+
+  allNotificationWeeksForNotificationBoxQuery() {
+    const query = this.testContext.demoFirestoreCollections.notificationWeekCollectionFactory(this.document).queryDocument();
+    return query;
+  }
+
+  async initializeAllApplicableNotificationBoxes() {
+    const params: InitializeAllApplicableNotificationBoxesParams = {};
+    const initializeAllApplicableNotificationBoxes = await this.testContext.notificationInitServerActions.initializeAllApplicableNotificationBoxes(params);
+    return initializeAllApplicableNotificationBoxes();
+  }
+
+  async loadAllNotificationsForNotificationBox() {
+    const query = this.allNotificationsForNotificationBoxQuery();
+    const results = await query.getDocs();
+    return getDocumentSnapshotDataPairs(results);
+  }
+
+  async loadAllNotificationWeeksForNotificationBox() {
+    const query = this.allNotificationWeeksForNotificationBoxQuery();
+    const results = await query.getDocs();
+    return getDocumentSnapshotDataPairs(results);
+  }
+
+  async deleteAllNotificationsForNotificationBox() {
+    const existingNotifications = await this.loadAllNotificationsForNotificationBox();
+    await Promise.all(existingNotifications.map((x) => x.document.accessor.delete()));
+  }
+
+  async initializeNotificationBox(params?: Omit<InitializeNotificationBoxParams, 'key'>) {
+    const initNotificationBox = await this.testContext.notificationInitServerActions.initializeNotificationBox({ key: this.documentKey, ...params });
+    return initNotificationBox(this.document);
+  }
+}
+
+export const demoNotificationBoxContextFactory = () =>
+  modelTestContextFactory<NotificationBox, NotificationBoxDocument, DemoApiNotificationBoxTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationBoxTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationBoxTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationBoxFirestoreCollection>({
+    makeFixture: (f) => new DemoApiNotificationBoxTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.notificationBoxCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationBoxTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      const flatModelKey = params.for.documentTwoWayFlatKey;
+      return collection.documentAccessor().loadDocumentForId(flatModelKey).documentRef;
+    },
+    initDocument: async (instance, params) => {
+      const p = instance.testContext;
+
+      if (params.createIfNeeded === true || params.initIfNeeded === true) {
+        const exists = await instance.document.exists();
+
+        // create if it doesn't exist
+        if (!exists) {
+          const model = inferKeyFromTwoWayFlatFirestoreModelKey(instance.documentId);
+          const createNotificationBox = await p.notificationServerActions.createNotificationBox({
+            model
+          });
+
+          await createNotificationBox();
+        }
+
+        // initialize
+        if (params.initIfNeeded === true) {
+          const initNotificationBox = await p.notificationInitServerActions.initializeNotificationBox({
+            key: instance.documentKey
+          });
+
+          await initNotificationBox(instance.document);
+        }
+      }
+    }
+  });
+
+export const demoNotificationBoxContext = demoNotificationBoxContextFactory();
+
+// MARK: Notification
+export interface DemoApiNotificationTestContextParams extends Omit<CreateNotificationParams, 'key'> {
+  nb: DemoApiNotificationBoxTestContextFixture;
+}
+
+export class DemoApiNotificationTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Notification, NotificationDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationTestContextInstance<F>> {
+  async sendAllQueuedNotifications() {
+    return this.instance.sendAllQueuedNotifications();
+  }
+
+  async cleanupAllSentNotifications() {
+    return this.instance.cleanupAllSentNotifications();
+  }
+
+  async sendNotification(params?: Maybe<Omit<SendNotificationParams, 'key'>>) {
+    return this.instance.sendNotification(params);
+  }
+}
+
+export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Notification, NotificationDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  /**
+   * Sends the notification.
+   */
+  async sendAllQueuedNotifications() {
+    const sendAllQueuedNotifications = await this.testContext.notificationServerActions.sendQueuedNotifications({});
+    return sendAllQueuedNotifications();
+  }
+
+  /**
+   * Cleanup all sent notifications
+   */
+  async cleanupAllSentNotifications() {
+    const params: CleanupSentNotificationsParams = {};
+    const cleanupSentNotifications = await this.testContext.notificationServerActions.cleanupSentNotifications(params);
+    return cleanupSentNotifications();
+  }
+
+  /**
+   * Sends the notification.
+   */
+  async sendNotification(params?: Maybe<Omit<SendNotificationParams, 'key'>>) {
+    const sendNotification = await this.testContext.notificationServerActions.sendNotification({ ...params, key: this.documentKey });
+    return sendNotification(this.document);
+  }
+}
+
+export const demoNotificationContextFactory = () =>
+  modelTestContextFactory<Notification, NotificationDocument, DemoApiNotificationTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+    makeFixture: (f) => new DemoApiNotificationTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.notificationCollectionGroup,
+    collectionForDocument: (fi, doc) => {
+      const parentDocument = fi.demoFirestoreCollections.notificationBoxCollection.documentAccessor().loadDocument(doc.parent);
+      return fi.demoFirestoreCollections.notificationCollectionFactory(parentDocument);
+    },
+    makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      const { t, m, s, g, d } = params;
+      const notificationBoxDocument = await params.nb.document;
+
+      const createNotification = await p.notificationServerActions.createNotification({
+        t,
+        m,
+        s,
+        g,
+        d,
+        key: notificationBoxDocument.key
+      });
+
+      const result = await createNotification(notificationBoxDocument);
+      return result.documentRef;
+    }
+  });
+
+export const demoNotificationContext = demoNotificationContextFactory();
+
+// MARK: NotificationWeek
+export interface DemoApiNotificationWeekTestContextParams {
+  nb: DemoApiNotificationBoxTestContextFixture;
+  /**
+   * Week to target. If not set, defaults to today.
+   */
+  week?: YearWeekCode;
+  /**
+   * Whether or not to initialize the week. Defaults to true.
+   */
+  init?: boolean;
+}
+
+export class DemoApiNotificationWeekTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationWeek, NotificationWeekDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationWeekTestContextInstance<F>> {}
+
+export class DemoApiNotificationWeekTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationWeek, NotificationWeekDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+
+export const demoNotificationWeekContextFactory = () =>
+  modelTestContextFactory<NotificationWeek, NotificationWeekDocument, DemoApiNotificationWeekTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationWeekTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationWeekTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
+    makeFixture: (f) => new DemoApiNotificationWeekTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.notificationWeekCollectionGroup,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationWeekTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      const week = params.week ?? yearWeekCode(new Date());
+      const notificationWeekDocument = p.demoFirestoreCollections.notificationWeekCollectionFactory(params.nb.document).documentAccessor().loadDocumentForId(`${week}`);
+      return notificationWeekDocument.documentRef;
+    },
+    initDocument: async (instance, params) => {
+      if (params.init !== false) {
+        const exists = await instance.document.exists();
+
+        if (!exists) {
+          await instance.document.create({
+            w: Number(instance.documentId),
+            n: []
+          });
+        }
+      }
+    }
+  });
+
+export const demoNotificationWeekContext = demoNotificationWeekContextFactory();

@@ -1,4 +1,5 @@
 import { type MapFunction } from '../value/map';
+import { POJOKey } from './object';
 
 /**
  * An object with values of a specific type keyed by either string or number or symbols.
@@ -85,3 +86,46 @@ export function mapObjectToTargetObject<M extends ObjectMap<I>, I = unknown, O =
 
   return target;
 }
+
+export type MapObjectKeysFunction<M> = (object: M) => any;
+
+/**
+ * Maps the keys of the input object to a new object with the mapped keys.
+ *
+ * @param object
+ */
+export function mapObjectKeysFunction<M extends object>(mapKeyFn: <K extends keyof M>(key: K, value: M[K]) => POJOKey): MapObjectKeysFunction<M> {
+  return (object: M) => {
+    const keys = Object.keys(object) as (keyof M)[];
+    const target: any = {};
+
+    keys.forEach(<K extends keyof M>(key: K) => {
+      const value: M[K] = object[key];
+      const newKey = mapKeyFn(key, value);
+      target[newKey] = value;
+    });
+
+    return target;
+  };
+}
+
+export type MappedKeysToLowercaseObjectMap<M extends object> = {
+  [K in keyof M as K extends string ? Lowercase<K> : K]: M[K];
+};
+
+/**
+ * Maps all the keys of an object to a new object with keys of the object mapped to lowercase.
+ *
+ * @param object
+ * @param target
+ * @param mapFn
+ */
+export const mapObjectKeysToLowercase = mapObjectKeysFunction((key) => {
+  let nextKey = key as POJOKey;
+
+  if (typeof key === 'string') {
+    nextKey = key.toLowerCase();
+  }
+
+  return nextKey;
+}) as <M extends object>(object: M) => MappedKeysToLowercaseObjectMap<M>;

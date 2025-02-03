@@ -1,9 +1,9 @@
 import { timeHasExpired } from '@dereekb/date';
-import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFirestoreModelKeyInput, type Transaction, readFirestoreModelKey } from '@dereekb/firebase';
 import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys } from '@dereekb/util';
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, type NotificationItem, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
 import { notificationBoxIdForModel, type NotificationTemplateType } from './notification.id';
+import { FirebaseAuthUserId, FirestoreDocumentAccessor, ReadFirestoreModelKeyInput, Transaction, readFirestoreModelKey } from '../../common';
 
 /**
  * Template item for a new Notification
@@ -70,7 +70,7 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
 
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
   const {
-    notificationModel: inputNotificationModel,
+    notificationModel: inputNotification,
     type,
     // notification
     sendType,
@@ -93,7 +93,7 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     d: inputD
   } = input;
 
-  const notificationModel = readFirestoreModelKey(inputNotificationModel) as string;
+  const notificationModel = readFirestoreModelKey(inputNotification) as string;
   const targetModel = inputTargetModel ? readFirestoreModelKey(inputTargetModel) : undefined;
   let d = data ?? inputD;
 

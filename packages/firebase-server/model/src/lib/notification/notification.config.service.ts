@@ -1,7 +1,7 @@
 import { Maybe } from '@dereekb/util';
 import { Inject, Optional } from '@nestjs/common';
 import { noContentNotificationMessageFunctionFactory, NotificationMessageFunction, NotificationMessageFunctionFactory, NotificationMessageFunctionFactoryConfig, NotificationTemplateType } from '@dereekb/firebase';
-import { NotificationTemplateServiceTypeConfig, NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN } from './notification.config';
+import { NotificationTemplateServiceTypeConfig, NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationTemplateServiceTypeConfigArray, NotificationTemplateServiceDefaultsRecord } from './notification.config';
 
 export interface NotificationTemplateServiceRef {
   readonly notificationTemplateService: NotificationTemplateService;
@@ -11,13 +11,13 @@ export interface NotificationTemplateServiceRef {
  * Service dedicated to providing access to NotificationMessageFunctionFactory values for specific NotificationTemplateTypes.
  */
 export class NotificationTemplateService {
-  private readonly _defaults: Record<NotificationTemplateType, NotificationMessageFunctionFactory>;
+  private readonly _defaults: NotificationTemplateServiceDefaultsRecord;
   private readonly _config: Map<NotificationTemplateType, NotificationTemplateServiceTypeConfig>;
 
   constructor(
     //
-    @Optional() @Inject(NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN) _inputDefaults: Record<NotificationTemplateType, NotificationMessageFunctionFactory> | undefined,
-    @Optional() @Inject(NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN) _inputConfigs: NotificationTemplateServiceTypeConfig[] | undefined
+    @Optional() @Inject(NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN) _inputDefaults: NotificationTemplateServiceDefaultsRecord | undefined,
+    @Inject(NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN) _inputConfigs: NotificationTemplateServiceTypeConfigArray | undefined
   ) {
     this._defaults = _inputDefaults ?? {};
 
@@ -34,44 +34,40 @@ export class NotificationTemplateService {
   }
 
   templateInstanceForType(type: NotificationTemplateType): NotificationTemplateServiceInstance {
-    return new NotificationTemplateServiceInstance(this, type);
+    return notificationTemplateServiceInstance(this, type);
   }
 }
 
 /**
  * NotificationTemplateService instance that provides access to message functions of a certain type.
  */
-export class NotificationTemplateServiceInstance {
-  private readonly _service: NotificationTemplateService;
-  private readonly _type: NotificationTemplateType;
+export interface NotificationTemplateServiceInstance {
+  readonly service: NotificationTemplateService;
+  readonly type: NotificationTemplateType;
+  readonly isKnownType: boolean;
+  readonly loadMessageFunction: (config: NotificationMessageFunctionFactoryConfig) => Promise<NotificationMessageFunction>;
+}
 
-  private readonly _isKnownType: boolean;
-  private readonly _defaultFactory: NotificationMessageFunctionFactory;
-  private readonly _config: Maybe<NotificationTemplateServiceTypeConfig>;
+/**
+ * Creates a NotificationTemplateServiceInstance.
+ *
+ * @param service
+ * @param type
+ * @returns
+ */
+export function notificationTemplateServiceInstance(service: NotificationTemplateService, type: NotificationTemplateType): NotificationTemplateServiceInstance {
+  const pair = service.configPairForType(type);
+  const isKnownType = pair[0] != null || pair[1] != null;
+  const defaultFactory = noContentNotificationMessageFunctionFactory();
+  const instanceConfig = pair[1];
 
-  constructor(service: NotificationTemplateService, type: NotificationTemplateType) {
-    this._service = service;
-    this._type = type;
-    const pair = service.configPairForType(type);
-    this._isKnownType = pair[0] != null || pair[1] != null;
-    this._defaultFactory = noContentNotificationMessageFunctionFactory();
-    this._config = pair[1];
-  }
-
-  get service() {
-    return this._service;
-  }
-
-  get type() {
-    return this._type;
-  }
-
-  get isKnownType() {
-    return this._isKnownType;
-  }
-
-  async loadMessageFunction(config: NotificationMessageFunctionFactoryConfig): Promise<NotificationMessageFunction> {
-    const factory = this._config?.factory ?? this._defaultFactory;
-    return factory(config);
-  }
+  return {
+    service,
+    type,
+    isKnownType,
+    loadMessageFunction: async (config: NotificationMessageFunctionFactoryConfig) => {
+      const factory = instanceConfig?.factory ?? defaultFactory;
+      return factory(config);
+    }
+  };
 }

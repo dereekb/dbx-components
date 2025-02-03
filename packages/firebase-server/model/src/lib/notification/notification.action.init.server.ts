@@ -4,6 +4,13 @@ import { NotificationFirestoreCollections, AsyncNotificationBoxUpdateAction, Not
 import { Maybe, performAsyncTasks } from '@dereekb/util';
 import { TransformAndValidateFunctionResult } from '@dereekb/model';
 import { notificationBoxAlreadyInitializedError } from './notification.error';
+import { InjectionToken } from '@nestjs/common';
+
+// MARK: NotificationInitServerActionsContextConfig
+/**
+ * Token to access/override the NotificationTemplateService's defaults records.
+ */
+export const NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN: InjectionToken = 'NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG';
 
 export interface NotificationInitServerActionsContextConfig {
   /**
@@ -19,6 +26,7 @@ export interface MakeTemplateForNotificationBoxInitializationFunctionInput {
   readonly collectionName: FirestoreCollectionName;
 }
 
+export type MakeTemplateForNotificationBoxInitializationFunctionResult = Maybe<Partial<NotificationBox>> | MakeTemplateForNotificationBoxInitializationFunctionDeleteResponse;
 export type MakeTemplateForNotificationBoxInitializationFunctionDeleteResponse = false;
 
 /**
@@ -29,8 +37,9 @@ export type MakeTemplateForNotificationBoxInitializationFunctionDeleteResponse =
  * - If null/undefined is returned, then the model will be flagged as invalid instead.
  * - If false, then the NotificationBox will be deleted.
  */
-export type MakeTemplateForNotificationBoxInitializationFunction = (input: MakeTemplateForNotificationBoxInitializationFunctionInput) => Promise<Maybe<Partial<NotificationBox>> | MakeTemplateForNotificationBoxInitializationFunctionDeleteResponse>;
+export type MakeTemplateForNotificationBoxInitializationFunction = (input: MakeTemplateForNotificationBoxInitializationFunctionInput) => Promise<MakeTemplateForNotificationBoxInitializationFunctionResult>;
 
+// MARK: Notificaiton Initialization Server Actions
 export interface NotificationInitServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirestoreContextReference, NotificationInitServerActionsContextConfig {}
 
 export abstract class NotificationInitServerActions {
@@ -75,7 +84,7 @@ export function initializeNotificationBoxInTransactionFactory(context: Notificat
       } else if (template == null) {
         await notificationBoxDocumentInTransaction.update({
           s: false, // set false when "f" is set true
-          f: true
+          fi: true
         });
       } else {
         initialized = true;
@@ -85,7 +94,7 @@ export function initializeNotificationBoxInTransactionFactory(context: Notificat
           ...template,
           m: undefined, // should not be changed
           s: null, // is now initialized.
-          f: false // set false
+          fi: false // set false
         });
       }
     } else if (throwErrorIfInitialized) {

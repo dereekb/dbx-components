@@ -4,7 +4,12 @@ import { type SetIncludesMode } from '../set/set.mode';
 import { type KeyAsString } from '../type';
 
 /**
- * Key of an object.
+ * Any valid Plain-old Javascript Object key.
+ */
+export type POJOKey = string | number | symbol;
+
+/**
+ * String key of an object.
  */
 export type ObjectKey = string;
 export type EmptyObject = Record<string, never>;

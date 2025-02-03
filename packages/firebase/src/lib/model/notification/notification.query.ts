@@ -1,4 +1,4 @@
-import { type FirestoreQueryConstraint, where } from '@dereekb/firebase';
+import { type FirestoreQueryConstraint, where } from '../../common/firestore';
 import { type Notification, type NotificationBox } from './notification';
 import { toISODateString } from '@dereekb/date';
 
@@ -20,7 +20,7 @@ export function notificationBoxesFlaggedForNeedsInitializationQuery(): Firestore
  * @returns
  */
 export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
-  return [where<NotificationBox>('in', '==', true)];
+  return [where<NotificationBox>('fi', '==', true)];
 }
 
 // MARK: Notifcation

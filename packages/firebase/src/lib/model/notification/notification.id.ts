@@ -1,4 +1,4 @@
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { FirestoreModelId, type FirestoreModelKey, FlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '../../common';
 
 /**
  * The NotificationBox's id is the flat firestore model key of the object that it represents.
@@ -32,5 +32,7 @@ export const DEFAULT_NOTIFICATION_TEMPLATE_TYPE = 'D';
  * Template type identifier of the notification.
  *
  * Provides default information for the notification.
+ *
+ * Types are generally intended to be handled case-insensitively by notification services.
  */
 export type NotificationTemplateType = string;

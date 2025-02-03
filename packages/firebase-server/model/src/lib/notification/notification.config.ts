@@ -26,3 +26,13 @@ export interface NotificationTemplateServiceTypeConfig {
    */
   factory: NotificationMessageFunctionFactory<any>;
 }
+
+/**
+ * Used by NotificationTemplateService for template configurations.
+ */
+export type NotificationTemplateServiceTypeConfigArray = NotificationTemplateServiceTypeConfig[];
+
+/**
+ * A record of default NotificationMessageFunctionFactory valeus to use for specific NotificationTemplateType values.
+ */
+export type NotificationTemplateServiceDefaultsRecord = Record<NotificationTemplateType, NotificationMessageFunctionFactory>;
