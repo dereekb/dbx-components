@@ -1,7 +1,7 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Inject, Optional } from '@nestjs/common';
-import { noContentNotificationMessageFunctionFactory, NotificationMessageFunction, NotificationMessageFunctionFactory, NotificationMessageFunctionFactoryConfig, NotificationTemplateType } from '@dereekb/firebase';
-import { NotificationTemplateServiceTypeConfig, NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationTemplateServiceTypeConfigArray, NotificationTemplateServiceDefaultsRecord } from './notification.config';
+import { noContentNotificationMessageFunctionFactory, type NotificationMessageFunction, type NotificationMessageFunctionFactory, type NotificationMessageFunctionFactoryConfig, type NotificationTemplateType } from '@dereekb/firebase';
+import { type NotificationTemplateServiceTypeConfig, NOTIFICATION_TEMPLATE_SERVICE_DEFAULTS_OVERRIDE_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, type NotificationTemplateServiceTypeConfigArray, type NotificationTemplateServiceDefaultsRecord } from './notification.config';
 
 export interface NotificationTemplateServiceRef {
   readonly notificationTemplateService: NotificationTemplateService;

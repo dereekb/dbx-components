@@ -1,7 +1,6 @@
-import { allowedNotificationRecipients, DEFAULT_NOTIFICATION_TEMPLATE_TYPE, Notification, NotificationBox, NotificationBoxRecipient, NotificationBoxRecipientTemplateConfig, NotificationRecipientSendFlag, NotificationRecipientWithConfig } from '@dereekb/firebase';
-import { FirebaseAuthDetails, FirebaseAuthUserId } from '@dereekb/firebase';
-import { FirebaseServerAuthService } from '@dereekb/firebase-server';
-import { E164PhoneNumber, EmailAddress, Maybe, PhoneNumber } from '@dereekb/util';
+import { allowedNotificationRecipients, DEFAULT_NOTIFICATION_TEMPLATE_TYPE, type Notification, type NotificationBox, type NotificationBoxRecipient, type NotificationBoxRecipientTemplateConfig, NotificationRecipientSendFlag, type NotificationRecipientWithConfig, type FirebaseAuthDetails, type FirebaseAuthUserId } from '@dereekb/firebase';
+import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
+import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber } from '@dereekb/util';
 
 export interface ExpandNotificationRecipientsInput {
   readonly notification: Notification;

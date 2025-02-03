@@ -1,4 +1,4 @@
-import { FirestoreModelId, type FirestoreModelKey, FlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '../../common';
 
 /**
  * The NotificationBox's id is the flat firestore model key of the object that it represents.

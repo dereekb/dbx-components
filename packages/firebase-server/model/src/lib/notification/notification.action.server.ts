@@ -1,52 +1,64 @@
 import { isPast, addMinutes, addHours } from 'date-fns';
-import { DocumentDataWithIdAndKey, FirebaseAuthOwnershipKey, FirestoreContextReference, FirestoreDocumentSnapshotDataPair, FirestoreModelKey, ReadFirestoreModelKeyInput, Transaction, firestoreDummyKey, getDocumentSnapshotDataPairs, inferKeyFromTwoWayFlatFirestoreModelKey, loadDocumentsForDocumentReferencesFromValues, readFirestoreModelKey, getDocumentSnapshotData } from '@dereekb/firebase';
-import { FirebaseServerActionsContext, FirebaseServerAuthServiceRef, assertSnapshotData } from '@dereekb/firebase-server';
 import {
-  AsyncNotificationUpdateAction,
-  NotificationDocument,
-  NotificationFirestoreCollections,
+  type DocumentDataWithIdAndKey,
+  type FirebaseAuthOwnershipKey,
+  type FirestoreContextReference,
+  type FirestoreDocumentSnapshotDataPair,
+  type FirestoreModelKey,
+  type ReadFirestoreModelKeyInput,
+  type Transaction,
+  firestoreDummyKey,
+  getDocumentSnapshotDataPairs,
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  loadDocumentsForDocumentReferencesFromValues,
+  readFirestoreModelKey,
+  getDocumentSnapshotData,
+  type AsyncNotificationUpdateAction,
+  type NotificationDocument,
+  type NotificationFirestoreCollections,
   CreateNotificationParams,
-  AsyncNotificationCreateAction,
-  AsyncNotificationBoxUpdateAction,
+  type AsyncNotificationCreateAction,
+  type AsyncNotificationBoxUpdateAction,
   UpdateNotificationBoxParams,
-  NotificationBoxDocument,
+  type NotificationBoxDocument,
   UpdateNotificationBoxRecipientParams,
   SendNotificationParams,
   UpdateNotificationParams,
-  NotificationBoxRecipient,
+  type NotificationBoxRecipient,
   notificationBoxRecipientTemplateConfigArrayToMap,
   SendQueuedNotificationsParams,
-  SendQueuedNotificationsResult,
-  SendNotificationResult,
+  type SendQueuedNotificationsResult,
+  type SendNotificationResult,
   CleanupSentNotificationsParams,
-  CleanupSentNotificationsResult,
+  type CleanupSentNotificationsResult,
   notificationsPastSendAtTimeQuery,
-  Notification,
-  NotificationItem,
+  type Notification,
+  type NotificationItem,
   NotificationSendType,
-  NotificationRecipientWithConfig,
+  type NotificationRecipientWithConfig,
   NotificationSendState,
-  NotificationBox,
-  NotificationTemplateType,
-  AsyncNotificationBoxCreateAction,
+  type NotificationBox,
+  type NotificationTemplateType,
+  type AsyncNotificationBoxCreateAction,
   CreateNotificationBoxParams,
-  NotificationMessageInputContext,
+  type NotificationMessageInputContext,
   notificationSendFlagsImplyIsComplete,
-  NotificationSendFlags,
+  type NotificationSendFlags,
   notificationBoxIdForModel,
   notificationsReadyForCleanupQuery,
-  NotificationRecipientSendFlag,
+  type NotificationRecipientSendFlag,
   shouldSaveNotificationToNotificationWeek
 } from '@dereekb/firebase';
+import { type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, assertSnapshotData } from '@dereekb/firebase-server';
 import { createNotificationIdRequiredError, notificationBoxRecipientDoesNotExistsError } from './notification.error';
-import { Maybe, performAsyncTasks, batch, invertBooleanReturnFunction, lastValue, makeValuesGroupMap, mergeObjects, sortAscendingIndexNumberRefFunction, filterMaybeValues } from '@dereekb/util';
-import { TransformAndValidateFunctionResult } from '@dereekb/model';
+import { type Maybe, performAsyncTasks, batch, invertBooleanReturnFunction, lastValue, makeValuesGroupMap, mergeObjects, sortAscendingIndexNumberRefFunction, filterMaybeValues } from '@dereekb/util';
+import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { expandNotificationRecipients } from './notification.util';
 import { yearWeekCode } from '@dereekb/date';
-import { NotificationTemplateServiceInstance, NotificationTemplateServiceRef } from './notification.config.service';
-import { NotificationSendServiceRef } from './notification.send.service';
-import { NotificationSendMessagesInstance } from './notification.send';
-import { InjectionToken } from '@nestjs/common';
+import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
+import { type NotificationSendServiceRef } from './notification.send.service';
+import { type NotificationSendMessagesInstance } from './notification.send';
+import { type InjectionToken } from '@nestjs/common';
 
 /**
  * Injection token for the BaseNotificationServerActionsContext

@@ -1,5 +1,5 @@
 import { type MapFunction } from '../value/map';
-import { POJOKey } from './object';
+import { type POJOKey } from './object';
 
 /**
  * An object with values of a specific type keyed by either string or number or symbols.

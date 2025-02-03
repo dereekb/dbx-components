@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationServerActions, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
+import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContextWithNotificationServices } from './notification.action.context';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoNotificationTemplateServiceConfigsArrayFactory } from './notification.factory';

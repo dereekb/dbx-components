@@ -1,8 +1,8 @@
-import { Maybe, batch, build, multiValueMapBuilder, PromiseOrValue, useAsync, runAsyncTasksForValues, IndexedBatch, mapObjectKeysToLowercase } from '@dereekb/util';
-import { MailgunRecipient, MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
-import { NotificationMessage, NotificationTemplateType } from '@dereekb/firebase';
-import { NotificationEmailSendService } from '../notification/notification.send.service';
-import { NotificationSendMessagesInstance } from '../notification/notification.send';
+import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase } from '@dereekb/util';
+import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
+import { type NotificationMessage, type NotificationTemplateType } from '@dereekb/firebase';
+import { type NotificationEmailSendService } from '../notification/notification.send.service';
+import { type NotificationSendMessagesInstance } from '../notification/notification.send';
 
 /**
  * Input for a MailgunNotificationEmailSendServiceTemplateBuilder.
@@ -53,7 +53,7 @@ export const MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_
  */
 export type MailgunNotificationEmailSendServiceTemplateBuilder = (input: MailgunNotificationEmailSendServiceTemplateBuilderInput) => PromiseOrValue<MailgunTemplateEmailRequest>;
 
-export interface MailgunNotificationEmailSendService extends NotificationEmailSendService {}
+export type MailgunNotificationEmailSendService = NotificationEmailSendService;
 
 export function mailgunNotificationEmailSendService(config: MailgunNotificationEmailSendServiceConfig): MailgunNotificationEmailSendService {
   const { mailgunService, defaultTemplateType, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders } = config;

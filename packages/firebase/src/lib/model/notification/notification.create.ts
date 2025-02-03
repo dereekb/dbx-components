@@ -3,7 +3,7 @@ import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, type NotificationItem, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
 import { notificationBoxIdForModel, type NotificationTemplateType } from './notification.id';
-import { FirebaseAuthUserId, FirestoreDocumentAccessor, ReadFirestoreModelKeyInput, Transaction, readFirestoreModelKey } from '../../common';
+import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFirestoreModelKeyInput, type Transaction, readFirestoreModelKey } from '../../common';
 
 /**
  * Template item for a new Notification

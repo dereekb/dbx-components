@@ -3,19 +3,19 @@ import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type NotificationTemplateType, type NotificationBoxId, type NotificationId } from './notification.id';
 import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { UserRelatedById, type UserRelated } from '../user';
+import { type UserRelatedById, type UserRelated } from '../user';
 import {
   AbstractFirestoreDocument,
   AbstractFirestoreDocumentWithParent,
-  CollectionGroup,
-  CollectionReference,
-  FirebaseAuthUserId,
-  FirestoreCollection,
-  FirestoreCollectionGroup,
-  FirestoreCollectionWithParent,
-  FirestoreContext,
-  FirestoreModelKey,
-  SavedToFirestoreIfTrue,
+  type CollectionGroup,
+  type CollectionReference,
+  type FirebaseAuthUserId,
+  type FirestoreCollection,
+  type FirestoreCollectionGroup,
+  type FirestoreCollectionWithParent,
+  type FirestoreContext,
+  type FirestoreModelKey,
+  type SavedToFirestoreIfTrue,
   firestoreBoolean,
   firestoreDate,
   firestoreEnum,

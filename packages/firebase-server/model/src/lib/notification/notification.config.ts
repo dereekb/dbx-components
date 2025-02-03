@@ -1,5 +1,5 @@
-import { InjectionToken } from '@nestjs/common';
-import { NotificationTemplateType, NotificationMessageFunctionFactory } from '@dereekb/firebase';
+import { type InjectionToken } from '@nestjs/common';
+import { type NotificationTemplateType, type NotificationMessageFunctionFactory } from '@dereekb/firebase';
 
 // MARK: Tokens
 /**

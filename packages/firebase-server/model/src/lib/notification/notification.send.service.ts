@@ -1,6 +1,6 @@
-import { NotificationMessage } from '@dereekb/firebase';
-import { NotificationSendMessagesInstance } from './notification.send';
-import { Maybe } from '@dereekb/util';
+import { type NotificationMessage } from '@dereekb/firebase';
+import { type NotificationSendMessagesInstance } from './notification.send';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Provides a reference to a NotificationSendService instance.
