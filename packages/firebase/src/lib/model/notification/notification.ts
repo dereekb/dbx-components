@@ -1,6 +1,6 @@
 import { type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { type NotificationTemplateType, type NotificationBoxId, type NotificationId } from './notification.id';
+import { type NotificationBoxId } from './notification.id';
 import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { type UserRelatedById, type UserRelated } from '../user';
@@ -9,7 +9,6 @@ import {
   AbstractFirestoreDocumentWithParent,
   type CollectionGroup,
   type CollectionReference,
-  type FirebaseAuthUserId,
   type FirestoreCollection,
   type FirestoreCollectionGroup,
   type FirestoreCollectionWithParent,
@@ -20,24 +19,21 @@ import {
   firestoreDate,
   firestoreEnum,
   firestoreModelIdArrayField,
-  firestoreModelIdString,
   firestoreModelIdentity,
   firestoreModelKeyString,
   firestoreNumber,
   firestoreObjectArray,
-  firestorePassThroughField,
-  firestoreString,
-  firestoreSubObject,
   firestoreUID,
   optionalFirestoreBoolean,
   optionalFirestoreEnum,
-  optionalFirestoreString,
-  optionalFirestoreUID,
-  snapshotConverterFunctions
+  snapshotConverterFunctions,
+  optionalFirestoreDate
 } from '../../common';
+import { NotificationItem, firestoreNotificationItem } from './notification.item';
 
 export interface NotificationFirestoreCollections {
   readonly notificationUserCollection: NotificationUserFirestoreCollection;
+  readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
   readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
   readonly notificationCollectionFactory: NotificationFirestoreCollectionFactory;
   readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
@@ -103,6 +99,84 @@ export function notificationUserFirestoreCollection(firestoreContext: FirestoreC
     converter: notificationUserConverter,
     collection: notificationUserCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new NotificationUserDocument(accessor, documentAccessor),
+    firestoreContext
+  });
+}
+
+// MARK: NotificationSummary
+/**
+ * An arbitrary summary object
+ */
+export const notificationSummaryIdentity = firestoreModelIdentity('notificationSummary', 'ns');
+
+/**
+ * The maximum number of notifications that can be stored in a NotificationSummary.
+ */
+export const NOTIFICATION_SUMMARY_ITEM_LIMIT = 1000;
+
+/**
+ * Used to hold arbitrary NotificationItems in the system for an object. The id for this is the two-way flat key of the object it represents.
+ *
+ * Notification Items can be delivered here.
+ */
+export interface NotificationSummary {
+  /**
+   * Notification Box creation date
+   */
+  cat: Date;
+  /**
+   * Model key of the model this box is assigned to.
+   */
+  m: FirestoreModelKey;
+  /**
+   * Owner model key of the model this box is assigned to.
+   */
+  o: FirestoreModelKey;
+  /**
+   * Notification items.
+   */
+  n: NotificationItem[];
+  /**
+   * Date of the latest notification.
+   */
+  lat?: Maybe<Date>;
+}
+
+/**
+ * NotificationSummary roles
+ */
+export type NotificationSummaryRoles = GrantedReadRole;
+
+export class NotificationSummaryDocument extends AbstractFirestoreDocument<NotificationSummary, NotificationSummaryDocument, typeof notificationSummaryIdentity> {
+  get modelIdentity() {
+    return notificationSummaryIdentity;
+  }
+}
+
+export const notificationSummaryConverter = snapshotConverterFunctions<NotificationSummary>({
+  fields: {
+    cat: firestoreDate(),
+    m: firestoreModelKeyString,
+    o: firestoreModelKeyString,
+    n: firestoreObjectArray({
+      objectField: firestoreNotificationItem
+    }),
+    lat: optionalFirestoreDate()
+  }
+});
+
+export function notificationSummaryCollectionReference(context: FirestoreContext): CollectionReference<NotificationSummary> {
+  return context.collection(notificationSummaryIdentity.collectionName);
+}
+
+export type NotificationSummaryFirestoreCollection = FirestoreCollection<NotificationSummary, NotificationSummaryDocument>;
+
+export function notificationSummaryFirestoreCollection(firestoreContext: FirestoreContext): NotificationSummaryFirestoreCollection {
+  return firestoreContext.firestoreCollection({
+    modelIdentity: notificationSummaryIdentity,
+    converter: notificationSummaryConverter,
+    collection: notificationSummaryCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new NotificationSummaryDocument(accessor, documentAccessor),
     firestoreContext
   });
 }
@@ -200,66 +274,6 @@ export function notificationBoxFirestoreCollection(firestoreContext: FirestoreCo
 
 // MARK: Notification Data
 export const notificationIdentity = firestoreModelIdentity(notificationBoxIdentity, 'notification', 'nbn');
-
-/**
- * Arbitrary metadata for a job. Derived/managed by the concrete job type.
- */
-export type NotificationItemMetadata = Readonly<Record<string, any>>;
-
-/**
- * A notification item.
- *
- * Is embedded within a Notification, NotificationWeek, and NotificationSummary.
- */
-export interface NotificationItem<D extends NotificationItemMetadata = {}> {
-  /**
-   * Unique identifier
-   */
-  id: NotificationId;
-  /**
-   * Notification date/time
-   */
-  cat: Date;
-  /**
-   * Notification template type.
-   */
-  t: NotificationTemplateType;
-  /**
-   * User who created this notification, if applicable.
-   */
-  cb?: Maybe<FirebaseAuthUserId>;
-  /**
-   * Model/object that this notification item is targeting.
-   */
-  m?: Maybe<FirestoreModelKey>;
-  /**
-   * Subject. Used to overwrite the template's default subject.
-   */
-  s?: Maybe<string>;
-  /**
-   * Message. Used to overwrite the template's default message.
-   */
-  g?: Maybe<string>;
-  /**
-   * Arbitrary metadata attached to the notification item.
-   */
-  d?: Maybe<D>;
-}
-
-export const firestoreNotificationItem = firestoreSubObject<NotificationItem>({
-  objectField: {
-    fields: {
-      id: firestoreModelIdString,
-      cat: firestoreDate(),
-      cb: optionalFirestoreUID(),
-      t: firestoreString(),
-      m: optionalFirestoreString(),
-      s: optionalFirestoreString(),
-      g: optionalFirestoreString(),
-      d: firestorePassThroughField()
-    }
-  }
-});
 
 export enum NotificationSendType {
   /**
@@ -361,6 +375,10 @@ export interface NotificationSendFlags {
    */
   ps: NotificationSendState;
   /**
+   * Notification summary send state
+   */
+  ns: NotificationSendState;
+  /**
    * Push notification recipient send flag. Determines who will recieve the notifications, and if it should be saved to the NotificationWeek once sent.
    */
   rf?: Maybe<NotificationRecipientSendFlag>;
@@ -412,6 +430,7 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
     ts: firestoreEnum({ default: NotificationSendState.NONE }),
     es: firestoreEnum({ default: NotificationSendState.NONE }),
     ps: firestoreEnum({ default: NotificationSendState.NONE }),
+    ns: firestoreEnum({ default: NotificationSendState.NONE }),
     n: firestoreNotificationItem,
     r: firestoreObjectArray({
       objectField: firestoreNotificationRecipientWithConfig
@@ -480,8 +499,6 @@ export interface NotificationWeek {
   w: YearWeekCode;
   /**
    * Notification items.
-   *
-   * Contains only the latest 2000 notifications.
    */
   n: NotificationItem[];
 }

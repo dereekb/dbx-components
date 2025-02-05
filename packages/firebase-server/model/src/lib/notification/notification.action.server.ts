@@ -279,6 +279,10 @@ export interface CreateNotificationInTransactionParams {
    */
   readonly sendPushNotifications?: boolean;
   /**
+   * Whether or not to send to notification summaries. Defaults to true.
+   */
+  readonly sendToNotificationSummary?: boolean;
+  /**
    * Ownership key for the notification.
    */
   readonly ownershipKey?: FirebaseAuthOwnershipKey;
@@ -287,7 +291,7 @@ export interface CreateNotificationInTransactionParams {
 export function createNotificationInTransactionFactory(context: NotificationServerActionsContext) {
   const { notificationCollectionFactory, notificationBoxCollection } = context;
   return async (params: CreateNotificationInTransactionParams, transaction: Transaction) => {
-    const { createFor, notificationBox: inputNotificationBox, sendType, recipientSendFlag, item, sendAt, additionalRecipients, sendEmails = true, sendTexts = true, sendPushNotifications = true, ownershipKey } = params;
+    const { createFor, notificationBox: inputNotificationBox, sendType, recipientSendFlag, item, sendAt, additionalRecipients, sendEmails = true, sendTexts = true, sendPushNotifications = true, sendToNotificationSummary = true, ownershipKey } = params;
 
     let id: Maybe<string> = inputNotificationBox?.id;
 
@@ -313,6 +317,7 @@ export function createNotificationInTransactionFactory(context: NotificationServ
       es: sendEmails ? NotificationSendState.QUEUED : NotificationSendState.NONE,
       ts: sendTexts ? NotificationSendState.QUEUED : NotificationSendState.NONE,
       ps: sendPushNotifications ? NotificationSendState.QUEUED : NotificationSendState.NONE,
+      ns: sendToNotificationSummary ? NotificationSendState.QUEUED : NotificationSendState.NONE,
       n: {
         ...item,
         id: notificationDocument.id,
@@ -524,18 +529,22 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
           if (messageFunction) {
             // expand recipients
-            const { emails, texts } = await expandNotificationRecipients({
+            const {
+              emails: emailRecipients,
+              texts: textRecipients,
+              notificationSummaries: notificationSummaryRecipients
+            } = await expandNotificationRecipients({
               notification,
               notificationBox,
               authService,
               globalRecipients: messageFunction.additionalRecipients
             });
 
-            let { es, ts, ps } = notification;
+            let { es, ts, ps, ns } = notification;
 
             // do emails
             if (es === NotificationSendState.QUEUED) {
-              const emailInputContexts: NotificationMessageInputContext[] = emails.map((x) => {
+              const emailInputContexts: NotificationMessageInputContext[] = emailRecipients.map((x) => {
                 const context: NotificationMessageInputContext = {
                   recipient: {
                     n: x.name,
@@ -588,8 +597,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             ts = NotificationSendState.NO_TRY;
             ps = NotificationSendState.NO_TRY;
 
+            // do notification summaries
+            if (ns === NotificationSendState.QUEUED) {
+              // TODO: add notifications to respective notification summaries...
+            }
+
             // calculate results
-            const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps };
+            const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns };
 
             success = notificationSendFlagsImplyIsComplete(notificationTemplate);
 

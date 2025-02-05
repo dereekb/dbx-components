@@ -42,7 +42,9 @@ import {
   SystemStateRoles,
   SystemStateStoredData,
   SystemStateTypes,
-  FirestoreContextReference
+  FirestoreContextReference,
+  NotificationSummaryFirestoreCollection,
+  notificationSummaryFirestoreCollection
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
@@ -60,6 +62,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
   abstract readonly profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
   abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
+  abstract readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
   abstract readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
   abstract readonly notificationCollectionFactory: NotificationFirestoreCollectionFactory;
   abstract readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
@@ -78,6 +81,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
     profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext),
     notificationUserCollection: notificationUserFirestoreCollection(firestoreContext),
+    notificationSummaryCollection: notificationSummaryFirestoreCollection(firestoreContext),
     notificationBoxCollection: notificationBoxFirestoreCollection(firestoreContext),
     notificationCollectionFactory: notificationFirestoreCollectionFactory(firestoreContext),
     notificationCollectionGroup: notificationFirestoreCollectionGroup(firestoreContext),

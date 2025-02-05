@@ -1,9 +1,10 @@
 import { timeHasExpired } from '@dereekb/date';
 import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys } from '@dereekb/util';
-import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, type NotificationItem, NotificationSendState, NotificationSendType } from './notification';
+import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
 import { notificationBoxIdForModel, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFirestoreModelKeyInput, type Transaction, readFirestoreModelKey } from '../../common';
+import { type NotificationItem } from './notification.item';
 
 /**
  * Template item for a new Notification
@@ -191,7 +192,7 @@ export interface CreateNotificationDocumentPairResult {
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context } = input;
-  const { notificationModel, st, sat, r, rf, n, ts, es, ps } = template;
+  const { notificationModel, st, sat, r, rf, n, ts, es, ps, ns } = template;
 
   let accessor = inputAccessor;
   const notificationBoxId = notificationBoxIdForModel(notificationModel);
@@ -230,7 +231,8 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     d: false,
     ts: ts ?? NotificationSendState.QUEUED,
     es: es ?? NotificationSendState.QUEUED,
-    ps: ps ?? NotificationSendState.QUEUED
+    ps: ps ?? NotificationSendState.QUEUED,
+    ns: ns ?? NotificationSendState.QUEUED
   };
 
   return {

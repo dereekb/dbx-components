@@ -13,10 +13,18 @@ export type NotificationBoxKey = FirestoreModelKey;
  * @param modelKey
  * @returns
  */
-export function notificationBoxIdForModel(modelKey: FirestoreModelKey): NotificationBoxId {
-  const flatModelKey = twoWayFlatFirestoreModelKey(modelKey);
-  return flatModelKey;
-}
+export const notificationBoxIdForModel = twoWayFlatFirestoreModelKey;
+
+export type NotificationSummaryId = FlatFirestoreModelKey;
+export type NotificationSummaryKey = FirestoreModelKey;
+
+/**
+ * Creates a NotificationSummaryId from the input FirestoreModelKey.
+ *
+ * @param modelKey
+ * @returns
+ */
+export const notificationSummaryIdForModel = twoWayFlatFirestoreModelKey;
 
 export type NotificationWeekId = FirestoreModelId;
 export type NotificationWeekKey = FirestoreModelKey;

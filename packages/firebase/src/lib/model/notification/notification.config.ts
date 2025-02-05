@@ -1,5 +1,5 @@
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue } from '@dereekb/util';
-import { type NotificationTemplateType } from './notification.id';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey } from '@dereekb/util';
+import { NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString } from '../../common';
 
 // MARK: Recipient
@@ -25,6 +25,10 @@ export interface NotificationRecipient {
    * User's phone number to send text messages to. Overrides any info in the user's Profile.
    */
   t?: Maybe<E164PhoneNumber>;
+  /**
+   * Notification summary to send notifications to. Ignored if uid is defined.
+   */
+  s?: Maybe<NotificationSummaryId>;
 }
 
 export interface NotificationRecipientWithConfig extends NotificationRecipient, NotificationBoxRecipientTemplateConfig {}
@@ -34,10 +38,12 @@ export const firestoreNotificationRecipientWithConfig = firestoreSubObject<Notif
     fields: {
       uid: optionalFirestoreString(),
       n: optionalFirestoreString(),
-      t: optionalFirestoreString(),
       e: optionalFirestoreString(),
+      t: optionalFirestoreString(),
+      s: optionalFirestoreString(),
       se: optionalFirestoreBoolean(),
       st: optionalFirestoreBoolean(),
+      sp: optionalFirestoreBoolean(),
       sn: optionalFirestoreBoolean()
     }
   }
@@ -52,7 +58,7 @@ export enum NotificationBoxRecipientFlag {
    */
   ENABLED = 0,
   /**
-   * The recipient is not enabled to recieve notifications for now.
+   * The recipient is not enabled to recieve notifications currently.
    */
   DISABLED = 1,
   /**
@@ -100,13 +106,18 @@ export interface NotificationBoxRecipientTemplateConfig {
   /**
    * Push notification enabled / Send Push Notification
    */
+  sp?: Maybe<boolean>;
+  /**
+   * Send to notification summary of the associate user, if applicable.
+   */
   sn?: Maybe<boolean>;
 }
 
 export enum NotificationBoxRecipientTemplateConfigBoolean {
   EMAIL = 0,
   TEXT = 1,
-  PUSH_NOTIFICATION = 2
+  PUSH_NOTIFICATION = 2,
+  NOTIFICATION_SUMMARY = 3
 }
 
 /**
@@ -139,8 +150,12 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
       set.add(NotificationBoxRecipientTemplateConfigBoolean.EMAIL);
     }
 
-    if (x.sn) {
+    if (x.sp) {
       set.add(NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION);
+    }
+
+    if (x.sn) {
+      set.add(NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY);
     }
 
     return set;
@@ -157,6 +172,10 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
     }
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION)) {
+      object.sp = true;
+    }
+
+    if (x.has(NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY)) {
       object.sn = true;
     }
 
@@ -178,6 +197,7 @@ export const firestoreNotificationBoxRecipient = firestoreSubObject<Notification
       n: optionalFirestoreString(),
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
+      s: optionalFirestoreString(),
       f: optionalFirestoreEnum(),
       c: firestoreNotificationBoxRecipientTemplateConfigMap()
     }
@@ -215,6 +235,7 @@ export function notificationBoxRecipientTemplateConfigArrayToMap(input: Notifica
     map[x.type] = {
       st: x.st,
       se: x.se,
+      sp: x.sp,
       sn: x.sn
     };
   });

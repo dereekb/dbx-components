@@ -1,11 +1,15 @@
-import { allowedNotificationRecipients, DEFAULT_NOTIFICATION_TEMPLATE_TYPE, type Notification, type NotificationBox, type NotificationBoxRecipient, type NotificationBoxRecipientTemplateConfig, NotificationRecipientSendFlag, type NotificationRecipientWithConfig, type FirebaseAuthDetails, type FirebaseAuthUserId } from '@dereekb/firebase';
+import { allowedNotificationRecipients, DEFAULT_NOTIFICATION_TEMPLATE_TYPE, type Notification, type NotificationBox, type NotificationBoxRecipient, type NotificationBoxRecipientTemplateConfig, NotificationRecipientSendFlag, type NotificationRecipientWithConfig, type FirebaseAuthDetails, type FirebaseAuthUserId, NotificationSummaryKey, firestoreModelKey, notificationSummaryIdentity, NotificationSummaryId } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
-import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber } from '@dereekb/util';
+import { FactoryWithInput, type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, FactoryWithRequiredInput } from '@dereekb/util';
 
 export interface ExpandNotificationRecipientsInput {
   readonly notification: Notification;
   readonly notificationBox?: Maybe<NotificationBox>;
   readonly authService: FirebaseServerAuthService;
+  /**
+   * Factory for creating a NotificationSummaryKey given a uid. If not defined, then notification summaries will not be generated for uids.
+   */
+  readonly notificationSummaryIdForUid?: FactoryWithRequiredInput<NotificationSummaryId, FirebaseAuthUserId>;
   /**
    * Overrides the recipient flag for the notification.
    */
@@ -22,31 +26,36 @@ export interface ExpandedNotificationRecipientConfig {
 }
 
 export interface ExpandedNotificationRecipientBase {
-  name?: Maybe<string>;
-  emailAddress?: Maybe<EmailAddress>;
-  phoneNumber?: Maybe<E164PhoneNumber>;
-  boxRecipient?: ExpandedNotificationRecipientConfig;
-  otherRecipient?: NotificationRecipientWithConfig;
+  readonly name?: Maybe<string>;
+  readonly emailAddress?: Maybe<EmailAddress>;
+  readonly phoneNumber?: Maybe<E164PhoneNumber>;
+  readonly boxRecipient?: ExpandedNotificationRecipientConfig;
+  readonly otherRecipient?: NotificationRecipientWithConfig;
 }
 
 export interface ExpandedNotificationRecipientEmail extends ExpandedNotificationRecipientBase {
-  emailAddress: EmailAddress;
+  readonly emailAddress: EmailAddress;
 }
 
 export interface ExpandedNotificationRecipientPhone extends ExpandedNotificationRecipientBase {
-  phoneNumber: E164PhoneNumber;
+  readonly phoneNumber: E164PhoneNumber;
 }
 
 export type ExpandedNotificationRecipientText = ExpandedNotificationRecipientPhone;
+
+export interface ExpandedNotificationNotificationSummaryRecipient extends Pick<ExpandedNotificationRecipientBase, 'boxRecipient' | 'otherRecipient'> {
+  readonly notificationSummaryKey: NotificationSummaryKey;
+}
 
 export interface ExpandNotificationRecipientsResult {
   readonly emails: ExpandedNotificationRecipientEmail[];
   readonly texts: ExpandedNotificationRecipientText[];
   // readonly pushNotifications: ExpandedNotificationRecipient[];
+  readonly notificationSummaries: ExpandedNotificationNotificationSummaryRecipient[];
 }
 
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
-  const { authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride } = input;
+  const { authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid = () => undefined } = input;
   const notificationTemplateType = notification.n.t || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
   const recipientFlag = recipientFlagOverride ?? notification.rf ?? NotificationRecipientSendFlag.NORMAL;
 
@@ -66,7 +75,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     if (!x.f) {
       const relevantConfig = x.c[notificationTemplateType];
 
-      if (!relevantConfig || relevantConfig.se || relevantConfig.sn || relevantConfig.st) {
+      if (!relevantConfig || relevantConfig.se || relevantConfig.sp || relevantConfig.st) {
         relevantBoxRecipientConfigs.push({
           recipient: x,
           templateConfig: relevantConfig
@@ -83,6 +92,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const otherRecipientConfigs = new Map<FirebaseAuthUserId, NotificationRecipientWithConfig>();
   const otherRecipientEmailAddresses = new Map<EmailAddress, NotificationRecipientWithConfig>();
   const otherRecipientTextNumbers = new Map<PhoneNumber, NotificationRecipientWithConfig>();
+  const otherRecipientNotificationSummaryKeys = new Map<NotificationSummaryId, NotificationRecipientWithConfig>();
 
   [...explicitRecipients, ...globalRecipients].forEach((x) => {
     if (x.uid) {
@@ -96,6 +106,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
     if (x.t) {
       otherRecipientTextNumbers.set(x.t, x);
+    }
+
+    if (x.s) {
+      otherRecipientNotificationSummaryKeys.set(firestoreModelKey(notificationSummaryIdentity, x.s), x);
     }
   });
 
@@ -196,7 +210,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       if (t) {
         const n = x.recipient.n ?? userDetails?.displayName;
         const phoneNumber = t as E164PhoneNumber;
-        otherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same email
+        otherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same text phone number
 
         const textRecipient: ExpandedNotificationRecipientText = {
           phoneNumber,
@@ -210,26 +224,6 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
         if (uid) {
           textUidsSet.add(uid);
         }
-      }
-    }
-  });
-
-  otherRecipientConfigs.forEach((x, uid) => {
-    const userDetails = userDetailsMap.get(uid);
-
-    if (userDetails) {
-      const { email: emailAddress, displayName } = userDetails;
-
-      if (emailAddress && !emailUidsSet.has(uid)) {
-        const emailRecipient: ExpandedNotificationRecipientEmail = {
-          emailAddress,
-          name: x.n ?? displayName,
-          otherRecipient: x
-        };
-
-        emails.push(emailRecipient);
-        emailUidsSet.add(uid);
-        otherRecipientEmailAddresses.delete(emailAddress);
       }
     }
   });
@@ -264,10 +258,74 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     texts.push(textRecipient);
   });
 
+  // make all notification summary recipients
+  const notificationSummaries: ExpandedNotificationNotificationSummaryRecipient[] = [];
+  const notificationSummaryKeysSet = new Set<NotificationSummaryKey>();
+  const notificationSummaryUidsSet = new Set<FirebaseAuthUserId>();
+
+  relevantBoxRecipientConfigs.forEach((x) => {
+    const { recipient } = x;
+    const { uid } = recipient;
+
+    const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
+
+    // don't send a notification summary if marked false
+    if (x.templateConfig?.sn !== false && !notificationSummaryUidsSet.has(uid ?? '')) {
+      let notificationSummaryId: Maybe<NotificationSummaryId>;
+
+      if (uid) {
+        // only use the uid (and ignore recipient config) if uid is defined
+        notificationSummaryId = notificationSummaryIdForUid(uid);
+        notificationSummaryUidsSet.add(uid);
+      } else if (x.recipient.s) {
+        notificationSummaryId = x.recipient.s;
+      }
+
+      let notificationSummaryKey: Maybe<NotificationSummaryKey> = notificationSummaryId ? firestoreModelKey(notificationSummaryIdentity, notificationSummaryId) : undefined;
+
+      if (notificationSummaryKey) {
+        notificationSummaries.push({
+          notificationSummaryKey,
+          boxRecipient: x,
+          otherRecipient: otherRecipientForUser
+        });
+        otherRecipientNotificationSummaryKeys.delete(notificationSummaryKey); // don't double send
+      }
+    }
+  });
+
+  otherRecipientConfigs.forEach((x, uid) => {
+    const { s: notificationSummaryId } = x;
+
+    if (notificationSummaryId) {
+      const notificationSummaryKey = firestoreModelKey(notificationSummaryIdentity, notificationSummaryId);
+
+      if (!notificationSummaryKeysSet.has(notificationSummaryId)) {
+        const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
+          notificationSummaryKey,
+          otherRecipient: x
+        };
+
+        notificationSummaries.push(notificationSummary);
+        otherRecipientNotificationSummaryKeys.delete(notificationSummaryKey);
+      }
+    }
+  });
+
+  otherRecipientNotificationSummaryKeys.forEach((x, notificationSummaryKey) => {
+    const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
+      notificationSummaryKey,
+      otherRecipient: x
+    };
+
+    notificationSummaries.push(notificationSummary);
+  });
+
   // results
   const result: ExpandNotificationRecipientsResult = {
     emails,
-    texts
+    texts,
+    notificationSummaries
   };
 
   return result;

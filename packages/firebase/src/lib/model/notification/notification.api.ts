@@ -3,9 +3,10 @@ import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirest
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
-import { type NotificationItem, type NotificationItemMetadata, type NotificationTypes } from './notification';
+import { type NotificationTypes } from './notification';
+import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type NotificationBoxRecipientTemplateConfigArrayEntry } from './notification.config';
-import { type NotificationTemplateType } from './notification.id';
+import { NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -75,6 +76,11 @@ export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements No
   @Expose()
   @IsOptional()
   @IsBoolean()
+  sp?: Maybe<boolean>;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
   sn?: Maybe<boolean>;
 }
 
@@ -113,6 +119,14 @@ export class UpdateNotificationBoxRecipientParams extends TargetModelParams {
   @IsOptional()
   @IsPhoneNumber()
   p?: Maybe<E164PhoneNumber>;
+
+  /**
+   * Notification summary id
+   */
+  @Expose()
+  @IsOptional()
+  @IsPhoneNumber()
+  s?: Maybe<NotificationSummaryId>;
 
   /**
    * Array of configs

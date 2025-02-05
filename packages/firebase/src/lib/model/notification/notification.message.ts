@@ -1,6 +1,7 @@
 import { type Building, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
-import { type Notification, type NotificationBox, type NotificationItem, type NotificationItemMetadata } from './notification';
+import { type Notification, type NotificationBox } from './notification';
+import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type DocumentDataWithIdAndKey } from '../../common';
 
 /**
