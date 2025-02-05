@@ -29,7 +29,7 @@ export abstract class GuestbookEntryParams {
   guestbook!: string; // ModelKey;
 }
 
-export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
+export class InsertGuestbookEntryParams extends GuestbookEntryParams {
   @Expose()
   @IsOptional()
   @IsNotEmpty()
@@ -59,19 +59,26 @@ export type GuestbookModelCrudFunctionsConfig = {
     create: CreateGuestbookParams;
   };
   guestbookEntry: {
-    update: UpdateGuestbookEntryParams;
+    update: {
+      insert: InsertGuestbookEntryParams;
+    };
     delete: GuestbookEntryParams;
   };
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
   guestbook: ['create'],
-  guestbookEntry: ['update', 'delete']
+  guestbookEntry: ['update:insert', 'delete']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
 
 export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<GuestbookFunctionTypeMap, GuestbookModelCrudFunctionsConfig> {
   abstract guestbook: { createGuestbook: ModelFirebaseCreateFunction<CreateGuestbookParams> };
-  abstract guestbookEntry: { updateGuestbookEntry: ModelFirebaseCrudFunction<UpdateGuestbookEntryParams>; deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams> };
+  abstract guestbookEntry: {
+    updateGuestbookEntry: {
+      insert: ModelFirebaseCrudFunction<InsertGuestbookEntryParams>;
+    };
+    deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;
+  };
 }

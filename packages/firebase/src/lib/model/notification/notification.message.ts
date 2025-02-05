@@ -14,18 +14,20 @@ export interface NotificationMessageInputContext {
 }
 
 /**
- * Arbitrary template type/key that is used to configure which template to use by the sending service.
+ * Arbitrary template name/key that is used to configure which template to use by the sending service.
  */
-export type NotificationMessageTemplateType = string;
+export type NotificationSendMessageTemplateName = string;
 
 /**
  * Generic notification message content.
  */
 export interface NotificationMessageContent {
   /**
-   * Explicit template type to use, if applicable.
+   * Explicit send template name to use, if applicable.
+   *
+   * The sending service determines how this template is used.
    */
-  readonly templateType?: Maybe<NotificationMessageTemplateType>;
+  readonly sendTemplateName?: Maybe<NotificationSendMessageTemplateName>;
   /**
    * The title/subject of the message for the recipient
    */

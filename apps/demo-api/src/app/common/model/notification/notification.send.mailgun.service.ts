@@ -27,7 +27,7 @@ export function demoNotificationMailgunSendService(mailgunService: MailgunServic
 
   const mailgunSendService: MailgunNotificationEmailSendService = mailgunNotificationEmailSendService({
     mailgunService,
-    defaultTemplateType: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
+    defaultSendTemplateName: DEMO_NOTIFICATION_ACTION_TEMPLATE_KEY,
     messageBuilders: {
       notificationTemplate: (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): MailgunTemplateEmailRequest => {
         const { messages } = input;

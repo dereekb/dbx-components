@@ -207,7 +207,9 @@ export const notificationIdentity = firestoreModelIdentity(notificationBoxIdenti
 export type NotificationItemMetadata = Readonly<Record<string, any>>;
 
 /**
- * A notification item. Is embedded within a Notification and NotificationWeek.
+ * A notification item.
+ *
+ * Is embedded within a Notification, NotificationWeek, and NotificationSummary.
  */
 export interface NotificationItem<D extends NotificationItemMetadata = {}> {
   /**
@@ -464,6 +466,11 @@ export function notificationFirestoreCollectionGroup(firestoreContext: Firestore
 export const notificationWeekIdentity = firestoreModelIdentity(notificationBoxIdentity, 'notificationWeek', 'nbnw');
 
 /**
+ * The maximum number of notifications that can be stored in a NotificationWeek.
+ */
+export const NOTIFICATION_WEEK_NOTIFICATION_ITEM_LIMIT = 5000;
+
+/**
  * Notification week. Contains all notifications in the box for the given week.
  */
 export interface NotificationWeek {
@@ -472,7 +479,9 @@ export interface NotificationWeek {
    */
   w: YearWeekCode;
   /**
-   * Notification items
+   * Notification items.
+   *
+   * Contains only the latest 2000 notifications.
    */
   n: NotificationItem[];
 }

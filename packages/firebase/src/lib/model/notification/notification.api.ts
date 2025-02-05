@@ -38,9 +38,9 @@ export class InitializeNotificationBoxParams extends TargetModelParams {
    * Whether or not to throw an error if the notification has already been sent or is being sent.
    */
   @Expose()
-  @IsOptional()
   @IsBoolean()
-  throwErrorIfInitialized?: Maybe<boolean>;
+  @IsOptional()
+  throwErrorIfInitialized?: boolean;
 }
 
 export class InitializeAllApplicableNotificationBoxesParams {}

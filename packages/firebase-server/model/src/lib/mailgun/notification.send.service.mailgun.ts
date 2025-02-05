@@ -1,6 +1,6 @@
 import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase } from '@dereekb/util';
 import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
-import { type NotificationMessage, type NotificationTemplateType } from '@dereekb/firebase';
+import { type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
 import { type NotificationEmailSendService } from '../notification/notification.send.service';
 import { type NotificationSendMessagesInstance } from '../notification/notification.send';
 
@@ -15,7 +15,7 @@ export interface MailgunNotificationEmailSendServiceTemplateBuilderInput {
   /**
    * The determined template type for all email messages provided.
    */
-  readonly templateType: NotificationTemplateType;
+  readonly sendTemplateName: NotificationSendMessageTemplateName;
   /**
    * The set of email messages to be built into the email request.
    */
@@ -33,7 +33,7 @@ export interface MailgunNotificationEmailSendServiceConfig {
   /**
    * The default template type to use for messages, if applicable.
    */
-  readonly defaultTemplateType?: Maybe<NotificationTemplateType>;
+  readonly defaultSendTemplateName?: Maybe<NotificationSendMessageTemplateName>;
   /**
    * The maximum number of messages to batch together.
    *
@@ -43,7 +43,7 @@ export interface MailgunNotificationEmailSendServiceConfig {
   /**
    * A Record of MailgunNotificationEmailSendServiceTemplateBuilder functions keyed by the template type used to convert messages.
    */
-  readonly messageBuilders: Record<NotificationTemplateType, MailgunNotificationEmailSendServiceTemplateBuilder>;
+  readonly messageBuilders: Record<NotificationSendMessageTemplateName, MailgunNotificationEmailSendServiceTemplateBuilder>;
 }
 
 export const MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST = 50;
@@ -56,40 +56,40 @@ export type MailgunNotificationEmailSendServiceTemplateBuilder = (input: Mailgun
 export type MailgunNotificationEmailSendService = NotificationEmailSendService;
 
 export function mailgunNotificationEmailSendService(config: MailgunNotificationEmailSendServiceConfig): MailgunNotificationEmailSendService {
-  const { mailgunService, defaultTemplateType, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders } = config;
+  const { mailgunService, defaultSendTemplateName, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders } = config;
   const lowercaseKeysMessageBuilders = mapObjectKeysToLowercase(inputMessageBuilders);
   const maxBatchSizePerRequest = inputMaxBatchSizePerRequest ?? MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST;
 
   const sendService: MailgunNotificationEmailSendService = {
     async buildSendInstanceForEmailNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance> {
-      const templateMap = multiValueMapBuilder<NotificationMessage, NotificationTemplateType>();
+      const templateMap = multiValueMapBuilder<NotificationMessage, NotificationSendMessageTemplateName>();
 
       // group by templates
       notificationMessages.forEach((x) => {
-        const templateType = x.emailContent?.templateType ?? x.content.templateType ?? defaultTemplateType;
+        const sendTemplateName = x.emailContent?.sendTemplateName ?? x.content.sendTemplateName ?? defaultSendTemplateName;
 
-        if (templateType == null) {
-          throw new Error(`mailgunNotificationEmailSendService(): A template type for a message was not available and no default was provided. Consider configuring a default template type.`);
+        if (sendTemplateName == null) {
+          throw new Error(`mailgunNotificationEmailSendService(): A sendTemplateName for a message was not available and no default was provided. Consider configuring a default send template.`);
         }
 
-        templateMap.add(templateType, x);
+        templateMap.add(sendTemplateName, x);
       });
 
       // build send batches
       const messageSendBatches = templateMap.entries().flatMap(([templateType, messages]) => {
-        return batch(messages, maxBatchSizePerRequest).map((x) => [templateType as NotificationTemplateType, x] as const);
+        return batch(messages, maxBatchSizePerRequest).map((x) => [templateType as NotificationSendMessageTemplateName, x] as const);
       });
 
       // create the template requests
       const templateRequests = await Promise.all(
-        messageSendBatches.map(([templateType, messages]) => {
-          const templateTypeToLowercase = templateType.toLowerCase();
-          const builderForKey = lowercaseKeysMessageBuilders[templateTypeToLowercase as any];
+        messageSendBatches.map(([sendTemplateName, messages]) => {
+          const sendTemplateNameToLowercase = sendTemplateName.toLowerCase();
+          const builderForKey = lowercaseKeysMessageBuilders[sendTemplateNameToLowercase as any];
 
           if (!builderForKey) {
-            throw new Error(`mailgunNotificationEmailSendService(): A template builder was not available for template type "${templateType}".`);
+            throw new Error(`mailgunNotificationEmailSendService(): A template builder was not available for template type "${sendTemplateName}".`);
           } else {
-            const input = { mailgunService, templateType, messages };
+            const input = { mailgunService, sendTemplateName, messages };
             return builderForKey(input);
           }
         })

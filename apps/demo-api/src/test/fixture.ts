@@ -1,4 +1,4 @@
-import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument, GuestbookEntryFirestoreCollection, Profile, ProfileFirestoreCollection } from '@dereekb/demo-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument, GuestbookEntryFirestoreCollection, Profile, ProfileFirestoreCollection, InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
 import {
   authorizedUserContextFactory,
   AuthorizedUserTestContextFixture,
@@ -24,9 +24,9 @@ import { initUserOnCreate } from '../app/function/auth/init.user.function';
 import { DemoApiNestContext } from '../app/function/function';
 import { CleanupSentNotificationsParams, CreateNotificationParams, FirestoreCollection, FirestoreModelKey, InitializeAllApplicableNotificationBoxesParams, InitializeNotificationBoxParams, NotificationBox, NotificationBoxDocument, NotificationBoxFirestoreCollection, Notification, NotificationDocument, NotificationWeek, NotificationWeekDocument, SendNotificationParams, getDocumentSnapshotDataPairs, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { type Maybe } from '@dereekb/util';
+import { objectHasKeys, type Maybe } from '@dereekb/util';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
-import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices } from '../app/common';
+import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 
 // MARK: Demo Api Testing Fixture
@@ -83,6 +83,14 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
   get notificationInitServerActions() {
     return this.instance.notificationInitServerActions;
   }
+
+  get profileServerActions() {
+    return this.instance.profileServerActions;
+  }
+
+  get guestbookServerActions() {
+    return this.instance.guestbookServerActions;
+  }
 }
 
 export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextInstance<F> implements DemoApiContext {
@@ -116,6 +124,14 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get notificationInitServerActions() {
     return this.get(NotificationInitServerActions);
+  }
+
+  get profileServerActions() {
+    return this.get(ProfileServerActions);
+  }
+
+  get guestbookServerActions() {
+    return this.get(GuestbookServerActions);
   }
 }
 
@@ -160,6 +176,14 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
   get notificationInitServerActions() {
     return this.instance.notificationInitServerActions;
   }
+
+  get profileServerActions() {
+    return this.instance.profileServerActions;
+  }
+
+  get guestbookServerActions() {
+    return this.instance.guestbookServerActions;
+  }
 }
 
 export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextInstance<F> implements DemoApiContext {
@@ -193,6 +217,14 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get notificationInitServerActions() {
     return this.get(NotificationInitServerActions);
+  }
+
+  get profileServerActions() {
+    return this.get(ProfileServerActions);
+  }
+
+  get guestbookServerActions() {
+    return this.get(GuestbookServerActions);
   }
 }
 
@@ -305,9 +337,34 @@ export interface DemoApiGuestbookEntryTestContextParams extends Partial<Guestboo
   g: DemoApiGuestbookTestContextFixture;
 }
 
-export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookEntryTestContextInstance<F>> {}
+export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookEntryTestContextInstance<F>> {
+  async init(params?: Maybe<Partial<Omit<InsertGuestbookEntryParams, 'guestbook'>>>) {
+    return this.instance.init(params);
+  }
 
-export class DemoApiGuestbookEntryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+  async createOrUpdateEntry(update: Omit<InsertGuestbookEntryParams, 'guestbook'>) {
+    return this.instance.createOrUpdateEntry(update);
+  }
+}
+
+export class DemoApiGuestbookEntryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  async init(params?: Maybe<Partial<Omit<InsertGuestbookEntryParams, 'guestbook'>>>) {
+    await this.createOrUpdateEntry({
+      message: params?.message ?? 'test',
+      signed: params?.signed ?? 'test',
+      published: params?.published ?? true
+    });
+  }
+
+  async createOrUpdateEntry(update: Omit<InsertGuestbookEntryParams, 'guestbook'>) {
+    const updateInstance = await this.testContext.guestbookServerActions.insertGuestbookEntry({
+      ...update,
+      guestbook: this.document.parent.id
+    });
+
+    await updateInstance(this.document);
+  }
+}
 
 export const demoGuestbookEntryContextFactory = () =>
   modelTestContextFactory<GuestbookEntry, GuestbookEntryDocument, DemoApiGuestbookEntryTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>, GuestbookEntryFirestoreCollection>({
@@ -323,13 +380,18 @@ export const demoGuestbookEntryContextFactory = () =>
     },
     initDocument: async (instance, params) => {
       const guestbookEntry = instance.document;
+      let exists = await instance.document.exists();
 
-      if (params.init !== false) {
-        await guestbookEntry.accessor.set({
-          uid: params.u.uid,
-          message: params.message ?? 'test',
-          signed: params.signed ?? 'test',
-          published: params.published ?? true,
+      if (params.init !== false && !exists) {
+        if (!exists) {
+          await instance.init(params);
+        }
+      } else if (exists && objectHasKeys(params, ['message', 'signed', 'published'], 'any')) {
+        await instance.createOrUpdateEntry(params);
+      }
+
+      if (params.createdAt || params.updatedAt) {
+        await guestbookEntry.update({
           createdAt: params.createdAt ?? new Date(),
           updatedAt: params.updatedAt ?? new Date()
         });

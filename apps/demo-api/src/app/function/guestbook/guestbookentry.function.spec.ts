@@ -1,4 +1,4 @@
-import { GuestbookEntry, guestbookEntryIdentity, UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
+import { GuestbookEntry, guestbookEntryIdentity, InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
@@ -6,7 +6,7 @@ import { onCallUpdateModelParams } from '@dereekb/firebase';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCloudFunctionTest('updateGuestbookEntry', { f, fn: demoCallModel }, (callGuestbookEntryCloudFn) => {
+  describeCloudFunctionTest('insertGuestbookEntry', { f, fn: demoCallModel }, (callGuestbookEntryCloudFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       demoGuestbookContext({ f, published: true }, (g) => {
         describe('guestbook is active', () => {
@@ -21,7 +21,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             const message = 'test message';
             const signed = 'test signed';
 
-            const params: UpdateGuestbookEntryParams = {
+            const params: InsertGuestbookEntryParams = {
               guestbook: g.documentId,
               message,
               signed
@@ -79,7 +79,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                 const newMessage = 'updated test message';
 
-                const params: UpdateGuestbookEntryParams = {
+                const params: InsertGuestbookEntryParams = {
                   guestbook: g.documentId,
                   message: newMessage,
                   published: true
