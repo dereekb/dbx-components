@@ -1,6 +1,7 @@
-import { computeNextFreeIndexFunction, type Maybe, ModelRelationUtility, readIndexNumber, type RelationChange } from '@dereekb/util';
-import { type Notification, type NotificationBox, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState } from './notification';
-import { type NotificationBoxRecipient } from './notification.config';
+import { computeNextFreeIndexFunction, type Maybe, ModelRelationUtility, readIndexNumber, RelationChange } from '@dereekb/util';
+import { type Notification, type NotificationBox, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, NotificationUser } from './notification';
+import { NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag } from './notification.config';
+import { NotificationBoxId } from './notification.id';
 
 // MARK: Notification
 /**
@@ -96,50 +97,27 @@ export function shouldSaveNotificationToNotificationWeek(notification: Notificat
 }
 
 // MARK: NotificationBox
-export interface ChangeRecipientInNotificationBoxInput {
-  /**
-   * Relation change to perform
-   */
-  readonly change: RelationChange;
-  /**
-   * Recipient to change
-   */
-  readonly recipient: Partial<NotificationBoxRecipient>;
-  readonly recipientsRef: Pick<NotificationBox, 'r'>;
+export function mergeNotificationUserNotificationBoxRecipientConfigs(a: NotificationUserNotificationBoxRecipientConfig, b: Partial<NotificationUserNotificationBoxRecipientConfig>): NotificationUserNotificationBoxRecipientConfig {
+  return {
+    ...mergeNotificationBoxRecipients(a, b),
+    // retain the following states always
+    f: a.f === NotificationBoxRecipientFlag.OPT_OUT ? a.f : b.f ?? a.f, // do not override if marked OPT OUT
+    nb: a.nb,
+    rm: a.rm,
+    ns: a.ns,
+    lk: a.lk,
+    bk: a.bk
+  };
 }
 
-export function changeRecipientInNotificationBox(input: ChangeRecipientInNotificationBoxInput): NotificationBoxRecipient[] {
-  const { change, recipient, recipientsRef } = input;
-  const { uid } = recipient;
-  let { i } = recipient;
-
-  // look up the user's index if it isn't provided
-  if (i == null && uid) {
-    i = recipientsRef.r.find((x) => x.uid === uid)?.i;
-  }
-
-  // set the next/default index
-  if (i == null) {
-    i = computeNextFreeIndexFunction(readIndexNumber)(recipientsRef.r);
-  }
-
-  const fullRecipient = {
-    ...recipient,
-    i
-  } as NotificationBoxRecipient;
-
-  const mods: NotificationBoxRecipient[] = [fullRecipient];
-  return ModelRelationUtility.modifyCollection<NotificationBoxRecipient>(input.recipientsRef.r, change, mods, {
-    readKey: readIndexNumber,
-    merge: (a, b) => {
-      return {
-        ...b,
-        ...a,
-        c: {
-          ...a.c,
-          ...b.c
-        }
-      };
+export function mergeNotificationBoxRecipients<T extends NotificationBoxRecipient>(a: T, b: Partial<T>): T {
+  return {
+    ...a,
+    ...b,
+    // configs should be merged/ovewritten
+    c: {
+      ...a.c,
+      ...b.c
     }
-  });
+  };
 }

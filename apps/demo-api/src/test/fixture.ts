@@ -22,7 +22,25 @@ import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
 import { DemoApiNestContext } from '../app/function/function';
-import { CleanupSentNotificationsParams, CreateNotificationParams, FirestoreCollection, FirestoreModelKey, InitializeAllApplicableNotificationBoxesParams, InitializeNotificationBoxParams, NotificationBox, NotificationBoxDocument, NotificationBoxFirestoreCollection, Notification, NotificationDocument, NotificationWeek, NotificationWeekDocument, SendNotificationParams, getDocumentSnapshotDataPairs, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import {
+  CleanupSentNotificationsParams,
+  CreateNotificationParams,
+  FirestoreCollection,
+  FirestoreModelKey,
+  InitializeAllApplicableNotificationBoxesParams,
+  InitializeNotificationBoxParams,
+  NotificationBox,
+  NotificationBoxDocument,
+  NotificationBoxFirestoreCollection,
+  Notification,
+  NotificationDocument,
+  NotificationWeek,
+  NotificationWeekDocument,
+  SendNotificationParams,
+  getDocumentSnapshotDataPairs,
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  UpdateNotificationBoxRecipientParams
+} from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe } from '@dereekb/util';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
@@ -439,6 +457,10 @@ export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFun
   async initializeNotificationBox(params?: Omit<InitializeNotificationBoxParams, 'key'>) {
     return this.instance.initializeNotificationBox(params);
   }
+
+  async updateRecipient(params: Omit<UpdateNotificationBoxRecipientParams, 'key'>) {
+    return this.instance.updateRecipient(params);
+  }
 }
 
 export class DemoApiNotificationBoxTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationBox, NotificationBoxDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -478,6 +500,15 @@ export class DemoApiNotificationBoxTestContextInstance<F extends FirebaseAdminFu
   async initializeNotificationBox(params?: Omit<InitializeNotificationBoxParams, 'key'>) {
     const initNotificationBox = await this.testContext.notificationInitServerActions.initializeNotificationBox({ key: this.documentKey, ...params });
     return initNotificationBox(this.document);
+  }
+
+  async updateRecipient(params: Omit<UpdateNotificationBoxRecipientParams, 'key'>) {
+    const updateRecipient = await this.testContext.notificationServerActions.updateNotificationBoxRecipient({
+      key: this.documentKey,
+      ...params
+    });
+
+    await updateRecipient(this.document);
   }
 }
 

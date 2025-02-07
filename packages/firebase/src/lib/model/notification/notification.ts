@@ -1,7 +1,7 @@
 import { type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type NotificationBoxId } from './notification.id';
-import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig } from './notification.config';
+import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { type UserRelatedById, type UserRelated } from '../user';
 import {
@@ -50,22 +50,24 @@ export const notificationUserIdentity = firestoreModelIdentity('notificationUser
  * A global notification User in the system.
  *
  * Keeps track of the NotificationBoxes the user is subscribed to, as well as other global subscriptions.
+ *
+ * The NotificationUser is created automatically by the NotificationBox as a user is created.
  */
 export interface NotificationUser extends UserRelated, UserRelatedById {
   /**
-   * Notification User creation date
-   */
-  cat: Date;
-  /**
-   * Latest marked as read date. Used to control which notifications are marked as read or not.
-   */
-  mat: Date;
-  /**
-   * List of notification boxes this user is associated with
+   * List of notification boxes this user is associated with. Cannot be changed directly.
    */
   b: NotificationBoxId[];
-
-  // TODO: last recieved
+  /**
+   * List of NotificationBox configurations.
+   *
+   * Configs remain
+   */
+  bc: NotificationUserNotificationBoxRecipientConfig[];
+  /**
+   * Whether or not the user has one or more configs that need to be synced.
+   */
+  ns?: Maybe<NeedsSyncBoolean>;
 
   // TODO: subscriptions: global notification subscriptions that can be subscribed to or cancelled and the system can query on.
 }
@@ -80,10 +82,12 @@ export class NotificationUserDocument extends AbstractFirestoreDocument<Notifica
 
 export const notificationUserConverter = snapshotConverterFunctions<NotificationUser>({
   fields: {
-    cat: firestoreDate(),
-    mat: firestoreDate(),
     uid: firestoreUID(),
-    b: firestoreModelIdArrayField
+    b: firestoreModelIdArrayField,
+    bc: firestoreObjectArray({
+      objectField: firestoreNotificationUserNotificationBoxRecipientConfig
+    }),
+    ns: optionalFirestoreBoolean()
   }
 });
 
@@ -189,7 +193,10 @@ export const notificationBoxIdentity = firestoreModelIdentity('notificationBox',
  *
  * This object is the root collection for notifications for the corresponding object.
  *
- * Additional information about what notification templates are available to this type are available on a per-application basis.
+ * Additional information about what notification templates are available to this type are available on a per-application basis, typically through the
+ * NotificationTemplateTypeDetailsRecord configured for the app.
+ *
+ * Update to each recipient is propogated from NotificationUser values.
  */
 export interface NotificationBox {
   /**

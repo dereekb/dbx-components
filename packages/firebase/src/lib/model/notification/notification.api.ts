@@ -118,7 +118,7 @@ export class UpdateNotificationBoxRecipientParams extends TargetModelParams {
   @Expose()
   @IsOptional()
   @IsPhoneNumber()
-  p?: Maybe<E164PhoneNumber>;
+  t?: Maybe<E164PhoneNumber>;
 
   /**
    * Notification summary id
@@ -136,7 +136,7 @@ export class UpdateNotificationBoxRecipientParams extends TargetModelParams {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => NotificationBoxRecipientTemplateConfigArrayEntryParam)
-  configs: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
+  configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
 
   /**
    * Whether or not to insert the user if they currently do not exist. Defaults to false.

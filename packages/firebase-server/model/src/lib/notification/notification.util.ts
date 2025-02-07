@@ -1,6 +1,28 @@
-import { allowedNotificationRecipients, DEFAULT_NOTIFICATION_TEMPLATE_TYPE, type Notification, type NotificationBox, type NotificationBoxRecipient, type NotificationBoxRecipientTemplateConfig, NotificationRecipientSendFlag, type NotificationRecipientWithConfig, type FirebaseAuthDetails, type FirebaseAuthUserId, NotificationSummaryKey, firestoreModelKey, notificationSummaryIdentity, NotificationSummaryId } from '@dereekb/firebase';
+import {
+  allowedNotificationRecipients,
+  DEFAULT_NOTIFICATION_TEMPLATE_TYPE,
+  type Notification,
+  type NotificationBox,
+  type NotificationBoxRecipient,
+  type NotificationBoxRecipientTemplateConfig,
+  NotificationRecipientSendFlag,
+  type NotificationRecipientWithConfig,
+  type FirebaseAuthDetails,
+  type FirebaseAuthUserId,
+  NotificationSummaryKey,
+  firestoreModelKey,
+  notificationSummaryIdentity,
+  NotificationSummaryId,
+  NotificationBoxId,
+  NotificationUser,
+  NotificationUserNotificationBoxRecipientConfig,
+  mergeNotificationBoxRecipients,
+  mergeNotificationUserNotificationBoxRecipientConfigs,
+  NotificationUserId
+} from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
-import { FactoryWithInput, type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, FactoryWithRequiredInput } from '@dereekb/util';
+import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, FactoryWithRequiredInput, UNSET_INDEX_NUMBER } from '@dereekb/util';
+import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUserLockedConfigFromBeingUpdatedError } from './notification.error';
 
 export interface ExpandNotificationRecipientsInput {
   readonly notification: Notification;
@@ -329,4 +351,123 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   };
 
   return result;
+}
+
+// MARK: NotificationBox
+export interface UpdateNotificationUserNotificationBoxRecipientConfigInput {
+  readonly notificationBoxId: NotificationBoxId;
+  readonly notificationUserId: NotificationUserId;
+  /**
+   * The existing NotificationUser.
+   */
+  readonly notificationUser: Pick<NotificationUser, 'bc'>;
+  /**
+   * If true, flag as if the recipient is being inserted into the NotificationBox since it does not exist there.
+   */
+  readonly insertingRecipientIntoNotificationBox?: Maybe<boolean>;
+  /**
+   * If true, flag as if the recipient is being removed from the NotificationBox.
+   */
+  readonly removeRecipientFromNotificationBox?: Maybe<boolean>;
+  /**
+   * The current NotificationBoxRecipient
+   */
+  readonly notificationBoxRecipient: Maybe<NotificationBoxRecipient>;
+}
+
+export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
+  /**
+   * New configs array, if changes occured.
+   */
+  readonly updatedBc?: Maybe<NotificationUserNotificationBoxRecipientConfig[]>;
+  /**
+   * The updated NotificationBox recipient
+   */
+  readonly updatedNotificationBoxRecipient: Maybe<NotificationBoxRecipient>;
+}
+
+export function updateNotificationUserNotificationBoxRecipientConfig(input: UpdateNotificationUserNotificationBoxRecipientConfigInput): UpdateNotificationUserNotificationBoxRecipientConfigResult {
+  const { notificationBoxId, notificationUserId, notificationUser, insertingRecipientIntoNotificationBox, removeRecipientFromNotificationBox, notificationBoxRecipient } = input;
+
+  const currentNotificationUserBoxIndex = notificationUser.bc.findIndex((x) => x.nb === notificationBoxId);
+
+  const currentNotificationUserBoxIndexExists = currentNotificationUserBoxIndex !== -1;
+  const currentNotificationUserBoxConfig: Partial<NotificationUserNotificationBoxRecipientConfig> = notificationUser.bc[currentNotificationUserBoxIndex] ?? {};
+
+  /**
+   * If bc is updated then the user should be updated too
+   */
+  let updatedBc: Maybe<NotificationUserNotificationBoxRecipientConfig[]>;
+  let updatedNotificationBoxRecipient: Maybe<NotificationBoxRecipient>;
+
+  if (removeRecipientFromNotificationBox) {
+    // flag as removed in the NotificationUser details if not already flagged as such
+    if (currentNotificationUserBoxIndexExists && currentNotificationUserBoxConfig.rm !== true) {
+      updatedBc = [...notificationUser.bc];
+      updatedBc[currentNotificationUserBoxIndex] = {
+        ...(currentNotificationUserBoxConfig as NotificationUserNotificationBoxRecipientConfig),
+        nb: notificationBoxId, // set the NotificationBox id
+        c: currentNotificationUserBoxConfig.c ?? {},
+        i: UNSET_INDEX_NUMBER, // index should be cleared and set to -1
+        rm: true
+      };
+    }
+  } else if (notificationBoxRecipient != null) {
+    const { ns: currentConfigNeedsSync, lk: lockedFromChanges, bk: blockedFromAdd } = currentNotificationUserBoxConfig;
+
+    // if we're re-inserting, then take the prevous config and restore as it was and remove the rm tag
+    let updateWithNotificationBoxRecipient: Partial<NotificationBoxRecipient>;
+
+    if (insertingRecipientIntoNotificationBox) {
+      // does not exist in the NotificationBox currently
+
+      if (blockedFromAdd) {
+        throw notificationUserBlockedFromBeingAddedToRecipientsError(notificationUserId);
+      } else if (lockedFromChanges) {
+        // ignored the notificationBoxRecipient's updates
+        updateWithNotificationBoxRecipient = currentNotificationUserBoxConfig;
+      } else {
+        updateWithNotificationBoxRecipient = mergeNotificationBoxRecipients(notificationBoxRecipient, currentNotificationUserBoxConfig);
+      }
+    } else {
+      // if locked from changes, throw error
+      if (lockedFromChanges) {
+        throw notificationUserLockedConfigFromBeingUpdatedError(notificationUserId);
+      } else if (currentConfigNeedsSync) {
+        // if needs sync, then merge changes from the config into the notificationBoxRecipient
+        updateWithNotificationBoxRecipient = mergeNotificationBoxRecipients(notificationBoxRecipient, currentNotificationUserBoxConfig);
+      } else {
+        // use as-is
+        updateWithNotificationBoxRecipient = notificationBoxRecipient;
+      }
+    }
+
+    const updatedNotificationUserBoxEntry = mergeNotificationUserNotificationBoxRecipientConfigs(
+      {
+        ...currentNotificationUserBoxConfig,
+        i: notificationBoxRecipient.i,
+        c: currentNotificationUserBoxConfig.c ?? {},
+        nb: notificationBoxId, // set the NotificationBox id
+        rm: false // remove/clear the removed flag
+      },
+      updateWithNotificationBoxRecipient
+    );
+
+    updatedBc = [...notificationUser.bc];
+
+    if (currentNotificationUserBoxIndexExists) {
+      updatedBc[currentNotificationUserBoxIndex] = updatedNotificationUserBoxEntry;
+    } else {
+      updatedBc.push(updatedNotificationUserBoxEntry);
+    }
+
+    // sync index with input NotificationBoxRecipient
+    updatedNotificationUserBoxEntry.i = notificationBoxRecipient.i;
+    updatedNotificationBoxRecipient = updatedNotificationUserBoxEntry;
+  }
+
+  return {
+    updatedBc,
+    updatedNotificationBoxRecipient
+  };
 }

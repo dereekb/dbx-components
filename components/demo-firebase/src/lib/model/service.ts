@@ -44,7 +44,10 @@ import {
   SystemStateTypes,
   FirestoreContextReference,
   NotificationSummaryFirestoreCollection,
-  notificationSummaryFirestoreCollection
+  notificationSummaryFirestoreCollection,
+  NotificationSummary,
+  NotificationSummaryDocument,
+  NotificationSummaryRoles
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
@@ -145,6 +148,13 @@ export const notificationUserFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.notificationUserCollection
 });
 
+export const notificationSummaryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationSummary, NotificationSummaryDocument, NotificationSummaryRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationSummary, NotificationSummaryDocument>, context: DemoFirebaseContext, model: NotificationSummaryDocument): PromiseOrValue<GrantedRoleMap<NotificationSummaryRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.notificationSummaryCollection
+});
+
 export const notificationBoxFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationBox, NotificationBoxDocument, NotificationBoxRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationBox, NotificationBoxDocument>, context: DemoFirebaseContext, model: NotificationBoxDocument): PromiseOrValue<GrantedRoleMap<NotificationBoxRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -180,6 +190,7 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   profile: profileFirebaseModelServiceFactory,
   profilePrivate: profilePrivateDataFirebaseModelServiceFactory,
   notificationUser: notificationUserFirebaseModelServiceFactory,
+  notificationSummary: notificationSummaryFirebaseModelServiceFactory,
   notificationBox: notificationBoxFirebaseModelServiceFactory,
   notification: notificationFirebaseModelServiceFactory,
   notificationWeek: notificationWeekFirebaseModelServiceFactory

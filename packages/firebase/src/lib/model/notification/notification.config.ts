@@ -1,6 +1,6 @@
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey } from '@dereekb/util';
-import { NotificationSummaryId, type NotificationTemplateType } from './notification.id';
-import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString } from '../../common';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean } from '@dereekb/util';
+import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
+import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, firestoreModelKey, firestoreString, SavedToFirestoreIfTrue } from '../../common';
 
 // MARK: Recipient
 /**
@@ -79,6 +79,10 @@ export interface NotificationBoxRecipient extends NotificationRecipient, IndexRe
    * Whether or not this recipient is enabled.
    */
   f?: Maybe<NotificationBoxRecipientFlag>;
+  /**
+   * Locked state that corresponds and is sync'd by NotificationUserNotificationBoxRecipientConfig.
+   */
+  lk?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 export function newNotificationBoxRecipientForUid(uid: FirebaseAuthUserId, i: number): NotificationBoxRecipient {
@@ -87,6 +91,42 @@ export function newNotificationBoxRecipientForUid(uid: FirebaseAuthUserId, i: nu
     i,
     uid
   };
+}
+
+/**
+ * Used to reflect the NotificationBoxRecipient config back to a NotificationUser.
+ *
+ * The index reflects the index the user is in the NotificationBox.
+ */
+export interface NotificationUserNotificationBoxRecipientConfig extends NotificationBoxRecipient {
+  /**
+   * NotificationBox this configuration reflects.
+   */
+  nb: NotificationBoxId;
+  /**
+   * Removed state.
+   *
+   * If flagged, then this user has been removed from the NotificationBox.
+   *
+   * The config for this NotificationBox is retained on the NotificationUser, unless the user deletes the configuration themselves.
+   */
+  rm?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * Needs to be sync'd with the NotificationBox
+   */
+  ns?: Maybe<NeedsSyncBoolean>;
+  /**
+   * Locked state.
+   *
+   * If locked, updating the NotificationBox recipient will throw an error. The user can update their settings without issue.
+   */
+  lk?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * Blocked state.
+   *
+   * If blocked, this NotificationBox will not be able to add this user back.
+   */
+  bk?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 /**
@@ -198,7 +238,28 @@ export const firestoreNotificationBoxRecipient = firestoreSubObject<Notification
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
       s: optionalFirestoreString(),
-      f: optionalFirestoreEnum(),
+      f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
+      c: firestoreNotificationBoxRecipientTemplateConfigMap(),
+      lk: optionalFirestoreBoolean({ dontStoreValueIf: false })
+    }
+  }
+});
+
+export const firestoreNotificationUserNotificationBoxRecipientConfig = firestoreSubObject<NotificationUserNotificationBoxRecipientConfig>({
+  objectField: {
+    fields: {
+      nb: firestoreString(),
+      rm: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      ns: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      bk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      i: firestoreNumber({ default: 0 }),
+      uid: optionalFirestoreString(),
+      n: optionalFirestoreString(),
+      t: optionalFirestoreString(),
+      e: optionalFirestoreString(),
+      s: optionalFirestoreString(),
+      f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
       c: firestoreNotificationBoxRecipientTemplateConfigMap()
     }
   }

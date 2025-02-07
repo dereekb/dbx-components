@@ -1,13 +1,14 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationBoxContext, demoNotificationContext, demoProfileContext } from '../../../test/fixture';
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationBoxContext, demoNotificationContext, demoProfileContext } from '../../../test/fixture';
+import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { DocumentDataWithIdAndKey, NotificationBox, Notification, NotificationDocument, NotificationItem, NotificationMessage, NotificationMessageFunctionFactoryConfig, NotificationMessageInputContext, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, firestoreDummyKey } from '@dereekb/firebase';
+import { DocumentDataWithIdAndKey, NotificationBox, Notification, NotificationDocument, NotificationItem, NotificationMessage, NotificationMessageFunctionFactoryConfig, NotificationMessageInputContext, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, firestoreDummyKey, NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
 import { TEST_NOTIFICATIONS_TEMPLATE_TYPE } from '@dereekb/demo-firebase';
 import { createNotificationInTransactionFactory, CreateNotificationInTransactionParams, UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
   describeCloudFunctionTest('notification.crud', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
@@ -70,13 +71,168 @@ demoApiFunctionContextFactory((f) => {
         demoProfileContext({ f, u }, (p) => {
           describe('Notification Box', () => {
             describe('exists', () => {
-              describe('created but not initialized', () => {
-                // TODO: ...
-              });
+              demoNotificationBoxContext(
+                {
+                  f,
+                  for: p, // NotificationBox is for the profile
+                  createIfNeeded: true
+                },
+                (nb) => {
+                  describe('updateNotificationBoxRecipient()', () => {
+                    describe('recipient with uid', () => {
+                      demoAuthorizedUserContext({ f }, (u2) => {
+                        it('should add a user recipient via uid of a user that exists', async () => {
+                          let notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(0);
+
+                          await nb.updateRecipient({
+                            uid: u2.uid,
+                            insert: true
+                          });
+
+                          notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].uid).toBe(u2.uid);
+                        });
+
+                        itShouldFail('if the recipient does not exist in the NotificationBox and insert is not true', async () => {
+                          await expectFail(
+                            () =>
+                              nb.updateRecipient({
+                                uid: u2.uid,
+                                insert: false
+                              }),
+                            jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE)
+                          );
+                        });
+
+                        itShouldFail('if the recipient with the target uid does not exist', async () => {
+                          await expectFail(
+                            () =>
+                              nb.updateRecipient({
+                                uid: 'does_not_exist',
+                                insert: true
+                              }),
+                            jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                          );
+                        });
+                      });
+                    });
+
+                    describe('recipient with email address', () => {
+                      const e = 'tester@dereekb.com';
+
+                      it('should add an email recipient', async () => {
+                        let notificationBox = await assertSnapshotData(nb.document);
+                        expect(notificationBox.r).toHaveLength(0);
+
+                        await nb.updateRecipient({
+                          e,
+                          insert: true
+                        });
+
+                        notificationBox = await assertSnapshotData(nb.document);
+                        expect(notificationBox.r).toHaveLength(1);
+                        expect(notificationBox.r[0].e).toBe(e);
+                      });
+
+                      describe('one exists', () => {
+                        const i = 0;
+
+                        beforeEach(async () => {
+                          await nb.updateRecipient({
+                            e,
+                            insert: true
+                          });
+                        });
+
+                        it('should add two of the same email recipient if insert is true and no index is passed', async () => {
+                          let notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].e).toBe(e);
+
+                          // NOTE: Does not check for duplicate recipients. This is an intended effect.
+                          await nb.updateRecipient({
+                            e,
+                            insert: true
+                          });
+
+                          notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(2);
+                          expect(notificationBox.r[0].e).toBe(e);
+                          expect(notificationBox.r[1].e).toBe(e);
+                        });
+
+                        it('should update the email of the target recipient', async () => {
+                          let notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].e).toBe(e);
+                          expect(notificationBox.r[0].i).toBe(i);
+
+                          const expectedE = 'second@components.dereekb.com';
+
+                          await nb.updateRecipient({
+                            i,
+                            e: expectedE
+                          });
+
+                          notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].e).toBe(expectedE);
+                          expect(notificationBox.r[0].i).toBe(i);
+                        });
+
+                        it('should add a valid uid to the target recipient', async () => {
+                          let notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].e).toBe(e);
+                          expect(notificationBox.r[0].i).toBe(i);
+
+                          const expectedE = 'second@components.dereekb.com';
+
+                          await nb.updateRecipient({
+                            i,
+                            e: expectedE
+                          });
+
+                          notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].e).toBe(expectedE);
+                          expect(notificationBox.r[0].i).toBe(i);
+                        });
+
+                        itShouldFail('to add a uid to the recipient if the target uid does not exist', async () => {
+                          await expectFail(
+                            () =>
+                              nb.updateRecipient({
+                                uid: 'does_not_exist',
+                                insert: true
+                              }),
+                            jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                          );
+                        });
+
+                        it('should remove the recipient', async () => {
+                          await nb.updateRecipient({
+                            i,
+                            remove: true
+                          });
+
+                          const notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(0);
+                        });
+                      });
+                    });
+                  });
+
+                  describe('created but not initialized', () => {
+                    // TODO: ...
+                  });
+                }
+              );
             });
 
             // If the box isn't initialized tben wait until it is before sending the first notifications
-
             describe('does not exist', () => {
               demoNotificationBoxContext(
                 {

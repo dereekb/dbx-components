@@ -15,6 +15,9 @@ export type NotificationBoxKey = FirestoreModelKey;
  */
 export const notificationBoxIdForModel = twoWayFlatFirestoreModelKey;
 
+export type NotificationUserId = FlatFirestoreModelKey;
+export type NotificationUserKey = FirestoreModelKey;
+
 export type NotificationSummaryId = FlatFirestoreModelKey;
 export type NotificationSummaryKey = FirestoreModelKey;
 

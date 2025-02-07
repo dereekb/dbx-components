@@ -1,4 +1,5 @@
-import { CREATE_NOTIFICATION_ID_REQUIRED_ERROR_CODE, type FirestoreModelKey, NOTIFICATION_BOX_ALREADY_INITIALIZED_ERROR_CODE, NOTIFICATION_BOX_EXISTS_FOR_MODEL_ERROR_CODE, NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE } from '@dereekb/firebase';
+import { notificationBoxConverter } from './../../../../../firebase/src/lib/model/notification/notification';
+import { CREATE_NOTIFICATION_ID_REQUIRED_ERROR_CODE, type FirestoreModelKey, NOTIFICATION_BOX_ALREADY_INITIALIZED_ERROR_CODE, NOTIFICATION_BOX_EXISTS_FOR_MODEL_ERROR_CODE, NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE, FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE } from '@dereekb/firebase';
 import { preconditionConflictError } from '@dereekb/firebase-server';
 
 export function createNotificationIdRequiredError() {
@@ -34,7 +35,37 @@ export function notificationBoxExistsForModelError() {
 
 export function notificationBoxRecipientDoesNotExistsError() {
   return preconditionConflictError({
-    message: `A NotificationBox does not exist for this model.`,
+    message: `An existing NotificationBox recipient for the target does not exist. You must pass insert=true to create a new recipient.`,
     code: NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE
+  });
+}
+
+export function notificationUserInvalidUidForCreateError(uid: FirebaseAuthUserId) {
+  return preconditionConflictError({
+    message: `The user with the uid '${uid}' does not exist. Cannot create a NotificationUser for them.`,
+    code: NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE,
+    data: {
+      uid
+    }
+  });
+}
+
+export function notificationUserBlockedFromBeingAddedToRecipientsError(uid: FirebaseAuthUserId) {
+  return preconditionConflictError({
+    message: `The user with the uid '${uid}' has blocked themselves from from being added recipients.`,
+    code: NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
+    data: {
+      uid
+    }
+  });
+}
+
+export function notificationUserLockedConfigFromBeingUpdatedError(uid: FirebaseAuthUserId) {
+  return preconditionConflictError({
+    message: `The user with the uid '${uid}' has locked their config from being updated.`,
+    code: NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
+    data: {
+      uid
+    }
   });
 }
