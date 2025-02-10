@@ -1,5 +1,4 @@
-import { notificationBoxConverter } from './../../../../../firebase/src/lib/model/notification/notification';
-import { CREATE_NOTIFICATION_ID_REQUIRED_ERROR_CODE, type FirestoreModelKey, NOTIFICATION_BOX_ALREADY_INITIALIZED_ERROR_CODE, NOTIFICATION_BOX_EXISTS_FOR_MODEL_ERROR_CODE, NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE, FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE } from '@dereekb/firebase';
+import { CREATE_NOTIFICATION_ID_REQUIRED_ERROR_CODE, type FirestoreModelKey, NOTIFICATION_MODEL_ALREADY_INITIALIZED_ERROR_CODE, NOTIFICATION_BOX_EXISTS_FOR_MODEL_ERROR_CODE, NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE, FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE } from '@dereekb/firebase';
 import { preconditionConflictError } from '@dereekb/firebase-server';
 
 export function createNotificationIdRequiredError() {
@@ -9,17 +8,17 @@ export function createNotificationIdRequiredError() {
   });
 }
 
-export function notificationBoxAlreadyInitializedError() {
+export function notificationModelAlreadyInitializedError() {
   return preconditionConflictError({
-    message: `This NotificationBox has already been initialized.`,
-    code: NOTIFICATION_BOX_ALREADY_INITIALIZED_ERROR_CODE
+    message: `This model has already been initialized.`,
+    code: NOTIFICATION_MODEL_ALREADY_INITIALIZED_ERROR_CODE
   });
 }
 
 export function notificationBoxUnregistredModelTypeInitializationError(key: FirestoreModelKey) {
   return preconditionConflictError({
-    message: `This NotificationBox has already been initialized.`,
-    code: NOTIFICATION_BOX_ALREADY_INITIALIZED_ERROR_CODE,
+    message: `This NotificationBox is associated with an unregistered model type.`,
+    code: NOTIFICATION_MODEL_ALREADY_INITIALIZED_ERROR_CODE,
     data: {
       key
     }

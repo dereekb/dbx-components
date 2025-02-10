@@ -10,16 +10,26 @@ import {
   type NotificationFirestoreCollections,
   type AsyncNotificationBoxUpdateAction,
   type NotificationBoxDocument,
-  InitializeNotificationBoxParams,
+  InitializeNotificationModelParams,
   InitializeAllApplicableNotificationBoxesParams,
   type InitializeAllApplicableNotificationBoxesResult,
   notificationBoxesFlaggedForNeedsInitializationQuery,
-  type NotificationBox
+  type NotificationBox,
+  NotificationSummary,
+  InitializeAllApplicableNotificationSummariesParams,
+  InitializeAllApplicableNotificationSummariesResult,
+  notificationSummariesFlaggedForNeedsInitializationQuery,
+  NotificationSummaryDocument,
+  AsyncNotificationSummaryUpdateAction,
+  FirestoreDocument,
+  DocumentDataWithIdAndKey,
+  FirestoreDocumentData,
+  InitializedNotificationModel
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
 import { type Maybe, performAsyncTasks } from '@dereekb/util';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { notificationBoxAlreadyInitializedError } from './notification.error';
+import { notificationModelAlreadyInitializedError } from './notification.error';
 import { type InjectionToken } from '@nestjs/common';
 
 // MARK: NotificationInitServerActionsContextConfig
@@ -33,94 +43,125 @@ export interface NotificationInitServerActionsContextConfig {
    * MakeTemplateForNotificationBoxInitializationFunction used by the system for initializing the NotificationBoxes for models.
    */
   readonly makeTemplateForNotificationBoxInitialization: MakeTemplateForNotificationBoxInitializationFunction;
+  /**
+   * MakeTemplateForNotificationBoxInitializationFunction used by the system for initializing the NotificationSummaries for models.
+   */
+  readonly makeTemplateForNotificationSummaryInitialization: MakeTemplateForNotificationSummaryInitializationFunction;
 }
 
-export interface MakeTemplateForNotificationBoxInitializationFunctionInput {
+export interface MakeTemplateForNotificationRelatedModelInitializationFunctionInput {
   readonly transaction: Transaction;
   readonly flatModelKey: TwoWayFlatFirestoreModelKey;
   readonly modelKey: FirestoreModelKey;
   readonly collectionName: FirestoreCollectionName;
 }
 
-export type MakeTemplateForNotificationBoxInitializationFunctionResult = Maybe<Partial<NotificationBox>> | MakeTemplateForNotificationBoxInitializationFunctionDeleteResponse;
-export type MakeTemplateForNotificationBoxInitializationFunctionDeleteResponse = false;
+export type MakeTemplateForNotificationRelatedModelInitializationFunctionDeleteResponse = false;
+export type MakeTemplateForNotificationRelatedModelInitializationFunctionResult<T> = Maybe<Partial<T>> | MakeTemplateForNotificationRelatedModelInitializationFunctionDeleteResponse;
 
 /**
- * Function used by the system to determine how to handle a NotifcationBox initialization.
+ * Idempotent function used by the system to determine how to handle a model initialization.
  *
  * Behavior:
- * - Creates a template for the input for initializing a NotificationBox with its related model for models that should be initialized.
+ * - Returns a template for the input that is used for initializing the notification model. Typically this is the owner, or name, etc.
  * - If null/undefined is returned, then the model will be flagged as invalid instead.
- * - If false, then the NotificationBox will be deleted.
+ * - If false, then the notification model will be deleted. Used for cases where a model should not have t
  */
-export type MakeTemplateForNotificationBoxInitializationFunction = (input: MakeTemplateForNotificationBoxInitializationFunctionInput) => Promise<MakeTemplateForNotificationBoxInitializationFunctionResult>;
+export type MakeTemplateForNotificationRelatedModelInitializationFunction<T> = (input: MakeTemplateForNotificationRelatedModelInitializationFunctionInput) => Promise<MakeTemplateForNotificationRelatedModelInitializationFunctionResult<T>>;
+
+export type MakeTemplateForNotificationBoxInitializationFunction = MakeTemplateForNotificationRelatedModelInitializationFunction<NotificationBox>;
+export type MakeTemplateForNotificationSummaryInitializationFunction = MakeTemplateForNotificationRelatedModelInitializationFunction<NotificationSummary>;
 
 // MARK: Notificaiton Initialization Server Actions
 export interface NotificationInitServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirestoreContextReference, NotificationInitServerActionsContextConfig {}
 
 export abstract class NotificationInitServerActions {
-  abstract initializeNotificationBox(params: InitializeNotificationBoxParams): AsyncNotificationBoxUpdateAction<InitializeNotificationBoxParams>;
+  abstract initializeNotificationBox(params: InitializeNotificationModelParams): AsyncNotificationBoxUpdateAction<InitializeNotificationModelParams>;
   abstract initializeAllApplicableNotificationBoxes(params: InitializeAllApplicableNotificationBoxesParams): Promise<TransformAndValidateFunctionResult<InitializeAllApplicableNotificationBoxesParams, () => Promise<InitializeAllApplicableNotificationBoxesResult>>>;
+  abstract initializeNotificationSummary(params: InitializeNotificationModelParams): AsyncNotificationSummaryUpdateAction<InitializeNotificationModelParams>;
+  abstract initializeAllApplicableNotificationSummaries(params: InitializeAllApplicableNotificationSummariesParams): Promise<TransformAndValidateFunctionResult<InitializeAllApplicableNotificationSummariesParams, () => Promise<InitializeAllApplicableNotificationSummariesResult>>>;
 }
 
 export function notificationInitServerActions(context: NotificationInitServerActionsContext): NotificationInitServerActions {
   return {
     initializeNotificationBox: initializeNotificationBoxFactory(context),
-    initializeAllApplicableNotificationBoxes: initializeAllApplicableNotificationBoxesFactory(context)
+    initializeAllApplicableNotificationBoxes: initializeAllApplicableNotificationBoxesFactory(context),
+    initializeNotificationSummary: initializeNotificationSummaryFactory(context),
+    initializeAllApplicableNotificationSummaries: initializeAllApplicableNotificationSummariesFactory(context)
+  };
+}
+
+export interface InitializeNotificationModelInTransactionInput<D extends FirestoreDocument<InitializedNotificationModel, any>> {
+  readonly makeTemplateFunction: MakeTemplateForNotificationRelatedModelInitializationFunction<FirestoreDocumentData<D>>;
+  readonly throwErrorIfAlreadyInitialized?: Maybe<boolean>;
+  readonly transaction: Transaction;
+  readonly document: D;
+  readonly data: FirestoreDocumentData<D>;
+}
+
+export async function initializeNotificationModelInTransaction<D extends FirestoreDocument<InitializedNotificationModel, any>>(input: InitializeNotificationModelInTransactionInput<D>) {
+  const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: notificationBox } = input;
+
+  let initialized: boolean = false;
+  const alreadyInitialized: boolean = !notificationBox.s;
+
+  if (!alreadyInitialized) {
+    const flatModelKey = documentInTransaction.id;
+    const modelKey = inferKeyFromTwoWayFlatFirestoreModelKey(flatModelKey);
+    const modelCollectionName = firestoreModelKeyCollectionName(modelKey) as string;
+
+    const input: MakeTemplateForNotificationRelatedModelInitializationFunctionInput = {
+      transaction,
+      flatModelKey,
+      modelKey,
+      collectionName: modelCollectionName
+    };
+
+    const template = await makeTemplateFunction(input);
+
+    if (template === false) {
+      await documentInTransaction.accessor.delete();
+    } else if (template == null) {
+      await documentInTransaction.update({
+        s: false, // set false when "f" is set true
+        fi: true
+      });
+    } else {
+      initialized = true;
+
+      await documentInTransaction.update({
+        //
+        ...template,
+        m: undefined, // should not be changed
+        s: null, // is now initialized.
+        fi: false // set false
+      });
+    }
+  } else if (throwErrorIfAlreadyInitialized) {
+    throw notificationModelAlreadyInitializedError();
+  }
+
+  return {
+    initialized,
+    alreadyInitialized
   };
 }
 
 export function initializeNotificationBoxInTransactionFactory(context: NotificationInitServerActionsContext) {
   const { notificationBoxCollection, makeTemplateForNotificationBoxInitialization } = context;
 
-  return async (params: InitializeNotificationBoxParams, notificationBoxDocument: NotificationBoxDocument, transaction: Transaction) => {
-    const { throwErrorIfInitialized } = params;
+  return async (params: InitializeNotificationModelParams, notificationBoxDocument: NotificationBoxDocument, transaction: Transaction) => {
+    const { throwErrorIfAlreadyInitialized } = params;
     const notificationBoxDocumentInTransaction = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationBoxDocument);
     const notificationBox = await assertSnapshotData(notificationBoxDocumentInTransaction);
 
-    let initialized: boolean = false;
-    const alreadyInitialized: boolean = !notificationBox.s;
-
-    if (!alreadyInitialized) {
-      const flatModelKey = notificationBoxDocument.id;
-      const modelKey = inferKeyFromTwoWayFlatFirestoreModelKey(flatModelKey);
-      const modelCollectionName = firestoreModelKeyCollectionName(modelKey) as string;
-
-      const input: MakeTemplateForNotificationBoxInitializationFunctionInput = {
-        transaction,
-        flatModelKey,
-        modelKey,
-        collectionName: modelCollectionName
-      };
-
-      const template = await makeTemplateForNotificationBoxInitialization(input);
-
-      if (template === false) {
-        await notificationBoxDocumentInTransaction.accessor.delete();
-      } else if (template == null) {
-        await notificationBoxDocumentInTransaction.update({
-          s: false, // set false when "f" is set true
-          fi: true
-        });
-      } else {
-        initialized = true;
-
-        await notificationBoxDocumentInTransaction.update({
-          //
-          ...template,
-          m: undefined, // should not be changed
-          s: null, // is now initialized.
-          fi: false // set false
-        });
-      }
-    } else if (throwErrorIfInitialized) {
-      throw notificationBoxAlreadyInitializedError();
-    }
-
-    return {
-      initialized,
-      alreadyInitialized
-    };
+    return initializeNotificationModelInTransaction({
+      makeTemplateFunction: makeTemplateForNotificationBoxInitialization,
+      throwErrorIfAlreadyInitialized,
+      transaction,
+      document: notificationBoxDocumentInTransaction,
+      data: notificationBox
+    });
   };
 }
 
@@ -128,7 +169,7 @@ export function initializeNotificationBoxFactory(context: NotificationInitServer
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const initializeNotificationBoxInTransaction = initializeNotificationBoxInTransactionFactory(context);
 
-  return firebaseServerActionTransformFunctionFactory(InitializeNotificationBoxParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(InitializeNotificationModelParams, async (params) => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       await firestoreContext.runTransaction((transaction) => initializeNotificationBoxInTransaction(params, notificationBoxDocument, transaction));
       return notificationBoxDocument;
@@ -147,7 +188,7 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
       let notificationBoxesFailed: number = 0;
       let notificationBoxesAlreadyInitialized: number = 0;
 
-      const initializeNotificationBoxParams: InitializeNotificationBoxParams = { key: firestoreDummyKey(), throwErrorIfInitialized: false };
+      const initializeNotificationBoxParams: InitializeNotificationModelParams = { key: firestoreDummyKey(), throwErrorIfAlreadyInitialized: false };
 
       async function initializeNotificationBoxes() {
         const query = notificationBoxCollection.queryDocument(notificationBoxesFlaggedForNeedsInitializationQuery());
@@ -194,6 +235,101 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
         notificationBoxesSucceeded,
         notificationBoxesFailed,
         notificationBoxesAlreadyInitialized
+      };
+
+      return result;
+    };
+  });
+}
+
+export function initializeNotificationSummaryInTransactionFactory(context: NotificationInitServerActionsContext) {
+  const { notificationSummaryCollection, makeTemplateForNotificationSummaryInitialization } = context;
+
+  return async (params: InitializeNotificationModelParams, notificationSummaryDocument: NotificationSummaryDocument, transaction: Transaction) => {
+    const { throwErrorIfAlreadyInitialized } = params;
+    const notificationSummaryDocumentInTransaction = notificationSummaryCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationSummaryDocument);
+    const notificationSummary = await assertSnapshotData(notificationSummaryDocumentInTransaction);
+
+    return initializeNotificationModelInTransaction({
+      makeTemplateFunction: makeTemplateForNotificationSummaryInitialization,
+      throwErrorIfAlreadyInitialized,
+      transaction,
+      document: notificationSummaryDocumentInTransaction,
+      data: notificationSummary
+    });
+  };
+}
+
+export function initializeNotificationSummaryFactory(context: NotificationInitServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
+  const initializeNotificationSummaryInTransaction = initializeNotificationSummaryInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(InitializeNotificationModelParams, async (params) => {
+    return async (notificationSummaryDocument: NotificationSummaryDocument) => {
+      await firestoreContext.runTransaction((transaction) => initializeNotificationSummaryInTransaction(params, notificationSummaryDocument, transaction));
+      return notificationSummaryDocument;
+    };
+  });
+}
+
+export function initializeAllApplicableNotificationSummariesFactory(context: NotificationInitServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationSummaryCollection, notificationCollectionGroup } = context;
+  const initializeNotificationSummaryInTransaction = initializeNotificationSummaryInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(InitializeAllApplicableNotificationSummariesParams, async () => {
+    return async () => {
+      let notificationSummariesVisited: number = 0;
+      let notificationSummariesSucceeded: number = 0;
+      let notificationSummariesFailed: number = 0;
+      let notificationSummariesAlreadyInitialized: number = 0;
+
+      const initializeNotificationSummaryParams: InitializeNotificationModelParams = { key: firestoreDummyKey(), throwErrorIfAlreadyInitialized: false };
+
+      async function initializeNotificationSummaries() {
+        const query = notificationSummaryCollection.queryDocument(notificationSummariesFlaggedForNeedsInitializationQuery());
+        const notificationSummaryDocuments = await query.getDocs();
+
+        const result = await performAsyncTasks(
+          notificationSummaryDocuments,
+          async (notificationSummaryDocument) => {
+            return firestoreContext.runTransaction((transaction) => initializeNotificationSummaryInTransaction(initializeNotificationSummaryParams, notificationSummaryDocument, transaction));
+          },
+          {
+            maxParallelTasks: 5
+          }
+        );
+
+        return result;
+      }
+
+      // iterate through all JobApplication items that need to be synced
+      while (true) {
+        const initializeNotificationSummariesResults = await initializeNotificationSummaries();
+        initializeNotificationSummariesResults.results.forEach((x) => {
+          const result = x[1];
+
+          if (result.alreadyInitialized) {
+            notificationSummariesAlreadyInitialized += 1;
+          } else if (result.initialized) {
+            notificationSummariesSucceeded += 1;
+          } else {
+            notificationSummariesFailed += 1;
+          }
+        });
+
+        const found = initializeNotificationSummariesResults.results.length;
+        notificationSummariesVisited += found;
+
+        if (!found) {
+          break;
+        }
+      }
+
+      const result: InitializeAllApplicableNotificationSummariesResult = {
+        notificationSummariesVisited,
+        notificationSummariesSucceeded,
+        notificationSummariesFailed,
+        notificationSummariesAlreadyInitialized
       };
 
       return result;

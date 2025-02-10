@@ -50,12 +50,20 @@ import {
   shouldSaveNotificationToNotificationWeek,
   NotificationUser,
   mergeNotificationBoxRecipients,
-  NotificationUserNotificationBoxRecipientConfig,
-  mergeNotificationUserNotificationBoxRecipientConfigs
+  AsyncNotificationSummaryCreateAction,
+  CreateNotificationSummaryParams,
+  AsyncNotificationUserCreateAction,
+  AsyncNotificationUserUpdateAction,
+  CreateNotificationUserParams,
+  UpdateNotificationUserParams,
+  NotificationUserDocument,
+  NotificationSummary,
+  NotificationSummaryDocument,
+  notificationSummaryIdForModel
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, assertSnapshotData } from '@dereekb/firebase-server';
-import { createNotificationIdRequiredError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError, notificationUserLockedConfigFromBeingUpdatedError } from './notification.error';
-import { type Maybe, performAsyncTasks, batch, invertBooleanReturnFunction, lastValue, makeValuesGroupMap, mergeObjects, sortAscendingIndexNumberRefFunction, filterMaybeValues, readIndexNumber, computeNextFreeIndexOnSortedValuesFunction, UNSET_INDEX_NUMBER } from '@dereekb/util';
+import { createNotificationIdRequiredError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
+import { type Maybe, performAsyncTasks, batch, makeValuesGroupMap, filterMaybeValues, readIndexNumber, computeNextFreeIndexOnSortedValuesFunction, UNSET_INDEX_NUMBER } from '@dereekb/util';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { expandNotificationRecipients, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { yearWeekCode } from '@dereekb/date';
@@ -78,6 +86,9 @@ export interface BaseNotificationServerActionsContext extends FirebaseServerActi
 export interface NotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, FirestoreContextReference {}
 
 export abstract class NotificationServerActions {
+  abstract createNotificationUser(params: CreateNotificationUserParams): AsyncNotificationUserCreateAction<CreateNotificationUserParams>;
+  abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
+  abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
   abstract updateNotificationBox(params: UpdateNotificationBoxParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxParams>;
   abstract updateNotificationBoxRecipient(params: UpdateNotificationBoxRecipientParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxRecipientParams>;
@@ -90,6 +101,9 @@ export abstract class NotificationServerActions {
 
 export function notificationServerActions(context: NotificationServerActionsContext): NotificationServerActions {
   return {
+    createNotificationUser: createNotificationUserFactory(context),
+    updateNotificationUser: updateNotificationUserFactory(context),
+    createNotificationSummary: createNotificationSummaryFactory(context),
     createNotificationBox: createNotificationBoxFactory(context),
     updateNotificationBox: updateNotificationBoxFactory(context),
     updateNotificationBoxRecipient: updateNotificationBoxRecipientFactory(context),
@@ -102,6 +116,71 @@ export function notificationServerActions(context: NotificationServerActionsCont
 }
 
 // MARK: Actions
+export function createNotificationUserFactory(context: NotificationServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, notificationUserCollection, authService } = context;
+
+  return firebaseServerActionTransformFunctionFactory(CreateNotificationUserParams, async (params) => {
+    const { uid } = params;
+
+    return async () => {
+      // assert they exist in the auth system
+      const userContext = authService.userContext(uid);
+      const userExistsInAuth = await userContext.exists();
+
+      if (!userExistsInAuth) {
+        throw notificationUserInvalidUidForCreateError(uid);
+      }
+
+      const notificationUserDocument = notificationUserCollection.documentAccessor().loadDocumentForId(uid);
+
+      const newUserTemplate: NotificationUser = {
+        uid,
+        bc: [],
+        b: []
+      };
+
+      await notificationUserDocument.create(newUserTemplate);
+      return notificationUserDocument;
+    };
+  });
+}
+
+export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, notificationUserCollection } = context;
+
+  return firebaseServerActionTransformFunctionFactory(UpdateNotificationUserParams, async (params) => {
+    return async (notificationUserDocument: NotificationUserDocument) => {
+      // TODO: ...
+
+      return notificationUserDocument;
+    };
+  });
+}
+
+export function createNotificationSummaryFactory(context: NotificationServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection, authService } = context;
+
+  return firebaseServerActionTransformFunctionFactory(CreateNotificationSummaryParams, async (params) => {
+    const { model } = params;
+
+    return async () => {
+      const notificationSummaryId = notificationSummaryIdForModel(model);
+      const notificationSummaryDocument: NotificationSummaryDocument = notificationSummaryCollection.documentAccessor().loadDocumentForId(notificationSummaryId);
+
+      const newSummaryTemplate: NotificationSummary = {
+        cat: new Date(),
+        m: model,
+        o: firestoreDummyKey(),
+        s: true,
+        n: []
+      };
+
+      await notificationSummaryDocument.create(newSummaryTemplate);
+      return notificationSummaryDocument;
+    };
+  });
+}
+
 /**
  * Used for creating a new NotificationBox within a transaction.
  *
@@ -120,6 +199,7 @@ export interface CreateNotificationBoxInTransactionParams {
 
 export function createNotificationBoxInTransactionFactory(context: NotificationServerActionsContext) {
   const { notificationBoxCollection } = context;
+
   return async (params: CreateNotificationBoxInTransactionParams, transaction: Transaction) => {
     const { now = new Date(), model } = params;
 

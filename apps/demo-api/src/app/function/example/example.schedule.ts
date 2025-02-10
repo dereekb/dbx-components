@@ -14,3 +14,10 @@ export const exampleUsageOfSchedule: DemoScheduleFunction = async (request) => {
     }
   });
 };
+
+export const hourlySchedule: DemoScheduleFunction = async (request) => {
+  const { nest } = request;
+
+  await nest.notificationInitActions.initializeAllApplicableNotificationBoxes({}).then((x) => x());
+  await nest.notificationInitActions.initializeAllApplicableNotificationSummaries({}).then((x) => x());
+};

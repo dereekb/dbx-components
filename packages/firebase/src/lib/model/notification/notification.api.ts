@@ -7,6 +7,7 @@ import { type NotificationTypes } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type NotificationBoxRecipientTemplateConfigArrayEntry } from './notification.config';
 import { NotificationSummaryId, type NotificationTemplateType } from './notification.id';
+import { IsE164PhoneNumber } from '@dereekb/model';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -16,47 +17,6 @@ export const NOTIFICATION_SUBJECT_MAX_LENGTH = 100;
 
 export const NOTIFICATION_MESSAGE_MIN_LENGTH = 2;
 export const NOTIFICATION_MESSAGE_MAX_LENGTH = 1000;
-
-/**
- * Used for creating or initializing a new NotificationBox for a model.
- *
- * Mainly used for testing. Not exposed to the API.
- *
- * The preferred way is to create a NotificationBox through a Notification.
- */
-export class CreateNotificationBoxParams {
-  @Expose()
-  @IsNotEmpty()
-  @IsFirestoreModelKey()
-  model!: FirestoreModelKey;
-}
-
-/**
- * Used for initializing an uninitialized NotificationBox
- */
-export class InitializeNotificationBoxParams extends TargetModelParams {
-  /**
-   * Whether or not to throw an error if the notification has already been sent or is being sent.
-   */
-  @Expose()
-  @IsBoolean()
-  @IsOptional()
-  throwErrorIfInitialized?: boolean;
-}
-
-export class InitializeAllApplicableNotificationBoxesParams {}
-
-export interface InitializeAllApplicableNotificationBoxesResult {
-  notificationBoxesVisited: number;
-  notificationBoxesSucceeded: number;
-  notificationBoxesFailed: number;
-  notificationBoxesAlreadyInitialized: number;
-}
-
-/**
- * Used for updating the NotificationBox.
- */
-export class UpdateNotificationBoxParams extends TargetModelParams {}
 
 export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements NotificationBoxRecipientTemplateConfigArrayEntry {
   @Expose()
@@ -83,6 +43,89 @@ export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements No
   @IsBoolean()
   sn?: Maybe<boolean>;
 }
+
+/**
+ * Used for creating a new NotificationUser for a user.
+ */
+export class CreateNotificationUserParams {
+  /**
+   * UID of the user to create the NotificationUser for.
+   */
+  @Expose()
+  @IsOptional()
+  @IsFirestoreModelId()
+  uid!: FirebaseAuthUserId;
+}
+
+/**
+ * Used for updating the NotificationUser.
+ */
+export class UpdateNotificationUserParams extends TargetModelParams {
+  // TODO: update configs...
+}
+
+/**
+ * Used for creating a new NotificationSummary for a model.
+ */
+export class CreateNotificationSummaryParams {
+  /**
+   * Model to create the NotificationSummary for.
+   */
+  @Expose()
+  @IsNotEmpty()
+  @IsFirestoreModelKey()
+  model!: FirestoreModelKey;
+}
+
+/**
+ * Used for creating or initializing a new NotificationBox for a model.
+ *
+ * Mainly used for testing. Not exposed to the API.
+ *
+ * The preferred way is to create a NotificationBox through a Notification.
+ */
+export class CreateNotificationBoxParams {
+  @Expose()
+  @IsNotEmpty()
+  @IsFirestoreModelKey()
+  model!: FirestoreModelKey;
+}
+
+/**
+ * Used for initializing an uninitialized model like NotificationBox or NotificationSummary.
+ */
+export class InitializeNotificationModelParams extends TargetModelParams {
+  /**
+   * Whether or not to throw an error if the notification has already been sent or is being sent.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  throwErrorIfAlreadyInitialized?: boolean;
+}
+
+export class InitializeAllApplicableNotificationBoxesParams {}
+
+export interface InitializeAllApplicableNotificationBoxesResult {
+  readonly notificationBoxesVisited: number;
+  readonly notificationBoxesSucceeded: number;
+  readonly notificationBoxesFailed: number;
+  readonly notificationBoxesAlreadyInitialized: number;
+}
+
+export class InitializeAllApplicableNotificationSummariesParams {}
+
+export interface InitializeAllApplicableNotificationSummariesResult {
+  readonly notificationSummariesVisited: number;
+  readonly notificationSummariesSucceeded: number;
+  readonly notificationSummariesFailed: number;
+  readonly notificationSummariesAlreadyInitialized: number;
+}
+
+/**
+ * Used for updating the NotificationBox.
+ */
+export class UpdateNotificationBoxParams extends TargetModelParams {}
 
 /**
  * Used to create/update a notification box recipient.
@@ -117,7 +160,7 @@ export class UpdateNotificationBoxRecipientParams extends TargetModelParams {
    */
   @Expose()
   @IsOptional()
-  @IsPhoneNumber()
+  @IsE164PhoneNumber()
   t?: Maybe<E164PhoneNumber>;
 
   /**

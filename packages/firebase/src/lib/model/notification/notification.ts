@@ -43,6 +43,26 @@ export interface NotificationFirestoreCollections {
 
 export type NotificationTypes = typeof notificationUserIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity;
 
+/**
+ * Notification-related model that is initialized asynchronously at a later time.
+ */
+export interface InitializedNotificationModel {
+  /**
+   * True if this model needs to be sync'd/initialized with the original model.
+   *
+   * Is set false if/when "fi" is set true.
+   */
+  s?: Maybe<NeedsSyncBoolean>;
+  /**
+   * True if this model has been flagged invalid.
+   *
+   * This is for cases where the model cannot be properly initiialized.
+   *
+   * NOTE: The server can also be configured to automatically delete these models instead of marking them as invalid.
+   */
+  fi?: Maybe<SavedToFirestoreIfTrue>;
+}
+
 // MARK: NotificationUser
 export const notificationUserIdentity = firestoreModelIdentity('notificationUser', 'nu');
 
@@ -125,7 +145,7 @@ export const NOTIFICATION_SUMMARY_ITEM_LIMIT = 1000;
  */
 export interface NotificationSummary {
   /**
-   * Notification Box creation date
+   * Notification Summary creation date
    */
   cat: Date;
   /**
@@ -134,6 +154,8 @@ export interface NotificationSummary {
   m: FirestoreModelKey;
   /**
    * Owner model key of the model this box is assigned to.
+   *
+   * Is created with a dummy value until it is initialized.
    */
   o: FirestoreModelKey;
   /**
@@ -144,6 +166,10 @@ export interface NotificationSummary {
    * Date of the latest notification.
    */
   lat?: Maybe<Date>;
+  /**
+   * True if this NotificationSummary needs to be sync'd/initialized with the original model.
+   */
+  s?: Maybe<NeedsSyncBoolean>;
 }
 
 /**
@@ -165,7 +191,8 @@ export const notificationSummaryConverter = snapshotConverterFunctions<Notificat
     n: firestoreObjectArray({
       objectField: firestoreNotificationItem
     }),
-    lat: optionalFirestoreDate()
+    lat: optionalFirestoreDate(),
+    s: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 
@@ -209,6 +236,8 @@ export interface NotificationBox {
   m: FirestoreModelKey;
   /**
    * Owner model key of the model this box is assigned to.
+   *
+   * Is created with a dummy value until it is initialized.
    */
   o: FirestoreModelKey;
   /**
@@ -222,7 +251,7 @@ export interface NotificationBox {
   /**
    * True if this NotificationBox needs to be sync'd/initialized with the original model.
    *
-   * Is set false if/when "f" is set true.
+   * Is set false if/when "fi" is set true.
    */
   s?: Maybe<NeedsSyncBoolean>;
   /**
@@ -258,8 +287,8 @@ export const notificationBoxConverter = snapshotConverterFunctions<NotificationB
       objectField: firestoreNotificationBoxRecipient
     }),
     w: firestoreNumber({ default: () => yearWeekCode(new Date()) }),
-    s: optionalFirestoreBoolean({ dontStoreValueIf: false }),
-    fi: optionalFirestoreBoolean({ dontStoreValueIf: true })
+    s: optionalFirestoreBoolean({ dontStoreIf: false }),
+    fi: optionalFirestoreBoolean({ dontStoreIf: true })
   }
 });
 

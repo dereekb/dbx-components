@@ -79,8 +79,8 @@ demoApiFunctionContextFactory((f) => {
                 },
                 (nb) => {
                   describe('updateNotificationBoxRecipient()', () => {
-                    describe('recipient with uid', () => {
-                      demoAuthorizedUserContext({ f }, (u2) => {
+                    demoAuthorizedUserContext({ f }, (u2) => {
+                      describe('recipient with uid', () => {
                         it('should add a user recipient via uid of a user that exists', async () => {
                           let notificationBox = await assertSnapshotData(nb.document);
                           expect(notificationBox.r).toHaveLength(0);
@@ -117,109 +117,220 @@ demoApiFunctionContextFactory((f) => {
                           );
                         });
                       });
-                    });
 
-                    describe('recipient with email address', () => {
-                      const e = 'tester@dereekb.com';
+                      describe('recipient with email address', () => {
+                        const e = 'tester@dereekb.com';
 
-                      it('should add an email recipient', async () => {
-                        let notificationBox = await assertSnapshotData(nb.document);
-                        expect(notificationBox.r).toHaveLength(0);
+                        it('should add an email recipient', async () => {
+                          let notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(0);
 
-                        await nb.updateRecipient({
-                          e,
-                          insert: true
+                          await nb.updateRecipient({
+                            e,
+                            insert: true
+                          });
+
+                          notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].e).toBe(e);
                         });
 
-                        notificationBox = await assertSnapshotData(nb.document);
-                        expect(notificationBox.r).toHaveLength(1);
-                        expect(notificationBox.r[0].e).toBe(e);
+                        describe('one exists', () => {
+                          const i = 0;
+
+                          beforeEach(async () => {
+                            await nb.updateRecipient({
+                              e,
+                              insert: true
+                            });
+                          });
+
+                          it('should add two of the same email recipient if insert is true and no index is passed', async () => {
+                            let notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].e).toBe(e);
+
+                            // NOTE: Does not check for duplicate recipients. This is an intended effect.
+                            await nb.updateRecipient({
+                              e,
+                              insert: true
+                            });
+
+                            notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(2);
+                            expect(notificationBox.r[0].e).toBe(e);
+                            expect(notificationBox.r[1].e).toBe(e);
+                          });
+
+                          it('should update the email of the target recipient', async () => {
+                            let notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].e).toBe(e);
+                            expect(notificationBox.r[0].i).toBe(i);
+
+                            const expectedE = 'second@components.dereekb.com';
+
+                            await nb.updateRecipient({
+                              i,
+                              e: expectedE
+                            });
+
+                            notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].e).toBe(expectedE);
+                            expect(notificationBox.r[0].i).toBe(i);
+                          });
+
+                          it('should add a valid uid to the target recipient', async () => {
+                            let notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].e).toBe(e);
+                            expect(notificationBox.r[0].i).toBe(i);
+                            expect(notificationBox.r[0].uid).toBeUndefined();
+
+                            const expectedE = 'second@components.dereekb.com';
+
+                            await nb.updateRecipient({
+                              i,
+                              e: expectedE,
+                              uid: u2.uid // set uid too
+                            });
+
+                            notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].e).toBe(expectedE);
+                            expect(notificationBox.r[0].uid).toBe(u2.uid);
+                            expect(notificationBox.r[0].i).toBe(i);
+                          });
+
+                          itShouldFail('to add a uid to the recipient if the target uid does not exist', async () => {
+                            await expectFail(
+                              () =>
+                                nb.updateRecipient({
+                                  uid: 'does_not_exist',
+                                  insert: true
+                                }),
+                              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                            );
+                          });
+
+                          it('should remove the recipient', async () => {
+                            await nb.updateRecipient({
+                              i,
+                              remove: true
+                            });
+
+                            const notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(0);
+                          });
+                        });
                       });
 
-                      describe('one exists', () => {
-                        const i = 0;
+                      describe('recipient with phone number for sms', () => {
+                        const t = '+1208888888';
 
-                        beforeEach(async () => {
-                          await nb.updateRecipient({
-                            e,
-                            insert: true
-                          });
-                        });
-
-                        it('should add two of the same email recipient if insert is true and no index is passed', async () => {
+                        it('should add a sms recipient', async () => {
                           let notificationBox = await assertSnapshotData(nb.document);
-                          expect(notificationBox.r).toHaveLength(1);
-                          expect(notificationBox.r[0].e).toBe(e);
-
-                          // NOTE: Does not check for duplicate recipients. This is an intended effect.
-                          await nb.updateRecipient({
-                            e,
-                            insert: true
-                          });
-
-                          notificationBox = await assertSnapshotData(nb.document);
-                          expect(notificationBox.r).toHaveLength(2);
-                          expect(notificationBox.r[0].e).toBe(e);
-                          expect(notificationBox.r[1].e).toBe(e);
-                        });
-
-                        it('should update the email of the target recipient', async () => {
-                          let notificationBox = await assertSnapshotData(nb.document);
-                          expect(notificationBox.r).toHaveLength(1);
-                          expect(notificationBox.r[0].e).toBe(e);
-                          expect(notificationBox.r[0].i).toBe(i);
-
-                          const expectedE = 'second@components.dereekb.com';
-
-                          await nb.updateRecipient({
-                            i,
-                            e: expectedE
-                          });
-
-                          notificationBox = await assertSnapshotData(nb.document);
-                          expect(notificationBox.r).toHaveLength(1);
-                          expect(notificationBox.r[0].e).toBe(expectedE);
-                          expect(notificationBox.r[0].i).toBe(i);
-                        });
-
-                        it('should add a valid uid to the target recipient', async () => {
-                          let notificationBox = await assertSnapshotData(nb.document);
-                          expect(notificationBox.r).toHaveLength(1);
-                          expect(notificationBox.r[0].e).toBe(e);
-                          expect(notificationBox.r[0].i).toBe(i);
-
-                          const expectedE = 'second@components.dereekb.com';
-
-                          await nb.updateRecipient({
-                            i,
-                            e: expectedE
-                          });
-
-                          notificationBox = await assertSnapshotData(nb.document);
-                          expect(notificationBox.r).toHaveLength(1);
-                          expect(notificationBox.r[0].e).toBe(expectedE);
-                          expect(notificationBox.r[0].i).toBe(i);
-                        });
-
-                        itShouldFail('to add a uid to the recipient if the target uid does not exist', async () => {
-                          await expectFail(
-                            () =>
-                              nb.updateRecipient({
-                                uid: 'does_not_exist',
-                                insert: true
-                              }),
-                            jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
-                          );
-                        });
-
-                        it('should remove the recipient', async () => {
-                          await nb.updateRecipient({
-                            i,
-                            remove: true
-                          });
-
-                          const notificationBox = await assertSnapshotData(nb.document);
                           expect(notificationBox.r).toHaveLength(0);
+
+                          await nb.updateRecipient({
+                            t,
+                            insert: true
+                          });
+
+                          notificationBox = await assertSnapshotData(nb.document);
+                          expect(notificationBox.r).toHaveLength(1);
+                          expect(notificationBox.r[0].t).toBe(t);
+                        });
+
+                        describe('one exists', () => {
+                          const i = 0;
+
+                          beforeEach(async () => {
+                            await nb.updateRecipient({
+                              t,
+                              insert: true
+                            });
+                          });
+
+                          it('should add two of the same sms recipients if insert is true and no index is passed', async () => {
+                            let notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].t).toBe(t);
+
+                            // NOTE: Does not check for duplicate recipients. This is an intended effect.
+                            await nb.updateRecipient({
+                              t,
+                              insert: true
+                            });
+
+                            notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(2);
+                            expect(notificationBox.r[0].t).toBe(t);
+                            expect(notificationBox.r[1].t).toBe(t);
+                          });
+
+                          it('should update the email of the target recipient', async () => {
+                            let notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].t).toBe(t);
+                            expect(notificationBox.r[0].i).toBe(i);
+
+                            const expectedT = '+12109999999';
+
+                            await nb.updateRecipient({
+                              i,
+                              t: expectedT
+                            });
+
+                            notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].t).toBe(expectedT);
+                            expect(notificationBox.r[0].i).toBe(i);
+                          });
+
+                          it('should add a valid uid to the target recipient', async () => {
+                            let notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].t).toBe(t);
+                            expect(notificationBox.r[0].i).toBe(i);
+                            expect(notificationBox.r[0].uid).toBeUndefined();
+
+                            const expectedT = '+12109999999';
+
+                            await nb.updateRecipient({
+                              i,
+                              t: expectedT,
+                              uid: u2.uid // set uid too
+                            });
+
+                            notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(1);
+                            expect(notificationBox.r[0].t).toBe(expectedT);
+                            expect(notificationBox.r[0].uid).toBe(u2.uid);
+                            expect(notificationBox.r[0].i).toBe(i);
+                          });
+
+                          itShouldFail('to add a uid to the recipient if the target uid does not exist', async () => {
+                            await expectFail(
+                              () =>
+                                nb.updateRecipient({
+                                  uid: 'does_not_exist',
+                                  insert: true
+                                }),
+                              jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                            );
+                          });
+
+                          it('should remove the recipient', async () => {
+                            await nb.updateRecipient({
+                              i,
+                              remove: true
+                            });
+
+                            const notificationBox = await assertSnapshotData(nb.document);
+                            expect(notificationBox.r).toHaveLength(0);
+                          });
                         });
                       });
                     });

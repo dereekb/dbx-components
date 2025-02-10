@@ -28,7 +28,7 @@ import {
   FirestoreCollection,
   FirestoreModelKey,
   InitializeAllApplicableNotificationBoxesParams,
-  InitializeNotificationBoxParams,
+  InitializeNotificationModelParams,
   NotificationBox,
   NotificationBoxDocument,
   NotificationBoxFirestoreCollection,
@@ -39,7 +39,10 @@ import {
   SendNotificationParams,
   getDocumentSnapshotDataPairs,
   inferKeyFromTwoWayFlatFirestoreModelKey,
-  UpdateNotificationBoxRecipientParams
+  UpdateNotificationBoxRecipientParams,
+  NotificationSummary,
+  NotificationSummaryDocument,
+  NotificationSummaryFirestoreCollection
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe } from '@dereekb/util';
@@ -419,6 +422,56 @@ export const demoGuestbookEntryContextFactory = () =>
 
 export const demoGuestbookEntryContext = demoGuestbookEntryContextFactory();
 
+// MARK: NotificationSummary
+export interface DemoApiNotificationSummaryTestContextParams {
+  for: ModelTestContextFixture<any, any, any, any, any>;
+  ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
+  createIfNeeded?: boolean;
+  initIfNeeded?: boolean;
+}
+
+export class DemoApiNotificationSummaryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationSummary, NotificationSummaryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationSummaryTestContextInstance<F>> {}
+
+export class DemoApiNotificationSummaryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationSummary, NotificationSummaryDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+
+export const demoNotificationSummaryContextFactory = () =>
+  modelTestContextFactory<NotificationSummary, NotificationSummaryDocument, DemoApiNotificationSummaryTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationSummaryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationSummaryTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationSummaryFirestoreCollection>({
+    makeFixture: (f) => new DemoApiNotificationSummaryTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.notificationSummaryCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationSummaryTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      const flatModelKey = params.for.documentTwoWayFlatKey;
+      return collection.documentAccessor().loadDocumentForId(flatModelKey).documentRef;
+    },
+    initDocument: async (instance, params) => {
+      const p = instance.testContext;
+
+      if (params.createIfNeeded === true) {
+        const exists = await instance.document.exists();
+
+        // initialize
+        if (!exists) {
+          const createNotificationSummary = await p.notificationServerActions.createNotificationSummary({
+            model: params.for.documentTwoWayFlatKey
+          });
+
+          await createNotificationSummary();
+        }
+
+        // initialize
+        if (params.createIfNeeded === true || params.initIfNeeded === true) {
+          const initNotificationSummary = await p.notificationInitServerActions.initializeNotificationSummary({
+            key: instance.documentKey
+          });
+
+          await initNotificationSummary(instance.document);
+        }
+      }
+    }
+  });
+
+export const demoNotificationSummaryContext = demoNotificationSummaryContextFactory();
+
 // MARK: NotificationBox
 export interface DemoApiNotificationBoxTestContextParams {
   for: ModelTestContextFixture<any, any, any, any, any>;
@@ -454,7 +507,7 @@ export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFun
     return this.instance.deleteAllNotificationsForNotificationBox();
   }
 
-  async initializeNotificationBox(params?: Omit<InitializeNotificationBoxParams, 'key'>) {
+  async initializeNotificationBox(params?: Omit<InitializeNotificationModelParams, 'key'>) {
     return this.instance.initializeNotificationBox(params);
   }
 
@@ -497,7 +550,7 @@ export class DemoApiNotificationBoxTestContextInstance<F extends FirebaseAdminFu
     await Promise.all(existingNotifications.map((x) => x.document.accessor.delete()));
   }
 
-  async initializeNotificationBox(params?: Omit<InitializeNotificationBoxParams, 'key'>) {
+  async initializeNotificationBox(params?: Omit<InitializeNotificationModelParams, 'key'>) {
     const initNotificationBox = await this.testContext.notificationInitServerActions.initializeNotificationBox({ key: this.documentKey, ...params });
     return initNotificationBox(this.document);
   }

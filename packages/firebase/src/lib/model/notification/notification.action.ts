@@ -1,5 +1,17 @@
 import { type AsyncFirebaseFunctionCreateAction, type AsyncFirebaseFunctionDeleteAction, type AsyncFirebaseFunctionUpdateAction, type FirebaseFunctionCreateAction, type FirebaseFunctionDeleteAction, type FirebaseFunctionUpdateAction } from '../../common';
-import { type NotificationBoxDocument, type NotificationDocument, type NotificationWeekDocument } from './notification';
+import { NotificationSummaryDocument, type NotificationBoxDocument, type NotificationDocument, type NotificationWeekDocument, NotificationUserDocument } from './notification';
+
+export type NotificationUserCreateAction<P extends object> = FirebaseFunctionCreateAction<P, NotificationUserDocument>;
+export type AsyncNotificationUserCreateAction<P extends object> = AsyncFirebaseFunctionCreateAction<P, NotificationUserDocument>;
+
+export type NotificationUserUpdateAction<P extends object> = FirebaseFunctionUpdateAction<P, NotificationUserDocument>;
+export type AsyncNotificationUserUpdateAction<P extends object> = AsyncFirebaseFunctionUpdateAction<P, NotificationUserDocument>;
+
+export type NotificationSummaryCreateAction<P extends object> = FirebaseFunctionCreateAction<P, NotificationSummaryDocument>;
+export type AsyncNotificationSummaryCreateAction<P extends object> = AsyncFirebaseFunctionCreateAction<P, NotificationSummaryDocument>;
+
+export type NotificationSummaryUpdateAction<P extends object> = FirebaseFunctionUpdateAction<P, NotificationSummaryDocument>;
+export type AsyncNotificationSummaryUpdateAction<P extends object> = AsyncFirebaseFunctionUpdateAction<P, NotificationSummaryDocument>;
 
 export type NotificationBoxCreateAction<P extends object> = FirebaseFunctionCreateAction<P, NotificationBoxDocument>;
 export type AsyncNotificationBoxCreateAction<P extends object> = AsyncFirebaseFunctionCreateAction<P, NotificationBoxDocument>;
