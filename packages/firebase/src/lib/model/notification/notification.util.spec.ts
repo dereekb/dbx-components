@@ -5,7 +5,7 @@ describe('mergeNotificationUserNotificationBoxRecipientConfigs()', () => {
   it('should retain the user-only config values', () => {
     const nb = '0';
 
-    const mergeResult = mergeNotificationUserNotificationBoxRecipientConfigs<NotificationUserNotificationBoxRecipientConfig>(
+    const mergeResult = mergeNotificationUserNotificationBoxRecipientConfigs(
       {
         f: NotificationBoxRecipientFlag.OPT_OUT,
         nb,

@@ -1,6 +1,28 @@
 import { type FirestoreQueryConstraint, where } from '../../common/firestore';
-import { NotificationSummary, type Notification, type NotificationBox } from './notification';
+import { NotificationSummary, type Notification, type NotificationBox, NotificationUser } from './notification';
 import { toISODateString } from '@dereekb/date';
+
+// MARK: NotificationUser
+/**
+ * Query for notificationUsers that are flagged for initialization.
+ *
+ * @param now
+ * @returns
+ */
+export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConstraint[] {
+  return [where<NotificationUser>('ns', '==', true)];
+}
+
+// MARK: NotificationSummary
+/**
+ * Query for notificationSummaries that are flagged for initialization.
+ *
+ * @param now
+ * @returns
+ */
+export function notificationSummariesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
+  return [where<NotificationSummary>('s', '==', true)];
+}
 
 // MARK: NotificationBox
 /**
@@ -21,17 +43,6 @@ export function notificationBoxesFlaggedForNeedsInitializationQuery(): Firestore
  */
 export function notificationBoxesFlaggedInvalidQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationBox>('fi', '==', true)];
-}
-
-// MARK: NotificationSummary
-/**
- * Query for notificationSummaries that are flagged for initialization.
- *
- * @param now
- * @returns
- */
-export function notificationSummariesFlaggedForNeedsInitializationQuery(): FirestoreQueryConstraint[] {
-  return [where<NotificationSummary>('s', '==', true)];
 }
 
 // MARK: Notifcation

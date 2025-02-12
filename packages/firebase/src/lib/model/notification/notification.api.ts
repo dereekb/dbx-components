@@ -1,12 +1,12 @@
 import { Type, Expose } from 'class-transformer';
 import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
-import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
-import { type NotificationBoxRecipientTemplateConfigArrayEntry } from './notification.config';
-import { NotificationSummaryId, type NotificationTemplateType } from './notification.id';
+import { NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
+import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { IsE164PhoneNumber } from '@dereekb/model';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
@@ -58,10 +58,179 @@ export class CreateNotificationUserParams {
 }
 
 /**
+ * Used for updating the global or default config on a NotificationUser.
+ */
+export class UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams implements Omit<NotificationUserDefaultNotificationBoxRecipientConfig, 'c'> {
+  /**
+   * NotificationBox recipient to update. Is ignored if UID is provided and matches a user. Used for external recipients/users.
+   */
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  i?: Maybe<IndexNumber>;
+
+  /**
+   * Override email address
+   */
+  @Expose()
+  @IsOptional()
+  @IsEmail()
+  e?: Maybe<EmailAddress>;
+
+  /**
+   * Override phone number
+   */
+  @Expose()
+  @IsOptional()
+  @IsE164PhoneNumber()
+  t?: Maybe<E164PhoneNumber>;
+
+  /**
+   * Array of configs that correspond with "c"
+   */
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => NotificationBoxRecipientTemplateConfigArrayEntryParam)
+  configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
+
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  lk?: Maybe<boolean>;
+
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  bk?: Maybe<boolean>;
+
+  @Expose()
+  @IsOptional()
+  @IsEnum(() => NotificationBoxRecipientFlag)
+  f?: Maybe<NotificationBoxRecipientFlag>;
+}
+
+export class UpdateNotificationBoxRecipientLikeParams {
+  /**
+   * Override email address
+   */
+  @Expose()
+  @IsOptional()
+  @IsEmail()
+  e?: Maybe<EmailAddress>;
+
+  /**
+   * Override phone number
+   */
+  @Expose()
+  @IsOptional()
+  @IsE164PhoneNumber()
+  t?: Maybe<E164PhoneNumber>;
+
+  /**
+   * Notification summary id
+   */
+  @Expose()
+  @IsOptional()
+  @IsPhoneNumber()
+  s?: Maybe<NotificationSummaryId>;
+
+  /**
+   * Array of configs
+   */
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => NotificationBoxRecipientTemplateConfigArrayEntryParam)
+  configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
+}
+
+/**
+ * Used for updating the target NotificationUserNotificationBoxRecipientConfig.
+ */
+export class UpdateNotificationUserNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams {
+  /**
+   * NotificationBox config to update
+   */
+  @Expose()
+  @IsFirestoreModelId()
+  nb!: NotificationBoxId;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  rm?: Maybe<boolean>;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  lk?: Maybe<boolean>;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  bk?: Maybe<boolean>;
+
+  @Expose()
+  @IsOptional()
+  @IsEnum(() => NotificationBoxRecipientFlag)
+  f?: Maybe<NotificationBoxRecipientFlag>;
+
+  /**
+   * Whether or not to delete this configuration entirely.
+   *
+   * Will only delete if rm is true and ns is false. Is ignored otherwise.
+   */
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  deleteAfterRemove?: Maybe<boolean>;
+}
+
+/**
  * Used for updating the NotificationUser.
  */
 export class UpdateNotificationUserParams extends TargetModelParams {
   // TODO: update configs...
+
+  @Expose()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams)
+  gc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
+
+  @Expose()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams)
+  dc?: Maybe<UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams>;
+
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateNotificationUserNotificationBoxRecipientParams)
+  bc: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
+}
+
+export class ResyncNotificationUserNotificationBoxConfigsParams extends TargetModelParams {}
+
+export interface ResyncNotificationUserNotificationBoxConfigsResult {
+  /**
+   * Total number of notification boxes updated.
+   */
+  readonly notificationBoxesUpdated: number;
+}
+
+export class ResyncAllNotificationUserNotificationBoxConfigsParams {}
+
+export interface ResyncAllNotificationUserNotificationBoxConfigsResult extends ResyncNotificationUserNotificationBoxConfigsResult {
+  /**
+   * Total number of users updated.
+   */
+  readonly notificationUsersResynced: number;
 }
 
 /**
@@ -130,14 +299,14 @@ export class UpdateNotificationBoxParams extends TargetModelParams {}
 /**
  * Used to create/update a notification box recipient.
  */
-export class UpdateNotificationBoxRecipientParams extends TargetModelParams {
+export class UpdateNotificationBoxRecipientParams extends UpdateNotificationBoxRecipientLikeParams implements TargetModelParams {
   /**
-   * Notification recipient to update by UID, if applicable.
+   * NotificationBox key to update.
    */
   @Expose()
-  @IsOptional()
-  @IsFirestoreModelId()
-  uid?: Maybe<FirebaseAuthUserId>;
+  @IsNotEmpty()
+  @IsFirestoreModelKey()
+  key!: FirestoreModelKey;
 
   /**
    * NotificationBox recipient to update. Is ignored if UID is provided and matches a user. Used for external recipients/users.
@@ -148,38 +317,12 @@ export class UpdateNotificationBoxRecipientParams extends TargetModelParams {
   i?: Maybe<IndexNumber>;
 
   /**
-   * Override email address
+   * Notification recipient to update by UID, if applicable.
    */
   @Expose()
   @IsOptional()
-  @IsEmail()
-  e?: Maybe<EmailAddress>;
-
-  /**
-   * Override phone number
-   */
-  @Expose()
-  @IsOptional()
-  @IsE164PhoneNumber()
-  t?: Maybe<E164PhoneNumber>;
-
-  /**
-   * Notification summary id
-   */
-  @Expose()
-  @IsOptional()
-  @IsPhoneNumber()
-  s?: Maybe<NotificationSummaryId>;
-
-  /**
-   * Array of configs
-   */
-  @Expose()
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => NotificationBoxRecipientTemplateConfigArrayEntryParam)
-  configs?: Maybe<NotificationBoxRecipientTemplateConfigArrayEntryParam[]>;
+  @IsFirestoreModelId()
+  uid?: Maybe<FirebaseAuthUserId>;
 
   /**
    * Whether or not to insert the user if they currently do not exist. Defaults to false.

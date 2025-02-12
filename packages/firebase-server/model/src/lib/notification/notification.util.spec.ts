@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE, NotificationBoxRecipient, NotificationUser, NotificationUserNotificationBoxRecipientConfig } from '@dereekb/firebase';
+import { FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE, NotificationBoxRecipient, NotificationUser, NotificationUserNotificationBoxRecipientConfig, firestoreDummyKey } from '@dereekb/firebase';
 import { updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { jestExpectFailAssertHttpErrorServerErrorCode } from '../../../../test/src/lib/firebase/firebase.jest';
 
@@ -11,6 +11,7 @@ const ADDED_EXAMPLE_TEST_TEMPLATE_TYPE = 'test_added';
 describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
   const uid: FirebaseAuthUserId = '0';
   const nb = '111';
+  const m = firestoreDummyKey();
   const otherNb = '222';
 
   describe('recipient exists in notification box config', () => {
@@ -30,18 +31,22 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
       const bc = [
         {
           nb,
+          m,
           ...notificationBoxRecipient
         },
         {
           nb: otherNb,
+          m,
           ...notificationBoxRecipient
         }
       ];
 
       const notificationUser: NotificationUser = {
-        b: [], // unused for tests
+        b: [],
         bc,
-        uid
+        uid,
+        dc: { c: {} },
+        gc: { c: {} }
       };
 
       const nextNotificationBoxRecipient: NotificationBoxRecipient = {
@@ -60,6 +65,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         it('should update the example template type config', () => {
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: nextNotificationBoxRecipient,
@@ -99,12 +105,14 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
               () =>
                 updateNotificationUserNotificationBoxRecipientConfig({
                   notificationBoxId: nb,
+                  notificationBoxAssociatedModelKey: m,
                   notificationUserId: uid,
                   notificationUser: {
                     ...notificationUser,
                     bc: [
                       {
                         nb,
+                        m,
                         ...notificationBoxRecipient,
                         bk: true // is blocked
                       }
@@ -125,6 +133,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         it('should update the example template type config', () => {
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: nextNotificationBoxRecipient,
@@ -162,6 +171,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
           const expectedI = 2;
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: {
@@ -189,12 +199,14 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
               () =>
                 updateNotificationUserNotificationBoxRecipientConfig({
                   notificationBoxId: nb,
+                  notificationBoxAssociatedModelKey: m,
                   notificationUserId: uid,
                   notificationUser: {
                     ...notificationUser,
                     bc: [
                       {
                         nb,
+                        m,
                         ...notificationBoxRecipient,
                         lk: true // is locked
                       }
@@ -215,6 +227,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         it('should flag as removed in updatedBc', () => {
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: undefined,
@@ -234,9 +247,11 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
 
     describe('box config does not exist in associated NotificationUser', () => {
       const notificationUser: NotificationUser = {
-        b: [], // unused for tests
+        b: [],
         bc: [],
-        uid
+        uid,
+        dc: { c: {} },
+        gc: { c: {} }
       };
 
       const nextNotificationBoxRecipient: NotificationBoxRecipient = {
@@ -255,6 +270,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         it('should insert the example template type config into bc', () => {
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: nextNotificationBoxRecipient,
@@ -289,6 +305,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         it('should insert the example template type config into bc', () => {
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: nextNotificationBoxRecipient,
@@ -323,6 +340,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
         it('should return updatedBc as undefined and updatedNotificationBoxRecipient as undefined', () => {
           const result = updateNotificationUserNotificationBoxRecipientConfig({
             notificationBoxId: nb,
+            notificationBoxAssociatedModelKey: m,
             notificationUserId: uid,
             notificationUser,
             notificationBoxRecipient: nextNotificationBoxRecipient,

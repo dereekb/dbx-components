@@ -1,5 +1,5 @@
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoProfileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { Notification, NotificationBox, NotificationBoxRecipient, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, firestoreDummyKey, firestoreModelKey, notificationSummaryIdentity, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, profileIdentity } from '@dereekb/demo-firebase';
@@ -32,7 +32,6 @@ demoApiFunctionContextFactory((f) => {
             };
           });
 
-          // TODO: with notification box
           describe('with NotificationBox', () => {
             const baseNotificationBox: NotificationBox = {
               cat: new Date(),
@@ -72,7 +71,8 @@ demoApiFunctionContextFactory((f) => {
                 const result = await expandNotificationRecipients({
                   notification,
                   notificationBox,
-                  authService: f.authService
+                  authService: f.authService,
+                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor()
                 });
 
                 expect(result.notificationSummaries).toHaveLength(1);
@@ -110,7 +110,8 @@ demoApiFunctionContextFactory((f) => {
                   notification,
                   notificationBox,
                   authService: f.authService,
-                  notificationSummaryIdForUid: (x) => twoWayFlatFirestoreModelKey(firestoreModelKey(profileIdentity, x))
+                  notificationSummaryIdForUid: (x) => twoWayFlatFirestoreModelKey(firestoreModelKey(profileIdentity, x)),
+                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor()
                 });
 
                 expect(result.notificationSummaries).toHaveLength(2);
@@ -123,6 +124,41 @@ demoApiFunctionContextFactory((f) => {
 
                 expect(summaryIdSummary.boxRecipient).toBeDefined();
                 expect(summaryIdSummary.notificationSummaryKey).toBe(firestoreModelKey(notificationSummaryIdentity, notificationSummaryId));
+              });
+            });
+          });
+
+          describe('scenarios', () => {
+            describe('Guestbook Scenario', () => {
+              demoGuestbookContext({ f }, (g) => {
+                demoNotificationBoxContext(
+                  {
+                    f,
+                    for: g, // NotificationBox is for the guestbook
+                    createIfNeeded: true
+                  },
+                  (nb) => {
+                    describe('Guestbook Entry', () => {
+                      describe('Guestbook Entry Likes Notifications', () => {
+                        demoGuestbookEntryContext({ f, u, g, init: false }, (ge) => {
+                          describe('notification user exists', () => {
+                            demoNotificationUserContext({ f, u }, (nu) => {
+                              beforeEach(async () => {
+                                // TODO: Update NotificationUser...
+                              });
+
+                              describe('user has opted out of like notifications', () => {
+                                it('should not return th');
+                              });
+                            });
+                          });
+
+                          describe('notification user does not exist', () => {});
+                        });
+                      });
+                    });
+                  }
+                );
               });
             });
           });

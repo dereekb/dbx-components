@@ -1,6 +1,6 @@
-import { type NotificationMessageFunctionFactory, type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeDetails, notificationTemplateTypeDetailsRecord } from '@dereekb/firebase';
+import { type NotificationMessageFunctionFactory, type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeDetails, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { ProfileDocument, ProfileId, profileIdentity } from './profile';
-import { Guestbook, guestbookIdentity } from './guestbook';
+import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from './guestbook';
 
 // MARK: Test Notification
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';
@@ -66,6 +66,35 @@ export function guestbookEntryCreatedNotificationTemplate(input: GuestbookEntryC
     type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
     notificationModel: guestbookKey,
     targetModel: guestbookKey
+  });
+}
+
+// MARK: Guestbook Entry Notifications
+export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GUESTBOOK_ENTRY_LIKED';
+
+export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeDetails = {
+  type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+  name: 'Guestbook Entry Liked',
+  description: 'A guestbook entry has been liked.',
+  notificationModelIdentity: guestbookIdentity, // occurs in guestbooks
+  targetModelIdentity: guestbookEntryIdentity // targets guestbook entries
+};
+
+export interface GuestbookEntryLikedNotificationData {}
+
+export interface GuestbookEntryLikedNotificationInput {
+  readonly guestbookEntryKey: ReadFirestoreModelKeyInput<GuestbookEntry>;
+}
+
+export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLikedNotificationInput): CreateNotificationTemplate {
+  const { guestbookEntryKey } = input;
+  const guestbookEntryModelKey = readFirestoreModelKey(guestbookEntryKey) as GuestbookEntryKey;
+  const guestbookKey = firestoreModelKeyParentKey(guestbookEntryModelKey, 1) as GuestbookKey;
+
+  return createNotificationTemplate({
+    type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+    notificationModel: guestbookKey,
+    targetModel: guestbookEntryModelKey
   });
 }
 

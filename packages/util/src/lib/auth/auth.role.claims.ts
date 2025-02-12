@@ -148,7 +148,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = objectToTuples<AuthRoleClaimsFactoryConfigEntry>(config as any)
+  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry>(config as any)
     .filter(([, entry]) => entry != null) // skip any ignored/null values
     .map((x) => {
       const inputEntry = x[1];

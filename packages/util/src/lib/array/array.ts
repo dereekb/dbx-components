@@ -1,3 +1,4 @@
+import { IterableOrValue, iterableToSet } from '../iterable/iterable';
 import { type Maybe } from '../value/maybe.type';
 
 // MARK: Types
@@ -237,4 +238,22 @@ export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (val
  */
 export function countAllInNestedArray<T>(array: T[][]): number {
   return array.reduce((acc, curr) => acc + curr.length, 0);
+}
+
+/**
+ * Creates a copy of the array with the items at the specified indexes removed.
+ *
+ * @param array
+ */
+export function removeValuesAtIndexesFromArrayCopy<T>(array: T[], removeIndexes: IterableOrValue<number>): T[] {
+  const result: T[] = [];
+  const ignoredIndexes = iterableToSet(removeIndexes);
+
+  array.forEach((value, index) => {
+    if (!ignoredIndexes.has(index)) {
+      result.push(value);
+    }
+  });
+
+  return result;
 }

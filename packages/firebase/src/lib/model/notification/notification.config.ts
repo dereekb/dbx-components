@@ -1,6 +1,6 @@
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue } from '@dereekb/util';
 import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
-import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, firestoreModelKey, firestoreString, SavedToFirestoreIfTrue } from '../../common';
+import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, firestoreModelKey, firestoreString, SavedToFirestoreIfTrue, FirestoreModelKey, firestoreModelIdString, firestoreModelKeys, firestoreModelKeyString } from '../../common';
 
 // MARK: Recipient
 /**
@@ -26,9 +26,23 @@ export interface NotificationRecipient {
    */
   t?: Maybe<E164PhoneNumber>;
   /**
-   * Notification summary to send notifications to. Ignored if uid is defined.
+   * Notification summary to send notifications to. Ignored and/or set null if uid is defined.
    */
   s?: Maybe<NotificationSummaryId>;
+}
+
+export function updateNotificationRecipient(a: NotificationRecipient, b: Partial<NotificationRecipient>): NotificationRecipient {
+  const { uid: inputUid, n: inputN, e: inputE, t: inputT, s: inputS } = b;
+
+  const uid = updateMaybeValue(a.uid, inputUid);
+
+  return {
+    uid,
+    n: updateMaybeValue(a.n, inputN),
+    e: updateMaybeValue(a.e, inputE),
+    t: updateMaybeValue(a.t, inputT),
+    s: uid != null ? null : updateMaybeValue(a.s, inputS) // null if uid is defined
+  };
 }
 
 export interface NotificationRecipientWithConfig extends NotificationRecipient, NotificationBoxRecipientTemplateConfig {}
@@ -69,18 +83,24 @@ export enum NotificationBoxRecipientFlag {
 
 /**
  * Settings related to recipients that recieve notifications.
+ *
+ * If uid is set, then most other NotificationRecipient fields are ignored as those are pulled from auth.
  */
 export interface NotificationBoxRecipient extends NotificationRecipient, IndexRef {
   /**
    * Enabled config types
    */
-  c: NotificationBoxRecipientTemplateConfigMap;
+  c: NotificationBoxRecipientTemplateConfigRecord;
   /**
-   * Whether or not this recipient is enabled.
+   * Current opt in flag. Non-zero values are opt-out.
+   *
+   * TODO: Test updating the flag and syncing
    */
   f?: Maybe<NotificationBoxRecipientFlag>;
   /**
-   * Locked state that corresponds and is sync'd by NotificationUserNotificationBoxRecipientConfig.
+   * Locked state that corresponds to the user's configuration and is sync'd by NotificationUserNotificationBoxRecipientConfig.
+   *
+   * If locked, updating the NotificationBox recipient will throw an error. The user can update their settings without issue.
    */
   lk?: Maybe<SavedToFirestoreIfTrue>;
 }
@@ -94,15 +114,37 @@ export function newNotificationBoxRecipientForUid(uid: FirebaseAuthUserId, i: nu
 }
 
 /**
+ * Default NotificationUserNotificationBoxRecipientConfig.
+ */
+export interface NotificationUserDefaultNotificationBoxRecipientConfig extends Omit<NotificationBoxRecipient, 'i' | 'n' | 's' | 'uid'> {
+  /**
+   * Locked state.
+   *
+   * If locked, updating the NotificationBox recipient will throw an error. The user can update their settings without issue.
+   */
+  lk?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * Blocked state.
+   *
+   * If blocked, this NotificationBox will not be able to add this user back.
+   */
+  bk?: Maybe<SavedToFirestoreIfTrue>;
+}
+
+/**
  * Used to reflect the NotificationBoxRecipient config back to a NotificationUser.
  *
  * The index reflects the index the user is in the NotificationBox.
  */
-export interface NotificationUserNotificationBoxRecipientConfig extends NotificationBoxRecipient {
+export interface NotificationUserNotificationBoxRecipientConfig extends Omit<NotificationBoxRecipient, 'uid'> {
   /**
    * NotificationBox this configuration reflects.
    */
   nb: NotificationBoxId;
+  /**
+   * Model key of the model this box is assigned to.
+   */
+  m: FirestoreModelKey;
   /**
    * Removed state.
    *
@@ -170,12 +212,12 @@ export type EncodedNotificationBoxRecipientTemplateConfig = BitwiseEncodedSet;
  *
  * Should not be saved with any template type entirely disabled.
  */
-export type NotificationBoxRecipientTemplateConfigMap = Record<NotificationTemplateType, NotificationBoxRecipientTemplateConfig>;
+export type NotificationBoxRecipientTemplateConfigRecord = Record<NotificationTemplateType, NotificationBoxRecipientTemplateConfig>;
 
 /**
- * Encoded NotificationBoxRecipientTemplateConfigMap
+ * Encoded NotificationBoxRecipientTemplateConfigRecord
  */
-export type EncodedNotificationBoxRecipientTemplateConfigMap = Record<NotificationTemplateType, EncodedNotificationBoxRecipientTemplateConfig>;
+export type EncodedNotificationBoxRecipientTemplateConfigRecord = Record<NotificationTemplateType, EncodedNotificationBoxRecipientTemplateConfig>;
 
 const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<NotificationBoxRecipientTemplateConfig, NotificationBoxRecipientTemplateConfigBoolean>({
   maxIndex: 3,
@@ -223,7 +265,7 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
   }
 });
 
-export function firestoreNotificationBoxRecipientTemplateConfigMap() {
+export function firestoreNotificationBoxRecipientTemplateConfigRecord() {
   return firestoreBitwiseObjectMap<NotificationBoxRecipientTemplateConfig, NotificationTemplateType>({
     dencoder: notificationBoxRecipientTemplateConfigDencoder
   });
@@ -239,8 +281,21 @@ export const firestoreNotificationBoxRecipient = firestoreSubObject<Notification
       e: optionalFirestoreString(),
       s: optionalFirestoreString(),
       f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
-      c: firestoreNotificationBoxRecipientTemplateConfigMap(),
+      c: firestoreNotificationBoxRecipientTemplateConfigRecord(),
       lk: optionalFirestoreBoolean({ dontStoreValueIf: false })
+    }
+  }
+});
+
+export const firestoreNotificationUserDefaultNotificationBoxRecipientConfig = firestoreSubObject<NotificationUserDefaultNotificationBoxRecipientConfig>({
+  objectField: {
+    fields: {
+      lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      bk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      t: optionalFirestoreString(),
+      e: optionalFirestoreString(),
+      f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
+      c: firestoreNotificationBoxRecipientTemplateConfigRecord()
     }
   }
 });
@@ -248,19 +303,19 @@ export const firestoreNotificationBoxRecipient = firestoreSubObject<Notification
 export const firestoreNotificationUserNotificationBoxRecipientConfig = firestoreSubObject<NotificationUserNotificationBoxRecipientConfig>({
   objectField: {
     fields: {
-      nb: firestoreString(),
+      nb: firestoreModelIdString,
+      m: firestoreModelKeyString,
       rm: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       ns: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       bk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       i: firestoreNumber({ default: 0 }),
-      uid: optionalFirestoreString(),
       n: optionalFirestoreString(),
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),
       s: optionalFirestoreString(),
       f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
-      c: firestoreNotificationBoxRecipientTemplateConfigMap()
+      c: firestoreNotificationBoxRecipientTemplateConfigRecord()
     }
   }
 });
@@ -274,7 +329,7 @@ export interface NotificationBoxRecipientTemplateConfigArrayEntry extends Notifi
 
 export type NotificationBoxRecipientTemplateConfigArray = NotificationBoxRecipientTemplateConfigArrayEntry[];
 
-export function notificationBoxRecipientTemplateConfigMapToArray(input: NotificationBoxRecipientTemplateConfigMap): NotificationBoxRecipientTemplateConfigArray {
+export function notificationBoxRecipientTemplateConfigRecordToArray(input: NotificationBoxRecipientTemplateConfigRecord): NotificationBoxRecipientTemplateConfigArray {
   const array: NotificationBoxRecipientTemplateConfigArray = [];
 
   forEachKeyValue(input, {
@@ -289,8 +344,8 @@ export function notificationBoxRecipientTemplateConfigMapToArray(input: Notifica
   return array;
 }
 
-export function notificationBoxRecipientTemplateConfigArrayToMap(input: NotificationBoxRecipientTemplateConfigArray): NotificationBoxRecipientTemplateConfigMap {
-  const map: NotificationBoxRecipientTemplateConfigMap = {};
+export function notificationBoxRecipientTemplateConfigArrayToRecord(input: NotificationBoxRecipientTemplateConfigArray): NotificationBoxRecipientTemplateConfigRecord {
+  const map: NotificationBoxRecipientTemplateConfigRecord = {};
 
   input.forEach((x) => {
     map[x.type] = {

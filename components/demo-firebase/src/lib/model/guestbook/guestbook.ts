@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithIdAndKey, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithIdAndKey, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID, firestoreNumber } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
 
@@ -93,6 +93,10 @@ export interface GuestbookEntry extends UserRelated, UserRelatedById {
    * Whether or not the entry has been published. It can be unpublished at any time by the user.
    */
   published: boolean;
+  /**
+   * The number of likes the entry has recieved.
+   */
+  likes: number;
 }
 
 export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
@@ -110,7 +114,8 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
     signed: firestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true }),
     createdAt: firestoreDate({ saveDefaultAsNow: true }),
-    published: firestoreBoolean({ default: false, defaultBeforeSave: false })
+    published: firestoreBoolean({ default: false, defaultBeforeSave: false }),
+    likes: firestoreNumber({ default: 0 })
   }
 });
 

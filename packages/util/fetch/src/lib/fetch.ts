@@ -313,7 +313,7 @@ export function headersToHeadersTuple(headers: HeadersInit): [string, string][] 
     });
   } else if (typeof headers === 'object') {
     // use as a normal object
-    tuples = objectToTuples(headers as Record<string, string>);
+    tuples = Object.entries(headers as Record<string, string>);
   }
 
   return tuples;

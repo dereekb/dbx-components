@@ -82,6 +82,13 @@ export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(d
   return runAsyncTasksForValues(documents, getDocumentSnapshotDataPair);
 }
 
+/**
+ * Convenience function for calling getDocumentSnapshotDataPairs() then returning only the pairs that have data.
+ */
+export function getDocumentSnapshotDataPairsWithData<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
+  return getDocumentSnapshotDataPairs(documents).then((pairs) => pairs.filter((pair) => pair.data != null) as FirestoreDocumentSnapshotDataPairWithData<D>[]);
+}
+
 export type FirestoreDocumentSnapshotDataTuple<D extends FirestoreDocument<any>> = [D, Maybe<FirestoreDocumentData<D>>];
 
 export function getDocumentSnapshotDataTuples<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataTuple<D>[]> {

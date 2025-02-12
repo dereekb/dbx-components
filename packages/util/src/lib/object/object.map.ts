@@ -27,18 +27,7 @@ export type MappedObjectMap<M extends object, O> = {
  * @returns
  */
 export function objectToMap<T>(object: ObjectMap<T>): Map<string, T> {
-  return new Map(objectToTuples(object));
-}
-
-/**
- * Converts an ObjectMap into tuples.
- *
- * @param object
- * @returns
- */
-export function objectToTuples<T>(object: ObjectMap<T>): [string, T][] {
-  const keys = Object.keys(object);
-  return keys.map((x) => [x, object[x]]);
+  return new Map(Object.entries(object));
 }
 
 /**
@@ -87,21 +76,27 @@ export function mapObjectToTargetObject<M extends ObjectMap<I>, I = unknown, O =
   return target;
 }
 
+/**
+ * Maps each key of the input object to a new object using the pre-configured function.
+ */
 export type MapObjectKeysFunction<M> = (object: M) => any;
+
+/**
+ * Map function that returns the new POJOKey using the input key/value pair.
+ */
+export type MapObjectKeyFunction<M> = <K extends keyof M>(key: K, value: M[K]) => POJOKey;
 
 /**
  * Maps the keys of the input object to a new object with the mapped keys.
  *
  * @param object
  */
-export function mapObjectKeysFunction<M extends object>(mapKeyFn: <K extends keyof M>(key: K, value: M[K]) => POJOKey): MapObjectKeysFunction<M> {
+export function mapObjectKeysFunction<M extends object>(mapKeyFn: MapObjectKeyFunction<M>): MapObjectKeysFunction<M> {
   return (object: M) => {
-    const keys = Object.keys(object) as (keyof M)[];
     const target: any = {};
 
-    keys.forEach(<K extends keyof M>(key: K) => {
-      const value: M[K] = object[key];
-      const newKey = mapKeyFn(key, value);
+    Object.entries(object).forEach(([key, value]) => {
+      const newKey = mapKeyFn(key as keyof M, value);
       target[newKey] = value;
     });
 
@@ -129,3 +124,14 @@ export const mapObjectKeysToLowercase = mapObjectKeysFunction((key) => {
 
   return nextKey;
 }) as <M extends object>(object: M) => MappedKeysToLowercaseObjectMap<M>;
+
+// MARK: Compat
+/**
+ * Converts an ObjectMap into tuples.
+ *
+ * @deprecated use Object.entries instead.
+ *
+ * @param object
+ * @returns
+ */
+export const objectToTuples: <T>(object: ObjectMap<T>) => [string, T][] = Object.entries;

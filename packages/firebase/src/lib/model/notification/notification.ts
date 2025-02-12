@@ -1,7 +1,7 @@
 import { type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type NotificationBoxId } from './notification.id';
-import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig } from './notification.config';
+import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig, NotificationBoxRecipientTemplateConfigRecord, NotificationUserDefaultNotificationBoxRecipientConfig, firestoreNotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { type UserRelatedById, type UserRelated } from '../user';
 import {
@@ -79,17 +79,25 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    */
   b: NotificationBoxId[];
   /**
-   * List of NotificationBox configurations.
+   * Direct/default config.
    *
-   * Configs remain
+   * This config is retrieved and used for cases where the recipient isn't associated with the NotificationBox but was added on an ad-hoc basis as an additional user as a uid.
+   */
+  dc: NotificationUserDefaultNotificationBoxRecipientConfig;
+  /**
+   * Global config override.
+   *
+   * This config is automatically copied to each value in bc when updated and always retained.
+   */
+  gc: NotificationUserDefaultNotificationBoxRecipientConfig;
+  /**
+   * List of NotificationBox configurations.
    */
   bc: NotificationUserNotificationBoxRecipientConfig[];
   /**
    * Whether or not the user has one or more configs that need to be synced.
    */
   ns?: Maybe<NeedsSyncBoolean>;
-
-  // TODO: subscriptions: global notification subscriptions that can be subscribed to or cancelled and the system can query on.
 }
 
 export type NotificationUserRoles = GrantedReadRole;
@@ -104,6 +112,8 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
   fields: {
     uid: firestoreUID(),
     b: firestoreModelIdArrayField,
+    dc: firestoreNotificationUserDefaultNotificationBoxRecipientConfig,
+    gc: firestoreNotificationUserDefaultNotificationBoxRecipientConfig,
     bc: firestoreObjectArray({
       objectField: firestoreNotificationUserNotificationBoxRecipientConfig
     }),

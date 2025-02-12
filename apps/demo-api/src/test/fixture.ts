@@ -42,7 +42,10 @@ import {
   UpdateNotificationBoxRecipientParams,
   NotificationSummary,
   NotificationSummaryDocument,
-  NotificationSummaryFirestoreCollection
+  NotificationSummaryFirestoreCollection,
+  NotificationUser,
+  NotificationUserDocument,
+  NotificationUserFirestoreCollection
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe } from '@dereekb/util';
@@ -421,6 +424,44 @@ export const demoGuestbookEntryContextFactory = () =>
   });
 
 export const demoGuestbookEntryContext = demoGuestbookEntryContextFactory();
+
+// MARK: NotificationSummary
+export interface DemoApiNotificationUserTestContextParams {
+  u: DemoApiAuthorizedUserTestContextFixture;
+  init?: boolean;
+}
+
+export class DemoApiNotificationUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationUserTestContextInstance<F>> {}
+
+export class DemoApiNotificationUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+
+export const demoNotificationUserContextFactory = () =>
+  modelTestContextFactory<NotificationUser, NotificationUserDocument, DemoApiNotificationUserTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationUserFirestoreCollection>({
+    makeFixture: (f) => new DemoApiNotificationUserTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.notificationUserCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationUserTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      return collection.documentAccessor().loadDocumentForId(params.u.uid).documentRef;
+    },
+    initDocument: async (instance, params) => {
+      const p = instance.testContext;
+
+      if (params.init !== false) {
+        const exists = await instance.document.exists();
+
+        // initialize
+        if (!exists) {
+          const createNotificationUser = await p.notificationServerActions.createNotificationUser({
+            uid: params.u.uid
+          });
+
+          await createNotificationUser();
+        }
+      }
+    }
+  });
+
+export const demoNotificationUserContext = demoNotificationUserContextFactory();
 
 // MARK: NotificationSummary
 export interface DemoApiNotificationSummaryTestContextParams {

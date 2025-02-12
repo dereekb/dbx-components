@@ -2,9 +2,37 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // MARK: Utilities
+    function userClaimsIsSysAdmin() {
+      return request.auth.token.a == 1;
+    }
+
+    function resourceIsPublished() {
+      return resource != null && resource.data != null && resource.data.published == true;
+    }
+
+    function resourceIsOwnedByAuthUserId() {
+      return resource != null && request.auth != null && (resource.id == request.auth.uid);
+    }
+
+    function resourceIsOwnedByAuthOwnershipKey() {
+      // compares the "o" value against the auth's uid
+      return resource != null && resource.data != null && resource.data.o != null && request.auth != null && resource.data.o == request.auth.uid;
+    }
+
+    // MARK: Rules
     match /pr/{profile} {
-      allow read: if true;
-      allow list: if false;
+
+      // users can read themselves
+      allow get: if isProfileOwner() || userClaimsIsSysAdmin();
+
+      // listing only allowed by admins not allowed
+      allow list: if userClaimsIsSysAdmin();
+
+      function isProfileOwner() {
+        return request.auth.uid == profile;
+      }
+
     }
 
     match /gb/{guestbook} {
@@ -31,13 +59,31 @@ service cloud.firestore {
       allow list: if resourceIsPublished();
     }
 
-    function resourceIsPublished() {
-      return resource != null && resource.data != null && resource.data.published == true;
+
+
+    match /nu/{notificationUser} {
+      allow read: if resourceIsOwnedByAuthUserId(); // users can read themselves
     }
 
-    function resourceIsOwnedByAuthUserId() {
-      return resource != null && request.auth != null && (resource.id == request.auth.uid);
+
+    match /ns/{notificationSummary} {
+      allow read: if resourceIsOwnedByAuthUserId(); // users can read themselves
     }
 
+
+    match /nb/{notificationBox} {
+      allow read: if resourceIsOwnedByAuthOwnershipKey(); // owners can read
+
+      match /nbn/{notification} {
+        // not allowed to read queued notifications
+        allow read: if false;
+      }
+
+      match /nbnw/{notificationWeek} {
+
+        // no need to view notification weeks
+        allow read: if false;
+      }
+    }
   }
 }
