@@ -63,15 +63,15 @@ import {
   updateNotificationRecipient,
   updateNotificationUserDefaultNotificationBoxRecipientConfig,
   updateNotificationUserNotificationBoxRecipientConfigs,
-  ResyncAllNotificationUserNotificationBoxConfigsParams,
+  ResyncAllNotificationUserParams,
   ResyncAllNotificationUserNotificationBoxConfigsResult,
   ResyncNotificationUserNotificationBoxConfigsResult,
-  ResyncNotificationUserNotificationBoxConfigsParams,
+  ResyncNotificationUserParams,
   loadDocumentsForIdsFromValues,
   loadDocumentsForIds,
   getDocumentSnapshotsData,
   NotificationBoxId,
-  AppNotificationTemplateTypeDetailsRecordServiceRef,
+  AppNotificationTemplateTypeInfoRecordServiceRef,
   NotificationBoxRecipientTemplateConfigRecord,
   NotificationUserNotificationBoxRecipientConfig,
   iterateFirestoreDocumentSnapshotPairs,
@@ -99,13 +99,13 @@ export const BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'BA
 export const NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'NOTIFICATION_SERVER_ACTION_CONTEXT';
 
 export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference {}
-export interface NotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, AppNotificationTemplateTypeDetailsRecordServiceRef, FirebaseServerAuthServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, FirestoreContextReference {}
+export interface NotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, FirestoreContextReference {}
 
 export abstract class NotificationServerActions {
   abstract createNotificationUser(params: CreateNotificationUserParams): AsyncNotificationUserCreateAction<CreateNotificationUserParams>;
   abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
-  abstract resyncNotificationUserNotificationBoxConfigs(params: ResyncNotificationUserNotificationBoxConfigsParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserNotificationBoxConfigsParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserNotificationBoxConfigsResult>>>;
-  abstract resyncAllNotificationUserNotificationBoxConfigs(params?: ResyncAllNotificationUserNotificationBoxConfigsParams): Promise<ResyncAllNotificationUserNotificationBoxConfigsResult>;
+  abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserNotificationBoxConfigsResult>>>;
+  abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUserNotificationBoxConfigsResult>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
   abstract updateNotificationBox(params: UpdateNotificationBoxParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxParams>;
@@ -121,8 +121,8 @@ export function notificationServerActions(context: NotificationServerActionsCont
   return {
     createNotificationUser: createNotificationUserFactory(context),
     updateNotificationUser: updateNotificationUserFactory(context),
-    resyncNotificationUserNotificationBoxConfigs: resyncNotificationUserNotificationBoxConfigsFactory(context),
-    resyncAllNotificationUserNotificationBoxConfigs: resyncAllNotificationUserNotificationBoxConfigsFactory(context),
+    resyncNotificationUser: resyncNotificationUserFactory(context),
+    resyncAllNotificationUsers: resyncAllNotificationUsersFactory(context),
     createNotificationSummary: createNotificationSummaryFactory(context),
     createNotificationBox: createNotificationBoxFactory(context),
     updateNotificationBox: updateNotificationBoxFactory(context),
@@ -172,7 +172,7 @@ export function createNotificationUserFactory(context: NotificationServerActions
 }
 
 export function updateNotificationUserFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
   return firebaseServerActionTransformFunctionFactory(UpdateNotificationUserParams, async (params) => {
     const { gc: inputGc, dc: inputDc, bc: inputBc } = params;
@@ -184,24 +184,29 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
         let updateTemplate: Partial<NotificationUser> = {};
 
+        const allKnownNotificationTypes = appNotificationTemplateTypeInfoRecordService.getAllKnownTemplateTypes();
+
         if (inputDc != null) {
-          updateTemplate.dc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.dc, inputDc);
+          updateTemplate.dc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.dc, inputDc, allKnownNotificationTypes);
         }
 
         if (inputGc != null) {
-          updateTemplate.gc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc);
+          updateTemplate.gc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
           updateTemplate.bc = notificationUser.bc.map((x) => (x.rm ? x : { ...x, ns: true })); // flag all non-removed types as needing a sync
-          updateTemplate.ns = true; // changing global settings changes trigger a resync
         }
 
         if (inputBc != null) {
-          const updateTemplateBc = updateNotificationUserNotificationBoxRecipientConfigs(updateTemplate.bc ?? notificationUser.bc, inputBc);
+          const updateTemplateBc = updateNotificationUserNotificationBoxRecipientConfigs(updateTemplate.bc ?? notificationUser.bc, inputBc, appNotificationTemplateTypeInfoRecordService);
 
           if (updateTemplateBc != null) {
-            updateTemplate.ns = updateTemplate.ns || updateTemplateBc.some((x) => x.ns);
             updateTemplate.bc = updateTemplateBc;
             updateTemplate.b = updateTemplateBc.map((x) => x.nb);
           }
+        }
+
+        // if bc is being updated, then also update ns
+        if (updateTemplate.bc != null) {
+          updateTemplate.ns = updateTemplate.bc.some((x) => x.ns);
         }
 
         await notificationUserDocumentInTransaction.update(updateTemplate);
@@ -214,10 +219,10 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
 const MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH = 50;
 
-export function resyncNotificationUserNotificationBoxConfigsFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeDetailsRecordService } = context;
+export function resyncNotificationUserFactory(context: NotificationServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(ResyncNotificationUserNotificationBoxConfigsParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(ResyncNotificationUserParams, async (params) => {
     return async (notificationUserDocument: NotificationUserDocument) => {
       // run updates in batches
 
@@ -281,7 +286,7 @@ export function resyncNotificationUserNotificationBoxConfigsFactory(context: Not
                 } else {
                   const { m } = notificationBox;
 
-                  const applicableTemplateTypesForModel = appNotificationTemplateTypeDetailsRecordService.getTemplateTypesForNotificationModel(m);
+                  const applicableTemplateTypesForModel = appNotificationTemplateTypeInfoRecordService.getTemplateTypesForNotificationModel(m);
                   const filterOnlyApplicableTemplateTypes = filterKeysOnPOJOFunction<NotificationBoxRecipientTemplateConfigRecord>(applicableTemplateTypesForModel);
 
                   const recipient = notificationBox.r[recipientIndex];
@@ -391,14 +396,14 @@ export function resyncNotificationUserNotificationBoxConfigsFactory(context: Not
   });
 }
 
-export function resyncAllNotificationUserNotificationBoxConfigsFactory(context: NotificationServerActionsContext) {
+export function resyncAllNotificationUsersFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection } = context;
-  const resyncNotificationUser = resyncNotificationUserNotificationBoxConfigsFactory(context);
+  const resyncNotificationUser = resyncNotificationUserFactory(context);
 
-  return async (params?: ResyncAllNotificationUserNotificationBoxConfigsParams) => {
+  return async (params?: ResyncAllNotificationUserParams) => {
     let notificationBoxesUpdated = 0;
 
-    const resyncNotificationUserParams: ResyncNotificationUserNotificationBoxConfigsParams = { key: firestoreDummyKey() };
+    const resyncNotificationUserParams: ResyncNotificationUserParams = { key: firestoreDummyKey() };
     const resyncNotificationUserInstance = await resyncNotificationUser(resyncNotificationUserParams);
 
     const iterateResult = await iterateFirestoreDocumentSnapshotPairs({

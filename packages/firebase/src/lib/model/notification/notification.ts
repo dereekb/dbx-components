@@ -79,17 +79,18 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    */
   b: NotificationBoxId[];
   /**
+   * Global config override.
+   *
+   * This config effectively overrides all other configs, both NotificationBox configs and direct/default configs when used.
+   * It does not however get copied to dc/bc when updated.
+   */
+  gc: NotificationUserDefaultNotificationBoxRecipientConfig;
+  /**
    * Direct/default config.
    *
    * This config is retrieved and used for cases where the recipient isn't associated with the NotificationBox but was added on an ad-hoc basis as an additional user as a uid.
    */
   dc: NotificationUserDefaultNotificationBoxRecipientConfig;
-  /**
-   * Global config override.
-   *
-   * This config is automatically copied to each value in bc when updated and always retained.
-   */
-  gc: NotificationUserDefaultNotificationBoxRecipientConfig;
   /**
    * List of NotificationBox configurations.
    */
@@ -100,7 +101,7 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
   ns?: Maybe<NeedsSyncBoolean>;
 }
 
-export type NotificationUserRoles = GrantedReadRole;
+export type NotificationUserRoles = 'sync' | GrantedUpdateRole | GrantedReadRole;
 
 export class NotificationUserDocument extends AbstractFirestoreDocument<NotificationUser, NotificationUserDocument, typeof notificationUserIdentity> {
   get modelIdentity() {
@@ -231,7 +232,7 @@ export const notificationBoxIdentity = firestoreModelIdentity('notificationBox',
  * This object is the root collection for notifications for the corresponding object.
  *
  * Additional information about what notification templates are available to this type are available on a per-application basis, typically through the
- * NotificationTemplateTypeDetailsRecord configured for the app.
+ * NotificationTemplateTypeInfoRecord configured for the app.
  *
  * Update to each recipient is propogated from NotificationUser values.
  */

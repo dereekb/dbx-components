@@ -1,8 +1,8 @@
 import { Maybe, arrayToObject } from '@dereekb/util';
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, FirestoreModelIdentity } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, FirestoreModelIdentity, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
 
 /**
- * The NotificationBox's id is the flat firestore model key of the object that it represents.
+ * The NotificationBox's id is the two way flat firestore model key of the object that it represents.
  */
 export type NotificationBoxId = FlatFirestoreModelKey;
 export type NotificationBoxKey = FirestoreModelKey;
@@ -14,6 +14,7 @@ export type NotificationBoxKey = FirestoreModelKey;
  * @returns
  */
 export const notificationBoxIdForModel = twoWayFlatFirestoreModelKey;
+export const inferNotificationBoxRelatedModelKey = inferKeyFromTwoWayFlatFirestoreModelKey;
 
 export type NotificationUserId = FlatFirestoreModelKey;
 export type NotificationUserKey = FirestoreModelKey;
@@ -46,5 +47,7 @@ export const DEFAULT_NOTIFICATION_TEMPLATE_TYPE = 'D';
  * Provides default information for the notification.
  *
  * Types are generally intended to be handled case-insensitively by notification services.
+ *
+ * Ideally type type values are shorter to reduce database size impact.
  */
 export type NotificationTemplateType = string;

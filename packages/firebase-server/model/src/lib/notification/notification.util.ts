@@ -510,7 +510,6 @@ export function updateNotificationUserNotificationBoxRecipientConfig(input: Upda
         ...currentNotificationUserBoxConfig,
         i: notificationBoxRecipient.i,
         c: currentNotificationUserBoxConfig.c ?? {},
-        m: notificationBoxAssociatedModelKey,
         nb: notificationBoxId, // set the NotificationBox id
         rm: false // remove/clear the removed flag
       },

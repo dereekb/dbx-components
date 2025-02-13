@@ -4,6 +4,7 @@ import { updateProfile, updateProfileUsername, updateProfleOnboarding } from '..
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
 import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallReadModelMap, DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
+import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -24,7 +25,13 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
     _: updateProfile,
     username: updateProfileUsername,
     onboard: updateProfleOnboarding
+  }),
+  notificationUser: onCallSpecifierHandler({
+    _: updateNotificationUser,
+    resync: resyncNotificationUser
   })
+
+  // TODO: add notification box, etc.
 };
 
 // MARK: Delete

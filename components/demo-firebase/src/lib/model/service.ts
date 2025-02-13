@@ -47,7 +47,8 @@ import {
   notificationSummaryFirestoreCollection,
   NotificationSummary,
   NotificationSummaryDocument,
-  NotificationSummaryRoles
+  NotificationSummaryRoles,
+  NotificationTypes
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
@@ -139,8 +140,8 @@ export const notificationUserFirebaseModelServiceFactory = firebaseModelServiceF
       () => fullAccessRoleMap(),
       () => {
         return grantModelRolesIfAuthUserRelatedModelFunction(() => {
-          const profileRoles: NotificationUserRoles[] = [];
-          return grantedRoleKeysMapFromArray(profileRoles);
+          const roles: NotificationUserRoles[] = ['read', 'update'];
+          return grantedRoleKeysMapFromArray(roles);
         })({ context, model: { uid: model.id } });
       }
     );
@@ -177,7 +178,7 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
 });
 
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 

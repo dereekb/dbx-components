@@ -1,4 +1,4 @@
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER } from '@dereekb/util';
 import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, firestoreModelKey, firestoreString, SavedToFirestoreIfTrue, FirestoreModelKey, firestoreModelIdString, firestoreModelKeys, firestoreModelKeyString } from '../../common';
 
@@ -139,12 +139,10 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
 export interface NotificationUserNotificationBoxRecipientConfig extends Omit<NotificationBoxRecipient, 'uid'> {
   /**
    * NotificationBox this configuration reflects.
+   *
+   * The model can be derived from this id.
    */
   nb: NotificationBoxId;
-  /**
-   * Model key of the model this box is assigned to.
-   */
-  m: FirestoreModelKey;
   /**
    * Removed state.
    *
@@ -197,9 +195,13 @@ export interface NotificationBoxRecipientTemplateConfig {
 
 export enum NotificationBoxRecipientTemplateConfigBoolean {
   EMAIL = 0,
-  TEXT = 1,
-  PUSH_NOTIFICATION = 2,
-  NOTIFICATION_SUMMARY = 3
+  EMAIL_OFF = 1,
+  TEXT = 2,
+  TEXT_OFF = 3,
+  PUSH_NOTIFICATION = 4,
+  PUSH_NOTIFICATION_OFF = 5,
+  NOTIFICATION_SUMMARY = 6,
+  NOTIFICATION_SUMMARY_OFF = 7
 }
 
 /**
@@ -220,24 +222,24 @@ export type NotificationBoxRecipientTemplateConfigRecord = Record<NotificationTe
 export type EncodedNotificationBoxRecipientTemplateConfigRecord = Record<NotificationTemplateType, EncodedNotificationBoxRecipientTemplateConfig>;
 
 const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<NotificationBoxRecipientTemplateConfig, NotificationBoxRecipientTemplateConfigBoolean>({
-  maxIndex: 3,
+  maxIndex: NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY_OFF + 1,
   toSetFunction: (x) => {
     const set = new Set<NotificationBoxRecipientTemplateConfigBoolean>();
 
-    if (x.st) {
-      set.add(NotificationBoxRecipientTemplateConfigBoolean.TEXT);
+    if (x.st != null) {
+      set.add(x.st ? NotificationBoxRecipientTemplateConfigBoolean.TEXT : NotificationBoxRecipientTemplateConfigBoolean.TEXT_OFF);
     }
 
-    if (x.se) {
-      set.add(NotificationBoxRecipientTemplateConfigBoolean.EMAIL);
+    if (x.se != null) {
+      set.add(x.se ? NotificationBoxRecipientTemplateConfigBoolean.EMAIL : NotificationBoxRecipientTemplateConfigBoolean.EMAIL_OFF);
     }
 
-    if (x.sp) {
-      set.add(NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION);
+    if (x.sp != null) {
+      set.add(x.sp ? NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION : NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION_OFF);
     }
 
-    if (x.sn) {
-      set.add(NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY);
+    if (x.sn != null) {
+      set.add(x.sn ? NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY : NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY_OFF);
     }
 
     return set;
@@ -247,18 +249,26 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.TEXT)) {
       object.st = true;
+    } else if (x.has(NotificationBoxRecipientTemplateConfigBoolean.TEXT_OFF)) {
+      object.st = false;
     }
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.EMAIL)) {
       object.se = true;
+    } else if (x.has(NotificationBoxRecipientTemplateConfigBoolean.EMAIL_OFF)) {
+      object.se = false;
     }
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION)) {
       object.sp = true;
+    } else if (x.has(NotificationBoxRecipientTemplateConfigBoolean.PUSH_NOTIFICATION_OFF)) {
+      object.sp = false;
     }
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY)) {
       object.sn = true;
+    } else if (x.has(NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY_OFF)) {
+      object.sn = false;
     }
 
     return object;
@@ -274,7 +284,7 @@ export function firestoreNotificationBoxRecipientTemplateConfigRecord() {
 export const firestoreNotificationBoxRecipient = firestoreSubObject<NotificationBoxRecipient>({
   objectField: {
     fields: {
-      i: firestoreNumber({ default: 0 }),
+      i: firestoreNumber({ default: UNSET_INDEX_NUMBER }),
       uid: optionalFirestoreString(),
       n: optionalFirestoreString(),
       t: optionalFirestoreString(),
@@ -304,12 +314,11 @@ export const firestoreNotificationUserNotificationBoxRecipientConfig = firestore
   objectField: {
     fields: {
       nb: firestoreModelIdString,
-      m: firestoreModelKeyString,
       rm: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       ns: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       bk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
-      i: firestoreNumber({ default: 0 }),
+      i: firestoreNumber({ default: UNSET_INDEX_NUMBER }),
       n: optionalFirestoreString(),
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),

@@ -61,6 +61,23 @@ demoApiFunctionContextFactory((f) => {
           });
         });
       });
+
+      describe('guestbook entry', () => {
+        demoGuestbookContext({ f, published: true }, (g) => {
+          demoGuestbookEntryContext({ f, u, g }, (ge) => {
+            demoNotificationBoxContext({ f, for: ge, createIfNeeded: true }, (guestbookEntryNb) => {
+              it('should flag the NotificationBox as invalid when initialized', async () => {
+                await guestbookEntryNb.initializeNotificationBox();
+
+                const notificationBox = await assertSnapshotData(guestbookEntryNb.document);
+
+                expect(notificationBox.fi).toBe(true);
+                expect(notificationBox.s).toBe(false);
+              });
+            });
+          });
+        });
+      });
     });
   });
 });

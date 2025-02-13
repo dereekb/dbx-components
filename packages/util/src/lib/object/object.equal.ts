@@ -4,6 +4,8 @@ import { type Building } from '../value/build';
 import { isDate, isEqualDate } from '../date';
 import { isIterable } from '../iterable';
 import { setsAreEquivalent } from '../set/set';
+import { FilterFromPOJOFunction } from './object.filter.pojo';
+import { MAP_IDENTITY } from '../value/map';
 
 /**
  * Performs a deep comparison to check if all values on the input filters are equal.
@@ -11,10 +13,23 @@ import { setsAreEquivalent } from '../set/set';
  * Recursively compares Arrays, Objects, Maps, Sets, Primatives, and Dates.
  */
 export function areEqualPOJOValues<F>(a: F, b: F): boolean {
+  return areEqualPOJOValuesUsingPojoFilter(a, b, MAP_IDENTITY);
+}
+
+/**
+ * Performs a deep comparison to check if all values on the input filters are equal. Each input is run through the pojo filter
+ *
+ * Recursively compares Arrays, Objects, Maps, Sets, Primatives, and Dates.
+ */
+export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
   // check self
   if (a === b) {
     return true;
   }
+
+  // run pojo filter before comparison
+  a = pojoFilter(a, true);
+  b = pojoFilter(b, true);
 
   // check one value is nullish and other is not
   if ((a == null || b == null) && (a || b)) {
@@ -32,7 +47,7 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
 
         const firstInequalityIndex = a.findIndex((aValue, i) => {
           const bValue = (b as any[])[i];
-          return !areEqualPOJOValues(aValue, bValue);
+          return !areEqualPOJOValuesUsingPojoFilter(aValue, bValue, pojoFilter);
         });
 
         return firstInequalityIndex === -1;
@@ -47,7 +62,7 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
 
         const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
           const bValue = bMap.get(key);
-          return !areEqualPOJOValues(aValue, bValue);
+          return !areEqualPOJOValuesUsingPojoFilter(aValue, bValue, pojoFilter);
         });
 
         return firstInequalityIndex === -1;
@@ -78,7 +93,7 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
         const firstInequalityIndex = aKeys.findIndex((key) => {
           const aKeyValue = aObject[key];
           const bKeyValue = bObject[key];
-          return !areEqualPOJOValues(aKeyValue, bKeyValue);
+          return !areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
         });
 
         if (firstInequalityIndex === -1) {

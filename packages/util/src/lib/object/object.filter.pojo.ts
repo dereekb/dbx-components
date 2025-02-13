@@ -250,7 +250,7 @@ export function filterFromPOJO<T extends object>(obj: T, config: FilterFromPOJO<
  * @param obj POJO to remove undefined values from.
  * @param copy Whether or not to return a copy of the input object. Default is true.
  */
-export type FilterFromPOJOFunction<T> = (input: T) => T;
+export type FilterFromPOJOFunction<T> = (input: T, copyOverride?: Maybe<boolean>) => T;
 export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) => T;
 
 export function filterFromPOJOFunction<T extends object>({ copy = false, filter: inputFilter = { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }: FilterFromPOJO<T> = {}): FilterFromPOJOFunction<T> {
@@ -264,8 +264,10 @@ export function filterFromPOJOFunction<T extends object>({ copy = false, filter:
     }
   });
 
-  return (obj: T) => {
-    if (copy) {
+  return (obj: T, copyOverride?: Maybe<boolean>) => {
+    const copyObj = typeof copyOverride === 'boolean' ? copyOverride : copy;
+
+    if (copyObj) {
       obj = {
         ...obj
       };

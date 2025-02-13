@@ -1,4 +1,4 @@
-import { type NotificationMessageFunctionFactory, type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeDetails, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey } from '@dereekb/firebase';
+import { type NotificationMessageFunctionFactory, type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey } from '@dereekb/firebase';
 import { ProfileDocument, ProfileId, profileIdentity } from './profile';
 import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from './guestbook';
 
@@ -6,9 +6,9 @@ import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEn
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';
 
 // MARK: Example Notification
-export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'EXAMPLE_NOTIFICATION';
+export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'E';
 
-export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeDetails = {
+export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
   type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Example Notification',
   description: 'An example notification.',
@@ -44,9 +44,9 @@ export function exampleNotification(input: ExampleNotificationInput): CreateNoti
 }
 
 // MARK: Guestbook Notifications
-export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GUESTBOOK_ENTRY_CREATED';
+export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_C';
 
-export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeDetails = {
+export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
   type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Guestbook Entry Created',
   description: 'A new guestbook entry has been created.',
@@ -70,9 +70,9 @@ export function guestbookEntryCreatedNotificationTemplate(input: GuestbookEntryC
 }
 
 // MARK: Guestbook Entry Notifications
-export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GUESTBOOK_ENTRY_LIKED';
+export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_L';
 
-export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeDetails = {
+export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
   type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Guestbook Entry Liked',
   description: 'A guestbook entry has been liked.',

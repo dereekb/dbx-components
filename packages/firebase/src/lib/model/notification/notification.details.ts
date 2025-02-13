@@ -9,7 +9,7 @@ import { NotificationTemplateType } from './notification.id';
  *
  * Types are generally intended to be handled case-insensitively by notification services.
  */
-export interface NotificationTemplateTypeDetails {
+export interface NotificationTemplateTypeInfo {
   /**
    * Notification type
    */
@@ -24,52 +24,69 @@ export interface NotificationTemplateTypeDetails {
   readonly description: string;
   /**
    * Model identity that this notification is for.
-   * 
+   *
    * This model will have a NotificationBox associated with it.
    */
   readonly notificationModelIdentity: FirestoreModelIdentity;
   /**
-   * Optional target model identity that this notification references. 
-   * 
+   * Optional target model identity that this notification references.
+   *
    * If not defined, it is assumed that the notificationModelIdentity is the target model.
-   * 
+   *
    * This model will not have a NotificationBox associated with it, and is typically a child model of the notificationModelIdentity.
    */
   readonly targetModelIdentity?: Maybe<FirestoreModelIdentity>;
 }
 
 /**
- * Record of NotificationTemplateTypeDetails keyed by type.
+ * Record of NotificationTemplateTypeInfo keyed by type.
  */
-export type NotificationTemplateTypeDetailsRecord = Record<NotificationTemplateType, NotificationTemplateTypeDetails>;
+export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType, NotificationTemplateTypeInfo>;
 
 /**
- * Creates a NotificationTemplateTypeDetailsRecord from the input details array.
+ * Creates a NotificationTemplateTypeInfoRecord from the input details array.
  *
- * @param details
+ * @param infoArray
  * @returns
  */
-export function notificationTemplateTypeDetailsRecord(details: NotificationTemplateTypeDetails[]): NotificationTemplateTypeDetailsRecord {
-  return arrayToObject(
-    details,
-    (d) => d.type,
-    (d) => d
-  );
+export function notificationTemplateTypeDetailsRecord(infoArray: NotificationTemplateTypeInfo[]): NotificationTemplateTypeInfoRecord {
+  const record: NotificationTemplateTypeInfoRecord = {};
+
+  infoArray.forEach((x) => {
+    const { type } = x;
+
+    if (record[type]) {
+      throw new Error(`notificationTemplateTypeDetailsRecord(): duplicate NotificationTemplateType in record: ${type}`);
+    }
+
+    record[type] = x;
+  });
+
+  return record;
 }
 
 /**
- * Reference to a NotificationTemplateTypeDetailsRecord that contains a AppNotificationTemplateTypeDetailsRecordService
+ * Reference to a NotificationTemplateTypeInfoRecord that contains a AppNotificationTemplateTypeInfoRecordService
  */
-export interface AppNotificationTemplateTypeDetailsRecordServiceRef {
-  readonly appNotificationTemplateTypeDetailsRecordService: AppNotificationTemplateTypeDetailsRecordService;
+export interface AppNotificationTemplateTypeInfoRecordServiceRef {
+  readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
 }
 
-export interface AppNotificationTemplateTypeDetailsRecordService {
-
+export interface AppNotificationTemplateTypeInfoRecordService {
   /**
    * All records for this app.
    */
-  readonly appNotificationTemplateTypeDetailsRecord: NotificationTemplateTypeDetailsRecord;
+  readonly appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord;
+
+  /**
+   * Returns the array of all known NotificationTemplateTypes
+   */
+  getAllKnownTemplateTypes(): NotificationTemplateType[];
+
+  /**
+   * Returns the array of all known NotificationTemplateTypeInfo
+   */
+  getAllKnownTemplateTypeDetails(): NotificationTemplateTypeInfo[];
 
   /**
    * Returns all individual FirestoreModelIdentity values that are associate with atleast one NotificationTemplateType.
@@ -78,47 +95,51 @@ export interface AppNotificationTemplateTypeDetailsRecordService {
 
   /**
    * Returns all NotificationTemplateTypes that are associate with the given model input.
-   * 
-   * @param model 
+   *
+   * @param model
    */
   getTemplateTypesForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateType[];
 
   /**
-   * Returns all NotificationTemplateTypeDetails that are associate with the given model input. 
-   * 
-   * @param model 
+   * Returns all NotificationTemplateTypeInfo that are associate with the given model input.
+   *
+   * @param model
    */
-  getTemplateTypesDetailsForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateTypeDetails[];
+  getTemplateTypesDetailsForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
 
   /**
    * Returns all NotificationTemplateTypes that are associate with the given model input.
-   * 
-   * @param model 
+   *
+   * @param model
    */
   getTemplateTypesForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateType[];
 
   /**
-   * Returns all NotificationTemplateTypeDetails that are associate with the given model input. 
-   * 
-   * @param model 
+   * Returns all NotificationTemplateTypeInfo that are associate with the given model input.
+   *
+   * @param model
    */
-  getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeDetails[];
-
+  getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
 }
 
-export function appNotificationTemplateTypeDetailsRecordService(appNotificationTemplateTypeDetailsRecord: NotificationTemplateTypeDetailsRecord): AppNotificationTemplateTypeDetailsRecordService {
-
+export function appNotificationTemplateTypeInfoRecordService(appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord): AppNotificationTemplateTypeInfoRecordService {
   const allNotificationModelIdentityValuesSet = new Set<FirestoreModelIdentity>();
-  const notificationModelTypeDetailsMapBuilder = multiValueMapBuilder<NotificationTemplateTypeDetails, FirestoreCollectionType>();
-  const targetModelTypeDetailsMapBuilder = multiValueMapBuilder<NotificationTemplateTypeDetails, FirestoreCollectionType>();
 
-  Object.entries(appNotificationTemplateTypeDetailsRecord).forEach(([_, details]) => {
+  const notificationModelTypeDetailsMapBuilder = multiValueMapBuilder<NotificationTemplateTypeInfo, FirestoreCollectionType>();
+  const targetModelTypeDetailsMapBuilder = multiValueMapBuilder<NotificationTemplateTypeInfo, FirestoreCollectionType>();
+
+  const allKnownTemplateTypes: NotificationTemplateType[] = [];
+  const allKnownTemplateTypeDetails: NotificationTemplateTypeInfo[] = [];
+
+  Object.entries(appNotificationTemplateTypeInfoRecord).forEach(([_, details]) => {
     const { collectionType } = details.notificationModelIdentity;
 
     notificationModelTypeDetailsMapBuilder.add(collectionType, details);
     targetModelTypeDetailsMapBuilder.add(details.targetModelIdentity?.collectionType ?? collectionType, details);
 
     allNotificationModelIdentityValuesSet.add(details.notificationModelIdentity);
+    allKnownTemplateTypeDetails.push(details);
+    allKnownTemplateTypes.push(details.type);
   });
 
   const allNotificationModelIdentityValues = Array.from(allNotificationModelIdentityValuesSet);
@@ -129,8 +150,16 @@ export function appNotificationTemplateTypeDetailsRecordService(appNotificationT
   const notificationModelTemplateTypesMap = new Map(Array.from(notificationModelTemplateDetailsMap.entries()).map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
   const targetModelTemplateTypesMap = new Map(Array.from(targetModelTemplateDetailsMap.entries()).map(([k, x]) => [k as NotificationTemplateType, x.map((y) => y.type)]));
 
-  const service: AppNotificationTemplateTypeDetailsRecordService = {
-    appNotificationTemplateTypeDetailsRecord,
+  const service: AppNotificationTemplateTypeInfoRecordService = {
+    appNotificationTemplateTypeInfoRecord,
+
+    getAllKnownTemplateTypes(): NotificationTemplateType[] {
+      return allKnownTemplateTypes;
+    },
+
+    getAllKnownTemplateTypeDetails(): NotificationTemplateTypeInfo[] {
+      return allKnownTemplateTypeDetails;
+    },
 
     getAllNotificationModelIdentityValues(): FirestoreModelIdentity[] {
       return allNotificationModelIdentityValues;
@@ -142,7 +171,7 @@ export function appNotificationTemplateTypeDetailsRecordService(appNotificationT
       return notificationModelTemplateTypesMap.get(firestoreCollectionType) ?? [];
     },
 
-    getTemplateTypesDetailsForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateTypeDetails[] {
+    getTemplateTypesDetailsForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[] {
       const modelKey = readFirestoreModelKey(model, true);
       const firestoreCollectionType = firestoreModelKeyCollectionType(modelKey) as FirestoreCollectionType;
       return notificationModelTemplateDetailsMap.get(firestoreCollectionType) ?? [];
@@ -154,12 +183,11 @@ export function appNotificationTemplateTypeDetailsRecordService(appNotificationT
       return targetModelTemplateTypesMap.get(targetFirestoreCollectionType) ?? [];
     },
 
-    getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeDetails[] {
+    getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[] {
       const targetModelKey = readFirestoreModelKey(target, true);
       const targetFirestoreCollectionType = firestoreModelKeyCollectionType(targetModelKey) as FirestoreCollectionType;
       return targetModelTemplateDetailsMap.get(targetFirestoreCollectionType) ?? [];
     }
-
   };
 
   return service;

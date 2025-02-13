@@ -18,6 +18,9 @@ export const NOTIFICATION_SUBJECT_MAX_LENGTH = 100;
 export const NOTIFICATION_MESSAGE_MIN_LENGTH = 2;
 export const NOTIFICATION_MESSAGE_MAX_LENGTH = 1000;
 
+/**
+ * Config entries are inserted, unless marked as remove.
+ */
 export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements NotificationBoxRecipientTemplateConfigArrayEntry {
   @Expose()
   @IsString()
@@ -42,6 +45,14 @@ export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements No
   @IsOptional()
   @IsBoolean()
   sn?: Maybe<boolean>;
+
+  /**
+   * If true, removes this configuration
+   */
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  remove?: Maybe<Boolean>;
 }
 
 /**
@@ -212,10 +223,10 @@ export class UpdateNotificationUserParams extends TargetModelParams {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateNotificationUserNotificationBoxRecipientParams)
-  bc: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
+  bc?: Maybe<UpdateNotificationUserNotificationBoxRecipientParams[]>;
 }
 
-export class ResyncNotificationUserNotificationBoxConfigsParams extends TargetModelParams {}
+export class ResyncNotificationUserParams extends TargetModelParams {}
 
 export interface ResyncNotificationUserNotificationBoxConfigsResult {
   /**
@@ -224,7 +235,7 @@ export interface ResyncNotificationUserNotificationBoxConfigsResult {
   readonly notificationBoxesUpdated: number;
 }
 
-export class ResyncAllNotificationUserNotificationBoxConfigsParams {}
+export class ResyncAllNotificationUserParams {}
 
 export interface ResyncAllNotificationUserNotificationBoxConfigsResult extends ResyncNotificationUserNotificationBoxConfigsResult {
   /**
