@@ -24,7 +24,13 @@ import {
   notificationUserIdentity,
   onCallUpdateModelParams,
   NotificationUserNotificationBoxRecipientConfig,
-  inferKeyFromTwoWayFlatFirestoreModelKey
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  ResyncNotificationUserParams,
+  ResyncNotificationUserResult,
+  UpdateNotificationBoxRecipientParams,
+  notificationBoxIdentity,
+  NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
+  NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
 import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from '@dereekb/demo-firebase';
@@ -233,7 +239,7 @@ demoApiFunctionContextFactory((f) => {
 
                           describe('updates', () => {
                             describe('global config', () => {
-                              it('updating the global config should flag a sync', async () => {
+                              it('updating the text or email on the global config should flag all notification box configs on NotificationUser for sync', async () => {
                                 let notificationUser = await assertSnapshotData(nu.document);
 
                                 const e = 'test@components.dereekb.com';
@@ -242,12 +248,40 @@ demoApiFunctionContextFactory((f) => {
                                 const params: UpdateNotificationUserParams = {
                                   key: nu.documentKey,
                                   gc: {
-                                    bk: true,
                                     e,
-                                    t,
+                                    t
+                                  }
+                                };
+
+                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                notificationUser = await assertSnapshotData(nu.document);
+
+                                expect(notificationUser.ns).toBe(true); // should sync with the notification box
+
+                                const profileNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(profileNotificationBoxConfig.ns).toBe(true);
+
+                                const guestbookNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(guestbookNotificationBoxConfig.ns).toBe(true);
+
+                                expect(notificationUser.bc[0].ns).toBe(true);
+                                expect(notificationUser.gc.e).toBe(e);
+                                expect(notificationUser.gc.t).toBe(t);
+                              });
+
+                              it('updating the global config should flag a sync on the relevant guestbooks', async () => {
+                                let notificationUser = await assertSnapshotData(nu.document);
+
+                                const e = 'test@components.dereekb.com';
+                                const t = '+1208888888';
+
+                                const params: UpdateNotificationUserParams = {
+                                  key: nu.documentKey,
+                                  gc: {
                                     configs: [
                                       {
-                                        type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
+                                        type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, // should trigger all associated guestbook model NotificationBoxes
                                         se: true,
                                         st: false // no text
                                       }
@@ -260,14 +294,54 @@ demoApiFunctionContextFactory((f) => {
                                 notificationUser = await assertSnapshotData(nu.document);
 
                                 expect(notificationUser.ns).toBe(true); // should sync with the notification box
-                                expect(notificationUser.bc[0].ns).toBe(true);
 
-                                expect(notificationUser.gc.bk).toBe(true);
-                                expect(notificationUser.gc.e).toBe(e);
-                                expect(notificationUser.gc.t).toBe(t);
+                                const profileNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(profileNotificationBoxConfig.ns).toBeFalsy(); // updated config is not for profile
+
+                                const guestbookNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_g.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(guestbookNotificationBoxConfig.ns).toBe(true); // updated config is for guestbook
+
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(true);
                                 expect(notificationUser.gc.c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(false);
+                              });
+
+                              describe('global config updated', () => {
+                                beforeEach(async () => {
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    gc: {
+                                      configs: [
+                                        {
+                                          type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
+                                          se: true,
+                                          st: false // no text
+                                        }
+                                      ]
+                                    }
+                                  };
+
+                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                });
+
+                                it('should sync the global config to only the relevant NotificationBoxes', async () => {
+                                  let notificationBox = await assertSnapshotData(nb_g.document);
+
+                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).not.toBeDefined();
+
+                                  const params: ResyncNotificationUserParams = {
+                                    key: nu.documentKey
+                                  };
+
+                                  const result = (await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
+                                  expect(result.notificationBoxesUpdated).toBe(1);
+
+                                  notificationBox = await assertSnapshotData(nb_g.document);
+
+                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
+                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(true);
+                                  expect(notificationBox.r[0].c[GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(false);
+                                });
                               });
                             });
 
@@ -411,13 +485,113 @@ demoApiFunctionContextFactory((f) => {
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
-                                expect(notificationUser.ns).toBe(true); // nothing to sync since no new types should have been added
+                                expect(notificationUser.ns).toBeFalsy(); // nothing to sync since no new types should have been added
                                 expect(notificationUser.bc).toHaveLength(2); // still associated with two notification boxes
 
                                 const relatedNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
                                 expect(relatedNotificationBoxConfig.ns).toBeFalsy(); // nothing to sync as no changes occured
 
                                 expect(relatedNotificationBoxConfig.c['UNKNOWN_TYPE']).toBeUndefined();
+                              });
+                            });
+
+                            describe('updating NotificationBox recipient', () => {
+                              it('should allow the NotificationBox to update the user', async () => {
+                                let notificationBox = await assertSnapshotData(nb_p.document);
+                                expect(notificationBox.r).toHaveLength(1);
+
+                                const params: UpdateNotificationBoxRecipientParams = {
+                                  key: nb_p.documentKey,
+                                  uid: u.uid,
+                                  configs: [
+                                    {
+                                      type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                                      se: true,
+                                      sn: true,
+                                      sp: false
+                                    }
+                                  ]
+                                };
+
+                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient'));
+
+                                notificationBox = await assertSnapshotData(nb_p.document);
+                                expect(notificationBox.r).toHaveLength(1);
+
+                                const notificationUser = await assertSnapshotData(nu.document);
+                                expect(notificationUser.bc[0].nb).toBe(nb_p.documentId);
+                                expect(notificationUser.bc[0].i).toBe(0);
+                                expect(notificationUser.bc[0].c[EXAMPLE_NOTIFICATION_TEMPLATE_TYPE].se).toBe(true);
+                                expect(notificationUser.bc[0].c[EXAMPLE_NOTIFICATION_TEMPLATE_TYPE].sn).toBe(true);
+                                expect(notificationUser.bc[0].c[EXAMPLE_NOTIFICATION_TEMPLATE_TYPE].sp).toBe(false);
+                                expect(notificationUser.bc[0].c[EXAMPLE_NOTIFICATION_TEMPLATE_TYPE].st).toBeUndefined();
+                              });
+
+                              describe('NotificationUser locks themselves from additional updates via global config', () => {
+                                beforeEach(async () => {
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    gc: {
+                                      lk: true
+                                    }
+                                  };
+
+                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                });
+
+                                itShouldFail('to update the user', async () => {
+                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.gc.lk).toBe(true);
+
+                                  const params: UpdateNotificationBoxRecipientParams = {
+                                    key: nb_p.documentKey,
+                                    uid: u.uid,
+                                    configs: [
+                                      {
+                                        type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                                        se: true,
+                                        st: true
+                                      }
+                                    ]
+                                  };
+
+                                  await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
+                                });
+                              });
+
+                              describe('NotificationUser locks themselves from additional updates via box config', () => {
+                                beforeEach(async () => {
+                                  const params: UpdateNotificationUserParams = {
+                                    key: nu.documentKey,
+                                    bc: [
+                                      {
+                                        nb: nb_p.documentId,
+                                        lk: true
+                                      }
+                                    ]
+                                  };
+
+                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                });
+
+                                itShouldFail('to update the user', async () => {
+                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.bc[0].lk).toBe(true);
+
+                                  const params: UpdateNotificationBoxRecipientParams = {
+                                    key: nb_p.documentKey,
+                                    uid: u.uid,
+                                    configs: [
+                                      {
+                                        type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
+                                        se: true,
+                                        st: true
+                                      }
+                                    ]
+                                  };
+
+                                  await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
+                                });
                               });
                             });
                           });
@@ -454,6 +628,40 @@ demoApiFunctionContextFactory((f) => {
                                 };
 
                                 await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                              });
+
+                              it('should resync the user when resync is called by an admin', async () => {
+                                let notificationUser = await assertSnapshotData(nu.document);
+                                expect(notificationUser.ns).toBe(true);
+
+                                const params: ResyncNotificationUserParams = {
+                                  key: nu.documentKey
+                                };
+
+                                const result = (await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
+                                expect(result.notificationBoxesUpdated).toBe(1);
+
+                                // notification user should now be marked synced
+                                notificationUser = await assertSnapshotData(nu.document);
+                                expect(notificationUser.ns).toBeFalsy();
+
+                                const relatedNotificationBoxConfig = notificationUser.bc.find((x) => x.nb === nb_p.documentId) as NotificationUserNotificationBoxRecipientConfig;
+                                expect(relatedNotificationBoxConfig.ns).toBeFalsy(); // should by synced now
+                                expect(relatedNotificationBoxConfig.i).toBe(0); // index should still be set
+                                expect(relatedNotificationBoxConfig.rm).toBeFalsy(); // was not marked for removal
+
+                                const notificationBox = await assertSnapshotData(nb_p.document);
+                                const relatedRecipient = notificationBox.r[0];
+
+                                expect(relatedRecipient.uid).toBe(u.uid);
+
+                                // check was synced to the notification box
+                                const exampleTemplateConfig = relatedRecipient.c[EXAMPLE_NOTIFICATION_TEMPLATE_TYPE];
+
+                                expect(exampleTemplateConfig.se).toBe(false);
+                                expect(exampleTemplateConfig.st).toBe(false);
+                                expect(exampleTemplateConfig.sn).toBe(false);
+                                expect(exampleTemplateConfig.sp).toBe(false);
                               });
 
                               it('should be resynced when resyncAllNotificationUsers() is called', async () => {
@@ -502,7 +710,160 @@ demoApiFunctionContextFactory((f) => {
                                   await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                 });
 
-                                it('should remove the user from the NotificationBox on the next removal', () => {});
+                                it('should remove the user from the NotificationBox on the next resync', async () => {
+                                  let notificationBox = await assertSnapshotData(nb_p.document);
+                                  expect(notificationBox.r).toHaveLength(1);
+
+                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.bc[0].nb).toBe(nb_p.documentId);
+                                  expect(notificationUser.bc[0].rm).toBe(true);
+                                  expect(notificationUser.bc[0].i).toBe(0);
+
+                                  const result = await f.notificationServerActions.resyncAllNotificationUsers();
+                                  expect(result.notificationUsersResynced).toBe(1);
+                                  expect(result.notificationBoxesUpdated).toBe(1);
+
+                                  notificationBox = await assertSnapshotData(nb_p.document);
+                                  expect(notificationBox.r).toHaveLength(0);
+
+                                  notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.bc[0].nb).toBe(nb_p.documentId);
+                                  expect(notificationUser.bc[0].rm).toBe(true);
+                                  expect(notificationUser.bc[0].i).toBe(UNSET_INDEX_NUMBER);
+                                });
+
+                                describe('user removed from NotificationBox', () => {
+                                  beforeEach(async () => {
+                                    await f.notificationServerActions.resyncAllNotificationUsers();
+                                  });
+
+                                  it('should allow the user to remove the NotificationBox config from the NotificationUser', async () => {
+                                    const params: UpdateNotificationUserParams = {
+                                      key: nu.documentKey,
+                                      bc: [
+                                        {
+                                          nb: nb_p.documentId,
+                                          deleteRemovedConfig: true
+                                        }
+                                      ]
+                                    };
+
+                                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                    let notificationUser = await assertSnapshotData(nu.document);
+                                    expect(notificationUser.bc).toHaveLength(0);
+                                  });
+
+                                  it('should allow the NotificationBox restore the user', async () => {
+                                    let notificationBox = await assertSnapshotData(nb_p.document);
+                                    expect(notificationBox.r).toHaveLength(0);
+
+                                    let notificationUser = await assertSnapshotData(nu.document);
+                                    expect(notificationUser.bc[0].nb).toBe(nb_p.documentId);
+                                    expect(notificationUser.bc[0].rm).toBe(true);
+                                    expect(notificationUser.bc[0].i).toBe(UNSET_INDEX_NUMBER);
+
+                                    const params: UpdateNotificationBoxRecipientParams = {
+                                      key: nb_p.documentKey,
+                                      uid: u.uid,
+                                      insert: true
+                                    };
+
+                                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient'));
+
+                                    notificationBox = await assertSnapshotData(nb_p.document);
+                                    expect(notificationBox.r).toHaveLength(1);
+
+                                    notificationUser = await assertSnapshotData(nu.document);
+                                    expect(notificationUser.bc[0].nb).toBe(nb_p.documentId);
+                                    expect(notificationUser.bc[0].rm).toBeFalsy();
+                                    expect(notificationUser.bc[0].i).toBe(0);
+                                  });
+
+                                  describe('user blocks self from being added by specific NotificationBox', () => {
+                                    beforeEach(async () => {
+                                      const params: UpdateNotificationUserParams = {
+                                        key: nu.documentKey,
+                                        bc: [
+                                          {
+                                            nb: nb_p.documentId,
+                                            bk: true
+                                          }
+                                        ]
+                                      };
+
+                                      await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                    });
+
+                                    itShouldFail('to allow the user to be added to the NotificationBox', async () => {
+                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      expect(notificationUser.bc[0].bk).toBe(true);
+
+                                      const params: UpdateNotificationBoxRecipientParams = {
+                                        key: nb_p.documentKey,
+                                        uid: u.uid,
+                                        insert: true
+                                      };
+
+                                      await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                    });
+                                  });
+
+                                  describe('user blocks self from being added by specific NotificationBox', () => {
+                                    beforeEach(async () => {
+                                      const params: UpdateNotificationUserParams = {
+                                        key: nu.documentKey,
+                                        bc: [
+                                          {
+                                            nb: nb_p.documentId,
+                                            bk: true
+                                          }
+                                        ]
+                                      };
+
+                                      await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                    });
+
+                                    itShouldFail('to allow the user to be added to the NotificationBox', async () => {
+                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      expect(notificationUser.bc[0].bk).toBe(true);
+
+                                      const params: UpdateNotificationBoxRecipientParams = {
+                                        key: nb_p.documentKey,
+                                        uid: u.uid,
+                                        insert: true
+                                      };
+
+                                      await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                    });
+                                  });
+
+                                  describe('user blocks self from being added by all NotificationBoxes', () => {
+                                    beforeEach(async () => {
+                                      const params: UpdateNotificationUserParams = {
+                                        key: nu.documentKey,
+                                        gc: {
+                                          bk: true // blocked from being added by anything
+                                        }
+                                      };
+
+                                      await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                    });
+
+                                    itShouldFail('to allow the user to be added to the NotificationBox', async () => {
+                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      expect(notificationUser.gc.bk).toBe(true);
+
+                                      const params: UpdateNotificationBoxRecipientParams = {
+                                        key: nb_p.documentKey,
+                                        uid: u.uid,
+                                        insert: true
+                                      };
+
+                                      await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                    });
+                                  });
+                                });
                               });
                             });
                           });
@@ -585,6 +946,33 @@ demoApiFunctionContextFactory((f) => {
                                 }),
                               jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
                             );
+                          });
+
+                          describe('recipient exists in NotificationBox', () => {
+                            beforeEach(async () => {
+                              await nb.updateRecipient({
+                                uid: u2.uid,
+                                insert: true
+                              });
+                            });
+
+                            it('should remove the recipient from the NotificationBox and retain the config on the NotificationUser', async () => {
+                              await nb.updateRecipient({
+                                uid: u2.uid,
+                                remove: true
+                              });
+
+                              const notificationBox = await assertSnapshotData(nb.document);
+                              expect(notificationBox.r).toHaveLength(0);
+
+                              const notificationUser = await assertSnapshotData(nu2.document);
+                              expect(notificationUser.bc).toHaveLength(1);
+
+                              const relatedConfig = notificationUser.bc[0];
+
+                              expect(relatedConfig.rm).toBe(true);
+                              expect(relatedConfig.i).toBe(UNSET_INDEX_NUMBER);
+                            });
                           });
                         });
                       });
@@ -793,7 +1181,7 @@ demoApiFunctionContextFactory((f) => {
                             );
                           });
 
-                          it('should remove the recipient', async () => {
+                          it('should remove the recipient from the notification box', async () => {
                             await nb.updateRecipient({
                               i,
                               remove: true

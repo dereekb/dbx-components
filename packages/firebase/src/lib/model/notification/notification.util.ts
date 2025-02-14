@@ -1,6 +1,51 @@
-import { type Maybe } from '@dereekb/util';
+import { filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
 import { type Notification, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState } from './notification';
-import { NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag } from './notification.config';
+import { NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationUserDefaultNotificationBoxRecipientConfig, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
+import { AppNotificationTemplateTypeInfoRecordService } from './notification.details';
+import { FirebaseAuthUserId, FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+
+// MARK: NotificationUser
+export interface EffectiveNotificationBoxRecipientConfigInput {
+  readonly uid: FirebaseAuthUserId;
+  readonly m?: FirestoreModelKey;
+  readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
+  readonly gc: NotificationUserDefaultNotificationBoxRecipientConfig;
+  readonly boxConfig: NotificationUserNotificationBoxRecipientConfig;
+  readonly recipient?: Maybe<NotificationBoxRecipient>;
+}
+
+export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotificationBoxRecipientConfigInput) {
+  const { uid, m: inputM, appNotificationTemplateTypeInfoRecordService, gc, boxConfig: notificationUserNotificationBoxConfig, recipient } = input;
+
+  const m = inputM ?? inferKeyFromTwoWayFlatFirestoreModelKey(notificationUserNotificationBoxConfig.nb);
+  const applicableTemplateTypesForModel = appNotificationTemplateTypeInfoRecordService.getTemplateTypesForNotificationModel(m);
+  const filterOnlyApplicableTemplateTypes = filterKeysOnPOJOFunction<NotificationBoxRecipientTemplateConfigRecord>(applicableTemplateTypesForModel);
+
+  // retain only the relevant/applicable template types for the model associate with the notification box
+  const c = filterOnlyApplicableTemplateTypes({
+    ...recipient?.c,
+    ...notificationUserNotificationBoxConfig.c,
+    ...gc.c
+  });
+
+  const nextRecipient: NotificationBoxRecipient = {
+    ...recipient,
+    c,
+    uid, // index and uid are retained
+    i: recipient?.i ?? notificationUserNotificationBoxConfig.i,
+    // copy from NotificationUser
+    f: gc.f ?? notificationUserNotificationBoxConfig.f ?? recipient?.f,
+    lk: gc.lk ?? notificationUserNotificationBoxConfig.lk, // lock state only comes from NotificationUser
+    // email and text overrides first come from global, then the NotificationBox specific config
+    e: gc.e ?? notificationUserNotificationBoxConfig.e,
+    t: gc.t ?? notificationUserNotificationBoxConfig.t,
+    // no custom name or notification summary allowed
+    n: undefined,
+    s: undefined // should never be defined since uid is defined
+  };
+
+  return nextRecipient;
+}
 
 // MARK: Notification
 /**

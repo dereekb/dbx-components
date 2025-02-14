@@ -1,5 +1,4 @@
-import { Maybe, arrayToObject } from '@dereekb/util';
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, FirestoreModelIdentity, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
 
 /**
  * The NotificationBox's id is the two way flat firestore model key of the object that it represents.

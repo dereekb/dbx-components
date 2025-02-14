@@ -101,7 +101,7 @@ export function updateNotificationUserNotificationBoxRecipientConfigs(a: Notific
     const existingBox = boxesMap.get(x.nb);
 
     if (existingBox) {
-      if (x.deleteAfterRemove && existingBox.rm && existingBox.i === UNSET_INDEX_NUMBER) {
+      if (x.deleteRemovedConfig && existingBox.rm && existingBox.i === UNSET_INDEX_NUMBER) {
         // delete if marked as removed and already sync'd
         boxesMap.delete(x.nb);
         hasChanges = true;

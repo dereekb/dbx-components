@@ -286,13 +286,17 @@ export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFun
 }
 
 export interface DemoAuthorizedUserContextFactoryConfig {
+  /**
+   * Onboarded state. Defaults to true.
+   */
+  onboarded?: boolean;
   demoUserLevel?: 'admin' | 'user';
 }
 
 export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserContextFactoryConfig) =>
   authorizedUserContextFactory<DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiAuthorizedUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
     makeFixture: (f) => new DemoApiAuthorizedUserTestContextFixture(f),
-    makeUserDetails: () => ({ claims: { demoUserLevel: params.demoUserLevel ?? 'user' } }),
+    makeUserDetails: () => ({ claims: { o: params.onboarded !== false ? 1 : 0, a: params.demoUserLevel === 'admin' ? 1 : 0, demoUserLevel: params.demoUserLevel ?? 'user' } }),
     makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance),
     initUser: async (instance) => {
       const userRecord = await instance.loadUserRecord();

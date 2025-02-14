@@ -281,7 +281,7 @@ export interface NotificationBox {
  * subscribe: user can subscribe or unsubscribe to/from this notification box and manage themselves.
  * manageRecipients: user can manage all recipients
  */
-export type NotificationBoxRoles = 'subscribe' | 'manageRecipients' | 'createNotification' | GrantedReadRole;
+export type NotificationBoxRoles = 'subscribe' | 'manageRecipients' | 'createNotification' | GrantedReadRole | GrantedUpdateRole;
 
 export class NotificationBoxDocument extends AbstractFirestoreDocument<NotificationBox, NotificationBoxDocument, typeof notificationBoxIdentity> {
   get modelIdentity() {

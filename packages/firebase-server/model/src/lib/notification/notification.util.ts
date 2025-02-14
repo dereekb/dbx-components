@@ -422,7 +422,7 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigInput {
   /**
    * The existing NotificationUser.
    */
-  readonly notificationUser: Pick<NotificationUser, 'bc'>;
+  readonly notificationUser: Pick<NotificationUser, 'gc' | 'bc'>;
   /**
    * If true, flag as if the recipient is being inserted into the NotificationBox since it does not exist there.
    */
@@ -454,6 +454,7 @@ export function updateNotificationUserNotificationBoxRecipientConfig(input: Upda
   const currentNotificationUserBoxIndex = notificationUser.bc.findIndex((x) => x.nb === notificationBoxId);
 
   const currentNotificationUserBoxIndexExists = currentNotificationUserBoxIndex !== -1;
+  const currentNotificationUserBoxGlobalConfig: Partial<NotificationUserDefaultNotificationBoxRecipientConfig> = notificationUser.gc;
   const currentNotificationUserBoxConfig: Partial<NotificationUserNotificationBoxRecipientConfig> = notificationUser.bc[currentNotificationUserBoxIndex] ?? {};
 
   /**
@@ -476,7 +477,15 @@ export function updateNotificationUserNotificationBoxRecipientConfig(input: Upda
       };
     }
   } else if (notificationBoxRecipient != null) {
-    const { ns: currentConfigNeedsSync, lk: lockedFromChanges, bk: blockedFromAdd } = currentNotificationUserBoxConfig;
+    const {
+      ns: currentConfigNeedsSync,
+      lk: lockedFromChanges,
+      bk: blockedFromAdd
+    } = {
+      ns: currentNotificationUserBoxConfig.ns,
+      lk: currentNotificationUserBoxGlobalConfig.lk ?? currentNotificationUserBoxConfig.lk,
+      bk: currentNotificationUserBoxGlobalConfig.bk ?? currentNotificationUserBoxConfig.bk
+    };
 
     // if we're re-inserting, then take the prevous config and restore as it was and remove the rm tag
     let updateWithNotificationBoxRecipient: Partial<NotificationBoxRecipient>;

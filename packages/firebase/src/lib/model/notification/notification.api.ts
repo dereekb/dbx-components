@@ -1,12 +1,12 @@
 import { Type, Expose } from 'class-transformer';
 import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirestoreModelKey, type FirebaseAuthUserId } from '../../common';
-import { callModelFirebaseFunctionMapFactory, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { callModelFirebaseFunctionMapFactory, ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
-import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
+import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { IsE164PhoneNumber } from '@dereekb/model';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
@@ -197,7 +197,7 @@ export class UpdateNotificationUserNotificationBoxRecipientParams extends Update
   @Expose()
   @IsOptional()
   @IsBoolean()
-  deleteAfterRemove?: Maybe<boolean>;
+  deleteRemovedConfig?: Maybe<boolean>;
 }
 
 /**
@@ -228,7 +228,7 @@ export class UpdateNotificationUserParams extends TargetModelParams {
 
 export class ResyncNotificationUserParams extends TargetModelParams {}
 
-export interface ResyncNotificationUserNotificationBoxConfigsResult {
+export interface ResyncNotificationUserResult {
   /**
    * Total number of notification boxes updated.
    */
@@ -237,7 +237,7 @@ export interface ResyncNotificationUserNotificationBoxConfigsResult {
 
 export class ResyncAllNotificationUserParams {}
 
-export interface ResyncAllNotificationUserNotificationBoxConfigsResult extends ResyncNotificationUserNotificationBoxConfigsResult {
+export interface ResyncAllNotificationUsersResult extends ResyncNotificationUserResult {
   /**
    * Total number of users updated.
    */
@@ -562,14 +562,40 @@ export type NotificationFunctionTypeMap = {};
 export const notificationFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<NotificationFunctionTypeMap> = {};
 
 export type NotificationBoxModelCrudFunctionsConfig = {
-  readonly notificationUser: null; // TODO: add API calls to update their settings, etc.
-  readonly notificationBox: null;
+  readonly notificationUser: {
+    update: {
+      _: UpdateNotificationUserParams;
+      resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
+    };
+  };
+  readonly notificationBox: {
+    update: {
+      _: UpdateNotificationBoxParams;
+      recipient: UpdateNotificationBoxRecipientParams;
+    };
+  };
   readonly notification: null;
   readonly notificationWeek: null;
 };
 
-export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {};
+export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
+  notificationUser: ['update:_,resync'],
+  notificationBox: ['update:_,recipient']
+};
 
-export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<NotificationFunctionTypeMap, NotificationBoxModelCrudFunctionsConfig> {}
+export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<NotificationFunctionTypeMap, NotificationBoxModelCrudFunctionsConfig> {
+  abstract notificationUser: {
+    updateNotificationUser: {
+      update: ModelFirebaseCrudFunction<UpdateNotificationUserParams>;
+      resync: ModelFirebaseCrudFunction<ResyncNotificationUserParams, ResyncNotificationUserResult>;
+    };
+  };
+  abstract notificationBox: {
+    updateNotificationBox: {
+      update: ModelFirebaseCrudFunction<UpdateNotificationBoxParams>;
+      recipient: ModelFirebaseCrudFunction<UpdateNotificationBoxRecipientParams>;
+    };
+  };
+}
 
 export const notificationFunctionMap = callModelFirebaseFunctionMapFactory(notificationFunctionTypeConfigMap, notificationBoxModelCrudFunctionsConfig);

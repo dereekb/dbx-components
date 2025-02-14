@@ -1,6 +1,7 @@
-import { ResyncNotificationUserParams, UpdateNotificationUserParams } from '@dereekb/firebase';
+import { ResyncNotificationUserParams, ResyncNotificationUserResult, UpdateNotificationUserParams } from '@dereekb/firebase';
 import { DemoUpdateModelFunction } from '../function';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
+import { isAdminInRequest } from '@dereekb/firebase-server';
 
 export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationUserParams> = async (request) => {
   const { nest, auth, data } = request;
@@ -16,7 +17,7 @@ export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationU
   await updateNotificationUser(notificationUserDocument);
 };
 
-export const resyncNotificationUser: DemoUpdateModelFunction<ResyncNotificationUserParams> = async (request) => {
+export const resyncNotificationUser: DemoUpdateModelFunction<ResyncNotificationUserParams, ResyncNotificationUserResult> = async (request) => {
   const { nest, auth, data } = request;
 
   const resyncNotificationUser = await nest.notificationActions.resyncNotificationUser(data);
@@ -27,5 +28,5 @@ export const resyncNotificationUser: DemoUpdateModelFunction<ResyncNotificationU
     use: (x) => x.document
   });
 
-  await resyncNotificationUser(notificationUserDocument);
+  return resyncNotificationUser(notificationUserDocument);
 };

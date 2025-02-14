@@ -146,7 +146,10 @@ export interface NotificationUserNotificationBoxRecipientConfig extends Omit<Not
   /**
    * Removed state.
    *
-   * If flagged, then this user has been removed from the NotificationBox.
+   * If flagged, then this user has flagged themselves to be removed from the NotificationBox or have already been removed.
+   *
+   * Only the NotificationBox can restore a user, so a if a user removes themselves the user cannot restore themselves.
+   * A user will typically prefer to utilize the "f" value (opt-out) flag to not recieve any notifications, rather than remove themselves.
    *
    * The config for this NotificationBox is retained on the NotificationUser, unless the user deletes the configuration themselves.
    */

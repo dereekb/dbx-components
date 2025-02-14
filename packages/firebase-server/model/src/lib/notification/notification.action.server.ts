@@ -64,8 +64,8 @@ import {
   updateNotificationUserDefaultNotificationBoxRecipientConfig,
   updateNotificationUserNotificationBoxRecipientConfigs,
   ResyncAllNotificationUserParams,
-  ResyncAllNotificationUserNotificationBoxConfigsResult,
-  ResyncNotificationUserNotificationBoxConfigsResult,
+  ResyncAllNotificationUsersResult,
+  ResyncNotificationUserResult,
   ResyncNotificationUserParams,
   loadDocumentsForIdsFromValues,
   loadDocumentsForIds,
@@ -75,7 +75,8 @@ import {
   NotificationBoxRecipientTemplateConfigRecord,
   NotificationUserNotificationBoxRecipientConfig,
   iterateFirestoreDocumentSnapshotPairs,
-  notificationUsersFlaggedForNeedsSyncQuery
+  notificationUsersFlaggedForNeedsSyncQuery,
+  effectiveNotificationBoxRecipientConfig
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -104,8 +105,8 @@ export interface NotificationServerActionsContext extends FirebaseServerActionsC
 export abstract class NotificationServerActions {
   abstract createNotificationUser(params: CreateNotificationUserParams): AsyncNotificationUserCreateAction<CreateNotificationUserParams>;
   abstract updateNotificationUser(params: UpdateNotificationUserParams): AsyncNotificationUserUpdateAction<UpdateNotificationUserParams>;
-  abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserNotificationBoxConfigsResult>>>;
-  abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUserNotificationBoxConfigsResult>;
+  abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserResult>>>;
+  abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUsersResult>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
   abstract updateNotificationBox(params: UpdateNotificationBoxParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxParams>;
@@ -191,8 +192,36 @@ export function updateNotificationUserFactory(context: NotificationServerActions
         }
 
         if (inputGc != null) {
-          updateTemplate.gc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
-          updateTemplate.bc = notificationUser.bc.map((x) => (x.rm ? x : { ...x, ns: true })); // flag all non-removed types as needing a sync
+          const nextGc = updateNotificationUserDefaultNotificationBoxRecipientConfig(notificationUser.gc, inputGc, allKnownNotificationTypes);
+
+          if (!areEqualPOJOValues(notificationUser.gc, nextGc)) {
+            updateTemplate.gc = nextGc;
+
+            // iterate and update any box config that has the effective recipient change
+            updateTemplate.bc = notificationUser.bc.map((currentConfig) => {
+              // check item isn't already marked for sync or marked as removed
+              if (currentConfig.ns === true || currentConfig.rm === true) {
+                return currentConfig;
+              }
+
+              const currentEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
+                uid: notificationUser.uid,
+                appNotificationTemplateTypeInfoRecordService,
+                gc: notificationUser.gc,
+                boxConfig: currentConfig
+              });
+
+              const nextEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
+                uid: notificationUser.uid,
+                appNotificationTemplateTypeInfoRecordService,
+                gc: nextGc,
+                boxConfig: currentConfig
+              });
+
+              const effectiveConfigChanged = !areEqualPOJOValues(currentEffectiveRecipient, nextEffectiveRecipient);
+              return effectiveConfigChanged ? { ...currentConfig, ns: true } : currentConfig;
+            });
+          }
         }
 
         if (inputBc != null) {
@@ -259,7 +288,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
 
             const notificationBoxConfigsToRemoveFromNotificationUser = new Set<NotificationBoxId>();
             const notificationUserNotificationBoxConfigsToMarkAsRemoved = new Set<NotificationBoxId>();
-            const updatedRecipientsMap = new Map<NotificationBoxId, Maybe<NotificationBoxRecipient>>();
+            const nextRecipientsMap = new Map<NotificationBoxId, Maybe<NotificationBoxRecipient>>();
 
             // update each NotificationBoxDocument
             await performAsyncTasks(notificationBoxDocumentSnapshotDataPairs, async (notificationBoxDocumentSnapshotDataPair) => {
@@ -285,47 +314,33 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
                   r = removeValuesAtIndexesFromArrayCopy(notificationBox.r, recipientIndex);
                 } else {
                   const { m } = notificationBox;
-
-                  const applicableTemplateTypesForModel = appNotificationTemplateTypeInfoRecordService.getTemplateTypesForNotificationModel(m);
-                  const filterOnlyApplicableTemplateTypes = filterKeysOnPOJOFunction<NotificationBoxRecipientTemplateConfigRecord>(applicableTemplateTypesForModel);
-
                   const recipient = notificationBox.r[recipientIndex];
 
-                  // retain only the relevant/applicable template types for the model associate with the notification box
-                  const c = filterOnlyApplicableTemplateTypes({
-                    ...recipient.c,
-                    ...notificationUserNotificationBoxConfig.c,
-                    ...gc.c
+                  const nextRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
+                    uid: notificationUser.uid,
+                    m,
+                    appNotificationTemplateTypeInfoRecordService,
+                    gc,
+                    boxConfig: notificationUserNotificationBoxConfig,
+                    recipient
                   });
 
-                  const nextRecipient: NotificationBoxRecipient = {
-                    ...recipient,
-                    c,
-                    uid: notificationUser.uid, // index and uid are retained
-                    i: recipient.i,
-                    // copy from NotificationUser
-                    f: gc.f ?? notificationUserNotificationBoxConfig.f ?? recipient.f,
-                    lk: gc.lk ?? notificationUserNotificationBoxConfig.lk, // lock state only comes from NotificationUser
-                    // email and text overrides first come from global, then the NotificationBox specific config
-                    e: gc.e ?? notificationUserNotificationBoxConfig.e,
-                    t: gc.t ?? notificationUserNotificationBoxConfig.t,
-                    // no custom name or notification summary allowed
-                    n: undefined,
-                    s: undefined // should never be defined since uid is defined
-                  };
+                  const recipientHasChange = !areEqualPOJOValues(nextRecipient, recipient);
 
                   // only update recipients if the next/new recipient is not equal to the existing one
-                  if (!areEqualPOJOValues(nextRecipient, recipient)) {
+                  if (recipientHasChange) {
                     r = [...notificationBox.r];
                     r[recipientIndex] = nextRecipient;
-                    updatedRecipientsMap.set(nb, nextRecipient);
+                    nextRecipientsMap.set(nb, nextRecipient);
+                  } else {
+                    nextRecipientsMap.set(nb, recipient);
                   }
                 }
 
                 // update recipients if needed
                 if (r != null) {
                   await document.update({ r });
-                  notificationBoxesUpdatedInBatch++;
+                  notificationBoxesUpdatedInBatch += 1;
                 }
               }
             });
@@ -354,7 +369,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
                   };
                 } else {
                   // else, use the updated recipient and keep/copy the
-                  const updatedRecipient = updatedRecipientsMap.get(nb) as NotificationBoxRecipient;
+                  const updatedRecipient = nextRecipientsMap.get(nb) as NotificationBoxRecipient;
 
                   nextConfig = {
                     ...existingConfig,
@@ -366,6 +381,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
               }
 
               if (nextConfig != null) {
+                nextConfig.ns = false; // mark as synced
                 nextConfigs.push(nextConfig);
               }
             });
@@ -375,19 +391,19 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
             hasUnsyncedNotificationBoxConfigs = ns;
           }
 
-          const result: ResyncNotificationUserBatchResult = {
+          const batchResult: ResyncNotificationUserBatchResult = {
             hasMoreNotificationBoxesToSync: hasUnsyncedNotificationBoxConfigs,
             notificationBoxesUpdatedInBatch
           };
 
-          return result;
+          return batchResult;
         });
 
         hasMoreNotificationBoxesToSync = batchResult.hasMoreNotificationBoxesToSync;
         notificationBoxesUpdated += batchResult.notificationBoxesUpdatedInBatch;
       }
 
-      const result: ResyncNotificationUserNotificationBoxConfigsResult = {
+      const result: ResyncNotificationUserResult = {
         notificationBoxesUpdated
       };
 
@@ -432,9 +448,9 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
       }
     });
 
-    const result: ResyncAllNotificationUserNotificationBoxConfigsResult = {
+    const result: ResyncAllNotificationUsersResult = {
       notificationUsersResynced: iterateResult.totalSnapshotsVisited,
-      notificationBoxesUpdated: 0
+      notificationBoxesUpdated
     };
 
     return result;
@@ -582,7 +598,6 @@ export function updateNotificationBoxRecipientFactory({ firestoreContext, authSe
 
           if (targetRecipient) {
             nextRecipient.i = targetRecipient.i;
-
             nextRecipient = mergeNotificationBoxRecipients(targetRecipient, nextRecipient) as NotificationBoxRecipient;
             r[targetRecipientIndex] = nextRecipient; // override in the array
           } else {

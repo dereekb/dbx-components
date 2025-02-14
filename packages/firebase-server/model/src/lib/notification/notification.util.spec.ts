@@ -112,7 +112,6 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
                     bc: [
                       {
                         nb,
-                        m,
                         ...notificationBoxRecipient,
                         bk: true // is blocked
                       }
@@ -206,7 +205,6 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
                     bc: [
                       {
                         nb,
-                        m,
                         ...notificationBoxRecipient,
                         lk: true // is locked
                       }
