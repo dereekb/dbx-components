@@ -62,17 +62,20 @@ demoApiFunctionContextFactory((f) => {
         });
       });
 
-      describe('guestbook entry', () => {
+      describe('invalid notification box model types', () => {
         demoGuestbookContext({ f, published: true }, (g) => {
-          demoGuestbookEntryContext({ f, u, g }, (ge) => {
-            demoNotificationBoxContext({ f, for: ge, createIfNeeded: true }, (guestbookEntryNb) => {
-              it('should flag the NotificationBox as invalid when initialized', async () => {
-                await guestbookEntryNb.initializeNotificationBox();
+          describe('guestbook entry', () => {
+            demoGuestbookEntryContext({ f, u, g }, (ge) => {
+              demoNotificationBoxContext({ f, for: ge, createIfNeeded: true }, (guestbookEntryNb) => {
+                // NotificationBoxes that are not for a Guestbook entry or a
+                it('should flag the guestbook entry NotificationBox as invalid when initialized', async () => {
+                  await guestbookEntryNb.initializeNotificationBox();
 
-                const notificationBox = await assertSnapshotData(guestbookEntryNb.document);
+                  const notificationBox = await assertSnapshotData(guestbookEntryNb.document);
 
-                expect(notificationBox.fi).toBe(true);
-                expect(notificationBox.s).toBe(false);
+                  expect(notificationBox.s).toBeFalsy();
+                  expect(notificationBox.fi).toBe(true);
+                });
               });
             });
           });

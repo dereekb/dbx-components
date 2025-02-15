@@ -1,6 +1,29 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithIdAndKey, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID, firestoreNumber } from '@dereekb/firebase';
+import {
+  CollectionReference,
+  AbstractFirestoreDocument,
+  snapshotConverterFunctions,
+  firestoreString,
+  firestoreDate,
+  FirestoreCollection,
+  UserRelatedById,
+  FirestoreContext,
+  FirestoreCollectionWithParent,
+  firestoreBoolean,
+  DocumentDataWithIdAndKey,
+  AbstractFirestoreDocumentWithParent,
+  optionalFirestoreDate,
+  FirestoreCollectionGroup,
+  CollectionGroup,
+  firestoreModelIdentity,
+  UserRelated,
+  copyUserRelatedDataAccessorFactoryFunction,
+  firestoreUID,
+  firestoreNumber,
+  optionalFirestoreString
+} from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
+import { ProfileId } from '../profile/profile.id';
 
 export interface GuestbookFirestoreCollections {
   guestbookCollection: GuestbookFirestoreCollection;
@@ -32,6 +55,10 @@ export interface Guestbook {
    * Date the guestbook was locked at.
    */
   lockedAt?: Maybe<Date>;
+  /**
+   * User who created the guestbook.
+   */
+  cby?: Maybe<ProfileId>;
 }
 
 export type GuestbookRoles = 'admin' | GrantedReadRole;
@@ -49,7 +76,8 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
     published: firestoreBoolean({ default: false }),
     name: firestoreString({ default: '' }),
     locked: firestoreBoolean({ default: false }),
-    lockedAt: optionalFirestoreDate()
+    lockedAt: optionalFirestoreDate(),
+    cby: optionalFirestoreString()
   }
 });
 

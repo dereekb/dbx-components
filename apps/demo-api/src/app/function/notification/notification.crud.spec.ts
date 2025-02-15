@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
+import { DemoApiNotificationBoxTestContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
@@ -19,8 +19,6 @@ import {
   NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE,
   UpdateNotificationUserParams,
-  OnCallCreateModelResult,
-  onCallCreateModelParams,
   notificationUserIdentity,
   onCallUpdateModelParams,
   NotificationUserNotificationBoxRecipientConfig,
@@ -1195,14 +1193,12 @@ demoApiFunctionContextFactory((f) => {
                     });
                   });
 
-                  describe('created but not initialized', () => {
-                    // TODO: ...
-                  });
+                  // TODO: describe sending notifications with set settings
                 }
               );
             });
 
-            // If the box isn't initialized tben wait until it is before sending the first notifications
+            // If the box isn't initialized then wait until it is before sending the first notifications
             describe('does not exist', () => {
               demoNotificationBoxContext(
                 {
@@ -1278,139 +1274,242 @@ demoApiFunctionContextFactory((f) => {
                       });
                     });
                   });
+                }
+              );
+            });
+          });
 
-                  describe('Notification', () => {
-                    let notificationDocument: NotificationDocument;
+          describe('Notification', () => {
+            let createNotificationInTransaction: ReturnType<typeof createNotificationInTransactionFactory>;
 
-                    function initNotification(sendType: NotificationSendType, loadParams?: () => Partial<CreateNotificationInTransactionParams>) {
-                      beforeEach(async () => {
-                        const partialParams = await loadParams?.();
+            beforeEach(() => {
+              createNotificationInTransaction = createNotificationInTransactionFactory(f.serverActionsContextWithNotificationServices);
+            });
 
-                        const createParams: CreateNotificationInTransactionParams = {
-                          createFor: p.document,
-                          sendType,
-                          item: {
-                            s: 'test',
-                            g: 'test',
-                            ...partialParams?.item,
-                            t: partialParams?.item?.t ?? TEST_NOTIFICATIONS_TEMPLATE_TYPE
-                          },
-                          ownershipKey: p.documentKey,
-                          ...partialParams
-                        };
+            function describeNotificationCreateAndSendTestsWithNotificationBox(initialNotificationBoxExists: boolean, initialNotificationBoxInitialized: boolean) {
+              demoNotificationBoxContext({ f, for: p, createIfNeeded: initialNotificationBoxExists, initIfNeeded: initialNotificationBoxInitialized }, (nb) => {
+                describe('notification created', () => {
+                  let notificationDocument: NotificationDocument;
 
-                        const createdNotificationDocumentRef = await f.demoFirestoreCollections.firestoreContext.runTransaction(async (transaction) => {
-                          const result = await createNotificationInTransaction(createParams, transaction);
-                          return result.documentRef;
+                  function initNotification(sendType: NotificationSendType, loadParams?: () => Partial<CreateNotificationInTransactionParams>) {
+                    beforeEach(async () => {
+                      const partialParams = await loadParams?.();
+
+                      const createParams: CreateNotificationInTransactionParams = {
+                        createFor: p.document,
+                        sendType,
+                        item: {
+                          s: 'test',
+                          g: 'test',
+                          ...partialParams?.item,
+                          t: partialParams?.item?.t ?? TEST_NOTIFICATIONS_TEMPLATE_TYPE
+                        },
+                        ownershipKey: p.documentKey,
+                        ...partialParams
+                      };
+
+                      const createdNotificationDocumentRef = await f.demoFirestoreCollections.firestoreContext.runTransaction(async (transaction) => {
+                        const result = await createNotificationInTransaction(createParams, transaction);
+                        return result.documentRef;
+                      });
+
+                      notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocument(createdNotificationDocumentRef);
+                    });
+                  }
+
+                  describe('unknown notification type', () => {
+                    describe('sendType=INIT_BOX_AND_SEND', () => {
+                      initNotification(NotificationSendType.INIT_BOX_AND_SEND, () => ({ item: { t: 'unknown_type' } }));
+                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                        describe('via sendQueuedNotifications()', () => {
+                          it('should have tried but not sent the queued notification.', async () => {
+                            const result = await nbn.sendAllQueuedNotifications();
+                            expect(result.notificationsVisited).toBe(1);
+                            expect(result.notificationsFailed).toBe(1);
+                            expect(result.notificationsDeleted).toBe(0);
+                          });
                         });
 
-                        notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocument(createdNotificationDocumentRef);
-                      });
-                    }
+                        describe('via sendNotification()', () => {
+                          it('should not have created a NotificationBox and increased the try send count by one', async () => {
+                            let notificationBoxExists = await nb.document.exists();
+                            expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 
-                    describe('unknown notification type', () => {
-                      describe('sendType=INIT_BOX_AND_SEND', () => {
-                        initNotification(NotificationSendType.INIT_BOX_AND_SEND, () => ({ item: { t: 'unknown_type' } }));
-                        demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
-                          describe('via sendQueuedNotifications()', () => {
-                            it('should have tried but not sent the queued notification.', async () => {
+                            const result = await nbn.sendNotification();
+
+                            expect(result.tryRun).toBe(false);
+                            expect(result.success).toBe(false);
+                            expect(result.deletedNotification).toBe(false);
+
+                            // check still does not exist
+                            notificationBoxExists = await nb.document.exists();
+                            expect(notificationBoxExists).toBe(initialNotificationBoxExists);
+
+                            // check notification changes
+                            const notification = await assertSnapshotData(nbn.document);
+
+                            expect(notification.a).toBe(1); // send count increases by one
+                            expect(isFuture(notification.sat)).toBe(true);
+                          });
+
+                          describe('send count is at maximum tries', () => {
+                            beforeEach(async () => {
+                              await nbn.document.update({ a: UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS });
+                            });
+
+                            it('should have tried but and deleted the queued notification.', async () => {
                               const result = await nbn.sendAllQueuedNotifications();
                               expect(result.notificationsVisited).toBe(1);
                               expect(result.notificationsFailed).toBe(1);
-                              expect(result.notificationsDeleted).toBe(0);
+                              expect(result.notificationsDeleted).toBe(1);
                             });
-                          });
 
-                          describe('via sendNotification()', () => {
-                            it('should not have created a NotificationBox and increased the try send count by one', async () => {
+                            it('should not have created a NotificationBox and deleted the notification', async () => {
                               let notificationBoxExists = await nb.document.exists();
-                              expect(notificationBoxExists).toBe(false);
+                              expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 
                               const result = await nbn.sendNotification();
 
                               expect(result.tryRun).toBe(false);
                               expect(result.success).toBe(false);
-                              expect(result.deletedNotification).toBe(false);
+                              expect(result.deletedNotification).toBe(true);
 
                               // check still does not exist
                               notificationBoxExists = await nb.document.exists();
-                              expect(notificationBoxExists).toBe(false);
+                              expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 
                               // check notification changes
-                              const notification = await assertSnapshotData(nbn.document);
-
-                              expect(notification.a).toBe(1); // send count increases by one
-                              expect(isFuture(notification.sat)).toBe(true);
+                              const notificationExists = await nbn.document.exists();
+                              expect(notificationExists).toBe(false); // send count increases by one
                             });
+                          });
+                        });
+                      });
+                    });
+                  });
 
-                            describe('send count is at maximum tries', () => {
-                              beforeEach(async () => {
-                                await nbn.document.update({ a: UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS });
-                              });
+                  describe('sendType', () => {
+                    describe('SEND_IF_BOX_EXISTS', () => {
+                      initNotification(NotificationSendType.SEND_IF_BOX_EXISTS);
+                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                        describe('send', () => {
+                          if (initialNotificationBoxExists) {
+                            describe('notification box exists', () => {
+                              if (initialNotificationBoxInitialized) {
+                                describe('notification box initialized', () => {
+                                  it('should have sent the notification', async () => {
+                                    let notificationBoxExists = await nb.document.exists();
+                                    expect(notificationBoxExists).toBe(true);
 
-                              it('should have tried but and deleted the queued notification.', async () => {
-                                const result = await nbn.sendAllQueuedNotifications();
-                                expect(result.notificationsVisited).toBe(1);
-                                expect(result.notificationsFailed).toBe(1);
-                                expect(result.notificationsDeleted).toBe(1);
-                              });
+                                    const result = await nbn.sendNotification();
 
-                              it('should not have created a NotificationBox and deleted the notification', async () => {
+                                    expect(result.tryRun).toBe(true);
+                                    expect(result.success).toBe(true);
+                                    expect(result.deletedNotification).toBe(false);
+
+                                    // check still does not exist
+                                    notificationBoxExists = await nb.document.exists();
+                                    expect(notificationBoxExists).toBe(true);
+                                  });
+                                });
+                              } else {
+                                describe('notification box not initialized', () => {
+                                  it('should not have sent the notification but also not deleted the notification', async () => {
+                                    let notificationBoxExists = await nb.document.exists();
+                                    expect(notificationBoxExists).toBe(true);
+
+                                    const result = await nbn.sendNotification();
+
+                                    expect(result.tryRun).toBe(false);
+                                    expect(result.success).toBe(false);
+                                    expect(result.deletedNotification).toBe(false);
+
+                                    // check still does not exist
+                                    notificationBoxExists = await nb.document.exists();
+                                    expect(notificationBoxExists).toBe(true);
+                                  });
+                                });
+                              }
+                            });
+                          } else {
+                            describe('notification box does not exist', () => {
+                              it('should not have sent and should have deleted the notification', async () => {
                                 let notificationBoxExists = await nb.document.exists();
                                 expect(notificationBoxExists).toBe(false);
 
                                 const result = await nbn.sendNotification();
 
                                 expect(result.tryRun).toBe(false);
-                                expect(result.success).toBe(false);
+                                expect(result.success).toBe(true);
                                 expect(result.deletedNotification).toBe(true);
 
                                 // check still does not exist
                                 notificationBoxExists = await nb.document.exists();
                                 expect(notificationBoxExists).toBe(false);
-
-                                // check notification changes
-                                const notificationExists = await nbn.document.exists();
-                                expect(notificationExists).toBe(false); // send count increases by one
                               });
                             });
-                          });
+                          }
                         });
                       });
                     });
 
-                    describe('sendType', () => {
-                      describe('SEND_IF_BOX_EXISTS', () => {
-                        initNotification(NotificationSendType.SEND_IF_BOX_EXISTS);
-                        demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
-                          describe('send', () => {
-                            it('should not have sent and should have deleted the notification', async () => {
-                              let notificationBoxExists = await nb.document.exists();
-                              expect(notificationBoxExists).toBe(false);
+                    describe('INIT_BOX_AND_SEND', () => {
+                      initNotification(NotificationSendType.INIT_BOX_AND_SEND);
 
-                              const result = await nbn.sendNotification();
+                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                        describe('send', () => {
+                          if (initialNotificationBoxExists) {
+                            describe('notification box exists', () => {
+                              if (initialNotificationBoxInitialized) {
+                                describe('NotificationBox is flagged initialized', () => {
+                                  demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
+                                    it('should have sent the notification', async () => {
+                                      const notificationBox = await assertSnapshotData(nb.document);
+                                      expect(notificationBox.s).toBeUndefined(); // initialized
 
-                              expect(result.tryRun).toBe(false);
-                              expect(result.success).toBe(true);
-                              expect(result.deletedNotification).toBe(true);
+                                      const result = await nbn.sendNotification();
 
-                              // check still does not exist
-                              notificationBoxExists = await nb.document.exists();
-                              expect(notificationBoxExists).toBe(false);
+                                      expect(result.tryRun).toBe(true);
+                                      expect(result.success).toBe(true);
+                                      expect(result.deletedNotification).toBe(false);
+                                      expect(result.emailsSent).toBe(0); // no recipients for the notification
+
+                                      // check update
+                                      const notification = await assertSnapshotData(nbn.document);
+                                      expect(notification.d).toBe(true);
+                                    });
+                                  });
+                                });
+                              } else {
+                                describe('NotificationBox is not flagged as initialized', () => {
+                                  demoNotificationBoxContext({ f, for: p, createIfNeeded: true }, () => {
+                                    it('should not have sent the notification since the box is not initialized', async () => {
+                                      let notificationBox = await assertSnapshotData(nb.document);
+                                      expect(notificationBox.s).toBe(true); // needs to be sync'd
+
+                                      const result = await nbn.sendNotification();
+
+                                      expect(result.tryRun).toBe(false);
+                                      expect(result.success).toBe(false);
+                                      expect(result.deletedNotification).toBe(false);
+                                      expect(result.emailsSent).toBeUndefined();
+
+                                      // check not sent
+                                      const notification = await assertSnapshotData(nbn.document);
+                                      expect(notification.d).toBe(false);
+
+                                      notificationBox = await assertSnapshotData(nb.document);
+                                      expect(notificationBox.s).toBe(true); // still needs to be sync'd
+                                    });
+                                  });
+                                });
+                              }
                             });
-                          });
-                        });
-                      });
-
-                      describe('INIT_BOX_AND_SEND', () => {
-                        initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-
-                        demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
-                          describe('send', () => {
+                          } else {
                             describe('notification box does not exist', () => {
                               it('should have created the NotificationBox', async () => {
                                 let notificationBoxExists = await nb.document.exists();
-                                expect(notificationBoxExists).toBe(false);
+                                expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 
                                 const result = await nbn.sendNotification();
 
@@ -1440,196 +1539,201 @@ demoApiFunctionContextFactory((f) => {
                                 expect(notification.d).toBe(false);
                               });
                             });
+                          }
+                        });
+                      });
+                    });
 
+                    describe('SEND_WITHOUT_CREATING_BOX', () => {
+                      initNotification(NotificationSendType.SEND_WITHOUT_CREATING_BOX);
+
+                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                        describe('send', () => {
+                          if (initialNotificationBoxExists) {
                             describe('notification box exists', () => {
-                              describe('NotificationBox is flagged initialized', () => {
-                                demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
-                                  it('should have sent the notification', async () => {
-                                    const notificationBox = await assertSnapshotData(nb.document);
-                                    expect(notificationBox.s).toBeUndefined(); // initialized
+                              if (initialNotificationBoxInitialized) {
+                                it('should have sent the notifixcation', async () => {
+                                  let notificationBoxExists = await nb.document.exists();
+                                  expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 
-                                    const result = await nbn.sendNotification();
+                                  const result = await nbn.sendNotification();
 
-                                    expect(result.tryRun).toBe(true);
-                                    expect(result.success).toBe(true);
-                                    expect(result.deletedNotification).toBe(false);
-                                    expect(result.emailsSent).toBe(0); // no recipients for the notification
+                                  expect(result.tryRun).toBe(true);
+                                  expect(result.success).toBe(true);
+                                  expect(result.deletedNotification).toBe(false);
 
-                                    // check update
-                                    const notification = await assertSnapshotData(nbn.document);
-                                    expect(notification.d).toBe(true);
-                                  });
+                                  // check still does not exist
+                                  notificationBoxExists = await nb.document.exists();
+                                  expect(notificationBoxExists).toBe(initialNotificationBoxExists);
                                 });
-                              });
+                              } else {
+                                it('should not send the notification until the notification box is initialized', async () => {
+                                  let notificationBoxExists = await nb.document.exists();
+                                  expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 
-                              describe('NotificationBox is not flagged as initialized', () => {
-                                demoNotificationBoxContext({ f, for: p, createIfNeeded: true }, () => {
-                                  it('should not have sent the notification since the box is not initialized', async () => {
-                                    let notificationBox = await assertSnapshotData(nb.document);
-                                    expect(notificationBox.s).toBe(true); // needs to be sync'd
+                                  const result = await nbn.sendNotification();
 
-                                    const result = await nbn.sendNotification();
+                                  expect(result.tryRun).toBe(false);
+                                  expect(result.success).toBe(false);
+                                  expect(result.deletedNotification).toBe(false);
 
-                                    expect(result.tryRun).toBe(false);
-                                    expect(result.success).toBe(false);
-                                    expect(result.deletedNotification).toBe(false);
-                                    expect(result.emailsSent).toBeUndefined();
-
-                                    // check not sent
-                                    const notification = await assertSnapshotData(nbn.document);
-                                    expect(notification.d).toBe(false);
-
-                                    notificationBox = await assertSnapshotData(nb.document);
-                                    expect(notificationBox.s).toBe(true); // still needs to be sync'd
-                                  });
+                                  // check still does not exist
+                                  notificationBoxExists = await nb.document.exists();
+                                  expect(notificationBoxExists).toBe(initialNotificationBoxExists);
                                 });
+                              }
+                            });
+                          } else {
+                            describe('notification box does not exist', () => {
+                              it('should have sent without creating the NotificationBox', async () => {
+                                let notificationBoxExists = await nb.document.exists();
+                                expect(notificationBoxExists).toBe(initialNotificationBoxExists);
+
+                                const result = await nbn.sendNotification();
+
+                                expect(result.tryRun).toBe(true);
+                                expect(result.success).toBe(true);
+                                expect(result.deletedNotification).toBe(false);
+
+                                // check still does not exist
+                                notificationBoxExists = await nb.document.exists();
+                                expect(notificationBoxExists).toBe(initialNotificationBoxExists);
                               });
                             });
-                          });
-                        });
-                      });
-
-                      describe('SEND_WITHOUT_CREATING_BOX', () => {
-                        initNotification(NotificationSendType.SEND_WITHOUT_CREATING_BOX);
-
-                        demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
-                          describe('send', () => {
-                            it('should have sent without creating the NotificationBox', async () => {
-                              let notificationBoxExists = await nb.document.exists();
-                              expect(notificationBoxExists).toBe(false);
-
-                              const result = await nbn.sendNotification();
-
-                              expect(result.tryRun).toBe(true);
-                              expect(result.success).toBe(true);
-                              expect(result.deletedNotification).toBe(false);
-
-                              // check still does not exist
-                              notificationBoxExists = await nb.document.exists();
-                              expect(notificationBoxExists).toBe(false);
-                            });
-                          });
+                          }
                         });
                       });
                     });
+                  });
 
-                    describe('multiple notifications', () => {
-                      initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-                      initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-                      initNotification(NotificationSendType.INIT_BOX_AND_SEND);
+                  describe('multiple notifications', () => {
+                    initNotification(NotificationSendType.INIT_BOX_AND_SEND);
+                    initNotification(NotificationSendType.INIT_BOX_AND_SEND);
+                    initNotification(NotificationSendType.INIT_BOX_AND_SEND);
 
+                    demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
+                      it('should queue up multiple notifications', async () => {
+                        const result = await nb.loadAllNotificationsForNotificationBox();
+                        expect(result.length).toBe(3);
+                      });
+                    });
+                  });
+
+                  describe('Notifications partially sent (email success)', () => {
+                    initNotification(NotificationSendType.INIT_BOX_AND_SEND);
+                    demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
                       demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
-                        it('should queue up multiple notifications', async () => {
-                          const result = await nb.loadAllNotificationsForNotificationBox();
-                          expect(result.length).toBe(3);
+                        beforeEach(async () => {
+                          await nbn.sendNotification();
                         });
-                      });
-                    });
 
-                    describe('Notifications partially sent (email success)', () => {
-                      initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
-                        demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
+                        describe('attempting to send too early', () => {
                           beforeEach(async () => {
-                            await nbn.sendNotification();
-                          });
-
-                          describe('attempting to send too early', () => {
-                            beforeEach(async () => {
-                              // mark as not done and queued
-                              await nbn.document.update({
-                                d: false,
-                                ts: NotificationSendState.QUEUED,
-                                sat: addMinutes(new Date(), 1) // cannot send for another minute
-                              });
-                            });
-
-                            it('should not attempt to be sent via send all', async () => {
-                              const result = await nbn.sendAllQueuedNotifications();
-                              expect(result.notificationsVisited).toBe(0);
-                            });
-
-                            it('should not attempt to send again (send throttling)', async () => {
-                              const result = await nbn.sendNotification();
-
-                              expect(result.emailsSent).toBeUndefined(); // not attempted
-                              expect(result.tryRun).toBe(false);
-                              expect(result.success).toBe(false);
+                            // mark as not done and queued
+                            await nbn.document.update({
+                              d: false,
+                              ts: NotificationSendState.QUEUED,
+                              sat: addMinutes(new Date(), 1) // cannot send for another minute
                             });
                           });
 
-                          describe('texts not sent', () => {
-                            beforeEach(async () => {
-                              // mark as not done and queued
-                              await nbn.document.update({ sat: new Date(), d: false, ts: NotificationSendState.QUEUED });
-                            });
+                          it('should not attempt to be sent via send all', async () => {
+                            const result = await nbn.sendAllQueuedNotifications();
+                            expect(result.notificationsVisited).toBe(0);
+                          });
 
-                            it('should attempt to send the text notifications again', async () => {
-                              const result = await nbn.sendNotification();
+                          it('should not attempt to send again (send throttling)', async () => {
+                            const result = await nbn.sendNotification();
 
-                              expect(result.emailsSent).toBeUndefined(); // not attempted
-                              expect(result.tryRun).toBe(true);
-                              expect(result.success).toBe(true);
-                            });
+                            expect(result.emailsSent).toBeUndefined(); // not attempted
+                            expect(result.tryRun).toBe(false);
+                            expect(result.success).toBe(false);
+                          });
+                        });
+
+                        describe('texts not sent', () => {
+                          beforeEach(async () => {
+                            // mark as not done and queued
+                            await nbn.document.update({ sat: new Date(), d: false, ts: NotificationSendState.QUEUED });
+                          });
+
+                          it('should attempt to send the text notifications again', async () => {
+                            const result = await nbn.sendNotification();
+
+                            expect(result.emailsSent).toBeUndefined(); // not attempted
+                            expect(result.tryRun).toBe(true);
+                            expect(result.success).toBe(true);
                           });
                         });
                       });
                     });
+                  });
 
-                    describe('Notification Sent', () => {
-                      initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
-                        demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
-                          describe('cleanupSentNotificationsFactory()', () => {
-                            it('should not clean up the unsent notification', async () => {
+                  describe('Notification Sent', () => {
+                    initNotification(NotificationSendType.INIT_BOX_AND_SEND);
+                    demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                      demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
+                        describe('cleanupSentNotificationsFactory()', () => {
+                          it('should not clean up the unsent notification', async () => {
+                            let allExistingNotifications = await nb.loadAllNotificationsForNotificationBox();
+                            expect(allExistingNotifications.length).toBe(1);
+
+                            await nbn.cleanupAllSentNotifications();
+
+                            allExistingNotifications = await nb.loadAllNotificationsForNotificationBox();
+                            expect(allExistingNotifications.length).toBe(1);
+                          });
+
+                          describe('notification sent/done', () => {
+                            beforeEach(async () => {
+                              // mark as sent/done
+                              await nbn.document.update({ d: true });
+                            });
+
+                            it('should clean up the sent notification', async () => {
                               let allExistingNotifications = await nb.loadAllNotificationsForNotificationBox();
                               expect(allExistingNotifications.length).toBe(1);
 
-                              await nbn.cleanupAllSentNotifications();
+                              let allExistingNotificationWeeks = await nb.loadAllNotificationWeeksForNotificationBox();
+                              expect(allExistingNotificationWeeks.length).toBe(0);
+
+                              const result = await nbn.cleanupAllSentNotifications();
+                              expect(result.notificationBoxesUpdatesCount).toBe(1);
+                              expect(result.notificationsDeleted).toBe(1);
+                              expect(result.notificationWeeksCreated).toBe(1);
+                              expect(result.notificationWeeksUpdated).toBe(0);
 
                               allExistingNotifications = await nb.loadAllNotificationsForNotificationBox();
-                              expect(allExistingNotifications.length).toBe(1);
-                            });
+                              expect(allExistingNotifications.length).toBe(0);
 
-                            describe('notification sent/done', () => {
-                              beforeEach(async () => {
-                                // mark as sent/done
-                                await nbn.document.update({ d: true });
-                              });
-
-                              it('should clean up the sent notification', async () => {
-                                let allExistingNotifications = await nb.loadAllNotificationsForNotificationBox();
-                                expect(allExistingNotifications.length).toBe(1);
-
-                                let allExistingNotificationWeeks = await nb.loadAllNotificationWeeksForNotificationBox();
-                                expect(allExistingNotificationWeeks.length).toBe(0);
-
-                                const result = await nbn.cleanupAllSentNotifications();
-                                expect(result.notificationBoxesUpdatesCount).toBe(1);
-                                expect(result.notificationsDeleted).toBe(1);
-                                expect(result.notificationWeeksCreated).toBe(1);
-                                expect(result.notificationWeeksUpdated).toBe(0);
-
-                                allExistingNotifications = await nb.loadAllNotificationsForNotificationBox();
-                                expect(allExistingNotifications.length).toBe(0);
-
-                                allExistingNotificationWeeks = await nb.loadAllNotificationWeeksForNotificationBox();
-                                expect(allExistingNotificationWeeks.length).toBe(1);
-                              });
+                              allExistingNotificationWeeks = await nb.loadAllNotificationWeeksForNotificationBox();
+                              expect(allExistingNotificationWeeks.length).toBe(1);
                             });
                           });
                         });
                       });
                     });
                   });
-                }
-              );
+                });
+              });
+            }
+
+            describe('notification box exists', () => {
+              describe('is initialized', () => {
+                describeNotificationCreateAndSendTestsWithNotificationBox(true, true);
+              });
+
+              describe('is not initialized', () => {
+                describeNotificationCreateAndSendTestsWithNotificationBox(true, false);
+              });
+            });
+
+            describe('notification box does not exist', () => {
+              describeNotificationCreateAndSendTestsWithNotificationBox(false, false);
             });
           });
         });
       });
     });
   });
-
-  // TODO: Test that notifications going to global recipients or explicit recipients is not saved to the NotificationWeek.
 });

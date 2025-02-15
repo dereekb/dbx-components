@@ -137,7 +137,8 @@ class FilterMapItem<F> {
     const existingObsItem = currentObs.find((x) => x.obs === obs);
 
     if (!existingObsItem) {
-      const i = (this._i += 1);
+      const i = this._i;
+      this._i += 1;
 
       const deleteOnComplete = obs
         .pipe(

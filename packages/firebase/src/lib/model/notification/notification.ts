@@ -299,7 +299,7 @@ export const notificationBoxConverter = snapshotConverterFunctions<NotificationB
     }),
     w: firestoreNumber({ default: () => yearWeekCode(new Date()) }),
     s: optionalFirestoreBoolean({ dontStoreIf: false }),
-    fi: optionalFirestoreBoolean({ dontStoreIf: true })
+    fi: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 

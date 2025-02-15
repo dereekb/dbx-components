@@ -56,8 +56,12 @@ export interface MakeTemplateForNotificationRelatedModelInitializationFunctionIn
   readonly collectionName: FirestoreCollectionName;
 }
 
-export type MakeTemplateForNotificationRelatedModelInitializationFunctionDeleteResponse = false;
-export type MakeTemplateForNotificationRelatedModelInitializationFunctionResult<T> = Maybe<Partial<T>> | MakeTemplateForNotificationRelatedModelInitializationFunctionDeleteResponse;
+export type MakeTemplateForNotificationRelatedModelInitializationFunctionInvalidResponse = null;
+
+export const MAKE_TEMPLATE_FOR_NOTIFICATION_RELATED_MODEL_INITIALIZATION_FUNCTION_DELETE_RESPONSE = false;
+export type MakeTemplateForNotificationRelatedModelInitializationFunctionDeleteResponse = typeof MAKE_TEMPLATE_FOR_NOTIFICATION_RELATED_MODEL_INITIALIZATION_FUNCTION_DELETE_RESPONSE;
+
+export type MakeTemplateForNotificationRelatedModelInitializationFunctionResult<T> = Partial<T> | MakeTemplateForNotificationRelatedModelInitializationFunctionInvalidResponse | MakeTemplateForNotificationRelatedModelInitializationFunctionDeleteResponse;
 
 /**
  * Idempotent function used by the system to determine how to handle a model initialization.

@@ -1,4 +1,4 @@
-import { switchMap, distinctUntilChanged, shareReplay, map, type Observable, BehaviorSubject, of, combineLatest, EMPTY, filter, skip } from 'rxjs';
+import { switchMap, distinctUntilChanged, shareReplay, map, type Observable, BehaviorSubject, of, combineLatest, EMPTY, skip, defaultIfEmpty } from 'rxjs';
 import { type FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
 import { asObservable, type ObservableOrValue } from '../rxjs/getter';
@@ -10,12 +10,12 @@ import { SubscriptionObject } from '../subscription';
  * A basic FilterSource implementation.
  */
 export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
-  private _initialFilterSub = new SubscriptionObject();
-  private _initialFilterTakesPriority = new BehaviorSubject<boolean>(false);
+  private readonly _initialFilterSub = new SubscriptionObject();
+  private readonly _initialFilterTakesPriority = new BehaviorSubject<boolean>(false);
 
-  private _filter = new BehaviorSubject<Maybe<F>>(undefined);
-  private _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);
-  private _defaultFilter = new BehaviorSubject<Maybe<Observable<Maybe<F>>>>(undefined);
+  private readonly _filter = new BehaviorSubject<Maybe<F>>(undefined);
+  private readonly _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);
+  private readonly _defaultFilter = new BehaviorSubject<Maybe<Observable<Maybe<F>>>>(undefined);
 
   readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(switchMapMaybeObs());
   readonly initialFilter$: Observable<Maybe<F>> = combineLatest([this._initialFilter, this._defaultFilter]).pipe(
@@ -74,15 +74,21 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
             if (clearFilterOnInitialFilterPush) {
               return this._initialFilter.pipe(
                 switchMap((x) => (x ? x : EMPTY)),
-                filter((x) => Boolean(x)),
+                filterMaybe(),
+                map(() => true),
                 skip(1) // skip the first emission
               );
             } else {
               return EMPTY;
             }
-          })
+          }),
+          defaultIfEmpty(false)
         )
-        .subscribe(() => this.resetFilter());
+        .subscribe((clear) => {
+          if (clear) {
+            this.resetFilter();
+          }
+        });
     }
   }
 
