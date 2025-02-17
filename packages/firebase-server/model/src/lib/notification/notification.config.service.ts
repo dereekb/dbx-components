@@ -39,13 +39,18 @@ export class NotificationTemplateService {
 }
 
 /**
+ * Loads/creates a NotificationMessageFunction based on the input configuration.
+ */
+export type LoadNotificationMessageFunction = (config: NotificationMessageFunctionFactoryConfig) => Promise<NotificationMessageFunction>;
+
+/**
  * NotificationTemplateService instance that provides access to message functions of a certain type.
  */
 export interface NotificationTemplateServiceInstance {
   readonly service: NotificationTemplateService;
   readonly type: NotificationTemplateType;
   readonly isKnownType: boolean;
-  readonly loadMessageFunction: (config: NotificationMessageFunctionFactoryConfig) => Promise<NotificationMessageFunction>;
+  readonly loadMessageFunction: LoadNotificationMessageFunction;
 }
 
 /**

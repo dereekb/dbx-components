@@ -19,7 +19,7 @@ export interface CreateNotificationTemplateItem extends Omit<NotificationItem, '
 /**
  * Template use for creating a new Notification
  */
-export interface CreateNotificationTemplate extends Partial<Omit<Notification, 'n' | 'a' | 'd'>> {
+export interface CreateNotificationTemplate extends Partial<Omit<Notification, 'n' | 'a' | 'd' | 'tsr' | 'esr'>> {
   /**
    * Model key of the NotificationBox's target model (not the NotificationBox's key)
    */
@@ -229,6 +229,8 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     },
     a: 0,
     d: false,
+    tsr: [],
+    esr: [],
     ts: ts ?? NotificationSendState.QUEUED,
     es: es ?? NotificationSendState.QUEUED,
     ps: ps ?? NotificationSendState.QUEUED,

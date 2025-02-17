@@ -15,7 +15,7 @@ export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTyp
   notificationModelIdentity: profileIdentity
 };
 
-export interface ExampleNotificationInput extends ExampleNotificationData {
+export interface ExampleNotificationInput {
   readonly profileDocument: ProfileDocument;
 }
 

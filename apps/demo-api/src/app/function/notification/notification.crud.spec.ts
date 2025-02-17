@@ -28,11 +28,13 @@ import {
   UpdateNotificationBoxRecipientParams,
   notificationBoxIdentity,
   NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
-  NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE
+  NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
+  createNotificationDocument,
+  CreateNotificationTemplate
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from '@dereekb/demo-firebase';
-import { createNotificationInTransactionFactory, CreateNotificationInTransactionParams, UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotification } from '@dereekb/demo-firebase';
+import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { UNSET_INDEX_NUMBER } from '@dereekb/util';
@@ -1197,130 +1199,48 @@ demoApiFunctionContextFactory((f) => {
                 }
               );
             });
-
-            // If the box isn't initialized then wait until it is before sending the first notifications
-            describe('does not exist', () => {
-              demoNotificationBoxContext(
-                {
-                  f,
-                  for: p, // NotificationBox is for the profile
-                  createIfNeeded: false
-                },
-                (nb) => {
-                  let createNotificationInTransaction: ReturnType<typeof createNotificationInTransactionFactory>;
-
-                  beforeEach(() => {
-                    createNotificationInTransaction = createNotificationInTransactionFactory(f.serverActionsContextWithNotificationServices);
-                  });
-
-                  describe('creating a notification', () => {
-                    describe('createNotificationInTransactionFactory()', () => {
-                      it('should allow creating a notification without a NotificationBox existing, and does not create a NotificationBox when created.', async () => {
-                        let notificationBoxExists = await nb.document.exists();
-                        expect(notificationBoxExists).toBe(false);
-
-                        const sendAt = addMinutes(new Date(), 3);
-                        const d = {
-                          test: true
-                        };
-
-                        const createParams: CreateNotificationInTransactionParams = {
-                          createFor: p.document,
-                          recipientSendFlag: NotificationRecipientSendFlag.SKIP_NOTIFICATION_BOX_RECIPIENTS,
-                          sendType: NotificationSendType.INIT_BOX_AND_SEND,
-                          sendAt,
-                          item: {
-                            m: firestoreDummyKey(),
-                            s: 'test',
-                            g: 'test',
-                            t: 'TEST_TYPE',
-                            d
-                          }
-                        };
-
-                        const createdNotificationDocumentRef = await f.demoFirestoreCollections.firestoreContext.runTransaction(async (transaction) => {
-                          const result = await createNotificationInTransaction(createParams, transaction);
-                          return result.documentRef;
-                        });
-
-                        const notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocument(createdNotificationDocumentRef);
-                        const notification = await assertSnapshotData(notificationDocument);
-
-                        expect(notification.a).toBe(0);
-                        expect(notification.d).toBe(false);
-                        expect(notification.st).toBe(createParams.sendType);
-                        expect(notification.r.length).toBe(0);
-                        expect(notification.rf).toBe(createParams.recipientSendFlag);
-                        expect(notification.sat).toBeSameSecondAs(sendAt);
-                        expect(notification.n).toBeDefined();
-                        expect(notification.n.cat).toBeDefined();
-                        expect(notification.n.id).toBe(notificationDocument.id);
-                        expect(notification.n.s).toBe(createParams.item.s);
-                        expect(notification.n.g).toBe(createParams.item.g);
-                        expect(notification.n.t).toBe(createParams.item.t);
-                        expect(notification.n.m).toBe(createParams.item.m);
-                        expect(notification.n.d).toBeDefined();
-                        expect((notification.n.d as typeof d).test).toBe(d.test);
-                        expect(notification.ts).toBe(NotificationSendState.QUEUED);
-                        expect(notification.es).toBe(NotificationSendState.QUEUED);
-                        expect(notification.ps).toBe(NotificationSendState.QUEUED);
-
-                        // still does not exist
-                        notificationBoxExists = await nb.document.exists();
-                        expect(notificationBoxExists).toBe(false);
-
-                        // should match
-                        expect(notificationDocument.parent.path).toBe(nb.documentKey);
-                      });
-                    });
-                  });
-                }
-              );
-            });
           });
 
           describe('Notification', () => {
-            let createNotificationInTransaction: ReturnType<typeof createNotificationInTransactionFactory>;
-
-            beforeEach(() => {
-              createNotificationInTransaction = createNotificationInTransactionFactory(f.serverActionsContextWithNotificationServices);
-            });
-
             function describeNotificationCreateAndSendTestsWithNotificationBox(initialNotificationBoxExists: boolean, initialNotificationBoxInitialized: boolean) {
               demoNotificationBoxContext({ f, for: p, createIfNeeded: initialNotificationBoxExists, initIfNeeded: initialNotificationBoxInitialized }, (nb) => {
                 describe('notification created', () => {
                   let notificationDocument: NotificationDocument;
 
-                  function initNotification(sendType: NotificationSendType, loadParams?: () => Partial<CreateNotificationInTransactionParams>) {
+                  function initNotification(sendType: NotificationSendType, loadParams?: () => Partial<CreateNotificationTemplate>) {
                     beforeEach(async () => {
                       const partialParams = await loadParams?.();
 
-                      const createParams: CreateNotificationInTransactionParams = {
-                        createFor: p.document,
-                        sendType,
-                        item: {
-                          s: 'test',
-                          g: 'test',
-                          ...partialParams?.item,
-                          t: partialParams?.item?.t ?? TEST_NOTIFICATIONS_TEMPLATE_TYPE
-                        },
-                        ownershipKey: p.documentKey,
-                        ...partialParams
-                      };
-
-                      const createdNotificationDocumentRef = await f.demoFirestoreCollections.firestoreContext.runTransaction(async (transaction) => {
-                        const result = await createNotificationInTransaction(createParams, transaction);
-                        return result.documentRef;
+                      const baseTemplate = exampleNotification({
+                        profileDocument: p.document
                       });
 
-                      notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocument(createdNotificationDocumentRef);
+                      const template: CreateNotificationTemplate = {
+                        ...baseTemplate,
+                        ...partialParams,
+                        st: sendType
+                      };
+
+                      const result = await createNotificationDocument({
+                        template
+                      });
+
+                      notificationDocument = result.notificationDocument;
                     });
                   }
 
                   describe('unknown notification type', () => {
                     describe('sendType=INIT_BOX_AND_SEND', () => {
-                      initNotification(NotificationSendType.INIT_BOX_AND_SEND, () => ({ item: { t: 'unknown_type' } }));
-                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                      initNotification(NotificationSendType.INIT_BOX_AND_SEND, () => {
+                        const template = exampleNotification({
+                          profileDocument: p.document
+                        });
+
+                        template.n.t = 'UNKNOWN_TYPE';
+
+                        return template;
+                      });
+                      demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                         describe('via sendQueuedNotifications()', () => {
                           it('should have tried but not sent the queued notification.', async () => {
                             const result = await nbn.sendAllQueuedNotifications();
@@ -1391,7 +1311,7 @@ demoApiFunctionContextFactory((f) => {
                   describe('sendType', () => {
                     describe('SEND_IF_BOX_EXISTS', () => {
                       initNotification(NotificationSendType.SEND_IF_BOX_EXISTS);
-                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                      demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                         describe('send', () => {
                           if (initialNotificationBoxExists) {
                             describe('notification box exists', () => {
@@ -1456,7 +1376,7 @@ demoApiFunctionContextFactory((f) => {
                     describe('INIT_BOX_AND_SEND', () => {
                       initNotification(NotificationSendType.INIT_BOX_AND_SEND);
 
-                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                      demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                         describe('send', () => {
                           if (initialNotificationBoxExists) {
                             describe('notification box exists', () => {
@@ -1547,7 +1467,7 @@ demoApiFunctionContextFactory((f) => {
                     describe('SEND_WITHOUT_CREATING_BOX', () => {
                       initNotification(NotificationSendType.SEND_WITHOUT_CREATING_BOX);
 
-                      demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                      demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                         describe('send', () => {
                           if (initialNotificationBoxExists) {
                             describe('notification box exists', () => {
@@ -1621,7 +1541,7 @@ demoApiFunctionContextFactory((f) => {
 
                   describe('Notifications partially sent (email success)', () => {
                     initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-                    demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                    demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                       demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
                         beforeEach(async () => {
                           await nbn.sendNotification();
@@ -1671,7 +1591,7 @@ demoApiFunctionContextFactory((f) => {
 
                   describe('Notification Sent', () => {
                     initNotification(NotificationSendType.INIT_BOX_AND_SEND);
-                    demoNotificationContext({ f, nb, doc: () => notificationDocument }, (nbn) => {
+                    demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                       demoNotificationBoxContext({ f, for: p, initIfNeeded: true }, () => {
                         describe('cleanupSentNotificationsFactory()', () => {
                           it('should not clean up the unsent notification', async () => {
@@ -1730,6 +1650,20 @@ demoApiFunctionContextFactory((f) => {
 
             describe('notification box does not exist', () => {
               describeNotificationCreateAndSendTestsWithNotificationBox(false, false);
+            });
+
+            describe('NotificationBox recipient configuration effects', () => {
+              demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb) => {
+                demoNotificationContext(
+                  {
+                    f,
+                    template: () => exampleNotification({ profileDocument: p.document })
+                  },
+                  (nbn) => {
+                    // TODO: ...
+                  }
+                );
+              });
             });
           });
         });

@@ -66,6 +66,8 @@ export interface NotificationMessageEmailContent extends NotificationMessageCont
   readonly prompt?: string;
 }
 
+export interface NotificationMessageNotificationSummaryContent {}
+
 export enum NotificationMessageFlag {
   /**
    * No flag
@@ -91,6 +93,8 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
   readonly flag?: NotificationMessageFlag;
   /**
    * Associated item used to generate the content.
+   *
+   * Is required for sending NotificationSummary messages.
    */
   readonly item?: NotificationItem<D>;
   /**
@@ -109,8 +113,10 @@ export interface NotificationMessage<D extends NotificationItemMetadata = {}> {
    * Content specific for a text.
    */
   readonly textContent?: NotificationMessageContent;
-
-  // TODO: ...
+  /**
+   * Content specific for notification summaries.
+   */
+  readonly notificationSummaryContent?: NotificationMessageNotificationSummaryContent;
 }
 
 export interface NotificationMessageFunctionFactoryConfig<D extends NotificationItemMetadata = {}> {

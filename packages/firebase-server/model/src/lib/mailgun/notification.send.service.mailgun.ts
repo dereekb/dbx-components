@@ -1,8 +1,8 @@
-import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase } from '@dereekb/util';
+import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, EmailAddress, asArray, pushArrayItemsIntoArray } from '@dereekb/util';
 import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
 import { type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
 import { type NotificationEmailSendService } from '../notification/notification.send.service';
-import { type NotificationSendMessagesInstance } from '../notification/notification.send';
+import { NotificationSendEmailMessagesResult, type NotificationSendMessagesInstance } from '../notification/notification.send';
 
 /**
  * Input for a MailgunNotificationEmailSendServiceTemplateBuilder.
@@ -61,7 +61,7 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
   const maxBatchSizePerRequest = inputMaxBatchSizePerRequest ?? MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST;
 
   const sendService: MailgunNotificationEmailSendService = {
-    async buildSendInstanceForEmailNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance> {
+    async buildSendInstanceForEmailNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>> {
       const templateMap = multiValueMapBuilder<NotificationMessage, NotificationSendMessageTemplateName>();
 
       // group by templates
@@ -96,8 +96,35 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
       );
 
       const sendFn = async () => {
+        const success: EmailAddress[] = [];
+        const failed: EmailAddress[] = [];
+
         // send the template emails
-        await runAsyncTasksForValues(templateRequests, (x) => mailgunService.sendTemplateEmail(x), { maxParallelTasks: 3 });
+        await runAsyncTasksForValues(
+          templateRequests,
+          (x) => {
+            const recipients = asArray(x.to).map((z) => z.email);
+
+            return mailgunService
+              .sendTemplateEmail(x)
+              .then(() => {
+                pushArrayItemsIntoArray(recipients, success);
+              })
+              .catch((e) => {
+                pushArrayItemsIntoArray(recipients, failed);
+                console.error('mailgunNotificationEmailSendService(): failed sending template emails', e);
+                // suppress error
+              });
+          },
+          { maxParallelTasks: 3 }
+        );
+
+        const result: NotificationSendEmailMessagesResult = {
+          success,
+          failed
+        };
+
+        return result;
       };
 
       return sendFn;

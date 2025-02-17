@@ -4,7 +4,6 @@ import { callModelFirebaseFunctionMapFactory, ModelFirebaseCrudFunction, type Fi
 import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
-import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { IsE164PhoneNumber } from '@dereekb/model';
@@ -397,58 +396,6 @@ export class NotificationRecipientParams {
 }
 
 /**
- * Used for enqueuing a new notification for a NotificationBox.
- */
-export class CreateNotificationParams<D extends NotificationItemMetadata = {}> extends TargetModelParams implements Omit<NotificationItem, 'id' | 'cat'> {
-  /**
-   * User creating the notification. Is set automatically by the server.
-   */
-  @Expose()
-  @IsOptional()
-  @IsString()
-  cb?: Maybe<FirebaseAuthUserId>;
-
-  @Expose()
-  @IsString()
-  t!: NotificationTemplateType;
-
-  @Expose()
-  @IsOptional()
-  @IsFirestoreModelKey()
-  m?: Maybe<FirestoreModelKey>;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MinLength(NOTIFICATION_SUBJECT_MIN_LENGTH)
-  @MaxLength(NOTIFICATION_SUBJECT_MAX_LENGTH)
-  s?: Maybe<string>;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MinLength(NOTIFICATION_MESSAGE_MIN_LENGTH)
-  @MaxLength(NOTIFICATION_MESSAGE_MAX_LENGTH)
-  g?: Maybe<string>;
-
-  @Expose()
-  @IsOptional()
-  d?: Maybe<D>;
-
-  @Expose()
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => NotificationRecipientParams)
-  r?: Maybe<NotificationRecipientParams[]>;
-}
-
-/**
- * Used for updating the notification. Only applicable before the notification is sent.
- */
-export class UpdateNotificationParams extends TargetModelParams {}
-
-/**
  * Used for sending the notification immediately, if it has not already been sent.
  */
 export class SendNotificationParams extends TargetModelParams {
@@ -472,60 +419,76 @@ export interface SendNotificationResult {
   /**
    * Attempted notification type
    */
-  notificationTemplateType: Maybe<NotificationTemplateType>;
+  readonly notificationTemplateType: Maybe<NotificationTemplateType>;
   /**
    * Whether or not the notification was of a known type.
    */
-  isKnownTemplateType: Maybe<boolean>;
+  readonly isKnownTemplateType: Maybe<boolean>;
   /**
    * Whether or not the try was aborted due to being throttled.
    */
-  throttled: boolean;
+  readonly throttled: boolean;
   /**
    * Whether or not the run was successful.
    *
    * In cases where the Notification is set to SEND_IF_BOX_EXISTS and the box does not exist, this will return true.
    */
-  success: boolean;
+  readonly success: boolean;
   /**
    * Whether or not the notification was marked as done.
    *
    * May occur in cases where success is false, but the notification reached the max number of send attempts.
    */
-  notificationMarkedDone: boolean;
+  readonly notificationMarkedDone: boolean;
   /**
    * Whether or not the NotificationBox was created.
    */
-  createdBox: boolean;
+  readonly createdBox: boolean;
   /**
    * Whether or not the notification was deleted.
    *
    * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist.
    */
-  deletedNotification: boolean;
-  exists: boolean;
-  boxExists: boolean;
-  tryRun: boolean;
+  readonly deletedNotification: boolean;
+  readonly exists: boolean;
+  readonly boxExists: boolean;
+  readonly tryRun: boolean;
   /**
    * Number of text messages sent. Not attempted if null/undefined.
    */
-  textsSent: Maybe<number>;
+  readonly textsSent: Maybe<number>;
+  /**
+   * Number of text messages that were marked as failures while sending. Not attempted if null/undefined.
+   */
+  readonly textsFailed: Maybe<number>;
   /**
    * Number of email messages sent. Not attempted if null/undefined.
    */
-  emailsSent: Maybe<number>;
+  readonly emailsSent: Maybe<number>;
+  /**
+   * Number of email messages that were marked as failures while sending. Not attempted if null/undefined.
+   */
+  readonly emailsFailed: Maybe<number>;
   /**
    * Number of push notifications sent. Not attempted if null/undefined.
    */
-  pushNotificationsSent: Maybe<number>;
+  readonly pushNotificationsSent: Maybe<number>;
+  /**
+   * Number of push notifications that were marked as failures while sending. Not attempted if null/undefined.
+   */
+  readonly pushNotificationsFailed: Maybe<number>;
+  /**
+   * Number of notification summaries updated. Not attempted if null/undefined.
+   */
+  readonly notificationSummariesUpdated: Maybe<number>;
   /**
    * Failed while attempting to loada the proper message function
    */
-  loadMessageFunctionFailure: boolean;
+  readonly loadMessageFunctionFailure: boolean;
   /**
    * Failed while attempting to build a message
    */
-  buildMessageFailure: boolean;
+  readonly buildMessageFailure: boolean;
 }
 
 /**

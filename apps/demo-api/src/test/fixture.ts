@@ -24,7 +24,6 @@ import { initUserOnCreate } from '../app/function/auth/init.user.function';
 import { DemoApiNestContext } from '../app/function/function';
 import {
   CleanupSentNotificationsParams,
-  CreateNotificationParams,
   FirestoreCollection,
   FirestoreModelKey,
   InitializeAllApplicableNotificationBoxesParams,
@@ -45,10 +44,12 @@ import {
   NotificationSummaryFirestoreCollection,
   NotificationUser,
   NotificationUserDocument,
-  NotificationUserFirestoreCollection
+  NotificationUserFirestoreCollection,
+  CreateNotificationTemplate,
+  createNotificationDocument
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { objectHasKeys, type Maybe } from '@dereekb/util';
+import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter } from '@dereekb/util';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
@@ -650,8 +651,8 @@ export const demoNotificationBoxContextFactory = () =>
 export const demoNotificationBoxContext = demoNotificationBoxContextFactory();
 
 // MARK: Notification
-export interface DemoApiNotificationTestContextParams extends Omit<CreateNotificationParams, 'key'> {
-  nb: DemoApiNotificationBoxTestContextFixture;
+export interface DemoApiNotificationTestContextParams {
+  template: AsyncGetterOrValue<CreateNotificationTemplate>;
 }
 
 export class DemoApiNotificationTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Notification, NotificationDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationTestContextInstance<F>> {
@@ -705,20 +706,17 @@ export const demoNotificationContextFactory = () =>
     },
     makeInstance: (delegate, ref, testInstance) => new DemoApiNotificationTestContextInstance(delegate, ref, testInstance),
     makeRef: async (collection, params, p) => {
-      const { t, m, s, g, d } = params;
-      const notificationBoxDocument = await params.nb.document;
+      const template = await getValueFromGetter(params.template);
 
-      const createNotification = await p.notificationServerActions.createNotification({
-        t,
-        m,
-        s,
-        g,
-        d,
-        key: notificationBoxDocument.key
+      if (!template) {
+        throw new Error('Template is required, or provide an existing doc.');
+      }
+
+      const result = await createNotificationDocument({
+        template
       });
 
-      const result = await createNotification(notificationBoxDocument);
-      return result.documentRef;
+      return result.notificationDocument.documentRef;
     }
   });
 

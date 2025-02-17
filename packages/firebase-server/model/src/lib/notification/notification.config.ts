@@ -24,7 +24,7 @@ export interface NotificationTemplateServiceTypeConfig {
   /**
    * Factory for messages of this type.
    */
-  factory: NotificationMessageFunctionFactory<any>;
+  readonly factory: NotificationMessageFunctionFactory<any>;
 }
 
 /**

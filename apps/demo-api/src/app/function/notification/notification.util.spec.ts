@@ -25,6 +25,8 @@ demoApiFunctionContextFactory((f) => {
               sat: new Date(),
               a: 0,
               d: false,
+              tsr: [],
+              esr: [],
               ts: NotificationSendState.QUEUED,
               es: NotificationSendState.QUEUED,
               ps: NotificationSendState.QUEUED,

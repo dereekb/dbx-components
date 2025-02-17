@@ -55,7 +55,7 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
  * @returns
  */
 export function notificationSendFlagsImplyIsComplete(input: NotificationSendFlags): boolean {
-  return isCompleteNotificationSendState(input.es) && isCompleteNotificationSendState(input.ps) && isCompleteNotificationSendState(input.ts);
+  return isCompleteNotificationSendState(input.es) && isCompleteNotificationSendState(input.ps) && isCompleteNotificationSendState(input.ts) && isCompleteNotificationSendState(input.ns);
 }
 
 /**

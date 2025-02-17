@@ -1,4 +1,4 @@
-import { type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
+import { E164PhoneNumber, EmailAddress, type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type NotificationBoxId } from './notification.id';
 import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig, NotificationBoxRecipientTemplateConfigRecord, NotificationUserDefaultNotificationBoxRecipientConfig, firestoreNotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
@@ -27,7 +27,8 @@ import {
   optionalFirestoreBoolean,
   optionalFirestoreEnum,
   snapshotConverterFunctions,
-  optionalFirestoreDate
+  optionalFirestoreDate,
+  firestoreUniqueStringArray
 } from '../../common';
 import { NotificationItem, firestoreNotificationItem } from './notification.item';
 
@@ -353,25 +354,29 @@ export enum NotificationSendState {
    */
   SENT = 1,
   /**
+   * Some of the notifications have been sent, but some failed.
+   */
+  SENT_PARTIAL = 2,
+  /**
    * Notification has been skipped due to the box's settings.
    */
-  SKIPPED = 2,
+  SKIPPED = 3,
   /**
    * Notification is flagged as being skipped and should not be reattempetd
    */
-  NO_TRY = 3,
+  NO_TRY = 4,
   /**
    * Notification encountered an error while sending and could not be sent.
    */
-  SEND_ERROR = 4,
+  SEND_ERROR = 5,
   /**
    * Notification encountered an error while building and could not be sent.
    */
-  BUILD_ERROR = 5,
+  BUILD_ERROR = 6,
   /**
    * Notification encountered an error due to the system not being configured properly.
    */
-  CONFIG_ERROR = 6
+  CONFIG_ERROR = 7
 }
 
 export enum NotificationType {
@@ -431,7 +436,23 @@ export interface NotificationSendFlags {
   rf?: Maybe<NotificationRecipientSendFlag>;
 }
 
-export interface Notification extends NotificationSendFlags {
+/**
+ * Contains information about which recipients were already sent their messages, etc.
+ */
+export interface NotificationSendCheckpoints {
+  /**
+   * Set of numbers the notification was sent to via text/sms.
+   */
+  tsr: E164PhoneNumber[];
+  /**
+   * Set of emails that the notification was set to via email.
+   */
+  esr: EmailAddress[];
+
+  // TODO: Add push notification checkpoint details
+}
+
+export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
   /**
    * Send type
    */
@@ -484,7 +505,9 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
     }),
     sat: firestoreDate(),
     a: firestoreNumber({ default: 0 }),
-    d: firestoreBoolean({ default: false })
+    d: firestoreBoolean({ default: false }),
+    tsr: firestoreUniqueStringArray(),
+    esr: firestoreUniqueStringArray()
   }
 });
 

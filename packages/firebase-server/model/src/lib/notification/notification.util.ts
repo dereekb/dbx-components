@@ -84,7 +84,7 @@ export interface ExpandedNotificationRecipientPhone extends ExpandedNotification
 
 export type ExpandedNotificationRecipientText = ExpandedNotificationRecipientPhone;
 
-export interface ExpandedNotificationNotificationSummaryRecipient extends Pick<ExpandedNotificationRecipientBase, 'boxRecipient' | 'otherRecipient'> {
+export interface ExpandedNotificationNotificationSummaryRecipient extends Pick<ExpandedNotificationRecipientBase, 'name' | 'boxRecipient' | 'otherRecipient'> {
   readonly notificationSummaryKey: NotificationSummaryKey;
 }
 
@@ -370,7 +370,8 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
         notificationSummaries.push({
           notificationSummaryKey,
           boxRecipient: x,
-          otherRecipient: otherRecipientForUser
+          otherRecipient: otherRecipientForUser,
+          name: x.recipient.n
         });
         otherRecipientNotificationSummaryKeys.delete(notificationSummaryKey); // don't double send
       }
@@ -378,7 +379,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   otherRecipientConfigs.forEach((x, uid) => {
-    const { s: notificationSummaryId } = x;
+    const { n: name, s: notificationSummaryId } = x;
 
     if (notificationSummaryId) {
       const notificationSummaryKey = firestoreModelKey(notificationSummaryIdentity, notificationSummaryId);
@@ -386,7 +387,8 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       if (!notificationSummaryKeysSet.has(notificationSummaryId)) {
         const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
           notificationSummaryKey,
-          otherRecipient: x
+          otherRecipient: x,
+          name
         };
 
         notificationSummaries.push(notificationSummary);
@@ -398,7 +400,8 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   otherRecipientNotificationSummaryKeys.forEach((x, notificationSummaryKey) => {
     const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
       notificationSummaryKey,
-      otherRecipient: x
+      otherRecipient: x,
+      name: x.n
     };
 
     notificationSummaries.push(notificationSummary);
@@ -492,7 +495,6 @@ export function updateNotificationUserNotificationBoxRecipientConfig(input: Upda
 
     if (insertingRecipientIntoNotificationBox) {
       // does not exist in the NotificationBox currently
-
       if (blockedFromAdd) {
         throw notificationUserBlockedFromBeingAddedToRecipientsError(notificationUserId);
       } else if (lockedFromChanges) {
