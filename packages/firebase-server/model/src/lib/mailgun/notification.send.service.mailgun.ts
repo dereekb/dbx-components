@@ -1,8 +1,8 @@
 import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, EmailAddress, asArray, pushArrayItemsIntoArray } from '@dereekb/util';
 import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
-import { type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
+import { NotificationSendEmailMessagesResult, type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
 import { type NotificationEmailSendService } from '../notification/notification.send.service';
-import { NotificationSendEmailMessagesResult, type NotificationSendMessagesInstance } from '../notification/notification.send';
+import { type NotificationSendMessagesInstance } from '../notification/notification.send';
 
 /**
  * Input for a MailgunNotificationEmailSendServiceTemplateBuilder.
@@ -108,10 +108,10 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
             return mailgunService
               .sendTemplateEmail(x)
               .then(() => {
-                pushArrayItemsIntoArray(recipients, success);
+                pushArrayItemsIntoArray(success, recipients);
               })
               .catch((e) => {
-                pushArrayItemsIntoArray(recipients, failed);
+                pushArrayItemsIntoArray(failed, recipients);
                 console.error('mailgunNotificationEmailSendService(): failed sending template emails', e);
                 // suppress error
               });
@@ -121,7 +121,8 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
 
         const result: NotificationSendEmailMessagesResult = {
           success,
-          failed
+          failed,
+          ignored: []
         };
 
         return result;

@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, TargetModelParams, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsOptional, IsNotEmpty, IsString, MaxLength, IsBoolean } from 'class-validator';
 import { GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
@@ -50,6 +50,8 @@ export class InsertGuestbookEntryParams extends GuestbookEntryParams {
   published?: boolean;
 }
 
+export class LikeGuestbookEntryParams extends TargetModelParams {}
+
 export type GuestbookFunctionTypeMap = {};
 
 export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {};
@@ -61,6 +63,7 @@ export type GuestbookModelCrudFunctionsConfig = {
   guestbookEntry: {
     update: {
       insert: InsertGuestbookEntryParams;
+      like: LikeGuestbookEntryParams;
     };
     delete: GuestbookEntryParams;
   };
@@ -68,7 +71,7 @@ export type GuestbookModelCrudFunctionsConfig = {
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
   guestbook: ['create'],
-  guestbookEntry: ['update:insert', 'delete']
+  guestbookEntry: ['update:insert,like', 'delete']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
@@ -78,6 +81,7 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
   abstract guestbookEntry: {
     updateGuestbookEntry: {
       insert: ModelFirebaseCrudFunction<InsertGuestbookEntryParams>;
+      like: ModelFirebaseCrudFunction<LikeGuestbookEntryParams>;
     };
     deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;
   };

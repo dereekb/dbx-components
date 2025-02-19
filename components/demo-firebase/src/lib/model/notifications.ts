@@ -1,9 +1,16 @@
-import { type NotificationMessageFunctionFactory, type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey } from '@dereekb/firebase';
-import { ProfileDocument, ProfileId, profileIdentity } from './profile';
+import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, twoWayFlatFirestoreModelKey, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
+import { ProfileDocument, profileIdentity } from './profile';
 import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from './guestbook';
 
 // MARK: Test Notification
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';
+
+export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
+  type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
+  name: 'Test Type',
+  description: 'A test notification for profiles.',
+  notificationModelIdentity: profileIdentity
+};
 
 // MARK: Example Notification
 export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'E';
@@ -90,13 +97,26 @@ export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLik
   const { guestbookEntryKey } = input;
   const guestbookEntryModelKey = readFirestoreModelKey(guestbookEntryKey) as GuestbookEntryKey;
   const guestbookKey = firestoreModelKeyParentKey(guestbookEntryModelKey, 1) as GuestbookKey;
+  const creatorUid = firestoreModelId(guestbookEntryModelKey);
 
   return createNotificationTemplate({
     type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
     notificationModel: guestbookKey,
-    targetModel: guestbookEntryModelKey
+    targetModel: guestbookEntryModelKey,
+    r: [
+      {
+        uid: creatorUid,
+        // only send to notification summary by default
+        sn: true,
+        // by default, don't send to email/text
+        se: false,
+        st: false
+      }
+    ]
   });
 }
 
 // MARK: All Notifications
-export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD = notificationTemplateTypeDetailsRecord([EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_DETAILS]);
+export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD = notificationTemplateTypeDetailsRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_DETAILS, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_DETAILS, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_DETAILS]);
+
+export const DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID: NotificationSummaryIdForUidFunction = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);

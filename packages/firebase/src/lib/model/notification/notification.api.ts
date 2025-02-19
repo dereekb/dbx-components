@@ -7,6 +7,7 @@ import { type NotificationTypes } from './notification';
 import { NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { IsE164PhoneNumber } from '@dereekb/model';
+import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -24,6 +25,11 @@ export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements No
   @Expose()
   @IsString()
   type!: string;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  sd?: Maybe<boolean>;
 
   @Expose()
   @IsOptional()
@@ -117,7 +123,7 @@ export class UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams i
 
   @Expose()
   @IsOptional()
-  @IsEnum(() => NotificationBoxRecipientFlag)
+  @IsEnum(NotificationBoxRecipientFlag)
   f?: Maybe<NotificationBoxRecipientFlag>;
 }
 
@@ -425,6 +431,10 @@ export interface SendNotificationResult {
    */
   readonly isKnownTemplateType: Maybe<boolean>;
   /**
+   * Whether or not the notification was of a configured type.
+   */
+  readonly isConfiguredTemplateType: Maybe<boolean>;
+  /**
    * Whether or not the try was aborted due to being throttled.
    */
   readonly throttled: boolean;
@@ -454,33 +464,24 @@ export interface SendNotificationResult {
   readonly boxExists: boolean;
   readonly tryRun: boolean;
   /**
-   * Number of text messages sent. Not attempted if null/undefined.
+   * Send emails result.
+   *
+   * Undefined if not attempted.
    */
-  readonly textsSent: Maybe<number>;
+  readonly sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
   /**
-   * Number of text messages that were marked as failures while sending. Not attempted if null/undefined.
+   *
+   * Send texts result.
+   *
+   * Undefined if not attempted.
    */
-  readonly textsFailed: Maybe<number>;
+  readonly sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
   /**
-   * Number of email messages sent. Not attempted if null/undefined.
+   * Send notification summaries result.
+   *
+   * Undefined if not attempted.
    */
-  readonly emailsSent: Maybe<number>;
-  /**
-   * Number of email messages that were marked as failures while sending. Not attempted if null/undefined.
-   */
-  readonly emailsFailed: Maybe<number>;
-  /**
-   * Number of push notifications sent. Not attempted if null/undefined.
-   */
-  readonly pushNotificationsSent: Maybe<number>;
-  /**
-   * Number of push notifications that were marked as failures while sending. Not attempted if null/undefined.
-   */
-  readonly pushNotificationsFailed: Maybe<number>;
-  /**
-   * Number of notification summaries updated. Not attempted if null/undefined.
-   */
-  readonly notificationSummariesUpdated: Maybe<number>;
+  readonly sendNotificationSummaryResult: Maybe<NotificationSendNotificationSummaryMessagesResult>;
   /**
    * Failed while attempting to loada the proper message function
    */
@@ -496,7 +497,7 @@ export interface SendNotificationResult {
  */
 export class SendQueuedNotificationsParams {}
 
-export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
   readonly notificationBoxesCreated: number;
   readonly notificationsVisited: number;
   readonly notificationsSucceeded: number;

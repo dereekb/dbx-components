@@ -21,7 +21,7 @@ import {
   firestoreNumber,
   optionalFirestoreString
 } from '@dereekb/firebase';
-import { GrantedReadRole } from '@dereekb/model';
+import { GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
 import { type Maybe } from '@dereekb/util';
 import { ProfileId } from '../profile/profile.id';
 
@@ -122,12 +122,14 @@ export interface GuestbookEntry extends UserRelated, UserRelatedById {
    */
   published: boolean;
   /**
-   * The number of likes the entry has recieved.
+   * The number of likes the entry has recieved from users.
+   *
+   * Uniqueness of likes is not retained, so users may like something more than once.
    */
   likes: number;
 }
 
-export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
+export type GuestbookEntryRoles = 'like' | GrantedReadRole | GrantedUpdateRole;
 
 export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument, typeof guestbookEntryIdentity> {
   get modelIdentity() {

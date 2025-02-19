@@ -64,7 +64,11 @@ import {
   NotificationUserNotificationBoxRecipientConfig,
   iterateFirestoreDocumentSnapshotPairs,
   notificationUsersFlaggedForNeedsSyncQuery,
-  effectiveNotificationBoxRecipientConfig
+  effectiveNotificationBoxRecipientConfig,
+  NotificationSendEmailMessagesResult,
+  NotificationSendNotificationSummaryMessagesResult,
+  NotificationSendTextMessagesResult,
+  mergeNotificationSendMessagesResult
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -73,7 +77,7 @@ import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
 import { notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
-import { NotificationSendEmailMessagesResult, NotificationSendTextMessagesResult, type NotificationSendMessagesInstance, NotificationSendNotificationSummaryMessagesResult } from './notification.send';
+import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 
@@ -676,12 +680,16 @@ export function updateNotificationBoxRecipientFactory({ firestoreContext, authSe
 }
 
 export const UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY = 8;
-export const UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS = 3;
+export const UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS = 1;
+
+export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY = UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
+export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS = 5;
+
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
 export function sendNotificationFactory(context: NotificationServerActionsContext) {
-  const { notificationSendService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
+  const { appNotificationTemplateTypeInfoRecordService, notificationSendService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
   const notificationUserAccessor = notificationUserCollection.documentAccessor();
 
@@ -691,7 +699,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
     return async (notificationDocument: NotificationDocument) => {
       // does nothing currently.
 
-      const { throttled, tryRun, notification, createdBox, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isKnownTemplateType } = await firestoreContext.runTransaction(async (transaction) => {
+      const { throttled, tryRun, notification, createdBox, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
         let [notificationBox, notification] = await Promise.all([notificationBoxDocument.snapshotData(), getDocumentSnapshotData(notificationDocumentInTransaction)]);
@@ -717,6 +725,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         let deletedNotification = false;
         let notificationBoxNeedsInitialization = false;
         let isKnownTemplateType: Maybe<boolean>;
+        let isConfiguredTemplateType: Maybe<boolean>;
         let templateInstance: Maybe<NotificationTemplateServiceInstance>;
 
         async function deleteNotification() {
@@ -731,18 +740,30 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           const { t } = notification.n;
 
           templateInstance = notificationTemplateService.templateInstanceForType(t);
-          isKnownTemplateType = templateInstance.isKnownType;
+          isKnownTemplateType = isConfiguredTemplateType = templateInstance.isConfiguredType;
 
-          if (!isKnownTemplateType) {
-            // log the issue that an unknown notification was sent
+          if (!isConfiguredTemplateType) {
+            // log the issue that an notification with an unconfigured type was queued
 
-            if (notification.a < UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS) {
-              console.warn(`Unknown template type of "${t}" was found in a Notification. Send is being delayed by ${UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY} hours.`);
+            const templateInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
+            isKnownTemplateType = templateInfo != null;
+
+            const retryAttempts = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
+            const delay = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
+
+            if (notification.a < retryAttempts) {
+              if (isKnownTemplateType) {
+                console.warn(`Unconfigured but known template type of "${t}" (${templateInfo.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
+              } else {
+                console.warn(`Unknown template type of "${t}" was found in a Notification. Send is being delayed by ${delay} hours.`);
+              }
+
               // delay send for 12 hours, for a max of 24 hours incase it is an issue.
-              nextSat = addHours(new Date(), UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY);
+              nextSat = addHours(new Date(), delay);
               tryRun = false;
             } else {
-              console.warn(`Unknown template type of "${t}" was found in a Notification. The Notification has failed sending multiple times and is being deleted.`);
+              console.warn(`Unconfigured template type of "${t}" was found in a Notification. The Notification has reached the delete threshhold after failing to send due to misconfiguration multiple times and is being deleted.`);
+
               // after attempting to send 3 times, delete it.
               await deleteNotification();
             }
@@ -802,26 +823,21 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           notification,
           templateInstance,
           isKnownTemplateType,
+          isConfiguredTemplateType,
           tryRun
         };
       });
 
       let success = false;
 
-      let textsSent: Maybe<number>;
-      let textsFailed: Maybe<number>;
-
-      let emailsSent: Maybe<number>;
-      let emailsFailed: Maybe<number>;
-
-      let pushNotificationsSent: Maybe<number>;
-      let pushNotificationsFailed: Maybe<number>;
-
-      let notificationSummariesUpdated: Maybe<number>;
+      let sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
+      let sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
+      let sendNotificationSummaryResult: Maybe<NotificationSendNotificationSummaryMessagesResult>;
 
       let loadMessageFunctionFailure: boolean = false;
       let buildMessageFailure: boolean = false;
       let notificationMarkedDone: boolean = false;
+
       const notificationTemplateType: Maybe<NotificationTemplateType> = templateInstance?.type;
 
       // notification is only null/undefined if it didn't exist.
@@ -854,7 +870,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               notificationBox,
               authService,
               notificationUserAccessor,
-              globalRecipients: messageFunction.additionalRecipients
+              globalRecipients: messageFunction.additionalRecipients,
+              notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
             });
 
             let { es, ts, ps, ns, esr: currentEsr, tsr: currentTsr } = notification;
@@ -884,8 +901,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 return undefined;
               });
 
-              let sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
-
               if (emailMessages?.length) {
                 if (notificationSendService.emailSendService != null) {
                   let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>>;
@@ -913,9 +928,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 if (sendEmailsResult != null) {
                   const { success, failed } = sendEmailsResult;
                   esr = success.length ? currentEsr.concat(success.map((x) => x.toLowerCase())) : undefined;
-
-                  textsSent = success.length;
-                  textsFailed = failed.length;
 
                   if (failed.length > 0) {
                     es = NotificationSendState.SENT_PARTIAL;
@@ -953,8 +965,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 return undefined;
               });
 
-              let sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
-
               if (textMessages?.length) {
                 if (notificationSendService.textSendService != null) {
                   let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendTextMessagesResult>>;
@@ -980,11 +990,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 }
 
                 if (sendTextsResult != null) {
-                  const { success, failed } = sendTextsResult;
+                  const { success, failed, ignored } = sendTextsResult;
                   tsr = success.length ? currentTsr.concat(success) : undefined;
-
-                  textsSent = success.length;
-                  textsFailed = failed.length;
 
                   if (failed.length > 0) {
                     ts = NotificationSendState.SENT_PARTIAL;
@@ -1006,7 +1013,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 const context: NotificationMessageInputContext = {
                   recipient: {
                     n: x.name,
-                    s: x.notificationSummaryKey
+                    s: x.notificationSummaryId
                   }
                 };
 
@@ -1018,8 +1025,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 buildMessageFailure = true;
                 return undefined;
               });
-
-              let sendNotificationSummaryResult: Maybe<NotificationSendNotificationSummaryMessagesResult>;
 
               if (notificationSummaryMessages?.length) {
                 if (notificationSendService.notificationSummarySendService != null) {
@@ -1035,6 +1040,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   if (sendInstance) {
                     try {
                       sendNotificationSummaryResult = await sendInstance();
+                      ns = NotificationSendState.SENT;
                     } catch (e) {
                       console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}": `, e);
                       ns = NotificationSendState.SEND_ERROR;
@@ -1043,12 +1049,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 } else {
                   console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}" due to no notification summary service being configured.`);
                   ns = NotificationSendState.CONFIG_ERROR;
-                }
-
-                if (sendNotificationSummaryResult != null) {
-                  const { success } = sendNotificationSummaryResult;
-                  notificationSummariesUpdated = success.length;
-                  ns = NotificationSendState.SENT;
                 }
               } else {
                 ns = NotificationSendState.SENT;
@@ -1086,6 +1086,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       const result: SendNotificationResult = {
         notificationTemplateType,
         isKnownTemplateType,
+        isConfiguredTemplateType,
         throttled,
         exists: notification != null,
         boxExists: notificationBox != null,
@@ -1094,13 +1095,9 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         notificationMarkedDone,
         tryRun,
         success,
-        textsSent,
-        textsFailed,
-        emailsSent,
-        emailsFailed,
-        pushNotificationsSent,
-        pushNotificationsFailed,
-        notificationSummariesUpdated,
+        sendEmailsResult,
+        sendTextsResult,
+        sendNotificationSummaryResult,
         loadMessageFunctionFailure,
         buildMessageFailure
       };
@@ -1121,13 +1118,10 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       let notificationsVisited: number = 0;
       let notificationsSucceeded: number = 0;
       let notificationsFailed: number = 0;
-      let textsSent: number = 0;
-      let textsFailed: number = 0;
-      let emailsSent: number = 0;
-      let emailsFailed: number = 0;
-      let pushNotificationsSent: number = 0;
-      let pushNotificationsFailed: number = 0;
-      let notificationSummariesUpdated: number = 0;
+
+      let sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
+      let sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
+      let sendNotificationSummaryResult: Maybe<NotificationSendNotificationSummaryMessagesResult>;
 
       const sendNotificationParams: SendNotificationParams = { key: firestoreDummyKey(), throwErrorIfSent: false };
       const sendNotificationInstance = await sendNotification(sendNotificationParams);
@@ -1153,13 +1147,9 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
             notificationBoxesCreated += 1;
           }
 
-          textsSent += result.textsSent ?? 0;
-          textsFailed += result.textsFailed ?? 0;
-          emailsSent += result.emailsSent ?? 0;
-          emailsFailed += result.emailsFailed ?? 0;
-          pushNotificationsSent += result.pushNotificationsSent ?? 0;
-          pushNotificationsFailed += result.pushNotificationsFailed ?? 0;
-          notificationSummariesUpdated += result.notificationSummariesUpdated ?? 0;
+          sendEmailsResult = mergeNotificationSendMessagesResult(sendEmailsResult, result.sendEmailsResult);
+          sendTextsResult = mergeNotificationSendMessagesResult(sendTextsResult, result.sendTextsResult);
+          sendNotificationSummaryResult = mergeNotificationSendMessagesResult(sendNotificationSummaryResult, result.sendNotificationSummaryResult);
         });
 
         const found = sendQueuedNotificationsResults.results.length;
@@ -1194,13 +1184,9 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
         notificationsVisited,
         notificationsSucceeded,
         notificationsFailed,
-        textsSent,
-        textsFailed,
-        emailsSent,
-        emailsFailed,
-        pushNotificationsSent,
-        pushNotificationsFailed,
-        notificationSummariesUpdated
+        sendEmailsResult,
+        sendTextsResult,
+        sendNotificationSummaryResult
       };
 
       return result;

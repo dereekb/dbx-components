@@ -23,7 +23,11 @@ import {
   NotificationUserDocument,
   loadDocumentsForIds,
   getDocumentSnapshotDataPairsWithData,
-  NotificationUserDefaultNotificationBoxRecipientConfig
+  NotificationUserDefaultNotificationBoxRecipientConfig,
+  effectiveNotificationBoxRecipientTemplateConfig,
+  mergeNotificationBoxRecipientTemplateConfigs,
+  mergeNotificationUserDefaultNotificationBoxRecipientConfig,
+  NotificationSummaryIdForUidFunction
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, FactoryWithRequiredInput, UNSET_INDEX_NUMBER, ModelKey } from '@dereekb/util';
@@ -38,9 +42,11 @@ export interface ExpandNotificationRecipientsInput {
    */
   readonly notificationUserAccessor: FirestoreDocumentAccessor<NotificationUser, NotificationUserDocument>;
   /**
-   * Factory for creating a NotificationSummaryKey given a uid. If not defined, then notification summaries will not be generated for uids.
+   * Factory for creating a NotificationSummaryKey given a uid.
+   *
+   * If not defined, then notification summaries will not be generated for recipients with uids.
    */
-  readonly notificationSummaryIdForUid?: FactoryWithRequiredInput<NotificationSummaryId, FirebaseAuthUserId>;
+  readonly notificationSummaryIdForUid?: Maybe<NotificationSummaryIdForUidFunction>;
   /**
    * Overrides the recipient flag for the notification.
    */
@@ -49,11 +55,17 @@ export interface ExpandNotificationRecipientsInput {
    * Recipients that come from the message, also known as global recipients.
    */
   readonly globalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
+  /**
+   * Only text those who have texting/sms notifications explicitly enabled.
+   *
+   * Defaults to true.
+   */
+  readonly onlyTextExplicitlyEnabledRecipients?: Maybe<boolean>;
 }
 
 export interface ExpandedNotificationRecipientConfig {
   readonly recipient: Omit<NotificationBoxRecipient, 'i'>;
-  readonly templateConfig?: Maybe<NotificationBoxRecipientTemplateConfig>;
+  readonly effectiveTemplateConfig?: Maybe<NotificationBoxRecipientTemplateConfig>;
 }
 
 export interface ExpandedNotificationRecipientBase {
@@ -85,10 +97,27 @@ export interface ExpandedNotificationRecipientPhone extends ExpandedNotification
 export type ExpandedNotificationRecipientText = ExpandedNotificationRecipientPhone;
 
 export interface ExpandedNotificationNotificationSummaryRecipient extends Pick<ExpandedNotificationRecipientBase, 'name' | 'boxRecipient' | 'otherRecipient'> {
-  readonly notificationSummaryKey: NotificationSummaryKey;
+  readonly notificationSummaryId: NotificationSummaryId;
+}
+
+export interface ExpandNotificationRecipientsInternal {
+  readonly userDetailsMap: Map<string, FirebaseAuthDetails | undefined>;
+  readonly explicitRecipients: NotificationRecipientWithConfig[];
+  readonly globalRecipients: NotificationRecipientWithConfig[];
+  readonly allBoxRecipientConfigs: NotificationBoxRecipient[];
+  readonly relevantBoxRecipientConfigs: ExpandedNotificationRecipientConfig[];
+  readonly recipientUids: Set<FirebaseAuthUserId>;
+  readonly otherRecipientConfigs: Map<FirebaseAuthUserId, NotificationRecipientWithConfig>;
+  readonly explicitOtherRecipientEmailAddresses: Map<EmailAddress, NotificationRecipientWithConfig>;
+  readonly explicitOtherRecipientTextNumbers: Map<PhoneNumber, NotificationRecipientWithConfig>;
+  readonly explicitOtherRecipientNotificationSummaryIds: Map<NotificationSummaryId, NotificationRecipientWithConfig>;
+  readonly otherNotificationUserUidOptOuts: Set<NotificationUserId>;
+  readonly nonNotificationBoxUidRecipientConfigs: Map<FirebaseAuthUserId, NotificationRecipientWithConfig>;
+  readonly notificationUserRecipientConfigs: Map<NotificationUserId, NotificationUserDefaultNotificationBoxRecipientConfig>;
 }
 
 export interface ExpandNotificationRecipientsResult {
+  readonly _internal: ExpandNotificationRecipientsInternal;
   readonly emails: ExpandedNotificationRecipientEmail[];
   readonly texts: ExpandedNotificationRecipientText[];
   // readonly pushNotifications: ExpandedNotificationRecipient[];
@@ -96,18 +125,32 @@ export interface ExpandNotificationRecipientsResult {
 }
 
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
-  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid = () => undefined } = input;
+  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
+  const notificationSummaryIdForUid = inputNotificationSummaryIdForUid ?? (() => undefined);
   const notificationTemplateType = notification.n.t || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
   const recipientFlag = recipientFlagOverride ?? notification.rf ?? NotificationRecipientSendFlag.NORMAL;
+  const onlyTextExplicitlyEnabledRecipients = inputOnlyTextExplicitlyEnabledRecipients !== false;
 
   const { canSendToGlobalRecipients, canSendToBoxRecipients, canSendToExplicitRecipients } = allowedNotificationRecipients(recipientFlag);
 
-  const explicitRecipients = canSendToExplicitRecipients ? notification.r : [];
-  const globalRecipients = canSendToGlobalRecipients && inputGlobalRecipients ? inputGlobalRecipients : [];
-  const allBoxRecipientConfigs = canSendToBoxRecipients && notificationBox ? notificationBox.r : [];
+  const initialExplicitRecipients = canSendToExplicitRecipients ? notification.r : [];
+  const initialGlobalRecipients = canSendToGlobalRecipients && inputGlobalRecipients ? inputGlobalRecipients : [];
 
-  const recipientUids: Set<FirebaseAuthUserId> = new Set<FirebaseAuthUserId>();
+  const explicitRecipients: NotificationRecipientWithConfig[] = initialExplicitRecipients.map((x) => ({
+    ...x,
+    ...effectiveNotificationBoxRecipientTemplateConfig(x)
+  }));
 
+  const globalRecipients: NotificationRecipientWithConfig[] = initialGlobalRecipients.map((x) => ({
+    ...x,
+    ...effectiveNotificationBoxRecipientTemplateConfig(x)
+  }));
+
+  const explicitAndGlobalRecipients = [...explicitRecipients, ...globalRecipients];
+
+  const allBoxRecipientConfigs: NotificationBoxRecipient[] = canSendToBoxRecipients && notificationBox ? notificationBox.r : [];
+
+  const recipientUids = new Set<FirebaseAuthUserId>();
   const relevantBoxRecipientConfigs: ExpandedNotificationRecipientConfig[] = [];
 
   // find all recipients in the NotificationBox with the target template type flagged for them.
@@ -115,11 +158,12 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     // ignore opt-out flagged recipients
     if (!x.f) {
       const relevantConfig = x.c[notificationTemplateType];
+      const effectiveTemplateConfig = relevantConfig ? effectiveNotificationBoxRecipientTemplateConfig(relevantConfig) : undefined;
 
-      if (!relevantConfig || relevantConfig.se || relevantConfig.sp || relevantConfig.st) {
+      if (!effectiveTemplateConfig || effectiveTemplateConfig.st || effectiveTemplateConfig.se || effectiveTemplateConfig.sp || effectiveTemplateConfig.st) {
         relevantBoxRecipientConfigs.push({
           recipient: x,
-          templateConfig: relevantConfig
+          effectiveTemplateConfig
         });
 
         if (x.uid) {
@@ -132,14 +176,12 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   // add other recipients to the map
   const nonNotificationBoxUidRecipientConfigs = new Map<FirebaseAuthUserId, NotificationRecipientWithConfig>();
 
-  [...explicitRecipients, ...globalRecipients].forEach((x) => {
+  explicitAndGlobalRecipients.forEach((x) => {
     const { uid } = x;
 
-    if (uid) {
-      if (!recipientUids.has(uid)) {
-        // if already in recipientUids then they are a box recipient and we don't have to try and load them.
-        nonNotificationBoxUidRecipientConfigs.set(uid, x);
-      }
+    if (uid && !recipientUids.has(uid)) {
+      // if already in recipientUids then they are a box recipient and we don't have to try and load them.
+      nonNotificationBoxUidRecipientConfigs.set(uid, x);
     }
   });
 
@@ -156,42 +198,65 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
     notificationUsers.forEach((x) => {
       const { data: notificationUser } = x;
-      const { dc } = notificationUser;
+      const { dc, gc } = notificationUser;
+
+      const effectiveConfig = mergeNotificationUserDefaultNotificationBoxRecipientConfig(dc, gc);
       const uid = x.document.id;
 
-      if (!dc.f) {
-        notificationUserRecipientConfigs.set(uid, dc);
-      } else {
+      notificationUserRecipientConfigs.set(uid, effectiveConfig);
+
+      if (effectiveConfig.f) {
+        // if flagged for opt out, add to set
         otherNotificationUserUidOptOuts.add(uid);
       }
     });
   }
 
+  /**
+   * Other NotificationRecipientWithConfig
+   */
   const otherRecipientConfigs = new Map<FirebaseAuthUserId, NotificationRecipientWithConfig>();
-  const otherRecipientEmailAddresses = new Map<EmailAddress, NotificationRecipientWithConfig>();
-  const otherRecipientTextNumbers = new Map<PhoneNumber, NotificationRecipientWithConfig>();
-  const otherRecipientNotificationSummaryKeys = new Map<NotificationSummaryId, NotificationRecipientWithConfig>();
 
-  [...explicitRecipients, ...globalRecipients].forEach((x) => {
-    if (x.uid) {
-      if (otherNotificationUserUidOptOuts.has(x.uid)) {
+  const explicitOtherRecipientEmailAddresses = new Map<EmailAddress, NotificationRecipientWithConfig>();
+  const explicitOtherRecipientTextNumbers = new Map<PhoneNumber, NotificationRecipientWithConfig>();
+  const explicitOtherRecipientNotificationSummaryIds = new Map<NotificationSummaryId, NotificationRecipientWithConfig>();
+
+  explicitAndGlobalRecipients.forEach((x) => {
+    const uid = x.uid;
+
+    if (uid) {
+      if (otherNotificationUserUidOptOuts.has(uid)) {
         return; // do not add to the recipients at all, user has opted out
       }
 
-      recipientUids.add(x.uid);
-      otherRecipientConfigs.set(x.uid, x);
+      const notificationUserRecipientConfig = notificationUserRecipientConfigs.get(uid);
+
+      if (notificationUserRecipientConfig != null) {
+        const userTemplateTypeConfig = notificationUserRecipientConfig.c[notificationTemplateType] ?? {};
+        const templateConfig: NotificationBoxRecipientTemplateConfig = mergeNotificationBoxRecipientTemplateConfigs(effectiveNotificationBoxRecipientTemplateConfig(userTemplateTypeConfig), x);
+
+        // replace the input NotificationRecipientWithConfig with the user's config
+        x = {
+          ...notificationUserRecipientConfig,
+          ...effectiveNotificationBoxRecipientTemplateConfig(templateConfig),
+          uid
+        };
+      }
+
+      recipientUids.add(uid);
+      otherRecipientConfigs.set(uid, x);
     }
 
     if (x.e) {
-      otherRecipientEmailAddresses.set(x.e.toLowerCase(), x);
+      explicitOtherRecipientEmailAddresses.set(x.e.toLowerCase(), x);
     }
 
     if (x.t) {
-      otherRecipientTextNumbers.set(x.t, x);
+      explicitOtherRecipientTextNumbers.set(x.t, x);
     }
 
     if (x.s) {
-      otherRecipientNotificationSummaryKeys.set(firestoreModelKey(notificationSummaryIdentity, x.s), x);
+      explicitOtherRecipientNotificationSummaryIds.set(x.s, x);
     }
   });
 
@@ -202,11 +267,27 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
         .userContext(uid)
         .loadDetails()
         .then((details) => [uid, details] as [string, FirebaseAuthDetails | undefined])
-        .catch((e) => [uid, undefined] as [string, FirebaseAuthDetails | undefined])
+        .catch(() => [uid, undefined] as [string, FirebaseAuthDetails | undefined])
     )
   );
 
-  const userDetailsMap = new Map(allUserDetails);
+  const userDetailsMap = new Map<string, FirebaseAuthDetails | undefined>(allUserDetails);
+
+  const _internal: ExpandNotificationRecipientsInternal = {
+    userDetailsMap,
+    explicitRecipients,
+    globalRecipients,
+    allBoxRecipientConfigs,
+    relevantBoxRecipientConfigs,
+    recipientUids,
+    otherRecipientConfigs,
+    explicitOtherRecipientEmailAddresses,
+    explicitOtherRecipientTextNumbers,
+    explicitOtherRecipientNotificationSummaryIds,
+    otherNotificationUserUidOptOuts,
+    nonNotificationBoxUidRecipientConfigs,
+    notificationUserRecipientConfigs
+  };
 
   // make all email recipients
   const emails: ExpandedNotificationRecipientEmail[] = [];
@@ -221,16 +302,16 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
 
     // don't send an email if marked false
-    if (x.templateConfig?.se !== false && !emailUidsSet.has(uid ?? '')) {
+    if (x.effectiveTemplateConfig?.se !== false && !emailUidsSet.has(uid ?? '')) {
       const e = overrideRecipientEmail ?? userDetails?.email; // use override email or the default email
 
       if (e) {
         const n = overrideRecipientName ?? userDetails?.displayName;
-        const email = e.toLowerCase();
-        otherRecipientEmailAddresses.delete(email); // don't double-send to the same email
+        const emailAddress = e.toLowerCase();
+        explicitOtherRecipientEmailAddresses.delete(emailAddress); // don't double-send to the same email
 
         const emailRecipient: ExpandedNotificationRecipientEmail = {
-          emailAddress: email,
+          emailAddress,
           name: n,
           boxRecipient: x,
           otherRecipient: otherRecipientForUser
@@ -246,58 +327,70 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   otherRecipientConfigs.forEach((x, uid) => {
+    // add users who existing in the system at this step, then other recipients in the next step
     const userDetails = userDetailsMap.get(uid);
 
     if (userDetails) {
-      const { email: emailAddress, displayName } = userDetails;
+      const { email: userEmailAddress, displayName } = userDetails;
+      const sendEmail = x.se !== false;
 
-      if (emailAddress && !emailUidsSet.has(uid)) {
+      if (userEmailAddress && sendEmail && !emailUidsSet.has(uid)) {
+        const emailAddress = userEmailAddress.toLowerCase();
+
+        const name = displayName || x.n;
         const emailRecipient: ExpandedNotificationRecipientEmail = {
           emailAddress,
-          name: x.n ?? displayName,
+          name,
           otherRecipient: x
         };
 
         emails.push(emailRecipient);
         emailUidsSet.add(uid);
-        otherRecipientEmailAddresses.delete(emailAddress);
+        explicitOtherRecipientEmailAddresses.delete(emailAddress);
       }
     }
   });
 
-  otherRecipientEmailAddresses.forEach((x, e) => {
-    const emailRecipient: ExpandedNotificationRecipientEmail = {
-      emailAddress: e,
-      name: x.n,
-      otherRecipient: x
-    };
+  explicitOtherRecipientEmailAddresses.forEach((x, emailAddress) => {
+    const sendEmail = x.se !== false;
 
-    emails.push(emailRecipient);
+    if (sendEmail) {
+      const emailRecipient: ExpandedNotificationRecipientEmail = {
+        emailAddress: emailAddress,
+        name: x.n,
+        otherRecipient: x
+      };
+
+      emails.push(emailRecipient);
+    }
   });
 
   // make all text recipients
+  // text recipients should be explicitly enabled, or marked true
   const texts: ExpandedNotificationRecipientText[] = [];
   const textUidsSet = new Set<FirebaseAuthUserId>();
 
   relevantBoxRecipientConfigs.forEach((x) => {
     const { recipient } = x;
     const { uid } = recipient;
+    const sendTextEnabled = x.effectiveTemplateConfig?.st;
 
     const userDetails = uid ? userDetailsMap.get(uid) : undefined;
     const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
 
-    // don't send a text if marked false
-    if (x.templateConfig?.st !== false && !textUidsSet.has(uid ?? '')) {
+    // only send a text if explicitly enabled
+    const shouldSendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+    if (shouldSendText && !textUidsSet.has(uid ?? '')) {
       const t = x.recipient.t ?? userDetails?.phoneNumber; // use override phoneNumber or the default phone
 
       if (t) {
-        const n = x.recipient.n ?? userDetails?.displayName;
+        const name = userDetails?.displayName ?? x.recipient.n;
         const phoneNumber = t as E164PhoneNumber;
-        otherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same text phone number
+        explicitOtherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same text phone number
 
         const textRecipient: ExpandedNotificationRecipientText = {
           phoneNumber,
-          name: n,
+          name,
           boxRecipient: x,
           otherRecipient: otherRecipientForUser
         };
@@ -312,34 +405,45 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   otherRecipientConfigs.forEach((x, uid) => {
+    // add users who existing in the system at this step, then other recipients in the next step
     const userDetails = userDetailsMap.get(uid);
 
     if (userDetails) {
-      const { phoneNumber: t, displayName } = userDetails;
+      const { phoneNumber, displayName } = userDetails;
+      const sendTextEnabled = x.st;
 
-      if (t && !textUidsSet.has(uid)) {
+      const sendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+      if (phoneNumber != null && sendText && !textUidsSet.has(uid)) {
+        const name = displayName || x.n;
         const textRecipient: ExpandedNotificationRecipientText = {
-          phoneNumber: t as E164PhoneNumber,
-          name: x.n ?? displayName,
+          phoneNumber: phoneNumber as E164PhoneNumber,
+          name,
           otherRecipient: x
         };
 
         texts.push(textRecipient);
         textUidsSet.add(uid);
-        otherRecipientTextNumbers.delete(t); // don't double-send to the same text phone number
+        explicitOtherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same text phone number
       }
     }
   });
 
-  otherRecipientTextNumbers.forEach((x, t) => {
-    const textRecipient: ExpandedNotificationRecipientText = {
-      phoneNumber: t as E164PhoneNumber,
-      name: x.n,
-      otherRecipient: x
-    };
+  explicitOtherRecipientTextNumbers.forEach((x, t) => {
+    const sendTextEnabled = x.st;
+    const shouldSendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
 
-    texts.push(textRecipient);
+    if (shouldSendText) {
+      const textRecipient: ExpandedNotificationRecipientText = {
+        phoneNumber: t as E164PhoneNumber,
+        name: x.n,
+        otherRecipient: x
+      };
+
+      texts.push(textRecipient);
+    }
   });
+
+  // TODO: Add push notification details...
 
   // make all notification summary recipients
   const notificationSummaries: ExpandedNotificationNotificationSummaryRecipient[] = [];
@@ -350,10 +454,12 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     const { recipient } = x;
     const { uid } = recipient;
 
+    const userDetails = uid ? userDetailsMap.get(uid) : undefined;
     const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
+    const sendNotificationSummary = x.effectiveTemplateConfig?.sn !== false;
 
     // don't send a notification summary if marked false
-    if (x.templateConfig?.sn !== false && !notificationSummaryUidsSet.has(uid ?? '')) {
+    if (sendNotificationSummary && !notificationSummaryUidsSet.has(uid ?? '')) {
       let notificationSummaryId: Maybe<NotificationSummaryId>;
 
       if (uid) {
@@ -364,51 +470,96 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
         notificationSummaryId = x.recipient.s;
       }
 
-      let notificationSummaryKey: Maybe<NotificationSummaryKey> = notificationSummaryId ? firestoreModelKey(notificationSummaryIdentity, notificationSummaryId) : undefined;
+      if (notificationSummaryId) {
+        const name = userDetails?.displayName ?? x.recipient.n;
 
-      if (notificationSummaryKey) {
         notificationSummaries.push({
-          notificationSummaryKey,
+          notificationSummaryId,
           boxRecipient: x,
           otherRecipient: otherRecipientForUser,
-          name: x.recipient.n
+          name
         });
-        otherRecipientNotificationSummaryKeys.delete(notificationSummaryKey); // don't double send
+
+        explicitOtherRecipientNotificationSummaryIds.delete(notificationSummaryId); // don't double send
       }
     }
   });
 
   otherRecipientConfigs.forEach((x, uid) => {
-    const { n: name, s: notificationSummaryId } = x;
+    // add users who existing in the system at this step, then other recipients in the next step
+    const userDetails = userDetailsMap.get(uid);
 
-    if (notificationSummaryId) {
-      const notificationSummaryKey = firestoreModelKey(notificationSummaryIdentity, notificationSummaryId);
+    if (userDetails) {
+      const { phoneNumber, displayName } = userDetails;
+      const sendTextEnabled = x.st;
 
-      if (!notificationSummaryKeysSet.has(notificationSummaryId)) {
-        const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
-          notificationSummaryKey,
-          otherRecipient: x,
-          name
+      const sendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+      if (phoneNumber != null && sendText && !textUidsSet.has(uid)) {
+        const name = displayName || x.n;
+        const textRecipient: ExpandedNotificationRecipientText = {
+          phoneNumber: phoneNumber as E164PhoneNumber,
+          name,
+          otherRecipient: x
         };
 
-        notificationSummaries.push(notificationSummary);
-        otherRecipientNotificationSummaryKeys.delete(notificationSummaryKey);
+        texts.push(textRecipient);
+        textUidsSet.add(uid);
+        explicitOtherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same text phone number
       }
     }
   });
 
-  otherRecipientNotificationSummaryKeys.forEach((x, notificationSummaryKey) => {
-    const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
-      notificationSummaryKey,
-      otherRecipient: x,
-      name: x.n
-    };
+  otherRecipientConfigs.forEach((x, uid) => {
+    const userDetails = userDetailsMap.get(uid);
 
-    notificationSummaries.push(notificationSummary);
+    if (userDetails) {
+      const { displayName } = userDetails;
+
+      const sendNotificationSummary = x.sn;
+      if (sendNotificationSummary !== false) {
+        let notificationSummaryId: Maybe<NotificationSummaryId>;
+
+        if (uid) {
+          notificationSummaryId = notificationSummaryIdForUid(uid);
+          notificationSummaryUidsSet.add(uid);
+        } else if (x.s) {
+          notificationSummaryId = x.s;
+        }
+
+        if (notificationSummaryId) {
+          if (!notificationSummaryKeysSet.has(notificationSummaryId)) {
+            const name = displayName || x.n;
+            const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
+              notificationSummaryId,
+              otherRecipient: x,
+              name
+            };
+
+            notificationSummaries.push(notificationSummary);
+            explicitOtherRecipientNotificationSummaryIds.delete(notificationSummaryId);
+          }
+        }
+      }
+    }
+  });
+
+  explicitOtherRecipientNotificationSummaryIds.forEach((x, notificationSummaryId) => {
+    const { sn: sendNotificationSummary } = x;
+
+    if (sendNotificationSummary !== false) {
+      const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
+        notificationSummaryId,
+        otherRecipient: x,
+        name: x.n
+      };
+
+      notificationSummaries.push(notificationSummary);
+    }
   });
 
   // results
   const result: ExpandNotificationRecipientsResult = {
+    _internal,
     emails,
     texts,
     notificationSummaries
@@ -452,7 +603,7 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
 }
 
 export function updateNotificationUserNotificationBoxRecipientConfig(input: UpdateNotificationUserNotificationBoxRecipientConfigInput): UpdateNotificationUserNotificationBoxRecipientConfigResult {
-  const { notificationBoxId, notificationBoxAssociatedModelKey, notificationUserId, notificationUser, insertingRecipientIntoNotificationBox, removeRecipientFromNotificationBox, notificationBoxRecipient } = input;
+  const { notificationBoxId, notificationUserId, notificationUser, insertingRecipientIntoNotificationBox, removeRecipientFromNotificationBox, notificationBoxRecipient } = input;
 
   const currentNotificationUserBoxIndex = notificationUser.bc.findIndex((x) => x.nb === notificationBoxId);
 

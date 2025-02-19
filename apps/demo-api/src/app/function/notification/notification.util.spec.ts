@@ -1,13 +1,14 @@
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { Notification, NotificationBox, NotificationBoxRecipient, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, firestoreDummyKey, firestoreModelKey, notificationSummaryIdentity, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, profileIdentity } from '@dereekb/demo-firebase';
+import { Notification, NotificationBox, NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigArrayEntryParam, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, firestoreDummyKey, firestoreModelKey, notificationSummaryIdentity, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, profileIdentity } from '@dereekb/demo-firebase';
 import { expandNotificationRecipients } from '@dereekb/firebase-server/model';
+import { assertSnapshotData } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f) => {
   describeCloudFunctionTest('notification.util', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
-    demoAuthorizedUserContext({ f }, (u) => {
+    demoAuthorizedUserContext({ f, addContactInfo: true }, (u) => {
       demoProfileContext({ f, u }, (p) => {
         describe('expandNotificationRecipients()', () => {
           let baseNotification: Notification;
@@ -79,7 +80,7 @@ demoApiFunctionContextFactory((f) => {
 
                 expect(result.notificationSummaries).toHaveLength(1);
                 expect(result.notificationSummaries[0].boxRecipient).toBeDefined();
-                expect(result.notificationSummaries[0].notificationSummaryKey).toBe(firestoreModelKey(notificationSummaryIdentity, notificationSummaryId));
+                expect(result.notificationSummaries[0].notificationSummaryId).toBe(notificationSummaryId);
               });
 
               it('should expand notification summaries for recipients with uids if notificationSummaryKeyForUid is defined', async () => {
@@ -122,10 +123,10 @@ demoApiFunctionContextFactory((f) => {
                 const summaryIdSummary = result.notificationSummaries[1];
 
                 expect(uidSummary.boxRecipient).toBeDefined();
-                expect(uidSummary.notificationSummaryKey).toBe(firestoreModelKey(notificationSummaryIdentity, twoWayFlatFirestoreModelKey(firestoreModelKey(profileIdentity, uid))));
+                expect(uidSummary.notificationSummaryId).toBe(DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID(uid));
 
                 expect(summaryIdSummary.boxRecipient).toBeDefined();
-                expect(summaryIdSummary.notificationSummaryKey).toBe(firestoreModelKey(notificationSummaryIdentity, notificationSummaryId));
+                expect(summaryIdSummary.notificationSummaryId).toBe(notificationSummaryId);
               });
             });
           });
@@ -137,25 +138,269 @@ demoApiFunctionContextFactory((f) => {
                   {
                     f,
                     for: g, // NotificationBox is for the guestbook
-                    createIfNeeded: true
+                    createIfNeeded: true,
+                    initIfNeeded: true
                   },
                   (nb) => {
                     describe('Guestbook Entry', () => {
+                      /**
+                       * The guestbookEntryLikedNotificationTemplate() adds the recipient of the GuestbookEntry that only recieves notification summaries by default
+                       */
                       describe('Guestbook Entry Likes Notifications', () => {
-                        demoGuestbookEntryContext({ f, u, g, init: false }, (ge) => {
-                          describe('notification user exists', () => {
-                            demoNotificationUserContext({ f, u }, (nu) => {
-                              beforeEach(async () => {
-                                // TODO: Update NotificationUser...
-                              });
+                        demoGuestbookEntryContext({ f, u, g, init: true }, (ge) => {
+                          beforeEach(async () => {
+                            await nb.deleteAllNotificationsForNotificationBox(); // delete all non-like notifications
+                            await ge.like();
+                          });
 
-                              describe('user has opted out of like notifications', () => {
-                                it('should not return th');
+                          describe('notification user exists', () => {
+                            demoNotificationUserContext({ f, u, init: true }, (nu) => {
+                              demoNotificationSummaryContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (ns_p) => {
+                                demoNotificationContext(
+                                  {
+                                    f,
+                                    doc: async () => {
+                                      const notifications = await nb.loadAllNotificationsForNotificationBox();
+                                      return notifications[0].document;
+                                    }
+                                  },
+                                  (nbn) => {
+                                    interface LikeNotificationShouldBeSentExpectation {
+                                      readonly email: boolean;
+                                      readonly text: boolean; // no text provider is configured for demo-api, but will still check expandNotificationRecipients()
+                                      readonly notificationSummary: boolean;
+                                      readonly checkGlobalConfig?: boolean;
+                                      readonly checkDefaultConfig?: boolean;
+                                      readonly checkOptOutFromFlag?: boolean;
+                                    }
+
+                                    function describeNotificationShouldBeSentToUser(expectation: LikeNotificationShouldBeSentExpectation) {
+                                      it('should send the expected notifications to the user', async () => {
+                                        let [notificationBox, notification] = await Promise.all([assertSnapshotData(nb.document), assertSnapshotData(nbn.document)]);
+
+                                        expect(notification.es).toBe(NotificationSendState.QUEUED);
+                                        expect(notification.ts).toBe(NotificationSendState.QUEUED);
+                                        expect(notification.ps).toBe(NotificationSendState.QUEUED);
+                                        expect(notification.ns).toBe(NotificationSendState.QUEUED);
+
+                                        expect(notificationBox.r).toHaveLength(0); // no recipients in the box
+                                        expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
+                                        expect(notification.r[0].uid).toBe(u.uid);
+                                        expect(notification.r[0].s).toBeUndefined();
+
+                                        const result = await nbn.sendNotification({});
+
+                                        expect(result.tryRun).toBe(true);
+
+                                        expect(result.sendEmailsResult?.failed.length).toBeFalsy();
+                                        expect(result.sendTextsResult?.failed.length).toBeFalsy();
+                                        expect(result.sendNotificationSummaryResult?.failed.length).toBeFalsy();
+
+                                        expect(result.sendEmailsResult?.success.length).toBe(expectation.email ? 1 : undefined);
+                                        expect(result.sendTextsResult?.ignored.length).toBe(expectation.text ? 1 : undefined); // no text provider is configured for demo-api, so we check ignored
+                                        expect(result.sendNotificationSummaryResult?.success.length).toBe(expectation.notificationSummary ? 1 : undefined);
+
+                                        expect(result.success).toBe(true);
+
+                                        if (expectation.notificationSummary) {
+                                          const notificationSummary = await assertSnapshotData(ns_p.document);
+
+                                          expect(notificationSummary.lat).toBeDefined();
+                                          expect(notificationSummary.lat).toBeBefore(new Date());
+                                          expect(notificationSummary.n).toHaveLength(1);
+                                        }
+
+                                        notification = await assertSnapshotData(nbn.document);
+                                        expect(notification.d).toBe(true);
+
+                                        expect(notification.ts).toBe(NotificationSendState.SENT);
+                                        expect(notification.es).toBe(NotificationSendState.SENT);
+                                        // expect(notification.ps).toBe(NotificationSendState.QUEUED);
+                                        expect(notification.ns).toBe(NotificationSendState.SENT);
+                                      });
+
+                                      describe('expandNotificationRecipients()', () => {
+                                        it('should expand the user recipient', async () => {
+                                          const [notificationBox, notification] = await Promise.all([assertSnapshotData(nb.document), assertSnapshotData(nbn.document)]);
+
+                                          expect(notificationBox.r).toHaveLength(0); // no recipients in the box
+                                          expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
+                                          expect(notification.r[0].uid).toBe(u.uid);
+
+                                          const result = await expandNotificationRecipients({
+                                            notification,
+                                            notificationBox,
+                                            authService: f.authService,
+                                            notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor(),
+                                            notificationSummaryIdForUid: f.notificationSendService.notificationSummaryIdForUidFunction
+                                          });
+
+                                          expect(result._internal.globalRecipients).toHaveLength(0);
+                                          expect(result._internal.explicitRecipients).toHaveLength(1);
+                                          expect(result._internal.allBoxRecipientConfigs).toHaveLength(0);
+
+                                          const explicitRecipient = result._internal.explicitRecipients[0];
+                                          expect(explicitRecipient.uid).toBeDefined();
+                                          expect(explicitRecipient.n).toBeUndefined();
+                                          expect(explicitRecipient.s).toBeUndefined();
+                                          expect(explicitRecipient.e).toBeUndefined();
+
+                                          expect(Array.from(result._internal.nonNotificationBoxUidRecipientConfigs.keys())).toHaveLength(1);
+                                          expect(Array.from(result._internal.notificationUserRecipientConfigs.entries())).toHaveLength(1);
+
+                                          const notificationUser = await nu.document.snapshotData();
+                                          expect(notificationUser).toBeDefined();
+
+                                          const userNotificationUserRecipientConfig = result._internal.notificationUserRecipientConfigs.get(u.uid);
+                                          expect(userNotificationUserRecipientConfig).toBeDefined();
+
+                                          if (expectation.checkOptOutFromFlag) {
+                                            expect(result._internal.otherNotificationUserUidOptOuts).toContain(u.uid);
+                                          } else {
+                                            // when not opt-out from all, the user details should be made available
+                                            const authUser = result._internal.userDetailsMap.get(u.uid);
+                                            expect(authUser).toBeDefined();
+                                            expect(authUser?.email).toBeDefined();
+                                            expect(authUser?.phoneNumber).toBeDefined();
+                                          }
+
+                                          if (userNotificationUserRecipientConfig) {
+                                            const userGlobalConfig = notificationUser?.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE];
+                                            const userDefaultConfig = notificationUser?.dc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE];
+                                            const userNotificationUserRecipientConfigForTemplateType = userNotificationUserRecipientConfig.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE];
+
+                                            // email is opt-in, so it should appear in the configuration
+                                            if (expectation.email) {
+                                              if (expectation.checkGlobalConfig) {
+                                                expect(userGlobalConfig?.se).toBe(true);
+                                              } else if (expectation.checkDefaultConfig) {
+                                                expect(userDefaultConfig?.se).toBe(true);
+                                              }
+
+                                              expect(userNotificationUserRecipientConfigForTemplateType?.se).toBe(true);
+                                            } else {
+                                              if (expectation.checkGlobalConfig) {
+                                                expect(userGlobalConfig?.se).toBeFalsy();
+                                              } else if (expectation.checkDefaultConfig) {
+                                                expect(userDefaultConfig?.se).toBeFalsy();
+                                              }
+
+                                              expect(userNotificationUserRecipientConfigForTemplateType?.se).toBeFalsy();
+                                            }
+
+                                            // text is opt-in, so it should appear in the configuration
+                                            if (expectation.text) {
+                                              if (expectation.checkGlobalConfig) {
+                                                expect(userGlobalConfig?.st).toBe(true);
+                                              } else if (expectation.checkDefaultConfig) {
+                                                expect(userDefaultConfig?.st).toBe(true);
+                                              }
+
+                                              expect(userNotificationUserRecipientConfigForTemplateType?.st).toBe(true);
+                                            } else {
+                                              if (expectation.checkGlobalConfig) {
+                                                expect(userGlobalConfig?.st).toBeFalsy();
+                                              } else if (expectation.checkDefaultConfig) {
+                                                expect(userDefaultConfig?.st).toBeFalsy();
+                                              }
+
+                                              expect(userNotificationUserRecipientConfigForTemplateType?.st).toBeFalsy();
+                                            }
+                                          }
+
+                                          expect(result.emails).toHaveLength(expectation.email ? 1 : 0);
+                                          expect(result.texts).toHaveLength(expectation.text ? 1 : 0);
+                                          expect(result.notificationSummaries).toHaveLength(expectation.notificationSummary ? 1 : 0);
+
+                                          if (expectation.notificationSummary) {
+                                            expect(result.notificationSummaries[0].notificationSummaryId).toBe(DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID(u.uid));
+                                          }
+                                        });
+                                      });
+                                    }
+
+                                    // Not associated with NotificationBox
+                                    describe('user not associated with guestbook notification box', () => {
+                                      describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true });
+
+                                      describe('global configuration', () => {
+                                        function beforeEachUpdateNotificationUserGlobalConfig(gc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams) {
+                                          beforeEach(async () => {
+                                            await nu.updateNotificationUser({
+                                              gc
+                                            });
+                                          });
+                                        }
+
+                                        function beforeEachUpdateNotificationUserGlobalConfigForTemplateType(config: Omit<NotificationBoxRecipientTemplateConfigArrayEntryParam, 'type'>) {
+                                          beforeEachUpdateNotificationUserGlobalConfig({
+                                            configs: [
+                                              {
+                                                type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+                                                ...config
+                                              }
+                                            ]
+                                          });
+                                        }
+
+                                        describe('user opt in tests', () => {
+                                          describe('user opts into sms', () => {
+                                            beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ st: true });
+                                            describeNotificationShouldBeSentToUser({ email: false, text: true, notificationSummary: true, checkGlobalConfig: true });
+                                          });
+
+                                          describe('user opts into emails', () => {
+                                            beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ se: true });
+                                            describeNotificationShouldBeSentToUser({ email: true, text: false, notificationSummary: true, checkGlobalConfig: true });
+                                          });
+                                        });
+
+                                        describe('user opts out tests', () => {
+                                          describe('partial opt-out', () => {
+                                            // NOTE: effectively no effect since emails are disabled by default
+                                            describe('user disables sending emails for Like notifications', () => {
+                                              beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ se: false });
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true, checkGlobalConfig: true });
+                                            });
+
+                                            describe('user disables sending notification summaries for Like notifications', () => {
+                                              beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ sn: false });
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkGlobalConfig: true });
+                                            });
+                                          });
+
+                                          describe('full opt-out', () => {
+                                            describe('user has disabled sending for all Like notifications', () => {
+                                              beforeEachUpdateNotificationUserGlobalConfigForTemplateType({ sd: false });
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkGlobalConfig: true });
+                                            });
+
+                                            describe('user has opted out of all notifications', () => {
+                                              beforeEachUpdateNotificationUserGlobalConfig({
+                                                f: NotificationBoxRecipientFlag.OPT_OUT
+                                              });
+
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkOptOutFromFlag: true });
+                                            });
+                                          });
+                                        });
+                                      });
+                                    });
+                                  }
+                                );
                               });
                             });
                           });
 
-                          describe('notification user does not exist', () => {});
+                          /*
+                          describe('notification user does not exist', () => {
+
+                            describe('notification summary does not exist', () => {
+
+                            });
+
+                          });
+                          */
                         });
                       });
                     });

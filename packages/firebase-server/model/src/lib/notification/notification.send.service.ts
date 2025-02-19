@@ -1,5 +1,5 @@
-import { type NotificationMessage } from '@dereekb/firebase';
-import { NotificationSendEmailMessagesResult, NotificationSendTextMessagesResult, type NotificationSendMessagesInstance, NotificationSendNotificationSummaryMessagesResult } from './notification.send';
+import { NotificationSummaryIdForUidFunction, type NotificationMessage, NotificationSendEmailMessagesResult, NotificationSendNotificationSummaryMessagesResult, NotificationSendTextMessagesResult } from '@dereekb/firebase';
+import { type NotificationSendMessagesInstance } from './notification.send';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -13,6 +13,12 @@ export interface NotificationSendServiceRef {
  * Service dedicated to providing access to NotificationMessageFunctionFactory values for specific NotificationTemplateTypes.
  */
 export abstract class NotificationSendService {
+  /**
+   * NotificationSummaryIdForUidFunction if this app should/will create NotificationSummary values for each user.
+   *
+   * If not defined, then sent notifications to recipients with UIDs will
+   */
+  abstract readonly notificationSummaryIdForUidFunction?: Maybe<NotificationSummaryIdForUidFunction>;
   /**
    * NotificationEmailSendService instance, if emails are configured for this server.
    */

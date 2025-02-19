@@ -1,7 +1,7 @@
-import { NotificationFirestoreCollections, FirestoreContextReference, NotificationMessage, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationSummaryId, NotificationItem, NOTIFICATION_SUMMARY_ITEM_LIMIT } from '@dereekb/firebase';
+import { NotificationFirestoreCollections, FirestoreContextReference, NotificationMessage, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationSummaryId, NotificationItem, NOTIFICATION_SUMMARY_ITEM_LIMIT, NotificationSendNotificationSummaryMessagesResult } from '@dereekb/firebase';
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { NotificationSummarySendService } from './notification.send.service';
-import { NotificationSendMessagesInstance, NotificationSendNotificationSummaryMessagesResult } from './notification.send';
+import { NotificationSendMessagesInstance } from './notification.send';
 import { multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
 
 export interface FirestoreNotificationSummarySendServiceConfig {
@@ -42,7 +42,7 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
               const notificationSummary = await notificationSummaryDocument.snapshotData();
               let updated = false;
 
-              if (notificationSummary) {
+              if (notificationSummary != null) {
                 const existingMessageIds = new Set(notificationSummary.n.map((x) => x.id));
 
                 // ignore any repeat messages
@@ -51,7 +51,7 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
                 if (messagesToSend.length > 0) {
                   // add the new items to existing n then keep the last 1000
                   const n = takeLast(notificationSummary.n.concat(messagesToSend.map((x) => x.item as NotificationItem)), NOTIFICATION_SUMMARY_ITEM_LIMIT);
-                  await notificationSummaryDocument.update({ n });
+                  await notificationSummaryDocument.update({ lat: new Date(), n });
                   updated = true;
                 }
               }
@@ -65,7 +65,8 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
                 ignored.push(notificationSummaryId);
               }
             })
-            .catch(() => {
+            .catch((e) => {
+              console.error('firestoreNotificationSummarySendService(): failed updating notification summary', e);
               failed.push(notificationSummaryId);
             });
         });

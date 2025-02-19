@@ -1,6 +1,59 @@
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter } from '@dereekb/util';
 import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, firestoreModelKey, firestoreString, SavedToFirestoreIfTrue, FirestoreModelKey, firestoreModelIdString, firestoreModelKeys, firestoreModelKeyString } from '../../common';
+
+/**
+ * Notification configuration state for a template.
+ *
+ * Denotes which modes of message are enabled for the user to recieve.
+ */
+export interface NotificationBoxRecipientTemplateConfig {
+  /**
+   * Send default is enabled/disabled for all types if not defined
+   */
+  sd?: Maybe<boolean>;
+  /**
+   * Email enabled / Send Email
+   */
+  se?: Maybe<boolean>;
+  /**
+   * Phone enabled / Send Text
+   */
+  st?: Maybe<boolean>;
+  /**
+   * Push notification enabled / Send Push Notification
+   */
+  sp?: Maybe<boolean>;
+  /**
+   * Send to notification summary of the associate user, if applicable.
+   */
+  sn?: Maybe<boolean>;
+}
+
+export function mergeNotificationBoxRecipientTemplateConfigs(a?: Maybe<NotificationBoxRecipientTemplateConfig>, b?: Maybe<NotificationBoxRecipientTemplateConfig>): NotificationBoxRecipientTemplateConfig {
+  const { sd, se, st, sp, sn } = a ?? {};
+  const { sd: sdb, se: seb, st: stb, sp: spb, sn: snb } = b ?? {};
+
+  return {
+    sd: sd ?? sdb,
+    se: se ?? seb,
+    st: st ?? stb,
+    sp: sp ?? spb,
+    sn: sn ?? snb
+  };
+}
+
+export function effectiveNotificationBoxRecipientTemplateConfig(x: NotificationBoxRecipientTemplateConfig): NotificationBoxRecipientTemplateConfig {
+  const { sd, se, st, sp, sn } = x;
+
+  return {
+    sd,
+    se: se ?? sd,
+    st: st ?? sd,
+    sp: sp ?? sd,
+    sn: sn ?? sd
+  };
+}
 
 // MARK: Recipient
 /**
@@ -26,7 +79,7 @@ export interface NotificationRecipient {
    */
   t?: Maybe<E164PhoneNumber>;
   /**
-   * Notification summary to send notifications to. Ignored and/or set null if uid is defined.
+   * Notification summary id to send notifications to. Ignored and/or set null if uid is defined.
    */
   s?: Maybe<NotificationSummaryId>;
 }
@@ -55,6 +108,7 @@ export const firestoreNotificationRecipientWithConfig = firestoreSubObject<Notif
       e: optionalFirestoreString(),
       t: optionalFirestoreString(),
       s: optionalFirestoreString(),
+      sd: optionalFirestoreBoolean(),
       se: optionalFirestoreBoolean(),
       st: optionalFirestoreBoolean(),
       sp: optionalFirestoreBoolean(),
@@ -131,6 +185,18 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
   bk?: Maybe<SavedToFirestoreIfTrue>;
 }
 
+export function mergeNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: NotificationUserDefaultNotificationBoxRecipientConfig): NotificationUserDefaultNotificationBoxRecipientConfig {
+  const c = mergeNotificationBoxRecipientTemplateConfigRecords(a.c, b.c);
+
+  const result: NotificationUserDefaultNotificationBoxRecipientConfig = {
+    ...a,
+    ...b,
+    c
+  };
+
+  return result;
+}
+
 /**
  * Used to reflect the NotificationBoxRecipient config back to a NotificationUser.
  *
@@ -172,39 +238,17 @@ export interface NotificationUserNotificationBoxRecipientConfig extends Omit<Not
   bk?: Maybe<SavedToFirestoreIfTrue>;
 }
 
-/**
- * Notification configuration state for a template.
- *
- * Denotes which modes of message are enabled for the user to recieve.
- */
-export interface NotificationBoxRecipientTemplateConfig {
-  /**
-   * Email enabled / Send Email
-   */
-  se?: Maybe<boolean>;
-  /**
-   * Phone enabled / Send Text
-   */
-  st?: Maybe<boolean>;
-  /**
-   * Push notification enabled / Send Push Notification
-   */
-  sp?: Maybe<boolean>;
-  /**
-   * Send to notification summary of the associate user, if applicable.
-   */
-  sn?: Maybe<boolean>;
-}
-
 export enum NotificationBoxRecipientTemplateConfigBoolean {
-  EMAIL = 0,
-  EMAIL_OFF = 1,
-  TEXT = 2,
-  TEXT_OFF = 3,
-  PUSH_NOTIFICATION = 4,
-  PUSH_NOTIFICATION_OFF = 5,
-  NOTIFICATION_SUMMARY = 6,
-  NOTIFICATION_SUMMARY_OFF = 7
+  SEND_ALL_ON = 0,
+  SEND_ALL_OFF = 1,
+  EMAIL = 2,
+  EMAIL_OFF = 3,
+  TEXT = 4,
+  TEXT_OFF = 5,
+  PUSH_NOTIFICATION = 6,
+  PUSH_NOTIFICATION_OFF = 7,
+  NOTIFICATION_SUMMARY = 8,
+  NOTIFICATION_SUMMARY_OFF = 9
 }
 
 /**
@@ -219,6 +263,11 @@ export type EncodedNotificationBoxRecipientTemplateConfig = BitwiseEncodedSet;
  */
 export type NotificationBoxRecipientTemplateConfigRecord = Record<NotificationTemplateType, NotificationBoxRecipientTemplateConfig>;
 
+export function mergeNotificationBoxRecipientTemplateConfigRecords(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigRecord): NotificationBoxRecipientTemplateConfigRecord {
+  const mergeConfigs = mergeObjectsFunction<NotificationBoxRecipientTemplateConfigRecord>(KeyValueTypleValueFilter.UNDEFINED);
+  return mergeConfigs([a, b]) as NotificationBoxRecipientTemplateConfigRecord;
+}
+
 /**
  * Encoded NotificationBoxRecipientTemplateConfigRecord
  */
@@ -228,6 +277,10 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
   maxIndex: NotificationBoxRecipientTemplateConfigBoolean.NOTIFICATION_SUMMARY_OFF + 1,
   toSetFunction: (x) => {
     const set = new Set<NotificationBoxRecipientTemplateConfigBoolean>();
+
+    if (x.sd != null) {
+      set.add(x.sd ? NotificationBoxRecipientTemplateConfigBoolean.SEND_ALL_ON : NotificationBoxRecipientTemplateConfigBoolean.SEND_ALL_OFF);
+    }
 
     if (x.st != null) {
       set.add(x.st ? NotificationBoxRecipientTemplateConfigBoolean.TEXT : NotificationBoxRecipientTemplateConfigBoolean.TEXT_OFF);
@@ -249,6 +302,12 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
   },
   fromSetFunction: (x) => {
     const object: NotificationBoxRecipientTemplateConfig = {};
+
+    if (x.has(NotificationBoxRecipientTemplateConfigBoolean.SEND_ALL_ON)) {
+      object.sd = true;
+    } else if (x.has(NotificationBoxRecipientTemplateConfigBoolean.SEND_ALL_OFF)) {
+      object.sd = false;
+    }
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.TEXT)) {
       object.st = true;
@@ -361,6 +420,7 @@ export function notificationBoxRecipientTemplateConfigArrayToRecord(input: Notif
 
   input.forEach((x) => {
     map[x.type] = {
+      sd: x.sd,
       st: x.st,
       se: x.se,
       sp: x.sp,

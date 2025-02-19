@@ -1,11 +1,11 @@
-import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { GuestbookFirestoreCollections, InsertGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry, CreateGuestbookParams, AsyncGuestbookCreateAction, GuestbookDocument, guestbookEntryCreatedNotificationTemplate } from '@dereekb/demo-firebase';
-import { NotificationFirestoreCollections, createNotificationDocument, createNotificationDocumentIfSending } from '@dereekb/firebase';
+import { FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
+import { GuestbookFirestoreCollections, InsertGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry, CreateGuestbookParams, AsyncGuestbookCreateAction, GuestbookDocument, guestbookEntryCreatedNotificationTemplate, LikeGuestbookEntryParams, guestbookEntryLikedNotificationTemplate } from '@dereekb/demo-firebase';
+import { FirestoreContextReference, NotificationFirestoreCollections, createNotificationDocument, createNotificationDocumentIfSending } from '@dereekb/firebase';
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
  */
-export interface GuestbookServerActionsContext extends FirebaseServerActionsContext, GuestbookFirestoreCollections, NotificationFirestoreCollections {}
+export interface GuestbookServerActionsContext extends FirebaseServerActionsContext, GuestbookFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference {}
 
 /**
  * Server-only guestbook actions.
@@ -13,6 +13,7 @@ export interface GuestbookServerActionsContext extends FirebaseServerActionsCont
 export abstract class GuestbookServerActions {
   abstract createGuestbook(params: CreateGuestbookParams): AsyncGuestbookCreateAction<CreateGuestbookParams>;
   abstract insertGuestbookEntry(params: InsertGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<InsertGuestbookEntryParams>;
+  abstract likeGuestbookEntry(params: LikeGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<LikeGuestbookEntryParams>;
 }
 
 /**
@@ -21,7 +22,8 @@ export abstract class GuestbookServerActions {
 export function guestbookServerActions(context: GuestbookServerActionsContext): GuestbookServerActions {
   return {
     createGuestbook: guestbookCreateGuestbookFactory(context),
-    insertGuestbookEntry: guestbookEntryInsertEntryFactory(context)
+    insertGuestbookEntry: guestbookEntryInsertEntryFactory(context),
+    likeGuestbookEntry: likeGuestbookEntryFactory(context)
   };
 }
 
@@ -91,6 +93,37 @@ export function guestbookEntryInsertEntryFactory(context: GuestbookServerActions
             await guestbookEntryDocument.update(set);
           }
         }
+      });
+
+      return document;
+    };
+  });
+}
+
+export function likeGuestbookEntryFactory(context: GuestbookServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection, guestbookEntryCollectionGroup } = context;
+
+  return firebaseServerActionTransformFunctionFactory(LikeGuestbookEntryParams, async (params) => {
+    return async (document: GuestbookEntryDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        const guestbookEntryDocumentInTransaction = guestbookEntryCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(document);
+        const guestbookEntry = await assertSnapshotData(guestbookEntryDocumentInTransaction);
+
+        if (!guestbookEntry.published) {
+          throw new Error('The guestbook entry is not published.');
+        }
+
+        // increase the number of likes by 1
+        await guestbookEntryDocumentInTransaction.accessor.increment({ likes: 1 });
+
+        // create a new notification
+        await createNotificationDocument({
+          transaction,
+          context,
+          template: guestbookEntryLikedNotificationTemplate({
+            guestbookEntryKey: document.key
+          })
+        });
       });
 
       return document;

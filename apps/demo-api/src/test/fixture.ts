@@ -46,11 +46,12 @@ import {
   NotificationUserDocument,
   NotificationUserFirestoreCollection,
   CreateNotificationTemplate,
-  createNotificationDocument
+  createNotificationDocument,
+  UpdateNotificationUserParams
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter } from '@dereekb/util';
-import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { NotificationInitServerActions, NotificationSendService, NotificationServerActions } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 
@@ -77,6 +78,7 @@ export interface DemoApiContext {
   get mailgunService(): MailgunService;
   get notificationServerActions(): NotificationServerActions;
   get notificationInitServerActions(): NotificationInitServerActions;
+  get notificationSendService(): NotificationSendService;
 }
 
 // MARK: Admin
@@ -107,6 +109,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get notificationInitServerActions() {
     return this.instance.notificationInitServerActions;
+  }
+
+  get notificationSendService() {
+    return this.instance.notificationSendService;
   }
 
   get profileServerActions() {
@@ -149,6 +155,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get notificationInitServerActions() {
     return this.get(NotificationInitServerActions);
+  }
+
+  get notificationSendService() {
+    return this.get(NotificationSendService);
   }
 
   get profileServerActions() {
@@ -198,6 +208,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.notificationServerActions;
   }
 
+  get notificationSendService() {
+    return this.instance.notificationSendService;
+  }
+
   get notificationInitServerActions() {
     return this.instance.notificationInitServerActions;
   }
@@ -242,6 +256,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get notificationInitServerActions() {
     return this.get(NotificationInitServerActions);
+  }
+
+  get notificationSendService() {
+    return this.get(NotificationSendService);
   }
 
   get profileServerActions() {
@@ -374,6 +392,10 @@ export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunc
   async createOrUpdateEntry(update: Omit<InsertGuestbookEntryParams, 'guestbook'>) {
     return this.instance.createOrUpdateEntry(update);
   }
+
+  async like() {
+    return this.instance.like();
+  }
 }
 
 export class DemoApiGuestbookEntryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -392,6 +414,14 @@ export class DemoApiGuestbookEntryTestContextInstance<F extends FirebaseAdminFun
     });
 
     await updateInstance(this.document);
+  }
+
+  async like() {
+    const likeInstance = await this.testContext.guestbookServerActions.likeGuestbookEntry({
+      key: this.documentKey
+    });
+
+    return likeInstance(this.document);
   }
 }
 
@@ -436,9 +466,34 @@ export interface DemoApiNotificationUserTestContextParams {
   init?: boolean;
 }
 
-export class DemoApiNotificationUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationUserTestContextInstance<F>> {}
+export class DemoApiNotificationUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationUserTestContextInstance<F>> {
+  async updateNotificationUser(params: Omit<UpdateNotificationUserParams, 'key'>) {
+    return this.instance.updateNotificationUser(params);
+  }
 
-export class DemoApiNotificationUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+  async resyncNotificationUser() {
+    return this.instance.resyncNotificationUser();
+  }
+}
+
+export class DemoApiNotificationUserTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  async updateNotificationUser(params: Omit<UpdateNotificationUserParams, 'key'>) {
+    const update = await this.testContext.notificationServerActions.updateNotificationUser({
+      ...params,
+      key: this.documentKey
+    });
+
+    await update(this.document);
+  }
+
+  async resyncNotificationUser() {
+    const resyncUser = await this.testContext.notificationServerActions.resyncNotificationUser({
+      key: this.documentKey
+    });
+
+    await resyncUser(this.document);
+  }
+}
 
 export const demoNotificationUserContextFactory = () =>
   modelTestContextFactory<NotificationUser, NotificationUserDocument, DemoApiNotificationUserTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiNotificationUserTestContextFixture<FirebaseAdminFunctionTestContextInstance>, NotificationUserFirestoreCollection>({
@@ -498,7 +553,7 @@ export const demoNotificationSummaryContextFactory = () =>
         // initialize
         if (!exists) {
           const createNotificationSummary = await p.notificationServerActions.createNotificationSummary({
-            model: params.for.documentTwoWayFlatKey
+            model: params.for.documentKey
           });
 
           await createNotificationSummary();

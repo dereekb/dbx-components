@@ -112,7 +112,15 @@ export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<
 
 export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<GuestbookEntry, GuestbookEntryDocument>, context: DemoFirebaseContext, model: GuestbookEntryDocument): PromiseOrValue<GrantedRoleMap<GuestbookEntryRoles>> {
-    return grantFullAccessIfAuthUserRelated({ context, document: model });
+    return grantFullAccessIfAuthUserRelated({ context, document: model }, () => {
+      let roles: GuestbookEntryRoles[] = [];
+
+      if (context.auth) {
+        roles = ['like']; // if a user is logged in then they can "like" something
+      }
+
+      return grantedRoleKeysMapFromArray(roles);
+    });
   },
   getFirestoreCollection: (c) => c.app.guestbookEntryCollectionGroup
 });

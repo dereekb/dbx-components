@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
-import { DemoApiNotificationBoxTestContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
@@ -12,10 +12,8 @@ import {
   NotificationMessage,
   NotificationMessageFunctionFactoryConfig,
   NotificationMessageInputContext,
-  NotificationRecipientSendFlag,
   NotificationSendState,
   NotificationSendType,
-  firestoreDummyKey,
   NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE,
   NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE,
   UpdateNotificationUserParams,
@@ -30,10 +28,12 @@ import {
   NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
   NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
   createNotificationDocument,
-  CreateNotificationTemplate
+  CreateNotificationTemplate,
+  NotificationRecipient,
+  NotificationBoxRecipient
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotification } from '@dereekb/demo-firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotification } from '@dereekb/demo-firebase';
 import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
@@ -239,6 +239,86 @@ demoApiFunctionContextFactory((f) => {
 
                           describe('updates', () => {
                             describe('global config', () => {
+                              it('should update the global config for a specific configuration but ignore unknown types', async () => {
+                                let notificationUser = await assertSnapshotData(nu.document);
+
+                                const UNKNOWN_TYPE = 'UNKNOWN_TYPE';
+                                const params: UpdateNotificationUserParams = {
+                                  key: nu.documentKey,
+                                  gc: {
+                                    configs: [
+                                      {
+                                        type: UNKNOWN_TYPE,
+                                        se: false, // opt-out of emails
+                                        st: true // opt-into texts
+                                      },
+                                      {
+                                        type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+                                        se: false, // opt-out of emails
+                                        st: true // opt-into texts
+                                      }
+                                    ]
+                                  }
+                                };
+
+                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                notificationUser = await assertSnapshotData(nu.document);
+
+                                expect(notificationUser.gc.c[UNKNOWN_TYPE]).toBeUndefined();
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(false);
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(true);
+                              });
+
+                              it('should update the global config for a specific configuration', async () => {
+                                let notificationUser = await assertSnapshotData(nu.document);
+
+                                const params: UpdateNotificationUserParams = {
+                                  key: nu.documentKey,
+                                  gc: {
+                                    configs: [
+                                      {
+                                        type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+                                        se: false, // opt-out of emails
+                                        st: true // opt-into texts
+                                      }
+                                    ]
+                                  }
+                                };
+
+                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                notificationUser = await assertSnapshotData(nu.document);
+
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE].se).toBe(false);
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE].st).toBe(true);
+                              });
+
+                              it('should update the global config for a specific configuration to opt out of all notifications for a specific type', async () => {
+                                let notificationUser = await assertSnapshotData(nu.document);
+
+                                const params: UpdateNotificationUserParams = {
+                                  key: nu.documentKey,
+                                  gc: {
+                                    configs: [
+                                      {
+                                        type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+                                        sd: false // opt out of all
+                                      }
+                                    ]
+                                  }
+                                };
+
+                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+
+                                notificationUser = await assertSnapshotData(nu.document);
+
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE]).toBeDefined();
+                                expect(notificationUser.gc.c[GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE].sd).toBe(false);
+                              });
+
                               it('updating the text or email on the global config should flag all notification box configs on NotificationUser for sync', async () => {
                                 let notificationUser = await assertSnapshotData(nu.document);
 
@@ -1392,7 +1472,7 @@ demoApiFunctionContextFactory((f) => {
                                       expect(result.tryRun).toBe(true);
                                       expect(result.success).toBe(true);
                                       expect(result.deletedNotification).toBe(false);
-                                      expect(result.emailsSent).toBe(0); // no recipients for the notification
+                                      expect(result.sendEmailsResult?.success).toBe(0); // no recipients for the notification
 
                                       // check update
                                       const notification = await assertSnapshotData(nbn.document);
@@ -1412,7 +1492,7 @@ demoApiFunctionContextFactory((f) => {
                                       expect(result.tryRun).toBe(false);
                                       expect(result.success).toBe(false);
                                       expect(result.deletedNotification).toBe(false);
-                                      expect(result.emailsSent).toBeUndefined();
+                                      expect(result.sendEmailsResult).toBeUndefined();
 
                                       // check not sent
                                       const notification = await assertSnapshotData(nbn.document);
@@ -1452,7 +1532,7 @@ demoApiFunctionContextFactory((f) => {
                                 expect(result.tryRun).toBe(false);
                                 expect(result.success).toBe(false);
                                 expect(result.deletedNotification).toBe(false);
-                                expect(result.emailsSent).toBeUndefined();
+                                expect(result.sendEmailsResult).toBeUndefined();
 
                                 // check update
                                 const notification = await assertSnapshotData(nbn.document);
@@ -1565,7 +1645,7 @@ demoApiFunctionContextFactory((f) => {
                           it('should not attempt to send again (send throttling)', async () => {
                             const result = await nbn.sendNotification();
 
-                            expect(result.emailsSent).toBeUndefined(); // not attempted
+                            expect(result.sendEmailsResult).toBeUndefined(); // not attempted
                             expect(result.tryRun).toBe(false);
                             expect(result.success).toBe(false);
                           });
@@ -1580,7 +1660,7 @@ demoApiFunctionContextFactory((f) => {
                           it('should attempt to send the text notifications again', async () => {
                             const result = await nbn.sendNotification();
 
-                            expect(result.emailsSent).toBeUndefined(); // not attempted
+                            expect(result.sendEmailsResult).toBeUndefined(); // not attempted
                             expect(result.tryRun).toBe(true);
                             expect(result.success).toBe(true);
                           });
@@ -1650,20 +1730,6 @@ demoApiFunctionContextFactory((f) => {
 
             describe('notification box does not exist', () => {
               describeNotificationCreateAndSendTestsWithNotificationBox(false, false);
-            });
-
-            describe('NotificationBox recipient configuration effects', () => {
-              demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb) => {
-                demoNotificationContext(
-                  {
-                    f,
-                    template: () => exampleNotification({ profileDocument: p.document })
-                  },
-                  (nbn) => {
-                    // TODO: ...
-                  }
-                );
-              });
             });
           });
         });

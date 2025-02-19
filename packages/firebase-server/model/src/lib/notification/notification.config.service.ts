@@ -47,9 +47,21 @@ export type LoadNotificationMessageFunction = (config: NotificationMessageFuncti
  * NotificationTemplateService instance that provides access to message functions of a certain type.
  */
 export interface NotificationTemplateServiceInstance {
+  /**
+   * Parent service
+   */
   readonly service: NotificationTemplateService;
+  /**
+   * The type of template this instance contains/represents.
+   */
   readonly type: NotificationTemplateType;
-  readonly isKnownType: boolean;
+  /**
+   * True if the template type is configured in the NotificationTemplateService.
+   */
+  readonly isConfiguredType: boolean;
+  /**
+   * The LoadNotificationMessageFunction for the type.
+   */
   readonly loadMessageFunction: LoadNotificationMessageFunction;
 }
 
@@ -69,7 +81,7 @@ export function notificationTemplateServiceInstance(service: NotificationTemplat
   return {
     service,
     type,
-    isKnownType,
+    isConfiguredType: isKnownType,
     loadMessageFunction: async (config: NotificationMessageFunctionFactoryConfig) => {
       const factory = instanceConfig?.factory ?? defaultFactory;
       return factory(config);

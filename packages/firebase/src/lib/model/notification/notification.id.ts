@@ -1,4 +1,5 @@
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+import { type FactoryWithRequiredInput } from '@dereekb/util';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, FirestoreModelIdentity, firestoreModelKey, RootFirestoreModelIdentity } from '../../common';
 
 /**
  * The NotificationBox's id is the two way flat firestore model key of the object that it represents.
@@ -28,6 +29,15 @@ export type NotificationSummaryKey = FirestoreModelKey;
  * @returns
  */
 export const notificationSummaryIdForModel = twoWayFlatFirestoreModelKey;
+
+/**
+ * Function used to retrieve a NotificationSummaryId given the input FirestoreAuthUserId.
+ */
+export type NotificationSummaryIdForUidFunction = FactoryWithRequiredInput<NotificationSummaryId, FirebaseAuthUserId>;
+
+export function notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(userModelIdentity: RootFirestoreModelIdentity): NotificationSummaryIdForUidFunction {
+  return (uid) => twoWayFlatFirestoreModelKey(firestoreModelKey(userModelIdentity, uid));
+}
 
 export type NotificationWeekId = FirestoreModelId;
 export type NotificationWeekKey = FirestoreModelKey;
