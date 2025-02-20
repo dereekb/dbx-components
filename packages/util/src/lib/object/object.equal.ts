@@ -4,7 +4,7 @@ import { type Building } from '../value/build';
 import { isDate, isEqualDate } from '../date';
 import { isIterable } from '../iterable';
 import { setsAreEquivalent } from '../set/set';
-import { FilterFromPOJOFunction } from './object.filter.pojo';
+import { type FilterFromPOJOFunction } from './object.filter.pojo';
 import { MAP_IDENTITY } from '../value/map';
 
 /**

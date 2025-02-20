@@ -1,6 +1,6 @@
-import { Maybe } from '@dereekb/util';
-import { FirebaseAuthUserId, FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField } from '../../common';
-import { NotificationId, NotificationTemplateType } from './notification.id';
+import { type Maybe } from '@dereekb/util';
+import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField } from '../../common';
+import { type NotificationId, type NotificationTemplateType } from './notification.id';
 
 /**
  * Arbitrary metadata for a job. Derived/managed by the concrete job type.

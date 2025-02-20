@@ -1,6 +1,6 @@
-import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, EmailAddress, asArray, pushArrayItemsIntoArray } from '@dereekb/util';
+import { type Maybe, batch, multiValueMapBuilder, type PromiseOrValue, runAsyncTasksForValues, mapObjectKeysToLowercase, type EmailAddress, asArray, pushArrayItemsIntoArray } from '@dereekb/util';
 import { type MailgunTemplateEmailRequest, type MailgunService } from '@dereekb/nestjs/mailgun';
-import { NotificationSendEmailMessagesResult, type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
+import { type NotificationSendEmailMessagesResult, type NotificationMessage, type NotificationSendMessageTemplateName } from '@dereekb/firebase';
 import { type NotificationEmailSendService } from '../notification/notification.send.service';
 import { type NotificationSendMessagesInstance } from '../notification/notification.send';
 

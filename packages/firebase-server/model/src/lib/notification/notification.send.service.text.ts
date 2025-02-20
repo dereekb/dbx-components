@@ -1,7 +1,7 @@
-import { NotificationMessage, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
-import { NotificationTextSendService } from './notification.send.service';
-import { NotificationSendMessagesInstance } from './notification.send';
-import { E164PhoneNumber } from '@dereekb/util';
+import { type NotificationMessage, type NotificationSendTextMessagesResult } from '@dereekb/firebase';
+import { type NotificationTextSendService } from './notification.send.service';
+import { type NotificationSendMessagesInstance } from './notification.send';
+import { type E164PhoneNumber } from '@dereekb/util';
 
 /**
  * NotificationTextSendService that ignores sending all messages.

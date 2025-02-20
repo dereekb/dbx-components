@@ -1,4 +1,4 @@
-import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, firestoreModelKey, NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, twoWayFlatFirestoreModelKey, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
+import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
 import { ProfileDocument, profileIdentity } from './profile';
 import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from './guestbook';
 

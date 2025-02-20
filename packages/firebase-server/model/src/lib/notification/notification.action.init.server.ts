@@ -15,16 +15,15 @@ import {
   type InitializeAllApplicableNotificationBoxesResult,
   notificationBoxesFlaggedForNeedsInitializationQuery,
   type NotificationBox,
-  NotificationSummary,
+  type NotificationSummary,
   InitializeAllApplicableNotificationSummariesParams,
-  InitializeAllApplicableNotificationSummariesResult,
+  type InitializeAllApplicableNotificationSummariesResult,
   notificationSummariesFlaggedForNeedsInitializationQuery,
-  NotificationSummaryDocument,
-  AsyncNotificationSummaryUpdateAction,
-  FirestoreDocument,
-  DocumentDataWithIdAndKey,
-  FirestoreDocumentData,
-  InitializedNotificationModel
+  type NotificationSummaryDocument,
+  type AsyncNotificationSummaryUpdateAction,
+  type FirestoreDocument,
+  type FirestoreDocumentData,
+  type InitializedNotificationModel
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
 import { type Maybe, performAsyncTasks } from '@dereekb/util';

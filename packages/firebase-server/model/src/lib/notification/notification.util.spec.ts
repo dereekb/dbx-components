@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE, NotificationBoxRecipient, NotificationUser, NotificationUserNotificationBoxRecipientConfig, firestoreDummyKey } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE, NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE, type NotificationBoxRecipient, type NotificationUser, type NotificationUserNotificationBoxRecipientConfig, firestoreDummyKey } from '@dereekb/firebase';
 import { updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { jestExpectFailAssertHttpErrorServerErrorCode } from '../../../../test/src/lib/firebase/firebase.jest';
 

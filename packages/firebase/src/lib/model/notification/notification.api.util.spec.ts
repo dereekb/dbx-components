@@ -1,4 +1,4 @@
-import { NotificationBoxRecipientFlag, NotificationUserNotificationBoxRecipientConfig } from './notification.config';
+import { NotificationBoxRecipientFlag } from './notification.config';
 import { updateNotificationUserDefaultNotificationBoxRecipientConfig, updateNotificationUserNotificationBoxRecipientConfigIfChanged } from './notification.api.util';
 
 describe('updateNotificationUserDefaultNotificationBoxRecipientConfig()', () => {

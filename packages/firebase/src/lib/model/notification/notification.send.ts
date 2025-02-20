@@ -1,5 +1,5 @@
-import { Maybe, EmailAddress, E164PhoneNumber } from '@dereekb/util';
-import { NotificationSummaryId } from './notification.id';
+import { type Maybe, type EmailAddress, type E164PhoneNumber } from '@dereekb/util';
+import { type NotificationSummaryId } from './notification.id';
 
 export interface NotificationSendMessagesResult<K> {
   /**

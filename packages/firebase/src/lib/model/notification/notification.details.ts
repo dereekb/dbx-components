@@ -1,6 +1,6 @@
-import { Maybe, arrayToObject, multiValueMapBuilder, objectToTuples } from '@dereekb/util';
-import { FirestoreCollectionType, FirestoreModelIdentity, ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
-import { NotificationTemplateType } from './notification.id';
+import { type Maybe, multiValueMapBuilder } from '@dereekb/util';
+import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
+import { type NotificationTemplateType } from './notification.id';
 
 /**
  * Template type identifier of the notification.

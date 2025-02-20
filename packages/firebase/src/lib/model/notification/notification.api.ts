@@ -1,10 +1,10 @@
 import { Type, Expose } from 'class-transformer';
 import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirestoreModelKey, type FirebaseAuthUserId } from '../../common';
-import { callModelFirebaseFunctionMapFactory, ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
+import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
 import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
-import { NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
+import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { IsE164PhoneNumber } from '@dereekb/model';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
@@ -57,7 +57,7 @@ export class NotificationBoxRecipientTemplateConfigArrayEntryParam implements No
   @Expose()
   @IsOptional()
   @IsBoolean()
-  remove?: Maybe<Boolean>;
+  remove?: Maybe<boolean>;
 }
 
 /**

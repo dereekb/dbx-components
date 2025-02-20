@@ -9,28 +9,26 @@ import {
   type NotificationRecipientWithConfig,
   type FirebaseAuthDetails,
   type FirebaseAuthUserId,
-  NotificationSummaryKey,
-  firestoreModelKey,
-  notificationSummaryIdentity,
-  NotificationSummaryId,
-  NotificationBoxId,
-  NotificationUser,
-  NotificationUserNotificationBoxRecipientConfig,
+  type NotificationSummaryKey,
+  type NotificationSummaryId,
+  type NotificationBoxId,
+  type NotificationUser,
+  type NotificationUserNotificationBoxRecipientConfig,
   mergeNotificationBoxRecipients,
   mergeNotificationUserNotificationBoxRecipientConfigs,
-  NotificationUserId,
-  FirestoreDocumentAccessor,
-  NotificationUserDocument,
+  type NotificationUserId,
+  type FirestoreDocumentAccessor,
+  type NotificationUserDocument,
   loadDocumentsForIds,
   getDocumentSnapshotDataPairsWithData,
-  NotificationUserDefaultNotificationBoxRecipientConfig,
+  type NotificationUserDefaultNotificationBoxRecipientConfig,
   effectiveNotificationBoxRecipientTemplateConfig,
   mergeNotificationBoxRecipientTemplateConfigs,
   mergeNotificationUserDefaultNotificationBoxRecipientConfig,
-  NotificationSummaryIdForUidFunction
+  type NotificationSummaryIdForUidFunction
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
-import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, FactoryWithRequiredInput, UNSET_INDEX_NUMBER, ModelKey } from '@dereekb/util';
+import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, UNSET_INDEX_NUMBER, type ModelKey } from '@dereekb/util';
 import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUserLockedConfigFromBeingUpdatedError } from './notification.error';
 
 export interface ExpandNotificationRecipientsInput {

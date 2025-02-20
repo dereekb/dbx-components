@@ -1,7 +1,7 @@
-import { E164PhoneNumber, EmailAddress, type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
+import { type E164PhoneNumber, type EmailAddress, type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { type NotificationBoxId } from './notification.id';
-import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig, NotificationBoxRecipientTemplateConfigRecord, NotificationUserDefaultNotificationBoxRecipientConfig, firestoreNotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
+import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, type NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig, type NotificationUserDefaultNotificationBoxRecipientConfig, firestoreNotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { type UserRelatedById, type UserRelated } from '../user';
 import {
@@ -30,7 +30,7 @@ import {
   optionalFirestoreDate,
   firestoreUniqueStringArray
 } from '../../common';
-import { NotificationItem, firestoreNotificationItem } from './notification.item';
+import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
 export interface NotificationFirestoreCollections {
   readonly notificationUserCollection: NotificationUserFirestoreCollection;

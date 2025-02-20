@@ -1,7 +1,5 @@
 import { ResyncNotificationUserParams, ResyncNotificationUserResult, UpdateNotificationUserParams } from '@dereekb/firebase';
 import { DemoUpdateModelFunction } from '../function';
-import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
-import { isAdminInRequest } from '@dereekb/firebase-server';
 
 export const updateNotificationUser: DemoUpdateModelFunction<UpdateNotificationUserParams> = async (request) => {
   const { nest, auth, data } = request;

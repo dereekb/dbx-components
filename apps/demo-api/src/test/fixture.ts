@@ -439,7 +439,7 @@ export const demoGuestbookEntryContextFactory = () =>
     },
     initDocument: async (instance, params) => {
       const guestbookEntry = instance.document;
-      let exists = await instance.document.exists();
+      const exists = await instance.document.exists();
 
       if (params.init !== false && !exists) {
         if (!exists) {

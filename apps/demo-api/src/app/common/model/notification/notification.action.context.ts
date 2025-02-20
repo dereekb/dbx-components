@@ -1,6 +1,5 @@
 import { NotificationSendService, NotificationTemplateService, NotificationTemplateServiceRef } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { AppNotificationTemplateTypeInfoRecordService, NotificationTemplateTypeInfoRecord } from '@dereekb/firebase';
 import { AppNotificationTemplateTypeInfoRecordServiceRef } from '@dereekb/firebase';
 
 export abstract class DemoFirebaseServerActionsContextWithNotificationServices extends DemoFirebaseServerActionsContext implements NotificationTemplateServiceRef, AppNotificationTemplateTypeInfoRecordServiceRef {

@@ -1,6 +1,6 @@
 import { first, of, timeout } from 'rxjs';
 import { FilterSourceInstance } from './filter.source';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 interface TestFilter {
   test?: boolean;

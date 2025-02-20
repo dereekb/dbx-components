@@ -1,8 +1,8 @@
-import { Maybe, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValues, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, filterUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
-import { NotificationBoxRecipientTemplateConfigRecord, NotificationUserDefaultNotificationBoxRecipientConfig, NotificationUserNotificationBoxRecipientConfig, notificationBoxRecipientTemplateConfigArrayToRecord, notificationBoxRecipientTemplateConfigRecordToArray, updateNotificationRecipient } from './notification.config';
-import { NotificationBoxRecipientTemplateConfigArrayEntryParam, UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
-import { AppNotificationTemplateTypeInfoRecordService } from './notification.details';
-import { NotificationTemplateType, inferNotificationBoxRelatedModelKey } from './notification.id';
+import { type Maybe, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
+import { type NotificationBoxRecipientTemplateConfigRecord, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationUserNotificationBoxRecipientConfig, notificationBoxRecipientTemplateConfigArrayToRecord, notificationBoxRecipientTemplateConfigRecordToArray, updateNotificationRecipient } from './notification.config';
+import { type NotificationBoxRecipientTemplateConfigArrayEntryParam, type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, type UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
+import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
+import { type NotificationTemplateType, inferNotificationBoxRelatedModelKey } from './notification.id';
 
 /**
  * Updates a NotificationUserDefaultNotificationBoxRecipientConfig with the input UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams.

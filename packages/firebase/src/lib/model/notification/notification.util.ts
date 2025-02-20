@@ -1,8 +1,8 @@
 import { filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
 import { type Notification, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState } from './notification';
-import { NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationUserDefaultNotificationBoxRecipientConfig, NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
-import { AppNotificationTemplateTypeInfoRecordService } from './notification.details';
-import { FirebaseAuthUserId, FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
+import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
+import { type FirebaseAuthUserId, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
 
 // MARK: NotificationUser
 export interface EffectiveNotificationBoxRecipientConfigInput {

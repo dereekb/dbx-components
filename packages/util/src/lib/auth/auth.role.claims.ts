@@ -2,7 +2,6 @@ import { type AuthRole, type AuthRoleSet } from './auth.role';
 import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
-import { objectToTuples } from '../object/object.map';
 import { type ArrayOrValue, asArray } from '../array/array';
 import { addToSet, setContainsAllValues } from '../set';
 import { type Maybe } from '../value/maybe.type';

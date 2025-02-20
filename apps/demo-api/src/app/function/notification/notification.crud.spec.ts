@@ -29,8 +29,6 @@ import {
   NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
   createNotificationDocument,
   CreateNotificationTemplate,
-  NotificationRecipient,
-  NotificationBoxRecipient,
   NotificationBoxRecipientFlag
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
@@ -663,7 +661,7 @@ demoApiFunctionContextFactory((f) => {
                                 });
 
                                 itShouldFail('to update the user', async () => {
-                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  const notificationUser = await assertSnapshotData(nu.document);
                                   expect(notificationUser.gc.lk).toBe(true);
 
                                   const params: UpdateNotificationBoxRecipientParams = {
@@ -698,7 +696,7 @@ demoApiFunctionContextFactory((f) => {
                                 });
 
                                 itShouldFail('to update the user', async () => {
-                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  const notificationUser = await assertSnapshotData(nu.document);
                                   expect(notificationUser.bc[0].lk).toBe(true);
 
                                   const params: UpdateNotificationBoxRecipientParams = {
@@ -873,7 +871,7 @@ demoApiFunctionContextFactory((f) => {
 
                                     await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
-                                    let notificationUser = await assertSnapshotData(nu.document);
+                                    const notificationUser = await assertSnapshotData(nu.document);
                                     expect(notificationUser.bc).toHaveLength(0);
                                   });
 
@@ -919,7 +917,7 @@ demoApiFunctionContextFactory((f) => {
                                     });
 
                                     itShouldFail('to allow the user to be added to the NotificationBox', async () => {
-                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      const notificationUser = await assertSnapshotData(nu.document);
                                       expect(notificationUser.bc[0].bk).toBe(true);
 
                                       const params: UpdateNotificationBoxRecipientParams = {
@@ -948,7 +946,7 @@ demoApiFunctionContextFactory((f) => {
                                     });
 
                                     itShouldFail('to allow the user to be added to the NotificationBox', async () => {
-                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      const notificationUser = await assertSnapshotData(nu.document);
                                       expect(notificationUser.bc[0].bk).toBe(true);
 
                                       const params: UpdateNotificationBoxRecipientParams = {
@@ -974,7 +972,7 @@ demoApiFunctionContextFactory((f) => {
                                     });
 
                                     itShouldFail('to allow the user to be added to the NotificationBox', async () => {
-                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      const notificationUser = await assertSnapshotData(nu.document);
                                       expect(notificationUser.gc.bk).toBe(true);
 
                                       const params: UpdateNotificationBoxRecipientParams = {

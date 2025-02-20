@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord } from './notification.details';
+import { type NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord } from './notification.details';
 import { firestoreModelIdentity } from '../../common';
 
 describe('notificationTemplateTypeDetailsRecord()', () => {

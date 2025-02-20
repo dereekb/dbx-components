@@ -1,4 +1,4 @@
-import { IterableOrValue, iterableToSet } from '../iterable/iterable';
+import { type IterableOrValue, iterableToSet } from '../iterable/iterable';
 import { type Maybe } from '../value/maybe.type';
 
 // MARK: Types

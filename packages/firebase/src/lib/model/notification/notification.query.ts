@@ -1,5 +1,5 @@
 import { type FirestoreQueryConstraint, where } from '../../common/firestore';
-import { NotificationSummary, type Notification, type NotificationBox, NotificationUser } from './notification';
+import { type NotificationSummary, type Notification, type NotificationBox, type NotificationUser } from './notification';
 import { toISODateString } from '@dereekb/date';
 
 // MARK: NotificationUser

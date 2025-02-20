@@ -1,5 +1,4 @@
-import { firestoreDummyKey } from '../../common';
-import { NotificationBoxRecipientFlag, NotificationUserNotificationBoxRecipientConfig } from './notification.config';
+import { NotificationBoxRecipientFlag } from './notification.config';
 import { mergeNotificationUserNotificationBoxRecipientConfigs } from './notification.util';
 
 describe('mergeNotificationUserNotificationBoxRecipientConfigs()', () => {
