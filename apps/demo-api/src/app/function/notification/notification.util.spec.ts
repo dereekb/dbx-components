@@ -385,22 +385,75 @@ demoApiFunctionContextFactory((f) => {
                                           });
                                         });
                                       });
+
+                                      describe('default configuration', () => {
+                                        function beforeEachUpdateNotificationUserDefaultConfig(dc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams) {
+                                          beforeEach(async () => {
+                                            await nu.updateNotificationUser({
+                                              dc
+                                            });
+                                          });
+                                        }
+
+                                        function beforeEachUpdateNotificationUserDefaultConfigForTemplateType(config: Omit<NotificationBoxRecipientTemplateConfigArrayEntryParam, 'type'>) {
+                                          beforeEachUpdateNotificationUserDefaultConfig({
+                                            configs: [
+                                              {
+                                                type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
+                                                ...config
+                                              }
+                                            ]
+                                          });
+                                        }
+
+                                        describe('user opt in tests', () => {
+                                          describe('user opts into sms', () => {
+                                            beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ st: true });
+                                            describeNotificationShouldBeSentToUser({ email: false, text: true, notificationSummary: true, checkDefaultConfig: true });
+                                          });
+
+                                          describe('user opts into emails', () => {
+                                            beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ se: true });
+                                            describeNotificationShouldBeSentToUser({ email: true, text: false, notificationSummary: true, checkDefaultConfig: true });
+                                          });
+                                        });
+
+                                        describe('user opts out tests', () => {
+                                          describe('partial opt-out', () => {
+                                            // NOTE: effectively no effect since emails are disabled by default
+                                            describe('user disables sending emails for Like notifications', () => {
+                                              beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ se: false });
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true, checkDefaultConfig: true });
+                                            });
+
+                                            describe('user disables sending notification summaries for Like notifications', () => {
+                                              beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ sn: false });
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkDefaultConfig: true });
+                                            });
+                                          });
+
+                                          describe('full opt-out', () => {
+                                            describe('user has disabled sending for all Like notifications', () => {
+                                              beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ sd: false });
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkDefaultConfig: true });
+                                            });
+
+                                            describe('user has opted out of all notifications', () => {
+                                              beforeEachUpdateNotificationUserDefaultConfig({
+                                                f: NotificationBoxRecipientFlag.OPT_OUT
+                                              });
+
+                                              describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkOptOutFromFlag: true });
+                                            });
+                                          });
+                                        });
+                                      });
                                     });
                                   }
                                 );
                               });
                             });
                           });
-
-                          /*
-                          describe('notification user does not exist', () => {
-
-                            describe('notification summary does not exist', () => {
-
-                            });
-
-                          });
-                          */
                         });
                       });
                     });

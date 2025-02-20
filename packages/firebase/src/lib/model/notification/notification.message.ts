@@ -141,11 +141,9 @@ export type NotificationMessageFunctionFactory<D extends NotificationItemMetadat
 
 export interface NotificationMessageFunctionExtras {
   /**
-   * Any additional recipients that should be added to the notification.
-   *
-   * This is generally also known as the global recipients as these recipients are attached to all notifications of this type.
+   * Any global/additional recipient(s) that should be added to all Notifications associated with this NotificationMessageFunctionExtras.
    */
-  readonly additionalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
+  readonly globalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
 }
 
 export type NotificationMessageFunctionWithoutExtras = (inputContext: NotificationMessageInputContext) => Promise<NotificationMessage>;
@@ -165,7 +163,7 @@ export type NotificationMessageFunction = NotificationMessageFunctionWithoutExtr
 export function notificationMessageFunction(fn: NotificationMessageFunctionWithoutExtras, extras?: NotificationMessageFunctionExtras): NotificationMessageFunction {
   if (extras) {
     const fnWithExtras = fn as Building<NotificationMessageFunction>;
-    fnWithExtras.additionalRecipients = extras.additionalRecipients;
+    fnWithExtras.globalRecipients = extras.globalRecipients;
     return fnWithExtras as NotificationMessageFunction;
   } else {
     return fn;

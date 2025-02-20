@@ -1,4 +1,4 @@
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, ModelKey, NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
 import { NotificationBoxId, NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, firestoreModelKey, firestoreString, SavedToFirestoreIfTrue, FirestoreModelKey, firestoreModelIdString, firestoreModelKeys, firestoreModelKeyString } from '../../common';
 
@@ -189,8 +189,7 @@ export function mergeNotificationUserDefaultNotificationBoxRecipientConfig(a: No
   const c = mergeNotificationBoxRecipientTemplateConfigRecords(a.c, b.c);
 
   const result: NotificationUserDefaultNotificationBoxRecipientConfig = {
-    ...a,
-    ...b,
+    ...mergeObjects<NotificationUserDefaultNotificationBoxRecipientConfig>([a, b], KeyValueTypleValueFilter.UNDEFINED),
     c
   };
 

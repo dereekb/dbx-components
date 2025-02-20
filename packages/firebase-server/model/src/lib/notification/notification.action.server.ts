@@ -748,7 +748,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             const templateInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
             isKnownTemplateType = templateInfo != null;
 
-            const retryAttempts = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
+            const retryAttempts = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS;
             const delay = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
 
             if (notification.a < retryAttempts) {
@@ -870,7 +870,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               notificationBox,
               authService,
               notificationUserAccessor,
-              globalRecipients: messageFunction.additionalRecipients,
+              globalRecipients: messageFunction.globalRecipients,
               notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
             });
 

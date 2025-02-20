@@ -124,6 +124,16 @@ export interface ExpandNotificationRecipientsResult {
   readonly notificationSummaries: ExpandedNotificationNotificationSummaryRecipient[];
 }
 
+/**
+ * "Expands" the input into recipients for emails, texts, etc.
+ *
+ * Recipients may come from the NotificationBox, Notification or from the global recipients.
+ *
+ * Recipients are each configurable and may be defined with as little info as a single contact info, or have multiple contact info pieces associated with them.
+ *
+ * @param input
+ * @returns
+ */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
   const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
   const notificationSummaryIdForUid = inputNotificationSummaryIdForUid ?? (() => undefined);
