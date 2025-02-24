@@ -60,16 +60,13 @@ service cloud.firestore {
     }
 
 
-
     match /nu/{notificationUser} {
       allow read: if resourceIsOwnedByAuthUserId(); // users can read themselves
     }
 
-
     match /ns/{notificationSummary} {
       allow read: if resourceIsOwnedByAuthUserId(); // users can read themselves
     }
-
 
     match /nb/{notificationBox} {
       allow read: if resourceIsOwnedByAuthOwnershipKey(); // owners can read

@@ -9,7 +9,7 @@ import { type NotificationItem } from './notification.item';
 /**
  * Template item for a new Notification
  */
-export interface CreateNotificationTemplateItem extends Omit<NotificationItem, 'id' | 'cat'> {
+export interface CreateNotificationTemplateItem extends Omit<NotificationItem, 'r' | 'id' | 'cat'> {
   /**
    * Custom created at date for the item.
    */

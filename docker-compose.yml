@@ -19,6 +19,7 @@ services:
       # disable GCE Metadata retrieval.
       # https://github.com/firebase/firebase-tools/issues/6765
       - METADATA_SERVER_DETECTION=none
+      - GCE_METADATA_HOST=0.0.0.0
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components
       - NODE_EXTRA_CA_CERTS=/code/docker/nginx/certs/firebase.crt

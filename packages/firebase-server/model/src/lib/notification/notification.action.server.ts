@@ -68,7 +68,9 @@ import {
   type NotificationSendEmailMessagesResult,
   type NotificationSendNotificationSummaryMessagesResult,
   type NotificationSendTextMessagesResult,
-  mergeNotificationSendMessagesResult
+  mergeNotificationSendMessagesResult,
+  AsyncNotificationSummaryUpdateAction,
+  UpdateNotificationSummaryParams
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -100,6 +102,7 @@ export abstract class NotificationServerActions {
   abstract resyncNotificationUser(params: ResyncNotificationUserParams): Promise<TransformAndValidateFunctionResult<ResyncNotificationUserParams, (notificationUserDocument: NotificationUserDocument) => Promise<ResyncNotificationUserResult>>>;
   abstract resyncAllNotificationUsers(params?: ResyncAllNotificationUserParams): Promise<ResyncAllNotificationUsersResult>;
   abstract createNotificationSummary(params: CreateNotificationSummaryParams): AsyncNotificationSummaryCreateAction<CreateNotificationSummaryParams>;
+  abstract updateNotificationSummary(params: UpdateNotificationSummaryParams): AsyncNotificationSummaryUpdateAction<UpdateNotificationSummaryParams>;
   abstract createNotificationBox(params: CreateNotificationBoxParams): AsyncNotificationBoxCreateAction<CreateNotificationBoxParams>;
   abstract updateNotificationBox(params: UpdateNotificationBoxParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxParams>;
   abstract updateNotificationBoxRecipient(params: UpdateNotificationBoxRecipientParams): AsyncNotificationBoxUpdateAction<UpdateNotificationBoxRecipientParams>;
@@ -115,6 +118,7 @@ export function notificationServerActions(context: NotificationServerActionsCont
     resyncNotificationUser: resyncNotificationUserFactory(context),
     resyncAllNotificationUsers: resyncAllNotificationUsersFactory(context),
     createNotificationSummary: createNotificationSummaryFactory(context),
+    updateNotificationSummary: updateNotificationSummaryFactory(context),
     createNotificationBox: createNotificationBoxFactory(context),
     updateNotificationBox: updateNotificationBoxFactory(context),
     updateNotificationBoxRecipient: updateNotificationBoxRecipientFactory(context),
@@ -464,6 +468,30 @@ export function createNotificationSummaryFactory(context: NotificationServerActi
       };
 
       await notificationSummaryDocument.create(newSummaryTemplate);
+      return notificationSummaryDocument;
+    };
+  });
+}
+
+export function updateNotificationSummaryFactory(context: NotificationServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
+
+  return firebaseServerActionTransformFunctionFactory(UpdateNotificationSummaryParams, async (params) => {
+    const { setReadAtTime, flagAllRead } = params;
+
+    return async (notificationSummaryDocument: NotificationSummaryDocument) => {
+      let updateTemplate: Maybe<Partial<NotificationSummary>>;
+
+      if (setReadAtTime != null) {
+        updateTemplate = { rat: setReadAtTime };
+      } else if (flagAllRead === true) {
+        updateTemplate = { rat: new Date() };
+      }
+
+      if (updateTemplate != null) {
+        await notificationSummaryDocument.update(updateTemplate);
+      }
+
       return notificationSummaryDocument;
     };
   });

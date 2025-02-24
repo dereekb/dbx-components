@@ -1,6 +1,6 @@
 import { Type, Provider, forwardRef } from '@angular/core';
 import { Maybe, ModelKey } from '@dereekb/util';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 // MARK: Id
 /**
@@ -13,7 +13,7 @@ export abstract class DbxRouteModelIdDirectiveDelegate {
    * @param idFromParamsObs
    * @param computedIdObs
    */
-  abstract useRouteModelIdParamsObservable(idFromParamsObs: Observable<Maybe<ModelKey>>, computedIdObs: Observable<Maybe<ModelKey>>): void;
+  abstract useRouteModelIdParamsObservable(idFromParamsObs: Observable<Maybe<ModelKey>>, computedIdObs: Observable<Maybe<ModelKey>>): Subscription;
 }
 
 /**
@@ -41,7 +41,7 @@ export abstract class DbxRouteModelKeyDirectiveDelegate {
    * @param keyFromParamsObs
    * @param computedKeyObs
    */
-  abstract useRouteModelKeyParamsObservable(keyFromParamsObs: Observable<Maybe<ModelKey>>, computedKeyObs: Observable<Maybe<ModelKey>>): void;
+  abstract useRouteModelKeyParamsObservable(keyFromParamsObs: Observable<Maybe<ModelKey>>, computedKeyObs: Observable<Maybe<ModelKey>>): Subscription;
 }
 
 /**

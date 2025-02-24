@@ -1,7 +1,7 @@
 import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeValues, type EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
 import { type MonoTypeOperatorFunction, type OperatorFunction, startWith, type Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, type ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
-import { successResult, type LoadingState, type PageLoadingState, beginLoading, isLoadingStateFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, isLoadingStateWithDefinedValue, LoadingStateType, loadingStateType, isLoadingStateLoading, isLoadingStateWithError, type LoadingStateWithValueType, errorResult, type LoadingStateWithDefinedValue, isPageLoadingStateMetadataEqual } from './loading.state';
+import { successResult, type LoadingState, type PageLoadingState, beginLoading, isLoadingStateFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, isLoadingStateWithDefinedValue, LoadingStateType, loadingStateType, isLoadingStateLoading, isLoadingStateWithError, type LoadingStateWithValueType, errorResult, type LoadingStateWithDefinedValue, isPageLoadingStateMetadataEqual, LoadingStateWithError } from './loading.state';
 
 // TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
@@ -186,7 +186,7 @@ export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = P
 }
 
 /**
- * Convenience function for mapping the loading state's value from one value to another using an arbitrary operator.
+ * Convenience function for catching the loading state's error from one value to another using an arbitrary operator.
  */
 export function mapLoadingStateValueWithOperator<L extends LoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
 export function mapLoadingStateValueWithOperator<L extends PageLoadingState, O>(operator: OperatorFunction<LoadingStateValue<L>, O>, mapOnUndefined?: boolean): OperatorFunction<L, LoadingStateWithValueType<L, O>>;
@@ -213,6 +213,35 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
             // never pass through the non-mapped state's value as-is.
             mappedObs = of({ ...state, loading: true, value: undefined }) as unknown as Observable<LoadingStateWithValueType<L, O>>;
           }
+        }
+
+        return mappedObs;
+      })
+    );
+  };
+}
+
+/**
+ * Convenience function for catching an LoadingStateWithError and returning a new LoadingState.
+ */
+export function catchLoadingStateErrorWithOperator<L extends LoadingState>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
+export function catchLoadingStateErrorWithOperator<L extends PageLoadingState>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
+export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoadingState>>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L>;
+export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoadingState>>(operator: OperatorFunction<L & LoadingStateWithError, L>): MonoTypeOperatorFunction<L> {
+  return (obs: Observable<L>) => {
+    return obs.pipe(
+      switchMap((state: L) => {
+        let mappedObs: Observable<L>;
+
+        if (isLoadingStateWithError(state)) {
+          // map the value using the error state
+          mappedObs = of(state as L & LoadingStateWithError).pipe(
+            operator,
+            // if the operator does not return nearly instantly, then return the current state, minus a value
+            timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as L, 0)
+          );
+        } else {
+          mappedObs = of(state);
         }
 
         return mappedObs;

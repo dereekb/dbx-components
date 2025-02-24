@@ -2,7 +2,7 @@ import { Directive, forwardRef, Input, OnDestroy, Provider, Type } from '@angula
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId } from '@dereekb/firebase';
 import { ModelKey, type Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store.document';
-import { BehaviorSubject, first, Observable, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, first, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, useFirst } from '@dereekb/rxjs';
 import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
 
@@ -49,12 +49,12 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
     this._store.next(store);
   }
 
-  useRouteModelIdParamsObservable(idFromParams: Observable<Maybe<ModelKey>>): void {
-    this.store$.pipe(first()).subscribe((x) => x.setId(idFromParams));
+  useRouteModelIdParamsObservable(idFromParams: Observable<Maybe<ModelKey>>): Subscription {
+    return this.store$.pipe(first()).subscribe((x) => x.setId(idFromParams));
   }
 
-  useRouteModelKeyParamsObservable(keyFromParams: Observable<Maybe<ModelKey>>): void {
-    this.store$.pipe(first()).subscribe((x) => x.setKey(keyFromParams));
+  useRouteModelKeyParamsObservable(keyFromParams: Observable<Maybe<ModelKey>>): Subscription {
+    return this.store$.pipe(first()).subscribe((x) => x.setKey(keyFromParams));
   }
 
   // MARK: Inputs

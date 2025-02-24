@@ -32,17 +32,17 @@ import {
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
-export interface NotificationFirestoreCollections {
-  readonly notificationUserCollection: NotificationUserFirestoreCollection;
-  readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
-  readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
-  readonly notificationCollectionFactory: NotificationFirestoreCollectionFactory;
-  readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
-  readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
-  readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
+export abstract class NotificationFirestoreCollections {
+  abstract readonly notificationUserCollection: NotificationUserFirestoreCollection;
+  abstract readonly notificationSummaryCollection: NotificationSummaryFirestoreCollection;
+  abstract readonly notificationBoxCollection: NotificationBoxFirestoreCollection;
+  abstract readonly notificationCollectionFactory: NotificationFirestoreCollectionFactory;
+  abstract readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
+  abstract readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
+  abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
 }
 
-export type NotificationTypes = typeof notificationUserIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity;
+export type NotificationTypes = typeof notificationUserIdentity | typeof notificationSummaryIdentity | typeof notificationBoxIdentity | typeof notificationIdentity | typeof notificationWeekIdentity;
 
 /**
  * Notification-related model that is initialized asynchronously at a later time.
@@ -179,6 +179,10 @@ export interface NotificationSummary {
    */
   lat?: Maybe<Date>;
   /**
+   * Date of the last read at time so notifications can be marked as read.
+   */
+  rat?: Maybe<Date>;
+  /**
    * True if this NotificationSummary needs to be sync'd/initialized with the original model.
    */
   s?: Maybe<NeedsSyncBoolean>;
@@ -204,6 +208,7 @@ export const notificationSummaryConverter = snapshotConverterFunctions<Notificat
       objectField: firestoreNotificationItem
     }),
     lat: optionalFirestoreDate(),
+    rat: optionalFirestoreDate(),
     s: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });

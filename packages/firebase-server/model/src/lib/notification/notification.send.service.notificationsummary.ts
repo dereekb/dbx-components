@@ -50,7 +50,20 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
 
                 if (messagesToSend.length > 0) {
                   // add the new items to existing n then keep the last 1000
-                  const n = takeLast(notificationSummary.n.concat(messagesToSend.map((x) => x.item as NotificationItem)), NOTIFICATION_SUMMARY_ITEM_LIMIT);
+                  const n = takeLast(
+                    notificationSummary.n.concat(
+                      messagesToSend.map((x) => {
+                        const item: NotificationItem = {
+                          ...(x.item as NotificationItem),
+                          s: x.content.title,
+                          g: x.content.openingMessage
+                        };
+
+                        return item;
+                      })
+                    ),
+                    NOTIFICATION_SUMMARY_ITEM_LIMIT
+                  );
                   await notificationSummaryDocument.update({ lat: new Date(), n });
                   updated = true;
                 }

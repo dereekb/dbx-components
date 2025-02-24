@@ -1,9 +1,11 @@
 import { Observable } from 'rxjs';
 import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
-import { DbxRouterService, AbstractSubscriptionDirective, DbxRouteModelIdDirectiveDelegate } from '@dereekb/dbx-core';
 import { Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 import { dbxRouteModelIdParamRedirect } from './id.param.redirect';
+import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
+import { DbxRouterService } from '../router/service/router.service';
+import { DbxRouteModelIdDirectiveDelegate } from './model.router';
 
 /**
  * Used for retrieving the model's id from the current route using the configured parameter and passes it to its delegate.
@@ -21,7 +23,7 @@ export class DbxRouteModelIdDirective extends AbstractSubscriptionDirective impl
   readonly id$: Observable<Maybe<ModelKey>> = this._redirectInstance.value$;
 
   ngOnInit(): void {
-    this.dbxRouteModelIdDelegate.useRouteModelIdParamsObservable(this.idFromParams$, this.id$);
+    this.sub = this.dbxRouteModelIdDelegate.useRouteModelIdParamsObservable(this.idFromParams$, this.id$);
     this._redirectInstance.init();
   }
 

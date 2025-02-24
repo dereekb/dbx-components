@@ -72,54 +72,54 @@ export interface AppNotificationTemplateTypeInfoRecordServiceRef {
   readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
 }
 
-export interface AppNotificationTemplateTypeInfoRecordService {
+export abstract class AppNotificationTemplateTypeInfoRecordService {
   /**
    * All records for this app.
    */
-  readonly appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord;
+  abstract readonly appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord;
 
   /**
    * Returns the array of all known NotificationTemplateTypes
    */
-  getAllKnownTemplateTypes(): NotificationTemplateType[];
+  abstract getAllKnownTemplateTypes(): NotificationTemplateType[];
 
   /**
    * Returns the array of all known NotificationTemplateTypeInfo
    */
-  getAllKnownTemplateTypeDetails(): NotificationTemplateTypeInfo[];
+  abstract getAllKnownTemplateTypeDetails(): NotificationTemplateTypeInfo[];
 
   /**
    * Returns all individual FirestoreModelIdentity values that are associate with atleast one NotificationTemplateType.
    */
-  getAllNotificationModelIdentityValues(): FirestoreModelIdentity[];
+  abstract getAllNotificationModelIdentityValues(): FirestoreModelIdentity[];
 
   /**
    * Returns all NotificationTemplateTypes that are associate with the given model input.
    *
    * @param model
    */
-  getTemplateTypesForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateType[];
+  abstract getTemplateTypesForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateType[];
 
   /**
    * Returns all NotificationTemplateTypeInfo that are associate with the given model input.
    *
    * @param model
    */
-  getTemplateTypesDetailsForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
+  abstract getTemplateTypesDetailsForNotificationModel(model: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
 
   /**
    * Returns all NotificationTemplateTypes that are associate with the given model input.
    *
    * @param model
    */
-  getTemplateTypesForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateType[];
+  abstract getTemplateTypesForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateType[];
 
   /**
    * Returns all NotificationTemplateTypeInfo that are associate with the given model input.
    *
    * @param model
    */
-  getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
+  abstract getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
 }
 
 export function appNotificationTemplateTypeInfoRecordService(appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord): AppNotificationTemplateTypeInfoRecordService {

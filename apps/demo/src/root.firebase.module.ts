@@ -1,8 +1,8 @@
-import { FirestoreContext, firestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
-import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate, DbxFirebaseStorageModule, DbxFirebaseDevelopmentModule, DbxFirebaseModelContextService, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry } from '@dereekb/dbx-firebase';
+import { appNotificationTemplateTypeInfoRecordService, FirestoreContext, firestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
+import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate, DbxFirebaseStorageModule, DbxFirebaseDevelopmentModule, DbxFirebaseModelContextService, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, DbxFirebaseNotificationModule } from '@dereekb/dbx-firebase';
 import { Injector, NgModule } from '@angular/core';
 import { environment } from './environments/environment';
-import { Guestbook, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, guestbookIdentity, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { Guestbook, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, guestbookIdentity, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD } from '@dereekb/demo-firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from '@dereekb/demo-components';
 
 export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
@@ -52,7 +52,8 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
     DbxFirebaseFirestoreCollectionModule.forRoot({
       appCollectionClass: DemoFirestoreCollections,
       collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
-      provideSystemStateFirestoreCollections: true
+      provideSystemStateFirestoreCollections: true,
+      provideNotificationFirestoreCollections: true
     }),
     DbxFirebaseFunctionsModule.forRoot({
       functionsGetterToken: DemoFirebaseFunctionsGetter,
@@ -66,6 +67,9 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
     DbxFirebaseDevelopmentModule.forRoot({
       enabled: !environment.production,
       entries: [demoSetupDevelopmentWidget()]
+    }),
+    DbxFirebaseNotificationModule.forRoot({
+      appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD)
     })
   ],
   providers: [

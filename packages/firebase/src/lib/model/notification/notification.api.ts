@@ -1,7 +1,7 @@
 import { Type, Expose } from 'class-transformer';
 import { TargetModelParams, IsFirestoreModelId, type FirestoreModelKey, IsFirestoreModelKey, type FirebaseAuthUserId } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap } from '../../client';
-import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum } from 'class-validator';
+import { MinLength, IsNumber, IsEmail, IsPhoneNumber, IsBoolean, IsOptional, IsArray, ValidateNested, IsNotEmpty, IsString, MaxLength, IsEnum, IsDate } from 'class-validator';
 import { type E164PhoneNumber, type EmailAddress, type IndexNumber, type Maybe } from '@dereekb/util';
 import { type NotificationTypes } from './notification';
 import { type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigArrayEntry, NotificationBoxRecipientFlag } from './notification.config';
@@ -260,6 +260,28 @@ export class CreateNotificationSummaryParams {
   @IsNotEmpty()
   @IsFirestoreModelKey()
   model!: FirestoreModelKey;
+}
+
+/**
+ * Used for updating the NotificationSummary.
+ */
+export class UpdateNotificationSummaryParams extends TargetModelParams {
+  /**
+   * Updates the "rat" time to now.
+   */
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  readonly flagAllRead?: Maybe<boolean>;
+
+  /**
+   * Sets the "rat" time to the given date, or clears it.
+   */
+  @Expose()
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  readonly setReadAtTime?: Maybe<Date>;
 }
 
 /**
@@ -532,6 +554,11 @@ export type NotificationBoxModelCrudFunctionsConfig = {
       resync: [ResyncNotificationUserParams, ResyncNotificationUserResult];
     };
   };
+  readonly notificationSummary: {
+    update: {
+      _: UpdateNotificationSummaryParams;
+    };
+  };
   readonly notificationBox: {
     update: {
       _: UpdateNotificationBoxParams;
@@ -544,6 +571,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
 
 export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
   notificationUser: ['update:_,resync'],
+  notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient']
 };
 
@@ -552,6 +580,11 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
     updateNotificationUser: {
       update: ModelFirebaseCrudFunction<UpdateNotificationUserParams>;
       resync: ModelFirebaseCrudFunction<ResyncNotificationUserParams, ResyncNotificationUserResult>;
+    };
+  };
+  abstract notificationSummary: {
+    updateNotificationSummary: {
+      update: ModelFirebaseCrudFunction<UpdateNotificationSummaryParams>;
     };
   };
   abstract notificationBox: {

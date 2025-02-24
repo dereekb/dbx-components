@@ -1,0 +1,32 @@
+import { AnchorForValueFunction } from '@dereekb/dbx-web';
+import { Component, inject } from '@angular/core';
+import { DemoAppRouterService } from '../../../demo.app.router.service';
+import { NotificationItem } from '@dereekb/firebase';
+import { DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
+import { DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
+import { map } from 'rxjs';
+import { LoadingState, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
+
+@Component({
+  templateUrl: './list.component.html',
+  providers: [DbxFirebaseNotificationItemStore]
+})
+export class DemoNotificationListPageComponent {
+  readonly dbxRouterService = inject(DbxRouterService);
+  readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
+  readonly notificationSummaryDocumentStore = inject(NotificationSummaryDocumentStore);
+
+  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
+
+  private readonly _notificationIdInstance = dbxRouteModelIdParamRedirect(this.dbxRouterService);
+
+  readonly demoAppRouterService = inject(DemoAppRouterService);
+
+  readonly notificationItemListRef = this.demoAppRouterService.userNotificationListRef();
+  readonly makeNotificationItemAnchor: AnchorForValueFunction<NotificationItem> = (doc) => this.demoAppRouterService.userNotificationListNotificationRef(doc.id);
+
+  ngOnInit(): void {
+    this.dbxFirebaseNotificationItemStore.setItems(this.notificationSummaryDocumentStore.notificationItems$);
+    this.dbxFirebaseNotificationItemStore.setSelectedId(this._notificationIdInstance.paramValue$);
+  }
+}
