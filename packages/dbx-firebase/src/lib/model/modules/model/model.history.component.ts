@@ -17,7 +17,7 @@ import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service'
 export class DbxFirebaseModelHistoryComponent implements OnDestroy {
   readonly dbxFirebaseModelTrackerService = inject(DbxFirebaseModelTrackerService);
 
-  private _historyFilter = new BehaviorSubject<Maybe<DbxFirebaseModelTrackerHistoryFilter>>(undefined);
+  private readonly _historyFilter = new BehaviorSubject<Maybe<DbxFirebaseModelTrackerHistoryFilter>>(undefined);
 
   @Input()
   anchorForItem?: Maybe<AnchorForValueFunction<DbxFirebaseModelTypesServiceInstancePair>>;

@@ -5,7 +5,11 @@
         <dbx-spacer></dbx-spacer>
         <dbx-firebase-model-history-popover-button></dbx-firebase-model-history-popover-button>
       </div>
-      <dbx-firebase-model-history [historyFilter]="historyFilter"></dbx-firebase-model-history>
+      <dbx-firebase-model-history [historyFilter]="historyFilter">
+        <dbx-list-empty-content empty>
+          <p>History is empty.</p>
+        </dbx-list-empty-content>
+      </dbx-firebase-model-history>
     </dbx-section-page>
   </dbx-content-container>
 </dbx-content-page>
