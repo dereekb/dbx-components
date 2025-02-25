@@ -74,7 +74,7 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -1282,7 +1282,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
                 const notificationWeek = await notificationWeekDocument.snapshotData();
 
-                const newItems: NotificationItem[] = filterMaybeValues(
+                const newItems: NotificationItem[] = filterMaybeArrayValues(
                   notificationDocumentsInSameWeek.map((x) => {
                     const data = x.data as DocumentDataWithIdAndKey<Notification>;
                     const shouldSaveToNotificationWeek = shouldSaveNotificationToNotificationWeek(data);

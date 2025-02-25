@@ -1,7 +1,7 @@
 import { filterMaybe, LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState, WorkUsingContext } from '@dereekb/rxjs';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, Observable, combineLatest, of } from 'rxjs';
-import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
+import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
 import { FieldType, FormlyFieldProps } from '@ngx-formly/material/form-field';
 import { FieldTypeConfig } from '@ngx-formly/core';
 import { SourceSelectValueMetaLoader, SourceSelectMetaValueReader, SourceSelectOpenFunction, SourceSelectLoadSourcesFunction, SourceSelectLoadSource, SourceSelectLoadSourceLoadingState, SourceSelectDisplayValue, SourceSelectValue, SourceSelectDisplayFunction, SourceSelectDisplayValueGroup, SourceSelectValueGroup, SourceSelectOptions, SourceSelectOpenSourceResult } from './sourceselect';
@@ -227,7 +227,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
             const displayValuesMap = new Map(displayValues.map((x) => [x.value, x]));
 
             const displayGroups: SourceSelectDisplayValueGroup<T, M>[] = simplifiedValuesGroups.map((valueGroup) => {
-              const values = filterMaybeValues(valueGroup.values.map((x) => displayValuesMap.get(x.value)));
+              const values = filterMaybeArrayValues(valueGroup.values.map((x) => displayValuesMap.get(x.value)));
 
               return {
                 label: valueGroup.label,

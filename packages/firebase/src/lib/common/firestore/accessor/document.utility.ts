@@ -1,4 +1,4 @@
-import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues, runAsyncTasksForValues, type Building } from '@dereekb/util';
+import { type AsyncGetterOrValue, type Maybe, performMakeLoop, type UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeArrayValues, runAsyncTasksForValues, type Building } from '@dereekb/util';
 import { type FirestoreModelId, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from '../collection';
 import { type QueryDocumentSnapshot, type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
 import { type FirestoreDocumentData, type FirestoreDocument, type FirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessorContextExtension } from './document';
@@ -122,7 +122,7 @@ export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[]
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId?: boolean): DocumentDataWithIdAndKey<T>[] | T[];
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: boolean = true): DocumentDataWithIdAndKey<T>[] | T[] {
   const mapFn = documentDataFunction<T>(withId);
-  return filterMaybeValues<T>(snapshots.map(mapFn));
+  return filterMaybeArrayValues<T>(snapshots.map(mapFn));
 }
 
 export function loadDocumentsForSnapshots<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, snapshots: QuerySnapshot<T>): D[] {

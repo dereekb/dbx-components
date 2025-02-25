@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, type MonoTypeOperatorFunction, type Observable, of, type OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe } from '@dereekb/util';
+import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues } from '@dereekb/util';
 import { asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter } from './getter';
 import { type ObservableDecisionFunction } from './decision';
 
@@ -39,7 +39,14 @@ export function checkIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value:
  * Observable filter that filters maybe value that are defined.
  */
 export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
-  return filter((x) => x != null) as OperatorFunction<Maybe<T>, T>;
+  return filter(isMaybeSo);
+}
+
+/**
+ * Observable filter that filters maybe value from the input array of maybe values
+ */
+export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
+  return map(filterMaybeArrayValues) as OperatorFunction<Maybe<T>[], T[]>;
 }
 
 /**

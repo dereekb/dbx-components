@@ -1,4 +1,4 @@
-import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeValues, type EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
+import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeArrayValues, type EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
 import { type MonoTypeOperatorFunction, type OperatorFunction, startWith, type Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, type ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
 import { successResult, type LoadingState, type PageLoadingState, beginLoading, isLoadingStateFinishedLoading, mergeLoadingStates, mapLoadingStateResults, type MapLoadingStateResultsConfiguration, type LoadingStateValue, isLoadingStateWithDefinedValue, LoadingStateType, loadingStateType, isLoadingStateLoading, isLoadingStateWithError, type LoadingStateWithValueType, errorResult, type LoadingStateWithDefinedValue, isPageLoadingStateMetadataEqual, LoadingStateWithError } from './loading.state';
@@ -36,7 +36,7 @@ export function combineLoadingStates<A extends object, B extends object, C exten
 export function combineLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, obsC: Observable<LoadingState<C>>, obsD: Observable<LoadingState<D>>, obsE: Observable<LoadingState<E>>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): Observable<LoadingState<O>>;
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>>;
 export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState<O>> {
-  const validArgs = filterMaybeValues(args); // filter out any undefined values
+  const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
   const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
   const obsArgs: Observable<LoadingState<any>>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
   const mergeFn = lastValueIsMergeFn ? validArgs[validArgs.length - 1] : undefined;

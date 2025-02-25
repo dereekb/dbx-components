@@ -1,5 +1,5 @@
 import { type ArrayOrValue, asArray } from './../array/array';
-import { filterMaybeValues } from '../array/array.value';
+import { filterMaybeArrayValues } from '../array/array.value';
 import { type Maybe } from '../value/maybe.type';
 import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 import { cachedGetter, type Getter } from '../getter';
@@ -96,7 +96,7 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
     dynamic: true // no need to use cache, as cache won't be used.
   });
 
-  return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeValues(objects))({});
+  return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeArrayValues(objects))({});
 }
 
 // MARK: POJO

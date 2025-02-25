@@ -10,7 +10,7 @@ import {
   type PrimativeKey,
   type ReadKeyFunction,
   type ModelFieldMapFunctionsWithDefaultsConfig,
-  filterMaybeValues,
+  filterMaybeArrayValues,
   type MaybeSo,
   type FilterUniqueStringsTransformConfig,
   filterUniqueTransform,
@@ -21,7 +21,7 @@ import {
   copyObject,
   type CopyObjectFunction,
   mapObjectMapFunction,
-  filterEmptyValues,
+  filterEmptyArrayValues,
   type ModelKey,
   unique,
   filterUniqueFunction,
@@ -589,7 +589,7 @@ export function firestoreEncodedArray<T, E extends string | number>(config: Fire
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (input: E[]) => sortFn((input as MaybeSo<E>[]).map(fromData), false),
-    toData: (input: T[]) => filterMaybeValues((sortFn(input, true) as MaybeSo<T>[]).map(toData))
+    toData: (input: T[]) => filterMaybeArrayValues((sortFn(input, true) as MaybeSo<T>[]).map(toData))
   });
 }
 
@@ -795,7 +795,7 @@ export type FirestoreArrayMapFieldConfig<T, K extends string = string> = Firesto
 export function firestoreArrayMap<T, K extends string = string>(config: FirestoreArrayMapFieldConfig<T, K> = {}) {
   return firestoreMap({
     mapFilter: KeyValueTypleValueFilter.EMPTY, // default to empty instead of null
-    mapFieldValues: filterMaybeValues, // filters all null/undefined values from arrays by default.
+    mapFieldValues: filterMaybeArrayValues, // filters all null/undefined values from arrays by default.
     ...config
   });
 }
@@ -807,7 +807,7 @@ export function firestoreArrayMap<T, K extends string = string>(config: Firestor
  */
 export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
   return firestoreArrayMap<R, FirestoreModelKey>({
-    mapFieldValues: filterEmptyValues
+    mapFieldValues: filterEmptyArrayValues
   });
 }
 
@@ -898,7 +898,7 @@ export function firestoreObjectArray<T extends object, O extends object = Firest
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (input: O[]) => sortFn(performFiltering(input.map((x) => from(x))), false), // map then filter then sort
-    toData: (input: T[]) => filterMaybeValues(sortFn(performFiltering(input), true)).map((x) => to(x)) // filter then sort then map
+    toData: (input: T[]) => filterMaybeArrayValues(sortFn(performFiltering(input), true)).map((x) => to(x)) // filter then sort then map
   });
 }
 

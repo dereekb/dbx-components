@@ -1,6 +1,6 @@
 import { OnDestroy, Input, Directive, inject } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
-import { ArrayOrValue, Maybe, asArray, filterMaybeValues } from '@dereekb/util';
+import { ArrayOrValue, Maybe, asArray, filterMaybeArrayValues } from '@dereekb/util';
 import { shareReplay, BehaviorSubject, switchMap, distinctUntilChanged, map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
 import { SideNavDisplayMode } from './sidenav';
@@ -29,7 +29,7 @@ export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective implem
   }
 
   set modes(modes: Maybe<ArrayOrValue<SideNavDisplayMode | string>>) {
-    this._sidenavModes.next(new Set(filterMaybeValues(asArray(modes as SideNavDisplayMode))));
+    this._sidenavModes.next(new Set(filterMaybeArrayValues(asArray(modes as SideNavDisplayMode))));
   }
 
   override ngOnDestroy(): void {

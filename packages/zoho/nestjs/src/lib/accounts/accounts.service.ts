@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ZohoAccessToken, ZohoAccessTokenCache, ZohoServiceAccessTokenKey } from '@dereekb/zoho';
-import { Maybe, forEachKeyValue, Configurable, filterMaybeValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
+import { Maybe, forEachKeyValue, Configurable, filterMaybeArrayValues, tryWithPromiseFactoriesFunction, isPast } from '@dereekb/util';
 import { dirname } from 'path';
 import { readFile, writeFile, rm, mkdirSync } from 'fs';
 
@@ -85,7 +85,7 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
           ).then((x) => {
             // only find the failures if we're logging
             if (logErrorFunction != null) {
-              const failedUpdates = filterMaybeValues(x.map((y) => (y as PromiseFulfilledResult<any>).value)) as unknown as (readonly [ZohoAccessTokenCache, unknown])[];
+              const failedUpdates = filterMaybeArrayValues(x.map((y) => (y as PromiseFulfilledResult<any>).value)) as unknown as (readonly [ZohoAccessTokenCache, unknown])[];
 
               if (failedUpdates.length) {
                 logErrorFunction(failedUpdates);

@@ -1,5 +1,5 @@
 import { asArray, type ArrayOrValue } from '../array/array';
-import { filterMaybeValues } from '../array/array.value';
+import { filterMaybeArrayValues } from '../array/array.value';
 import { type PromiseOrValue } from '../promise/promise.type';
 import { build } from './build';
 import { isMaybeNot } from './maybe';
@@ -128,7 +128,7 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
  * @param fns
  */
 export function chainMapSameFunctions<I>(input: ArrayOrValue<Maybe<MapSameFunction<I>>>): MapSameFunction<I> {
-  const fns = filterMaybeValues(asArray(input).filter((x) => !isMapIdentityFunction(x))); // remove all identify functions too
+  const fns = filterMaybeArrayValues(asArray(input).filter((x) => !isMapIdentityFunction(x))); // remove all identify functions too
   let fn: MapSameFunction<I>;
 
   switch (fns.length) {

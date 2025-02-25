@@ -1,4 +1,4 @@
-import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from '@dereekb/util';
+import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeArrayValues } from '@dereekb/util';
 import { Inject, Injectable, InjectionToken, Optional, Type, inject } from '@angular/core';
 import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from './login';
 import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
@@ -165,7 +165,7 @@ export class DbxFirebaseAuthLoginService {
   }
 
   getLoginProviders(types: Iterable<FirebaseLoginMethodType>): DbxFirebaseAuthLoginProvider[] {
-    return filterMaybeValues(mapIterable(types ?? [], (x) => this._providers.get(x)));
+    return filterMaybeArrayValues(mapIterable(types ?? [], (x) => this._providers.get(x)));
   }
 
   getRegisterProvider(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProvider> {
@@ -173,7 +173,7 @@ export class DbxFirebaseAuthLoginService {
   }
 
   getRegisterProviders(types: Iterable<FirebaseLoginMethodType>): DbxFirebaseAuthLoginProvider[] {
-    return filterMaybeValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter((x) => x.registrationComponentClass !== false);
+    return filterMaybeArrayValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter((x) => x.registrationComponentClass !== false);
   }
 
   getProviderAssets(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProviderAssets> {

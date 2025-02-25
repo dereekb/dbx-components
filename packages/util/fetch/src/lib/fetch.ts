@@ -1,4 +1,4 @@
-import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeValues, type PromiseOrValue, isPromiseLike, type GetterOrValue, asGetter, isWebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Factory, fixMultiSlashesInSlashPath, type MapFunction, type Maybe, removeTrailingSlashes, type WebsitePath, type WebsiteUrl, multiValueMapBuilder, filterMaybeArrayValues, type PromiseOrValue, isPromiseLike, type GetterOrValue, asGetter, isWebsiteUrlWithPrefix } from '@dereekb/util';
 import { FetchRequestFactoryError, fetchOk } from './error';
 import { type ConfiguredFetchWithTimeout, type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
@@ -281,7 +281,7 @@ export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: 
 export function mergeRequestHeaders(inputHeadersArray: Maybe<HeadersInit>[]): [string, string][] {
   const headersMap = multiValueMapBuilder<string, string>();
 
-  filterMaybeValues(inputHeadersArray).forEach((headers, i) => {
+  filterMaybeArrayValues(inputHeadersArray).forEach((headers, i) => {
     const tuples: [string, string][] = headersToHeadersTuple(headers);
     const visitedKeysSet = new Set();
 
