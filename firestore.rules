@@ -15,6 +15,11 @@ service cloud.firestore {
       return resource != null && request.auth != null && (resource.id == request.auth.uid);
     }
 
+    function twoWayKeyRelatedResourceIsOwnedByAuthUserProfile() {
+      // compare the resource's identifier which would be derived from the user's profile twoWayKey, which is pr_<id>
+      return resource != null && request.auth != null && (resource.id == 'pr_' + request.auth.uid);
+    }
+
     function resourceIsOwnedByAuthOwnershipKey() {
       // compares the "o" value against the auth's uid
       return resource != null && resource.data != null && resource.data.o != null && request.auth != null && resource.data.o == request.auth.uid;
@@ -61,11 +66,11 @@ service cloud.firestore {
 
 
     match /nu/{notificationUser} {
-      allow read: if resourceIsOwnedByAuthUserId(); // users can read themselves
+      allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
     }
 
     match /ns/{notificationSummary} {
-      allow read: if resourceIsOwnedByAuthUserId(); // users can read themselves
+      allow read: if twoWayKeyRelatedResourceIsOwnedByAuthUserProfile(); // users can read themselves
     }
 
     match /nb/{notificationBox} {

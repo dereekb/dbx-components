@@ -1,10 +1,17 @@
-import { type NotificationFirestoreCollections, type FirestoreContextReference, type NotificationMessage, type AppNotificationTemplateTypeInfoRecordServiceRef, type NotificationSummaryId, type NotificationItem, NOTIFICATION_SUMMARY_ITEM_LIMIT, type NotificationSendNotificationSummaryMessagesResult } from '@dereekb/firebase';
+import { type NotificationFirestoreCollections, type FirestoreContextReference, type NotificationMessage, type AppNotificationTemplateTypeInfoRecordServiceRef, type NotificationSummaryId, type NotificationItem, NOTIFICATION_SUMMARY_ITEM_LIMIT, type NotificationSendNotificationSummaryMessagesResult, NotificationSummary, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type NotificationSummarySendService } from './notification.send.service';
 import { type NotificationSendMessagesInstance } from './notification.send';
-import { multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
+import { Maybe, multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
+import { makeNewNotificationSummaryTemplate } from './notification.util';
 
 export interface FirestoreNotificationSummarySendServiceConfig {
+  /**
+   * Whether or not to allow the creation of new NotificationSummary objects if one does not exist for a message.
+   *
+   * Defaults to true.
+   */
+  readonly allowCreateNotificationSummaries?: Maybe<boolean>;
   readonly context: FirebaseServerActionsContext & NotificationFirestoreCollections & FirestoreContextReference & AppNotificationTemplateTypeInfoRecordServiceRef;
 }
 
@@ -14,8 +21,10 @@ export interface FirestoreNotificationSummarySendServiceConfig {
 export type FirestoreNotificationSummarySendService = NotificationSummarySendService;
 
 export function firestoreNotificationSummarySendService(config: FirestoreNotificationSummarySendServiceConfig): FirestoreNotificationSummarySendService {
-  const { context } = config;
+  const { context, allowCreateNotificationSummaries: inputAllowCreateNotificationSummaries } = config;
   const { firestoreContext, notificationSummaryCollection } = context;
+
+  const allowCreateNotificationSummaries = inputAllowCreateNotificationSummaries ?? true;
 
   const sendService: FirestoreNotificationSummarySendService = {
     async buildSendInstanceForNotificationSummaryMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendNotificationSummaryMessagesResult>> {
@@ -40,31 +49,51 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
             .runTransaction(async (transaction) => {
               const notificationSummaryDocument = notificationSummaryCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationSummaryId as NotificationSummaryId);
               const notificationSummary = await notificationSummaryDocument.snapshotData();
+
               let updated = false;
+              let updateTemplate: Maybe<Pick<NotificationSummary, 'n' | 'lat'>>;
 
-              if (notificationSummary != null) {
-                const existingMessageIds = new Set(notificationSummary.n.map((x) => x.id));
+              const existingMessages = notificationSummary?.n ?? [];
+              const existingMessageIds = new Set(existingMessages.map((x) => x.id));
 
-                // ignore any repeat messages
-                const messagesToSend = messages.filter((x) => !existingMessageIds.has((x.item as NotificationItem).id));
+              // ignore any repeat messages
+              const messagesToSend = messages.filter((x) => !existingMessageIds.has((x.item as NotificationItem).id));
 
-                if (messagesToSend.length > 0) {
-                  // add the new items to existing n then keep the last 1000
-                  const n = takeLast(
-                    notificationSummary.n.concat(
-                      messagesToSend.map((x) => {
-                        const item: NotificationItem = {
-                          ...(x.item as NotificationItem),
-                          s: x.content.title,
-                          g: x.content.openingMessage
-                        };
+              if (messagesToSend.length > 0) {
+                // add the new items to existing n then keep the last 1000
+                const n = takeLast(
+                  existingMessages.concat(
+                    messagesToSend.map((x) => {
+                      const item: NotificationItem = {
+                        ...(x.item as NotificationItem),
+                        s: x.content.title,
+                        g: x.content.openingMessage
+                      };
 
-                        return item;
-                      })
-                    ),
-                    NOTIFICATION_SUMMARY_ITEM_LIMIT
-                  );
-                  await notificationSummaryDocument.update({ lat: new Date(), n });
+                      return item;
+                    })
+                  ),
+                  NOTIFICATION_SUMMARY_ITEM_LIMIT
+                );
+
+                updateTemplate = {
+                  n,
+                  lat: new Date()
+                };
+              }
+
+              if (updateTemplate != null) {
+                if (notificationSummary != null) {
+                  await notificationSummaryDocument.update(updateTemplate!);
+                  updated = true;
+                } else if (allowCreateNotificationSummaries) {
+                  // if it does not exist, and we are allowed to create new summaries, create it and add the new notifications
+                  const createTemplate: NotificationSummary = {
+                    ...makeNewNotificationSummaryTemplate(inferKeyFromTwoWayFlatFirestoreModelKey(notificationSummaryId)),
+                    ...updateTemplate
+                  };
+
+                  await notificationSummaryDocument.create(createTemplate);
                   updated = true;
                 }
               }

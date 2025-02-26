@@ -1,6 +1,6 @@
 import { systemStateExampleRead } from './../system/systemstate.read';
 import { createGuestbook } from './../guestbook/guestbook.crud';
-import { updateProfile, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
+import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
 import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallReadModelMap, DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
@@ -25,7 +25,8 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   profile: onCallSpecifierHandler({
     _: updateProfile,
     username: updateProfileUsername,
-    onboard: updateProfleOnboarding
+    onboard: updateProfleOnboarding,
+    createTestNotification: updateProfileCreateTestNotification
   }),
   notificationUser: onCallSpecifierHandler({
     _: updateNotificationUser,

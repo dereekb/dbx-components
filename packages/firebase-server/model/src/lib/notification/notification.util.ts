@@ -25,12 +25,26 @@ import {
   effectiveNotificationBoxRecipientTemplateConfig,
   mergeNotificationBoxRecipientTemplateConfigs,
   mergeNotificationUserDefaultNotificationBoxRecipientConfig,
-  type NotificationSummaryIdForUidFunction
+  type NotificationSummaryIdForUidFunction,
+  firestoreDummyKey,
+  NotificationSummary
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, UNSET_INDEX_NUMBER, type ModelKey } from '@dereekb/util';
 import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUserLockedConfigFromBeingUpdatedError } from './notification.error';
 
+// MARK: Create NotificationSummary
+export function makeNewNotificationSummaryTemplate(model: ModelKey): NotificationSummary {
+  return {
+    cat: new Date(),
+    m: model,
+    o: firestoreDummyKey(),
+    s: true,
+    n: []
+  };
+}
+
+// MARK: ExpandNotificationRecipients
 export interface ExpandNotificationRecipientsInput {
   readonly notification: Notification;
   readonly notificationBox?: Maybe<NotificationBox>;

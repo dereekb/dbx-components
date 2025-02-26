@@ -5,18 +5,21 @@ import { NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { map } from 'rxjs';
-import { LoadingState, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
+import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult, tapLog } from '@dereekb/rxjs';
+import { ProfileDocumentStore } from '@dereekb/demo-components';
 
 @Component({
   templateUrl: './list.component.html',
   providers: [DbxFirebaseNotificationItemStore]
 })
 export class DemoNotificationListPageComponent {
+  readonly profileDocumentStore = inject(ProfileDocumentStore);
+
   readonly dbxRouterService = inject(DbxRouterService);
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
   readonly notificationSummaryDocumentStore = inject(NotificationSummaryDocumentStore);
 
-  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
+  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(tapLog('sss'), catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
 
   private readonly _notificationIdInstance = dbxRouteModelIdParamRedirect(this.dbxRouterService);
 
@@ -29,4 +32,8 @@ export class DemoNotificationListPageComponent {
     this.dbxFirebaseNotificationItemStore.setItems(this.notificationSummaryDocumentStore.notificationItems$);
     this.dbxFirebaseNotificationItemStore.setSelectedId(this._notificationIdInstance.paramValue$);
   }
+
+  readonly handleCreateTestNotification: WorkUsingContext = (form, context) => {
+    context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.createTestNotification({}));
+  };
 }

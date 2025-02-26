@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationSummaryContextFactory, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
@@ -32,7 +32,7 @@ import {
   NotificationBoxRecipientFlag
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotification } from '@dereekb/demo-firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from '@dereekb/demo-firebase';
 import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
@@ -997,6 +997,72 @@ demoApiFunctionContextFactory((f) => {
             });
           });
 
+          describe('Notification Summary', () => {
+            demoNotificationSummaryContext({ f, for: p }, (ns) => {
+              demoNotificationBoxContext({ f, for: p, createIfNeeded: false }, (nb) => {
+                describe('initialization', () => {
+                  describe('firestoreNotificationSummarySendService()', () => {
+                    describe('configured to create notification summaries', () => {
+                      function describeCreateNotificationSummary(expectation: 'create' | 'delay') {
+                        it(`should ${expectation === 'create' ? 'create a new uninitiailized NotificationSummary' : 'delay the sending of the Notification'}`, async () => {
+                          const createTestNotification = await f.profileServerActions.createTestNotification({
+                            key: p.documentKey
+                          });
+
+                          await createTestNotification(p.document);
+
+                          let exists = await ns.document.exists();
+                          expect(exists).toBe(false);
+
+                          const sendAllQueuedNotifications = await f.notificationServerActions.sendQueuedNotifications({});
+                          const sendResult = await sendAllQueuedNotifications();
+
+                          switch (expectation) {
+                            case 'create':
+                              expect(sendResult.sendNotificationSummaryResult?.success).toHaveLength(1);
+
+                              exists = await ns.document.exists();
+                              expect(exists).toBe(true);
+
+                              break;
+                            case 'delay':
+                              expect(sendResult.notificationsDelayed).toBe(1);
+                              expect(sendResult.sendNotificationSummaryResult?.success).toHaveLength(0);
+                              expect(sendResult.sendNotificationSummaryResult?.ignored).toHaveLength(0);
+                              expect(sendResult.sendNotificationSummaryResult?.failed).toHaveLength(0);
+
+                              exists = await ns.document.exists();
+                              expect(exists).toBe(false);
+
+                              break;
+                          }
+                        });
+                      }
+
+                      describe('notification box exists', () => {
+                        describe('uninitialized', () => {
+                          demoNotificationBoxContext({ f, for: p, createIfNeeded: true }, (nb) => {
+                            describeCreateNotificationSummary('delay');
+                          });
+                        });
+
+                        describe('initialized', () => {
+                          demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb) => {
+                            describeCreateNotificationSummary('create');
+                          });
+                        });
+                      });
+
+                      describe('notification does not exist', () => {
+                        describeCreateNotificationSummary('delay');
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+
           describe('Notification Box', () => {
             describe('exists', () => {
               demoNotificationBoxContext(
@@ -1332,7 +1398,7 @@ demoApiFunctionContextFactory((f) => {
                     beforeEach(async () => {
                       const partialParams = await loadParams?.();
 
-                      const baseTemplate = exampleNotification({
+                      const baseTemplate = exampleNotificationTemplate({
                         profileDocument: p.document
                       });
 
@@ -1354,7 +1420,7 @@ demoApiFunctionContextFactory((f) => {
                   describe('unknown notification type', () => {
                     describe('sendType=INIT_BOX_AND_SEND', () => {
                       initNotification(NotificationSendType.INIT_BOX_AND_SEND, () => {
-                        const template = exampleNotification({
+                        const template = exampleNotificationTemplate({
                           profileDocument: p.document
                         });
 

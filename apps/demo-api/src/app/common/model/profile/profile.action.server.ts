@@ -1,11 +1,12 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
+import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument } from '@dereekb/firebase';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
  */
-export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections {}
+export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference {}
 
 /**
  * Server-only profile actions.
@@ -14,6 +15,7 @@ export abstract class ProfileServerActions {
   abstract initProfileForUid(uid: string): Promise<ProfileDocument>;
   abstract updateProfile(params: UpdateProfileParams): AsyncProfileUpdateAction<UpdateProfileParams>;
   abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
+  abstract createTestNotification(params: ProfileCreateTestNotificationParams): AsyncProfileUpdateAction<ProfileCreateTestNotificationParams>;
 }
 
 /**
@@ -23,7 +25,8 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
   return {
     initProfileForUid: initProfileForUidFactory(context),
     updateProfile: updateProfileFactory(context),
-    setProfileUsername: setProfileUsernameFactory(context)
+    setProfileUsername: setProfileUsernameFactory(context),
+    createTestNotification: createTestNotificationFactory(context)
   };
 }
 
@@ -129,6 +132,25 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
 
       const profile = profileFirestoreCollection.documentAccessor().loadDocument(documentRef);
       await profile.accessor.set({ bio }, { merge: true });
+      return document;
+    };
+  });
+}
+
+export function createTestNotificationFactory(context: ProfileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  return firebaseServerActionTransformFunctionFactory(ProfileCreateTestNotificationParams, async (params) => {
+    const {} = params;
+
+    return async (document: ProfileDocument) => {
+      // create a new notification
+      await createNotificationDocument({
+        context,
+        template: exampleNotificationTemplate({
+          profileDocument: document
+        })
+      });
+
       return document;
     };
   });

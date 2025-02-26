@@ -477,6 +477,10 @@ export interface SendNotificationResult {
    */
   readonly createdBox: boolean;
   /**
+   * Whether or not the NotificationBox exists but still needs initialization.
+   */
+  readonly notificationBoxNeedsInitialization: boolean;
+  /**
    * Whether or not the notification was deleted.
    *
    * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist.
@@ -519,10 +523,11 @@ export interface SendNotificationResult {
  */
 export class SendQueuedNotificationsParams {}
 
-export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
   readonly notificationBoxesCreated: number;
   readonly notificationsVisited: number;
   readonly notificationsSucceeded: number;
+  readonly notificationsDelayed: number;
   readonly notificationsFailed: number;
   readonly notificationsDeleted: number;
 }

@@ -43,7 +43,7 @@ export class DbxFirebaseNotificationModule {
 
     const providers: Provider[] = [
       {
-        provide: DbxFirebaseNotificationTemplateService,
+        provide: AppNotificationTemplateTypeInfoRecordService,
         useValue: appNotificationTemplateTypeInfoRecordService
       },
       {

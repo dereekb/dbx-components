@@ -81,7 +81,7 @@ import { type NotificationTemplateServiceInstance, type NotificationTemplateServ
 import { notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
-import { expandNotificationRecipients, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 
 /**
  * Injection token for the BaseNotificationServerActionsContext
@@ -459,14 +459,7 @@ export function createNotificationSummaryFactory(context: NotificationServerActi
       const notificationSummaryId = notificationSummaryIdForModel(model);
       const notificationSummaryDocument: NotificationSummaryDocument = notificationSummaryCollection.documentAccessor().loadDocumentForId(notificationSummaryId);
 
-      const newSummaryTemplate: NotificationSummary = {
-        cat: new Date(),
-        m: model,
-        o: firestoreDummyKey(),
-        s: true,
-        n: []
-      };
-
+      const newSummaryTemplate: NotificationSummary = makeNewNotificationSummaryTemplate(model);
       await notificationSummaryDocument.create(newSummaryTemplate);
       return notificationSummaryDocument;
     };
@@ -727,7 +720,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
     return async (notificationDocument: NotificationDocument) => {
       // does nothing currently.
 
-      const { throttled, tryRun, notification, createdBox, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType } = await firestoreContext.runTransaction(async (transaction) => {
+      const { throttled, tryRun, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
         let [notificationBox, notification] = await Promise.all([notificationBoxDocument.snapshotData(), getDocumentSnapshotData(notificationDocumentInTransaction)]);
@@ -847,6 +840,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           deletedNotification,
           createdBox,
           notificationBoxModelKey: model,
+          notificationBoxNeedsInitialization,
           notificationBox,
           notification,
           templateInstance,
@@ -1117,6 +1111,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         throttled,
         exists: notification != null,
         boxExists: notificationBox != null,
+        notificationBoxNeedsInitialization,
         createdBox,
         deletedNotification,
         notificationMarkedDone,
@@ -1144,6 +1139,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       let notificationsDeleted: number = 0;
       let notificationsVisited: number = 0;
       let notificationsSucceeded: number = 0;
+      let notificationsDelayed: number = 0;
       let notificationsFailed: number = 0;
 
       let sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
@@ -1162,6 +1158,8 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
 
           if (result.success) {
             notificationsSucceeded += 1;
+          } else if (result.createdBox || result.notificationBoxNeedsInitialization) {
+            notificationsDelayed = 1;
           } else {
             notificationsFailed += 1;
           }
@@ -1170,7 +1168,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
             notificationsDeleted += 1;
           }
 
-          if (result.boxExists) {
+          if (result.createdBox) {
             notificationBoxesCreated += 1;
           }
 
@@ -1210,6 +1208,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
         notificationsDeleted,
         notificationsVisited,
         notificationsSucceeded,
+        notificationsDelayed,
         notificationsFailed,
         sendEmailsResult,
         sendTextsResult,

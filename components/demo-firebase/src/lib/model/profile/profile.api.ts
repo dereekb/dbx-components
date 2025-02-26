@@ -7,6 +7,8 @@ import { ProfileTypes } from './profile';
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
+export class ProfileCreateTestNotificationParams extends InferredTargetModelParams {}
+
 export class SetProfileUsernameParams extends InferredTargetModelParams {
   @Expose()
   @IsNotEmpty()
@@ -48,6 +50,7 @@ export type ProfileModelCrudFunctionsConfig = {
       _: UpdateProfileParams;
       username: SetProfileUsernameParams;
       onboard: [FinishOnboardingProfileParams, boolean];
+      createTestNotification: ProfileCreateTestNotificationParams;
     };
     delete: UpdateProfileParams;
   };
@@ -56,7 +59,7 @@ export type ProfileModelCrudFunctionsConfig = {
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: [
-    'update:_,username,onboard' as any, // use "any" once typescript complains about combinations
+    'update:_,username,onboard,createTestNotification' as any, // use "any" once typescript complains about combinations
     'delete'
   ]
 };
@@ -77,6 +80,7 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
       updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
       updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
+      createTestNotification: ModelFirebaseCrudFunction<ProfileCreateTestNotificationParams>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;
       username: ModelFirebaseCrudFunction<SetProfileUsernameParams>;

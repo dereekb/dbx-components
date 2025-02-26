@@ -30,7 +30,7 @@ export interface ExampleNotificationData {
   readonly uid: FirebaseAuthUserId; // user id to store in the notification
 }
 
-export function exampleNotification(input: ExampleNotificationInput): CreateNotificationTemplate {
+export function exampleNotificationTemplate(input: ExampleNotificationInput): CreateNotificationTemplate {
   const { profileDocument } = input;
   const uid = profileDocument.id;
 
