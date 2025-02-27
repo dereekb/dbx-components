@@ -102,9 +102,9 @@ export interface FirestoreFieldDefaultData<D = unknown> {
   defaultData: GetterOrValue<D>;
 }
 
-export interface FirestoreFieldConfigWithDefault<V, D = unknown> extends BaseFirestoreFieldConfig<V, D>, FirestoreFieldDefault<V> {}
+export interface FirestoreFieldConfigWithDefault<V, D = unknown> extends BaseFirestoreFieldConfig<V, D>, FirestoreFieldDefault<V> { }
 
-export interface FirestoreFieldConfigWithDefaultData<V, D = unknown> extends BaseFirestoreFieldConfig<V, D>, FirestoreFieldDefaultData<D> {}
+export interface FirestoreFieldConfigWithDefaultData<V, D = unknown> extends BaseFirestoreFieldConfig<V, D>, FirestoreFieldDefaultData<D> { }
 
 export type FirestoreFieldConfig<V, D = unknown> = FirestoreFieldConfigWithDefault<V, D> | FirestoreFieldConfigWithDefaultData<V, D>;
 
@@ -119,13 +119,13 @@ export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D
     from:
       (config as FirestoreFieldConfigWithDefault<V, D>).default != null
         ? {
-            default: asObjectCopyFactory((config as FirestoreFieldConfigWithDefault<V, D>).default),
-            convert: config.fromData
-          }
+          default: asObjectCopyFactory((config as FirestoreFieldConfigWithDefault<V, D>).default),
+          convert: config.fromData
+        }
         : {
-            defaultInput: asObjectCopyFactory((config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData),
-            convert: config.fromData
-          },
+          defaultInput: asObjectCopyFactory((config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData),
+          convert: config.fromData
+        },
     to: {
       default: (config.defaultBeforeSave ?? FIRESTORE_EMPTY_VALUE) as GetterOrValue<D>, // always store the default empty value as the default
       convert: config.toData
@@ -224,9 +224,9 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): ModelFieldMa
     const transformTo =
       dontStoreValueIf != null
         ? (value: V) => {
-            const dontStoreCheck = dontStoreValueIf(value);
-            return dontStoreCheck ? null : baseTransformTo(value);
-          }
+          const dontStoreCheck = dontStoreValueIf(value);
+          return dontStoreCheck ? null : baseTransformTo(value);
+        }
         : baseTransformTo;
 
     let loadDefaultReadValueFn: Maybe<Getter<D>>; // set if a default read value is provided
@@ -311,7 +311,14 @@ export function firestoreString<S extends string = string>(config?: FirestoreStr
   });
 }
 
-export type OptionalFirestoreString<S extends string = string> = OptionalOneTypeFirestoreFieldConfig<S> & Pick<FirestoreStringConfig<S>, 'transform'>;
+export type OptionalFirestoreString<S extends string = string> = OptionalOneTypeFirestoreFieldConfig<S> & Pick<FirestoreStringConfig<S>, 'transform'> & {
+  /**
+   * Alias for dontStoreIf=''. Ignored if dontStoreIf is provided.
+   * 
+   * Defaults to true.
+   */
+  readonly dontStoreIfEmptyString?: Maybe<boolean>;
+};
 
 export function optionalFirestoreString<S extends string = string>(config?: OptionalFirestoreString<S>) {
   const transform: Maybe<TransformStringFunctionConfig<S>> = transformStringFunctionConfig(config?.transform);
@@ -319,6 +326,7 @@ export function optionalFirestoreString<S extends string = string>(config?: Opti
 
   return optionalFirestoreField<S>({
     ...config,
+    dontStoreIf: config?.dontStoreIf ?? (config?.dontStoreDefaultReadValue !== false ? ('' as S) : undefined),
     transformData
   });
 }
@@ -476,8 +484,8 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
   } else {
     dontStoreIf = shouldNotStoreIfEmpty
       ? (x: T[]) => {
-          return x.length === 0;
-        }
+        return x.length === 0;
+      }
       : undefined;
   }
 
@@ -485,9 +493,9 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
   const filterUniqueValuesFn: Maybe<MapSameFunction<T[]>> =
     inputFilterUnique != null
       ? (x) => {
-          const result = inputFilterUnique(x);
-          return result;
-        }
+        const result = inputFilterUnique(x);
+        return result;
+      }
       : undefined;
 
   const inputTransformData = config?.transformData;

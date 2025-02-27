@@ -1,7 +1,7 @@
 import { ModuleWithProviders, NgModule, Provider } from '@angular/core';
 import { AppNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { DbxFirebaseNotificationTemplateService } from './service/notification.template.service';
-import { DbxLayoutModule, DbxListLayoutModule, DbxSectionLayoutModule, DbxWidgetModule } from '@dereekb/dbx-web';
+import { DbxListLayoutModule, DbxSectionLayoutModule, DbxWidgetModule } from '@dereekb/dbx-web';
 import { DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemListViewComponent, DbxFirebaseNotificationItemListViewItemComponent } from './component/notificationitem.list.component';
 import { CommonModule } from '@angular/common';
 import { DbxFirebaseNotificationBoxDocumentStoreDirective } from './store/notificationbox.document.store.directive';
@@ -9,7 +9,6 @@ import { DbxFirebaseNotificationBoxCollectionStoreDirective } from './store/noti
 import { DbxFirebaseNotificationSummaryCollectionStoreDirective, DbxFirebaseNotificationSummaryDocumentStoreDirective, DbxFirebaseNotificationUserCollectionStoreDirective, DbxFirebaseNotificationUserDocumentStoreDirective } from './store';
 import { DbxFirebaseNotificationItemDefaultViewComponent } from './component/notificationitem.view.default.component';
 import { DbxFirebaseNotificationItemViewComponent } from './component';
-import { DbxFirebaseNotificationItemWidgetService } from './service/notificationitem.widget.service';
 import { DbxValuePipeModule } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemContentComponent } from './component/notificationitem.content.component';
 

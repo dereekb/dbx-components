@@ -309,6 +309,30 @@ describe('firestoreString()', () => {
 });
 
 describe('optionalFirestoreString()', () => {
+  describe('dontStoreIfEmptyString', () => {
+    describe('false', () => {
+      const field = optionalFirestoreString({ dontStoreIfEmptyString: false });
+
+      it('should return null if the input value equals an empty string', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to('');
+        expect(result).toBe('');
+      });
+    });
+
+    describe('true/null/undefined', () => {
+      const field = optionalFirestoreString({});
+
+      it('should return the empty string if the input value equals an empty string', () => {
+        const { from, to } = modelFieldMapFunctions(field);
+
+        const result = to('');
+        expect(result).toBe(null);
+      });
+    });
+  });
+
   describe('dontStoreIf', () => {
     const dontStoreIf: string = 'a';
 

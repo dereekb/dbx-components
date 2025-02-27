@@ -36,7 +36,8 @@ export function demoExampleNotificationFactory(context: DemoFirebaseServerAction
       return async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
           title: 'This is a test notification',
-          openingMessage: `This is a test notification inteded for user with uid "${item.d?.uid}". This is a test message and contains the opening text of a notification. The message is over the maximum length to show truncation of the message when saved to a NotificationSummary item.`,
+          openingMessage: `This is a test notification intended for user with uid "${item.d?.uid}". This is a test message and contains the opening text of a notification.`,
+          closingMessage: `This is the closing part of the message.`,
           action: 'View test',
           actionUrl: ``
         };

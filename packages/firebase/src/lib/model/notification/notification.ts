@@ -158,7 +158,7 @@ export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH 
 /**
  * The expected max length of a message on a NotificationSummary's embedded NotificationItem.
  */
-export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH = 100;
+export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH = 500;
 
 /**
  * Used to hold arbitrary NotificationItems in the system for an object. The id for this is the two-way flat key of the object it represents.

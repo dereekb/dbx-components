@@ -80,10 +80,20 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
                 const n = takeLast(
                   existingMessages.concat(
                     messagesToSend.map((x) => {
+                      let message: string = '';
+
+                      if (x.content.openingMessage) {
+                        message = x.content.openingMessage;
+                      }
+
+                      if (x.content.closingMessage) {
+                        message = (message ? message + '\n\n' : message) + x.content.closingMessage;
+                      }
+
                       const item: NotificationItem = {
                         ...(x.item as NotificationItem),
                         s: cutSubject(x.content.title),
-                        g: cutMessage(x.content.openingMessage)
+                        g: cutMessage(message)
                       };
 
                       return item;
