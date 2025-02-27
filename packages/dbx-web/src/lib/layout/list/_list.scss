@@ -119,6 +119,12 @@ $list-item-padded-min-height: 42px;
     .item-details {
       font-size: 0.8em;
     }
+
+    .item-details-footnote {
+      padding: 3px 0;
+      font-size: 0.75em;
+      opacity: 0.8;
+    }
   }
 
   .dbx-list-no-hover-effects .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item {

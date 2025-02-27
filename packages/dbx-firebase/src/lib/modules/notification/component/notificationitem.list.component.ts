@@ -35,9 +35,12 @@ export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSel
 
 @Component({
   template: `
-    <div>
-      <p>{{ title }}</p>
-      <p>{{ message }}</p>
+    <div class="dbx-list-item-padded dbx-list-two-line-item dbx-firebase-notificationitem-list-view-item">
+      <div class="item-left">
+        <span class="notificationitem-subject">{{ subject }}</span>
+        <span class="notificationitem-message item-details">{{ message | cutText: 90 }}</span>
+        <span class="notificationitem-date item-details-footnote">{{ date | date: 'medium' }}</span>
+      </div>
     </div>
   `
 })
@@ -46,11 +49,15 @@ export class DbxFirebaseNotificationItemListViewItemComponent extends AbstractDb
 
   readonly pairGetter = cachedGetter(() => this.dbxFirebaseNotificationTemplateService.notificationItemSubjectMessagePairForNotificationSummaryItem(this.itemValue));
 
-  get title() {
-    return this.pairGetter().title;
+  get subject() {
+    return this.pairGetter().subject;
   }
 
   get message() {
     return this.pairGetter().message;
+  }
+
+  get date() {
+    return this.pairGetter().date;
   }
 }

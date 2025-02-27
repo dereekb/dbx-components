@@ -1,3 +1,4 @@
+import { endAt } from 'firebase/firestore';
 import { type MapFunction } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 
@@ -139,4 +140,53 @@ export function repeatString(string: string, reapeat: number): string {
   }
 
   return result;
+}
+
+export interface CutStringFunctionConfig {
+  /**
+   * Max length of the string.
+   */
+  readonly maxLength: number;
+  /**
+   * Whether or not the end text addition should be included in the max length computation.
+   *
+   * If false, then the input string will be cut at the max length.
+   */
+  readonly maxLengthIncludesEndText?: Maybe<boolean>;
+  /**
+   * The end text to add to the cut string.
+   *
+   * Defaults to "...".
+   */
+  readonly endText?: Maybe<string>;
+}
+
+export const DEFAULT_CUT_STRING_END_TEXT = '...';
+
+export type CutStringFunction = ((input: string) => string) & ((input: Maybe<string>) => Maybe<string>);
+
+export function cutStringFunction(config: CutStringFunctionConfig): CutStringFunction {
+  const { maxLength: inputMaxLength, maxLengthIncludesEndText, endText: inputEndText } = config;
+  const endText = inputEndText === undefined ? DEFAULT_CUT_STRING_END_TEXT : '';
+  const maxLength = maxLengthIncludesEndText !== false ? inputMaxLength - endText.length : inputMaxLength;
+
+  return ((input: Maybe<string>) => {
+    let result: Maybe<String> = input;
+
+    if (input != null) {
+      const inputLength = input.length;
+
+      if (inputLength > inputMaxLength) {
+        result = input.substring(0, maxLength) + endText;
+      } else {
+        result = input;
+      }
+    }
+
+    return result;
+  }) as CutStringFunction;
+}
+
+export function cutString(input: Maybe<string>, maxLength: number, endText?: Maybe<string>): Maybe<string> {
+  return cutStringFunction({ maxLength, endText })(input);
 }

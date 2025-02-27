@@ -1,0 +1,10 @@
+<div class="dbx-firebase-notificationitem-content">
+  <div class="notificationitem-header dbx-pb2">
+    <div *ngIf="subject" class="notificationitem-subject dbx-pb1">{{ subject }}</div>
+    <ng-content select="[header]"></ng-content>
+    <div *ngIf="date" class="notificationitem-date dbx-label dbx-small">{{ date | date: 'medium' }}</div>
+  </div>
+  <ng-content select="[premessage]"></ng-content>
+  <div class="notificationitem-message">{{ message }}</div>
+  <ng-content></ng-content>
+</div>

@@ -1,4 +1,4 @@
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from '@dereekb/demo-firebase'; // TODO: rename to demo-firebase
+import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from '@dereekb/demo-firebase'; // TODO: rename to demo-firebase
 import { NotificationMessageFunctionFactoryConfig, NotificationMessageInputContext, NotificationMessageContent, NotificationMessage, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
@@ -30,11 +30,13 @@ export function demoNotificationTestFactory(context: DemoFirebaseServerActionsCo
 export function demoExampleNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
     type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
-    factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
+    factory: async (config: NotificationMessageFunctionFactoryConfig<ExampleNotificationData>) => {
       const { item } = config;
+
       return async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
           title: 'This is a test notification',
+          openingMessage: `This is a test notification inteded for user with uid "${item.d?.uid}". This is a test message and contains the opening text of a notification. The message is over the maximum length to show truncation of the message when saved to a NotificationSummary item.`,
           action: 'View test',
           actionUrl: ``
         };

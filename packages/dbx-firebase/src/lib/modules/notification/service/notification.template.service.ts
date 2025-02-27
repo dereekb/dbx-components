@@ -1,4 +1,4 @@
-import { Inject, Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AppNotificationTemplateTypeInfoRecordService, NotificationItem, NotificationItemMetadata, NotificationItemSubjectMessagePair } from '@dereekb/firebase';
 
 /**
@@ -12,13 +12,15 @@ export class DbxFirebaseNotificationTemplateService {
     const templateType = item.t;
     const templateDetails = this.appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[templateType];
 
-    const title = item.s ?? templateDetails.name;
+    const subject = item.s ?? templateDetails.name;
     const message = item.g ?? '';
+    const date = item.cat;
 
     return {
       item,
-      title,
-      message
+      subject,
+      message,
+      date
     };
   }
 }

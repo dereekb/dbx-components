@@ -1,8 +1,21 @@
-import { type NotificationFirestoreCollections, type FirestoreContextReference, type NotificationMessage, type AppNotificationTemplateTypeInfoRecordServiceRef, type NotificationSummaryId, type NotificationItem, NOTIFICATION_SUMMARY_ITEM_LIMIT, type NotificationSendNotificationSummaryMessagesResult, NotificationSummary, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import {
+  type NotificationFirestoreCollections,
+  type FirestoreContextReference,
+  type NotificationMessage,
+  type AppNotificationTemplateTypeInfoRecordServiceRef,
+  type NotificationSummaryId,
+  type NotificationItem,
+  NOTIFICATION_SUMMARY_ITEM_LIMIT,
+  type NotificationSendNotificationSummaryMessagesResult,
+  NotificationSummary,
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH,
+  NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH
+} from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type NotificationSummarySendService } from './notification.send.service';
 import { type NotificationSendMessagesInstance } from './notification.send';
-import { Maybe, multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
+import { Maybe, cutStringFunction, multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
 import { makeNewNotificationSummaryTemplate } from './notification.util';
 
 export interface FirestoreNotificationSummarySendServiceConfig {
@@ -37,6 +50,9 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
         }
       });
 
+      const cutSubject = cutStringFunction({ maxLength: NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH });
+      const cutMessage = cutStringFunction({ maxLength: NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH });
+
       const messagesGroups = messagesGroupedByNotificationSummaryMapBuilder.entries() as [NotificationSummaryId, NotificationMessage<{}>[]][];
 
       return async () => {
@@ -66,8 +82,8 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
                     messagesToSend.map((x) => {
                       const item: NotificationItem = {
                         ...(x.item as NotificationItem),
-                        s: x.content.title,
-                        g: x.content.openingMessage
+                        s: cutSubject(x.content.title),
+                        g: cutMessage(x.content.openingMessage)
                       };
 
                       return item;

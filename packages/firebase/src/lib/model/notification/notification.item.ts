@@ -10,8 +10,9 @@ export type NotificationItemMetadata = Readonly<Record<string, any>>;
 
 export interface NotificationItemSubjectMessagePair<D extends NotificationItemMetadata = {}> {
   readonly item: NotificationItem<D>;
-  readonly title: string;
+  readonly subject: string;
   readonly message: string;
+  readonly date: Date;
 }
 
 /**

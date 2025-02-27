@@ -19,7 +19,7 @@ export class DemoNotificationListPageComponent {
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
   readonly notificationSummaryDocumentStore = inject(NotificationSummaryDocumentStore);
 
-  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(tapLog('sss'), catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
+  readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
 
   private readonly _notificationIdInstance = dbxRouteModelIdParamRedirect(this.dbxRouterService);
 

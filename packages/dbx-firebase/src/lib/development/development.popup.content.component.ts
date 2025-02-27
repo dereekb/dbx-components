@@ -32,7 +32,7 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
 
   readonly entries = this.dbxFirebaseDevelopmentWidgetService.getEntries();
 
-  private _activeEntrySelector = new BehaviorSubject<Maybe<DevelopmentFirebaseFunctionSpecifier>>(DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY);
+  private readonly _activeEntrySelector = new BehaviorSubject<Maybe<DevelopmentFirebaseFunctionSpecifier>>(DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY);
 
   readonly isLoggedIn$ = this.dbxAuthService.isLoggedIn$;
 

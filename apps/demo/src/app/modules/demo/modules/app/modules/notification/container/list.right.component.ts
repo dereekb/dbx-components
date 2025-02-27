@@ -1,14 +1,17 @@
 import { OnDestroy, Component, inject } from '@angular/core';
-import { loadingStateContext } from '@dereekb/rxjs';
+import { loadingStateContext, loadingStateFromObs } from '@dereekb/rxjs';
 import { GuestbookDocumentStore } from '@dereekb/demo-components';
+import { DbxFirebaseNotificationItemStore } from '@dereekb/dbx-firebase';
 
 @Component({
   templateUrl: './list.right.component.html'
 })
 export class DemoNotificationListPageRightComponent implements OnDestroy {
-  readonly notificationStore = inject(GuestbookDocumentStore);
+  readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
 
-  readonly context = loadingStateContext({ obs: this.notificationStore.dataLoadingState$ });
+  readonly selectedItem$ = this.dbxFirebaseNotificationItemStore.selectedItem$;
+
+  readonly context = loadingStateContext({ obs: loadingStateFromObs(this.dbxFirebaseNotificationItemStore.selectedItem$) });
 
   ngOnDestroy(): void {
     this.context.destroy();

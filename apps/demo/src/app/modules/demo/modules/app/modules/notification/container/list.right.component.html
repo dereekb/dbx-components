@@ -1,1 +1,9 @@
-<dbx-two-column-right header="Notification"></dbx-two-column-right>
+<dbx-two-column-right header="Notification">
+  <dbx-loading [context]="context">
+    <dbx-content-container>
+      <div class="dbx-pt4">
+        <dbx-firebase-notificationitem-view [item]="selectedItem$ | async"></dbx-firebase-notificationitem-view>
+      </div>
+    </dbx-content-container>
+  </dbx-loading>
+</dbx-two-column-right>

@@ -1,4 +1,4 @@
-import { joinStringsWithSpaces, repeatString, splitJoinNameString, splitJoinRemainder } from './string';
+import { DEFAULT_CUT_STRING_END_TEXT, cutStringFunction, joinStringsWithSpaces, repeatString, splitJoinNameString, splitJoinRemainder } from './string';
 
 describe('splitJoinRemainder()', () => {
   it('should handle having a single value', () => {
@@ -78,5 +78,59 @@ describe('repeatString()', () => {
   it('should repeat the given string', () => {
     const result = repeatString('a', 3);
     expect(result).toBe('aaa');
+  });
+});
+
+describe('cutStringFunction()', () => {
+  describe('function', () => {
+    it('should return undefined if undefined is input', () => {
+      const testString = undefined;
+      const fn = cutStringFunction({ maxLength: 4 });
+
+      const result = fn(testString);
+      expect(result).toBeUndefined();
+    });
+
+    it('should return null if null is input', () => {
+      const testString = null;
+      const fn = cutStringFunction({ maxLength: 4 });
+
+      const result = fn(testString);
+      expect(result).toBeNull();
+    });
+
+    it('should not cut the string if its length is under the max length', () => {
+      const testString = 'abcde';
+      const fn = cutStringFunction({ maxLength: testString.length + 1 });
+
+      const result = fn(testString);
+      expect(result).toBe(testString);
+    });
+
+    it('should not cut the string if its length is equal to the max length', () => {
+      const testString = 'abcde';
+      const fn = cutStringFunction({ maxLength: testString.length });
+
+      const result = fn(testString);
+      expect(result).toBe(testString);
+    });
+
+    it('should cut the string to the expected length including the default end text', () => {
+      const testString = 'abcde';
+      const fn = cutStringFunction({ maxLength: 4 });
+
+      const result = fn(testString);
+      expect(result).toBe(`a${DEFAULT_CUT_STRING_END_TEXT}`);
+    });
+
+    describe('maxLengthIncludesEndText=false', () => {
+      it('should cut the string to the expected length including the default end text', () => {
+        const testString = 'abcde';
+        const fn = cutStringFunction({ maxLength: 4, maxLengthIncludesEndText: false });
+
+        const result = fn(testString);
+        expect(result).toBe(`abcd${DEFAULT_CUT_STRING_END_TEXT}`);
+      });
+    });
   });
 });
