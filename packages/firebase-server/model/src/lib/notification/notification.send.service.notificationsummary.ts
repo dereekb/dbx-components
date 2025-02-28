@@ -10,7 +10,8 @@ import {
   NotificationSummary,
   inferKeyFromTwoWayFlatFirestoreModelKey,
   NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH,
-  NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH
+  NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH,
+  sortNotificationItemsFunction
 } from '@dereekb/firebase';
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type NotificationSummarySendService } from './notification.send.service';
@@ -76,9 +77,9 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
               const messagesToSend = messages.filter((x) => !existingMessageIds.has((x.item as NotificationItem).id));
 
               if (messagesToSend.length > 0) {
-                // add the new items to existing n then keep the last 1000
-                const n = takeLast(
-                  existingMessages.concat(
+                // add the new items to existing n, then keep the last 1000
+                const sortedN = existingMessages
+                  .concat(
                     messagesToSend.map((x) => {
                       let message: string = '';
 
@@ -98,9 +99,10 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
 
                       return item;
                     })
-                  ),
-                  NOTIFICATION_SUMMARY_ITEM_LIMIT
-                );
+                  )
+                  .sort(sortNotificationItemsFunction);
+
+                const n = takeLast(sortedN, NOTIFICATION_SUMMARY_ITEM_LIMIT);
 
                 updateTemplate = {
                   n,

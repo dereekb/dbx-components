@@ -182,6 +182,8 @@ export interface NotificationSummary {
   o: FirestoreModelKey;
   /**
    * Notification items.
+   *
+   * They are sorted in ascending order, with the newest items at the end.
    */
   n: NotificationItem[];
   /**

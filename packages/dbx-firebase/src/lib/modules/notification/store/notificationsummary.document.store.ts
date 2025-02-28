@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { isSameDate } from '@dereekb/date';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
 import { NotificationFirestoreCollections, NotificationFunctions, NotificationItem, NotificationItemMetadata, NotificationSummary, NotificationSummaryDocument, UnreadNotificationItemsResult, unreadNotificationItems } from '@dereekb/firebase';
-import { LoadingState, LoadingStateWithValue, ObservableOrValue, asObservable, mapLoadingStateValueWithOperator } from '@dereekb/rxjs';
+import { LoadingState, LoadingStateWithValue, ObservableOrValue, asObservable, mapLoadingStateValueWithOperator, tapLog } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { map, shareReplay, distinctUntilChanged, Observable, combineLatest } from 'rxjs';
 
@@ -14,7 +14,10 @@ export class NotificationSummaryDocumentStore extends AbstractDbxFirebaseDocumen
     super({ firestoreCollection: inject(NotificationFirestoreCollections).notificationSummaryCollection });
   }
 
-  readonly notificationItemsLoadingState$: Observable<LoadingState<NotificationItem<any>[]>> = this.dataLoadingState$.pipe(mapLoadingStateValueWithOperator(map((x) => x.n)));
+  readonly notificationItemsLoadingState$: Observable<LoadingState<NotificationItem<any>[]>> = this.dataLoadingState$.pipe(
+    mapLoadingStateValueWithOperator(map((x) => [...x.n].reverse())), // n is sorted in ascending order
+    shareReplay(1)
+  );
 
   readonly createdAt$ = this.data$.pipe(
     map((x) => x.cat),
@@ -35,7 +38,7 @@ export class NotificationSummaryDocumentStore extends AbstractDbxFirebaseDocumen
   );
 
   readonly notificationItems$ = this.data$.pipe(
-    map((x) => x.n),
+    map((x) => [...x.n].reverse()), // n is sorted in ascending order
     shareReplay(1)
   );
 

@@ -2,6 +2,7 @@ import { separateValues, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, SavedToFirestoreIfTrue } from '../../common';
 import { type NotificationId, type NotificationTemplateType } from './notification.id';
 import { isAfter, isBefore } from 'date-fns';
+import { sortByDateFunction } from '@dereekb/date';
 
 /**
  * Arbitrary metadata for a job. Derived/managed by the concrete job type.
@@ -98,3 +99,5 @@ export function unreadNotificationItems<D extends NotificationItemMetadata = {}>
     unread
   };
 }
+
+export const sortNotificationItemsFunction = sortByDateFunction<NotificationItem<any>>((x) => x.cat);

@@ -9,21 +9,19 @@ import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, suc
 import { ProfileDocumentStore } from '@dereekb/demo-components';
 
 @Component({
-  templateUrl: './list.component.html',
-  providers: [DbxFirebaseNotificationItemStore]
+  templateUrl: './list.component.html'
 })
 export class DemoNotificationListPageComponent {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
 
   readonly dbxRouterService = inject(DbxRouterService);
+  readonly demoAppRouterService = inject(DemoAppRouterService);
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);
   readonly notificationSummaryDocumentStore = inject(NotificationSummaryDocumentStore);
 
   readonly notificationItemsLoadingState$ = this.notificationSummaryDocumentStore.notificationItemsLoadingState$.pipe(catchLoadingStateErrorWithOperator<LoadingState<NotificationItem<any>[]>>(map(() => successResult([]))));
 
   private readonly _notificationIdInstance = dbxRouteModelIdParamRedirect(this.dbxRouterService);
-
-  readonly demoAppRouterService = inject(DemoAppRouterService);
 
   readonly notificationItemListRef = this.demoAppRouterService.userNotificationListRef();
   readonly makeNotificationItemAnchor: AnchorForValueFunction<NotificationItem> = (doc) => this.demoAppRouterService.userNotificationListNotificationRef(doc.id);

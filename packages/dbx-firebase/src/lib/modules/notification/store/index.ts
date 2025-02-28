@@ -2,7 +2,7 @@ export * from './notificationsummary.collection.store.directive';
 export * from './notificationsummary.collection.store';
 export * from './notificationsummary.document.store.directive';
 export * from './notificationsummary.document.store';
-export * from './notificationsummary.item.store';
+export * from './notification.item.store';
 export * from './notificationuser.collection.store.directive';
 export * from './notificationuser.collection.store';
 export * from './notificationuser.document.store.directive';
