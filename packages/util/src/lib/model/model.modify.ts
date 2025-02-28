@@ -1,5 +1,5 @@
 import { type ArrayOrValue, asArray } from '../array/array';
-import { filterMaybeValues } from '../array/array.value';
+import { filterMaybeArrayValues } from '../array/array.value';
 import { type Maybe, type MaybeMap } from '../value/maybe.type';
 import { maybeMergeModifiers, type ModifierFunction } from '../value/modifier';
 import { type ModelConversionOptions, type ModelMapFunction, type ModelMapFunctions } from './model.conversion';
@@ -17,8 +17,8 @@ export type PartialModelModifier<V extends object, D extends object> = Partial<M
 
 export function maybeMergeModelModifiers<V extends object, D extends object>(input: ArrayOrValue<PartialModelModifier<V, D>>): PartialModelModifier<V, D> {
   const modifiers = asArray(input);
-  const allModifyData = filterMaybeValues(modifiers.map((x) => x.modifyData));
-  const allModifyModel = filterMaybeValues(modifiers.map((x) => x.modifyModel));
+  const allModifyData = filterMaybeArrayValues(modifiers.map((x) => x.modifyData));
+  const allModifyModel = filterMaybeArrayValues(modifiers.map((x) => x.modifyModel));
   const modifyData = maybeMergeModifiers(allModifyData);
   const modifyModel = maybeMergeModifiers(allModifyModel);
 

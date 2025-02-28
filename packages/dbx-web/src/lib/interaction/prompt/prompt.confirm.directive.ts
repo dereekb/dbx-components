@@ -1,6 +1,6 @@
 import { Directive, Input, inject } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
 import { DbxPromptConfirm, provideDbxPromptConfirm } from './prompt.confirm';
 import { DbxPromptConfirmConfig } from './prompt.confirm.component';

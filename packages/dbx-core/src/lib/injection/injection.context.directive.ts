@@ -2,7 +2,7 @@ import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainer
 import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
-import { PromiseOrValue, PromiseReference, promiseReference, Maybe } from '@dereekb/util';
+import { PromiseOrValue, PromiseReference, promiseReference, type Maybe } from '@dereekb/util';
 
 /**
  * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.

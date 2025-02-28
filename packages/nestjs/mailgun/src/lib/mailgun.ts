@@ -1,5 +1,5 @@
 import { isTestNodeEnv } from '@dereekb/nestjs';
-import { ArrayOrValue, asArray, EmailAddress, EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, NameEmailPair, overrideInObject, objectIsEmpty, EmailParticipantString, addToSet, forEachInIterable, Maybe } from '@dereekb/util';
+import { ArrayOrValue, asArray, EmailAddress, EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, NameEmailPair, overrideInObject, objectIsEmpty, EmailParticipantString, addToSet, forEachInIterable, type Maybe } from '@dereekb/util';
 import APIResponse from 'mailgun.js/interfaces/ApiResponse';
 import { MailgunMessageData, MessagesSendResult } from 'mailgun.js/interfaces/Messages';
 

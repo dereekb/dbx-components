@@ -496,9 +496,14 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
   return object;
 }
 
+/**
+ * String that is composed of the FirestoreCollectionNames derived from an input FirestoreModelKey and joined together via a separator.
+ *
+ * Is equivalent to a FirestoreCollectionType if the FIRESTORE_COLLECTION_NAME_SEPARATOR is used as the separator.
+ */
 export type FirestoreModelCollectionTypeArrayName = string;
 
-export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestoreModelKeyInput<T>) {
+export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreCollectionType> {
   return firestoreModelKeyCollectionTypeArrayName(input, FIRESTORE_COLLECTION_NAME_SEPARATOR);
 }
 

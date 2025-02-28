@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilC
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {
   fields: Observable<FormlyFieldConfig[]>;

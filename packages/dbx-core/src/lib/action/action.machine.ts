@@ -3,7 +3,7 @@ import { delay, first } from 'rxjs';
 import { ActionContextStoreSource } from './action.store.source';
 import { DbxActionWorkInstanceDelegate } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
-import { Destroyable, Maybe } from '@dereekb/util';
+import { Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject, Work, workFactory } from '@dereekb/rxjs';
 import { Injectable, OnDestroy } from '@angular/core';
 

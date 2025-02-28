@@ -3,7 +3,7 @@ import { DbxPopoverService } from '@dereekb/dbx-web';
 import { BehaviorSubject, distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Toggle button for selecting and clearing the current selection.

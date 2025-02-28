@@ -1,7 +1,7 @@
 import { isSameDateDay } from '@dereekb/date';
 import { ClickableFilterPreset, ClickableFilterPresetOrPartialPreset, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { FilterWithPreset } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
 
 export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'week' | 'noicon' | 'delete';

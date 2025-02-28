@@ -40,9 +40,24 @@ export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: numbe
 }
 
 /**
+ * Exclusive end value used by range().
+ */
+export type RangeInputEndValue = number;
+
+/**
  * Input for range()
  */
-export type RangeInputObject = { start?: number; end: number };
+export interface RangeInputObject {
+  /**
+   * Start value. Defaults to 0 if not defined.
+   */
+  readonly start?: number;
+  /**
+   * The exclusive end value.
+   */
+  readonly end: RangeInputEndValue;
+}
+
 export type RangeInput = number | RangeInputObject | IndexRange;
 
 /**
@@ -53,7 +68,7 @@ export type RangeInput = number | RangeInputObject | IndexRange;
  * @param param0
  * @returns
  */
-export function range(input: RangeInput, inputEnd?: number): number[] {
+export function range(input: RangeInput, inputEnd?: RangeInputEndValue): number[] {
   const range = [];
 
   let start: number;

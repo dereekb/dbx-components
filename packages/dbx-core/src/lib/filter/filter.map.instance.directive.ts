@@ -1,7 +1,7 @@
 import { filterMaybe, FilterMapKey, FilterMap } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, OnDestroy, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Provides a FilterSource from a parent FilterMap.

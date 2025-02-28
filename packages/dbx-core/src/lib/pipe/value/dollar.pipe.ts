@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { dollarAmountString, Maybe } from '@dereekb/util';
+import { dollarAmountString, type Maybe } from '@dereekb/util';
 
 /**
  * Pipe that takes in a number and returns the number formatted as a dollar using dollarAmountString().

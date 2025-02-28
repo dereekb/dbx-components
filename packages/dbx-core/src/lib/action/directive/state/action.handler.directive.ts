@@ -1,6 +1,6 @@
 import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { FactoryWithInput, GetterOrValue, Maybe } from '@dereekb/util';
+import { FactoryWithInput, GetterOrValue, type Maybe } from '@dereekb/util';
 import { DbxActionHandlerInstance } from './action.handler.instance';
 import { Work } from '@dereekb/rxjs';
 

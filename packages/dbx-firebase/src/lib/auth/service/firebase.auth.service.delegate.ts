@@ -1,4 +1,4 @@
-import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, filterMaybeValues } from '@dereekb/util';
+import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, filterMaybeArrayValues } from '@dereekb/util';
 import { map, Observable, switchMap } from 'rxjs';
 import { authUserStateFromFirebaseAuthServiceFunction, stateFromTokenForLoggedInUserFunction, StateFromTokenFunction } from './firebase.auth.rxjs';
 import { AuthUserStateObsFunction, DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
@@ -39,7 +39,7 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
 export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> = AuthRolesObsWithClaimsServiceConfig<T>;
 
 export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends AuthClaimsObject>(config: DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T>): DbxFirebaseAuthServiceDelegate {
-  if (filterMaybeValues([config.stateForLoggedInUser, config.stateForLoggedInUserToken, config.authUserStateObs]).length > 1) {
+  if (filterMaybeArrayValues([config.stateForLoggedInUser, config.stateForLoggedInUserToken, config.authUserStateObs]).length > 1) {
     throw new Error('Cannot specify a combination of "stateForLoggedInUserToken", "stateForLoggedInUser" and "authUserStateObs". Must specify one at max.');
   }
 

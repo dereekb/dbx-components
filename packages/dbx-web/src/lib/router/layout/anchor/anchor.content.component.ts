@@ -1,7 +1,7 @@
 import { BehaviorSubject, combineLatest, map, Observable, of, shareReplay } from 'rxjs';
 import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
 
 /**

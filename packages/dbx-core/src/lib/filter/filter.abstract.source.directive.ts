@@ -1,7 +1,7 @@
 import { of, Observable } from 'rxjs';
 import { Directive, forwardRef, OnDestroy, OnInit, Provider, Type } from '@angular/core';
 import { FilterSource, FilterSourceInstance, ObservableOrValue } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { provideFilterSource } from './filter.content';
 
 export abstract class FilterSourceDirective<F = unknown> implements FilterSource<F> {

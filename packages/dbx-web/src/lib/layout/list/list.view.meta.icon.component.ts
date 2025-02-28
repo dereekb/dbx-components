@@ -1,6 +1,6 @@
 import { Component, InjectionToken, inject } from '@angular/core';
 import { DBX_VALUE_LIST_VIEW_ITEM, DbxValueListItem } from './list.view.value';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 export const DBX_LIST_VIEW_DEFAULT_META_ICON = new InjectionToken<string>('DBX_LIST_VIEW_DEFAULT_META_ICON');

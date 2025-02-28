@@ -1,4 +1,4 @@
-import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeValues, ArrayOrValue, asArray, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl, PrimativeKey } from '@dereekb/util';
+import { CommaSeparatedString, ISO8601DateString, Maybe, escapeStringCharactersFunction, filterMaybeArrayValues, ArrayOrValue, asArray, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl, PrimativeKey } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -217,7 +217,7 @@ export function zohoRecruitSearchRecordsCriteriaStringForTree<T = any>(tree: Zoh
   }
 
   function mergeValues(values: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>[], type: 'and' | 'or'): ZohoRecruitSearchRecordsCriteriaString {
-    const allStrings = filterMaybeValues(values.map(convertToString)).flatMap(asArray);
+    const allStrings = filterMaybeArrayValues(values.map(convertToString)).flatMap(asArray);
     return mergeStringValues(allStrings, type);
   }
 

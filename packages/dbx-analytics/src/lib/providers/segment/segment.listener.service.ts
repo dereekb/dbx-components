@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { combineLatest } from 'rxjs';
 import { AbstractDbxAnalyticsServiceListener, DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType, DbxAnalyticsUser } from '../../analytics';
 import { DbxAnalyticsSegmentApiService } from './segment.service';

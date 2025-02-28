@@ -1,0 +1,12 @@
+<dbx-popover-content>
+  <!-- Header -->
+  <dbx-popover-header [icon]="icon" [header]="header"></dbx-popover-header>
+  <!-- Content -->
+  <dbx-popover-scroll-content>
+    <dbx-firebase-notificationitem-list [state$]="notificationItemsLoadingState$" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeNotificationItemAnchor">
+      <dbx-list-empty-content empty>
+        <p>{{ emptyText }}</p>
+      </dbx-list-empty-content>
+    </dbx-firebase-notificationitem-list>
+  </dbx-popover-scroll-content>
+</dbx-popover-content>

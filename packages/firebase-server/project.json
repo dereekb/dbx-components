@@ -20,6 +20,9 @@
           },
           {
             "command": "npx nx run firebase-server-zoho:build-base"
+          },
+          {
+            "command": "npx nx run firebase-server-model:build-base"
           }
         ],
         "parallel": false

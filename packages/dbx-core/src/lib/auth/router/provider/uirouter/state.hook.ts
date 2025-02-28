@@ -1,5 +1,5 @@
 import { map, Observable } from 'rxjs';
-import { AllowedSet, isAllowed, maybeSet, ArrayOrValue, Maybe } from '@dereekb/util';
+import { AllowedSet, isAllowed, maybeSet, ArrayOrValue, type Maybe } from '@dereekb/util';
 import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
 import { AuthUserState } from '../../../auth.user';
 import { DbxAuthService } from '../../../service/auth.service';

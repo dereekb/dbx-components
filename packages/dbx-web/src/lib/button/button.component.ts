@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxProgressButtonOptions } from './progress/button.progress.config';
 import { DbxThemeColor } from '../layout/style/style';
 

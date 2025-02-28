@@ -1,0 +1,11 @@
+<dbx-content-page dbxAppContextState="notification" demoProfileDocument dbxRouteModelIdFromAuthUserId dbxFirebaseDocumentStoreTwoWayModelKeySource>
+  <dbx-content-container dbxFirebaseNotificationSummaryDocument dbxFirebaseDocumentStoreIdFromTwoWayModelKey>
+    <dbx-section-page header="Notifications">
+      <div sectionHeader>
+        <dbx-spacer></dbx-spacer>
+        <dbx-firebase-notification-item-store-popover-button [config]="notificationsButtonConfig"></dbx-firebase-notification-item-store-popover-button>
+      </div>
+      <ui-view></ui-view>
+    </dbx-section-page>
+  </dbx-content-container>
+</dbx-content-page>

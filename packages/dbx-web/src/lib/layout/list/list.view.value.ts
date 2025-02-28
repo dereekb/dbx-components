@@ -1,7 +1,7 @@
 import { forwardRef, InjectionToken, Provider, StaticProvider, Type } from '@angular/core';
 import { ClickableAnchor, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { map, Observable, of } from 'rxjs';
-import { DecisionFunction, Maybe } from '@dereekb/util';
+import { DecisionFunction, type Maybe } from '@dereekb/util';
 
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<unknown>('DbxValueListViewItem');
 

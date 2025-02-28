@@ -1,5 +1,5 @@
 import { Injectable, Type } from '@angular/core';
-import { Maybe, filterMaybeValues, mapIterable, StringErrorCode } from '@dereekb/util';
+import { Maybe, filterMaybeArrayValues, mapIterable, StringErrorCode } from '@dereekb/util';
 import { DbxErrorDefaultErrorWidgetComponent } from './default.error.widget.component';
 
 export const DEFAULT_ERROR_WIDGET_CODE = 'DEFAULT_ERROR_WIDGET';
@@ -104,6 +104,6 @@ export class DbxErrorWidgetService {
   }
 
   getErrorWidgetEntries(codes: Iterable<StringErrorCode>): DbxErrorWidgetEntry[] {
-    return filterMaybeValues(mapIterable(codes ?? [], (x) => this._entries.get(x)));
+    return filterMaybeArrayValues(mapIterable(codes ?? [], (x) => this._entries.get(x)));
   }
 }

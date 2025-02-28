@@ -1,4 +1,4 @@
-import { filterMaybeValues } from '../array/array.value';
+import { filterMaybeArrayValues } from '../array/array.value';
 import { invertBooleanReturnFunction } from '../function/function.boolean';
 import { type Maybe } from '../value/maybe.type';
 
@@ -23,7 +23,7 @@ export type FilterFunction<T = unknown> = (value: T, index: number) => boolean;
  * @returns
  */
 export function mergeFilterFunctions<T>(...inputFilters: Maybe<FilterFunction<T>>[]): FilterFunction<T> {
-  const filters = filterMaybeValues(inputFilters);
+  const filters = filterMaybeArrayValues(inputFilters);
   let filter: FilterFunction<T>;
 
   switch (filters.length) {

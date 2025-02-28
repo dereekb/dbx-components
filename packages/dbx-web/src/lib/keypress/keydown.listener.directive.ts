@@ -1,5 +1,5 @@
 import { Input, OnDestroy, Output, EventEmitter, HostListener, Directive } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Directive({
   selector: '[dbxWindowKeyDownListener]'

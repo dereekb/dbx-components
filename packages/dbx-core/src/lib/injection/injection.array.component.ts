@@ -1,7 +1,7 @@
 import { BehaviorSubject } from 'rxjs';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, TrackByFunction } from '@angular/core';
 import { DbxInjectionArrayEntry } from './injection.array';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Component that injects content based on the configuration into the view.

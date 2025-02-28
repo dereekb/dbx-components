@@ -3,7 +3,7 @@ import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angula
 import { NgPopoverRef } from 'ng-overlay-container';
 import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
 import { IsModifiedFunction } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxActionPopoverFunctionParams {
   origin: ElementRef;

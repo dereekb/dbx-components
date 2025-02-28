@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DateRange, formatDateDistance } from '@dereekb/date';
 
 @Pipe({ name: 'dateRangeDistance', pure: false })

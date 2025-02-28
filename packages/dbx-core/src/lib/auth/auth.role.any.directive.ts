@@ -1,4 +1,4 @@
-import { AuthRole, ArrayOrValue, Maybe } from '@dereekb/util';
+import { AuthRole, ArrayOrValue, type Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { authRolesSetContainsAnyRoleFrom, DbxAuthService } from './service';

@@ -1,6 +1,29 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithIdAndKey, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
-import { GrantedReadRole } from '@dereekb/model';
-import { Maybe } from '@dereekb/util';
+import {
+  CollectionReference,
+  AbstractFirestoreDocument,
+  snapshotConverterFunctions,
+  firestoreString,
+  firestoreDate,
+  FirestoreCollection,
+  UserRelatedById,
+  FirestoreContext,
+  FirestoreCollectionWithParent,
+  firestoreBoolean,
+  DocumentDataWithIdAndKey,
+  AbstractFirestoreDocumentWithParent,
+  optionalFirestoreDate,
+  FirestoreCollectionGroup,
+  CollectionGroup,
+  firestoreModelIdentity,
+  UserRelated,
+  copyUserRelatedDataAccessorFactoryFunction,
+  firestoreUID,
+  firestoreNumber,
+  optionalFirestoreString
+} from '@dereekb/firebase';
+import { GrantedReadRole, GrantedUpdateRole } from '@dereekb/model';
+import { type Maybe } from '@dereekb/util';
+import { ProfileId } from '../profile/profile.id';
 
 export interface GuestbookFirestoreCollections {
   guestbookCollection: GuestbookFirestoreCollection;
@@ -32,6 +55,10 @@ export interface Guestbook {
    * Date the guestbook was locked at.
    */
   lockedAt?: Maybe<Date>;
+  /**
+   * User who created the guestbook.
+   */
+  cby?: Maybe<ProfileId>;
 }
 
 export type GuestbookRoles = 'admin' | GrantedReadRole;
@@ -49,7 +76,8 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
     published: firestoreBoolean({ default: false }),
     name: firestoreString({ default: '' }),
     locked: firestoreBoolean({ default: false }),
-    lockedAt: optionalFirestoreDate()
+    lockedAt: optionalFirestoreDate(),
+    cby: optionalFirestoreString()
   }
 });
 
@@ -93,9 +121,15 @@ export interface GuestbookEntry extends UserRelated, UserRelatedById {
    * Whether or not the entry has been published. It can be unpublished at any time by the user.
    */
   published: boolean;
+  /**
+   * The number of likes the entry has recieved from users.
+   *
+   * Uniqueness of likes is not retained, so users may like something more than once.
+   */
+  likes: number;
 }
 
-export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
+export type GuestbookEntryRoles = 'like' | GrantedReadRole | GrantedUpdateRole;
 
 export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument, typeof guestbookEntryIdentity> {
   get modelIdentity() {
@@ -110,7 +144,8 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
     signed: firestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true }),
     createdAt: firestoreDate({ saveDefaultAsNow: true }),
-    published: firestoreBoolean({ default: false, defaultBeforeSave: false })
+    published: firestoreBoolean({ default: false, defaultBeforeSave: false }),
+    likes: firestoreNumber({ default: 0 })
   }
 });
 

@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
 import { DbxAuthService } from '../../../service/auth.service';
 import { AuthTransitionDecision, AuthTransitionHookOptions, makeAuthTransitionHook } from './hook';

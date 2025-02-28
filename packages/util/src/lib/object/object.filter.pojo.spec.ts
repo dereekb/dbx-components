@@ -1,6 +1,6 @@
 import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
-import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction } from './object.filter.pojo';
+import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction, filterKeysOnPOJOFunction } from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 describe('overrideInObject', () => {
@@ -318,5 +318,34 @@ describe('allMaybeSoKeys()', () => {
     expect(result.findIndex((x) => x === 'b')).toBe(-1);
     expect(result.findIndex((x) => x === 'c')).toBe(-1);
     expect(result.findIndex((x) => x === 'd')).not.toBe(-1);
+  });
+});
+
+describe('filterKeysOnPOJOFunction()', () => {
+  describe('function', () => {
+    it('should return a new record/object with only values from the input keys on it', () => {
+      const keys = ['a', 'b'];
+      const input = { a: 1, b: 2, c: 3 };
+
+      const result = filterKeysOnPOJOFunction<typeof input>(keys, false)(input);
+
+      expect(result).toBeDefined();
+      expect(result).toEqual({ a: 1, b: 2 });
+      expect(result.c).toBeUndefined();
+    });
+
+    describe('invertFilter=true', () => {
+      it('should return a new record/object with out values from the input keys on it', () => {
+        const keys = ['a', 'b'];
+        const input = { a: 1, b: 2, c: 3 };
+
+        const result = filterKeysOnPOJOFunction<typeof input>(keys, true)(input);
+
+        expect(result).toBeDefined();
+        expect(result).toEqual({ c: 3 });
+        expect(result.a).toBeUndefined();
+        expect(result.b).toBeUndefined();
+      });
+    });
   });
 });

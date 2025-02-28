@@ -6,7 +6,7 @@ import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
 import { debounceTime, filter } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type TextEditorComponentFieldProps = FormlyFieldProps;
 

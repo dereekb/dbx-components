@@ -1,6 +1,6 @@
 import { Input, Directive, inject } from '@angular/core';
 import { DbxTableStore } from './table.store';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxTableContextDataDelegate, DbxTableViewDelegate } from './table';
 
 /**

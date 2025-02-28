@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type DbxSectionHeaderHType = 1 | 2 | 3 | 4 | 5;
 

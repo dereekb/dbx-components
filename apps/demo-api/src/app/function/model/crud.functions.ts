@@ -1,9 +1,11 @@
 import { systemStateExampleRead } from './../system/systemstate.read';
 import { createGuestbook } from './../guestbook/guestbook.crud';
-import { updateProfile, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
-import { updateGuestbookEntry } from '../guestbook/guestbookentry.update';
+import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
+import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
 import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallReadModelMap, DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
+import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
+import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -19,11 +21,20 @@ export const demoReadModelMap: DemoOnCallReadModelMap = {
 
 // MARK: Update
 export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
-  guestbookEntry: updateGuestbookEntry,
+  guestbookEntry: insertGuestbookEntry,
   profile: onCallSpecifierHandler({
     _: updateProfile,
     username: updateProfileUsername,
-    onboard: updateProfleOnboarding
+    onboard: updateProfleOnboarding,
+    createTestNotification: updateProfileCreateTestNotification
+  }),
+  notificationUser: onCallSpecifierHandler({
+    _: updateNotificationUser,
+    resync: resyncNotificationUser
+  }),
+  notificationBox: onCallSpecifierHandler({
+    _: updateNotificationBox,
+    recipient: updateNotificationBoxRecipient
   })
 };
 

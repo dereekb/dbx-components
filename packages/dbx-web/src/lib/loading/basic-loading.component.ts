@@ -2,7 +2,7 @@ import { startWith, distinctUntilChanged, shareReplay, combineLatest, map, Behav
 import { OnDestroy, Component, Input, ViewChild, ElementRef } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
-import { ErrorInput, Maybe } from '@dereekb/util';
+import { ErrorInput, type Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { DbxThemeColor } from '../layout/style/style';

@@ -4,7 +4,7 @@ import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { DbxAppContextService } from './context.service';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxAppContextState } from './context';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used to set the DbxAppContextState for an app to the input state using the DbxAppContextService.

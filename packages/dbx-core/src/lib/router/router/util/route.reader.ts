@@ -1,5 +1,5 @@
 import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, asObservableFromGetter } from '@dereekb/rxjs';
-import { Destroyable, Maybe } from '@dereekb/util';
+import { Destroyable, type Maybe } from '@dereekb/util';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, Observable, shareReplay } from 'rxjs';
 import { DbxRouterService } from '../service/router.service';
 
@@ -11,12 +11,14 @@ export interface DbxRouteParamReader<T> {
    * The param value as read from the current router state.
    */
   readonly paramValue$: Observable<Maybe<T>>;
+
   /**
    * The default value observable.
    */
   readonly defaultValue$: Observable<Maybe<T>>;
+
   /**
-   * The final computed value
+   * The current value given the paramValue and the defaultValue.
    */
   readonly value$: Observable<Maybe<T>>;
 
@@ -60,7 +62,7 @@ export interface DbxRouteParamReaderInstance<T> extends DbxRouteParamReader<T>, 
  * @param defaultValue
  * @returns
  */
-export function dbxRouteParamReaderInstance<T>(dbxRouterService: DbxRouterService, defaultParamKey: string, defaultValue?: MaybeObservableOrValueGetter<T>) {
+export function dbxRouteParamReaderInstance<T>(dbxRouterService: DbxRouterService, defaultParamKey: string, defaultValue?: MaybeObservableOrValueGetter<T>): DbxRouteParamReaderInstance<T> {
   const _paramKey = new BehaviorSubject<string>(defaultParamKey);
   const _defaultValue = new BehaviorSubject<Maybe<ObservableOrValueGetter<Maybe<T>>>>(defaultValue);
 

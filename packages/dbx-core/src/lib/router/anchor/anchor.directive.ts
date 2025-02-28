@@ -1,7 +1,7 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
 import { map, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
 import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
 

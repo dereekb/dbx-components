@@ -1,4 +1,4 @@
-import { type FilterFunction, filterMaybeValues, type Maybe } from '@dereekb/util';
+import { type FilterFunction, filterMaybeArrayValues, type Maybe } from '@dereekb/util';
 import { isAfter } from 'date-fns';
 import { type DateCell, type DateCellDurationSpan } from './date.cell';
 import { type DateCellRange, type UniqueDateCell, dateCellRangeWithRange, dateCellRangeOverlapsRangeFunction, isDateCellWithinDateCellRangeFunction } from './date.cell.index';
@@ -42,7 +42,7 @@ export function modifyDateCellsToFitRangeFunction(range: DateCellRange): ModifyD
   const overlapsRange = dateCellRangeOverlapsRangeFunction(range);
 
   return <B extends DateCell | DateCellRange | UniqueDateCell>(input: B[]) =>
-    filterMaybeValues(
+    filterMaybeArrayValues(
       input.map((x) => {
         let result: Maybe<B>;
 

@@ -1,8 +1,8 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, TargetModelParams, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsOptional, IsNotEmpty, IsString, MaxLength, IsBoolean } from 'class-validator';
 import { GuestbookTypes } from './guestbook';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
@@ -29,7 +29,7 @@ export abstract class GuestbookEntryParams {
   guestbook!: string; // ModelKey;
 }
 
-export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
+export class InsertGuestbookEntryParams extends GuestbookEntryParams {
   @Expose()
   @IsOptional()
   @IsNotEmpty()
@@ -50,6 +50,8 @@ export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
   published?: boolean;
 }
 
+export class LikeGuestbookEntryParams extends TargetModelParams {}
+
 export type GuestbookFunctionTypeMap = {};
 
 export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {};
@@ -59,19 +61,28 @@ export type GuestbookModelCrudFunctionsConfig = {
     create: CreateGuestbookParams;
   };
   guestbookEntry: {
-    update: UpdateGuestbookEntryParams;
+    update: {
+      insert: InsertGuestbookEntryParams;
+      like: LikeGuestbookEntryParams;
+    };
     delete: GuestbookEntryParams;
   };
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
   guestbook: ['create'],
-  guestbookEntry: ['update', 'delete']
+  guestbookEntry: ['update:insert,like', 'delete']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
 
 export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<GuestbookFunctionTypeMap, GuestbookModelCrudFunctionsConfig> {
   abstract guestbook: { createGuestbook: ModelFirebaseCreateFunction<CreateGuestbookParams> };
-  abstract guestbookEntry: { updateGuestbookEntry: ModelFirebaseCrudFunction<UpdateGuestbookEntryParams>; deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams> };
+  abstract guestbookEntry: {
+    updateGuestbookEntry: {
+      insert: ModelFirebaseCrudFunction<InsertGuestbookEntryParams>;
+      like: ModelFirebaseCrudFunction<LikeGuestbookEntryParams>;
+    };
+    deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;
+  };
 }

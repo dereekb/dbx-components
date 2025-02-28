@@ -3,7 +3,7 @@ import { Directive, Input } from '@angular/core';
 import { FilterSourceConnector, FilterSource, FilterMapKey } from '@dereekb/rxjs';
 import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Acts as an "input" FilterSourceConnector for an FilterMap, as well as a source for the FilterSourceConnector.

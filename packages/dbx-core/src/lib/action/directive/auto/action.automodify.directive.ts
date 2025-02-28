@@ -2,7 +2,7 @@ import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { distinctUntilChanged, filter, combineLatest, BehaviorSubject } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Directive({
   selector: '[dbxActionAutoModify]'

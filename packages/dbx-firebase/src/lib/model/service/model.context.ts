@@ -1,6 +1,6 @@
 import { FirestoreDocument, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, FirestoreModelKey, FirestoreModelType } from '@dereekb/firebase';
 import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
-import { SetIncludesMode, IterableOrValue } from '@dereekb/util';
+import { SetIncludesMode, IterableOrValue, Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
 /**
@@ -27,9 +27,9 @@ export interface DbxFirebaseInContextFirebaseModelInfoServiceInstance<D extends 
   readonly modelType$: Observable<FirestoreModelType>;
   readonly model$: Observable<D>;
   /**
-   * Reads the data from the model once and returns the current state without streaming.
+   * Reads the data from the model once and returns the current state without streaming, if it exists or can be retrieved.
    */
-  readonly snapshotData$: Observable<FirestoreDocumentData<D>>;
+  readonly snapshotData$: Observable<Maybe<FirestoreDocumentData<D>>>;
   snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<FirestoreDocumentData<D>>>;
   snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<FirestoreDocumentData<D>>;
 }

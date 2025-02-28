@@ -2,7 +2,7 @@ import { inject, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, Subject, combineLatest, Observable, BehaviorSubject } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
+import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 
 const DEFAULT_DEBOUNCE_MS = 2 * 1000;
 

@@ -1,6 +1,6 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { DbxFirebaseEmulatorConfig, DbxFirebaseEmulatorsConfig, DbxFirebaseParsedEmulatorsConfig } from './emulators';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used to configure the DbxFirebaseEmulatorsConfig provider.

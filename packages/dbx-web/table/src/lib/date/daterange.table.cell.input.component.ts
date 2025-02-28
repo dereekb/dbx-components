@@ -3,7 +3,7 @@ import { DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
 import { DbxTableStore } from '../table.store';
 import { MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY } from '@angular/material/datepicker';
 import { DateAdapter } from '@angular/material/core';
-import { Days, Maybe } from '@dereekb/util';
+import { Days, type Maybe } from '@dereekb/util';
 import { FormGroup, FormControl } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { addDays, format as formatDate } from 'date-fns';

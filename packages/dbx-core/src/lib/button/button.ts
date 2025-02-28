@@ -1,5 +1,5 @@
 import { Type, Provider, forwardRef } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
 /**

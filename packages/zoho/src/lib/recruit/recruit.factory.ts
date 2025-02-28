@@ -5,7 +5,7 @@ import { handleZohoRecruitErrorFetch, interceptZohoRecruitErrorResponse } from '
 import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 import { ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type ZohoRecruit = ZohoRecruitContextRef;
 

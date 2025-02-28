@@ -19,7 +19,7 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new Injection
 export class DbxFirebaseDevelopmentWidgetService {
   readonly dbxWidgetService = inject(DbxWidgetService);
 
-  private _entries = new Map<DbxWidgetType, DbxFirebaseDevelopmentWidgetEntry>();
+  private readonly _entries = new Map<DbxWidgetType, DbxFirebaseDevelopmentWidgetEntry>();
 
   constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN) defaultEntries: DbxFirebaseDevelopmentWidgetEntry[]) {
     if (defaultEntries) {

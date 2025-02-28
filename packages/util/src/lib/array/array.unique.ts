@@ -1,7 +1,7 @@
 import { concatArrays, flattenArray, mergeArrays } from './array';
 import { type PrimativeKey, type ReadKeyFunction } from '../key';
 import { type Maybe } from '../value/maybe.type';
-import { filterMaybeValues } from './array.value';
+import { filterMaybeArrayValues } from './array.value';
 import { addToSet, removeFromSet } from '../set/set';
 import { MAP_IDENTITY } from '../value/map';
 import { type Building } from '../value/build';
@@ -49,7 +49,7 @@ export interface FilterUniqueFunctionAdditionalKeys<T, K extends PrimativeKey = 
 }
 
 export function readKeysFromFilterUniqueFunctionAdditionalKeysInput<T, K extends PrimativeKey = PrimativeKey>(additionalKeysInput: Maybe<FilterUniqueFunctionAdditionalKeysInput<T, K>>, readKey: ReadKeyFunction<T, K>): K[] {
-  return filterMaybeValues(additionalKeysInput != null ? (Array.isArray(additionalKeysInput) ? additionalKeysInput : readKeysFromFilterUniqueFunctionAdditionalKeys<T, K>(additionalKeysInput, readKey)) : []);
+  return filterMaybeArrayValues(additionalKeysInput != null ? (Array.isArray(additionalKeysInput) ? additionalKeysInput : readKeysFromFilterUniqueFunctionAdditionalKeys<T, K>(additionalKeysInput, readKey)) : []);
 }
 
 export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends PrimativeKey = PrimativeKey>(input: FilterUniqueFunctionAdditionalKeys<T, K>, readKey: ReadKeyFunction<T, K>): Maybe<K>[] {
@@ -74,7 +74,7 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
 
   function calculateExclude(excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, K>): K[] {
     const newExcludeKeys = excludeInput ? (Array.isArray(excludeInput) ? excludeInput.map(readKey) : readKeysFromFilterUniqueFunctionAdditionalKeys(excludeInput, readKey)) : [];
-    return newExcludeKeys?.length ? mergeArrays([filterMaybeValues(newExcludeKeys), baseKeys]) : baseKeys;
+    return newExcludeKeys?.length ? mergeArrays([filterMaybeArrayValues(newExcludeKeys), baseKeys]) : baseKeys;
   }
 
   return (input: T[], excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, K>) => {

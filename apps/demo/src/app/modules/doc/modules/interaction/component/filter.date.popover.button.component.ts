@@ -3,7 +3,7 @@ import { DbxFilterButtonConfigWithPresetFilter } from '@dereekb/dbx-web';
 import { Component, Input, inject } from '@angular/core';
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DocInteractionTestDateFilterPresetFilterComponent } from './filter.date.preset.component';
 
 @Component({

@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
 import { loadingStateFromObs } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap, shareReplay } from 'rxjs';
 import { DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from './model.tracker.service';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
@@ -17,7 +17,7 @@ import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service'
 export class DbxFirebaseModelHistoryComponent implements OnDestroy {
   readonly dbxFirebaseModelTrackerService = inject(DbxFirebaseModelTrackerService);
 
-  private _historyFilter = new BehaviorSubject<Maybe<DbxFirebaseModelTrackerHistoryFilter>>(undefined);
+  private readonly _historyFilter = new BehaviorSubject<Maybe<DbxFirebaseModelTrackerHistoryFilter>>(undefined);
 
   @Input()
   anchorForItem?: Maybe<AnchorForValueFunction<DbxFirebaseModelTypesServiceInstancePair>>;

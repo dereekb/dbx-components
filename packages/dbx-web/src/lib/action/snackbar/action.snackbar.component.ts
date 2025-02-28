@@ -2,7 +2,7 @@ import { OnInit, Component, OnDestroy, AfterViewInit, inject } from '@angular/co
 import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
 import { distinctUntilChanged, Observable, shareReplay, BehaviorSubject, switchMap, startWith, Subject, of, filter, map } from 'rxjs';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
-import { MS_IN_SECOND, Maybe } from '@dereekb/util';
+import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
 import { DbxActionContextSourceReference, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 

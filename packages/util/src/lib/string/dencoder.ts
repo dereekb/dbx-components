@@ -1,7 +1,7 @@
 import { type Writable } from 'ts-essentials';
 import { type PrimativeKey } from '../key';
 import { type ArrayOrValue } from '../array/array';
-import { filterMaybeValues } from '../array/array.value';
+import { filterMaybeArrayValues } from '../array/array.value';
 import { type FactoryWithRequiredInput } from '../getter/getter';
 import { forEachKeyValue, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { type Maybe } from '../value/maybe.type';
@@ -92,7 +92,7 @@ export function primativeKeyDencoder<D extends PrimativeKey, E extends Primative
 
   const fn = ((input: ArrayOrValue<E | D>) => {
     if (Array.isArray(input)) {
-      const values = filterMaybeValues(input.map((x) => map.get(x)));
+      const values = filterMaybeArrayValues(input.map((x) => map.get(x)));
       return values;
     } else {
       let value: Maybe<D | E> = map.get(input);

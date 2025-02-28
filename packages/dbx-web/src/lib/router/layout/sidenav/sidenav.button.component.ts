@@ -1,5 +1,5 @@
 import { Component, Input, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
 import { SideNavDisplayMode } from './sidenav';

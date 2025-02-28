@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { shareReplay, map, Observable, combineLatest } from 'rxjs';
 import { DbxMapboxMarker } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldComponent } from './latlng.field.component';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Component({
   template: `

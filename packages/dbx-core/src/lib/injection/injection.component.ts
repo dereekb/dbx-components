@@ -1,7 +1,7 @@
 import { Component, ViewChild, ViewContainerRef, Input } from '@angular/core';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Component that injects content based on the configuration into the view.

@@ -2,7 +2,7 @@ import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addD
 import {
   type DayOfWeekNameFunction,
   type DateOrDateString,
-  filterMaybeValues,
+  filterMaybeArrayValues,
   type ISO8601DateString,
   type Maybe,
   type Minutes,
@@ -140,7 +140,7 @@ export function parseJsDateString(input: ISO8601DateString | UTCDateString | Uni
 export function earliestDate(dates: Maybe<Date>[]): Maybe<Date>;
 export function earliestDate(dates: Maybe<Date>[], defaultDate: Date): Date;
 export function earliestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = undefined): Maybe<Date> {
-  const filtered: Date[] = filterMaybeValues(dates);
+  const filtered: Date[] = filterMaybeArrayValues(dates);
   return filtered.length > 0 ? minDate(filtered) : defaultDate;
 }
 
@@ -150,7 +150,7 @@ export function earliestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = un
 export function latestDate(dates: Maybe<Date>[]): Maybe<Date>;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Date): Date;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = undefined): Maybe<Date> {
-  const filtered: Date[] = filterMaybeValues(dates);
+  const filtered: Date[] = filterMaybeArrayValues(dates);
   return filtered.length > 0 ? maxDate(filtered) : defaultDate;
 }
 
@@ -382,7 +382,7 @@ export type ReduceDatesFunction = (inputDates: ArrayOrValue<Maybe<Date>>) => May
 
 export function reduceDatesFunction(reduceDates: (dates: Date[]) => Maybe<Date>): ReduceDatesFunction {
   return (inputDates: ArrayOrValue<Maybe<Date>>) => {
-    const dates = filterMaybeValues(asArray(inputDates));
+    const dates = filterMaybeArrayValues(asArray(inputDates));
     let result: Maybe<Date>;
 
     if (dates.length) {

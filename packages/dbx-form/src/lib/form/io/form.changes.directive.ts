@@ -1,6 +1,6 @@
 import { Directive, EventEmitter, Output, OnInit, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { first, mergeMap, delay, map } from 'rxjs';
 import { DbxForm } from '../form';
 
