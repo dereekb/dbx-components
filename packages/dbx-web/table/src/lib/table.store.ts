@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { beginLoading, filterMaybe, LoadingState, PageListLoadingState, valueFromLoadingState } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of } from 'rxjs';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, DbxTableViewDelegate } from './table';

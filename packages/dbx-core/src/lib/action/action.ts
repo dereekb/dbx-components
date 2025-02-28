@@ -1,5 +1,5 @@
 import { LoadingStateType } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used by ActionContextState to denote what state the action is in.

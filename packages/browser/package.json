@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/browser",
-  "version": "11.0.21",
+  "version": "11.1.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

@@ -1,5 +1,5 @@
 import { InjectionToken, Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from '@angular/core';
-import { FactoryWithRequiredInput, filterMaybeValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
+import { FactoryWithRequiredInput, filterMaybeArrayValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
 
 export const DBX_INJECTION_COMPONENT_DATA = new InjectionToken('DbxInjectionComponentConfigData');
 
@@ -55,7 +55,7 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
  * @returns
  */
 export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
-  const providers = mergeArrays(filterMaybeValues(configs).map((x) => x.providers));
+  const providers = mergeArrays(filterMaybeArrayValues(configs).map((x) => x.providers));
   const result = mergeObjects(configs);
   result.providers = providers;
   return result;

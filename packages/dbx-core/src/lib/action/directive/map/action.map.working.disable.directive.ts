@@ -1,5 +1,5 @@
 import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';

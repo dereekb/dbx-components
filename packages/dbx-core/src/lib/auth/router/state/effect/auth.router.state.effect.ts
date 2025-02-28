@@ -1,6 +1,6 @@
 import { exhaustMap, filter } from 'rxjs';
 import { Injectable, InjectionToken, inject } from '@angular/core';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { ArrayOrValue, type Maybe } from '@dereekb/util';
 import { createEffect, ofType } from '@ngrx/effects';
 import { DbxAppContextState, DBX_KNOWN_APP_CONTEXT_STATES } from '../../../../context/context';
 import { AbstractOnDbxAppContextStateEffects } from '../../../../context/state/effect';

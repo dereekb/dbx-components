@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DbxInjectionComponentConfig, DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxTableColumn } from '../table';
 
 /**

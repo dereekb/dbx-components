@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * An application user state.

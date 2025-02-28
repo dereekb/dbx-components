@@ -1,5 +1,5 @@
 import { OnInit, Directive, Input, OnDestroy, inject } from '@angular/core';
-import { isNotNullOrEmptyString, Maybe } from '@dereekb/util';
+import { isNotNullOrEmptyString, type Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 

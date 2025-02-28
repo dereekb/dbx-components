@@ -5,6 +5,19 @@ import { SegueRef } from '@dereekb/dbx-core';
   providedIn: 'root'
 })
 export class DemoAppRouterService {
+  userNotificationListRef(): SegueRef {
+    return {
+      ref: 'demo.app.notification.list'
+    };
+  }
+
+  userNotificationListNotificationRef(id: string): SegueRef {
+    return {
+      ref: 'demo.app.notification.list.notification',
+      refParams: { id }
+    };
+  }
+
   guestbookListRef(): SegueRef {
     return {
       ref: 'demo.app.guestbook.list'

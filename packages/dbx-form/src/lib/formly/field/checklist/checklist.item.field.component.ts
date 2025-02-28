@@ -6,7 +6,7 @@ import { ValidationErrors, FormGroup } from '@angular/forms';
 import { FieldType, FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProps {
   /**

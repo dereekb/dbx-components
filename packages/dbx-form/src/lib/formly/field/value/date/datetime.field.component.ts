@@ -1,4 +1,4 @@
-import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
+import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeArrayValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
 import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
@@ -509,7 +509,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       let parsed: DbxDateTimeFieldSyncParsedField[];
 
       if (x) {
-        parsed = filterMaybeValues(
+        parsed = filterMaybeArrayValues(
           asArray(x).map((y) => {
             const control = this.form.get(y.syncWith);
 

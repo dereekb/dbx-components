@@ -72,7 +72,7 @@ export class DemoLayoutComponent {
     {
       title: 'Notifications',
       ref: 'demo.app.notification',
-      disabled: true
+      icon: 'notifications'
     },
     {
       title: 'Settings',

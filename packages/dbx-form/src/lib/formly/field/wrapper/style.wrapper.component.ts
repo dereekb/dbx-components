@@ -1,6 +1,6 @@
 import { OnInit, OnDestroy, Component } from '@angular/core';
 import { asObservable, ObservableOrValue, switchMapMaybeDefault } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, shareReplay } from 'rxjs';
 

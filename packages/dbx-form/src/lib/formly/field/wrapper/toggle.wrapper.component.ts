@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
 import { AbstractFormExpandSectionConfig, AbstractFormExpandSectionWrapperDirective } from './expand.wrapper.delegate';
 

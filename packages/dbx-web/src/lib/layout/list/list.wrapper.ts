@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { ListLoadingState } from '@dereekb/rxjs';
 import { EventEmitter, forwardRef, Provider, Type } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Common interface for views that may wrap a DbxListView, and pass values through to it.

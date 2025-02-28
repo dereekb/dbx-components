@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 
 @Component({

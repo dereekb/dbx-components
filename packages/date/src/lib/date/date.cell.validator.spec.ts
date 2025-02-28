@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Expose, plainToInstance, Type } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
 import { setMinutes, setHours, addSeconds } from 'date-fns';

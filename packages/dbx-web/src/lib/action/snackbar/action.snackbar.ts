@@ -1,7 +1,7 @@
 import { MatSnackBarConfig } from '@angular/material/snack-bar';
 import { DbxActionContextSourceReference } from '@dereekb/dbx-core';
 import { LoadingState, LoadingStateType } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export type DbxActionSnackbarType = string;
 export type DbxActionSnackbarKnownType = 'none' | 'create' | 'save' | 'delete' | 'merge' | 'send' | 'cancel' | 'restore' | 'refresh' | 'read' | 'unread';

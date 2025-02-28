@@ -3,7 +3,7 @@ import { DbxScreenMediaService } from '../../screen/screen.service';
 import { Directive, ChangeDetectorRef, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged, delay } from 'rxjs';
 import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used to declare a dbxFlexGroup.

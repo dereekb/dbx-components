@@ -1,4 +1,4 @@
-import { filterEmptyValues } from '../array/array.value';
+import { filterEmptyArrayValues } from '../array/array.value';
 import { type Maybe } from './maybe.type';
 
 /**
@@ -77,10 +77,10 @@ export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddre
     }
   }
 
-  const nonEmptyParts = filterEmptyValues(parts);
+  const nonEmptyParts = filterEmptyArrayValues(parts);
 
   if (nonEmptyParts.length > 0) {
-    address = filterEmptyValues(nonEmptyParts.map((x) => x.trim())).join(lineBreakLine);
+    address = filterEmptyArrayValues(nonEmptyParts.map((x) => x.trim())).join(lineBreakLine);
   }
 
   return address;

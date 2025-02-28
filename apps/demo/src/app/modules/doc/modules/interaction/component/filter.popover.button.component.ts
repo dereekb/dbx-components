@@ -5,7 +5,7 @@ import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.c
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Component({
   selector: 'doc-interaction-test-filter-popover-button',

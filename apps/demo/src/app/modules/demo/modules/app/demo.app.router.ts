@@ -31,6 +31,12 @@ export const settingsState: Ng2StateDeclaration = {
   component: DemoAppSettingsComponent
 };
 
+export const notificationState: Ng2StateDeclaration = {
+  url: '/notification',
+  name: 'demo.app.notification.**',
+  loadChildren: () => import('./modules/notification/notification.module').then((m) => m.DemoNotificationModule)
+};
+
 export const demoGuestbookFutureState: Ng2StateDeclaration = {
   name: 'demo.app.guestbook.**',
   url: '/guestbook',
@@ -49,6 +55,7 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   homeState,
   historyState,
   settingsState,
+  notificationState,
   demoGuestbookFutureState,
   demoProfileFutureState
 ];

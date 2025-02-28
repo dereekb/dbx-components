@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { map, shareReplay } from 'rxjs';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';

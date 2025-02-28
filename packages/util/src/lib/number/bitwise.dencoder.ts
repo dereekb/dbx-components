@@ -127,6 +127,9 @@ export type BitwiseObjectDencoder<T extends object> = BitwiseObjectEncoder<T> & 
 export interface BitwiseObjectDencoderConfig<T extends object, D extends BitwiseEncodedSetIndex = BitwiseEncodedSetIndex> {
   readonly toSetFunction: BitwiseObjectToSetFunction<T, D>;
   readonly fromSetFunction: BitwiseObjectFromSetFunction<T, D>;
+  /**
+   * The max index, exclusive
+   */
   readonly maxIndex?: number;
 }
 

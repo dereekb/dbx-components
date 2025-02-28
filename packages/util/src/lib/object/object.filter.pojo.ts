@@ -1,9 +1,10 @@
 import { type ArrayOrValue, asArray } from './../array/array';
-import { filterMaybeValues } from '../array/array.value';
+import { filterMaybeArrayValues } from '../array/array.value';
 import { type Maybe } from '../value/maybe.type';
 import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 import { cachedGetter, type Getter } from '../getter';
 import { copyObject } from './object';
+import { invertBooleanReturnFunction } from '../function/function.boolean';
 
 // MARK: Object Merging/Overriding
 /**
@@ -95,7 +96,7 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
     dynamic: true // no need to use cache, as cache won't be used.
   });
 
-  return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeValues(objects))({});
+  return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeArrayValues(objects))({});
 }
 
 // MARK: POJO
@@ -249,7 +250,7 @@ export function filterFromPOJO<T extends object>(obj: T, config: FilterFromPOJO<
  * @param obj POJO to remove undefined values from.
  * @param copy Whether or not to return a copy of the input object. Default is true.
  */
-export type FilterFromPOJOFunction<T> = (input: T) => T;
+export type FilterFromPOJOFunction<T> = (input: T, copyOverride?: Maybe<boolean>) => T;
 export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) => T;
 
 export function filterFromPOJOFunction<T extends object>({ copy = false, filter: inputFilter = { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }: FilterFromPOJO<T> = {}): FilterFromPOJOFunction<T> {
@@ -263,8 +264,10 @@ export function filterFromPOJOFunction<T extends object>({ copy = false, filter:
     }
   });
 
-  return (obj: T) => {
-    if (copy) {
+  return (obj: T, copyOverride?: Maybe<boolean>) => {
+    const copyObj = typeof copyOverride === 'boolean' ? copyOverride : copy;
+
+    if (copyObj) {
       obj = {
         ...obj
       };
@@ -367,6 +370,40 @@ export function valuesFromPOJOFunction<O = unknown, I extends object = object>(f
     addValuesFromObjectToContext(obj, context);
     return context.values;
   };
+}
+
+// MARK: Filter Keys
+/**
+ * Returns a FilterTuplesOnPOJOFunction that returns an object that contains only the input keys, or does not contain the input keys if invertFilter is true.
+ *
+ * @param keysToFilter
+ * @returns
+ */
+export function filterKeysOnPOJOFunction<T extends object>(keysToFilter: Iterable<string>, invertFilter = false): FilterTuplesOnPOJOFunction<T> {
+  const keysSet = new Set(keysToFilter);
+  const filterFn = invertBooleanReturnFunction(([key]) => keysSet.has(key), invertFilter);
+  return filterTuplesOnPOJOFunction(filterFn);
+}
+
+export type FilterTuplesOnPOJOFilter<T extends object> = Parameters<ReturnType<typeof Object.entries<T>>['filter']>['0'];
+
+/**
+ * Function that filters keys/values on a POJO using the pre-configured function.
+ */
+export type FilterTuplesOnPOJOFunction<T extends object> = T extends Record<string, infer I> ? (input: T) => Record<string, I> : (input: T) => Partial<T>;
+
+export function filterTuplesOnPOJOFunction<T extends object>(filterTupleOnObject: FilterTuplesOnPOJOFilter<T>): FilterTuplesOnPOJOFunction<T> {
+  return ((input: T) => {
+    const result: Partial<T> = {};
+
+    Object.entries<T>(input as any)
+      .filter(filterTupleOnObject)
+      .forEach((tuple) => {
+        (result as any)[tuple[0]] = tuple[1];
+      });
+
+    return result;
+  }) as FilterTuplesOnPOJOFunction<T>;
 }
 
 // MARK: ForEachKeyValue

@@ -1,6 +1,6 @@
 import { Input, Directive, inject } from '@angular/core';
 import { emitDelayObs } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
 import { AbstractIfDirective } from '../../../view/if.directive';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';

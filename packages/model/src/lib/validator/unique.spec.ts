@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsArray, IsOptional, IsString, ValidateNested, validate } from 'class-validator';
 import { IsUniqueKeyed } from './unique';

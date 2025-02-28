@@ -132,3 +132,17 @@ export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullabl
 export function valuesAreBothNullishOrEquivalent<T>(a: Maybe<T>, b: Maybe<T>): boolean {
   return a != null && b != null ? a === b : a == b;
 }
+
+/**
+ * Updates "a" with "b".
+ *
+ * - If b is defined, then returns b
+ * - If b is undefined, then returns a
+ * - If b is null, then returns null
+ *
+ * @param a
+ * @param b
+ */
+export function updateMaybeValue<T>(a: Maybe<T>, b: Maybe<T>): Maybe<T> {
+  return b === undefined ? a : b;
+}

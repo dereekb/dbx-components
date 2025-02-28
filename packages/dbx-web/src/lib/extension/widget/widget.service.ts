@@ -1,5 +1,5 @@
 import { Injectable, Type } from '@angular/core';
-import { Maybe, filterMaybeValues, mapIterable } from '@dereekb/util';
+import { Maybe, filterMaybeArrayValues, mapIterable } from '@dereekb/util';
 import { DbxWidgetType } from './widget';
 
 export interface DbxWidgetEntry {
@@ -47,6 +47,6 @@ export class DbxWidgetService {
   }
 
   getWidgetEntries(types: Iterable<DbxWidgetType>): DbxWidgetEntry[] {
-    return filterMaybeValues(mapIterable(types ?? [], (x) => this._entries.get(x)));
+    return filterMaybeArrayValues(mapIterable(types ?? [], (x) => this._entries.get(x)));
   }
 }

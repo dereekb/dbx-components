@@ -1,5 +1,5 @@
 import { mergeArraysIntoArray, range, flattenArray, type Maybe } from '@dereekb/util';
-import { takeLast } from './array';
+import { removeValuesAtIndexesFromArrayCopy, takeLast } from './array';
 
 describe('flattenArray', () => {
   it('should return all non-null/undefined values from first dimension, and all values from the second dimension.', () => {
@@ -107,5 +107,30 @@ describe('mergeArraysIntoArray()', () => {
     for (let i = 0; i < second.length; i += 1) {
       expect(result[i + 1 + second.length]).toBe(second[i]);
     }
+  });
+});
+
+describe('removeValuesAtIndexesFromArrayCopy()', () => {
+  it('should remove the value at the target index', () => {
+    const input = range({ start: 0, end: 3 }); // 0 - 2
+    const valuesToRemove = 1;
+
+    const result = removeValuesAtIndexesFromArrayCopy(input, valuesToRemove);
+
+    expect(result.length).toBe(input.length - 1);
+    expect(result[0]).toBe(0);
+    expect(result[1]).toBe(2);
+  });
+
+  it('should remove each value at each of the target indexes', () => {
+    const input = range({ start: 0, end: 10 }); // 0 - 9
+    const valuesToRemove = range(0, 7); // 0 - 6
+
+    const result = removeValuesAtIndexesFromArrayCopy(input, valuesToRemove);
+
+    expect(result.length).toBe(input.length - valuesToRemove.length);
+    expect(result[0]).toBe(7);
+    expect(result[1]).toBe(8);
+    expect(result[2]).toBe(9);
   });
 });

@@ -1,5 +1,5 @@
 import { Directive, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Component used to wrap content in a pit with a label.

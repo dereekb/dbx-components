@@ -3,7 +3,7 @@ import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, OnInit } from '@angular/core';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
 import { DbxPromptConfirmConfig, DbxPromptConfirmTypes } from './prompt.confirm.component';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export const DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG = {
   title: 'Confirm?',

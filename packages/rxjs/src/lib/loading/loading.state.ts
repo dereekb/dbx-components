@@ -1,4 +1,4 @@
-import { type Maybe, type ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, type ReadableDataError, type Page, type FilteredPage, type PageNumber, objectHasKey, type MapFunction, type ErrorInput, toReadableError, mergeObjects, filterMaybeValues, valuesAreBothNullishOrEquivalent } from '@dereekb/util';
+import { type Maybe, type ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, type ReadableDataError, type Page, type FilteredPage, type PageNumber, objectHasKey, type MapFunction, type ErrorInput, toReadableError, mergeObjects, filterMaybeArrayValues, valuesAreBothNullishOrEquivalent } from '@dereekb/util';
 
 /**
  * A value/error pair used in loading situations.
@@ -330,7 +330,7 @@ export function mergeLoadingStates<A extends object, B extends object, C extends
 export function mergeLoadingStates<A extends object, B extends object, C extends object, D extends object, E extends object, O>(a: LoadingState<A>, b: LoadingState<B>, c: LoadingState<C>, d: LoadingState<D>, e: LoadingState<E>, mergeFn: (a: A, b: B, c: C, d: D, e: E) => O): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O>;
 export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
-  const validArgs = filterMaybeValues(args); // filter out any undefined values
+  const validArgs = filterMaybeArrayValues(args); // filter out any undefined values
   const lastValueIsMergeFn = typeof validArgs[validArgs.length - 1] === 'function';
   const loadingStates: LoadingState<any>[] = lastValueIsMergeFn ? validArgs.slice(0, validArgs.length - 1) : validArgs;
   const mergeFn = lastValueIsMergeFn ? args[validArgs.length - 1] : (...inputArgs: any[]) => mergeObjects(inputArgs);

@@ -1,5 +1,5 @@
 import { itemAccumulator, type ItemAccumulatorNextPageUntilResultsCountFunction, type ItemAccumulatorInstance, type ItemAccumulatorMapFunction, type PageItemIteration } from '@dereekb/rxjs';
-import { type MapFunction, filterMaybeValues } from '@dereekb/util';
+import { type MapFunction, filterMaybeArrayValues } from '@dereekb/util';
 import { documentDataFunction } from '../accessor';
 import { type DocumentDataWithIdAndKey, type QueryDocumentSnapshotArray } from '../types';
 import { type FirestoreItemPageIterationInstance } from './iterator';
@@ -38,7 +38,7 @@ export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageI
 
   const snapshotData = documentDataFunction<T>(true);
   const mapFn: ItemAccumulatorMapFunction<U[], QueryDocumentSnapshotArray<T>> = (x: QueryDocumentSnapshotArray<T>) => {
-    const result: U[] = filterMaybeValues(
+    const result: U[] = filterMaybeArrayValues(
       x.map((y) => {
         const data = snapshotData(y);
         return data ? (mapItem as MapFunction<DocumentDataWithIdAndKey<T>, U>)(data) : undefined;

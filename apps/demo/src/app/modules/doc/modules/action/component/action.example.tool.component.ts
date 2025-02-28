@@ -3,7 +3,7 @@ import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
 import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { provideFormlyContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Component({
   templateUrl: './action.example.tool.component.html',

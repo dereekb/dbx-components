@@ -1,6 +1,6 @@
 import { Directive, Input, OnInit, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
 import { DbxActionSnackbarService } from './action.snackbar.service';
 import { DbxActionSnackbarDisplayConfigGeneratorFunction, DbxActionSnackbarGeneratorInput, DbxActionSnackbarGeneratorUndoInput } from './action.snackbar.generator';

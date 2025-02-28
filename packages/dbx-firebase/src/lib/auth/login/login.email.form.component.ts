@@ -1,6 +1,6 @@
 import { Component, Input, OnDestroy } from '@angular/core';
 import { TextPasswordFieldConfig, provideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { DbxFirebaseLoginMode } from './login';

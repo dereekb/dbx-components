@@ -24,6 +24,7 @@ import {
 } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
+import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get actionContext(): DemoFirebaseServerActionsContext {
@@ -36,6 +37,14 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 
   get demoFirestoreCollections(): DemoFirestoreCollections {
     return this.nest.get(DemoFirestoreCollections);
+  }
+
+  get notificationInitActions(): NotificationInitServerActions {
+    return this.nest.get(NotificationInitServerActions);
+  }
+
+  get notificationActions(): NotificationServerActions {
+    return this.nest.get(NotificationServerActions);
   }
 
   get profileActions(): ProfileServerActions {

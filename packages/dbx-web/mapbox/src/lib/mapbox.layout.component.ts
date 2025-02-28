@@ -1,7 +1,7 @@
 import { tap, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable } from 'rxjs';
 import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '@dereekb/dbx-web';
 import { ResizedEvent } from 'angular-resize-event';
 import { SubscriptionObject } from '@dereekb/rxjs';

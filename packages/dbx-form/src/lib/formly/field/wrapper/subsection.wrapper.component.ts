@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DbxSectionHeaderConfig } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 
 export type DbxFormSubsectionConfig = DbxSectionHeaderConfig;

@@ -1,6 +1,6 @@
 import { Directive, ElementRef, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionValueOnTriggerFunction, DbxActionValueOnTriggerInstance } from './action.value.trigger.instance';
 

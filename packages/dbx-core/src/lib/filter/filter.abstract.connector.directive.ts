@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject, of, switchMap, shareReplay } from 'rxjs';
 import { Directive, OnDestroy } from '@angular/core';
 import { FilterSourceConnector, FilterSource, filterMaybe } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Abstract FilterSourceConnector directive.

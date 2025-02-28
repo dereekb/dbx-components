@@ -1,7 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '../../layout/style/style';
 
 export interface DbxProgressButtonOptions {

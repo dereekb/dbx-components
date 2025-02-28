@@ -1,6 +1,6 @@
 import { DbxFirebaseLoginMode, FirebaseLoginMethodCategory, FirebaseLoginMethodType } from './login';
 import { Component, Input } from '@angular/core';
-import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { ArrayOrValue, type Maybe } from '@dereekb/util';
 
 /**
  * Pre-configured login component that displays all configured login types.

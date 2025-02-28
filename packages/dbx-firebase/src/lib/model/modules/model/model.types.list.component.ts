@@ -3,7 +3,7 @@ import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemC
 import { of } from 'rxjs';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 
-export type DbxFirestoreModelTypeInstanceItem = DbxValueAsListItem<DbxFirebaseModelTypesServiceInstancePair>;
+export type DbxFirebaseModelTypeInstanceItem = DbxValueAsListItem<DbxFirebaseModelTypesServiceInstancePair>;
 
 /**
  * Renders an item as configured from the DbxFirebaseModelTypesServiceInstancePair.
@@ -28,7 +28,7 @@ export class DbxFirebaseModelTypeInstanceComponent extends AbstractDbxSelectionL
   providers: provideDbxListView(DbxFirebaseModelTypeInstanceViewComponent)
 })
 export class DbxFirebaseModelTypeInstanceViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseModelTypesServiceInstancePair> {
-  readonly config: DbxSelectionValueListViewConfig<DbxFirestoreModelTypeInstanceItem> = {
+  readonly config: DbxSelectionValueListViewConfig<DbxFirebaseModelTypeInstanceItem> = {
     componentClass: DbxFirebaseModelTypeInstanceViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ itemValue: y, icon: y.displayInfo.icon ?? y.icon, anchor: y.segueRef })))
   };

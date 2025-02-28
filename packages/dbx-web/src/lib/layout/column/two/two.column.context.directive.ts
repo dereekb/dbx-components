@@ -1,5 +1,5 @@
 import { Input, OnDestroy, Directive, OnInit, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
 

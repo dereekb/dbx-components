@@ -1,7 +1,7 @@
 import { Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 import { DbxFirebaseModelTrackerHistoryFilter } from './model.tracker.service';
 
@@ -36,7 +36,7 @@ export interface DbxFirebaseModelHistoryPopoverParams {
   anchorForItem?: Maybe<AnchorForValueFunction<DbxFirebaseModelTypesServiceInstancePair>>;
 }
 
-export const DEFAULT_FIREBASE_HISTORY_COMPONENT_POPOVER_KEY = 'history';
+export const DEFAULT_DBX_FIREBASE_MODEL_HISTORY_COMPONENT_POPOVER_KEY = 'history';
 
 @Component({
   templateUrl: './model.history.popover.component.html'
@@ -44,7 +44,7 @@ export const DEFAULT_FIREBASE_HISTORY_COMPONENT_POPOVER_KEY = 'history';
 export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseModelHistoryPopoverParams> {
   static openPopover(popupService: DbxPopoverService, { origin, header, icon, emptyText, historyFilter, anchorForItem }: DbxFirebaseModelHistoryPopoverParams, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
-      key: popoverKey ?? DEFAULT_FIREBASE_HISTORY_COMPONENT_POPOVER_KEY,
+      key: popoverKey ?? DEFAULT_DBX_FIREBASE_MODEL_HISTORY_COMPONENT_POPOVER_KEY,
       origin,
       componentClass: DbxFirebaseModelHistoryPopoverComponent,
       data: {
@@ -53,7 +53,7 @@ export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDire
         emptyText,
         historyFilter,
         anchorForItem
-      } as DbxFirebaseModelHistoryPopoverParams
+      }
     });
   }
 

@@ -3,7 +3,7 @@ import { OnDestroy, Component, Input, ChangeDetectorRef, ChangeDetectionStrategy
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { LoadingContext } from '@dereekb/rxjs';
-import { ErrorInput, Maybe } from '@dereekb/util';
+import { ErrorInput, type Maybe } from '@dereekb/util';
 import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
 import { DbxThemeColor } from '../layout/style/style';
 

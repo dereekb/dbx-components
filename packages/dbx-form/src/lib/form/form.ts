@@ -1,7 +1,7 @@
 import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, type Maybe } from '@dereekb/util';
 import { AbstractControl, FormControlStatus } from '@angular/forms';
 
 /**

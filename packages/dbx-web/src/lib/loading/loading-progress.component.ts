@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '../layout/style/style';
 
 export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;

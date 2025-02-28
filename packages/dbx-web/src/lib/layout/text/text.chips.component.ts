@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 export interface TextChip<T = unknown> {
   text: string;

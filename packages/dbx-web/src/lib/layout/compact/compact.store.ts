@@ -16,5 +16,6 @@ export class CompactContextStore extends ComponentStore<CompactContextState> {
   // MARK: Accessors
   readonly mode$ = this.state$.pipe(map((x) => x.mode));
 
+  // MARK: State Changes
   readonly setMode = this.updater((state, mode: CompactMode | boolean) => ({ mode: compactModeFromInput(mode) }));
 }

@@ -2,7 +2,7 @@ import { distinctUntilChanged, filter, map, switchMap, combineLatest, BehaviorSu
 import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFormState, DbxFormStateRef, DbxMutableForm } from '../form';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { asObservable, ObservableOrValue, cleanup, errorOnEmissionsInPeriod } from '@dereekb/rxjs';
 
 export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: ObservableOrValue<T>, mode$: Observable<DbxFormSourceDirectiveMode>): Observable<T> {

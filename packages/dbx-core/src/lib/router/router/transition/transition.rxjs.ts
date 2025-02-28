@@ -1,5 +1,5 @@
 import { distinctUntilKeysChange } from '@dereekb/rxjs';
-import { ArrayOrValue, asArray, filterMaybeValues, IndexRef } from '@dereekb/util';
+import { ArrayOrValue, asArray, filterMaybeArrayValues, IndexRef } from '@dereekb/util';
 import { filter, map, MonoTypeOperatorFunction, Observable, distinctUntilChanged, shareReplay, startWith } from 'rxjs';
 import { SegueRefOrSegueRefRouterLink } from '../../segue';
 import { DbxRouterService } from '../service/router.service';
@@ -69,7 +69,7 @@ export function latestSuccessfulRoutes<T extends LatestSuccessfulRoutesConfigRou
   return successTransition(dbxRouterTransitionService.transitions$).pipe(
     startWith(undefined),
     map(() => {
-      const activeRoutes: LatestSuccessfulRoutesConfigRouteItem<T>[] = filterMaybeValues(checkRoutes.map((x) => x()));
+      const activeRoutes: LatestSuccessfulRoutesConfigRouteItem<T>[] = filterMaybeArrayValues(checkRoutes.map((x) => x()));
       return activeRoutes;
     }),
     distinctUntilKeysChange((x) => x.i),

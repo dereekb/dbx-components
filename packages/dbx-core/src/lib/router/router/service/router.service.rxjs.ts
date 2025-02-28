@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { filter, map, Observable, of, OperatorFunction, switchMap, startWith } from 'rxjs';
 import { SegueRefOrSegueRefRouterLink } from '../../segue';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../transition';

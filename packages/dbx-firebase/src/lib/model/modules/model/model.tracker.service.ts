@@ -1,10 +1,10 @@
 import { ArrayOrValue, DecisionFunction, Maybe, asArray, invertDecision } from '@dereekb/util';
 import { FirestoreModelIdentity } from '@dereekb/firebase';
-import { map, Observable, switchMap, shareReplay, startWith, of } from 'rxjs';
+import { map, Observable, switchMap, shareReplay, startWith, of, catchError } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { allDbxModelViewTrackerEventModelKeys, DbxModelTrackerService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
-import { filterItemsWithObservableDecision, invertObservableDecision, mapEachAsync, ObservableDecisionFunction } from '@dereekb/rxjs';
+import { filterItemsWithObservableDecision, filterMaybeArray, invertObservableDecision, mapEachAsync, ObservableDecisionFunction } from '@dereekb/rxjs';
 
 export interface DbxFirebaseModelTrackerFilterItem {
   instancePair: DbxFirebaseModelTypesServiceInstancePair;
@@ -46,7 +46,15 @@ export class DbxFirebaseModelTrackerService {
   );
 
   readonly filterItemHistoryPairs$: Observable<DbxFirebaseModelTrackerFilterItem[]> = this.historyPairs$.pipe(
-    mapEachAsync((instancePair) => instancePair.instance.identity$.pipe(map((identity) => ({ instancePair, identity }))), { onlyFirst: true }),
+    mapEachAsync(
+      (instancePair) =>
+        instancePair.instance.identity$.pipe(
+          map((identity) => ({ instancePair, identity })),
+          catchError(() => of(undefined))
+        ),
+      { onlyFirst: true }
+    ),
+    filterMaybeArray<DbxFirebaseModelTrackerFilterItem>(),
     shareReplay(1)
   );
 

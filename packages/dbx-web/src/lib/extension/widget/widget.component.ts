@@ -1,8 +1,8 @@
-import { Observable, BehaviorSubject, map } from 'rxjs';
+import { Observable, BehaviorSubject, map, shareReplay, distinctUntilChanged } from 'rxjs';
 import { Component, Input, OnDestroy, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxWidgetDataPair } from './widget';
+import { DbxWidgetViewComponentConfig } from './widget';
 import { DbxWidgetService } from './widget.service';
 
 /**
@@ -11,7 +11,20 @@ import { DbxWidgetService } from './widget.service';
 @Component({
   selector: 'dbx-widget-view',
   template: `
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <ng-container [ngSwitch]="widgetConfigExists$ | async">
+      <ng-container *ngSwitchCase="true">
+        <ng-container *ngTemplateOutlet="widget"></ng-container>
+      </ng-container>
+      <ng-container *ngSwitchCase="false">
+        <ng-container *ngTemplateOutlet="unknown"></ng-container>
+      </ng-container>
+    </ng-container>
+    <ng-template #widget>
+      <dbx-injection [config]="config$ | async"></dbx-injection>
+    </ng-template>
+    <ng-template #unknown>
+      <ng-content empty select="[unknownWidget]"></ng-content>
+    </ng-template>
   `,
   host: {
     class: 'dbx-widget-view'
@@ -20,25 +33,38 @@ import { DbxWidgetService } from './widget.service';
 export class DbxWidgetViewComponent implements OnDestroy {
   readonly dbxWidgetService = inject(DbxWidgetService);
 
-  private _config = new BehaviorSubject<Maybe<DbxWidgetDataPair>>(undefined);
+  private readonly _config = new BehaviorSubject<Maybe<DbxWidgetViewComponentConfig>>(undefined);
 
   readonly config$: Observable<Maybe<DbxInjectionComponentConfig>> = this._config.pipe(
-    map((pair: Maybe<DbxWidgetDataPair>) => {
-      let config: Maybe<DbxInjectionComponentConfig>;
+    map((pair: Maybe<DbxWidgetViewComponentConfig>) => {
+      let config: Maybe<DbxInjectionComponentConfig> = undefined;
 
       if (pair != null) {
-        const entry = this.dbxWidgetService.getWidgetEntry(pair.type);
+        let entry = this.dbxWidgetService.getWidgetEntry(pair.type);
+
+        if (!entry && pair.defaultType) {
+          entry = this.dbxWidgetService.getWidgetEntry(pair.defaultType);
+        }
 
         if (entry) {
           config = {
             componentClass: entry.componentClass,
             data: pair.data
           };
+        } else {
+          config = null;
         }
       }
 
       return config;
-    })
+    }),
+    shareReplay(1)
+  );
+
+  readonly widgetConfigExists$ = this.config$.pipe(
+    map((x) => x !== null),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   ngOnDestroy(): void {
@@ -46,7 +72,7 @@ export class DbxWidgetViewComponent implements OnDestroy {
   }
 
   @Input()
-  set config(config: Maybe<DbxWidgetDataPair>) {
+  set config(config: Maybe<DbxWidgetViewComponentConfig>) {
     this._config.next(config);
   }
 }

@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, Input, OnDestroy, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { ActionKey } from './action.map';
 import { SecondaryActionContextStoreSource } from '../../action.store.source';

@@ -2,7 +2,6 @@ import { type AuthRole, type AuthRoleSet } from './auth.role';
 import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
-import { objectToTuples } from '../object/object.map';
 import { type ArrayOrValue, asArray } from '../array/array';
 import { addToSet, setContainsAllValues } from '../set';
 import { type Maybe } from '../value/maybe.type';
@@ -148,7 +147,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = objectToTuples<AuthRoleClaimsFactoryConfigEntry>(config as any)
+  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = Object.entries<AuthRoleClaimsFactoryConfigEntry>(config as any)
     .filter(([, entry]) => entry != null) // skip any ignored/null values
     .map((x) => {
       const inputEntry = x[1];

@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { ZohoAccountsAuthFailureError } from './accounts.error.api';
 import { ZohoApiServiceName } from '../zoho.config';
 

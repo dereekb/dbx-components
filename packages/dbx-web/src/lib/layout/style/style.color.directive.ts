@@ -1,6 +1,6 @@
 import { Directive, Input } from '@angular/core';
 import { DbxThemeColor, dbxColorBackground } from './style';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Used to apply a background style using a color.

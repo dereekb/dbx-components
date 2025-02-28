@@ -15,9 +15,20 @@ import { range } from '../array/array.number';
 import { filterUniqueFunction, type FilterUniqueFunctionExcludeKeysInput } from '../array/array.unique';
 
 /**
- * A number that denotes which index an item is at.
+ * An integer that denotes which index an item is at.
+ *
+ * Is typically non-negative only.
  */
 export type IndexNumber = number;
+
+/**
+ * The default index number when no index is set.
+ *
+ * Only applicable for non-negative indexes.
+ */
+export const UNSET_INDEX_NUMBER = -1;
+
+export type UnsetIndexNumber = typeof UNSET_INDEX_NUMBER;
 
 /**
  * Item that references an IndexNumber.
@@ -143,6 +154,8 @@ export function sortByIndexAscendingCompareFunction<T>(readIndex: ReadIndexFunct
 
 /**
  * Computes the next free index given the input values.
+ *
+ * Returns 0 if no values are present.
  */
 export type ComputeNextFreeIndexFunction<T> = (values: T[]) => IndexNumber;
 
@@ -159,6 +172,22 @@ export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>,
 
     if (max != null) {
       return readNextIndex(max);
+    } else {
+      return 0;
+    }
+  };
+}
+
+/**
+ * Creates a new ComputeNextFreeIndexFunction that assumes that the input values are sorted in ascending order, with the latest index at the end.
+ */
+export function computeNextFreeIndexOnSortedValuesFunction<T>(readIndex: ReadIndexFunction<T>, nextIndex?: (value: T) => IndexNumber): ComputeNextFreeIndexFunction<T> {
+  const readNextIndex = nextIndex ?? ((x) => readIndex(x) + 1); //return the max index + 1 by default.
+  return (sortedValues: T[]) => {
+    const lastValueInSorted = lastValue(sortedValues);
+
+    if (lastValueInSorted != null) {
+      return readNextIndex(lastValueInSorted);
     } else {
       return 0;
     }

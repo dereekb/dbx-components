@@ -3,7 +3,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig } from '../../field';
 import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DbxDateTimePickerConfiguration } from './datetime.field.component';
 import { flexLayoutWrapper } from '../../wrapper/wrapper';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxFixedDateRangeFieldProps } from './fixeddaterange.field.component';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldProps, MaterialFormFieldConfig {}

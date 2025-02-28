@@ -1,4 +1,4 @@
-import { CssClass, Maybe } from '@dereekb/util';
+import { CssClass, type Maybe } from '@dereekb/util';
 
 export type DbxThemeColorMain = 'primary' | 'accent' | 'warn';
 export type DbxThemeColorExtra = 'notice' | 'ok' | 'success' | 'grey';

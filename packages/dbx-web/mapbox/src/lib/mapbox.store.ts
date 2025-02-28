@@ -75,59 +75,59 @@ export interface DbxMapboxStoreState {
   /**
    * Current MapService being utilized.
    */
-  mapService?: Maybe<MapService>;
-  lifecycleState: MapboxMapLifecycleState;
-  moveState: MapboxMapMoveState;
-  zoomState: MapboxMapZoomState;
-  rotateState: MapboxMapRotateState;
+  readonly mapService?: Maybe<MapService>;
+  readonly lifecycleState: MapboxMapLifecycleState;
+  readonly moveState: MapboxMapMoveState;
+  readonly zoomState: MapboxMapZoomState;
+  readonly rotateState: MapboxMapRotateState;
   /**
    * Visual container size of the map.
    */
-  mapCanvasSize?: Maybe<Vector>;
+  readonly mapCanvasSize?: Maybe<Vector>;
   /**
    * Latest click event
    */
-  clickEvent?: Maybe<DbxMapboxClickEvent>;
+  readonly clickEvent?: Maybe<DbxMapboxClickEvent>;
   /**
    * Latest double-click event
    */
-  doubleClickEvent?: Maybe<DbxMapboxClickEvent>;
+  readonly doubleClickEvent?: Maybe<DbxMapboxClickEvent>;
   /**
    * Latest contextmenu event.
    */
-  rightClickEvent?: Maybe<DbxMapboxClickEvent>;
+  readonly rightClickEvent?: Maybe<DbxMapboxClickEvent>;
   /**
    * Whether or not to retain content between resets.
    *
    * True by default.
    */
-  retainContent: boolean;
+  readonly retainContent: boolean;
   /**
    * Custom content configuration.
    */
-  content?: Maybe<DbxInjectionComponentConfig<unknown>>;
+  readonly content?: Maybe<DbxInjectionComponentConfig<unknown>>;
   /**
    * Latest error
    */
-  error?: Maybe<Error>;
+  readonly error?: Maybe<Error>;
   /**
    * Map margin/offset
    */
-  margin?: Maybe<DbxMapboxMarginCalculationSizing>;
+  readonly margin?: Maybe<DbxMapboxMarginCalculationSizing>;
   /**
    * Minimum vector size to use for the viewportBoundFunction$. If not defined there is no minimum.
    */
-  minimumVirtualViewportSize?: Maybe<Partial<Vector>>;
+  readonly minimumVirtualViewportSize?: Maybe<Partial<Vector>>;
   /**
    * Bound refresh settings
    */
-  boundRefreshSettings: DbxMapboxStoreBoundRefreshSettings;
+  readonly boundRefreshSettings: DbxMapboxStoreBoundRefreshSettings;
   /**
    * Whether or not to use the virtual bound (vs raw bound) for all bound-related observables.
    *
    * Defaults to true.
    */
-  useVirtualBound: boolean;
+  readonly useVirtualBound: boolean;
 }
 
 /**

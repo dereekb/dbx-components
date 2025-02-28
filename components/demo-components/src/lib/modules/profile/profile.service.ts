@@ -1,7 +1,7 @@
 import { ProfileDocument, DemoFirestoreCollections, profileWithUsername } from '@dereekb/demo-firebase';
 import { map, Observable, of, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 
 @Injectable({
   providedIn: 'root'
