@@ -3,7 +3,7 @@ import { AbstractPopoverRefDirective, DbxPopoverService } from '@dereekb/dbx-web
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseNotificationItemStorePopoverComponent, DbxFirebaseNotificationItemStorePopoverParams } from './notification.item.store.popover.component';
 import { DbxFirebaseNotificationItemStore } from '../store/notification.item.store';
-import { loadingStateFromObs, tapLog } from '@dereekb/rxjs';
+import { loadingStateFromObs } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 export type DbxFirebaseNotificationItemStorePopoverButtonConfig = DbxFirebaseNotificationItemStorePopoverParams;

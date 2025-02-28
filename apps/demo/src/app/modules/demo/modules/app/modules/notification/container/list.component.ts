@@ -5,7 +5,7 @@ import { NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
-import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult, tapLog } from '@dereekb/rxjs';
+import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
 import { ProfileDocumentStore } from '@dereekb/demo-components';
 
 @Component({

@@ -27,7 +27,7 @@ import {
   mergeNotificationUserDefaultNotificationBoxRecipientConfig,
   type NotificationSummaryIdForUidFunction,
   firestoreDummyKey,
-  NotificationSummary
+  type NotificationSummary
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, UNSET_INDEX_NUMBER, type ModelKey } from '@dereekb/util';

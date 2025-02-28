@@ -1,6 +1,5 @@
 import { OnDestroy, Component, inject } from '@angular/core';
 import { loadingStateContext, loadingStateFromObs } from '@dereekb/rxjs';
-import { GuestbookDocumentStore } from '@dereekb/demo-components';
 import { DbxFirebaseNotificationItemStore } from '@dereekb/dbx-firebase';
 
 @Component({

@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { NotificationId, NotificationItem, NotificationSummary } from '@dereekb/firebase';
+import { NotificationId, NotificationItem } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';

@@ -1,7 +1,7 @@
 import { separateValues, type Maybe } from '@dereekb/util';
-import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, SavedToFirestoreIfTrue } from '../../common';
+import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, type SavedToFirestoreIfTrue } from '../../common';
 import { type NotificationId, type NotificationTemplateType } from './notification.id';
-import { isAfter, isBefore } from 'date-fns';
+import { isAfter } from 'date-fns';
 import { sortByDateFunction } from '@dereekb/date';
 
 /**

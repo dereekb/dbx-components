@@ -1,4 +1,3 @@
-import { endAt } from 'firebase/firestore';
 import { type MapFunction } from '../value/map';
 import { type Maybe } from '../value/maybe.type';
 
@@ -171,7 +170,7 @@ export function cutStringFunction(config: CutStringFunctionConfig): CutStringFun
   const maxLength = maxLengthIncludesEndText !== false ? inputMaxLength - endText.length : inputMaxLength;
 
   return ((input: Maybe<string>) => {
-    let result: Maybe<String> = input;
+    let result: Maybe<string> = input;
 
     if (input != null) {
       const inputLength = input.length;

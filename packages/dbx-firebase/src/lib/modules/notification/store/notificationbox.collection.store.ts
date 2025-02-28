@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AbstractDbxFirebaseCollectionStore, DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../../../model/modules/store';
+import { AbstractDbxFirebaseCollectionStore } from '../../../model/modules/store';
 import { NotificationFirestoreCollections, NotificationBox, NotificationBoxDocument } from '@dereekb/firebase';
 
 @Injectable()

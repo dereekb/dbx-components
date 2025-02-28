@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { OnDestroy, Directive, Input, OnInit, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { DbxFirebaseDocumentStoreTwoWayKeyProvider, provideDbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
 

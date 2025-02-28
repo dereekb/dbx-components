@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy } from '@angular/core';
 import { DbxWidgetViewComponentConfig } from '@dereekb/dbx-web';
 import { NotificationItem, NotificationItemMetadata } from '@dereekb/firebase';
-import { filterMaybe, tapLog } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
 import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotificationTemplateType } from '../service';

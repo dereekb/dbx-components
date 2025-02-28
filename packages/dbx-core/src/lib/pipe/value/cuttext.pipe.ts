@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { cutString, dollarAmountString, type Maybe } from '@dereekb/util';
+import { cutString, type Maybe } from '@dereekb/util';
 
 /**
  * Pipe that cuts the input text to the requested length and adds elipsis.

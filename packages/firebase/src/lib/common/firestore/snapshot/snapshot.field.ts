@@ -311,15 +311,7 @@ export function firestoreString<S extends string = string>(config?: FirestoreStr
   });
 }
 
-export type OptionalFirestoreString<S extends string = string> = OptionalOneTypeFirestoreFieldConfig<S> &
-  Pick<FirestoreStringConfig<S>, 'transform'> & {
-    /**
-     * Alias for dontStoreIf=''. Ignored if dontStoreIf is provided.
-     *
-     * Defaults to true.
-     */
-    readonly dontStoreIfEmptyString?: Maybe<boolean>;
-  };
+export type OptionalFirestoreString<S extends string = string> = OptionalOneTypeFirestoreFieldConfig<S> & Pick<FirestoreStringConfig<S>, 'transform'>;
 
 export function optionalFirestoreString<S extends string = string>(config?: OptionalFirestoreString<S>) {
   const transform: Maybe<TransformStringFunctionConfig<S>> = transformStringFunctionConfig(config?.transform);
@@ -327,7 +319,6 @@ export function optionalFirestoreString<S extends string = string>(config?: Opti
 
   return optionalFirestoreField<S>({
     ...config,
-    dontStoreIf: config?.dontStoreIf ?? (config?.dontStoreDefaultReadValue !== false ? ('' as S) : undefined),
     transformData
   });
 }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { isSameDate } from '@dereekb/date';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '../../../model/modules/store';
 import { NotificationFirestoreCollections, NotificationFunctions, NotificationItem, NotificationItemMetadata, NotificationSummary, NotificationSummaryDocument, UnreadNotificationItemsResult, unreadNotificationItems } from '@dereekb/firebase';
-import { LoadingState, LoadingStateWithValue, ObservableOrValue, asObservable, mapLoadingStateValueWithOperator, tapLog } from '@dereekb/rxjs';
+import { LoadingState, ObservableOrValue, asObservable, mapLoadingStateValueWithOperator } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { map, shareReplay, distinctUntilChanged, Observable, combineLatest } from 'rxjs';
 

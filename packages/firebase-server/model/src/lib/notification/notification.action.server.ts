@@ -69,7 +69,7 @@ import {
   type NotificationSendNotificationSummaryMessagesResult,
   type NotificationSendTextMessagesResult,
   mergeNotificationSendMessagesResult,
-  AsyncNotificationSummaryUpdateAction,
+  type AsyncNotificationSummaryUpdateAction,
   UpdateNotificationSummaryParams
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';

@@ -3,7 +3,6 @@ import { NotificationTemplateType } from '@dereekb/firebase';
 import { DbxFirebaseNotificationTemplateService } from './notification.template.service';
 import { DbxWidgetEntry, DbxWidgetService } from '@dereekb/dbx-web';
 import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, DbxFirebaseNotificationItemWidgetEntry, DbxFirebaseNotificationItemWidgetEntryRegistration, dbxWidgetTypeForNotificationTemplateType } from './notificationitem.widget';
-import { DbxFirebaseNotificationItemDefaultViewComponent } from '../component/notificationitem.view.default.component';
 
 /**
  * Service used for registering widgets used for notification items.

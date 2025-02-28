@@ -1,7 +1,7 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileIdentity, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
-import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
+import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.

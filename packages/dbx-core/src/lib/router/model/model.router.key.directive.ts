@@ -5,7 +5,7 @@ import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '
 import { dbxRouteModelKeyParamRedirect } from './id.param.redirect';
 import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
 import { DbxRouterService } from '../router/service/router.service';
-import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate } from './model.router';
+import { DbxRouteModelKeyDirectiveDelegate } from './model.router';
 
 /**
  * Used for retrieving the model's key from the current route using the configured parameter and passes it to its delegate.

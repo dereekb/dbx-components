@@ -1,5 +1,5 @@
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from 'apps/demo-api/src/test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f) => {
@@ -7,7 +7,7 @@ demoApiFunctionContextFactory((f) => {
     describe('Profile', () => {
       demoAuthorizedUserAdminContext({ f }, (u) => {
         demoProfileContext({ f, u }, (p) => {
-          // TODO: Test that when a test notification is created the Notification Summary for that profile is also created if it does not exist
+          // TODO: Test the profile test notifications
           it('todo', () => {});
         });
       });

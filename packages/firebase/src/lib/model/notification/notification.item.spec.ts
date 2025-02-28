@@ -1,5 +1,5 @@
-import { addMinutes, isBefore } from 'date-fns';
-import { NotificationItem, unreadNotificationItems } from './notification.item';
+import { addMinutes } from 'date-fns';
+import { type NotificationItem, unreadNotificationItems } from './notification.item';
 
 describe('unreadNotificationItems()', () => {
   it('should separate out the read items and the unread items', () => {

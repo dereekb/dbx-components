@@ -4,7 +4,7 @@ import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverKey, DbxPop
 import { type Maybe } from '@dereekb/util';
 import { NotificationItem } from '@dereekb/firebase';
 import { Observable } from 'rxjs';
-import { LoadingState, tapLog } from '@dereekb/rxjs';
+import { LoadingState } from '@dereekb/rxjs';
 
 export interface DbxFirebaseNotificationItemStorePopoverParams {
   /**

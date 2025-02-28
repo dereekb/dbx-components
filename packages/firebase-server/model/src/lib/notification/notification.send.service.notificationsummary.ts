@@ -7,7 +7,7 @@ import {
   type NotificationItem,
   NOTIFICATION_SUMMARY_ITEM_LIMIT,
   type NotificationSendNotificationSummaryMessagesResult,
-  NotificationSummary,
+  type NotificationSummary,
   inferKeyFromTwoWayFlatFirestoreModelKey,
   NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH,
   NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH,
@@ -16,7 +16,7 @@ import {
 import { type FirebaseServerActionsContext } from '@dereekb/firebase-server';
 import { type NotificationSummarySendService } from './notification.send.service';
 import { type NotificationSendMessagesInstance } from './notification.send';
-import { Maybe, cutStringFunction, multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
+import { type Maybe, cutStringFunction, multiValueMapBuilder, runAsyncTasksForValues, takeLast } from '@dereekb/util';
 import { makeNewNotificationSummaryTemplate } from './notification.util';
 
 export interface FirestoreNotificationSummarySendServiceConfig {
