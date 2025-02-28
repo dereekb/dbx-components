@@ -1,7 +1,7 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileIdentity, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
-import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument } from '@dereekb/firebase';
+import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
@@ -138,11 +138,21 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
 }
 
 export function createTestNotificationFactory(context: ProfileServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory } = context;
+  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
   return firebaseServerActionTransformFunctionFactory(ProfileCreateTestNotificationParams, async (params) => {
     const {} = params;
 
     return async (document: ProfileDocument) => {
+      // load the existing notification summary if it exists and check number of
+      const notificationSummaryId = twoWayFlatFirestoreModelKey(document.key);
+      const notificationSummaryDocument = notificationSummaryCollection.documentAccessor().loadDocumentForId(notificationSummaryId as NotificationSummaryId);
+
+      const notificationSummary = await notificationSummaryDocument.snapshotData();
+
+      if ((notificationSummary?.n.length ?? 0) > 6) {
+        throw new Error('Too many test notifications.');
+      }
+
       // create a new notification
       await createNotificationDocument({
         context,

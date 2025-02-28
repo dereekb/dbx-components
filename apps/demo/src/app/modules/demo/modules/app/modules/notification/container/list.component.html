@@ -1,7 +1,7 @@
 <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="notificationItemListRef" dbxTwoColumnSrefShowRight>
   <dbx-two-block left>
     <dbx-two-column-head top>
-      <ng-container dbxAction dbxActionValue [dbxActionHandler]="handleCreateTestNotification">
+      <ng-container dbxAction dbxActionValue dbxActionSnackbarError [dbxActionHandler]="handleCreateTestNotification" [dbxActionDisabled]="reachedTestLimit$ | async">
         <dbx-button dbxActionButton text="New Notification"></dbx-button>
       </ng-container>
     </dbx-two-column-head>

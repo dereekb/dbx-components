@@ -5,6 +5,7 @@ import { type FactoryWithInput, type Maybe, type PromiseOrValue, toReadableError
 import { type FirebaseError } from 'firebase/app';
 import { type HttpsCallable, type HttpsCallableResult } from 'firebase/functions';
 import { FirebaseServerError } from './error';
+import { isClientFirebaseError } from '../error/error';
 
 export interface MapHttpsCallable<I, O, A, B> {
   readonly mapInput?: FactoryWithInput<PromiseOrValue<A>, Maybe<I>>;
@@ -63,7 +64,7 @@ export function convertHttpsCallableErrorToReadableError(error: unknown) {
   let result: unknown;
 
   if (typeof error === 'object') {
-    if ((error as FirebaseError).name === 'FirebaseError' || ((error as FirebaseError).code && (error as { details: object }).details)) {
+    if (isClientFirebaseError(error) && (error as Partial<{ details: object }>).details != null) {
       result = FirebaseServerError.fromFirebaseError(error as FirebaseError);
     } else {
       result = toReadableError(error);

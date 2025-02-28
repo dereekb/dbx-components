@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-import { DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemStore } from '@dereekb/dbx-firebase';
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
 import { NotificationItem } from '@dereekb/firebase';

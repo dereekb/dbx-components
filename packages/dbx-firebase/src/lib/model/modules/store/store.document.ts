@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
+import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of, catchError } from 'rxjs';
 import {
   DocumentSnapshot,
   DocumentReference,
@@ -22,7 +22,9 @@ import {
   RootSingleItemFirestoreCollection,
   FlatFirestoreModelKey,
   flatFirestoreModelKey,
-  twoWayFlatFirestoreModelKey
+  twoWayFlatFirestoreModelKey,
+  FIRESTORE_PERMISSION_DENIED_ERROR_CODE,
+  isClientFirebaseError
 } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue, isLoadingStateLoading } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
@@ -293,6 +295,23 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly exists$: Observable<boolean> = this.currentData$.pipe(
     map((x) => isMaybeSo(x)),
+    catchError((e) => {
+      let result: Maybe<boolean>;
+
+      if (isClientFirebaseError(e)) {
+        switch (e.code) {
+          case FIRESTORE_PERMISSION_DENIED_ERROR_CODE:
+            result = false;
+            break;
+        }
+      }
+
+      if (result == null) {
+        throw e;
+      }
+
+      return of(result);
+    }),
     shareReplay(1)
   );
 
