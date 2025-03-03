@@ -1,6 +1,24 @@
-import { type Maybe, multiValueMapBuilder } from '@dereekb/util';
+import { type Maybe, multiValueMapBuilder, ArrayOrValue, asArray } from '@dereekb/util';
 import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
+
+/**
+ * NotificationTemplateTypeInfo alternative/derivative identity.
+ *
+ * For example, this model may be directly related to the identity in "notificationModelIdentity" but notifications are actually attached to the corresponding "altNotificationModelIdentity" or "altTargetModelIdentity".
+ *
+ * The alternative model should always have a NotificationBox associated with it.
+ */
+export interface NotificationTemplateTypeInfoAlternativeModelIdentityPair {
+  /**
+   * Alternative notification model identity.
+   */
+  readonly altNotificationModelIdentity: FirestoreModelIdentity;
+  /**
+   * Corresponding alternative target model identity, if applicable.
+   */
+  readonly altTargetModelIdentity?: Maybe<FirestoreModelIdentity>;
+}
 
 /**
  * Template type identifier of the notification.
@@ -25,7 +43,7 @@ export interface NotificationTemplateTypeInfo {
   /**
    * Model identity that this notification is for.
    *
-   * This model will have a NotificationBox associated with it.
+   * This model will have a NotificationBox associated with it if no alternativeNotificationModelIdentity values are provided.
    */
   readonly notificationModelIdentity: FirestoreModelIdentity;
   /**
@@ -36,6 +54,16 @@ export interface NotificationTemplateTypeInfo {
    * This model will not have a NotificationBox associated with it, and is typically a child model of the notificationModelIdentity.
    */
   readonly targetModelIdentity?: Maybe<FirestoreModelIdentity>;
+  /**
+   * One or more alternative/derivative model identities that this notification can target.
+   */
+  readonly alternativeModelIdentities?: Maybe<ArrayOrValue<NotificationTemplateTypeInfoAlternativeModelIdentityPair>>;
+  /**
+   * Whether or not the system should expect to send notifications to the "notificationModelIdentity" if one or more "alternativeModelIdentities" values are provided.
+   *
+   * Defaults to false.
+   */
+  readonly sendToNotificationModelIdentity?: Maybe<boolean>;
 }
 
 /**
@@ -49,14 +77,14 @@ export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType
  * @param infoArray
  * @returns
  */
-export function notificationTemplateTypeDetailsRecord(infoArray: NotificationTemplateTypeInfo[]): NotificationTemplateTypeInfoRecord {
+export function notificationTemplateTypeInfoRecord(infoArray: NotificationTemplateTypeInfo[]): NotificationTemplateTypeInfoRecord {
   const record: NotificationTemplateTypeInfoRecord = {};
 
   infoArray.forEach((x) => {
     const { type } = x;
 
     if (record[type]) {
-      throw new Error(`notificationTemplateTypeDetailsRecord(): duplicate NotificationTemplateType in record: ${type}`);
+      throw new Error(`notificationTemplateTypeInfoRecord(): duplicate NotificationTemplateType in record: ${type}`);
     }
 
     record[type] = x;
@@ -115,11 +143,25 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
   abstract getTemplateTypesForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateType[];
 
   /**
+   * Returns all NotificationTemplateTypes that are associate with the given model identity.
+   *
+   * @param identity
+   */
+  abstract getTemplateTypesForTargetModelIdentity(identity: FirestoreModelIdentity): NotificationTemplateType[];
+
+  /**
    * Returns all NotificationTemplateTypeInfo that are associate with the given model input.
    *
    * @param model
    */
   abstract getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[];
+
+  /**
+   * Returns all NotificationTemplateTypeInfo that are associate with the given model identity.
+   *
+   * @param identity
+   */
+  abstract getTemplateTypesDetailsForTargetModelIdentity(identity: FirestoreModelIdentity): NotificationTemplateTypeInfo[];
 }
 
 export function appNotificationTemplateTypeInfoRecordService(appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord): AppNotificationTemplateTypeInfoRecordService {
@@ -132,12 +174,25 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
   const allKnownTemplateTypeDetails: NotificationTemplateTypeInfo[] = [];
 
   Object.entries(appNotificationTemplateTypeInfoRecord).forEach(([_, details]) => {
-    const { collectionType } = details.notificationModelIdentity;
+    const { notificationModelIdentity, targetModelIdentity, alternativeModelIdentities } = details;
 
-    notificationModelTypeDetailsMapBuilder.add(collectionType, details);
-    targetModelTypeDetailsMapBuilder.add(details.targetModelIdentity?.collectionType ?? collectionType, details);
+    function addDetailsForIdentity(modelIdentity: FirestoreModelIdentity, targetIdentity?: Maybe<FirestoreModelIdentity>) {
+      const { collectionType } = modelIdentity;
 
-    allNotificationModelIdentityValuesSet.add(details.notificationModelIdentity);
+      notificationModelTypeDetailsMapBuilder.add(collectionType, details);
+      targetModelTypeDetailsMapBuilder.add(targetIdentity?.collectionType ?? collectionType, details);
+
+      allNotificationModelIdentityValuesSet.add(modelIdentity);
+    }
+
+    addDetailsForIdentity(notificationModelIdentity, targetModelIdentity);
+
+    if (alternativeModelIdentities != null) {
+      asArray(alternativeModelIdentities).forEach((x) => {
+        addDetailsForIdentity(x.altNotificationModelIdentity, x.altTargetModelIdentity);
+      });
+    }
+
     allKnownTemplateTypeDetails.push(details);
     allKnownTemplateTypes.push(details.type);
   });
@@ -183,12 +238,26 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
       return targetModelTemplateTypesMap.get(targetFirestoreCollectionType) ?? [];
     },
 
+    getTemplateTypesForTargetModelIdentity(identity: FirestoreModelIdentity): NotificationTemplateType[] {
+      return targetModelTemplateTypesMap.get(identity.collectionName) ?? [];
+    },
+
     getTemplateTypesDetailsForTargetModel(target: ReadFirestoreModelKeyInput): NotificationTemplateTypeInfo[] {
       const targetModelKey = readFirestoreModelKey(target, true);
       const targetFirestoreCollectionType = firestoreModelKeyCollectionType(targetModelKey) as FirestoreCollectionType;
       return targetModelTemplateDetailsMap.get(targetFirestoreCollectionType) ?? [];
+    },
+
+    getTemplateTypesDetailsForTargetModelIdentity(identity: FirestoreModelIdentity): NotificationTemplateTypeInfo[] {
+      return targetModelTemplateDetailsMap.get(identity.collectionName) ?? [];
     }
   };
 
   return service;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use notificationTemplateTypeInfoRecord instead.
+ */
+export const notificationTemplateTypeDetailsRecord = notificationTemplateTypeInfoRecord;
