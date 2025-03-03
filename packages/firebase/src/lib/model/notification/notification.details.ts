@@ -1,4 +1,4 @@
-import { type Maybe, multiValueMapBuilder, ArrayOrValue, asArray } from '@dereekb/util';
+import { type Maybe, multiValueMapBuilder, type ArrayOrValue, asArray } from '@dereekb/util';
 import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFirestoreModelKeyInput, firestoreModelKeyCollectionType, readFirestoreModelKey } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
 
