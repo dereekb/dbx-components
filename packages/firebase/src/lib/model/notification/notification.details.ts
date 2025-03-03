@@ -3,13 +3,13 @@ import { type FirestoreCollectionType, type FirestoreModelIdentity, type ReadFir
 import { type NotificationTemplateType } from './notification.id';
 
 /**
- * NotificationTemplateTypeInfo alternative/derivative identity.
+ * NotificationTemplateTypeInfoIdentityInfo alternative/derivative identity.
  *
  * For example, this model may be directly related to the identity in "notificationModelIdentity" but notifications are actually attached to the corresponding "altNotificationModelIdentity" or "altTargetModelIdentity".
  *
  * The alternative model should always have a NotificationBox associated with it.
  */
-export interface NotificationTemplateTypeInfoAlternativeModelIdentityPair {
+export interface NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair {
   /**
    * Alternative notification model identity.
    */
@@ -21,25 +21,9 @@ export interface NotificationTemplateTypeInfoAlternativeModelIdentityPair {
 }
 
 /**
- * Template type identifier of the notification.
- *
- * Provides default information for the notification.
- *
- * Types are generally intended to be handled case-insensitively by notification services.
+ * NotificationTemplateTypeInfo identity info
  */
-export interface NotificationTemplateTypeInfo {
-  /**
-   * Notification type
-   */
-  readonly type: NotificationTemplateType;
-  /**
-   * The notification's name
-   */
-  readonly name: string;
-  /**
-   * Description of the notification's content.
-   */
-  readonly description: string;
+export interface NotificationTemplateTypeInfoIdentityInfo {
   /**
    * Model identity that this notification is for.
    *
@@ -57,13 +41,35 @@ export interface NotificationTemplateTypeInfo {
   /**
    * One or more alternative/derivative model identities that this notification can target.
    */
-  readonly alternativeModelIdentities?: Maybe<ArrayOrValue<NotificationTemplateTypeInfoAlternativeModelIdentityPair>>;
+  readonly alternativeModelIdentities?: Maybe<ArrayOrValue<NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair>>;
   /**
    * Whether or not the system should expect to send notifications to the "notificationModelIdentity" if one or more "alternativeModelIdentities" values are provided.
    *
    * Defaults to false.
    */
   readonly sendToNotificationModelIdentity?: Maybe<boolean>;
+}
+
+/**
+ * Template type identifier of the notification.
+ *
+ * Provides default information for the notification.
+ *
+ * Types are generally intended to be handled case-insensitively by notification services.
+ */
+export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeInfoIdentityInfo {
+  /**
+   * Notification type
+   */
+  readonly type: NotificationTemplateType;
+  /**
+   * The notification's name
+   */
+  readonly name: string;
+  /**
+   * Description of the notification's content.
+   */
+  readonly description: string;
 }
 
 /**
