@@ -24,6 +24,12 @@ describe('appNotificationTemplateTypeInfoRecordService()', () => {
   describe('alternative model types', () => {
     const record = notificationTemplateTypeInfoRecord([
       {
+        type: 'aonlynotarget',
+        name: 'aonly no target',
+        description: 'aonly no target',
+        notificationModelIdentity: testIdentityA
+      },
+      {
         type: 'aonly',
         name: 'aonly',
         description: 'aonly',
@@ -53,6 +59,18 @@ describe('appNotificationTemplateTypeInfoRecordService()', () => {
             altNotificationModelIdentity: testIdentityAlternative
           }
         ]
+      },
+      {
+        type: 'altnoalttarget',
+        name: 'test alternative with no alt target',
+        description: 'test alternative with no alt target',
+        notificationModelIdentity: testIdentityA,
+        targetModelIdentity: testIdentityATarget,
+        alternativeModelIdentities: [
+          {
+            altNotificationModelIdentity: testIdentityAlternative
+          }
+        ]
       }
     ]);
 
@@ -70,6 +88,16 @@ describe('appNotificationTemplateTypeInfoRecordService()', () => {
 
       const typesForTargetModel = service.getTemplateTypesForTargetModel(firestoreModelKey(testIdentityAlternativeTarget, '0'));
       expect(typesForTargetModel).toHaveLength(1);
+    });
+
+    it('should use the default target model type for alternative types with no alternative target type', () => {
+      const service = appNotificationTemplateTypeInfoRecordService(record);
+
+      const allIdentities = service.getAllNotificationModelIdentityValues();
+      expect(allIdentities).toContain(testIdentityAlternative);
+
+      const typesForTargetModel = service.getTemplateTypeInfosForTargetModelIdentity(testIdentityATarget);
+      expect(typesForTargetModel).toHaveLength(4);
     });
   });
 });
