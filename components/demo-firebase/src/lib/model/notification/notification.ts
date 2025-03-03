@@ -1,11 +1,11 @@
-import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, NotificationTemplateTypeInfo, notificationTemplateTypeDetailsRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
-import { ProfileDocument, profileIdentity } from './profile';
-import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from './guestbook';
+import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
+import { ProfileDocument, profileIdentity } from '../profile';
+import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
 
 // MARK: Test Notification
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';
 
-export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
+export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
   type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
   name: 'Test Type',
   description: 'A test notification for profiles.',
@@ -15,7 +15,7 @@ export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeI
 // MARK: Example Notification
 export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'E';
 
-export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
+export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
   type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Example Notification',
   description: 'An example notification.',
@@ -53,7 +53,7 @@ export function exampleNotificationTemplate(input: ExampleNotificationInput): Cr
 // MARK: Guestbook Notifications
 export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_C';
 
-export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
+export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
   type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Guestbook Entry Created',
   description: 'A new guestbook entry has been created.',
@@ -79,7 +79,7 @@ export function guestbookEntryCreatedNotificationTemplate(input: GuestbookEntryC
 // MARK: Guestbook Entry Notifications
 export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_L';
 
-export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_DETAILS: NotificationTemplateTypeInfo = {
+export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
   type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Guestbook Entry Liked',
   description: 'A guestbook entry has been liked.',
@@ -117,6 +117,6 @@ export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLik
 }
 
 // MARK: All Notifications
-export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD = notificationTemplateTypeDetailsRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_DETAILS, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_DETAILS, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_DETAILS, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_DETAILS]);
+export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO]);
 
 export const DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID: NotificationSummaryIdForUidFunction = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);

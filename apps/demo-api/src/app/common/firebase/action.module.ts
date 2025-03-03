@@ -1,6 +1,6 @@
 import { DemoApiAuthModule } from './auth.module';
 import { DemoApiFirestoreModule } from './firestore.module';
-import { DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD, DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { firebaseServerActionsContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 import { DemoFirebaseServerActionsContext } from './action.context';
@@ -17,7 +17,7 @@ const demoFirebaseServerActionsContextFactory = (collections: DemoFirestoreColle
     storageService,
     authService,
     mailgunService,
-    appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD)
+    appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
   };
 };
 

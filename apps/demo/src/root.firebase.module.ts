@@ -18,7 +18,7 @@ import {
 } from '@dereekb/dbx-firebase';
 import { inject, Injector, NgModule } from '@angular/core';
 import { environment } from './environments/environment';
-import { Guestbook, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, guestbookIdentity, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD } from '@dereekb/demo-firebase';
+import { Guestbook, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, guestbookIdentity, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from '@dereekb/demo-components';
 
 export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
@@ -85,7 +85,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
       entries: [demoSetupDevelopmentWidget()]
     }),
     DbxFirebaseNotificationModule.forRoot({
-      appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_DETAILS_RECORD)
+      appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
     })
   ],
   providers: [
