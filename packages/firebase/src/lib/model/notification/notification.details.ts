@@ -70,6 +70,14 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
    * Description of the notification's content.
    */
   readonly description: string;
+  /**
+   * If true, this notification will only be sent to recipients that explicitly enable recieving via respective NotificationBoxRecipientTemplateConfig for this type.
+   */
+  readonly onlySendToExplicitlyEnabledRecipients?: boolean;
+  /**
+   * If false, this notification will send sms/texts to all recipients, even if they have not explicitly opted in to recieving sms/texts.
+   */
+  readonly onlyTextExplicitlyEnabledRecipients?: boolean;
 }
 
 /**
@@ -78,7 +86,7 @@ export interface NotificationTemplateTypeInfo extends NotificationTemplateTypeIn
 export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType, NotificationTemplateTypeInfo>;
 
 /**
- * Creates a NotificationTemplateTypeInfoRecord from the input details array.
+ * Creates a NotificationTemplateTypeInfoRecord from the input info array.
  *
  * @param infoArray
  * @returns
@@ -179,14 +187,14 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
   const allKnownTemplateTypes: NotificationTemplateType[] = [];
   const allKnownTemplateTypeInfo: NotificationTemplateTypeInfo[] = [];
 
-  Object.entries(appNotificationTemplateTypeInfoRecord).forEach(([_, details]) => {
-    const { notificationModelIdentity, targetModelIdentity, alternativeModelIdentities } = details;
+  Object.entries(appNotificationTemplateTypeInfoRecord).forEach(([_, info]) => {
+    const { notificationModelIdentity, targetModelIdentity, alternativeModelIdentities } = info;
 
     function addInfoForIdentity(modelIdentity: FirestoreModelIdentity, targetIdentity?: Maybe<FirestoreModelIdentity>) {
       const { collectionType } = modelIdentity;
 
-      notificationModelTypeInfoMapBuilder.add(collectionType, details);
-      targetModelTypeInfoMapBuilder.add(targetIdentity?.collectionType ?? collectionType, details);
+      notificationModelTypeInfoMapBuilder.add(collectionType, info);
+      targetModelTypeInfoMapBuilder.add(targetIdentity?.collectionType ?? collectionType, info);
 
       allNotificationModelIdentityValuesSet.add(modelIdentity);
     }
@@ -199,8 +207,8 @@ export function appNotificationTemplateTypeInfoRecordService(appNotificationTemp
       });
     }
 
-    allKnownTemplateTypeInfo.push(details);
-    allKnownTemplateTypes.push(details.type);
+    allKnownTemplateTypeInfo.push(info);
+    allKnownTemplateTypes.push(info.type);
   });
 
   const allNotificationModelIdentityValues = Array.from(allNotificationModelIdentityValuesSet);

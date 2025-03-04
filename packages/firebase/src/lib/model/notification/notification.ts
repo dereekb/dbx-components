@@ -28,7 +28,8 @@ import {
   optionalFirestoreEnum,
   snapshotConverterFunctions,
   optionalFirestoreDate,
-  firestoreUniqueStringArray
+  firestoreUniqueStringArray,
+  type SavedToFirestoreIfFalse
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
@@ -480,8 +481,28 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
   n: NotificationItem;
   /**
    * Additional embedded recipients.
+   *
+   * Any values for the NotificationBoxRecipientTemplateConfig-related parameters will be used when considering explicit opt-in/op-out.
+   * (I.E. setting "st" to true for a user with no other config for the notification template type will mark them as opt-in for texts, and
+   * can only be overridden by the user's own config)
    */
   r: NotificationRecipientWithConfig[];
+  /**
+   * Explicit opt-in send only.
+   *
+   * If true, will only send to users that have explicitly opted in to recieving notifications via specific methods.
+   *
+   * This setting takes priority over the system's configured default for this notification's template type.
+   */
+  ois?: Maybe<SavedToFirestoreIfTrue>;
+  /**
+   * Explicit opt-in text/sms send only.
+   *
+   * If false, will send text/sms to all users regardless if they have not explicitly opted in to text/sms. Will still take their opt-out into account.
+   *
+   * This setting takes priority over the system's configured default for this notification's template type.
+   */
+  ots?: Maybe<SavedToFirestoreIfFalse>;
   /**
    * Minimum time at which this notification should be sent.
    *
@@ -520,6 +541,8 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
     r: firestoreObjectArray({
       objectField: firestoreNotificationRecipientWithConfig
     }),
+    ois: optionalFirestoreBoolean({ dontStoreIf: false }),
+    ots: optionalFirestoreBoolean({ dontStoreIf: true }),
     sat: firestoreDate(),
     a: firestoreNumber({ default: 0 }),
     d: firestoreBoolean({ default: false }),
