@@ -720,10 +720,12 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
     return async (notificationDocument: NotificationDocument) => {
       // does nothing currently.
 
-      const { throttled, tryRun, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType } = await firestoreContext.runTransaction(async (transaction) => {
+      const { throttled, tryRun, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
+
         let [notificationBox, notification] = await Promise.all([notificationBoxDocument.snapshotData(), getDocumentSnapshotData(notificationDocumentInTransaction)]);
+
         const model = inferKeyFromTwoWayFlatFirestoreModelKey(notificationBoxDocument.id);
 
         let tryRun = true;
@@ -747,6 +749,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         let notificationBoxNeedsInitialization = false;
         let isKnownTemplateType: Maybe<boolean>;
         let isConfiguredTemplateType: Maybe<boolean>;
+        let onlySendToExplicitlyEnabledRecipients: Maybe<boolean>;
+        let onlyTextExplicitlyEnabledRecipients: Maybe<boolean>;
         let templateInstance: Maybe<NotificationTemplateServiceInstance>;
 
         async function deleteNotification() {
@@ -761,20 +765,22 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           const { t } = notification.n;
 
           templateInstance = notificationTemplateService.templateInstanceForType(t);
-          isKnownTemplateType = isConfiguredTemplateType = templateInstance.isConfiguredType;
+          isConfiguredTemplateType = templateInstance.isConfiguredType;
+
+          const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
+
+          isKnownTemplateType = templateTypeInfo != null;
+          onlySendToExplicitlyEnabledRecipients = notification.ois ?? templateTypeInfo?.onlySendToExplicitlyEnabledRecipients;
+          onlyTextExplicitlyEnabledRecipients = notification.ots ?? templateTypeInfo?.onlyTextExplicitlyEnabledRecipients;
 
           if (!isConfiguredTemplateType) {
             // log the issue that an notification with an unconfigured type was queued
-
-            const templateInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
-            isKnownTemplateType = templateInfo != null;
-
             const retryAttempts = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS;
             const delay = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
 
             if (notification.a < retryAttempts) {
               if (isKnownTemplateType) {
-                console.warn(`Unconfigured but known template type of "${t}" (${templateInfo.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
+                console.warn(`Unconfigured but known template type of "${t}" (${templateTypeInfo.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
               } else {
                 console.warn(`Unknown template type of "${t}" was found in a Notification. Send is being delayed by ${delay} hours.`);
               }
@@ -846,7 +852,9 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           templateInstance,
           isKnownTemplateType,
           isConfiguredTemplateType,
-          tryRun
+          tryRun,
+          onlySendToExplicitlyEnabledRecipients,
+          onlyTextExplicitlyEnabledRecipients
         };
       });
 
@@ -893,6 +901,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               authService,
               notificationUserAccessor,
               globalRecipients: messageFunction.globalRecipients,
+              onlySendToExplicitlyEnabledRecipients,
+              onlyTextExplicitlyEnabledRecipients,
               notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
             });
 

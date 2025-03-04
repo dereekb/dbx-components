@@ -68,6 +68,12 @@ export interface ExpandNotificationRecipientsInput {
    */
   readonly globalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
   /**
+   * Only send to recipients that have explicitly enabled sending via all given methods, except for text/sms which has its own configuration parameter.
+   *
+   * Defaults to false.
+   */
+  readonly onlySendToExplicitlyEnabledRecipients?: Maybe<boolean>;
+  /**
    * Only text those who have texting/sms notifications explicitly enabled.
    *
    * Defaults to true.
@@ -147,11 +153,17 @@ export interface ExpandNotificationRecipientsResult {
  * @returns
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
-  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
+  const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients: inputOnlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
   const notificationSummaryIdForUid = inputNotificationSummaryIdForUid ?? (() => undefined);
   const notificationTemplateType = notification.n.t || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
   const recipientFlag = recipientFlagOverride ?? notification.rf ?? NotificationRecipientSendFlag.NORMAL;
-  const onlyTextExplicitlyEnabledRecipients = inputOnlyTextExplicitlyEnabledRecipients !== false;
+
+  const onlyTextExplicitlyEnabledRecipients = inputOnlyTextExplicitlyEnabledRecipients !== false; // defaults to true
+
+  const onlySendToExplicitlyEnabledRecipients = inputOnlySendToExplicitlyEnabledRecipients === true; // defaults to false
+  const onlyEmailExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
+  const onlySendPushNotificationExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
+  const onlySendNotificationSummaryExplicitlyEnabledRecipients = onlySendToExplicitlyEnabledRecipients;
 
   const { canSendToGlobalRecipients, canSendToBoxRecipients, canSendToExplicitRecipients } = allowedNotificationRecipients(recipientFlag);
 
@@ -315,6 +327,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const emails: ExpandedNotificationRecipientEmail[] = [];
   const emailUidsSet = new Set<FirebaseAuthUserId>();
 
+  function checkShouldSendEmail(sendEmailEnabled: Maybe<boolean>) {
+    return (!onlyEmailExplicitlyEnabledRecipients && sendEmailEnabled !== false) || (onlyEmailExplicitlyEnabledRecipients && sendEmailEnabled === true);
+  }
+
   // start with all box recipients
   relevantBoxRecipientConfigs.forEach((x) => {
     const { recipient } = x;
@@ -323,8 +339,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     const userDetails = uid ? userDetailsMap.get(uid) : undefined;
     const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
 
-    // don't send an email if marked false
-    if (x.effectiveTemplateConfig?.se !== false && !emailUidsSet.has(uid ?? '')) {
+    const sendEmailEnabled = x.effectiveTemplateConfig?.se;
+    const shouldSendEmail = checkShouldSendEmail(sendEmailEnabled);
+
+    if (shouldSendEmail && !emailUidsSet.has(uid ?? '')) {
       const e = overrideRecipientEmail ?? userDetails?.email; // use override email or the default email
 
       if (e) {
@@ -354,9 +372,11 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
     if (userDetails) {
       const { email: userEmailAddress, displayName } = userDetails;
-      const sendEmail = x.se !== false;
 
-      if (userEmailAddress && sendEmail && !emailUidsSet.has(uid)) {
+      const sendEmailEnabled = x.se;
+      const shouldSendEmail = checkShouldSendEmail(sendEmailEnabled);
+
+      if (userEmailAddress && shouldSendEmail && !emailUidsSet.has(uid)) {
         const emailAddress = userEmailAddress.toLowerCase();
 
         const name = displayName || x.n;
@@ -374,9 +394,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   explicitOtherRecipientEmailAddresses.forEach((x, emailAddress) => {
-    const sendEmail = x.se !== false;
+    const sendEmailEnabled = x.se;
+    const shouldSendEmail = checkShouldSendEmail(sendEmailEnabled);
 
-    if (sendEmail) {
+    if (shouldSendEmail) {
       const emailRecipient: ExpandedNotificationRecipientEmail = {
         emailAddress: emailAddress,
         name: x.n,
@@ -392,16 +413,21 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const texts: ExpandedNotificationRecipientText[] = [];
   const textUidsSet = new Set<FirebaseAuthUserId>();
 
+  function checkShouldSendText(sendTextEnabled: Maybe<boolean>) {
+    return (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+  }
+
   relevantBoxRecipientConfigs.forEach((x) => {
     const { recipient } = x;
     const { uid } = recipient;
-    const sendTextEnabled = x.effectiveTemplateConfig?.st;
 
     const userDetails = uid ? userDetailsMap.get(uid) : undefined;
     const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
 
     // only send a text if explicitly enabled
-    const shouldSendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+    const sendTextEnabled = x.effectiveTemplateConfig?.st;
+    const shouldSendText = checkShouldSendText(sendTextEnabled);
+
     if (shouldSendText && !textUidsSet.has(uid ?? '')) {
       const t = x.recipient.t ?? userDetails?.phoneNumber; // use override phoneNumber or the default phone
 
@@ -432,9 +458,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
     if (userDetails) {
       const { phoneNumber, displayName } = userDetails;
-      const sendTextEnabled = x.st;
 
-      const sendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+      const sendTextEnabled = x.st;
+      const sendText = checkShouldSendText(sendTextEnabled);
+
       if (phoneNumber != null && sendText && !textUidsSet.has(uid)) {
         const name = displayName || x.n;
         const textRecipient: ExpandedNotificationRecipientText = {
@@ -452,7 +479,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
   explicitOtherRecipientTextNumbers.forEach((x, t) => {
     const sendTextEnabled = x.st;
-    const shouldSendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
+    const shouldSendText = checkShouldSendText(sendTextEnabled);
 
     if (shouldSendText) {
       const textRecipient: ExpandedNotificationRecipientText = {
@@ -472,16 +499,21 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   const notificationSummaryKeysSet = new Set<NotificationSummaryKey>();
   const notificationSummaryUidsSet = new Set<FirebaseAuthUserId>();
 
+  function checkShouldSendNotificationSummary(sendNotificationSummaryEnabled: Maybe<boolean>) {
+    return (!onlySendNotificationSummaryExplicitlyEnabledRecipients && sendNotificationSummaryEnabled !== false) || (onlySendNotificationSummaryExplicitlyEnabledRecipients && sendNotificationSummaryEnabled === true);
+  }
+
   relevantBoxRecipientConfigs.forEach((x) => {
     const { recipient } = x;
     const { uid } = recipient;
 
     const userDetails = uid ? userDetailsMap.get(uid) : undefined;
     const otherRecipientForUser = uid ? otherRecipientConfigs.get(uid) : undefined;
-    const sendNotificationSummary = x.effectiveTemplateConfig?.sn !== false;
 
-    // don't send a notification summary if marked false
-    if (sendNotificationSummary && !notificationSummaryUidsSet.has(uid ?? '')) {
+    const sendNotificationSummaryEnabled = x.effectiveTemplateConfig?.sn;
+    const shouldSendNotificationSummary = checkShouldSendNotificationSummary(sendNotificationSummaryEnabled);
+
+    if (shouldSendNotificationSummary && !notificationSummaryUidsSet.has(uid ?? '')) {
       let notificationSummaryId: Maybe<NotificationSummaryId>;
 
       if (uid) {
@@ -508,37 +540,15 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   otherRecipientConfigs.forEach((x, uid) => {
-    // add users who existing in the system at this step, then other recipients in the next step
-    const userDetails = userDetailsMap.get(uid);
-
-    if (userDetails) {
-      const { phoneNumber, displayName } = userDetails;
-      const sendTextEnabled = x.st;
-
-      const sendText = (onlyTextExplicitlyEnabledRecipients && sendTextEnabled === true) || (!onlyTextExplicitlyEnabledRecipients && sendTextEnabled !== false);
-      if (phoneNumber != null && sendText && !textUidsSet.has(uid)) {
-        const name = displayName || x.n;
-        const textRecipient: ExpandedNotificationRecipientText = {
-          phoneNumber: phoneNumber as E164PhoneNumber,
-          name,
-          otherRecipient: x
-        };
-
-        texts.push(textRecipient);
-        textUidsSet.add(uid);
-        explicitOtherRecipientTextNumbers.delete(phoneNumber); // don't double-send to the same text phone number
-      }
-    }
-  });
-
-  otherRecipientConfigs.forEach((x, uid) => {
     const userDetails = userDetailsMap.get(uid);
 
     if (userDetails) {
       const { displayName } = userDetails;
 
-      const sendNotificationSummary = x.sn;
-      if (sendNotificationSummary !== false) {
+      const sendNotificationSummaryEnabled = x.sn;
+      const shouldSendNotificationSummary = checkShouldSendNotificationSummary(sendNotificationSummaryEnabled);
+
+      if (shouldSendNotificationSummary) {
         let notificationSummaryId: Maybe<NotificationSummaryId>;
 
         if (uid) {
@@ -566,9 +576,10 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   explicitOtherRecipientNotificationSummaryIds.forEach((x, notificationSummaryId) => {
-    const { sn: sendNotificationSummary } = x;
+    const sendNotificationSummaryEnabled = x.sn;
+    const shouldSendNotificationSummary = checkShouldSendNotificationSummary(sendNotificationSummaryEnabled);
 
-    if (sendNotificationSummary !== false) {
+    if (shouldSendNotificationSummary) {
       const notificationSummary: ExpandedNotificationNotificationSummaryRecipient = {
         notificationSummaryId,
         otherRecipient: x,

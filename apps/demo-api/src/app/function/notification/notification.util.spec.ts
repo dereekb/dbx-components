@@ -75,7 +75,8 @@ demoApiFunctionContextFactory((f) => {
                   notification,
                   notificationBox,
                   authService: f.authService,
-                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor()
+                  notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor(),
+                  notificationSummaryIdForUid: undefined
                 });
 
                 expect(result.notificationSummaries).toHaveLength(1);
@@ -232,7 +233,9 @@ demoApiFunctionContextFactory((f) => {
                                             notificationBox,
                                             authService: f.authService,
                                             notificationUserAccessor: f.demoFirestoreCollections.notificationUserCollection.documentAccessor(),
-                                            notificationSummaryIdForUid: f.notificationSendService.notificationSummaryIdForUidFunction
+                                            notificationSummaryIdForUid: f.notificationSendService.notificationSummaryIdForUidFunction,
+                                            onlySendToExplicitlyEnabledRecipients: notification.ois,
+                                            onlyTextExplicitlyEnabledRecipients: notification.ots
                                           });
 
                                           expect(result._internal.globalRecipients).toHaveLength(0);
@@ -415,6 +418,23 @@ demoApiFunctionContextFactory((f) => {
                                           describe('user opts into emails', () => {
                                             beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ se: true });
                                             describeNotificationShouldBeSentToUser({ email: true, text: false, notificationSummary: true, checkDefaultConfig: true });
+                                          });
+
+                                          describe('Notification opt-in', () => {
+                                            // Opt-in send only
+                                            describe('ois=true', () => {
+                                              beforeEach(async () => {
+                                                await nbn.document.update({ ois: true });
+                                              });
+
+                                              /**
+                                               * This notification in particular opts-in the target user by default for notification summary
+                                               */
+                                              describe('user not opted in but is directly referenced as Notification recipient with notification summary enabled', () => {
+                                                beforeEachUpdateNotificationUserDefaultConfigForTemplateType({ sd: null, se: null, st: null, sp: null, sn: null });
+                                                describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true, checkDefaultConfig: true });
+                                              });
+                                            });
                                           });
                                         });
 

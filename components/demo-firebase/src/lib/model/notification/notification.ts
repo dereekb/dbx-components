@@ -106,7 +106,7 @@ export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLik
     r: [
       {
         uid: creatorUid,
-        // only send to notification summary by default
+        // opt-in to send to notification summary by default
         sn: true,
         // by default, don't send to email/text
         se: false,
