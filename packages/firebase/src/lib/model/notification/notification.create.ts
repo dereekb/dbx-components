@@ -1,5 +1,5 @@
 import { timeHasExpired } from '@dereekb/date';
-import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys } from '@dereekb/util';
+import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues } from '@dereekb/util';
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
 import { notificationBoxIdForModel, type NotificationTemplateType } from './notification.id';
@@ -98,8 +98,14 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
   const targetModel = inputTargetModel ? readFirestoreModelKey(inputTargetModel) : undefined;
   let d = data ?? inputD;
 
-  if (d && objectHasNoKeys(d)) {
-    d = undefined;
+  if (d != null) {
+    const filteredData = filterUndefinedValues(d, true); // filter both null and undefined values
+
+    if (objectHasNoKeys(filteredData)) {
+      d = undefined;
+    } else {
+      d = filteredData;
+    }
   }
 
   const template: CreateNotificationTemplate = {

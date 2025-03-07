@@ -140,7 +140,7 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
 export function createTestNotificationFactory(context: ProfileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
   return firebaseServerActionTransformFunctionFactory(ProfileCreateTestNotificationParams, async (params) => {
-    const {} = params;
+    const { skipSend } = params;
 
     return async (document: ProfileDocument) => {
       // load the existing notification summary if it exists and check number of
@@ -157,7 +157,8 @@ export function createTestNotificationFactory(context: ProfileServerActionsConte
       await createNotificationDocument({
         context,
         template: exampleNotificationTemplate({
-          profileDocument: document
+          profileDocument: document,
+          skipSend
         })
       });
 

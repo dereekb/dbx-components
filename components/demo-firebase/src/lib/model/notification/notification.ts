@@ -1,6 +1,7 @@
 import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
 import { ProfileDocument, profileIdentity } from '../profile';
 import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
+import { Maybe } from '@dereekb/util';
 
 // MARK: Test Notification
 export const TEST_NOTIFICATIONS_TEMPLATE_TYPE: NotificationTemplateType = 'TEST';
@@ -22,16 +23,17 @@ export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeIn
   notificationModelIdentity: profileIdentity
 };
 
-export interface ExampleNotificationInput {
+export interface ExampleNotificationData {
+  readonly uid: FirebaseAuthUserId; // user id to store in the notification
+  readonly skipSend?: Maybe<boolean>;
+}
+
+export interface ExampleNotificationInput extends Omit<ExampleNotificationData, 'uid'> {
   readonly profileDocument: ProfileDocument;
 }
 
-export interface ExampleNotificationData {
-  readonly uid: FirebaseAuthUserId; // user id to store in the notification
-}
-
 export function exampleNotificationTemplate(input: ExampleNotificationInput): CreateNotificationTemplate {
-  const { profileDocument } = input;
+  const { profileDocument, skipSend } = input;
   const uid = profileDocument.id;
 
   return createNotificationTemplate({
@@ -45,7 +47,8 @@ export function exampleNotificationTemplate(input: ExampleNotificationInput): Cr
      */
     targetModel: profileDocument,
     data: {
-      uid
+      uid,
+      skipSend
     }
   });
 }

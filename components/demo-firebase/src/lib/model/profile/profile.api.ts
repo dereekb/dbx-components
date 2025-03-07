@@ -1,13 +1,18 @@
 import { Expose } from 'class-transformer';
 import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { type Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
-export class ProfileCreateTestNotificationParams extends InferredTargetModelParams {}
+export class ProfileCreateTestNotificationParams extends InferredTargetModelParams {
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  skipSend?: Maybe<boolean>;
+}
 
 export class SetProfileUsernameParams extends InferredTargetModelParams {
   @Expose()
