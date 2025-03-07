@@ -71,7 +71,7 @@ import {
   mergeNotificationSendMessagesResult,
   type AsyncNotificationSummaryUpdateAction,
   UpdateNotificationSummaryParams,
-  NotificationMessage
+  type NotificationMessage
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
