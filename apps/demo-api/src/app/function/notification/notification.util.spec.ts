@@ -133,6 +133,59 @@ demoApiFunctionContextFactory((f) => {
           });
 
           describe('scenarios', () => {
+            describe('Example Notification', () => {
+              demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb_p) => {
+                describe('Notification Message Send Test', () => {
+                  beforeEach(async () => {
+                    const createInstance = await f.profileServerActions.createTestNotification({});
+                    await createInstance(p.document);
+                  });
+
+                  demoNotificationContext(
+                    {
+                      f,
+                      doc: async () => {
+                        const notifications = await nb_p.loadAllNotificationsForNotificationBox();
+                        return notifications[0].document;
+                      }
+                    },
+                    (nbn) => {
+                      it('should send a notifications', async () => {
+                        const result = await nbn.sendNotification({});
+                        expect(result.success).toBe(true);
+                        expect(result.sendNotificationSummaryResult).toBeDefined();
+                        expect(result.sendNotificationSummaryResult?.success).toHaveLength(1);
+                      });
+                    }
+                  );
+                });
+
+                describe('Notification Message Dont Send Test', () => {
+                  beforeEach(async () => {
+                    const createInstance = await f.profileServerActions.createTestNotification({ skipSend: true });
+                    await createInstance(p.document);
+                  });
+
+                  demoNotificationContext(
+                    {
+                      f,
+                      doc: async () => {
+                        const notifications = await nb_p.loadAllNotificationsForNotificationBox();
+                        return notifications[0].document;
+                      }
+                    },
+                    (nbn) => {
+                      it('should not send any notifications', async () => {
+                        const result = await nbn.sendNotification({});
+                        expect(result.success).toBe(true);
+                        expect(result.sendNotificationSummaryResult).toBeUndefined();
+                      });
+                    }
+                  );
+                });
+              });
+            });
+
             describe('Guestbook Scenario', () => {
               demoGuestbookContext({ f }, (g) => {
                 demoNotificationBoxContext(

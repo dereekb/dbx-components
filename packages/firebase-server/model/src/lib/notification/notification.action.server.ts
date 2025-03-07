@@ -70,7 +70,8 @@ import {
   type NotificationSendTextMessagesResult,
   mergeNotificationSendMessagesResult,
   type AsyncNotificationSummaryUpdateAction,
-  UpdateNotificationSummaryParams
+  UpdateNotificationSummaryParams,
+  type NotificationMessage
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -890,6 +891,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             });
 
           if (messageFunction) {
+            function filterOutNoContentNotificationMessages(messages: NotificationMessage<any>[]) {
+              return messages.filter((x) => !x.flag);
+            }
+
             // expand recipients
             const {
               emails: emailRecipients,
@@ -927,11 +932,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   return context;
                 });
 
-              const emailMessages = await Promise.all(emailInputContexts.map(messageFunction)).catch((e) => {
-                console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
-                buildMessageFailure = true;
-                return undefined;
-              });
+              const emailMessages = await Promise.all(emailInputContexts.map(messageFunction))
+                .then(filterOutNoContentNotificationMessages)
+                .catch((e) => {
+                  console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
+                  buildMessageFailure = true;
+                  return undefined;
+                });
 
               if (emailMessages?.length) {
                 if (notificationSendService.emailSendService != null) {
@@ -991,11 +998,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   return context;
                 });
 
-              const textMessages = await Promise.all(textInputContexts.map(messageFunction)).catch((e) => {
-                console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
-                buildMessageFailure = true;
-                return undefined;
-              });
+              const textMessages = await Promise.all(textInputContexts.map(messageFunction))
+                .then(filterOutNoContentNotificationMessages)
+                .catch((e) => {
+                  console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
+                  buildMessageFailure = true;
+                  return undefined;
+                });
 
               if (textMessages?.length) {
                 if (notificationSendService.textSendService != null) {
@@ -1052,11 +1061,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 return context;
               });
 
-              const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(messageFunction)).catch((e) => {
-                console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
-                buildMessageFailure = true;
-                return undefined;
-              });
+              const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(messageFunction))
+                .then(filterOutNoContentNotificationMessages)
+                .catch((e) => {
+                  console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
+                  buildMessageFailure = true;
+                  return undefined;
+                });
 
               if (notificationSummaryMessages?.length) {
                 if (notificationSendService.notificationSummarySendService != null) {
