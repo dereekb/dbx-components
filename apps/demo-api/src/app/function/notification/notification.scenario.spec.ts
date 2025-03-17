@@ -2,7 +2,7 @@ import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { Notification, DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_BOX_RECIPIENT_DOES_NOT_EXIST_ERROR_CODE, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
+import { Notification, DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
 import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, guestbookIdentity, SubscribeToGuestbookNotificationsParams } from '@dereekb/demo-firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 

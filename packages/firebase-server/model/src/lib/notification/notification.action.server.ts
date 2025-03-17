@@ -24,7 +24,6 @@ import {
   inferKeyFromTwoWayFlatFirestoreModelKey,
   loadDocumentsForDocumentReferencesFromValues,
   mergeNotificationBoxRecipients,
-  notificationBoxIdForModel,
   notificationBoxRecipientTemplateConfigArrayToRecord,
   notificationSendFlagsImplyIsComplete,
   notificationSummaryIdForModel,
@@ -37,7 +36,6 @@ import {
   type DocumentDataWithIdAndKey,
   type FirestoreContextReference,
   type FirestoreDocumentSnapshotDataPair,
-  type FirestoreModelKey,
   type Notification,
   type NotificationBox,
   type NotificationBoxDocument,
@@ -72,10 +70,10 @@ import {
   type AsyncNotificationSummaryUpdateAction,
   UpdateNotificationSummaryParams,
   type NotificationMessage,
-  NotificationBoxDocumentReferencePair,
+  type NotificationBoxDocumentReferencePair,
   loadNotificationBoxDocumentForReferencePair
 } from '@dereekb/firebase';
-import { assertSnapshotData, modelNotAvailableError, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
+import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
@@ -603,7 +601,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
     let notificationBox = await notificationBoxDocument.snapshotData();
     let createNotificationBox = false;
 
-    let result: Maybe<UpdateNotificationBoxRecipientInTransactionResult> = undefined;
+    const result: Maybe<UpdateNotificationBoxRecipientInTransactionResult> = undefined;
 
     if (!notificationBox) {
       if (allowCreateNotificationBoxIfItDoesNotExist) {

@@ -23,7 +23,7 @@ import {
 import { dateCellDurationSpanHasNotEndedFilterFunction } from './date.cell.filter';
 import { type DateCellRange, type DateCellRangeWithRange } from './date.cell.index';
 import { type DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
-import { formatToISO8601DayStringForSystem, parseISO8601DayStringToDate, toISO8601DayStringForSystem } from './date.format';
+import { formatToISO8601DayStringForSystem, parseISO8601DayStringToDate } from './date.format';
 import { type DateRange, isDateInDateRange } from './date.range';
 import { UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 import { guessCurrentTimezone, requireCurrentTimezone } from './date';

@@ -1,7 +1,7 @@
 import { FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
 import { GuestbookFirestoreCollections, InsertGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry, CreateGuestbookParams, AsyncGuestbookCreateAction, GuestbookDocument, guestbookEntryCreatedNotificationTemplate, LikeGuestbookEntryParams, guestbookEntryLikedNotificationTemplate, SubscribeToGuestbookNotificationsParams, AsyncGuestbookUpdateAction } from '@dereekb/demo-firebase';
 import { FirestoreContextReference, NotificationFirestoreCollections, UpdateNotificationBoxRecipientParams, createNotificationDocument, firestoreDummyKey } from '@dereekb/firebase';
-import { BaseNotificationServerActionsContext, NotificationServerActionsContext, updateNotificationBoxRecipientInTransactionFactory } from '@dereekb/firebase-server/model';
+import { BaseNotificationServerActionsContext, updateNotificationBoxRecipientInTransactionFactory } from '@dereekb/firebase-server/model';
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
