@@ -1,11 +1,12 @@
 import { FirebaseServerActionsContext, assertSnapshotData } from '@dereekb/firebase-server';
-import { GuestbookFirestoreCollections, InsertGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry, CreateGuestbookParams, AsyncGuestbookCreateAction, GuestbookDocument, guestbookEntryCreatedNotificationTemplate, LikeGuestbookEntryParams, guestbookEntryLikedNotificationTemplate } from '@dereekb/demo-firebase';
-import { FirestoreContextReference, NotificationFirestoreCollections, createNotificationDocument } from '@dereekb/firebase';
+import { GuestbookFirestoreCollections, InsertGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry, CreateGuestbookParams, AsyncGuestbookCreateAction, GuestbookDocument, guestbookEntryCreatedNotificationTemplate, LikeGuestbookEntryParams, guestbookEntryLikedNotificationTemplate, SubscribeToGuestbookNotificationsParams, AsyncGuestbookUpdateAction } from '@dereekb/demo-firebase';
+import { FirestoreContextReference, NotificationFirestoreCollections, UpdateNotificationBoxRecipientParams, createNotificationDocument, firestoreDummyKey } from '@dereekb/firebase';
+import { BaseNotificationServerActionsContext, NotificationServerActionsContext, updateNotificationBoxRecipientInTransactionFactory } from '@dereekb/firebase-server/model';
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
  */
-export interface GuestbookServerActionsContext extends FirebaseServerActionsContext, GuestbookFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference {}
+export interface GuestbookServerActionsContext extends BaseNotificationServerActionsContext, FirebaseServerActionsContext, GuestbookFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference {}
 
 /**
  * Server-only guestbook actions.
@@ -14,6 +15,7 @@ export abstract class GuestbookServerActions {
   abstract createGuestbook(params: CreateGuestbookParams): AsyncGuestbookCreateAction<CreateGuestbookParams>;
   abstract insertGuestbookEntry(params: InsertGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<InsertGuestbookEntryParams>;
   abstract likeGuestbookEntry(params: LikeGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<LikeGuestbookEntryParams>;
+  abstract subscribeToGuestbookNotifications(params: SubscribeToGuestbookNotificationsParams): AsyncGuestbookUpdateAction<SubscribeToGuestbookNotificationsParams>;
 }
 
 /**
@@ -23,7 +25,8 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
   return {
     createGuestbook: guestbookCreateGuestbookFactory(context),
     insertGuestbookEntry: guestbookEntryInsertEntryFactory(context),
-    likeGuestbookEntry: likeGuestbookEntryFactory(context)
+    likeGuestbookEntry: likeGuestbookEntryFactory(context),
+    subscribeToGuestbookNotifications: subscribeToGuestbookNotificationsFactory(context)
   };
 }
 
@@ -124,6 +127,44 @@ export function likeGuestbookEntryFactory(context: GuestbookServerActionsContext
             guestbookEntryKey: document.key
           })
         });
+      });
+
+      return document;
+    };
+  });
+}
+
+export function subscribeToGuestbookNotificationsFactory(context: GuestbookServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection } = context;
+  const updateNotificationBoxRecipientInTransaction = updateNotificationBoxRecipientInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(SubscribeToGuestbookNotificationsParams, async (params) => {
+    const { uid } = params;
+
+    return async (document: GuestbookDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        const guestbookDocumentInTransaction = guestbookCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(document);
+        const guestbook = await assertSnapshotData(guestbookDocumentInTransaction);
+
+        if (!guestbook) {
+          throw new Error('The guestbook could not be found.');
+        }
+
+        const updateRecipientParams: UpdateNotificationBoxRecipientParams = {
+          key: firestoreDummyKey(),
+          uid,
+          insert: true
+        };
+
+        // update the notification box recipient to add the user
+        await updateNotificationBoxRecipientInTransaction(
+          {
+            params: updateRecipientParams,
+            notificationBoxRelatedModelKey: guestbookDocumentInTransaction.key,
+            allowCreateNotificationBoxIfItDoesNotExist: true
+          },
+          transaction
+        );
       });
 
       return document;

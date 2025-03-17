@@ -707,7 +707,7 @@ export const demoNotificationBoxContext = demoNotificationBoxContextFactory();
 
 // MARK: Notification
 export interface DemoApiNotificationTestContextParams {
-  template: AsyncGetterOrValue<CreateNotificationTemplate>;
+  readonly template?: Maybe<AsyncGetterOrValue<CreateNotificationTemplate>>;
 }
 
 export class DemoApiNotificationTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Notification, NotificationDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationTestContextInstance<F>> {

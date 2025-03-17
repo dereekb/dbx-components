@@ -363,7 +363,7 @@ export class UpdateNotificationBoxRecipientParams extends UpdateNotificationBoxR
   uid?: Maybe<FirebaseAuthUserId>;
 
   /**
-   * Whether or not to insert the user if they currently do not exist. Defaults to false.
+   * Whether or not to create the user if they currently do not exist. Defaults to false.
    */
   @Expose()
   @IsOptional()
@@ -441,6 +441,18 @@ export class SendNotificationParams extends TargetModelParams {
   @IsOptional()
   @IsBoolean()
   throwErrorIfSent?: Maybe<boolean>;
+}
+
+/**
+ * Params class used for subscribing a system user to a NotificationBox for a model.
+ */
+export abstract class AbstractSubscribeToNotificationBoxParams extends TargetModelParams {
+  /**
+   * Notification recipient to subscribe to notifications
+   */
+  @Expose()
+  @IsFirestoreModelId()
+  uid!: FirebaseAuthUserId;
 }
 
 export interface SendNotificationResult {
