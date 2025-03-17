@@ -141,7 +141,7 @@ export interface ShouldSendCreatedNotificationInput {
   /**
    * Amount of time to throttle notifications. Only used if sendNotificationThrottleDate is provided. Defaults to 1 hour.
    */
-  readonly sendNotificationThrottleTime?: Maybe<number>;
+  readonly sendNotificationThrottleTime?: Maybe<Milliseconds>;
 }
 
 /**

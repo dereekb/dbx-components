@@ -24,7 +24,6 @@ import {
   inferKeyFromTwoWayFlatFirestoreModelKey,
   loadDocumentsForDocumentReferencesFromValues,
   mergeNotificationBoxRecipients,
-  notificationBoxIdForModel,
   notificationBoxRecipientTemplateConfigArrayToRecord,
   notificationSendFlagsImplyIsComplete,
   notificationSummaryIdForModel,
@@ -37,7 +36,6 @@ import {
   type DocumentDataWithIdAndKey,
   type FirestoreContextReference,
   type FirestoreDocumentSnapshotDataPair,
-  type FirestoreModelKey,
   type Notification,
   type NotificationBox,
   type NotificationBoxDocument,
@@ -71,7 +69,9 @@ import {
   mergeNotificationSendMessagesResult,
   type AsyncNotificationSummaryUpdateAction,
   UpdateNotificationSummaryParams,
-  type NotificationMessage
+  type NotificationMessage,
+  type NotificationBoxDocumentReferencePair,
+  loadNotificationBoxDocumentForReferencePair
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -79,7 +79,7 @@ import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, 
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
-import { notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
+import { notificationBoxDoesNotExist, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
@@ -244,7 +244,7 @@ const MAX_NOTIFICATION_BOXES_TO_UPDATE_PER_BATCH = 50;
 export function resyncNotificationUserFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationUserCollection, appNotificationTemplateTypeInfoRecordService } = context;
 
-  return firebaseServerActionTransformFunctionFactory(ResyncNotificationUserParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(ResyncNotificationUserParams, async () => {
     return async (notificationUserDocument: NotificationUserDocument) => {
       // run updates in batches
 
@@ -406,10 +406,10 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
 }
 
 export function resyncAllNotificationUsersFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationUserCollection } = context;
+  const { notificationUserCollection } = context;
   const resyncNotificationUser = resyncNotificationUserFactory(context);
 
-  return async (params?: ResyncAllNotificationUserParams) => {
+  return async () => {
     let notificationBoxesUpdated = 0;
 
     const resyncNotificationUserParams: ResyncNotificationUserParams = { key: firestoreDummyKey() };
@@ -451,7 +451,7 @@ export function resyncAllNotificationUsersFactory(context: NotificationServerAct
 }
 
 export function createNotificationSummaryFactory(context: NotificationServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection, authService } = context;
+  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
 
   return firebaseServerActionTransformFunctionFactory(CreateNotificationSummaryParams, async (params) => {
     const { model } = params;
@@ -468,7 +468,7 @@ export function createNotificationSummaryFactory(context: NotificationServerActi
 }
 
 export function updateNotificationSummaryFactory(context: NotificationServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
+  const { firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(UpdateNotificationSummaryParams, async (params) => {
     const { setReadAtTime, flagAllRead } = params;
@@ -496,28 +496,28 @@ export function updateNotificationSummaryFactory(context: NotificationServerActi
  *
  * Used for new models.
  */
-export interface CreateNotificationBoxInTransactionParams {
+export interface CreateNotificationBoxInTransactionInput extends NotificationBoxDocumentReferencePair {
   /**
    * Now date to use.
    */
-  now?: Date;
+  readonly now?: Maybe<Date>;
   /**
-   * Model to create the box for.
+   * If true, skips create
    */
-  model: FirestoreModelKey;
+  readonly skipCreate?: Maybe<boolean>;
 }
 
-export function createNotificationBoxInTransactionFactory(context: NotificationServerActionsContext) {
+export function createNotificationBoxInTransactionFactory(context: BaseNotificationServerActionsContext) {
   const { notificationBoxCollection } = context;
 
-  return async (params: CreateNotificationBoxInTransactionParams, transaction: Transaction) => {
-    const { now = new Date(), model } = params;
+  return async (params: CreateNotificationBoxInTransactionInput, transaction: Transaction) => {
+    const { now: inputNow, skipCreate } = params;
+    const now = inputNow ?? new Date();
 
-    const notificationBoxId = notificationBoxIdForModel(model);
-    const notificationBoxDocument: NotificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationBoxId);
+    const notificationBoxDocument: NotificationBoxDocument = loadNotificationBoxDocumentForReferencePair(params, notificationBoxCollection.documentAccessorForTransaction(transaction));
 
     const notificationBoxTemplate: NotificationBox = {
-      m: model,
+      m: notificationBoxDocument.notificationBoxRelatedModelKey,
       o: firestoreDummyKey(), // set during initialization
       r: [],
       cat: now,
@@ -525,7 +525,9 @@ export function createNotificationBoxInTransactionFactory(context: NotificationS
       s: true // requires initialization
     };
 
-    await notificationBoxDocument.create(notificationBoxTemplate);
+    if (!skipCreate) {
+      await notificationBoxDocument.create(notificationBoxTemplate);
+    }
 
     return {
       notificationBoxTemplate,
@@ -535,7 +537,7 @@ export function createNotificationBoxInTransactionFactory(context: NotificationS
 }
 
 export function createNotificationBoxFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, authService, notificationBoxCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const { firestoreContext, notificationBoxCollection, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(CreateNotificationBoxParams, async (params) => {
@@ -543,13 +545,7 @@ export function createNotificationBoxFactory(context: NotificationServerActionsC
 
     return async () => {
       const result = await firestoreContext.runTransaction(async (transaction) => {
-        const { notificationBoxDocument } = await createNotificationBoxInTransaction(
-          {
-            model
-          },
-          transaction
-        );
-
+        const { notificationBoxDocument } = await createNotificationBoxInTransaction({ notificationBoxRelatedModelKey: model }, transaction);
         return notificationBoxDocument;
       });
 
@@ -568,132 +564,204 @@ export function updateNotificationBoxFactory({ firebaseServerActionTransformFunc
   });
 }
 
-export function updateNotificationBoxRecipientFactory({ firestoreContext, authService, notificationBoxCollection, notificationUserCollection, firebaseServerActionTransformFunctionFactory }: NotificationServerActionsContext) {
-  return firebaseServerActionTransformFunctionFactory(UpdateNotificationBoxRecipientParams, async (params) => {
-    const { uid, i, insert, remove, configs: inputC } = params;
+export interface UpdateNotificationBoxRecipientInTransactionInput extends NotificationBoxDocumentReferencePair {
+  /**
+   * Parameters to update the notification box recipient with.
+   */
+  readonly params: UpdateNotificationBoxRecipientParams;
+  /**
+   * Whether or not to create the NotificationBox if it does not exist.
+   */
+  readonly allowCreateNotificationBoxIfItDoesNotExist?: Maybe<boolean>;
+  /**
+   * Whether or not to throw an error if the NotificationBox does not exist. If false, the function will do nothing if the NotificationBox does not exist and will return undefined.
+   *
+   * Throws a notificationBoxDoesNotExistForModelError() error.
+   */
+  readonly throwErrorIfNotificationBoxDoesNotExist?: Maybe<boolean>;
+}
 
+export interface UpdateNotificationBoxRecipientInTransactionResult {
+  readonly updatedNotificationBox: NotificationBox;
+  readonly notificationBoxDocument: NotificationBoxDocument;
+}
+
+export function updateNotificationBoxRecipientInTransactionFactory(context: BaseNotificationServerActionsContext) {
+  const { authService, notificationBoxCollection, notificationUserCollection } = context;
+  const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
+
+  return async (input: UpdateNotificationBoxRecipientInTransactionInput, transaction: Transaction): Promise<Maybe<UpdateNotificationBoxRecipientInTransactionResult>> => {
+    const { params, allowCreateNotificationBoxIfItDoesNotExist, throwErrorIfNotificationBoxDoesNotExist } = input;
+
+    const { uid, i, insert, remove, configs: inputC } = params;
     const findRecipientFn = (x: NotificationBoxRecipient) => (uid != null && x.uid === uid) || (i != null && i === i);
 
-    return async (notificationBoxDocument: NotificationBoxDocument) => {
-      await firestoreContext.runTransaction(async (transaction) => {
-        const notificationBoxDocumentInTransaction = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationBoxDocument);
-        const notificationBox = await assertSnapshotData(notificationBoxDocumentInTransaction);
-        const { m } = notificationBox;
+    const notificationBoxDocument: NotificationBoxDocument = loadNotificationBoxDocumentForReferencePair(input, notificationBoxCollection.documentAccessorForTransaction(transaction));
 
-        let r: Maybe<NotificationBoxRecipient[]>;
-        let targetRecipientIndex = notificationBox.r.findIndex(findRecipientFn);
-        const targetRecipient = notificationBox.r[targetRecipientIndex] as NotificationBoxRecipient | undefined;
-        let nextRecipient: Maybe<NotificationBoxRecipient>;
+    let notificationBox = await notificationBoxDocument.snapshotData();
+    let createNotificationBox = false;
 
-        if (remove) {
-          if (targetRecipientIndex != null) {
-            r = [...notificationBox.r]; // remove if they exist.
-            delete r[targetRecipientIndex];
-          }
-        } else {
-          if (!targetRecipient && !insert) {
-            throw notificationBoxRecipientDoesNotExistsError();
-          }
+    const result: Maybe<UpdateNotificationBoxRecipientInTransactionResult> = undefined;
 
-          const c = (inputC != null ? notificationBoxRecipientTemplateConfigArrayToRecord(inputC) : targetRecipient?.c) ?? {};
+    if (!notificationBox) {
+      if (allowCreateNotificationBoxIfItDoesNotExist) {
+        const { notificationBoxTemplate } = await createNotificationBoxInTransaction(
+          {
+            notificationBoxDocument,
+            skipCreate: true // don't create since we still need to read things for the transaction
+          },
+          transaction
+        );
+        notificationBox = notificationBoxTemplate;
+        createNotificationBox = true;
+      } else if (throwErrorIfNotificationBoxDoesNotExist) {
+        throw notificationBoxDoesNotExist();
+      }
+    }
 
-          nextRecipient = {
-            uid,
-            i: targetRecipient?.i ?? UNSET_INDEX_NUMBER,
-            c,
-            ...updateNotificationRecipient(targetRecipient ?? {}, params)
-          };
+    if (notificationBox) {
+      const { m } = notificationBox;
 
-          r = [...notificationBox.r];
+      let r: Maybe<NotificationBoxRecipient[]>;
+      let targetRecipientIndex = notificationBox.r.findIndex(findRecipientFn);
 
-          if (targetRecipient) {
-            nextRecipient.i = targetRecipient.i;
-            nextRecipient = mergeNotificationBoxRecipients(targetRecipient, nextRecipient) as NotificationBoxRecipient;
-            r[targetRecipientIndex] = nextRecipient; // override in the array
-          } else {
-            const nextI = computeNextFreeIndexOnSortedValuesFunction(readIndexNumber)(notificationBox.r); // r is sorted by index in ascending order, so the last value is the largest i
-            nextRecipient.i = nextI;
+      const targetRecipient = notificationBox.r[targetRecipientIndex] as NotificationBoxRecipient | undefined;
+      let nextRecipient: Maybe<NotificationBoxRecipient>;
 
-            // should have the greatest i value, push to end
-            r.push(nextRecipient);
-            targetRecipientIndex = r.length - 1;
-          }
+      if (remove) {
+        if (targetRecipientIndex != null) {
+          r = [...notificationBox.r]; // remove if they exist.
+          delete r[targetRecipientIndex];
+        }
+      } else {
+        if (!targetRecipient && !insert) {
+          throw notificationBoxRecipientDoesNotExistsError();
         }
 
-        // save changes to r if it changed
-        if (r != null) {
-          const notificationUserId = targetRecipient?.uid ?? nextRecipient?.uid;
+        const c = (inputC != null ? notificationBoxRecipientTemplateConfigArrayToRecord(inputC) : targetRecipient?.c) ?? {};
 
-          // sync with the notification user's document, if it exists
-          if (notificationUserId != null) {
-            const notificationBoxId = notificationBoxDocument.id;
-            const notificationUserDocument = await notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationUserId);
+        nextRecipient = {
+          uid,
+          i: targetRecipient?.i ?? UNSET_INDEX_NUMBER,
+          c,
+          ...updateNotificationRecipient(targetRecipient ?? {}, params)
+        };
 
-            let notificationUser = await notificationUserDocument.snapshotData();
-            const createNotificationUser = !notificationUser && !remove && insert;
+        r = [...notificationBox.r];
+
+        if (targetRecipient) {
+          nextRecipient.i = targetRecipient.i;
+          nextRecipient = mergeNotificationBoxRecipients(targetRecipient, nextRecipient) as NotificationBoxRecipient;
+          r[targetRecipientIndex] = nextRecipient; // override in the array
+        } else {
+          const nextI = computeNextFreeIndexOnSortedValuesFunction(readIndexNumber)(notificationBox.r); // r is sorted by index in ascending order, so the last value is the largest i
+          nextRecipient.i = nextI;
+
+          // should have the greatest i value, push to end
+          r.push(nextRecipient);
+          targetRecipientIndex = r.length - 1;
+        }
+      }
+
+      // save changes to r if it has changed
+      if (r != null) {
+        const notificationUserId = targetRecipient?.uid ?? nextRecipient?.uid;
+
+        // sync with the notification user's document, if it exists
+        if (notificationUserId != null) {
+          const notificationBoxId = notificationBoxDocument.id;
+          const notificationUserDocument = await notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationUserId);
+
+          let notificationUser = await notificationUserDocument.snapshotData();
+          const createNotificationUser = !notificationUser && !remove && insert;
+
+          if (createNotificationUser) {
+            // assert they exist in the auth system
+            const userContext = authService.userContext(notificationUserId);
+            const userExistsInAuth = await userContext.exists();
+
+            if (!userExistsInAuth) {
+              throw notificationUserInvalidUidForCreateError(notificationUserId);
+            }
+
+            const notificationUserTemplate: NotificationUser = {
+              uid: notificationUserId,
+              b: [],
+              bc: [],
+              ns: false,
+              dc: {
+                c: {}
+              },
+              gc: {
+                c: {}
+              }
+            };
+
+            notificationUser = notificationUserTemplate;
+          }
+
+          // if the user is being inserted or exists, then make updates
+          if (notificationUser != null) {
+            const { updatedBc, updatedNotificationBoxRecipient } = updateNotificationUserNotificationBoxRecipientConfig({
+              notificationBoxId,
+              notificationUserId,
+              notificationBoxAssociatedModelKey: m,
+              notificationUser,
+              insertingRecipientIntoNotificationBox: insert,
+              removeRecipientFromNotificationBox: remove,
+              notificationBoxRecipient: nextRecipient
+            });
+
+            const updatedB = updatedBc ? updatedBc.map((x) => x.nb) : undefined;
 
             if (createNotificationUser) {
-              // assert they exist in the auth system
-              const userContext = authService.userContext(notificationUserId);
-              const userExistsInAuth = await userContext.exists();
-
-              if (!userExistsInAuth) {
-                throw notificationUserInvalidUidForCreateError(notificationUserId);
-              }
-
-              const notificationUserTemplate: NotificationUser = {
-                uid: notificationUserId,
-                b: [],
-                bc: [],
-                ns: false,
-                dc: {
-                  c: {}
-                },
-                gc: {
-                  c: {}
-                }
+              const newUserTemplate: NotificationUser = {
+                ...notificationUser,
+                bc: updatedBc ?? [],
+                b: updatedB ?? []
               };
 
-              notificationUser = notificationUserTemplate;
+              await notificationUserDocument.create(newUserTemplate);
+            } else if (updatedBc != null) {
+              await notificationUserDocument.update({ bc: updatedBc, b: updatedB });
             }
 
-            // if the user is being inserted or exists, then make updates
-            if (notificationUser != null) {
-              const { updatedBc, updatedNotificationBoxRecipient } = updateNotificationUserNotificationBoxRecipientConfig({
-                notificationBoxId,
-                notificationUserId,
-                notificationBoxAssociatedModelKey: m,
-                notificationUser,
-                insertingRecipientIntoNotificationBox: insert,
-                removeRecipientFromNotificationBox: remove,
-                notificationBoxRecipient: nextRecipient
-              });
-
-              const updatedB = updatedBc ? updatedBc.map((x) => x.nb) : undefined;
-
-              if (createNotificationUser) {
-                const newUserTemplate: NotificationUser = {
-                  ...notificationUser,
-                  bc: updatedBc ?? [],
-                  b: updatedB ?? []
-                };
-
-                await notificationUserDocument.create(newUserTemplate);
-              } else if (updatedBc != null) {
-                await notificationUserDocument.update({ bc: updatedBc, b: updatedB });
-              }
-
-              // Set if nextRecipient is updated/influence from existing configuration
-              if (targetRecipientIndex != null && updatedNotificationBoxRecipient && !remove) {
-                r[targetRecipientIndex] = updatedNotificationBoxRecipient; // set the updated value in r
-              }
+            // Set if nextRecipient is updated/influence from existing configuration
+            if (targetRecipientIndex != null && updatedNotificationBoxRecipient && !remove) {
+              r[targetRecipientIndex] = updatedNotificationBoxRecipient; // set the updated value in r
             }
-
-            // else, if removing and they don't exist, nothing to update
           }
 
-          await notificationBoxDocumentInTransaction.update({ r });
+          // else, if removing and they don't exist, nothing to update
         }
+
+        if (createNotificationBox) {
+          await notificationBoxDocument.create({ ...notificationBox, r });
+        } else {
+          await notificationBoxDocument.update({ r });
+        }
+      }
+    }
+
+    return result;
+  };
+}
+
+export function updateNotificationBoxRecipientFactory(context: NotificationServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
+  const updateNotificationBoxRecipientInTransaction = updateNotificationBoxRecipientInTransactionFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(UpdateNotificationBoxRecipientParams, async (params) => {
+    return async (notificationBoxDocument: NotificationBoxDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        await updateNotificationBoxRecipientInTransaction(
+          {
+            params,
+            throwErrorIfNotificationBoxDoesNotExist: true,
+            notificationBoxDocument
+          },
+          transaction
+        );
       });
 
       return notificationBoxDocument;
@@ -801,13 +869,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           if (!notificationBox && tryRun) {
             switch (notification.st) {
               case NotificationSendType.INIT_BOX_AND_SEND:
-                const { notificationBoxTemplate } = await createNotificationBoxInTransaction(
-                  {
-                    model
-                  },
-                  transaction
-                );
-
+                const { notificationBoxTemplate } = await createNotificationBoxInTransaction({ notificationBoxDocument }, transaction);
                 notificationBox = notificationBoxTemplate;
                 createdBox = true;
                 break;
@@ -1031,7 +1093,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 }
 
                 if (sendTextsResult != null) {
-                  const { success, failed, ignored } = sendTextsResult;
+                  const { success, failed } = sendTextsResult;
                   tsr = success.length ? currentTsr.concat(success) : undefined;
 
                   if (failed.length > 0) {
@@ -1242,7 +1304,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
 }
 
 export function cleanupSentNotificationsFactory(context: NotificationServerActionsContext) {
-  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationCollectionFactory, notificationBoxCollection, notificationWeekCollectionFactory } = context;
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, notificationCollectionGroup, notificationBoxCollection, notificationWeekCollectionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(CleanupSentNotificationsParams, async () => {
     return async () => {

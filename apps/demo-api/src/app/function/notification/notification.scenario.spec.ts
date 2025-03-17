@@ -1,9 +1,10 @@
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
+import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { Notification, DocumentDataWithIdAndKey } from '@dereekb/firebase';
-import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from '@dereekb/demo-firebase';
+import { Notification, DocumentDataWithIdAndKey, onCallUpdateModelParams, NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE } from '@dereekb/firebase';
+import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, guestbookIdentity, SubscribeToGuestbookNotificationsParams } from '@dereekb/demo-firebase';
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
   describeCloudFunctionTest('notification.scenario', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
@@ -38,6 +39,42 @@ demoApiFunctionContextFactory((f) => {
 
               const recipients = notificationBox.r;
               expect(recipients.length).toBe(0);
+            });
+
+            describe('adding notification recipient', () => {
+              demoAuthorizedUserAdminContext({ f }, (au) => {
+                describe('recipient exists', () => {
+                  it('should add the user as a notiication recipient', async () => {
+                    const params: SubscribeToGuestbookNotificationsParams = {
+                      uid: u.uid,
+                      key: g.documentKey
+                    };
+
+                    await au.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications'));
+
+                    const notificationBox = await assertSnapshotData(guestbookNb.document);
+
+                    const recipients = notificationBox.r;
+                    expect(recipients.length).toBe(1);
+                    expect(recipients[0].uid).toBe(u.uid);
+                  });
+                });
+
+                describe('recipient does not exist', () => {
+                  itShouldFail('to add a user that does not exist as a recipient', async () => {
+                    const params: SubscribeToGuestbookNotificationsParams = {
+                      uid: 'doesnotexist',
+                      key: g.documentKey
+                    };
+
+                    await expectFail(
+                      () => au.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications')),
+                      // should throw NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE
+                      jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
+                    );
+                  });
+                });
+              });
             });
 
             describe('guestbook entry created', () => {

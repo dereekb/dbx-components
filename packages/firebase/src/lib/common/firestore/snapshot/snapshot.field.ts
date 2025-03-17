@@ -325,7 +325,7 @@ export function optionalFirestoreString<S extends string = string>(config?: Opti
 
 export type FirestoreEnumConfig<S extends string | number> = MapConfiguredFirestoreFieldConfigWithDefault<S, S>;
 
-export function firestoreEnum<S extends string | number>(config: FirestoreEnumConfig<S>) {
+export function firestoreEnum<S extends string | number>(config: FirestoreEnumConfig<S>): FirestoreModelFieldMapFunctionsConfig<S, S> {
   return firestoreField<S, S>({
     ...config,
     fromData: passThrough,

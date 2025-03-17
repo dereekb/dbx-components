@@ -1,6 +1,6 @@
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { type NotificationBoxId } from './notification.id';
+import { inferNotificationBoxRelatedModelKey, type NotificationBoxId } from './notification.id';
 import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, type NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig, type NotificationUserDefaultNotificationBoxRecipientConfig, firestoreNotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { type UserRelatedById, type UserRelated } from '../user';
@@ -306,6 +306,10 @@ export class NotificationBoxDocument extends AbstractFirestoreDocument<Notificat
   get modelIdentity() {
     return notificationBoxIdentity;
   }
+
+  get notificationBoxRelatedModelKey() {
+    return inferNotificationBoxRelatedModelKey(this.id);
+  }
 }
 
 export const notificationBoxConverter = snapshotConverterFunctions<NotificationBox>({
@@ -531,12 +535,12 @@ export class NotificationDocument extends AbstractFirestoreDocumentWithParent<No
 
 export const notificationConverter = snapshotConverterFunctions<Notification>({
   fields: {
-    st: firestoreEnum({ default: NotificationSendType.SEND_IF_BOX_EXISTS }),
-    rf: optionalFirestoreEnum(),
-    ts: firestoreEnum({ default: NotificationSendState.NONE }),
-    es: firestoreEnum({ default: NotificationSendState.NONE }),
-    ps: firestoreEnum({ default: NotificationSendState.NONE }),
-    ns: firestoreEnum({ default: NotificationSendState.NONE }),
+    st: firestoreEnum<NotificationSendType>({ default: NotificationSendType.SEND_IF_BOX_EXISTS }),
+    rf: optionalFirestoreEnum<NotificationRecipientSendFlag>(),
+    ts: firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE }),
+    es: firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE }),
+    ps: firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE }),
+    ns: firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE }),
     n: firestoreNotificationItem,
     r: firestoreObjectArray({
       objectField: firestoreNotificationRecipientWithConfig

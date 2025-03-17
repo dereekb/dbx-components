@@ -29,7 +29,8 @@ import {
   NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
   createNotificationDocument,
   CreateNotificationTemplate,
-  NotificationBoxRecipientFlag
+  NotificationBoxRecipientFlag,
+  NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
 import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from '@dereekb/demo-firebase';
@@ -1064,6 +1065,30 @@ demoApiFunctionContextFactory((f) => {
           });
 
           describe('Notification Box', () => {
+            describe('does not exist', () => {
+              demoNotificationBoxContext(
+                {
+                  f,
+                  for: p, // NotificationBox is for the profile
+                  createIfNeeded: false
+                },
+                (nb) => {
+                  describe('updateNotificationBoxRecipient()', () => {
+                    itShouldFail('to add a recipient to a notification box that does not exist', async () => {
+                      await expectFail(
+                        () =>
+                          nb.updateRecipient({
+                            uid: u.uid,
+                            insert: true
+                          }),
+                        jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE)
+                      );
+                    });
+                  });
+                }
+              );
+            });
+
             describe('exists', () => {
               demoNotificationBoxContext(
                 {

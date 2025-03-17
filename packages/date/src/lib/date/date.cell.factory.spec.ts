@@ -25,7 +25,7 @@ import { type DateCellRange, type DateCellRangeWithRange } from './date.cell.ind
 import { type DateCellSchedule, expandDateCellSchedule } from './date.cell.schedule';
 import { formatToISO8601DayStringForSystem, parseISO8601DayStringToDate } from './date.format';
 import { type DateRange, isDateInDateRange } from './date.range';
-import { dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
+import { UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE, dateTimezoneUtcNormal, systemNormalDateToBaseDate } from './date.timezone';
 import { guessCurrentTimezone, requireCurrentTimezone } from './date';
 
 describe('dateCellRangeOfTimingFactory()', () => {
@@ -324,6 +324,37 @@ describe('dateCellIndexRange()', () => {
         const result = dateCellIndexRange(timing, limit, false);
         expect(result.minIndex).toBe(1);
         expect(result.maxIndex).toBe(days + daysPastEnd);
+      });
+    });
+  });
+
+  describe('scenario', () => {
+    describe('week of 3-9-2025', () => {
+      const days = 7;
+      const duration = 60;
+
+      describe('UTC', () => {
+        const startsAt = UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone('2025-03-09'); // daylight savings begins
+        const weekTiming = dateCellTiming({ startsAt, duration }, days, 'UTC');
+
+        it('should return an index range of 0 to 6', () => {
+          const result = dateCellIndexRange(weekTiming);
+
+          expect(result.minIndex).toBe(0);
+          expect(result.maxIndex).toBe(days);
+        });
+      });
+
+      describe('current timezone', () => {
+        const startsAt = UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInSystemDate('2025-03-09'); // daylight savings begins
+        const weekTiming = dateCellTiming({ startsAt, duration }, days);
+
+        it('should return an index range of 0 to 6', () => {
+          const result = dateCellIndexRange(weekTiming);
+
+          expect(result.minIndex).toBe(0);
+          expect(result.maxIndex).toBe(days);
+        });
       });
     });
   });

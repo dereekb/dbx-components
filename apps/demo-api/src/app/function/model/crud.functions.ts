@@ -6,6 +6,7 @@ import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel,
 import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallReadModelMap, DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
+import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -21,6 +22,9 @@ export const demoReadModelMap: DemoOnCallReadModelMap = {
 
 // MARK: Update
 export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
+  guestbook: onCallSpecifierHandler({
+    subscribeToNotifications: guestbookSubscribeToNotifications
+  }),
   guestbookEntry: insertGuestbookEntry,
   profile: onCallSpecifierHandler({
     _: updateProfile,

@@ -61,7 +61,7 @@ export interface Guestbook {
   cby?: Maybe<ProfileId>;
 }
 
-export type GuestbookRoles = 'admin' | GrantedReadRole;
+export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | GrantedReadRole;
 
 export type GuestbookWithId = DocumentDataWithIdAndKey<Guestbook>;
 

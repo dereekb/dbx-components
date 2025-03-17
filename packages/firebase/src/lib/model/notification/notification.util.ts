@@ -1,8 +1,9 @@
 import { filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
-import { type Notification, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState } from './notification';
+import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState } from './notification';
 import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
-import { type FirebaseAuthUserId, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
+import { notificationBoxIdForModel } from './notification.id';
 
 // MARK: NotificationUser
 export interface EffectiveNotificationBoxRecipientConfigInput {
@@ -164,4 +165,34 @@ export function mergeNotificationBoxRecipients<T extends NotificationBoxRecipien
       ...b.c
     }
   };
+}
+
+// MARK: NotificationBox
+export interface NotificationBoxDocumentReferencePair {
+  /**
+   * NotificationBoxDocument to update.
+   *
+   * If not provided, please provide the notificationBoxRelatedModelKey. If neither value is provided, an error will be thrown.
+   */
+  readonly notificationBoxDocument?: Maybe<NotificationBoxDocument>;
+  /**
+   * Key of the model the notification box is expected to be associated with. Used if NotificationBoxDocument is not provided already.
+   */
+  readonly notificationBoxRelatedModelKey?: Maybe<FirestoreModelKey>;
+}
+
+export function loadNotificationBoxDocumentForReferencePair(input: NotificationBoxDocumentReferencePair, accessor: FirestoreDocumentAccessor<NotificationBox, NotificationBoxDocument>) {
+  const { notificationBoxDocument: inputNotificationBoxDocument, notificationBoxRelatedModelKey: inputNotificationBoxRelatedModelKey } = input;
+  let notificationBoxDocument: NotificationBoxDocument;
+
+  if (inputNotificationBoxDocument != null) {
+    notificationBoxDocument = inputNotificationBoxDocument;
+  } else if (inputNotificationBoxRelatedModelKey) {
+    const notificationBoxId = notificationBoxIdForModel(inputNotificationBoxRelatedModelKey);
+    notificationBoxDocument = accessor.loadDocumentForId(notificationBoxId);
+  } else {
+    throw new Error('NotificationBoxDocument or NotificationBoxRelatedModelKey is required');
+  }
+
+  return notificationBoxDocument;
 }
