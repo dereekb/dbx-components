@@ -397,6 +397,10 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly sendSetupContentIfUserExists?: boolean;
   /**
+   * If true, and the setup content has been sent before, it will not be sent again.
+   */
+  readonly sendSetupDetailsOnce?: boolean;
+  /**
    * Whether or not to force sending the test details.
    */
   readonly sendDetailsInTestEnvironment?: boolean;
@@ -416,6 +420,10 @@ export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
    * Whether or not to force sending the test details. Usage differs between providers.
    */
   readonly sendDetailsInTestEnvironment?: boolean;
+  /**
+   * Whether or not to skip sending again if the setup content has already been sent once.
+   */
+  readonly sendSetupDetailsOnce?: boolean;
   /**
    * Any additional setup context
    */
@@ -485,7 +493,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   }
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
-    const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, data, sendDetailsInTestEnvironment } = input;
+    const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, sendSetupDetailsOnce: onlySendSetupContentOnce, data, sendDetailsInTestEnvironment } = input;
 
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
@@ -519,7 +527,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
     // send content if necessary
     if ((createdUser && sendSetupContent === true) || sendSetupContentIfUserExists) {
-      const sentEmail = await this.sendSetupContent(userRecordId, { data, sendDetailsInTestEnvironment });
+      const sentEmail = await this.sendSetupContent(userRecordId, { data, sendSetupDetailsOnce: onlySendSetupContentOnce, sendDetailsInTestEnvironment });
 
       // reload the user record
       if (sentEmail) {
@@ -549,7 +557,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
 
-      if (!setupCommunicationAt || timeHasExpired(new Date(setupCommunicationAt), this.setupThrottleTime)) {
+      if (!setupCommunicationAt || (!config?.sendSetupDetailsOnce && timeHasExpired(new Date(setupCommunicationAt), this.setupThrottleTime))) {
         await this.sendSetupContentToUser(setupDetails);
         await this.updateSetupContentSentTime(setupDetails);
         sentContent = true;
@@ -591,8 +599,10 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   }
 
   protected async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void> {
+    const setupCommunicationAt = toISODateString(new Date());
+
     await details.userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
-      setupCommunicationAt: toISODateString(new Date())
+      setupCommunicationAt
     });
   }
 
