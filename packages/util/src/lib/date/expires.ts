@@ -1,5 +1,5 @@
-import { Maybe } from '../value/maybe.type';
-import { DateOrUnixDateTimeNumber, Milliseconds, addMilliseconds } from './date';
+import { type Maybe } from '../value/maybe.type';
+import { type DateOrUnixDateTimeNumber, type Milliseconds, addMilliseconds } from './date';
 import { dateFromDateOrTimeNumber } from './date.unix';
 
 // MARK: Expires

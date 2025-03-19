@@ -1,5 +1,5 @@
 import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
-import { MaybeNot, type Maybe } from '../value/maybe.type';
+import { type MaybeNot, type Maybe } from '../value/maybe.type';
 
 /**
  * The past or future direction.

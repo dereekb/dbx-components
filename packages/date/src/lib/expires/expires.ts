@@ -1,7 +1,7 @@
 import { dateFromDateOrTimeNumber } from '../date/date.unix';
-import { Expires, type DateOrUnixDateTimeNumber, type Maybe, type Milliseconds } from '@dereekb/util';
+import { type Expires, type DateOrUnixDateTimeNumber, type Maybe, type Milliseconds } from '@dereekb/util';
 import { addMilliseconds, addMinutes, isPast } from 'date-fns';
-export { Expires } from '@dereekb/util';
+export type { Expires } from '@dereekb/util';
 
 // MARK: Compat
 /**

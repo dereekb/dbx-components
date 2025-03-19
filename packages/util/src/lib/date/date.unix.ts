@@ -1,5 +1,5 @@
-import { Maybe, MaybeNot } from '../value/maybe.type';
-import { DateOrUnixDateTimeNumber, isDate, UnixDateTimeNumber } from './date';
+import { type Maybe, type MaybeNot } from '../value/maybe.type';
+import { type DateOrUnixDateTimeNumber, isDate, type UnixDateTimeNumber } from './date';
 
 /**
  * Converts a Date object or unix timestamp number to a unix timestamp number.
