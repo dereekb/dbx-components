@@ -1,10 +1,10 @@
 import type * as functions from 'firebase-functions';
 import type * as admin from 'firebase-admin';
 import { type FirebaseAuthContextInfo, type FirebaseAuthDetails, type FirebaseAuthUserId, type FirebaseAuthNewUserClaimsData, type FirebaseAuthSetupPassword, type FirebaseAuthResetUserPasswordClaimsData, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY } from '@dereekb/firebase';
-import { type Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, type AuthClaims, type AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, type ArrayOrValue, type AuthRole, forEachKeyValue, type ObjectMap, type AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, type AuthClaimsObject, type Maybe, AUTH_TOS_SIGNED_ROLE, type EmailAddress, type E164PhoneNumber, randomNumberFactory, type PasswordString } from '@dereekb/util';
+import { type Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, type AuthClaims, type AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, type ArrayOrValue, type AuthRole, forEachKeyValue, type ObjectMap, type AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, type AuthClaimsObject, type Maybe, AUTH_TOS_SIGNED_ROLE, type EmailAddress, type E164PhoneNumber, randomNumberFactory, type PasswordString, isThrottled } from '@dereekb/util';
 import { assertIsContextWithAuthData, type CallableContextWithAuthData } from '../function/context';
 import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
-import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
+import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 
@@ -557,7 +557,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
 
-      if (!setupCommunicationAt || (!config?.sendSetupDetailsOnce && timeHasExpired(new Date(setupCommunicationAt), this.setupThrottleTime))) {
+      if (!setupCommunicationAt || (!config?.sendSetupDetailsOnce && !isThrottled(this.setupThrottleTime, new Date(setupCommunicationAt)))) {
         await this.sendSetupContentToUser(setupDetails);
         await this.updateSetupContentSentTime(setupDetails);
         sentContent = true;

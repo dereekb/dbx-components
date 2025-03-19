@@ -1,5 +1,5 @@
 import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
-import { type Maybe } from '../value/maybe.type';
+import { MaybeNot, type Maybe } from '../value/maybe.type';
 
 /**
  * The past or future direction.
@@ -329,4 +329,19 @@ export function isEqualDate(a: Date, b: Date): boolean {
  */
 export function isPast(input: Date): boolean {
   return input.getTime() < Date.now();
+}
+
+/**
+ * Adds milliseconds to the input date.
+ *
+ * If no date is input, then returns the input.
+ *
+ * @param input
+ * @param ms
+ */
+export function addMilliseconds(input: Date, ms: Maybe<Milliseconds>): Date;
+export function addMilliseconds(input: MaybeNot, ms: Maybe<Milliseconds>): MaybeNot;
+export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date>;
+export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date> {
+  return input != null ? new Date(input.getTime() + (ms ?? 0)) : input;
 }

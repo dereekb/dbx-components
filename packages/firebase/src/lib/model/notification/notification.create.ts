@@ -1,5 +1,5 @@
 import { timeHasExpired } from '@dereekb/date';
-import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues } from '@dereekb/util';
+import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues, isThrottled } from '@dereekb/util';
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
 import { notificationBoxIdForModel, type NotificationTemplateType } from './notification.id';
@@ -153,7 +153,7 @@ export interface ShouldSendCreatedNotificationInput {
 export function shouldSendCreatedNotificationInput(input: ShouldSendCreatedNotificationInput): boolean {
   const { sendNotification, sendNotificationThrottleDate, sendNotificationThrottleTime: inputSendNotificationThrottleTime } = input;
   const sendNotificationThrottleTime: Milliseconds = inputSendNotificationThrottleTime ?? MS_IN_HOUR;
-  const isNotThrottled = sendNotificationThrottleDate ? timeHasExpired(sendNotificationThrottleDate, sendNotificationThrottleTime) : true;
+  const isNotThrottled = sendNotificationThrottleDate ? !isThrottled(sendNotificationThrottleTime, sendNotificationThrottleDate) : true;
   return sendNotification !== false && isNotThrottled;
 }
 

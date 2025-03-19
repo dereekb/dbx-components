@@ -2,6 +2,8 @@ import { type Milliseconds, type DateOrUnixDateTimeNumber } from '@dereekb/util'
 import { filter, map, type MonoTypeOperatorFunction, type Observable, type OperatorFunction, skipWhile, switchMap, takeWhile } from 'rxjs';
 import { hasExpired, toExpires, type Expires, timeHasExpired } from './expires';
 
+// TODO: Deprecate and move to @dereekb/rxjs
+
 /**
  * Creates a new Expires object at the current time on emission that will expire in the set amount of time.
  *
