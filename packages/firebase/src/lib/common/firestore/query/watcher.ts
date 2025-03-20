@@ -1,5 +1,4 @@
-import { groupValues, type Building, build } from '@dereekb/util';
-import { toExpires } from '@dereekb/date';
+import { groupValues, type Building, build, calculateExpirationDate } from '@dereekb/util';
 import { map, type Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { type DocumentChange, type QuerySnapshot } from '../types';
 import { type FirestoreItemPageIterationInstance, type FirestoreItemPageQueryResult } from './iterator';
@@ -47,10 +46,10 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
   const stream$ = instance.snapshotIteration.firstSuccessfulPageResults$.pipe(
     switchMap((first) => {
       const { time, stream } = (first.value as ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>).value as FirestoreItemPageQueryResult<T>;
-      const beginCheckingAt = toExpires(time, timeUntilActive);
+      const beginCheckingAt = calculateExpirationDate({ expiresFromDate: time, expiresIn: timeUntilActive }) as Date;
 
       // don't start streaming until the given moment.
-      return timer(beginCheckingAt.expiresAt ?? new Date()).pipe(
+      return timer(beginCheckingAt).pipe(
         switchMap(() =>
           stream().pipe(
             skip(1) // skip the first value, as it should be equivalent to the query results given.

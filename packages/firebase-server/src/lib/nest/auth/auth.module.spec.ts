@@ -12,6 +12,7 @@ import { type CallableContextWithAuthData } from '../../function/context';
 import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
+import { addDays } from 'date-fns';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   a: { roles: [AUTH_ADMIN_ROLE] }
@@ -393,6 +394,73 @@ describe('firebase server nest auth', () => {
 
             expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
             expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBeDefined();
+          });
+
+          describe('setup content sent', () => {
+            beforeEach(async () => {
+              await newUserService.sendSetupContent(initializedUser.uid);
+            });
+
+            it('should not send the content again due to throttling', async () => {
+              let claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+              const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
+
+              expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+              expect(lastCommunicationDate).toBeDefined();
+
+              const claimsWereSent = await newUserService.sendSetupContent(initializedUser.uid, { sendSetupDetailsOnce: true });
+              expect(claimsWereSent).toBe(false);
+
+              claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+              expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+              expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBe(lastCommunicationDate); // unchanged
+            });
+
+            describe('time since last send', () => {
+              const newClaimsDate = addDays(new Date(), -3).toISOString(); // set to 3 days ago
+
+              beforeEach(async () => {
+                const userContext = authService.userContext(initializedUser.uid);
+
+                await userContext.updateClaims({
+                  [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]: newClaimsDate
+                });
+              });
+
+              it('should send the content again after the send throttle period has ended', async () => {
+                let claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+                const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
+
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+                expect(lastCommunicationDate).toBeDefined();
+
+                const claimsWereSent = await newUserService.sendSetupContent(initializedUser.uid, {});
+                expect(claimsWereSent).toBe(true);
+
+                claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).not.toBe(lastCommunicationDate); // updated
+              });
+
+              describe('onlySendOnce=true', () => {
+                it('should not send the content again after the send throttle period has ended', async () => {
+                  let claims = await authService.userContext(initializedUser.uid).loadClaims();
+                  const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
+
+                  const claimsWereSent = await newUserService.sendSetupContent(initializedUser.uid, { sendSetupDetailsOnce: true });
+                  expect(claimsWereSent).toBe(false);
+
+                  claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+                  expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+                  expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBe(lastCommunicationDate); // unchanged
+                });
+              });
+            });
           });
         });
       });

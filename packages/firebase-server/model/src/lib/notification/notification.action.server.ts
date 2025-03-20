@@ -582,6 +582,7 @@ export interface UpdateNotificationBoxRecipientInTransactionInput extends Notifi
 }
 
 export interface UpdateNotificationBoxRecipientInTransactionResult {
+  readonly notificationBoxWasCreated: boolean;
   readonly updatedNotificationBox: NotificationBox;
   readonly notificationBoxDocument: NotificationBoxDocument;
 }
@@ -601,7 +602,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
     let notificationBox = await notificationBoxDocument.snapshotData();
     let createNotificationBox = false;
 
-    const result: Maybe<UpdateNotificationBoxRecipientInTransactionResult> = undefined;
+    let result: Maybe<UpdateNotificationBoxRecipientInTransactionResult> = undefined;
 
     if (!notificationBox) {
       if (allowCreateNotificationBoxIfItDoesNotExist) {
@@ -735,11 +736,22 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
           // else, if removing and they don't exist, nothing to update
         }
 
+        const updatedNotificationBox = { ...notificationBox, r };
+
+        let notificationBoxWasCreated = false;
+
         if (createNotificationBox) {
-          await notificationBoxDocument.create({ ...notificationBox, r });
+          await notificationBoxDocument.create(updatedNotificationBox);
+          notificationBoxWasCreated = true;
         } else {
           await notificationBoxDocument.update({ r });
         }
+
+        result = {
+          updatedNotificationBox,
+          notificationBoxWasCreated,
+          notificationBoxDocument
+        };
       }
     }
 

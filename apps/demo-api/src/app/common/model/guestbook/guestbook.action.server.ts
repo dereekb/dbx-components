@@ -144,10 +144,10 @@ export function subscribeToGuestbookNotificationsFactory(context: GuestbookServe
     return async (document: GuestbookDocument) => {
       await firestoreContext.runTransaction(async (transaction) => {
         const guestbookDocumentInTransaction = guestbookCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(document);
-        const guestbook = await assertSnapshotData(guestbookDocumentInTransaction);
+        const guestbookExists = await guestbookDocumentInTransaction.exists();
 
-        if (!guestbook) {
-          throw new Error('The guestbook could not be found.');
+        if (!guestbookExists) {
+          throw new Error('The target guestbook does not exist.');
         }
 
         const updateRecipientParams: UpdateNotificationBoxRecipientParams = {
