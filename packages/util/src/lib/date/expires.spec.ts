@@ -121,6 +121,11 @@ describe('expirationDetails()', () => {
       });
 
       describe('isThrottled()', () => {
+        it('should return false if there was no last run (null/undefined)', () => {
+          const throttled = isThrottled(1000, null);
+          expect(throttled).toBe(false);
+        });
+
         it('should return true if the throttle time has not passed since the last run time', () => {
           const now = new Date();
 

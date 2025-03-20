@@ -30,15 +30,23 @@ export interface ExpirationDetailsInput<T extends Expires = Expires> extends Exp
    */
   expires?: Maybe<T>;
   /**
-   * Current time override to use.
+   * Default current now time to use.
+   *
+   * If not set, functions will use the current time when they are called.
    */
   now?: Maybe<Date>;
   /**
    * The base date or time number to calculate expirations from.
    *
-   * If not provided, defaults to now.
+   * If not defined, the expiresFromDate is considered to have never been run/set.
    */
   expiresFromDate?: Maybe<DateOrUnixDateTimeNumber>;
+  /**
+   * If true, the "expiresFromDate" will default to the calculated now time when calculating the expiration.
+   *
+   * Defaults to true.
+   */
+  defaultExpiresFromDateToNow?: Maybe<boolean>;
   /**
    * Time after "now" that expiration will occur.
    */
@@ -53,15 +61,16 @@ export interface ExpirationDetails<T extends Expires = Expires> {
   /**
    * Returns true if the expiration time has passed.
    *
-   * @param nowOverride
+   * @param nowOverride Optional override for the current time. Defaults to the current time.
+   * @param defaultIfNoExpirationDate If true, returns true if no expiration date is defined. Defaults to false.
    */
-  hasExpired(nowOverride?: Maybe<Date>): boolean;
+  hasExpired(nowOverride?: Maybe<Date>, defaultIfNoExpirationDate?: boolean): boolean;
   /**
    * Returns the expiration date.
    *
    * Returns null if no expiration is defined.
    *
-   * @param nowOverride
+   * @param nowOverride Optional override for the current time. Defaults to the current time.
    */
   getExpirationDate(nowOverride?: Maybe<Date>): Maybe<Date>;
 }
@@ -73,7 +82,7 @@ export interface ExpirationDetails<T extends Expires = Expires> {
  * @returns
  */
 export function expirationDetails<T extends Expires = Expires>(input: ExpirationDetailsInput<T>): ExpirationDetails<T> {
-  const { expiresAt, expires, now: inputNow, expiresFromDate, expiresIn } = input;
+  const { expiresAt, expires, now: inputNow, expiresFromDate, defaultExpiresFromDateToNow, expiresIn } = input;
   const parsedExpiresFromDate = expiresFromDate != null ? dateFromDateOrTimeNumber(expiresFromDate) : null;
 
   function getNow(nowOverride?: Maybe<Date>) {
@@ -81,10 +90,19 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
     return now;
   }
 
-  function hasExpired(nowOverride?: Maybe<Date>) {
+  function hasExpired(nowOverride?: Maybe<Date>, defaultIfNoExpirationDate: boolean = false) {
     const now = getNow(nowOverride);
     const expirationDate = getExpirationDateForNow(now);
-    return expirationDate != null && expirationDate <= now;
+
+    let result: boolean;
+
+    if (expirationDate == null) {
+      result = defaultIfNoExpirationDate;
+    } else {
+      result = expirationDate <= now;
+    }
+
+    return result;
   }
 
   function getExpirationDate(nowOverride?: Maybe<Date>) {
@@ -100,7 +118,7 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
     } else if (expiresAt != null) {
       expirationDate = expiresAt;
     } else if (expiresIn != null) {
-      const date = parsedExpiresFromDate ?? now;
+      const date = parsedExpiresFromDate ?? (defaultExpiresFromDateToNow !== false ? now : null);
       expirationDate = addMilliseconds(date, expiresIn);
     }
 
@@ -136,7 +154,7 @@ export function calculateExpirationDate(input: ExpirationDetailsInput<any>): May
  * @returns 
  */
 export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeNumber>, now?: Maybe<Date>) {
-  return !expirationDetails({ expiresFromDate: lastRunAt, expiresIn: throttleTime }).hasExpired(now);
+  return !expirationDetails({ defaultExpiresFromDateToNow: false, expiresFromDate: lastRunAt ?? null, expiresIn: throttleTime }).hasExpired(now, true);
 }
 
 /**
