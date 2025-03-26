@@ -1,7 +1,7 @@
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { AngularResizeEventModule } from 'angular-resize-event';
+import { AngularResizeEventModule } from 'angular-resize-event-package';
 import { MatDividerModule } from '@angular/material/divider';
 import { NgModule } from '@angular/core';
 import { NgOverlayContainerModule } from 'ng-overlay-container';

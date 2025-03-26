@@ -3,7 +3,7 @@ import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, 
 import { DbxMapboxMapStore } from './mapbox.store';
 import { type Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '@dereekb/dbx-web';
-import { ResizedEvent } from 'angular-resize-event';
+import { ResizedEvent } from 'angular-resize-event-package';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawerContainer } from '@angular/material/sidenav';
 import { MapboxEaseTo } from './mapbox';

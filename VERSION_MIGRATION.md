@@ -1,5 +1,13 @@
-## Migration of v9.x.x to v10.x.x
-Migration/Upgrade info is available in the `setup/v9-to-v10-upgrade-info.md` document.
+
+## Migration of v11.x.x to v12.x.x
+### Overview
+Version 11 to 12 stays upgrades dbx-component to Angular 18 and the equivalent Nx version. The minimum number of breaking changes are introduced as possible, but all "compat"/deprecated marked code is cleared again for this major version.
+
+### Breaking Changes
+
+
+### Migration Steps
+Migration/Upgrade info is available in the `setup/v11-to-v12-upgrade-info.md` document.
 
 ## Migration of v10.x.x to v11.x.x
 ### Overview
@@ -32,4 +40,7 @@ Some related threads to the useDefineForClassFields usage:
 - `MappedItemIterationInstance` and related types are now interfaces with functional implementations. 
 - `BooleanKeyArrayUtilityInstance` was removed and replaced with a functional implementation, `booleanKeyArrayUtility`. The `BooleanStringKeyArrayUtility` is now deprecated.
 - `DbxAnalyticsStreamEventAnalyticsEventWrapper` is now an interface
-- 
+
+## Migration of v9.x.x to v10.x.x
+### Migration Steps
+Migration/Upgrade info is available in the `setup/v9-to-v10-upgrade-info.md` document.

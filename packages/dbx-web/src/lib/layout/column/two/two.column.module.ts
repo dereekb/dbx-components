@@ -11,7 +11,7 @@ import { DbxTwoColumnRightComponent } from './two.column.right.component';
 import { DbxTwoColumnBackDirective } from './two.column.back.directive';
 import { DbxTwoColumnFullLeftDirective } from './two.column.full.left.directive';
 import { DbxTwoColumnContextDirective } from './two.column.context.directive';
-import { AngularResizeEventModule } from 'angular-resize-event';
+import { AngularResizeEventModule } from 'angular-resize-event-package';
 import { DbxTwoColumnSrefShowRightDirective } from './two.column.sref.showright.directive';
 
 @NgModule({

@@ -1,5 +1,5 @@
 import { ElementRef, Component, ViewChild, Input } from '@angular/core';
-import { ResizedEvent } from 'angular-resize-event';
+import { ResizedEvent } from 'angular-resize-event-package';
 
 /**
  * Wrapper of a block that is broken into two parts, with the bottom content's height
