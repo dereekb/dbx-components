@@ -38,7 +38,7 @@
         "stylePreprocessorOptions": {
           "includePaths": ["packages"]
         },
-        "styles": ["mapbox-gl/src/css/mapbox-gl.css", "apps/demo/src/styles.scss"],
+        "styles": ["mapbox-gl/dist/mapbox-gl.css", "apps/demo/src/styles.scss"],
         "scripts": []
       },
       "configurations": {
