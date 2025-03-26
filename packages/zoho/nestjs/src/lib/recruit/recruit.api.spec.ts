@@ -828,7 +828,7 @@ describe('recruit.api', () => {
 
       describe('executeRestApiFunction()', () => {
         it('should execute the function', async () => {
-          const testFunctionName = 'run_kaia_schedule';
+          const testFunctionName = 'test';
           const result = await api.executeRestApiFunction({ functionName: testFunctionName });
 
           expect(result).toBeDefined();

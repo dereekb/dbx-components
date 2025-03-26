@@ -7,7 +7,7 @@ import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '
 /**
  * Used for synchronizing the document store key to the param of the route. The param is interpreted as a TwoWayFlatFirestoreModelKey.
  *
- * @deprecated use DbxRouteModelKeyDirective instead.
+ * @deprecated use DbxRouteModelKeyDirective ([dbxRouteModelKey]) instead.
  */
 @Directive({
   selector: '[dbxFirebaseDocumentStoreRouteKey]'

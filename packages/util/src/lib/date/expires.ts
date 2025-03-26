@@ -144,14 +144,35 @@ export function calculateExpirationDate(input: ExpirationDetailsInput<any>): May
 }
 
 /**
+ * Returns true if the threshold has not passed since the next run time, compared to now.
+ *
+ * Used in cases where a date that was calculated using the "threshold" value is given and we want to check if we are still within that threshold.
+ *
+ * Example:
+ * - Should send a notification at max every 2 days. The threshold is 2 days in milliseconds, and "nextRunAt" is the previously calculated date that was originally "now" + "threshold".
+ *
+ * @param threshold The threshold time. Typically this is amount of time that was used to calculate the original "nextRunAt" time.
+ * @param nextRunAt Time the next run will occur. If null/undefined, then this function will return false.
+ * @param now Optional override for the current time. Defaults to the current time.
+ * @returns True if the threshold has not passed since the next run time, compared to now.
+ */
+export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateOrUnixDateTimeNumber>, now?: Maybe<Date>): boolean {
+  if (nextRunAt == null) {
+    return false;
+  }
+
+  return !isThrottled(-threshold, nextRunAt, now);
+}
+
+/**
  * Convenience function for quickly calculating throttling given a throttle time and last run time.
  * 
  * Returns true if the throttle time has not passed since the last run time, compared to now.
  
  * @param throttleTime Time after "now" that expiration will occur.
- * @param lastRunAt Time the last run occurred.
+ * @param lastRunAt Time the last run occurred. If the run has never occured then this function will return false.
  * @param now Optional override for the current time. Defaults to the current time.
- * @returns 
+ * @returns True if the throttle time has not passed since the last run time, compared to now.
  */
 export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeNumber>, now?: Maybe<Date>) {
   return !expirationDetails({ defaultExpiresFromDateToNow: false, expiresFromDate: lastRunAt ?? null, expiresIn: throttleTime }).hasExpired(now, true);

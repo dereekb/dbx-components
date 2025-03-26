@@ -51,12 +51,15 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
     this._store.next(store);
   }
 
+  // MARK: DbxRouteModelIdDirectiveDelegate
   useRouteModelIdParamsObservable(idFromParams: Observable<Maybe<ModelKey>>): Subscription {
     return this.store$.pipe(first()).subscribe((x) => x.setId(idFromParams));
   }
 
-  useRouteModelKeyParamsObservable(keyFromParams: Observable<Maybe<ModelKey>>): Subscription {
-    return this.store$.pipe(first()).subscribe((x) => x.setKey(keyFromParams));
+  // MARK: DbxRouteModelKeyDirectiveDelegate
+  useRouteModelKeyParamsObservable(keyFromParams: Observable<Maybe<TwoWayFlatFirestoreModelKey>>): Subscription {
+    // we assume that the input model key is a TwoWayFlatFirestoreModelKey, since the TwoWayFlatFirestoreModelKey is safe to encode in the url
+    return this.store$.pipe(first()).subscribe((x) => x.setFlatKey(keyFromParams));
   }
 
   // MARK: Inputs

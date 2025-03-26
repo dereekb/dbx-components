@@ -1,5 +1,5 @@
 import { addMilliseconds } from './date';
-import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails } from './expires';
+import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails, isUnderThreshold } from './expires';
 
 describe('expirationDetails()', () => {
   describe('hasExpired()', () => {
@@ -109,6 +109,63 @@ describe('expirationDetails()', () => {
   });
 
   describe('scenarios', () => {
+    /**
+     * The reverse of throttling, returns true if the expiration has not yet been met.
+     */
+    describe('threshold', () => {
+      it('should return true if under the threshold', () => {
+        const now = new Date();
+
+        const nextScheduledRunAt = addMilliseconds(now, 500);
+        const threshold = 1000;
+
+        const details = expirationDetails({ expiresFromDate: nextScheduledRunAt, expiresIn: -threshold });
+        expect(details.hasExpired()).toBe(true);
+      });
+
+      it('should return false if over the threshold', () => {
+        const now = new Date();
+
+        const nextScheduledRunAt = addMilliseconds(now, 1500);
+        const threshold = 1000;
+
+        const details = expirationDetails({ expiresFromDate: nextScheduledRunAt, expiresIn: -threshold });
+        expect(details.hasExpired()).toBe(false);
+      });
+
+      describe('isUnderThreshold()', () => {
+        it('should return false if the nextRunAt date is not defined.', () => {
+          const now = new Date();
+
+          const nextScheduledRunAt = null;
+          const threshold = 1000;
+
+          const result = isUnderThreshold(threshold, nextScheduledRunAt, now);
+          expect(result).toBe(false);
+        });
+
+        it('should return true if under the threshold', () => {
+          const now = new Date();
+
+          const nextScheduledRunAt = addMilliseconds(now, 500);
+          const threshold = 1000;
+
+          const result = isUnderThreshold(threshold, nextScheduledRunAt, now);
+          expect(result).toBe(true);
+        });
+
+        it('should return false if over the threshold', () => {
+          const now = new Date();
+
+          const nextScheduledRunAt = addMilliseconds(now, 1500);
+          const threshold = 1000;
+
+          const result = isUnderThreshold(threshold, nextScheduledRunAt, now);
+          expect(result).toBe(false);
+        });
+      });
+    });
+
     describe('throttling', () => {
       it('should return not expires if still being throttled', () => {
         const now = new Date();
