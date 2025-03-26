@@ -41,18 +41,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/model/**/*.ts", "packages/model/package.json", "packages/model/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/model", "{projectRoot}/.reports/jest/model.junit.xml"],
       "options": {
-        "jestConfig": "packages/model/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/model/jest.config.ts"
       }
     },
     "publish-npmjs": {

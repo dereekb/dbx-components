@@ -57,18 +57,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/zoho/**/*.ts", "packages/zoho/package.json", "packages/zoho/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/zoho"],
       "options": {
-        "jestConfig": "packages/zoho/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/zoho/jest.config.ts"
       }
     },
     "run-all-tests": {

@@ -18,18 +18,14 @@
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/nestjs/mailgun/**/*.ts", "packages/nestjs/mailgun/package.json", "packages/nestjs/mailgun/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/nestjs/mailgun"],
       "options": {
-        "jestConfig": "packages/nestjs/mailgun/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/nestjs/mailgun/jest.config.ts"
       }
     }
   },

@@ -114,7 +114,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       },
     }),
     EffectsModule.forRoot(),
-    (!environment.production ? StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: environment.production }) : []),
+    (!environment.production ? StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: environment.production , connectInZone: true}) : []),
     // other modules
     FormlyModule.forRoot({
       validationMessages: defaultValidationMessages()

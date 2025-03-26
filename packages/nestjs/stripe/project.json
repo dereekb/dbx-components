@@ -18,18 +18,14 @@
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/nestjs/stripe/**/*.ts", "packages/nestjs/stripe/package.json", "packages/nestjs/stripe/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/nestjs/stripe"],
       "options": {
-        "jestConfig": "packages/nestjs/stripe/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/nestjs/stripe/jest.config.ts"
       }
     }
   },

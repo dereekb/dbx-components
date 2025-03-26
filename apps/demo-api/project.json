@@ -67,11 +67,8 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/demo-api/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -83,8 +80,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
       "options": {
-        "jestConfig": "apps/demo-api/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "apps/demo-api/jest.config.ts"
       }
     },
     "watch": {

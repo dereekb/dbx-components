@@ -64,7 +64,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["API_APP_FOLDER/**/*.ts", "API_APP_FOLDER/package.json", "API_APP_FOLDER/project.json"]

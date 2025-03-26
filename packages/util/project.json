@@ -60,18 +60,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/util/src/**/*.ts", "packages/util/package.json", "packages/util/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/util", "{projectRoot}/.reports/jest/util.junit.xml"],
       "options": {
-        "jestConfig": "packages/util/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/util/jest.config.ts"
       }
     },
     "run-all-tests": {

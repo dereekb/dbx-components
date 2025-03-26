@@ -17,18 +17,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/firebase-server/zoho/**/*.ts", "packages/firebase-server/zoho/package.json", "packages/firebase-server/zoho/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/zoho"],
       "options": {
-        "jestConfig": "packages/firebase-server/zoho/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/firebase-server/zoho/jest.config.ts"
       }
     }
   },

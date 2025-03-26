@@ -28,15 +28,11 @@
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/mapbox"],
       "options": {
         "tsConfig": "packages/dbx-web/mapbox/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-web/mapbox/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-web/mapbox/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-web/mapbox/**/*.ts", "packages/dbx-web/mapbox/**/*.html", "packages/dbx-web/mapbox/package.json", "packages/dbx-web/mapbox/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "tags": []

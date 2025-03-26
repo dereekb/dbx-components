@@ -21,7 +21,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["FIREBASE_COMPONENTS_FOLDER/**/*.ts", "FIREBASE_COMPONENTS_FOLDER/package.json", "FIREBASE_COMPONENTS_FOLDER/project.json"]

@@ -35,18 +35,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/nestjs/src/**/*.ts", "packages/nestjs/package.json", "packages/nestjs/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/nestjs", "{projectRoot}/.reports/jest/nestjs.junit.xml"],
       "options": {
-        "jestConfig": "packages/nestjs/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/nestjs/jest.config.ts"
       }
     },
     "run-all-tests": {

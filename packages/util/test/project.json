@@ -18,18 +18,14 @@
       "dependsOn": []
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/util/test/**/*.ts", "packages/util/test/package.json", "packages/util/test/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/util/test", "{projectRoot}/.reports/jest/util-test.junit.xml"],
       "options": {
-        "jestConfig": "packages/util/test/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/util/test/jest.config.ts"
       }
     }
   },

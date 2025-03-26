@@ -48,11 +48,8 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/firebase/src/**/*.ts", "packages/firebase/package.json", "packages/firebase/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "watch": {
       "executor": "nx:run-commands",
@@ -70,8 +67,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/firebase", "{projectRoot}/.reports/jest/firebase.junit.xml"],
       "options": {
-        "jestConfig": "packages/firebase/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/firebase/jest.config.ts"
       }
     },
     "run-all-tests": {
