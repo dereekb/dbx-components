@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "tools/my-plugin/src/generators/temporaryBuildTarget": {
+      "factory": "./generators/temporary-build-target/generator",
+      "schema": "./generators/temporary-build-target/schema.json",
+      "description": "tools/my-plugin/src/generators/temporaryBuildTarget generator"
+    }
+  }
+}
