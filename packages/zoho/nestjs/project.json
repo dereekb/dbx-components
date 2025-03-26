@@ -17,18 +17,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/zoho/nestjs/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/zoho/nestjs"],
       "options": {
-        "jestConfig": "packages/zoho/nestjs/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/zoho/nestjs/jest.config.ts"
       }
     }
   },

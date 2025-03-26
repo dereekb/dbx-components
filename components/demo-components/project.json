@@ -35,15 +35,11 @@
       "outputs": ["{workspaceRoot}/coverage/components/demo-components"],
       "options": {
         "tsConfig": "components/demo-components/tsconfig.lib.json",
-        "jestConfig": "components/demo-components/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "components/demo-components/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["components/demo-components/**/*.ts", "components/demo-components/**/*.html"]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "implicitDependencies": ["!util-test"],

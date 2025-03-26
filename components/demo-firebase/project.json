@@ -24,18 +24,14 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["components/demo-firebase/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/components/demo-firebase"],
       "options": {
-        "jestConfig": "components/demo-firebase/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "components/demo-firebase/jest.config.ts"
       }
     },
     "watch": {
@@ -48,8 +44,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/components/demo-firebase", "{projectRoot}/.reports/jest/firebase.junit.xml"],
       "options": {
-        "jestConfig": "components/demo-firebase/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "components/demo-firebase/jest.config.ts"
       }
     }
   },

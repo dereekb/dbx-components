@@ -37,7 +37,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:eslint",
       "options": {
         "lintFilePatterns": ["ANGULAR_COMPONENTS_FOLDER/**/*.ts", "ANGULAR_COMPONENTS_FOLDER/**/*.html", "ANGULAR_COMPONENTS_FOLDER/package.json", "ANGULAR_COMPONENTS_FOLDER/project.json"]
       }

@@ -28,15 +28,11 @@
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/calendar"],
       "options": {
         "tsConfig": "packages/dbx-web/calendar/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-web/calendar/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-web/calendar/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-web/calendar/**/*.ts", "packages/dbx-web/calendar/**/*.html", "packages/dbx-web/calendar/package.json", "packages/dbx-web/calendar/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "tags": []

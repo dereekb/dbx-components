@@ -57,15 +57,11 @@
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-form", "{projectRoot}/.reports/jest/dbx-form.junit.xml"],
       "options": {
         "tsConfig": "packages/dbx-form/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-form/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-form/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-form/src/**/*.ts", "packages/dbx-form/src/**/*.html", "packages/dbx-form/package.json", "packages/dbx-form/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "publish-npmjs": {
       "executor": "nx:run-commands",

@@ -66,15 +66,11 @@
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/jest/dbx-web.junit.xml"],
       "options": {
         "tsConfig": "packages/dbx-web/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-web/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-web/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-web/src/**/*.ts", "packages/dbx-web/src/**/*.html", "packages/dbx-web/package.json", "packages/dbx-web/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "publish-npmjs": {
       "executor": "nx:run-commands",

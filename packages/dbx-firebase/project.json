@@ -58,8 +58,7 @@
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
         "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-firebase/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-firebase/jest.config.ts"
       }
     },
     "watch": {
@@ -76,10 +75,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-firebase/src/**/*.ts", "packages/dbx-firebase/src/**/*.html", "packages/dbx-firebase/package.json", "packages/dbx-firebase/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "publish-npmjs": {
       "executor": "nx:run-commands",
