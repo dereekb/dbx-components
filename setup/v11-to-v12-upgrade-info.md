@@ -38,3 +38,14 @@ The command-line steps we used are as follow:
 - run ```npx nx migrate --run-migrations```. This may take a while depending on the size of the project.
 
 (After doing this step it is a good idea to commit the changes on git before continuing)
+
+### Updating Projects
+- the `ng-package.json` of sub-packages (e.g. `dbx-web/mapbox`) need to be updated to remove the `dest` property as it is now properly detected as invalid configuration. Leave the `dest` property on the parent package (e.g. `dbx-web`). This property apparently had no effect when used in the sub-package. Read more here: https://github.com/ng-packagr/ng-packagr/issues/2767
+- Prior we also called run-commands to build each of the sub-packages independently, but this is no longer needed. In-fact, running them will cause our now updated config to behave as a non-sub package and output a dist folder into our src, which is not desired.
+
+### Updating Packages
+#### Mapbox
+There have been several type changes to mapbox past version 3.0.1. dbx-web/mapbox has been updated to export these types that were removed/discarded. Your project may need to be updated if it used some of these types. The minimum version of mapbox allowed now is `v3.10`.
+
+#### Firebase
+- The function definition for `StreamDocsWithOnSnapshotFunctionParams.next` has been updated to only pass the value, and never pass undefined to match with the observable.

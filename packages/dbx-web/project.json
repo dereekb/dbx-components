@@ -26,18 +26,6 @@
           {
             "description": "copy license",
             "command": "echo 'copying dbx-web license' && cp LICENSE dist/packages/dbx-web"
-          },
-          {
-            "description": "build dbx-web/mapbox",
-            "command": "npx nx run dbx-web-mapbox:build-base:production"
-          },
-          {
-            "description": "build dbx-web/calendar",
-            "command": "npx nx run dbx-web-calendar:build-base:production"
-          },
-          {
-            "description": "build dbx-web/table",
-            "command": "npx nx run dbx-web-table:build-base:production"
           }
         ],
         "parallel": false,
