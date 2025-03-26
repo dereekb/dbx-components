@@ -17,7 +17,7 @@ import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.in
  * Default firebase firestore provider module.
  */
 @NgModule({
-  imports: [
+  providers: [
     provideFirestore((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
@@ -61,7 +61,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule {}
  * Also configures the DbxFirebaseAppCheckHttpInterceptor with HTTP_INTERCEPTORS in order for appCheck to be appended to requests to the api.
  */
 @NgModule({
-  imports: [
+  providers: [
     provideAppCheck((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
@@ -91,9 +91,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule {}
       }
 
       return appCheck;
-    })
-  ],
-  providers: [
+    }),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: DbxFirebaseAppCheckHttpInterceptor,
@@ -107,7 +105,7 @@ export class DbxFirebaseDefaultAppCheckProviderModule {}
  * Default firebase auth provider module.
  */
 @NgModule({
-  imports: [
+  providers: [
     provideAuth((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const auth = getAuth(firebaseApp);
@@ -127,7 +125,7 @@ export class DbxFirebaseDefaultAuthProviderModule {}
  * Default firebase storage provider module.
  */
 @NgModule({
-  imports: [
+  providers: [
     provideStorage((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const storage = getStorage(firebaseApp);
@@ -147,7 +145,7 @@ export class DbxFirebaseDefaultStorageProviderModule {}
  * Default firebase functions provider module.
  */
 @NgModule({
-  imports: [
+  providers: [
     provideFunctions((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
@@ -170,7 +168,7 @@ export class DbxFirebaseDefaultFunctionsProviderModule {}
  * Default provider module.
  */
 @NgModule({
-  imports: [
+  providers: [
     provideFirebaseApp((injector: Injector) => {
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       return initializeApp(firebaseOptions);

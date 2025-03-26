@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 // MARK: OnSnapshot
 export interface StreamDocsWithOnSnapshotFunctionParams<O> {
-  readonly next: (value?: O | undefined) => void;
+  readonly next: (value: O) => void;
   readonly error: (err?: unknown) => void;
   readonly complete: () => void;
 }
@@ -18,7 +18,7 @@ export type StreamDocsUnsubscribeFunction = () => void;
  * @returns
  */
 export function streamFromOnSnapshot<O>(callOnSnapshot: (params: StreamDocsWithOnSnapshotFunctionParams<O>) => StreamDocsUnsubscribeFunction): Observable<O> {
-  return new Observable((subscriber) => {
+  return new Observable<O>((subscriber) => {
     const unsubscribe = callOnSnapshot({
       next: subscriber.next.bind(subscriber),
       error: subscriber.error.bind(subscriber),

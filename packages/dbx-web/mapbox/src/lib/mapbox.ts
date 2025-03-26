@@ -22,6 +22,8 @@ export const KNOWN_MAPBOX_STYLES: KnownMapboxStyle[] = [
   'mapbox://styles/mapbox/navigation-night-v1'
 ];
 
+export type MapboxEventData = object;
+
 export type MapboxZoomLevel = ZoomLevel;
 export type MapboxZoomLevelRange = ZoomLevelRange;
 
@@ -42,26 +44,43 @@ export type MapboxBearing = number;
  */
 export type MapboxTileSize = 512 | 256;
 
-export type DbxMapboxClickEvent = MapboxGl.MapMouseEvent & MapboxGl.EventData;
+export type DbxMapboxClickEvent = MapboxGl.MapMouseEvent & MapboxEventData;
+
+/**
+ * Options for MapboxGl.Map.fitBounds()
+ */
+export type MapboxFitBoundsOptions = Parameters<MapboxGl.Map['fitBounds']>[1];
+
+/**
+ * Options for MapboxGl.Map.easeTo()
+ */
+export type MapboxEaseToOptions = Parameters<MapboxGl.Map['easeTo']>[0];
+
+/**
+ * Options for MapboxGl.Map.flyTo()
+ */
+export type MapboxFlyToOptions = Parameters<MapboxGl.Map['flyTo']>[0];
+
+/**
+ * Options for MapboxGl.Map.setStyle()
+ */
+export type MapboxSetStyleOptions = Parameters<MapboxGl.Map['setStyle']>[1];
 
 export interface MapboxStyleConfig {
-  style: MapboxGl.Style | string;
-  options?: {
-    diff?: boolean | undefined;
-    localIdeographFontFamily?: string | undefined;
-  };
+  style: MapboxGl.StyleSpecification | string;
+  options?: MapboxSetStyleOptions;
 }
 
 export interface MapboxFitPositions {
   positions: ExtendLatLngBoundInput;
-  options?: mapboxgl.FitBoundsOptions;
-  eventData?: mapboxgl.EventData;
+  options?: MapboxFitBoundsOptions;
+  eventData?: MapboxEventData;
 }
 
 export interface MapboxFitBounds {
   bounds: LatLngBoundInput;
-  options?: mapboxgl.FitBoundsOptions;
-  eventData?: mapboxgl.EventData;
+  options?: MapboxFitBoundsOptions;
+  eventData?: MapboxEventData;
 }
 
 export interface MapboxJumpToPositionOptions extends Omit<MapboxGl.CameraOptions, 'center'> {
@@ -71,42 +90,42 @@ export interface MapboxJumpToPositionOptions extends Omit<MapboxGl.CameraOptions
 export interface MapboxJumpTo {
   center?: LatLngPointInput;
   to?: MapboxJumpToPositionOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
 
-export interface MapboxEaseToPositionOptions extends Omit<MapboxGl.EaseToOptions, 'center'>, MapboxJumpToPositionOptions {}
+export interface MapboxEaseToPositionOptions extends Omit<MapboxEaseToOptions, 'center'>, MapboxJumpToPositionOptions {}
 
 export interface MapboxEaseTo {
   center?: LatLngPointInput;
   to?: MapboxEaseToPositionOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
 
-export interface MapboxFlyToPositionOptions extends Omit<MapboxGl.FlyToOptions, 'center'>, MapboxJumpToPositionOptions {}
+export interface MapboxFlyToPositionOptions extends Omit<MapboxFlyToOptions, 'center'>, MapboxJumpToPositionOptions {}
 
 export interface MapboxFlyTo {
   center?: LatLngPointInput;
   to?: MapboxFlyToPositionOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
 
 export interface MapboxRotateTo {
   bearing: MapboxBearing;
   options?: mapboxgl.AnimationOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
 
 export interface MapboxResetNorth {
   options?: mapboxgl.AnimationOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
 
 export interface MapboxResetNorthPitch {
   options?: mapboxgl.AnimationOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
 
 export interface MapboxSnapToNorth {
   options?: mapboxgl.AnimationOptions;
-  eventData?: mapboxgl.EventData;
+  eventData?: MapboxEventData;
 }
