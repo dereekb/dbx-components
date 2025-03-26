@@ -8,7 +8,7 @@ import { DbxMapboxLayoutDrawerComponent } from './mapbox.layout.drawer.component
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { AngularResizeEventModule } from 'angular-resize-event';
+import { AngularResizeEventModule } from 'angular-resize-event-package';
 import { DbxMapboxMenuComponent } from './mapbox.menu.component';
 import { DbxMapboxMapStoreInjectionBlockDirective } from './mapbox.store.provide';
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
