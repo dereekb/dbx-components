@@ -28,7 +28,7 @@
         ],
         "allowedCommonJsDependencies": ["core-js", "validator", "date-fns", "date-fns-tz"],
         "styles": [
-          "mapbox-gl/src/css/mapbox-gl.css",
+          "mapbox-gl/dist/mapbox-gl.css",
           "ANGULAR_APP_FOLDER/src/styles.scss"
         ],
         "scripts": []

@@ -47,5 +47,18 @@ The command-line steps we used are as follow:
 #### Mapbox
 There have been several type changes to mapbox past version 3.0.1. dbx-web/mapbox has been updated to export these types that were removed/discarded. Your project may need to be updated if it used some of these types. The minimum version of mapbox allowed now is `v3.10`.
 
+The `mapbox-gl` package has also been updated to use the `dist` folder instead of the `src` folder. Update the `styles` property in the build configuration to reference `mapbox-gl/dist/mapbox-gl.css` instead of `mapbox-gl/src/css/mapbox-gl.css`.
+
 #### Firebase
 - The function definition for `StreamDocsWithOnSnapshotFunctionParams.next` has been updated to only pass the value, and never pass undefined to match with the observable.
+
+### NodeJS
+v12 requires NodeJS version 22 or greater. This project is specifically targeting NodeJS 22.14.
+
+You'll need to update the following:
+- `Dockerfile`: Update FROM to use `node:22.14-bookworm`
+- `package.json`: Update the `engines` to use `22`. Also update `@types/node` to `22.13.0`
+- `circleci/config.yml`: Update the `cimg/node` version to `22.14`
+
+### TypeScript
+After the update Typescript was throwing errors related to the NodeJS types not being available while building Demo. Updated `tsconfig.json` for the project to include the following under `compilerOptions`: `"types": ["node"]`, or add `node` to the existing types. This is probably not necessary for projects importing dbx-components.

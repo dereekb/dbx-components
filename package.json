@@ -123,7 +123,7 @@
     "@types/mapbox-gl": "^2.7.5",
     "@types/mapbox__geo-viewport": "^0.4.1",
     "@types/mockdate": "^3.0.0",
-    "@types/node": "^18.16.9",
+    "@types/node": "^22.13.0",
     "@types/segment-analytics": "^0.0.34",
     "@types/ungap__structured-clone": "^1.2.0",
     "@typescript-eslint/eslint-plugin": "6.21.0",
@@ -169,7 +169,7 @@
     "@nx/nx-win32-x64-msvc": "17.3.2"
   },
   "engines": {
-    "node": "18"
+    "node": "22"
   },
   "generators": "./generators.json"
 }
