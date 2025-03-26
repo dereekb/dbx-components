@@ -42,6 +42,7 @@
       "@dereekb/firebase-server/zoho": ["packages/firebase-server/zoho/src/index.ts"],
       "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/model": ["packages/model/src/index.ts"],
+      "@dereekb/my-plugin": ["tools/my-plugin/src/index.ts"],
       "@dereekb/nestjs": ["packages/nestjs/src/index.ts"],
       "@dereekb/nestjs/mailgun": ["packages/nestjs/mailgun/src/index.ts"],
       "@dereekb/nestjs/stripe": ["packages/nestjs/stripe/src/index.ts"],

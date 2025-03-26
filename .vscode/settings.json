@@ -12,5 +12,6 @@
     "**/dist/**": true,
     "**/tmp/**": true,
     "**/.hg/store/**": true
-  }
+  },
+  "eslint.validate": ["json"]
 }
