@@ -3,9 +3,7 @@ import { ClickableUrl } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseEmulatorService {
   readonly emulatorsConfig = inject(DbxFirebaseParsedEmulatorsConfig);
 

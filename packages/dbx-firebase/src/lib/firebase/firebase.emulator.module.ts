@@ -1,37 +1,18 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { DbxFirebaseEmulatorConfig, DbxFirebaseEmulatorsConfig, DbxFirebaseParsedEmulatorsConfig } from './emulators';
-import { type Maybe } from '@dereekb/util';
+import { provideDbxFirebaseEmulator } from './firebase.emulator.providers';
 
 /**
  * Used to configure the DbxFirebaseEmulatorsConfig provider.
+ *
+ * @deprecated use provideDbxFirebaseEmulator instead.
  */
 @NgModule()
 export class DbxFirebaseEmulatorModule {
   static forRoot(config: DbxFirebaseEmulatorsConfig): ModuleWithProviders<DbxFirebaseEmulatorModule> {
-    const defaultHost = config.host ?? 'localhost';
-
-    function emulatorConfig(emulator: Maybe<DbxFirebaseEmulatorConfig>): Required<DbxFirebaseEmulatorConfig> | undefined {
-      return emulator ? { host: emulator.host ?? defaultHost, port: emulator.port } : undefined;
-    }
-
-    const finalConfig: DbxFirebaseParsedEmulatorsConfig = {
-      useEmulators: config.useEmulators !== false,
-      ui: emulatorConfig(config.ui),
-      auth: emulatorConfig(config.auth),
-      firestore: emulatorConfig(config.firestore),
-      storage: emulatorConfig(config.storage),
-      functions: emulatorConfig(config.functions),
-      database: emulatorConfig(config.database)
-    };
-
     return {
       ngModule: DbxFirebaseEmulatorModule,
-      providers: [
-        {
-          provide: DbxFirebaseParsedEmulatorsConfig,
-          useValue: finalConfig
-        }
-      ]
+      providers: [provideDbxFirebaseEmulator(config)]
     };
   }
 }

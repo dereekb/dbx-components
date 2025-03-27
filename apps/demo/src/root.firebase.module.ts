@@ -2,11 +2,9 @@ import { appNotificationTemplateTypeInfoRecordService, FirestoreContext, firesto
 import {
   DbxFirebaseFirestoreCollectionModule,
   DbxFirebaseEmulatorModule,
-  DbxFirebaseAuthModule,
   DbxFirebaseFunctionsModule,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
   DbxFirebaseAuthServiceDelegate,
-  DbxFirebaseStorageModule,
   DbxFirebaseDevelopmentModule,
   DbxFirebaseModelContextService,
   DbxFirebaseModelTypesServiceConfig,
@@ -14,7 +12,13 @@ import {
   DbxFirebaseNotificationModule,
   DbxFirebaseNotificationItemDefaultViewComponent,
   DbxFirebaseNotificationItemWidgetService,
-  provideDbxFirebaseApp
+  provideDbxFirebaseApp,
+  providedDbxFirebaseStorage,
+  provideDbxFirebaseAuth,
+  provideDbxFirebaseFunctions,
+  provideDbxFirestoreCollection,
+  provideDbxFirebaseEmulator,
+  provideDbxFirebase
 } from '@dereekb/dbx-firebase';
 import { inject, Injector, NgModule } from '@angular/core';
 import { environment } from './environments/environment';
@@ -63,22 +67,6 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 @NgModule({
   imports: [
     // dbx-firebase
-    DbxFirebaseEmulatorModule.forRoot(environment.firebase.emulators),
-    DbxFirebaseFirestoreCollectionModule.forRoot({
-      appCollectionClass: DemoFirestoreCollections,
-      collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
-      provideSystemStateFirestoreCollections: true,
-      provideNotificationFirestoreCollections: true
-    }),
-    DbxFirebaseFunctionsModule.forRoot({
-      functionsGetterToken: DemoFirebaseFunctionsGetter,
-      functionsGetterFactory: makeDemoFirebaseFunctions,
-      functionsConfigMap: DEMO_FIREBASE_FUNCTIONS_CONFIG
-    }),
-    DbxFirebaseAuthModule.forRoot({
-      delegateFactory: demoAuthDelegateFactory
-    }),
-    DbxFirebaseStorageModule.forRoot(),
     DbxFirebaseDevelopmentModule.forRoot({
       enabled: !environment.production,
       entries: [demoSetupDevelopmentWidget()]
@@ -88,8 +76,26 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
     })
   ],
   providers: [
-    provideDbxFirebaseApp({
-      dbxFirebaseOptions: environment.firebase
+    provideDbxFirebase({
+      app: {
+        dbxFirebaseOptions: environment.firebase
+      },
+      emulator: environment.firebase.emulators,
+      storage: {},
+      auth: {
+        delegateFactory: demoAuthDelegateFactory
+      },
+      functions: {
+        functionsGetterToken: DemoFirebaseFunctionsGetter,
+        functionsGetterFactory: makeDemoFirebaseFunctions,
+        functionsConfigMap: DEMO_FIREBASE_FUNCTIONS_CONFIG
+      },
+      firestores: {
+        appCollectionClass: DemoFirestoreCollections,
+        collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
+        provideSystemStateFirestoreCollections: true,
+        provideNotificationFirestoreCollections: true
+      }
     }),
     {
       provide: DemoFirebaseContextService
