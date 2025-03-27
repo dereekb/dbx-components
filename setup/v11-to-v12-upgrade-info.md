@@ -1,8 +1,9 @@
-# Steps
-There are first 
+# dbx-components v11 to v12 upgrade info
+- Update Nx to v19
+- Update Angular to v18
 
 ## Migrations
-We are jumping from Nx version 14 to version 16. It is important to run two independent migrations to ensure everything gets up to date properly.
+We are jumping from Nx version 16 to version 18. It is important to run two independent migrations to ensure everything gets up to date properly.
 
 ### Migrate to Nx 17
 Nx 17 release info is here:
@@ -65,3 +66,23 @@ You'll need to update the following:
 
 ### TypeScript
 After the update Typescript was throwing errors related to the NodeJS types not being available while building Demo. Updated `tsconfig.json` for the project to include the following under `compilerOptions`: `"types": ["node"]`, or add `node` to the existing types. This is probably not necessary for projects importing dbx-components.
+
+
+### Migrate to Nx 18
+Nx 18 release info is here:
+
+https://nx.dev/blog/launch-nx-week-recap#nx-180-project-crystal
+
+First run the following:
+
+```nx migrate 18```
+
+This will setup the migration.json. It will also modify package.json, but it is best to manually check for the latest compatable versions of the dependencies. Compare the changes with the `package.json` with any other dependencies.
+
+Nx 18 had no changes with Angular, still using Angular 17.
+
+#### update package.json changes
+- Update all packages for their respective versions for Nx 18. This was mainly `@jscutlery/semver` while updating.
+
+#### Run the migrations
+Run ```npx nx migrate --run-migrations```. These are mainly minor updates to `package.json` and `nx.json`.

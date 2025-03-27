@@ -1,7 +1,4 @@
 {
-  "affected": {
-    "defaultBase": "develop"
-  },
   "cli": {
     "packageManager": "npm"
   },
@@ -85,5 +82,7 @@
     "sharedGlobals": [],
     "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/jest.config.[jt]s", "!{projectRoot}/src/test-setup.[jt]s", "!{projectRoot}/test-setup.[jt]s"]
   },
-  "nxCloudAccessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU="
+  "nxCloudAccessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU=",
+  "useInferencePlugins": false,
+  "defaultBase": "develop"
 }
