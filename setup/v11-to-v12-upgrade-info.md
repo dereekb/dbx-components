@@ -99,3 +99,6 @@ This will setup the migration.json. It will also modify package.json, but it is 
 
 #### package.json changes
 - Updated all 3rd-party packages to their angular 18 supported version
+
+#### Run the migrations
+Run ```npx nx migrate --run-migrations```. These are mainly minor updates to `package.json` and `nx.json`.

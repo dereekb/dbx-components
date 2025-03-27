@@ -12,7 +12,6 @@
     "url": "https://github.com/dereekb/dbx-components"
   },
   "dependencies": {
-    "@nx/devkit": "19.8.9",
     "@angular/animations": "18.2.9",
     "@angular/cdk": "18.2.9",
     "@angular/common": "18.2.9",
@@ -37,9 +36,11 @@
     "@ngrx/data": "18.1.1",
     "@ngrx/effects": "18.1.1",
     "@ngrx/entity": "18.1.1",
+    "@ngrx/operators": "^18.0.0",
     "@ngrx/store": "18.1.1",
     "@ngx-formly/core": "^6.0.0",
     "@ngx-formly/material": "^6.0.0",
+    "@nx/devkit": "19.8.9",
     "@placemarkio/geo-viewport": "^1.0.2",
     "@uirouter/angular": "15.0.0",
     "@uirouter/core": "^6.0.8",
@@ -85,7 +86,7 @@
     "@angular-eslint/eslint-plugin": "18.4.3",
     "@angular-eslint/eslint-plugin-template": "18.4.3",
     "@angular-eslint/template-parser": "18.4.3",
-    "@angular/cli": "~17.3.0",
+    "@angular/cli": "~18.2.0",
     "@angular/compiler-cli": "18.2.9",
     "@angular/language-service": "18.2.9",
     "@commitlint/cli": "^18.0.0",
@@ -127,6 +128,7 @@
     "@types/ungap__structured-clone": "^1.2.0",
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
+    "@typescript-eslint/utils": "^7.16.0",
     "@ungap/structured-clone": "^1.2.0",
     "autoprefixer": "^10.4.0",
     "cypress": "^9.5.1",
@@ -168,7 +170,7 @@
     "@nx/nx-win32-x64-msvc": "19.8.9"
   },
   "engines": {
-    "node": "22"
+    "node": ">=22.0.0"
   },
   "generators": "./generators.json"
 }
