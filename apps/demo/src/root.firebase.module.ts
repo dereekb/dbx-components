@@ -2,7 +2,6 @@ import { appNotificationTemplateTypeInfoRecordService, FirestoreContext, firesto
 import {
   DbxFirebaseFirestoreCollectionModule,
   DbxFirebaseEmulatorModule,
-  DbxFirebaseDefaultFirebaseProvidersModule,
   DbxFirebaseAuthModule,
   DbxFirebaseFunctionsModule,
   defaultDbxFirebaseAuthServiceDelegateWithClaimsService,
@@ -14,7 +13,8 @@ import {
   DbxFirebaseModelTypesServiceEntry,
   DbxFirebaseNotificationModule,
   DbxFirebaseNotificationItemDefaultViewComponent,
-  DbxFirebaseNotificationItemWidgetService
+  DbxFirebaseNotificationItemWidgetService,
+  provideDbxFirebaseApp
 } from '@dereekb/dbx-firebase';
 import { inject, Injector, NgModule } from '@angular/core';
 import { environment } from './environments/environment';
@@ -64,7 +64,6 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
   imports: [
     // dbx-firebase
     DbxFirebaseEmulatorModule.forRoot(environment.firebase.emulators),
-    DbxFirebaseDefaultFirebaseProvidersModule.forRoot(environment.firebase),
     DbxFirebaseFirestoreCollectionModule.forRoot({
       appCollectionClass: DemoFirestoreCollections,
       collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext),
@@ -89,6 +88,9 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
     })
   ],
   providers: [
+    provideDbxFirebaseApp({
+      dbxFirebaseOptions: environment.firebase
+    }),
     {
       provide: DemoFirebaseContextService
     },
