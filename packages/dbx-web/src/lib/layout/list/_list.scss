@@ -145,11 +145,11 @@ $list-item-padded-min-height: 42px;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
+  $color-config: theming.m2-get-color-config($theme-config);
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
-  $cdk-background-color: theming.get-color-from-palette($background, 'background');
-  $cdk-text-color: theming.get-color-from-palette($foreground, 'text');
+  $cdk-background-color: theming.m2-get-color-from-palette($background, 'background');
+  $cdk-text-color: theming.m2-get-color-from-palette($foreground, 'text');
 
   .dbx-list-view-group-header {
     color: var(--mdc-list-list-item-label-text-color);
@@ -171,9 +171,9 @@ $list-item-padded-min-height: 42px;
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-list') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);

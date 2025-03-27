@@ -50,13 +50,13 @@ $default-anchor-list-item-child-list-item-text-size: 14px;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
+  $color-config: theming.m2-get-color-config($theme-config);
   $foreground: map.get($color-config, 'foreground');
   $primary: map.get($color-config, 'primary');
 
   $background: map.get($color-config, 'background');
-  $background-hover-color: theming.get-color-from-palette($background, 'hover');
-  $background-disabled-color: theming.get-color-from-palette($background, 'contrast');
+  $background-hover-color: theming.m2-get-color-from-palette($background, 'hover');
+  $background-disabled-color: theming.m2-get-color-from-palette($background, 'contrast');
 
   .dbx-anchor-list.mat-mdc-nav-list {
     --mat-divider-color: #{color.scale($color: $background-hover-color, $alpha: 15%)};
@@ -110,9 +110,9 @@ $default-anchor-list-item-child-list-item-text-size: 14px;
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-anchorlist') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);

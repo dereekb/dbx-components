@@ -1,4 +1,3 @@
-@use 'node_modules/@angular/material/core/theming/palette';
 @use '@angular/material' as mat;
 @use 'dbx-web/src/index' as dbx;
 @use 'dbx-form/src/index' as dbx-form;
@@ -8,8 +7,8 @@ $opmore-navy: #1c3454;
 $opmore-pink: #ec4565;
 $opmore-white: #fff;
 
-$dark-primary-text: palette.$dark-primary-text;
-$light-primary-text: palette.$light-primary-text;
+$dark-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 50);
+$light-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 600);
 
 $opmore-blue: (
   50: #e5e9ed,

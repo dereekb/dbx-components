@@ -41,13 +41,13 @@ $bar-fixed-height: 40px;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
+  $color-config: theming.m2-get-color-config($theme-config);
   $background: map.get($color-config, 'background');
   $primary: map.get($color-config, 'primary');
   $accent: map.get($color-config, 'accent');
 
-  $dbx-bar-bg-color: theming.get-color-from-palette($background, 'app-bar');
-  $dbx-bar-color: theming.get-color-from-palette($background, 'contrast');
+  $dbx-bar-bg-color: theming.m2-get-color-from-palette($background, 'app-bar');
+  $dbx-bar-color: theming.m2-get-color-from-palette($background, 'contrast');
 
   .dbx-pagebar .mat-toolbar {
     // todo?
@@ -61,18 +61,18 @@ $bar-fixed-height: 40px;
 }
 
 @mixin typography($theme-config-or-typography-config) {
-  $typography-config: theming.get-typography-config($theme-config-or-typography-config);
+  $typography-config: theming.m2-get-typography-config($theme-config-or-typography-config);
 
   .dbx-bar {
-    font-size: theming.font-size($typography-config, 'caption');
+    font-size: theming.m2-font-size($typography-config, 'caption');
   }
 }
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-bar') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);

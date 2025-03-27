@@ -15,16 +15,8 @@
             "command": "npx nx run dbx-form:build-base:production"
           },
           {
-            "description": "copy all style files from src to map to respective directory",
-            "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
-          },
-          {
-            "description": "delete unnecessary src directory",
-            "command": "echo 'cleaning up dbx-form scss files' && rm -r dist/packages/dbx-form/src"
-          },
-          {
-            "description": "copy license",
-            "command": "echo 'copying dbx-form license' && cp LICENSE dist/packages/dbx-form"
+            "description": "finish dbx-form build script",
+            "command": "sh packages/dbx-form/complete-dbx-form-build.sh"
           }
         ],
         "parallel": false,

@@ -10,7 +10,7 @@
 
 // Includes all of the typographic styles.
 @mixin all-component-typographies($theme-config-or-typography-config: null) {
-  $typography-config: if(theming.private-is-theme-object($theme-config-or-typography-config), theming.get-typography-config($theme-config-or-typography-config), $theme-config-or-typography-config);
+  $typography-config: if(theming.private-is-theme-object($theme-config-or-typography-config), theming.m2-get-typography-config($theme-config-or-typography-config), $theme-config-or-typography-config);
 
   // If no actual color configuration has been specified, create a default one.
   @if not $typography-config {
