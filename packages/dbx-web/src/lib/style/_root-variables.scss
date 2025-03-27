@@ -42,7 +42,7 @@
 */
 @mixin root-theme-color-variables($root-selector, $theme-config) {
   #{$root-selector} {
-    $color-config: theming.get-color-config($theme-config);
+    $color-config: theming.m2-get-color-config($theme-config);
 
     $primary: map.get($color-config, 'primary');
     $accent: map.get($color-config, 'accent');
@@ -50,23 +50,23 @@
     $background: map.get($color-config, 'background');
     $foreground: map.get($color-config, 'foreground');
 
-    $primary-color: theming.get-color-from-palette($primary, 500);
-    $primary-color-contrast: theming.get-color-from-palette($primary, '500-contrast');
+    $primary-color: theming.m2-get-color-from-palette($primary, 500);
+    $primary-color-contrast: theming.m2-get-color-from-palette($primary, '500-contrast');
 
-    $accent-color: theming.get-color-from-palette($accent, 500);
-    $accent-color-contrast: theming.get-color-from-palette($accent, '500-contrast');
+    $accent-color: theming.m2-get-color-from-palette($accent, 500);
+    $accent-color-contrast: theming.m2-get-color-from-palette($accent, '500-contrast');
 
-    $warn-color: theming.get-color-from-palette($warn, 500);
-    $warn-color-contrast: theming.get-color-from-palette($warn, '500-contrast');
+    $warn-color: theming.m2-get-color-from-palette($warn, 500);
+    $warn-color-contrast: theming.m2-get-color-from-palette($warn, '500-contrast');
 
-    $grey-color: theming.get-color-from-palette($foreground, 'text');
-    $grey-color-contrast: theming.get-color-from-palette($background, 'disabled-button');
+    $grey-color: theming.m2-get-color-from-palette($foreground, 'text');
+    $grey-color-contrast: theming.m2-get-color-from-palette($background, 'disabled-button');
 
-    $disabled-color: theming.get-color-from-palette($foreground, 'disabled-text');
-    $disabled-color-contrast: theming.get-color-from-palette($background, 'disabled-button');
+    $disabled-color: theming.m2-get-color-from-palette($foreground, 'disabled-text');
+    $disabled-color-contrast: theming.m2-get-color-from-palette($background, 'disabled-button');
 
-    $background-color: theming.get-color-from-palette($foreground, 'text');
-    $background-color-contrast: theming.get-color-from-palette($background, 'background');
+    $background-color: theming.m2-get-color-from-palette($foreground, 'text');
+    $background-color-contrast: theming.m2-get-color-from-palette($background, 'background');
 
     $notice-color: theming.get-dbx-notice-color($theme-config);
     $success-color: theming.get-dbx-success-color($theme-config);

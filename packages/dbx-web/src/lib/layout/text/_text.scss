@@ -174,14 +174,14 @@ $dbx-detail-block-content-offset: 30px;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
+  $color-config: theming.m2-get-color-config($theme-config);
   $accent: map.get($color-config, 'accent');
   $warn: map.get($color-config, 'warn');
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
 
-  $text-color: theming.get-color-from-palette($foreground, 'text');
-  $border-color: theming.get-color-from-palette($background, 'background');
+  $text-color: theming.m2-get-color-from-palette($foreground, 'text');
+  $border-color: theming.m2-get-color-from-palette($background, 'background');
   $outlined-text-color: transparentize($border-color, 0.6);
 
   $is-dark: map.get($theme-config, is-dark);
@@ -222,12 +222,12 @@ $dbx-detail-block-content-offset: 30px;
 }
 
 @mixin typography($theme-config-or-typography-config) {
-  $typography-config: theming.get-typography-config($theme-config-or-typography-config);
+  $typography-config: theming.m2-get-typography-config($theme-config-or-typography-config);
 
   .dbx-label,
   .dbx-sublabel,
   .dbx-chip-sublabel {
-    font-size: theming.font-size($typography-config, 'caption');
+    font-size: theming.m2-font-size($typography-config, 'caption');
   }
 
   .dbx-chip-sublabel {
@@ -237,9 +237,9 @@ $dbx-detail-block-content-offset: 30px;
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-text') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);
