@@ -67,7 +67,6 @@ You'll need to update the following:
 ### TypeScript
 After the update Typescript was throwing errors related to the NodeJS types not being available while building Demo. Updated `tsconfig.json` for the project to include the following under `compilerOptions`: `"types": ["node"]`, or add `node` to the existing types. This is probably not necessary for projects importing dbx-components.
 
-
 ### Migrate to Nx 18
 Nx 18 release info is here:
 
@@ -86,3 +85,17 @@ Nx 18 had no changes with Angular, still using Angular 17.
 
 #### Run the migrations
 Run ```npx nx migrate --run-migrations```. These are mainly minor updates to `package.json` and `nx.json`.
+
+### Migrate to Nx 19
+Nx 19 release info is here:
+
+https://nx.dev/blog/nx-19-release
+
+First run the following:
+
+```nx migrate 19```
+
+This will setup the migration.json. It will also modify package.json, but it is best to manually check for the latest compatable versions of the dependencies. Compare the changes with the `package.json` with any other dependencies.
+
+#### package.json changes
+- Updated all 3rd-party packages to their angular 18 supported version
