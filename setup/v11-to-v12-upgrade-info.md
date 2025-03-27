@@ -53,6 +53,7 @@ The `mapbox-gl` package has also been updated to use the `dist` folder instead o
 - The function definition for `StreamDocsWithOnSnapshotFunctionParams.next` has been updated to only pass the value, and never pass undefined to match with the observable.
 - The various app provider functions (`provideFirebaseApp()`, `provideAppCheck()`, `provideFirestore()`, `provideAuth()`, `provideStorage()`, `provideFunctions()`) from `@angular/fire/functions` now returns providers instead of a module.
 - Added `provideDbxFirebaseApp()` to replace the `DbxFirebaseDefaultFirebaseProvidersModule`. The `DbxFirebaseDefaultFirebaseProvidersModule` is now deprecated, but still functional. The other individual modules have been removed.
+- Added `provideDbxFirebase()` to replace having to include the dbx-firebase configuration modules with in all-in-one provider.
 
 ### NodeJS
 v12 requires NodeJS version 22 or greater. This project is specifically targeting NodeJS 22.14.
