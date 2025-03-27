@@ -19,7 +19,7 @@ export class DbxMapboxMapDirective implements OnInit {
   ngOnInit(): void {
     // style must be provided first before the map will load.
     this.mapboxMap.style = this.dbxMapboxService.defaultStyle;
-    this.mapboxMap.zoom = [this.dbxMapboxService.defaultZoom];
+    this.mapboxMap.zoom = this.dbxMapboxService.defaultZoom;
     this.mapboxMap.center = latLngPoint(this.dbxMapboxService.defaultCenter);
 
     if (this.dbxMapboxMapStore) {

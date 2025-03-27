@@ -70,10 +70,10 @@ $opmore-pink: (
 );
 
 // Define an alternate dark theme.
-$doc-primary: mat.define-palette($opmore-blue);
-$doc-accent: mat.define-palette($opmore-pink);
-$doc-warn: mat.define-palette(mat.$red-palette);
-$doc-mat-theme: mat.define-light-theme(
+$doc-primary: mat.m2-define-palette($opmore-blue);
+$doc-accent: mat.m2-define-palette($opmore-pink);
+$doc-warn: mat.m2-define-palette(mat.$m2-red-palette);
+$doc-mat-theme: mat.m2-define-light-theme(
   (
     color: (
       primary: $doc-primary,
@@ -98,10 +98,10 @@ This mixin creates the doc-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $doc-form-theme);
 }
 
-$dark-doc-primary: mat.define-palette(mat.$purple-palette);
-$dark-doc-accent: mat.define-palette(mat.$orange-palette);
-$dark-doc-warn: mat.define-palette(mat.$red-palette);
-$dark-doc-mat-theme: mat.define-dark-theme(
+$dark-doc-primary: mat.m2-define-palette(mat.$m2-purple-palette);
+$dark-doc-accent: mat.m2-define-palette(mat.$m2-orange-palette);
+$dark-doc-warn: mat.m2-define-palette(mat.$m2-red-palette);
+$dark-doc-mat-theme: mat.m2-define-dark-theme(
   (
     color: (
       primary: $dark-doc-primary,

@@ -37,7 +37,8 @@ The command-line steps we used are as follow:
 - copy the files from the issue/comment above
 - run ```nx generate tools/my-plugin/src/generators/my-generator``` and answer "false" to the question
 - run ```npx nx migrate --run-migrations```. This may take a while depending on the size of the project.
-
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` and answer "true" to the question to undo the generator's changes
+- 
 (After doing this step it is a good idea to commit the changes on git before continuing)
 
 ### Updating Projects
@@ -102,3 +103,29 @@ This will setup the migration.json. It will also modify package.json, but it is 
 
 #### Run the migrations
 Run ```npx nx migrate --run-migrations```. These are mainly minor updates to `package.json` and `nx.json`.
+
+### Updating Packages - BREAKING CHANGES
+#### Angular Material
+Angular Material 18 added Material v3 to the mix as the new default, so usage of Material 2 is updated to be specifically referenced:
+
+```
+$app-typography-config: mat.define-typography-config
+```
+
+to:
+
+```
+$app-typography-config: mat.m2-define-typography-config
+```
+
+The Nx migration will handle this name change, but it is noted here for posterity.
+
+#### UIRouter
+UIRouter has been updated with stand-alone support, so UIView can no longer be referenced by modules and doesn't need to be imported.
+
+### Updating Application Build Executors
+ESBuild support for building Angular projects was added in Angular 17. You can replace `@angular-devkit/build-angular:browser` with `@nx/angular:application` to use the new application builder. You will have to make the following changes:
+
+- Replace `@angular-devkit/build-angular:browser` with `@nx/angular:application`
+- Remove `buildOptimizer` and `vendorChunk` options. If you do not, the builder will throw an error while building, complaining about extra options.
+ 

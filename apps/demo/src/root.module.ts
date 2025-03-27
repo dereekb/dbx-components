@@ -1,5 +1,5 @@
 import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
-import { Injector, NgModule, inject } from '@angular/core';
+import { Component, Injector, NgModule, inject } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
@@ -66,6 +66,16 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
   config.logging = false; // environment.testing;
   return config;
 }
+
+@Component({
+  selector: 'app-root',
+  template: `
+    <ui-view></ui-view>
+  `,
+  imports: [UIView],
+  standalone: true
+})
+export class RootComponent {}
 
 @NgModule({
   imports: [
@@ -160,7 +170,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       useValue: DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS
     }
   ],
-  bootstrap: [UIView]
+  bootstrap: [RootComponent]
 })
 export class RootModule {
   readonly dbxFirebaseAnalyticsUserEventsListener = inject(DbxFirebaseAnalyticsUserEventsListener);
