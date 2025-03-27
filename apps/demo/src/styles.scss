@@ -4,7 +4,7 @@
 @use 'dbx-firebase/src/index' as dbx-firebase;
 @use './style/style';
 
-$app-typography-config: mat.define-typography-config(
+$app-typography-config: mat.m2-define-typography-config(
   $font-family: 'Fira Sans'
 );
 

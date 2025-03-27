@@ -14,13 +14,13 @@
       }
     },
     "build-base": {
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@nx/angular:application",
       "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
+        "browser": "apps/demo/src/main.ts",
         "outputPath": "dist/apps/demo",
         "index": "apps/demo/src/index.html",
-        "main": "apps/demo/src/main.ts",
         "polyfills": ["zone.js"],
         "tsConfig": "apps/demo/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
@@ -35,8 +35,9 @@
           }
         ],
         "allowedCommonJsDependencies": ["core-js", "lodash", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
+        "externalDependencies": ["@angular/material/core"],
         "stylePreprocessorOptions": {
-          "includePaths": ["packages"]
+          "includePaths": ["packages", "node_modules"]
         },
         "styles": ["mapbox-gl/dist/mapbox-gl.css", "apps/demo/src/styles.scss"],
         "scripts": []
@@ -64,9 +65,7 @@
           "outputHashing": "all"
         },
         "development": {
-          "buildOptimizer": false,
           "optimization": false,
-          "vendorChunk": true,
           "extractLicenses": false,
           "sourceMap": true,
           "namedChunks": true
