@@ -3,8 +3,8 @@ import { ApplicationConfig, Injector } from '@angular/core';
 import { Category, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppAuthRouter, provideDbxAppContextState, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase } from '@dereekb/dbx-firebase';
-import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxStyleService } from '@dereekb/dbx-web';
+import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
+import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
@@ -14,6 +14,7 @@ import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -109,6 +110,8 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // browser
+    provideAnimations(),
     // ngRx
     provideEffects(),
     provideStore(),
@@ -121,6 +124,7 @@ export const appConfig: ApplicationConfig = {
       dbxAnalyticsServiceConfigurationFactory
     }),
     // dbx-core
+    provideDbxScreenMediaService(),
     provideDbxAppContextState(),
     provideDbxUIRouterService(),
     provideDbxStorage(),
@@ -194,6 +198,13 @@ export const appConfig: ApplicationConfig = {
       },
       notifications: {
         appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
+      }
+    }),
+    provideDbxFirebaseLogin({
+      enabledLoginMethods: environment.firebase.enabledLoginMethods,
+      termsOfServiceUrls: {
+        tosUrl: '/tos/terms',
+        privacyUrl: '/tos/privacy'
       }
     })
 
