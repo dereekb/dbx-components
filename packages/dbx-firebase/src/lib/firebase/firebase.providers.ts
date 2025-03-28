@@ -10,9 +10,9 @@ import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
 import { DbxFirebaseOptions, DBX_FIREBASE_OPTIONS_TOKEN } from './options';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck';
+import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck/appcheck';
 import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.interceptor';
-import { Maybe, pushArrayItemsIntoArray } from 'packages/util/src/lib';
+import { Maybe, pushArrayItemsIntoArray } from '@dereekb/util';
 
 /**
  * Configuration for provideDbxFirebaseApp().
