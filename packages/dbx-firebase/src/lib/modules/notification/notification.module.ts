@@ -13,10 +13,6 @@ import { DbxValuePipeModule } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemContentComponent } from './component/notificationitem.content.component';
 import { DbxFirebaseNotificationItemStorePopoverButtonComponent, DbxFirebaseNotificationItemStorePopoverComponent } from './container';
 
-export interface DbxFirebaseNotificationModuleConfig {
-  readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
-}
-
 const declarations = [
   // components
   DbxFirebaseNotificationItemListComponent,
@@ -48,24 +44,4 @@ const declarations = [
   declarations,
   exports: declarations
 })
-export class DbxFirebaseNotificationModule {
-  static forRoot(config: DbxFirebaseNotificationModuleConfig): ModuleWithProviders<DbxFirebaseNotificationModule> {
-    const { appNotificationTemplateTypeInfoRecordService } = config;
-
-    const providers: Provider[] = [
-      {
-        provide: AppNotificationTemplateTypeInfoRecordService,
-        useValue: appNotificationTemplateTypeInfoRecordService
-      },
-      {
-        provide: DbxFirebaseNotificationTemplateService,
-        useClass: DbxFirebaseNotificationTemplateService
-      }
-    ];
-
-    return {
-      ngModule: DbxFirebaseNotificationModule,
-      providers
-    };
-  }
-}
+export class DbxFirebaseNotificationModule {}

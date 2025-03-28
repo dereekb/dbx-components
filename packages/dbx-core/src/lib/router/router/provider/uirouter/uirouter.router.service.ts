@@ -17,6 +17,7 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   readonly uiRouterGlobals = inject(UIRouterGlobals);
 
   private readonly _params = new BehaviorSubject<SegueRefRawSegueParams>(this.uiRouterGlobals.params);
+
   readonly params$ = this._params.asObservable();
 
   private readonly _transitions = new Subject<DbxRouterTransitionEvent>();

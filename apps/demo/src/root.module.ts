@@ -19,6 +19,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { DemoRootSharedModule } from '@dereekb/demo-components';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import { STATES } from './app/app.router';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -70,10 +71,9 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
 @Component({
   selector: 'app-root',
   template: `
-    <ui-view></ui-view>
+    <ui-view id="default"></ui-view>
   `,
-  imports: [UIView],
-  standalone: true
+  standalone: false
 })
 export class RootComponent {}
 
@@ -131,6 +131,7 @@ export class RootComponent {}
     }),
     UIRouterModule.forRoot({
       useHash: false,
+      states: STATES,
       initial: { state: 'root' },
       otherwise: { state: 'root' },
       config: routerConfigFn
@@ -170,6 +171,7 @@ export class RootComponent {}
       useValue: DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS
     }
   ],
+  declarations: [RootComponent],
   bootstrap: [RootComponent]
 })
 export class RootModule {
