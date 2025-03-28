@@ -101,13 +101,13 @@ export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: M
 }
 
 export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
-  abstract disabled$: Observable<Maybe<boolean>>;
-  abstract selected$: Observable<Maybe<boolean>>;
-  abstract anchor$: Observable<Maybe<T>>;
-  abstract disabled: Maybe<boolean>;
-  abstract selected: Maybe<boolean>;
-  abstract anchor: Maybe<T>;
-  abstract type$: Observable<AnchorType>;
+  abstract readonly disabled$: Observable<Maybe<boolean>>;
+  abstract readonly selected$: Observable<Maybe<boolean>>;
+  abstract readonly anchor$: Observable<Maybe<T>>;
+  abstract readonly disabled: Maybe<boolean>;
+  abstract readonly selected: Maybe<boolean>;
+  abstract readonly anchor: Maybe<T>;
+  abstract readonly type$: Observable<AnchorType>;
 }
 
 export function provideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {

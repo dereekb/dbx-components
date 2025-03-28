@@ -1,7 +1,8 @@
-import { Directive, inject } from '@angular/core';
+import { computed, Directive, inject } from '@angular/core';
 import { DbxInjectionTemplateConfig } from '@dereekb/dbx-core';
 import { Observable, distinctUntilChanged, shareReplay, map } from 'rxjs';
 import { DbxAnchorComponent } from './anchor.component';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract implementation
@@ -10,25 +11,8 @@ import { DbxAnchorComponent } from './anchor.component';
 export abstract class AbstractDbxSegueAnchorDirective {
   readonly parent = inject(DbxAnchorComponent);
 
-  readonly target$ = this.parent.target$;
-
-  readonly ref$ = this.parent.anchor$.pipe(
-    map((x) => x?.ref),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-  readonly refParams$ = this.parent.anchor$.pipe(
-    map((x) => x?.refParams),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-  readonly refOptions$ = this.parent.anchor$.pipe(
-    map((x) => x?.refOptions),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
-  readonly template$: Observable<DbxInjectionTemplateConfig> = this.parent.templateRef$.pipe(
+  readonly anchor$ = this.parent.anchor$;
+  readonly templateConfig$: Observable<DbxInjectionTemplateConfig> = this.parent.templateRef$.pipe(
     distinctUntilChanged(),
     map((templateRef) => ({
       templateRef
@@ -36,7 +20,11 @@ export abstract class AbstractDbxSegueAnchorDirective {
     shareReplay(1)
   );
 
-  get anchor() {
-    return this.parent.anchor;
-  }
+  protected readonly _anchorSignal = toSignal(this.anchor$, { initialValue: undefined });
+  protected readonly _templateConfigSignal = toSignal(this.templateConfig$, { initialValue: undefined });
+
+  readonly anchorSignal = computed(() => this._anchorSignal());
+  readonly targetSignal = computed(() => this._anchorSignal()?.target);
+
+  readonly templateConfigSignal = computed(() => this._templateConfigSignal());
 }

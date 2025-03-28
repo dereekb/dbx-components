@@ -8,7 +8,7 @@ import { provideFirestore, connectFirestoreEmulator, initializeFirestore, persis
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
 import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
-import { DbxFirebaseOptions, DBX_FIREBASE_OPTIONS_TOKEN } from './options';
+import { DbxFirebaseAppOptions, DBX_FIREBASE_APP_OPTIONS_TOKEN } from './firebase.options';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck/appcheck';
 import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.interceptor';
@@ -19,11 +19,11 @@ import { Maybe, pushArrayItemsIntoArray } from '@dereekb/util';
  */
 export interface ProvideDbxFirebaseAppConfig {
   /**
-   * DbxFirebaseOptions for the app.
+   * DbxFirebaseAppOptions for the app.
    *
-   * Is automatically configured as a provider for the DBX_FIREBASE_OPTIONS_TOKEN.
+   * Is automatically configured as a provider for the DBX_FIREBASE_APP_OPTIONS_TOKEN.
    */
-  readonly dbxFirebaseOptions: DbxFirebaseOptions;
+  readonly dbxFirebaseAppOptions: DbxFirebaseAppOptions;
   /**
    * Whether or not to provide Firestore configuration.
    *
@@ -63,20 +63,20 @@ export interface ProvideDbxFirebaseAppConfig {
  * @returns EnvironmentProviders
  */
 export function provideDbxFirebaseApp(config: ProvideDbxFirebaseAppConfig): EnvironmentProviders {
-  const { dbxFirebaseOptions } = config;
+  const { dbxFirebaseAppOptions: dbxFirebaseOptions } = config;
 
   const providers: (Provider | EnvironmentProviders)[] = [
     // options
     makeEnvironmentProviders([
       {
-        provide: DBX_FIREBASE_OPTIONS_TOKEN,
+        provide: DBX_FIREBASE_APP_OPTIONS_TOKEN,
         useValue: dbxFirebaseOptions
       }
     ]),
 
     // app
     provideFirebaseApp((injector: Injector) => {
-      const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
+      const firebaseOptions = injector.get<DbxFirebaseAppOptions>(DBX_FIREBASE_APP_OPTIONS_TOKEN);
       return initializeApp(firebaseOptions);
     })
   ];
@@ -85,7 +85,7 @@ export function provideDbxFirebaseApp(config: ProvideDbxFirebaseAppConfig): Envi
   if (config.provideFirestore !== false) {
     const firestoreProvider = provideFirestore((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
-      const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
+      const firebaseOptions = injector.get<DbxFirebaseAppOptions>(DBX_FIREBASE_APP_OPTIONS_TOKEN);
 
       const firestoreSettings: FirestoreSettings = {};
 
@@ -125,14 +125,15 @@ export function provideDbxFirebaseApp(config: ProvideDbxFirebaseAppConfig): Envi
     const appCheckProviders = [
       provideAppCheck((injector: Injector) => {
         const firebaseApp = injector.get(FirebaseApp);
-        const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
+        const firebaseOptions = injector.get<DbxFirebaseAppOptions>(DBX_FIREBASE_APP_OPTIONS_TOKEN);
         const appCheckOptions = firebaseOptions.appCheck;
         const appCheckKnowinglyDisabled = appCheckOptions?.disabled === true || firebaseOptions.emulators?.useEmulators === true;
+
         let appCheck: AppCheck;
 
         if (appCheckOptions && !appCheckKnowinglyDisabled) {
           // enable the debug tokens if not using emulators and allowDebugTokens is set true
-          if (firebaseOptions.emulators?.useEmulators !== true && appCheckOptions.allowDebugTokens) {
+          if (!firebaseOptions.emulators?.useEmulators && appCheckOptions.allowDebugTokens) {
             enableAppCheckDebugTokenGeneration(true);
           }
 
@@ -201,7 +202,7 @@ export function provideDbxFirebaseApp(config: ProvideDbxFirebaseAppConfig): Envi
   if (config.provideFunctions !== false) {
     const functionsProvider = provideFunctions((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
-      const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
+      const firebaseOptions = injector.get<DbxFirebaseAppOptions>(DBX_FIREBASE_APP_OPTIONS_TOKEN);
       const { functionsRegionOrCustomDomain } = firebaseOptions;
 
       const functions = getFunctions(firebaseApp, functionsRegionOrCustomDomain);

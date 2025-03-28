@@ -1,22 +1,24 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
 import { map, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
-import { Directive, Input, OnDestroy } from '@angular/core';
+import { computed, Directive, Input, OnDestroy } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
 import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract anchor directive.
  */
 @Directive()
 export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbxAnchor, OnDestroy {
-  private _selected = new BehaviorSubject<Maybe<boolean>>(false);
-  private _disabled = new BehaviorSubject<Maybe<boolean>>(false);
-  private _anchor = new BehaviorSubject<Maybe<T>>(undefined);
+  private readonly _selected = new BehaviorSubject<Maybe<boolean>>(false);
+  private readonly _disabled = new BehaviorSubject<Maybe<boolean>>(false);
+  private readonly _anchor = new BehaviorSubject<Maybe<T>>(undefined);
 
-  readonly disabled$ = this._disabled.pipe(distinctUntilChanged());
-  readonly anchor$ = this._anchor.pipe(skipFirstMaybe(), distinctUntilChanged(), shareReplay(1));
-  readonly selected$ = combineLatest([this._selected, this.anchor$]).pipe(
+  readonly disabled$: Observable<Maybe<boolean>> = this._disabled.pipe(distinctUntilChanged());
+  readonly anchor$: Observable<Maybe<T>> = this._anchor.pipe(skipFirstMaybe(), distinctUntilChanged(), shareReplay(1));
+
+  readonly selected$: Observable<Maybe<boolean>> = combineLatest([this._selected, this.anchor$]).pipe(
     map(([selected, anchor]) => selected || anchor?.selected),
     distinctUntilChanged()
   );
@@ -27,6 +29,17 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  private readonly _anchorSignal = toSignal(this.anchor$, { initialValue: this._anchor.value });
+  private readonly _disabledSignal = toSignal(this.disabled$, { initialValue: this._disabled.value });
+  private readonly _selectedSignal = toSignal(this.selected$, { initialValue: this._selected.value });
+  private readonly _typeSignal = toSignal(this.type$, { initialValue: anchorTypeForAnchor(this._anchor.value, this._disabled.value) });
+
+  readonly disabledSignal = computed(() => this._disabledSignal());
+  readonly selectedSignal = computed(() => this._selectedSignal());
+  readonly urlSignal = computed(() => this._anchorSignal()?.url);
+  readonly targetSignal = computed(() => this._anchorSignal()?.target);
+  readonly typeSignal = computed(() => this._typeSignal());
 
   ngOnDestroy(): void {
     this._selected.complete();

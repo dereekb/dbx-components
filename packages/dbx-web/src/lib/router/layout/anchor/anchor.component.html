@@ -1,10 +1,10 @@
-<ng-container [ngSwitch]="type$ | async">
+<ng-container [ngSwitch]="typeSignal()">
   <!-- Plain -->
   <ng-container *ngSwitchCase="0">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </ng-container>
   <!-- Click -->
-  <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="(selectedClass$ | async) || ''" (click)="clickAnchor()" *ngSwitchCase="1">
+  <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()" *ngSwitchCase="1">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Router -->
@@ -12,7 +12,7 @@
     <!-- Injected in child. -->
   </dbx-injection>
   <!-- Href -->
-  <a class="dbx-anchor-a dbx-anchor-href" [href]="url$ | async" [attr.target]="target$ | async" *ngSwitchCase="3">
+  <a class="dbx-anchor-a dbx-anchor-href" [href]="urlSignal()" [attr.target]="targetSignal()" *ngSwitchCase="3">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Disabled or None -->
@@ -20,6 +20,7 @@
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
 </ng-container>
+
 <!-- Template content -->
 <ng-template #content>
   <ng-content></ng-content>

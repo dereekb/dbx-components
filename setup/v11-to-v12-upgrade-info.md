@@ -180,7 +180,9 @@ Pass --verbose to see the stacktrace.
 Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 
 
-#### Dbx Analytics
+#### Module Deprecations
+All `.forRoot()` methods have been deprecated in favor of provider functions.
+
 - `DbxAnalyticsSegmentModule.forRoot()` was replaced with `provideDbxAnalyticsSegmentApiService()`
 - `DbxWebAngularRouterModule.forRoot()` was replaced with `provideDbxRouterWebAngularRouterProviderConfig()`
 - `DbxWebUiRouterModule.forRoot()` was replaced with `provideDbxRouterWebUiRouterProviderConfig()`
@@ -192,7 +194,7 @@ Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 - `DbxAppAuthStateModule` was replaced with `provideDbxAppAuthState()`, `DbxAppAuthRouterModule` was replaced with `provideDbxAppAuthRouterModule()`
 - `DbxAppAuthRouterStateModule` was replaced with `provideDbxAppAuthRouterStateModule()`
 - `DbxAppContextStateModule` was replaced with `provideDbxAppContextState()`.
-  
+
 
 #### Angular
 - Any "shared" modules, such as `DemoRootSharedModule`, need to be updated to import anything it exports. Prior these types of functions just exported, but now need an import declaration too for the same modules.

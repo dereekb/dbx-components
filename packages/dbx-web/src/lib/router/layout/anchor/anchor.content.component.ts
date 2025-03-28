@@ -3,12 +3,16 @@ import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
+import { NgIf, AsyncPipe } from '@angular/common';
+import { MatIcon, MatIconModule } from '@angular/material/icon';
 
 /**
  * Component that displays an anchor and a span with the title.
  */
 @Component({
   selector: 'dbx-anchor-content',
+  standalone: true,
+  imports: [NgIf, AsyncPipe, MatIcon],
   template: `
     <mat-icon class="dbx-icon-spacer" *ngIf="icon$ | async">{{ icon$ | async }}</mat-icon>
     <span *ngIf="title$ | async">{{ title$ | async }}</span>
