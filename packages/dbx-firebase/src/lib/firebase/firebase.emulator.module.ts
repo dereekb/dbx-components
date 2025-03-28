@@ -1,5 +1,5 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbxFirebaseEmulatorConfig, DbxFirebaseEmulatorsConfig, DbxFirebaseParsedEmulatorsConfig } from './emulators';
+import { DbxFirebaseEmulatorsConfig } from './emulators';
 import { provideDbxFirebaseEmulator } from './firebase.emulator.providers';
 
 /**

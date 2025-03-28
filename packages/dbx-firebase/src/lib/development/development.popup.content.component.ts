@@ -10,7 +10,7 @@ import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.
 import { DbxFirebaseDevelopmentPopupContentFormValue } from './development.popup.content.form.component';
 import { msToSeconds } from '@dereekb/date';
 import { DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY } from './development.scheduler.widget.component';
-import { DbxFirebaseEmulatorService } from '../firebase';
+import { DbxFirebaseEmulatorService } from '../firebase/firebase.emulator.service';
 
 @Component({
   selector: 'dbx-firebase-development-popup-content',

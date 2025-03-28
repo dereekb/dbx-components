@@ -120,12 +120,59 @@ $app-typography-config: mat.m2-define-typography-config
 
 The Nx migration will handle this name change, but it is noted here for posterity.
 
+The dbx-components sass internally used a lot of `@angular/material` sass, so it required some updates to the scss to reference the m2- prefix. There shouldn't be any updates required to your code to make use of the changes.
+
 #### UIRouter
 UIRouter has been updated with stand-alone support, so UIView can no longer be referenced by modules and doesn't need to be imported.
 
-### Updating Application Build Executors
+#### Updating Application Build Executors
 ESBuild support for building Angular projects was added in Angular 17. You can replace `@angular-devkit/build-angular:browser` with `@nx/angular:application` to use the new application builder. You will have to make the following changes:
 
 - Replace `@angular-devkit/build-angular:browser` with `@nx/angular:application`
 - Remove `buildOptimizer` and `vendorChunk` options. If you do not, the builder will throw an error while building, complaining about extra options.
  
+#### Other Build Issue Notes
+There was a relatively cryptic build error after making the above changes: 
+
+```
+------------------------------------------------------------------------------
+Building entry point '@dereekb/dbx-firebase'
+------------------------------------------------------------------------------
+✖ Compiling with Angular sources in Ivy full compilation mode.
+
+ NX   Cannot destructure property 'pos' of 'file.referencedFiles[index]' as it is undefined.
+
+Pass --verbose to see the stacktrace.
+
+```
+
+At some point there were some dependency loops that seemed to arise during the update that aren't properly detected as such. 
+
+```
+// error
+import { DbxFirebaseEmulatorService } from '../firebase';
+
+// fixed
+import { DbxFirebaseEmulatorService } from '../firebase/firebase.emulator.service';
+```
+
+```
+// error
+import { Maybe, pushArrayItemsIntoArray } from 'packages/util/src/lib';
+
+// fixed
+import { Maybe, pushArrayItemsIntoArray } from '@dereekb/util';
+```
+
+#### app-api build
+dbx-components demo-api failed to build with the following error:
+
+```
+> nx run demo-api:build-base
+
+ NX   Using "isolatedConfig" without a "webpackConfig" is not supported.
+
+Pass --verbose to see the stacktrace.
+```
+
+Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321

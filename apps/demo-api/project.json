@@ -17,6 +17,7 @@
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
+        "webpackConfig": "apps/demo-api/webpack.config.js",
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
         "tsConfig": "apps/demo-api/tsconfig.app.json",
