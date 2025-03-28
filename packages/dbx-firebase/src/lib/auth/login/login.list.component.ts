@@ -3,13 +3,16 @@ import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService } from './log
 import { DbxFirebaseLoginMode, FirebaseLoginMethodType, FirebaseLoginMethodCategory } from './login';
 import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { containsStringAnyCase, Maybe, ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, DbxInjectionComponentModule } from '@dereekb/dbx-core';
+import { NgFor, NgIf, AsyncPipe } from '@angular/common';
 
 /**
  * Pre-configured login component that displays all configured login types.
  */
 @Component({
   selector: 'dbx-firebase-login-list',
+  standalone: true,
+  imports: [NgFor, NgIf, AsyncPipe, DbxInjectionComponentModule],
   template: `
     <div class="dbx-firebase-login-item" *ngFor="let config of providerInjectionConfigs$ | async">
       <dbx-injection [config]="config"></dbx-injection>

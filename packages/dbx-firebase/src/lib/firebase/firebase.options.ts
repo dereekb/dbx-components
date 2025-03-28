@@ -1,36 +1,38 @@
 import { InjectionToken } from '@angular/core';
 import { PersistentCacheSettings } from 'firebase/firestore';
 import { FirebaseOptions } from 'firebase/app';
-import { DbxFirebaseLoginModuleRootConfig } from '../auth/login/firebase.login.module';
 import { DbxFirebaseAppCheckConfig } from './appcheck';
 import { DbxFirebaseEmulatorsConfig } from './emulators';
 
-export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
+export const DBX_FIREBASE_APP_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
 
-export interface DbxFirebaseOptions extends FirebaseOptions, Pick<DbxFirebaseLoginModuleRootConfig, 'enabledLoginMethods'> {
-  emulators: DbxFirebaseEmulatorsConfig;
+/**
+ * Extends FirebaseOptions with additional properties for configuring the underlying client-side Firebase services.
+ */
+export interface DbxFirebaseAppOptions extends FirebaseOptions {
+  readonly emulators: DbxFirebaseEmulatorsConfig;
   /**
    * Firebase AppCheck handling
    */
-  appCheck?: DbxFirebaseAppCheckConfig;
+  readonly appCheck?: DbxFirebaseAppCheckConfig;
   /**
    * Passed to the Functions initialization to set the domain to use when sending requests.
    */
-  functionsRegionOrCustomDomain?: string | undefined;
+  readonly functionsRegionOrCustomDomain?: string | undefined;
   /**
    * Whether or not to call enableMultiTabIndexedDbPersistence() for firestore at setup time.
    *
    * True by default.
    */
-  enableMultiTabIndexedDbPersistence?: boolean;
+  readonly enableMultiTabIndexedDbPersistence?: boolean;
   /**
    * Whether or not to call enableIndexedDbPersistence() for firestore at setup time.
    *
    * True by default if enableMultiTabIndexedDbPersistence is false.
    */
-  enableIndexedDbPersistence?: boolean;
+  readonly enableIndexedDbPersistence?: boolean;
   /**
    * Optional persistent cache setting to pass to the Firestore cache.
    */
-  persistentCacheSettings?: Omit<PersistentCacheSettings, 'tabManager'>;
+  readonly persistentCacheSettings?: Omit<PersistentCacheSettings, 'tabManager'>;
 }

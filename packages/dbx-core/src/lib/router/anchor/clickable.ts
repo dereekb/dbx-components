@@ -1,7 +1,7 @@
 import { E164PhoneNumberWithOptionalExtension, MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
 
 export interface ClickableFunction {
-  onClick?: (event?: Maybe<MouseEvent>) => void;
+  readonly onClick?: (event?: Maybe<MouseEvent>) => void;
 }
 
 /**
@@ -11,11 +11,11 @@ export interface ClickableUrl {
   /**
    * href url
    */
-  url?: string;
+  readonly url?: string;
   /**
    * href target attribute.
    */
-  target?: string;
+  readonly target?: string;
 }
 
 export function clickableUrlInNewTab(url: string | WebsiteUrl): ClickableUrl {

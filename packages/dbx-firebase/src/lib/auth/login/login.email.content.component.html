@@ -1,5 +1,5 @@
 <div class="dbx-firebase-login-email-content">
-  <ng-container [ngSwitch]="emailMode$ | async">
+  <ng-container [ngSwitch]="emailModeSignal()">
     <ng-container *ngSwitchCase="'login'">
       <ng-container *ngTemplateOutlet="loginView"></ng-container>
     </ng-container>

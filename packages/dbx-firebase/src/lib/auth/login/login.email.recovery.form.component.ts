@@ -11,7 +11,8 @@ export interface DbxFirebaseEmailRecoveryFormValue {
     <dbx-formly></dbx-formly>
   `,
   selector: 'dbx-firebase-email-recovery-form',
-  providers: [provideFormlyContext()]
+  providers: [provideFormlyContext()],
+  standalone: true
 })
 export class DbxFirebaseEmailRecoveryFormComponent extends AbstractSyncFormlyFormDirective<DbxFirebaseEmailRecoveryFormValue> {
   readonly fields: FormlyFieldConfig[] = [emailField({ required: true })];

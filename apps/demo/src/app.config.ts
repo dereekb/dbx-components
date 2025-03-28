@@ -168,7 +168,7 @@ export const appConfig: ApplicationConfig = {
     // dbx-firebase
     provideDbxFirebase({
       app: {
-        dbxFirebaseOptions: environment.firebase
+        dbxFirebaseAppOptions: environment.firebase
       },
       emulator: environment.firebase.emulators,
       storage: {},

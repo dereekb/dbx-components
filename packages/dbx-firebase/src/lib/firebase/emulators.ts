@@ -12,6 +12,8 @@ export interface DbxFirebaseEmulatorConfig {
 export interface DbxFirebaseEmulatorsConfig {
   /**
    * Whether or not to enable the emulators.
+   *
+   * Defaults to false.
    */
   readonly useEmulators?: boolean;
   /**
