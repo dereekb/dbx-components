@@ -188,6 +188,11 @@ Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 - `DbxFirebaseNotificationModule.forRoot()` was replaced with `provideDbxFirebaseNotifications()`. It was also added to `provideDbxFirebase()`
 - `DbxMapboxModule.forRoot()` was replaced with `provideDbxMapbox()`
 - `DbxStorageModule.forRoot()` was replaced with `provideDbxStorage()`
+- `DbxModelInfoModule.forRoot()` was replaced with `provideDbxModelService()`
+- `DbxAppAuthStateModule` was replaced with `provideDbxAppAuthState()`, `DbxAppAuthRouterModule` was replaced with `provideDbxAppAuthRouterModule()`
+- `DbxAppAuthRouterStateModule` was replaced with `provideDbxAppAuthRouterStateModule()`
+- `DbxAppContextStateModule` was replaced with `provideDbxAppContextState()`.
+  
 
 #### Angular
 - Any "shared" modules, such as `DemoRootSharedModule`, need to be updated to import anything it exports. Prior these types of functions just exported, but now need an import declaration too for the same modules.

@@ -17,27 +17,27 @@ export interface DbxModelTypeConfiguration {
   /**
    * Popup label that can be used for these types.
    */
-  label?: string;
+  readonly label?: string;
   /**
    * Name used in analytics events. If not provided, label is used by default.
    */
-  analyticsName?: string;
+  readonly analyticsName?: string;
   /**
    * Model type this configuration is for.
    */
-  modelType: ModelTypeString;
+  readonly modelType: ModelTypeString;
   /**
    * Sref factory for viewing objects of this type.
    */
-  sref?: DbxModelTypeConfigurationSrefFactory;
+  readonly sref?: DbxModelTypeConfigurationSrefFactory;
   /**
    * DbxModelTypeConfigurationSrefFactoryBuilder
    */
-  srefBuilder?: DbxModelTypeConfigurationSrefFactoryBuilder;
+  readonly srefBuilder?: DbxModelTypeConfigurationSrefFactoryBuilder;
   /**
    * Icon used to represent this model.
    */
-  icon?: string;
+  readonly icon?: string;
 }
 
 export interface DbxModelTypeConfigurationMap {

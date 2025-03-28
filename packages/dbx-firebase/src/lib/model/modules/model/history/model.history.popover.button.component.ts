@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild, inject } from '@angular/core';
 import { AbstractPopoverRefDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxFirebaseModelHistoryPopoverComponent, DbxFirebaseModelHistoryPopoverParams } from './model.history.popover.component';
+import { DbxFirebaseModelHistoryPopoverComponent, DbxFirebaseModelHistoryPopoverConfig } from './model.history.popover.component';
 
-export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistoryPopoverParams;
+export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistoryPopoverConfig;
 
 @Component({
   selector: 'dbx-firebase-model-history-popover-button',

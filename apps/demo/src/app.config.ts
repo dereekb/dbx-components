@@ -2,15 +2,18 @@ import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegm
 import { ApplicationConfig, Injector } from '@angular/core';
 import { Category, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
-import { AuthTransitionHookOptions, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxUIRouterService } from '@dereekb/dbx-core';
+import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppAuthRouter, provideDbxAppContextState, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase } from '@dereekb/dbx-firebase';
-import { provideDbxRouterWebUiRouterProviderConfig, provideDbxStyleService } from '@dereekb/dbx-web';
+import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxStyleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
+import { provideEffects } from '@ngrx/effects';
+import { provideStore } from '@ngrx/store';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -106,6 +109,10 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // ngRx
+    provideEffects(),
+    provideStore(),
+    !environment.production ? provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }) : [],
     // dbx-analytics
     provideDbxAnalyticsSegmentApiService({
       dbxAnalyticsSegmentApiServiceConfigFactory
@@ -114,7 +121,17 @@ export const appConfig: ApplicationConfig = {
       dbxAnalyticsServiceConfigurationFactory
     }),
     // dbx-core
+    provideDbxAppContextState(),
     provideDbxUIRouterService(),
+    provideDbxStorage(),
+    provideDbxAppAuth({
+      dbxAppAuthRoutes: {
+        loginRef: { ref: 'demo.auth' },
+        loggedOutRef: { ref: 'demo.auth.loggedout' },
+        appRef: { ref: 'demo.app' }
+      },
+      activeRoutesToApplyEffects: DBX_KNOWN_APP_CONTEXT_STATES
+    }),
     // dbx-web
     provideDbxRouterWebUiRouterProviderConfig(),
     provideDbxStyleService({
@@ -129,6 +146,8 @@ export const appConfig: ApplicationConfig = {
         accessToken: environment.mapbox.token
       }
     }),
+    // dbx-web extensions
+    provideDbxModelService(),
     // dbx-form, form related
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,

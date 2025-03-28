@@ -3,27 +3,27 @@ import { FirestoreModelIdentity } from '@dereekb/firebase';
 import { map, Observable, switchMap, shareReplay, startWith, of, catchError } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { allDbxModelViewTrackerEventModelKeys, DbxModelTrackerService } from '@dereekb/dbx-web';
-import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
+import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
 import { filterItemsWithObservableDecision, filterMaybeArray, invertObservableDecision, mapEachAsync, ObservableDecisionFunction } from '@dereekb/rxjs';
 
 export interface DbxFirebaseModelTrackerFilterItem {
-  instancePair: DbxFirebaseModelTypesServiceInstancePair;
-  identity: FirestoreModelIdentity;
+  readonly instancePair: DbxFirebaseModelTypesServiceInstancePair;
+  readonly identity: FirestoreModelIdentity;
 }
 
 export interface DbxFirebaseModelTrackerHistoryFilter {
   /**
    * Whether or not to exclude the values instead of include them.
    */
-  invertFilter?: boolean;
+  readonly invertFilter?: boolean;
   /**
    * Identity types to filter on.
    */
-  identity?: Maybe<ArrayOrValue<FirestoreModelIdentity>>;
+  readonly identity?: Maybe<ArrayOrValue<FirestoreModelIdentity>>;
   /**
    * Arbitrary filter function to filter individual items.
    */
-  filterItem?: ObservableDecisionFunction<DbxFirebaseModelTrackerFilterItem>;
+  readonly filterItem?: ObservableDecisionFunction<DbxFirebaseModelTrackerFilterItem>;
 }
 
 @Injectable({

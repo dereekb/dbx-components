@@ -10,14 +10,17 @@ export type DbxFirebaseModelTypesServiceConfigFactory = (injector: Injector) => 
  * Configuration for provideDbxFirebaseModelTypesService().
  */
 export interface ProvideDbxFirebaseModelTypesServiceConfig {
+  /**
+   * Factory for DbxFirebaseModelTypesServiceConfig.
+   */
   readonly dbxFirebaseModelTypesServiceConfigFactory: DbxFirebaseModelTypesServiceConfigFactory;
 }
 
 /**
  * Creates EnvironmentProviders for DbxFirebaseModelTypesService.
  *
- * @param config
- * @returns
+ * @param config Configuration
+ * @returns EnvironmentProviders
  */
 export function provideDbxFirebaseModelTypesService(config: ProvideDbxFirebaseModelTypesServiceConfig): EnvironmentProviders {
   const { dbxFirebaseModelTypesServiceConfigFactory } = config;

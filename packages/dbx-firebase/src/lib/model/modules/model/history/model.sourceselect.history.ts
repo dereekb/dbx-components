@@ -4,26 +4,26 @@ import { LoadingState, loadingStateFromObs, mapEachAsync } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 import { GrantedRole } from '@dereekb/model';
 import { MapFunction } from '@dereekb/util';
-import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
+import { DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
 import { DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from './model.tracker.service';
 
 export interface DbxFirebaseSourceSelectLoadSourceConfig<M, D extends FirestoreDocument<any> = any, R extends GrantedRole = GrantedRole> extends Pick<DbxFirebaseModelTrackerHistoryFilter, 'filterItem'> {
   /**
    * Source label. Defaults to "History".
    */
-  label?: string;
+  readonly label?: string;
   /**
    * Type of model to pull from the history.
    */
-  identity: FirestoreModelIdentity;
+  readonly identity: FirestoreModelIdentity;
   /**
    * Maps a result instance to the target meta type
    */
-  mapToMeta: MapFunction<DbxFirebaseModelTypesServiceInstancePair<D, R>, Observable<M>>;
+  readonly mapToMeta: MapFunction<DbxFirebaseModelTypesServiceInstancePair<D, R>, Observable<M>>;
   /**
    * Tracker service to load history values from.
    */
-  dbxFirebaseModelTrackerService: DbxFirebaseModelTrackerService;
+  readonly dbxFirebaseModelTrackerService: DbxFirebaseModelTrackerService;
 }
 
 /**
