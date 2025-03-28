@@ -7,9 +7,7 @@ import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, DbxFirebaseNotification
 /**
  * Service used for registering widgets used for notification items.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseNotificationItemWidgetService {
   readonly dbxWidgetService = inject(DbxWidgetService);
   readonly dbxFirebaseNotificationTemplateService = inject(DbxFirebaseNotificationTemplateService);

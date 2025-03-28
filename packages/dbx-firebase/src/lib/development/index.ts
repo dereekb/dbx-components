@@ -1,4 +1,5 @@
 export * from './development.module';
+export * from './development.providers';
 export * from './development.widget.service';
 export * from './development.popup.component';
 export * from './development.popup.content.component';

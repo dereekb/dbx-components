@@ -57,3 +57,8 @@ import 'zone.js'; // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+/**
+ * Add reflect-metadata for Reflections api.
+ */
+import 'reflect-metadata';

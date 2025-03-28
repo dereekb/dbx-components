@@ -1,7 +1,7 @@
-import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { inject, Injectable, InjectionToken } from '@angular/core';
 
 /**
- * Enabled state
+ * Corresponds to the enabled value on the DbxFirebaseDevelopmentService.
  */
 export const DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN = new InjectionToken('DefaultDbxFirebaseDevelopmentEnabled');
 
@@ -10,9 +10,7 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN = new InjectionToken('De
  *
  * Default providers can be configured by the DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN injectable value.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseDevelopmentService {
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN) readonly enabled: boolean) {}
+  readonly enabled = inject<boolean>(DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN, { optional: true }) ?? false;
 }

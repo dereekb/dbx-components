@@ -13,9 +13,7 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new Injection
  *
  * Default providers can be configured by the DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN injectable value.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseDevelopmentWidgetService {
   readonly dbxWidgetService = inject(DbxWidgetService);
 

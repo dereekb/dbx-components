@@ -14,14 +14,14 @@
       }
     },
     "build-base": {
-      "executor": "@nx/angular:application",
+      "executor": "@angular-devkit/build-angular:application",
       "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "browser": "apps/demo/src/main.ts",
-        "outputPath": "dist/apps/demo",
         "index": "apps/demo/src/index.html",
         "polyfills": ["zone.js"],
+        "outputPath": "dist/apps/demo",
         "tsConfig": "apps/demo/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -37,7 +37,7 @@
         "allowedCommonJsDependencies": ["core-js", "lodash", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
         "externalDependencies": ["@angular/material/core"],
         "stylePreprocessorOptions": {
-          "includePaths": ["packages", "node_modules"]
+          "includePaths": ["packages", ""]
         },
         "styles": ["mapbox-gl/dist/mapbox-gl.css", "apps/demo/src/styles.scss"],
         "scripts": []

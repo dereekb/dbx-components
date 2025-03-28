@@ -1,2 +1,2 @@
 export * from './anchor.component';
-export * from './angular.router.module';
+export * from './angular.router.providers';

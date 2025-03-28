@@ -130,7 +130,9 @@ ESBuild support for building Angular projects was added in Angular 17. You can r
 
 - Replace `@angular-devkit/build-angular:browser` with `@nx/angular:application`
 - Remove `buildOptimizer` and `vendorChunk` options. If you do not, the builder will throw an error while building, complaining about extra options.
- 
+
+For dbx-components demo, we had to add the `""` path to `stylePreprocessorOptions` so that `@forward 'node_modules/@angular/...` would resolve properly from `@dereekb/dbx-web` but `demo` builds using the sass/typescript from those projects directly and not the dist folder. It did not seem to be needed before.
+
 #### Other Build Issue Notes
 There was a relatively cryptic build error after making the above changes: 
 
@@ -176,3 +178,11 @@ Pass --verbose to see the stacktrace.
 ```
 
 Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
+
+
+#### Dbx Analytics
+- `DbxAnalyticsSegmentModule.forRoot()` was replaced with `provideDbxAnalyticsSegmentApiService()`
+- `DbxWebAngularRouterModule.forRoot()` was replaced with `provideDbxRouterWebAngularRouterProviderConfig()`
+- `DbxWebUiRouterModule.forRoot()` was replaced with `provideDbxRouterWebUiRouterProviderConfig()`
+- `DbxFirebaseDevelopmentModule.forRoot()` was replaced with `provideDbxFirebaseDevelopment()`
+- 

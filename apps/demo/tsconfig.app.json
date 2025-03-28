@@ -7,6 +7,5 @@
     "useDefineForClassFields": true
   },
   "files": ["src/main.ts"],
-  "include": ["src/**/*.d.ts"],
   "exclude": ["**/*.spec.ts", "jest.config.ts"]
 }

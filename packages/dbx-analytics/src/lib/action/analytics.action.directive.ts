@@ -19,7 +19,8 @@ export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
  * Used to listen to an ActionContext and send analytical events based on action events.
  */
 @Directive({
-  selector: '[dbxActionAnalytics]'
+  selector: '[dbxActionAnalytics]',
+  standalone: true
 })
 export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
