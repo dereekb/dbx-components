@@ -2,6 +2,9 @@ import { BehaviorSubject } from 'rxjs';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, TrackByFunction } from '@angular/core';
 import { DbxInjectionArrayEntry } from './injection.array';
 import { type Maybe } from '@dereekb/util';
+import { DbxInjectionComponent } from './injection.component';
+import { AsyncPipe, NgFor } from '@angular/common';
+import { AsObservablePipe } from '../pipe/async/asobservable.pipe';
 
 /**
  * Component that injects content based on the configuration into the view.
@@ -13,10 +16,13 @@ import { type Maybe } from '@dereekb/util';
       <dbx-injection [config]="entry.injectionConfig | asObservable | async"></dbx-injection>
     </ng-container>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent, NgFor, AsObservablePipe, AsyncPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxInjectionArrayComponent implements OnDestroy {
-  private _entries = new BehaviorSubject<DbxInjectionArrayEntry[]>([]);
+  private readonly _entries = new BehaviorSubject<DbxInjectionArrayEntry[]>([]);
+
   readonly entries$ = this._entries.asObservable();
 
   readonly trackByKeyFn: TrackByFunction<DbxInjectionArrayEntry> = (index, item) => item.key;

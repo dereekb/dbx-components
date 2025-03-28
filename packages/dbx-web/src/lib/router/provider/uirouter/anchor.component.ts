@@ -3,13 +3,15 @@ import { Component } from '@angular/core';
 import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
 import { TransitionOptions } from '@uirouter/core';
 import { UISref } from '@uirouter/angular';
+import { DbxInjectionComponent } from '@dereekb/dbx-core';
+import { AsyncPipe } from '@angular/common';
 
 /**
  * SegueAnchor implementation for UIRouter.
  */
 @Component({
   templateUrl: './anchor.component.html',
-  imports: [UISref],
+  imports: [UISref, DbxInjectionComponent, AsyncPipe],
   standalone: true
 })
 export class DbxUIRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {

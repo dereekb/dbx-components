@@ -4,12 +4,22 @@ import { Category, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { AuthTransitionHookOptions, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase } from '@dereekb/dbx-firebase';
-import { provideDbxRouterWebUiRouterProviderConfig } from '@dereekb/dbx-web';
+import { provideDbxRouterWebUiRouterProviderConfig, provideDbxStyleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from '@dereekb/dbx-form';
+import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 
 // MARK: DbxAnalytics
+export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
+  const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
+  config.active = environment.production;
+  config.logging = false; // environment.testing;
+  return config;
+}
+
 export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): DbxAnalyticsServiceConfiguration {
   const segmentListener: DbxAnalyticsSegmentServiceListener = injector.get(DbxAnalyticsSegmentServiceListener);
   const dbxFirebaseAnalyticsUserSource: DbxFirebaseAnalyticsUserSource = injector.get(DbxFirebaseAnalyticsUserSource);
@@ -21,13 +31,6 @@ export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): Dbx
     userSource: dbxFirebaseAnalyticsUserSource
   };
 
-  return config;
-}
-
-export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
-  const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
-  config.active = environment.production;
-  config.logging = false; // environment.testing;
   return config;
 }
 
@@ -104,16 +107,41 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 export const appConfig: ApplicationConfig = {
   providers: [
     // dbx-analytics
-    provideDbxAnalyticsService({
-      dbxAnalyticsServiceConfigurationFactory
-    }),
     provideDbxAnalyticsSegmentApiService({
       dbxAnalyticsSegmentApiServiceConfigFactory
+    }),
+    provideDbxAnalyticsService({
+      dbxAnalyticsServiceConfigurationFactory
     }),
     // dbx-core
     provideDbxUIRouterService(),
     // dbx-web
     provideDbxRouterWebUiRouterProviderConfig(),
+    provideDbxStyleService({
+      dbxStyleConfig: {
+        style: 'doc-app',
+        suffixes: new Set(['dark'])
+      }
+    }),
+    provideDbxMapbox({
+      dbxMapboxConfig: environment.mapbox,
+      ngxMapboxGLModuleConfig: {
+        accessToken: environment.mapbox.token
+      }
+    }),
+    // dbx-form, form related
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: {
+        subscriptSizing: 'dynamic',
+        floatLabel: 'always',
+        appearance: 'outline'
+      }
+    },
+    {
+      provide: DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN,
+      useValue: DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS
+    },
     // dbx-firebase
     provideDbxFirebase({
       app: {

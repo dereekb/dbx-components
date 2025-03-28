@@ -9,21 +9,20 @@ export interface DbxStyleConfig {
   /**
    * Root style name.
    */
-  style: string;
+  readonly style: string;
   /**
    * Suffixes available to this configuration.
    */
-  suffixes?: Set<string>;
+  readonly suffixes?: Set<string>;
 }
 
 /**
  * Used for managing styles within an app.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxStyleService implements Destroyable {
   private readonly _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DBX_STYLE_DEFAULT_CONFIG_TOKEN));
+
   private readonly _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
   private readonly _suffix = new BehaviorSubject<Maybe<string>>(undefined);
 
