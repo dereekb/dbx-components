@@ -1,4 +1,4 @@
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseAuthLoginService } from './login.service';
@@ -10,12 +10,14 @@ import { DbxFirebaseAuthLoginService } from './login.service';
   `,
   host: {
     class: 'dbx-firebase-login-terms d-block'
-  }
+  },
+  imports: [DbxInjectionComponent],
+  standalone: true
 })
 export class DbxFirebaseLoginTermsComponent {
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
 
   readonly config: DbxInjectionComponentConfig = {
-    componentClass: this.dbxFirebaseAuthLoginService.termsComponentClass
+    componentClass: this.dbxFirebaseAuthLoginService.loginTermsComponentClass
   };
 }

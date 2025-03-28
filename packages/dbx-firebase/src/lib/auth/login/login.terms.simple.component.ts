@@ -1,6 +1,6 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { Component, inject } from '@angular/core';
-import { DbxFirebaseLoginTermsConfig } from './login.terms';
+import { DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG } from './login.terms';
 
 @Component({
   template: `
@@ -12,7 +12,7 @@ import { DbxFirebaseLoginTermsConfig } from './login.terms';
   `
 })
 export class DbxFirebaseLoginTermsSimpleComponent {
-  readonly dbxFirebaseLoginTermsConfig = inject(DbxFirebaseLoginTermsConfig);
+  readonly dbxFirebaseLoginTermsConfig = inject(DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG);
 
   readonly tosAnchor: ClickableAnchor = {
     url: this.dbxFirebaseLoginTermsConfig.tosUrl,
