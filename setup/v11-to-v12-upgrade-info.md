@@ -184,5 +184,10 @@ Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 - `DbxAnalyticsSegmentModule.forRoot()` was replaced with `provideDbxAnalyticsSegmentApiService()`
 - `DbxWebAngularRouterModule.forRoot()` was replaced with `provideDbxRouterWebAngularRouterProviderConfig()`
 - `DbxWebUiRouterModule.forRoot()` was replaced with `provideDbxRouterWebUiRouterProviderConfig()`
-- `DbxFirebaseDevelopmentModule.forRoot()` was replaced with `provideDbxFirebaseDevelopment()`
-- 
+- `DbxFirebaseDevelopmentModule.forRoot()` was replaced with `provideDbxFirebaseDevelopment()`. It was also added to `provideDbxFirebase()`
+- `DbxFirebaseNotificationModule.forRoot()` was replaced with `provideDbxFirebaseNotifications()`. It was also added to `provideDbxFirebase()`
+- `DbxMapboxModule.forRoot()` was replaced with `provideDbxMapbox()`
+- `DbxStorageModule.forRoot()` was replaced with `provideDbxStorage()`
+
+#### Angular
+- Any "shared" modules, such as `DemoRootSharedModule`, need to be updated to import anything it exports. Prior these types of functions just exported, but now need an import declaration too for the same modules.

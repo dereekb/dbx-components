@@ -2,6 +2,7 @@ import { Component, ViewChild, ViewContainerRef, Input } from '@angular/core';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';
+import { NgTemplateOutlet } from '@angular/common';
 
 /**
  * Component that injects content based on the configuration into the view.
@@ -10,7 +11,9 @@ import { type Maybe } from '@dereekb/util';
   selector: 'dbx-injection, [dbxInjection], [dbx-injection]',
   template: `
     <ng-template #content></ng-template>
-  `
+  `,
+  imports: [NgTemplateOutlet],
+  standalone: true
 })
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
   @Input()

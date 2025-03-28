@@ -9,15 +9,17 @@ import { PromiseOrValue, PromiseReference, promiseReference, type Maybe } from '
  */
 @Directive({
   selector: '[dbxInjectionContext]',
-  providers: provideDbxInjectionContext(DbxInjectionContextDirective)
+  providers: provideDbxInjectionContext(DbxInjectionContextDirective),
+  standalone: true
 })
 export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
   private readonly _injector = inject(Injector);
   private readonly _templateRef = inject(TemplateRef<O>);
   private readonly _viewContainer = inject(ViewContainerRef);
 
+  private readonly _instance = new DbxInjectionInstance(this._injector);
+
   private _currentPromise: Maybe<PromiseReference<unknown>>;
-  private _instance = new DbxInjectionInstance(this._injector);
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
 

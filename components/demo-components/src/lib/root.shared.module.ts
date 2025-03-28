@@ -106,14 +106,17 @@ const DBX_STANDALONE_COMPONENTS = [
   DbxActionAnalyticsDirective
 ];
 
+const IMPORTS_AND_EXPORTS = [
+  ...ANGULAR_MODULES,
+  ...ANGULAR_MATERIAL_MODULES,
+  ...DBX_MODULES,
+  ...DBX_STANDALONE_COMPONENTS,
+  // UI Router
+  UIRouterModule
+];
+
 @NgModule({
-  exports: [
-    ...ANGULAR_MODULES,
-    ...ANGULAR_MATERIAL_MODULES,
-    ...DBX_MODULES,
-    ...DBX_STANDALONE_COMPONENTS,
-    // UI Router
-    UIRouterModule
-  ]
+  imports: IMPORTS_AND_EXPORTS,
+  exports: IMPORTS_AND_EXPORTS
 })
 export class DemoRootSharedModule {}

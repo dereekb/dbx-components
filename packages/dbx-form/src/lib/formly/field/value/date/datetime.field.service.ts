@@ -9,7 +9,7 @@ export const DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN = new InjectionToken('DbxDat
   providedIn: 'root'
 })
 export class DbxDateTimeFieldMenuPresetsService {
-  private _configurations = new BehaviorSubject<DateTimePresetConfiguration[]>(inject<Maybe<DateTimePresetConfiguration[]>>(DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, { optional: true }) ?? []);
+  private readonly _configurations = new BehaviorSubject<DateTimePresetConfiguration[]>(inject<Maybe<DateTimePresetConfiguration[]>>(DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, { optional: true }) ?? []);
 
   readonly configurations$ = this._configurations.asObservable();
 
