@@ -9,7 +9,7 @@ export interface DbxModelTypeInfo extends Omit<DbxModelTypeConfiguration, 'srefF
    * Whether or not a response is expected for segues
    * to a view for objects of this type.
    */
-  canSegueToView: boolean;
+  readonly canSegueToView: boolean;
 }
 
 export interface DbxModelTypesMap<I extends DbxModelTypeInfo> {

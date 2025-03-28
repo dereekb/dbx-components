@@ -1,6 +1,7 @@
 import { Maybe, AuthRole, ArrayOrValue } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Directive, Input, inject, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { authRolesSetContainsNoRolesFrom, DbxAuthService } from './service';
 import { AbstractIfDirective } from '../view/if.directive';
 
@@ -8,21 +9,19 @@ import { AbstractIfDirective } from '../view/if.directive';
  * Structural decorator directive similar to ngIf that embeds content if the current auth user has none of the target role(s).
  */
 @Directive({
-  selector: '[dbxAuthNotAnyRole]'
+  selector: '[dbxAuthNotAnyRole]',
+  standalone: true
 })
-export class DbxAuthNotAnyRoleDirective extends AbstractIfDirective implements OnDestroy {
-  private _targetRoles = new BehaviorSubject<Maybe<ArrayOrValue<AuthRole>>>(undefined);
+export class DbxAuthNotAnyRoleDirective extends AbstractIfDirective {
+  private readonly _targetRoles = signal<Maybe<ArrayOrValue<AuthRole>>>(undefined);
+  private readonly _authService = inject(DbxAuthService);
 
-  readonly targetRoles$ = this._targetRoles.asObservable();
+  readonly targetRoles$ = toObservable(this._targetRoles);
 
-  readonly show$ = inject(DbxAuthService).authRoles$.pipe(authRolesSetContainsNoRolesFrom(this.targetRoles$));
-
-  override ngOnDestroy(): void {
-    this._targetRoles.complete();
-  }
+  readonly show$: Observable<boolean> = this._authService.authRoles$.pipe(authRolesSetContainsNoRolesFrom(this.targetRoles$));
 
   @Input('dbxAuthNotAnyRole')
   set targetRoles(roles: Maybe<ArrayOrValue<AuthRole>>) {
-    this._targetRoles.next(roles);
+    this._targetRoles.set(roles);
   }
 }

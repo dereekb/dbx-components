@@ -10,7 +10,8 @@ import { type Maybe } from '@dereekb/util';
  * Used to set the DbxAppContextState for an app to the input state using the DbxAppContextService.
  */
 @Directive({
-  selector: '[dbxAppContextState]'
+  selector: '[dbxAppContextState]',
+  standalone: true
 })
 export class DbxAppContextStateDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly dbxAppContextStateService = inject(DbxAppContextService);

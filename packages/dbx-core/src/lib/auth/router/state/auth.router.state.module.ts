@@ -8,8 +8,11 @@ export interface DbxAppAuthRouterStateModuleConfig {
   readonly activeRoutesToApplyEffects: ArrayOrValue<DbxAppContextState>;
 }
 
+/**
+ * @deprecated Use provideDbxAppAuthRouterState() instead.
+ */
 @NgModule({
-  imports: [EffectsModule.forFeature([DbxAppAuthRouterEffects])],
+  imports: [],
   declarations: [],
   exports: []
 })

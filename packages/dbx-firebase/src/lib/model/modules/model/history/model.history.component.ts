@@ -4,7 +4,7 @@ import { loadingStateFromObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap, shareReplay } from 'rxjs';
 import { DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from './model.tracker.service';
-import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
+import { DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
 
 @Component({
   selector: 'dbx-firebase-model-history',

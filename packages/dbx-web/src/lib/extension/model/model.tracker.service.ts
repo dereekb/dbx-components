@@ -7,9 +7,7 @@ import { DbxModelViewTrackerStorage } from './model.tracker.view.storage';
 /**
  * Service used for tracking/logging different kinds of events on objects.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxModelTrackerService {
   private readonly _viewTrackerStorage = inject(DbxModelViewTrackerStorage);
 

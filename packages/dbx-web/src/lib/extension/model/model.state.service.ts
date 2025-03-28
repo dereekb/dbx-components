@@ -4,9 +4,7 @@ import { onDbxModel } from './state';
 import { DbxModelObjectViewedParams } from './state/actions/model.actions';
 import { DbxModelFullState } from './state/state';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxModelObjectStateService {
   readonly store = inject(Store<DbxModelFullState>);
 

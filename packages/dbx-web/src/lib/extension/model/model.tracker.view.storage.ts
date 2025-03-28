@@ -5,21 +5,22 @@ import { encodeModelKeyTypePair, ModelRelationUtility, type Maybe } from '@deree
 import { map, mergeMap, catchError, Observable, of, Subject, tap } from 'rxjs';
 import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.tracker';
 
+/**
+ * Token that corresponds to a StorageAccessor<DbxModelViewTrackerEventSet> that is used by DbxModelViewTrackerStorage.
+ */
 export const DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN = new InjectionToken('DbxModelViewTrackerStorageAccessor');
 
 /**
  * Used for managing DbxModelViewTrackerEvent storage.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxModelViewTrackerStorage implements OnDestroy {
   static readonly OBJECT_VIEW_TRACKER_STORAGE_LIST_KEY = 'dbxModelViewTrackerEvents';
   static readonly DEFAULT_MAX_EVENTS = 100;
 
   readonly storageAccessor = inject<StorageAccessor<DbxModelViewTrackerEventSet>>(DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN);
 
-  private _newEvent = new Subject<DbxModelViewTrackerEvent>();
+  private readonly _newEvent = new Subject<DbxModelViewTrackerEvent>();
 
   readonly newEvent$ = this._newEvent.asObservable();
 
