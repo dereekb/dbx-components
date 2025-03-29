@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
 
 @Component({
@@ -8,7 +8,9 @@ import { Maybe, ReadableError } from '@dereekb/util';
   `,
   host: {
     class: 'd-block dbx-error-details'
-  }
+  },
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorDetailsComponent {
   @Input()

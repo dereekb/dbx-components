@@ -1,23 +1,34 @@
-import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { Maybe } from '@dereekb/util';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 export interface DbxErrorViewButtonEvent {
   readonly origin: ElementRef;
 }
 
 /**
- * The basic error view.
+ * The basic error view. Shows an info button and an error message.
  */
 @Component({
   selector: 'dbx-error-view',
-  templateUrl: './error.view.component.html',
+  template: `
+    <button class="dbx-error-button" [disabled]="buttonDisabled" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
+      <mat-icon>{{ icon }}</mat-icon>
+    </button>
+    <span class="dbx-error-message" *ngIf="message">{{ message }}</span>
+  `,
   host: {
     class: 'dbx-error dbx-warn dbx-b'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [CommonModule, MatIconModule, MatButtonModule]
 })
-export class DbxErrorViewComponent implements OnDestroy {
+export class DbxErrorViewComponent {
   @Input()
-  icon = 'error';
+  icon: string = 'error';
 
   @Input()
   message?: Maybe<string>;
@@ -34,17 +45,15 @@ export class DbxErrorViewComponent implements OnDestroy {
   @ViewChild('buttonPopoverOrigin', { read: ElementRef })
   buttonOrigin!: ElementRef;
 
-  constructor() {}
-
-  ngOnDestroy(): void {
-    this.buttonClick.complete();
-  }
-
   clickError() {
     if (!this.buttonDisabled) {
       this.buttonClick.emit({
         origin: this.buttonOrigin
       });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.buttonClick.complete();
   }
 }
