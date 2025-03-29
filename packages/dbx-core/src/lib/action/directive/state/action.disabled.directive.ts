@@ -10,7 +10,8 @@ export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
  * Directive that allows disabling an action using the inputs.
  */
 @Directive({
-  selector: '[dbxActionDisabled]'
+  selector: '[dbxActionDisabled]',
+  standalone: true
 })
 export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

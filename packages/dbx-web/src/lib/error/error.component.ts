@@ -25,18 +25,18 @@ interface DbxErrorComponentState {
  */
 @Component({
   selector: 'dbx-error',
-  standalone: true,
-  imports: [CommonModule, DbxErrorViewComponent, DbxInjectionComponent],
   template: `
-    <ng-container [ngSwitch]="viewType()">
+    <ng-container [ngSwitch]="viewTypeSignal()">
       <ng-container *ngSwitchCase="'default'">
-        <dbx-error-view icon="error" [message]="message()" [buttonDisabled]="isDefaultError()" (buttonClick)="openErrorPopover($event)"></dbx-error-view>
+        <dbx-error-view icon="error" [message]="messageSignal()" [buttonDisabled]="isDefaultErrorSignal()" (buttonClick)="openErrorPopover($event)"></dbx-error-view>
       </ng-container>
       <ng-container *ngSwitchCase="'custom'">
-        <dbx-injection [config]="customView()"></dbx-injection>
+        <dbx-injection [config]="customViewSignal()"></dbx-injection>
       </ng-container>
     </ng-container>
   `,
+  standalone: true,
+  imports: [CommonModule, DbxErrorViewComponent, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorComponent {
@@ -89,10 +89,10 @@ export class DbxErrorComponent {
     }
   });
 
-  readonly viewType = computed(() => this.state().viewType);
-  readonly isDefaultError = computed(() => this.state().isDefaultError);
-  readonly message = computed(() => this.state().message);
-  readonly customView = computed(() => this.state().customView);
+  readonly viewTypeSignal = computed(() => this.state().viewType);
+  readonly isDefaultErrorSignal = computed(() => this.state().isDefaultError);
+  readonly messageSignal = computed(() => this.state().message);
+  readonly customViewSignal = computed(() => this.state().customView);
 
   @Input()
   get error() {

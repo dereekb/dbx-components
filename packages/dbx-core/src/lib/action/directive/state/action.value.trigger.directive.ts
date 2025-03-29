@@ -48,7 +48,8 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnI
  */
 @Directive({
   exportAs: 'dbxActionValueOnTrigger',
-  selector: '[dbxActionValueOnTrigger]'
+  selector: '[dbxActionValueOnTrigger]',
+  standalone: true
 })
 export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);

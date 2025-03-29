@@ -5,7 +5,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { type Maybe } from '@dereekb/util';
 
 @Directive({
-  selector: '[dbxActionAutoModify]'
+  selector: '[dbxActionAutoModify]',
+  standalone: true
 })
 export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

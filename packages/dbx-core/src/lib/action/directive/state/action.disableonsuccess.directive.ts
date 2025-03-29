@@ -10,7 +10,8 @@ export const APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY = 'dbx_action_disabled
  * Directive that will disable the action after the action completes successfully.
  */
 @Directive({
-  selector: '[dbxActionDisabledOnSuccess]'
+  selector: '[dbxActionDisabledOnSuccess]',
+  standalone: true
 })
 export class DbxActionDisabledOnSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

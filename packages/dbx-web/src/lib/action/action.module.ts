@@ -10,6 +10,9 @@ import { DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionConfirmDirective } from './action.confirm.directive';
 import { DbxPromptModule } from '../interaction/prompt/prompt.module';
 
+/**
+ * @deprecated
+ */
 @NgModule({
   imports: [CommonModule, DbxCoreActionModule, DbxButtonModule, MatSnackBarModule, MatDialogModule, MatButtonModule, DbxPromptModule],
   declarations: [DbxActionKeyTriggerDirective, DbxActionConfirmDirective],

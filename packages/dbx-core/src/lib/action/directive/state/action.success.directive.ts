@@ -11,7 +11,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * Can be configured to show for a temporary period.
  */
 @Directive({
-  selector: '[dbxActionHasSuccess]'
+  selector: '[dbxActionHasSuccess]',
+  standalone: true
 })
 export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
   @Input('dbxActionHasSuccess')

@@ -3,6 +3,8 @@ import { ReadableError } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../interaction/popover/abstract.popover.directive';
 import { DbxPopoverKey } from '../interaction/popover/popover';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
+import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent } from '../interaction';
+import { DbxErrorDetailsComponent } from './error.details.component';
 
 export const DEFAULT_ERROR_POPOVER_KEY = 'error';
 
@@ -20,6 +22,7 @@ export interface DbxErrorPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent, DbxErrorDetailsComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

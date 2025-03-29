@@ -18,7 +18,8 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
  * When using auto triggers be sure to make sure that the action is not triggering too often due to misconfiguration.
  */
 @Directive({
-  selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]'
+  selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]',
+  standalone: true
 })
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

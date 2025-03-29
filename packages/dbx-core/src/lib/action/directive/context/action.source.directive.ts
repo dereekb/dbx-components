@@ -10,7 +10,8 @@ import { provideSecondaryActionStoreSource } from '../../action.store.source.pro
  */
 @Directive({
   selector: '[dbxActionSource]',
-  providers: provideSecondaryActionStoreSource(DbxActionSourceDirective)
+  providers: provideSecondaryActionStoreSource(DbxActionSourceDirective),
+  standalone: true
 })
 export class DbxActionSourceDirective implements SecondaryActionContextStoreSource, OnDestroy {
   private _source = new BehaviorSubject<Maybe<ActionContextStoreSource>>(undefined);

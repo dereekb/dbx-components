@@ -14,7 +14,8 @@ export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
  * Directive that executes a function on ActionContextStore Success.
  */
 @Directive({
-  selector: '[dbxActionSuccessHandler]'
+  selector: '[dbxActionSuccessHandler]',
+  standalone: true
 })
 export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
