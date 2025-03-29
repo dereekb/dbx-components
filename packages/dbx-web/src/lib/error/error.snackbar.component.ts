@@ -80,5 +80,4 @@ export class DbxErrorSnackbarComponent implements OnInit, OnDestroy {
       }
     });
   }
-
 }

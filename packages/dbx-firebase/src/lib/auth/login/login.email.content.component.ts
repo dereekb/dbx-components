@@ -3,7 +3,7 @@ import { DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerF
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap } from 'rxjs';
-import { Component, EventEmitter, OnDestroy, inject, signal, computed, Signal } from '@angular/core';
+import { Component, EventEmitter, inject, signal, computed, Signal } from '@angular/core';
 import { DbxFirebaseLoginContext } from './login.context';
 import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
@@ -35,29 +35,29 @@ export class DbxFirebaseLoginEmailContentComponent {
     passwordConfig: this.config.passwordConfig
   };
 
-  private readonly _emailFormValue = signal<Maybe<DbxFirebaseEmailFormValue>>(undefined);
-  private readonly _recoveryFormValue = signal<Maybe<DbxFirebaseEmailRecoveryFormValue>>(undefined);
-  private readonly _emailMode = signal<DbxFirebaseLoginEmailContentMode>('login');
+  private readonly _emailFormValueSignal = signal<Maybe<DbxFirebaseEmailFormValue>>(undefined);
+  private readonly _recoveryFormValueSignal = signal<Maybe<DbxFirebaseEmailRecoveryFormValue>>(undefined);
+  private readonly _emailModeSignal = signal<DbxFirebaseLoginEmailContentMode>('login');
 
-  readonly emailFormValueSignal = computed(() => this._emailFormValue());
-  readonly recoveryFormValueSignal = computed(() => this._recoveryFormValue());
-  readonly emailModeSignal = computed(() => this._emailMode());
+  readonly emailFormValueSignal = this._emailFormValueSignal();
+  readonly recoveryFormValueSignal = this._recoveryFormValueSignal();
+  readonly emailModeSignal = this._emailModeSignal();
 
   // Keep these for backward compatibility and template usage
   get emailFormValue(): Maybe<DbxFirebaseEmailFormValue> {
-    return this._emailFormValue();
+    return this._emailFormValueSignal();
   }
 
   set emailFormValue(value: Maybe<DbxFirebaseEmailFormValue>) {
-    this._emailFormValue.set(value);
+    this._emailFormValueSignal.set(value);
   }
 
   get recoveryFormValue(): Maybe<DbxFirebaseEmailRecoveryFormValue> {
-    return this._recoveryFormValue();
+    return this._recoveryFormValueSignal();
   }
 
   set recoveryFormValue(value: Maybe<DbxFirebaseEmailRecoveryFormValue>) {
-    this._recoveryFormValue.set(value);
+    this._recoveryFormValueSignal.set(value);
   }
 
   // No longer needed since we're using signals directly in the template
@@ -119,7 +119,7 @@ export class DbxFirebaseLoginEmailContentComponent {
 
   // MARK: Recovery
   openRecovery() {
-    this._emailMode.set('recover');
+    this._emailModeSignal.set('recover');
   }
 
   readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
@@ -130,11 +130,11 @@ export class DbxFirebaseLoginEmailContentComponent {
 
   // MARK: Recovering
   readonly handleRecoverySuccess: DbxActionSuccessHandlerFunction = (x) => {
-    this._emailMode.set('recoversent');
+    this._emailModeSignal.set('recoversent');
   };
 
   clickedRecoveryAcknowledged() {
-    this._emailMode.set('login');
+    this._emailModeSignal.set('login');
   }
 
   // MARK: Cancel

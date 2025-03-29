@@ -11,7 +11,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * Can specify a period in milliseconds that shows how long to show up after working for a particular number of seconds.
  */
 @Directive({
-  selector: '[dbxActionIsWorking]'
+  selector: '[dbxActionIsWorking]',
+  standalone: true
 })
 export class DbxActionIsWorkingDirective extends AbstractIfDirective implements OnDestroy {
   @Input('dbxActionIsWorking')

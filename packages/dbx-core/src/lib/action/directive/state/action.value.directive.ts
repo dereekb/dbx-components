@@ -11,7 +11,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * No value is required, allowing the directive to automatically call readyValue.
  */
 @Directive({
-  selector: '[dbxActionValue]'
+  selector: '[dbxActionValue]',
+  standalone: true
 })
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

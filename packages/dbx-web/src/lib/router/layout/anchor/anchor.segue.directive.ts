@@ -23,8 +23,8 @@ export abstract class AbstractDbxSegueAnchorDirective {
   protected readonly _anchorSignal = toSignal(this.anchor$, { initialValue: undefined });
   protected readonly _templateConfigSignal = toSignal(this.templateConfig$, { initialValue: undefined });
 
-  readonly anchorSignal = computed(() => this._anchorSignal());
+  readonly anchorSignal = this._anchorSignal;
   readonly targetSignal = computed(() => this._anchorSignal()?.target);
 
-  readonly templateConfigSignal = computed(() => this._templateConfigSignal());
+  readonly templateConfigSignal = this._templateConfigSignal;
 }

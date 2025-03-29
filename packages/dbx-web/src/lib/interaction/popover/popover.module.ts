@@ -16,8 +16,7 @@ import { DbxActionPopoverDirective } from './popover.action.directive';
 const declarations = [DbxPopoverComponent, DbxPopoverCoordinatorComponent, DbxActionPopoverDirective];
 
 @NgModule({
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule, DbxPopoverInteractionContentModule],
-  declarations,
+  imports: [...declarations, CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule, DbxPopoverInteractionContentModule],
   exports: [...declarations, DbxPopoverInteractionContentModule]
 })
 export class DbxPopoverInteractionModule {}

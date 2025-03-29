@@ -8,7 +8,8 @@ import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
  * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
  */
 @Directive({
-  selector: '[dbxActionValueStream]'
+  selector: '[dbxActionValueStream]',
+  standalone: true
 })
 export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

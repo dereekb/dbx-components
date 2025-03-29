@@ -26,7 +26,8 @@ export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown
  * Directive that wraps and controls a DbxActionHandlerInstance.
  */
 @Directive({
-  selector: '[dbxActionHandler]'
+  selector: '[dbxActionHandler]',
+  standalone: true
 })
 export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   @Input('dbxActionHandler')
@@ -43,7 +44,8 @@ export class DbxActionHandlerDirective<T = unknown, O = unknown> extends Abstrac
  * Directive that passes
  */
 @Directive({
-  selector: '[dbxActionHandlerValue]'
+  selector: '[dbxActionHandlerValue]',
+  standalone: true
 })
 export class DbxActionHandlerValueDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   @Input('dbxActionHandlerValue')

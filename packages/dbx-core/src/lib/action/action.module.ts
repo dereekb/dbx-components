@@ -46,9 +46,11 @@ const declarations = [
   DbxActionIsWorkingDirective
 ];
 
+/**
+ * @deprecated all components are now standalone. Import them directly instead.
+ */
 @NgModule({
-  imports: [CommonModule],
-  declarations,
+  imports: declarations,
   exports: declarations
 })
 export class DbxCoreActionModule {}

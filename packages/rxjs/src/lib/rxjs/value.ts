@@ -4,17 +4,25 @@ import { asObservableFromGetter, type MaybeObservableOrValueGetter, type Observa
 import { type ObservableDecisionFunction } from './decision';
 
 // MARK: Types
+/**
+ * Function that checks the input value and returns an observable that emits a boolean.
+ */
 export type IsCheckFunction<T = unknown> = (value: T) => Observable<boolean>;
 
 /**
- * Function that validates the input value and returns an observable.
+ * Function that validates the input value and returns an observable that emits true if the value is valid.
  */
 export type IsValidFunction<T = unknown> = IsCheckFunction<T>;
 
 /**
- * Function that checks modification status of the input value and returns a value.
+ * Function that checks modification status of the input value and returns an observable that emits true if the value is modified.
  */
 export type IsModifiedFunction<T = unknown> = IsCheckFunction<T>;
+
+/**
+ * Function that checks equality of the input value and returns an observable that emits true if the value is equal.
+ */
+export type IsEqualFunction<T = unknown> = IsCheckFunction<T>;
 
 // MARK: IsCheck
 export function makeReturnIfIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<Maybe<T>> {

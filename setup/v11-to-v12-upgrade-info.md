@@ -195,10 +195,8 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 - `DbxAppAuthRouterStateModule` was replaced with `provideDbxAppAuthRouterStateModule()`
 - `DbxAppContextStateModule` was replaced with `provideDbxAppContextState()`.
 
-
 #### Angular
 - Any "shared" modules, such as `DemoRootSharedModule`, need to be updated to import anything it exports. Prior these types of functions just exported, but now need an import declaration too for the same modules.
-
 
 #### Breaking Changes
 - `TimerInstance` has been removed in favor of `makeTimer()`. The `timer()` function has been deprecated in favor of `makeTimer()`.

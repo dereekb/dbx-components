@@ -35,11 +35,11 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
   private readonly _selectedSignal = toSignal(this.selected$, { initialValue: this._selected.value });
   private readonly _typeSignal = toSignal(this.type$, { initialValue: anchorTypeForAnchor(this._anchor.value, this._disabled.value) });
 
-  readonly disabledSignal = computed(() => this._disabledSignal());
-  readonly selectedSignal = computed(() => this._selectedSignal());
+  readonly disabledSignal = this._disabledSignal;
+  readonly selectedSignal = this._selectedSignal;
   readonly urlSignal = computed(() => this._anchorSignal()?.url);
   readonly targetSignal = computed(() => this._anchorSignal()?.target);
-  readonly typeSignal = computed(() => this._typeSignal());
+  readonly typeSignal = this._typeSignal;
 
   ngOnDestroy(): void {
     this._selected.complete();

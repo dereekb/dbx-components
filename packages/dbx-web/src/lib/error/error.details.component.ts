@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
+import { DbxErrorWidgetViewComponent } from './error.widget.component';
 
 @Component({
   selector: 'dbx-error-details',
@@ -9,6 +10,7 @@ import { Maybe, ReadableError } from '@dereekb/util';
   host: {
     class: 'd-block dbx-error-details'
   },
+  imports: [DbxErrorWidgetViewComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

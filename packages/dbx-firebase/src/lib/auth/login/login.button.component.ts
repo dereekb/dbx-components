@@ -1,4 +1,4 @@
-import { Component, Directive, Input, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, Directive, Input, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { FirebaseLoginMethodType } from './login';
@@ -25,13 +25,13 @@ export interface DbxFirebaseLoginButtonConfig {
   selector: 'dbx-firebase-login-button',
   template: `
     <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue [dbxActionSuccessHandler]="onActionSuccess">
-      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal()" [customButtonColor]="buttonColorSignal()" [raised]="true">
+      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal" [customButtonColor]="buttonColorSignal" [raised]="true">
         <div class="dbx-firebase-login-button-content">
           <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
-            <img *ngIf="iconUrlSignal()" [src]="iconUrlSignal()" />
-            <mat-icon *ngIf="iconSignal()">{{ iconSignal() }}</mat-icon>
+            <img *ngIf="iconUrlSignal" [src]="iconUrlSignal" />
+            <mat-icon *ngIf="iconSignal">{{ iconSignal }}</mat-icon>
           </span>
-          <span class="dbx-firebase-login-button-text">{{ textSignal() }}</span>
+          <span class="dbx-firebase-login-button-text">{{ textSignal }}</span>
         </div>
       </dbx-button>
     </ng-container>
@@ -40,7 +40,8 @@ export interface DbxFirebaseLoginButtonConfig {
     class: 'dbx-firebase-login-button'
   },
   standalone: true,
-  imports: [NgIf, MatIconModule, DbxActionModule, DbxButtonModule]
+  imports: [NgIf, MatIconModule, DbxActionModule, DbxButtonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseLoginButtonComponent {
   private readonly _config = signal<Maybe<DbxFirebaseLoginButtonConfig>>(null);
@@ -91,14 +92,13 @@ export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
   </dbx-firebase-login-button-container>
 `;
 
-export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_TEMPLATE: Pick<Component, 'template' | 'standalone' | 'imports'> = {
+export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_TEMPLATE: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   imports: [DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent],
-  template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE
+  template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE,
+  changeDetection: ChangeDetectionStrategy.OnPush
 };
 
-@Directive({
-  standalone: true
-})
+@Directive()
 export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implements OnInit {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
