@@ -1,5 +1,8 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
+import { ResizedDirective } from 'angular-resize-event-package';
+import { MatIcon } from '@angular/material/icon';
+import { MatDivider } from '@angular/material/divider';
 
 /**
  * Component used to format a header for a popover.
@@ -18,7 +21,10 @@ import { DbxPopoverContentComponent } from './popover.content.component';
       </div>
     </div>
     <mat-divider></mat-divider>
-  `
+  `,
+  imports: [MatIcon, MatDivider],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverHeaderComponent implements OnInit {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });

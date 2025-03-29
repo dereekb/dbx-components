@@ -10,9 +10,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-popover-coordinator',
   template: `
-    <ng-container *ngIf="showSignal()">
+    @if (showSignal()) {
       <ng-content></ng-content>
-    </ng-container>
+    }
   `,
   standalone: true
 })
@@ -28,8 +28,6 @@ export class DbxPopoverCoordinatorComponent implements OnInit, OnDestroy {
 
   readonly show$ = this.isPopoverForKey$.pipe(delay(0));
   readonly showSignal = toSignal(this.show$);
-
-  constructor() {}
 
   ngOnInit(): void {
     this._service.addPopover(this._popover);

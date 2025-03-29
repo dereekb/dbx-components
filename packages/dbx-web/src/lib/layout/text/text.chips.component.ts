@@ -1,4 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { MatChipListbox, MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { type Maybe } from '@dereekb/util';
 
 export interface TextChip<T = unknown> {
@@ -13,11 +15,16 @@ export interface TextChip<T = unknown> {
   selector: 'dbx-text-chips',
   template: `
     <mat-chip-listbox class="dbx-text-chips-listbox" *ngIf="chips">
-      <mat-chip-option *ngFor="let chip of chips; trackBy: trackChipByText" [selected]="chip.selected ?? defaultSelection" [color]="chip.color" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
-        {{ chip.text }}
-      </mat-chip-option>
+      @for (chip of chips; track chip.text) {
+        <mat-chip-option [selected]="chip.selected ?? defaultSelection" [color]="chip.color" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
+          {{ chip.text }}
+        </mat-chip-option>
+      }
     </mat-chip-listbox>
-  `
+  `,
+  imports: [MatChipsModule, MatTooltipModule],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTextChipsComponent<T = unknown> {
   @Input()
@@ -25,8 +32,4 @@ export class DbxTextChipsComponent<T = unknown> {
 
   @Input()
   chips?: Maybe<TextChip<T>[]>;
-
-  trackChipByText(index: number, chip: TextChip<T>) {
-    return chip.text;
-  }
 }

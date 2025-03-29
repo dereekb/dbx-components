@@ -13,10 +13,12 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 import { DbxPopoverInteractionContentModule } from './popover.content.module';
 import { DbxActionPopoverDirective } from './popover.action.directive';
 
-const declarations = [DbxPopoverComponent, DbxPopoverCoordinatorComponent, DbxActionPopoverDirective];
+// , CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule, DbxPopoverInteractionContentModule
+
+const importsAndExports = [DbxPopoverComponent, DbxPopoverCoordinatorComponent, DbxActionPopoverDirective, DbxPopoverInteractionContentModule];
 
 @NgModule({
-  imports: [...declarations, CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule, DbxPopoverInteractionContentModule],
-  exports: [...declarations, DbxPopoverInteractionContentModule]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxPopoverInteractionModule {}

@@ -47,7 +47,7 @@ const declarations = [
 ];
 
 /**
- * @deprecated all components are now standalone. Import them directly instead.
+ * Contains all base DbxAction components.
  */
 @NgModule({
   imports: declarations,

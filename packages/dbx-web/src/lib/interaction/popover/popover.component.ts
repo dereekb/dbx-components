@@ -1,6 +1,6 @@
-import { Component, Type, OnInit, OnDestroy, ElementRef, inject } from '@angular/core';
+import { Component, Type, OnInit, OnDestroy, ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';
@@ -8,6 +8,9 @@ import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
 import { asPromise, Maybe, PromiseOrValue, SpaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxPopoverController, DbxPopoverKey } from './popover';
+import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
+import { DbxWindowKeyDownListenerDirective } from '../../keypress';
+import { DbxStyleDirective } from '../../layout';
 
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
   getClosingValueFn?: (value?: I) => Promise<O>;
@@ -73,7 +76,10 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   ],
   host: {
     '[class]': 'config.panelClass'
-  }
+  },
+  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxStyleDirective, DbxInjectionComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
   private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);

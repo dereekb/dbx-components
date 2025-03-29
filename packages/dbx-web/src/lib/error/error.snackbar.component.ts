@@ -19,8 +19,6 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
 
 @Component({
   selector: 'dbx-error-snackbar',
-  standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, DbxErrorViewComponent, DbxErrorComponent],
   template: `
     <div class="dbx-error-snackbar-content">
       <dbx-error [error]="error" (popoverOpened)="onPopoverOpened($event)"></dbx-error>
@@ -30,6 +28,8 @@ export interface DbxErrorSnackbarData<T extends ErrorInput = ErrorInput> {
       </button>
     </div>
   `,
+  standalone: true,
+  imports: [CommonModule, MatIconModule, MatButtonModule, DbxErrorViewComponent, DbxErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorSnackbarComponent implements OnInit, OnDestroy {

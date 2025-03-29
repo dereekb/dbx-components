@@ -2,7 +2,8 @@ import { Input, OnDestroy, Output, EventEmitter, HostListener, Directive } from 
 import { type Maybe } from '@dereekb/util';
 
 @Directive({
-  selector: '[dbxWindowKeyDownListener]'
+  selector: '[dbxWindowKeyDownListener]',
+  standalone: true
 })
 export class DbxWindowKeyDownListenerDirective implements OnDestroy {
   private _keysFilter?: Maybe<Set<string>>;

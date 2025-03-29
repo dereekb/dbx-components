@@ -10,5 +10,13 @@
   "tabWidth": 2,
   "htmlWhitespaceSensitivity": "ignore",
   "endOfLine": "lf",
-  "printWidth": 500
+  "printWidth": 500,
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": {
+        "parser": "angular"
+      }
+    }
+  ]
 }
