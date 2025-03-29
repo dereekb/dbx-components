@@ -16,7 +16,8 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
  */
 @Directive({
   exportAs: 'dbxActionPopover',
-  selector: '[dbxActionPopover]'
+  selector: '[dbxActionPopover]',
+  standalone: true
 })
 export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);

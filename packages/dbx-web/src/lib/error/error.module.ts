@@ -1,7 +1,7 @@
 import { MatIconModule } from '@angular/material/icon';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbxReadableErrorComponent } from './error.component';
+import { DbxErrorComponent } from './error.component';
 import { DbxLoadingErrorDirective } from './error.loading.directive';
 import { DbxActionErrorDirective } from './error.action.directive';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,7 +18,7 @@ import { DbxActionSnackbarErrorDirective } from './error.snackbar.action.directi
 
 const declarations = [
   //
-  DbxReadableErrorComponent,
+  DbxErrorComponent,
   DbxLoadingErrorDirective,
   DbxActionErrorDirective,
   DbxActionSnackbarErrorDirective,
@@ -30,9 +30,11 @@ const declarations = [
   DbxErrorDefaultErrorWidgetComponent
 ];
 
+/**
+ * @deprecated all components are now standalone
+ */
 @NgModule({
-  imports: [CommonModule, DbxTextModule, DbxInjectionComponentModule, DbxPopoverInteractionContentModule, MatButtonModule, MatIconModule],
-  declarations,
+  imports: declarations,
   exports: declarations
 })
 export class DbxReadableErrorModule {}

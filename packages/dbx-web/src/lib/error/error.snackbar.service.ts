@@ -3,6 +3,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ErrorInput, type Maybe } from '@dereekb/util';
 import { DbxErrorSnackbarComponent, DbxErrorSnackbarConfig } from './error.snackbar.component';
 
+export const DEFAULT_DBX_ERROR_SNACKBAR_CONFIG: DbxErrorSnackbarConfig = {
+  politeness: 'polite',
+  announcementMessage: 'An error has occurred',
+  horizontalPosition: 'center',
+  verticalPosition: 'bottom'
+};
+
 /**
  * Service used to show errors in the snackbar.
  */
@@ -12,12 +19,7 @@ import { DbxErrorSnackbarComponent, DbxErrorSnackbarConfig } from './error.snack
 export class DbxErrorSnackbarService {
   readonly matSnackbar = inject(MatSnackBar);
 
-  private _defaultConfig: DbxErrorSnackbarConfig = {
-    politeness: 'polite',
-    announcementMessage: 'An error has occurred',
-    horizontalPosition: 'center',
-    verticalPosition: 'bottom'
-  };
+  private _defaultConfig: DbxErrorSnackbarConfig = DEFAULT_DBX_ERROR_SNACKBAR_CONFIG;
 
   get defaultConfig() {
     return this._defaultConfig;

@@ -4,7 +4,7 @@ import { Component, ViewChild } from '@angular/core';
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
-import { DbxReadableErrorComponent } from '../error';
+import { DbxErrorComponent } from '../error';
 import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
 import { DbxActionModule } from '../action/action.module';
 import { filter, first } from 'rxjs';
@@ -81,7 +81,7 @@ describe('DbxActionLoadingContextDirective', () => {
 
       it('should display the error.', (done) => {
         waitForComponentToHaveError(() => {
-          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxReadableErrorComponent));
+          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
           expect(errorComponentQueryResult).not.toBeNull();
           done();
         });

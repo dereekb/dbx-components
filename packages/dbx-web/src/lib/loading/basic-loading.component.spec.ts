@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { ErrorInput } from '@dereekb/util';
 import { LoadingComponentState, DbxBasicLoadingComponent } from './basic-loading.component';
-import { DbxReadableErrorComponent } from '../error/error.component';
+import { DbxErrorComponent } from '../error/error.component';
 import { filter, first } from 'rxjs';
 
 export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
@@ -129,7 +129,7 @@ describe('DbxBasicLoadingComponent', () => {
 
       it('should display the error view.', (done) => {
         waitForComponentToHaveError(() => {
-          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxReadableErrorComponent));
+          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
           expect(errorComponentQueryResult).not.toBeNull();
           done();
         });

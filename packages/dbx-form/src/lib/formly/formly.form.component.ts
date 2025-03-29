@@ -1,12 +1,13 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
+import { Component, OnDestroy, OnInit, computed, inject } from '@angular/core';
+import { FormGroup, FormGroupDirective, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormlyFieldConfig, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, iterablesAreSetEquivalent, type Maybe } from '@dereekb/util';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface DbxFormlyFormState {
   changesSinceLastResetCount: number;
@@ -22,26 +23,28 @@ export interface DbxFormlyFormState {
   exportAs: 'formly',
   template: `
     <form [formGroup]="form" class="dbx-formly">
-      <formly-form [form]="form" [fields]="(fields$ | async) ?? []" [model]="model"></formly-form>
+      <formly-form [form]="form" [fields]="fieldsSignal()" [model]="model"></formly-form>
     </form>
   `,
   providers: provideDbxMutableForm(DbxFormlyFormComponent),
   host: {
     class: 'dbx-formly'
-  }
+  },
+  imports: [FormsModule, ReactiveFormsModule, FormlyModule],
+  standalone: true
 })
 export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
   private readonly _dbxFormlyContext = inject(DbxFormlyContext<T>);
 
-  private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
-  private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
-  private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
+  private readonly _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
+  private readonly _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
+  private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
 
-  private _reset = new BehaviorSubject<Date>(new Date());
-  private _forceUpdate = new Subject<void>();
+  private readonly _reset = new BehaviorSubject<Date>(new Date());
+  private readonly _forceUpdate = new Subject<void>();
 
-  private _disabledSub = new SubscriptionObject();
-  private _enforceDisabledSub = new SubscriptionObject();
+  private readonly _disabledSub = new SubscriptionObject();
+  private readonly _enforceDisabledSub = new SubscriptionObject();
 
   readonly form = new FormGroup({});
 
@@ -122,6 +125,9 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
     ),
     shareReplay(1)
   );
+
+  private readonly _fieldsSignal = toSignal(this.fields$, { initialValue: undefined });
+  readonly fieldsSignal = computed(() => this._fieldsSignal() ?? []);
 
   ngOnInit(): void {
     this._dbxFormlyContext.setDelegate(this);

@@ -7,8 +7,7 @@ import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormlyFieldsContextDirective } from './formly.context.directive';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FormlyModule, FormlyMatToggleModule],
-  declarations: [DbxFormlyFormComponent, DbxFormlyFieldsContextDirective],
+  imports: [DbxFormlyFormComponent, DbxFormlyFieldsContextDirective, CommonModule, FormsModule, ReactiveFormsModule, FormlyModule, FormlyMatToggleModule],
   exports: [
     // Modules (?)
     FormsModule,
@@ -16,7 +15,6 @@ import { DbxFormlyFieldsContextDirective } from './formly.context.directive';
     // Directives
     DbxFormlyFormComponent,
     DbxFormlyFieldsContextDirective
-    // Helper Modules
   ]
 })
 export class DbxFormlyModule {}

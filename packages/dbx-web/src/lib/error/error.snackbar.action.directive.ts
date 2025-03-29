@@ -9,7 +9,8 @@ import { filterMaybe } from '@dereekb/rxjs';
  * Context used for displaying an error from an ActionContext a snackbar when an ReadableErrorComponent
  */
 @Directive({
-  selector: '[dbxActionSnackbarError]'
+  selector: '[dbxActionSnackbarError]',
+  standalone: true
 })
 export class DbxActionSnackbarErrorDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxErrorSnackbarService = inject(DbxErrorSnackbarService);
