@@ -1,28 +1,42 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { Maybe, UnitedStatesAddressWithContact } from '@dereekb/util';
 
 // prettier-ignore
 @Component({
   selector: 'dbx-us-address',
   template: `
-    <ng-container *ngIf="address">
-      <div *ngIf="address.name" class="addr-name">{{ address.name }}</div>
-      <div *ngIf="address.phone" class="addr-phone">{{ address.phone }}</div>
-      <div *ngIf="address.line1" class="addr-line1">{{ address.line1 }}</div>
-      <div *ngIf="address.line2" class="addr-line2">{{ address.line2 }}</div>
+    @if (address) {
+      @if (address.name) {
+        <div class="addr-name">{{ address.name }}</div>
+      }
+      @if (address.phone) {
+        <div class="addr-phone">{{ address.phone }}</div>
+      }
+      @if (address.line1) {
+        <div class="addr-line1">{{ address.line1 }}</div>
+      }
+      @if (address.line2) {
+        <div class="addr-line2">{{ address.line2 }}</div>
+      }
       <div class="city-state-zip">
         <span class="addr-city">{{ address.city }}</span>
-        <span *ngIf="address.state || address.zip">, </span>
+        @if (address.state || address.zip) {
+          <span>, </span>
+        }
         <span class="addr-state">{{ address.state }} </span>
         <span class="addr-zip">{{ address.zip }}</span>
       </div>
-    </ng-container>
+    }
   `,
   host: {
     class: 'dbx-us-address'
-  }
+  },
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxUnitedStatesAddressComponent {
+
   @Input()
-  address: Maybe<Partial<UnitedStatesAddressWithContact>>;
+  address?: Maybe<Partial<UnitedStatesAddressWithContact>>;
+
 }

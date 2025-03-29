@@ -1,5 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
+import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 
 /**
  * Header and details offset with an icon.
@@ -16,7 +17,10 @@ import { type Maybe } from '@dereekb/util';
   `,
   host: {
     class: 'dbx-detail-block d-block'
-  }
+  },
+  imports: [DbxDetailBlockHeaderComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDetailBlockComponent {
   @Input()

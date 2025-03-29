@@ -9,7 +9,8 @@ import { type Maybe } from '@dereekb/util';
   selector: '[dbxColor]',
   host: {
     '[class]': 'cssClass'
-  }
+  },
+  standalone: true
 })
 export class DbxColorDirective {
   cssClass = '';

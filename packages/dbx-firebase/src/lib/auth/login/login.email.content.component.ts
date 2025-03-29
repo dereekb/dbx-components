@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { DbxFirebaseEmailFormComponent } from './login.email.form.component';
 import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
+import { DbxFormActionModule } from '@dereekb/dbx-form';
 
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
@@ -24,7 +25,7 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
 @Component({
   templateUrl: './login.email.content.component.html',
   standalone: true,
-  imports: [NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet, MatButtonModule, DbxActionModule, DbxButtonModule, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent]
+  imports: [NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet, MatButtonModule, DbxActionModule, DbxFormActionModule, DbxButtonModule, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent]
 })
 export class DbxFirebaseLoginEmailContentComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

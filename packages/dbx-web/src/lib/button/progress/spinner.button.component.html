@@ -1,22 +1,20 @@
 <button class="dbx-base-button dbx-spinner-button" #button mat-button [type]="options.type" [color]="options.buttonColor" [ngClass]="buttonCss$ | async" [ngStyle]="options.customStyle!" [disabled]="options.working || options.disabled">
-  <ng-container *ngIf="showText">
-    <ng-container *ngIf="options.buttonIcon">
+  @if (showText) {
+    @if (options.buttonIcon) {
       <mat-icon class="mat-button-icon" [class.is-mat-icon]="!options.buttonIcon.fontSet" [class.working]="options.working && !options.disabled" [ngClass]="options.buttonIcon.customClass!" [fontSet]="options.buttonIcon.fontSet!" [fontIcon]="options.buttonIcon.fontIcon!" [color]="options.buttonIcon.color!" [svgIcon]="options.buttonIcon.svgIcon!">
         {{ options.buttonIcon.fontSet ? '' : options.buttonIcon.fontIcon }}
       </mat-icon>
-    </ng-container>
+    }
 
     <span class="button-text" [class.working]="options.working && !options.disabled">
       {{ options.text }}
       <ng-content></ng-content>
     </span>
-  </ng-container>
-
-  <ng-container *ngIf="!showText && options.buttonIcon">
+  }
+  @if (!showText && options.buttonIcon) {
     <mat-icon class="mat-fab-icon" [fontSet]="options.buttonIcon.fontSet!" [fontIcon]="options.buttonIcon.fontIcon!" [color]="options.buttonIcon.color!" [svgIcon]="options.buttonIcon.svgIcon!" [inline]="options.fab && options.buttonIcon.inline!">
       {{ options.buttonIcon.fontSet ? '' : options.buttonIcon.fontIcon }}
     </mat-icon>
-  </ng-container>
-
+  }
   <mat-spinner class="spinner" *ngIf="options.working && !options.disabled" [diameter]="calcSpinnerSize()" [color]="options.spinnerColor!" [mode]="options.mode!" [value]="options.value!" [ngStyle]="customSpinnerStyle!" [ngClass]="{ 'dbx-spinner-custom': customSpinnerStyle! }" [class.working]="options.working && !options.disabled"></mat-spinner>
 </button>

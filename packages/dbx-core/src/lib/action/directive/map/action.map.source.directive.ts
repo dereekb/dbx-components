@@ -1,14 +1,14 @@
 import { Directive, Input, OnDestroy, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { ActionContextStoreSource } from '../../action.store.source';
-import { DbxActionContextMapDirective } from './action.map.directive';
 import { ActionContextStoreSourceMap, ActionKey } from './action.map';
 
 /**
  * Used to communicate with an dbxActionMap and set the ActionContextStore to the store based on the key.
  */
 @Directive({
-  selector: '[dbxActionMapSource]'
+  selector: '[dbxActionMapSource]',
+  standalone: true
 })
 export class DbxActionMapSourceDirective implements OnDestroy {
   private readonly _actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);

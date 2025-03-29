@@ -10,7 +10,8 @@ import { delay } from 'rxjs';
   selector: 'dbx-style, [dbxStyle], .dbx-style',
   host: {
     '[class]': 'cssClass'
-  }
+  },
+  standalone: true
 })
 export class DbxStyleDirective extends AbstractSubscriptionDirective {
   private readonly _styleService = inject(DbxStyleService);

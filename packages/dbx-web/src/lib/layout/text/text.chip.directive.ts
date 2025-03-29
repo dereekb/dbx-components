@@ -6,7 +6,8 @@ import { type Maybe } from '@dereekb/util';
   host: {
     class: 'dbx-chip mat-standard-chip',
     '[class]': 'style'
-  }
+  },
+  standalone: true
 })
 export class DbxChipDirective {
   @Input()

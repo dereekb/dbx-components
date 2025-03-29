@@ -22,7 +22,8 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
  * For button usage, use an appPromptConfirmButton directive.
  */
 @Directive({
-  selector: '[dbxActionConfirm]'
+  selector: '[dbxActionConfirm]',
+  standalone: true
 })
 export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });

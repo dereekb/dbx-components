@@ -26,14 +26,14 @@ interface DbxErrorComponentState {
 @Component({
   selector: 'dbx-error',
   template: `
-    <ng-container [ngSwitch]="viewTypeSignal()">
-      <ng-container *ngSwitchCase="'default'">
+    @switch (viewTypeSignal()) {
+      @case ('default') {
         <dbx-error-view icon="error" [message]="messageSignal()" [buttonDisabled]="isDefaultErrorSignal()" (buttonClick)="openErrorPopover($event)"></dbx-error-view>
-      </ng-container>
-      <ng-container *ngSwitchCase="'custom'">
+      }
+      @case ('custom') {
         <dbx-injection [config]="customViewSignal()"></dbx-injection>
-      </ng-container>
-    </ng-container>
+      }
+    }
   `,
   standalone: true,
   imports: [CommonModule, DbxErrorViewComponent, DbxInjectionComponent],
@@ -44,7 +44,7 @@ export class DbxErrorComponent {
   private readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
 
   @Output()
-  readonly popoverOpen = new EventEmitter<NgPopoverRef>();
+  readonly popoverOpened = new EventEmitter<NgPopoverRef>();
 
   private readonly _inputError = signal<Maybe<ErrorInput>>(undefined);
   private readonly _iconOnly = signal<Maybe<boolean>>(undefined);
@@ -119,7 +119,7 @@ export class DbxErrorComponent {
         error
       });
 
-      this.popoverOpen.next(popoverRef);
+      this.popoverOpened.next(popoverRef);
     }
   }
 }

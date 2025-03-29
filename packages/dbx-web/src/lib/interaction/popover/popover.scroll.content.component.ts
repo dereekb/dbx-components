@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
@@ -12,7 +12,9 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   host: {
     class: 'd-block dbx-popover-scroll-content',
     '[class]': 'sizingClasses'
-  }
+  },
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverScrollContentComponent {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent);
