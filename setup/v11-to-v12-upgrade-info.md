@@ -202,3 +202,6 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 - `TimerInstance` has been removed in favor of `makeTimer()`. The `timer()` function has been deprecated in favor of `makeTimer()`.
 - `DbxReadableErrorComponent` has been renamed to `DbxErrorComponent`.
 - `DbxErrorComponent` `popoverOpen` event renamed to `popoverOpened`.
+- `DbxBarButtonComponent` has been renamed to `DbxProgressBarButtonComponent`.
+- `DbxSpinnerButtonComponent` has been renamed to `DbxProgressSpinnerButtonComponent`.
+- `DbxAnchorLinkComponent` has been renamed to `DbxLinkComponent`.

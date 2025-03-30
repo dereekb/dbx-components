@@ -127,6 +127,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 @Directive({
   selector: '[dbxButton]',
   exportAs: 'dbxButton',
-  providers: provideDbxButton(DbxButtonDirective)
+  providers: provideDbxButton(DbxButtonDirective),
+  standalone: true
 })
 export class DbxButtonDirective extends AbstractDbxButtonDirective {}

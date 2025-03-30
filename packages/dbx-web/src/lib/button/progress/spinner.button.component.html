@@ -1,20 +1,21 @@
-<button class="dbx-base-button dbx-spinner-button" #button mat-button [type]="options.type" [color]="options.buttonColor" [ngClass]="buttonCss$ | async" [ngStyle]="options.customStyle!" [disabled]="options.working || options.disabled">
-  @if (showText) {
-    @if (options.buttonIcon) {
-      <mat-icon class="mat-button-icon" [class.is-mat-icon]="!options.buttonIcon.fontSet" [class.working]="options.working && !options.disabled" [ngClass]="options.buttonIcon.customClass!" [fontSet]="options.buttonIcon.fontSet!" [fontIcon]="options.buttonIcon.fontIcon!" [color]="options.buttonIcon.color!" [svgIcon]="options.buttonIcon.svgIcon!">
-        {{ options.buttonIcon.fontSet ? '' : options.buttonIcon.fontIcon }}
+<button class="dbx-base-button dbx-spinner-button" #button mat-button [type]="optionsSignal()?.type" [color]="optionsSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="optionsSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
+  @if (showTextSignal()) {
+    @if (optionsSignal()?.buttonIcon) {
+      <mat-icon class="mat-button-icon" [class.is-mat-icon]="!optionsSignal()?.buttonIcon?.fontSet" [class.working]="showProgressSignal()" [ngClass]="optionsSignal()?.buttonIcon?.customClass" [fontSet]="optionsSignal()?.buttonIcon?.fontSet!" [fontIcon]="optionsSignal()?.buttonIcon?.fontIcon!" [color]="optionsSignal()?.buttonIcon?.color!" [svgIcon]="optionsSignal()?.buttonIcon?.svgIcon!">
+        {{ optionsSignal()?.buttonIcon?.fontSet ? '' : optionsSignal()?.buttonIcon?.fontIcon }}
       </mat-icon>
     }
-
-    <span class="button-text" [class.working]="options.working && !options.disabled">
-      {{ options.text }}
+    <span class="button-text" [class.working]="showProgressSignal()">
+      {{ optionsSignal()?.text }}
       <ng-content></ng-content>
     </span>
   }
-  @if (!showText && options.buttonIcon) {
-    <mat-icon class="mat-fab-icon" [fontSet]="options.buttonIcon.fontSet!" [fontIcon]="options.buttonIcon.fontIcon!" [color]="options.buttonIcon.color!" [svgIcon]="options.buttonIcon.svgIcon!" [inline]="options.fab && options.buttonIcon.inline!">
-      {{ options.buttonIcon.fontSet ? '' : options.buttonIcon.fontIcon }}
+  @if (showIconSignal()) {
+    <mat-icon class="mat-fab-icon" [fontSet]="optionsSignal()?.buttonIcon?.fontSet!" [fontIcon]="optionsSignal()?.buttonIcon?.fontIcon!" [color]="optionsSignal()?.buttonIcon?.color!" [svgIcon]="optionsSignal()?.buttonIcon?.svgIcon!" [inline]="optionsSignal()?.fab && optionsSignal()?.buttonIcon?.inline!">
+      {{ optionsSignal()?.buttonIcon?.fontSet! ? '' : optionsSignal()?.buttonIcon?.fontIcon! }}
     </mat-icon>
   }
-  <mat-spinner class="spinner" *ngIf="options.working && !options.disabled" [diameter]="calcSpinnerSize()" [color]="options.spinnerColor!" [mode]="options.mode!" [value]="options.value!" [ngStyle]="customSpinnerStyle!" [ngClass]="{ 'dbx-spinner-custom': customSpinnerStyle! }" [class.working]="options.working && !options.disabled"></mat-spinner>
+  @if (showProgressSignal()) {
+    <mat-spinner class="spinner" [diameter]="spinnerSizeSignal()" [color]="optionsSignal()?.spinnerColor!" [mode]="optionsSignal()?.mode!" [value]="optionsSignal()?.value!" [ngStyle]="customSpinnerStyleSignal()" [ngClass]="customSpinnerStyleClassSignal()" [class.working]="showProgressSignal()"></mat-spinner>
+  }
 </button>

@@ -11,7 +11,7 @@ import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonModule, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseEmailFormComponent } from './login.email.form.component';
 import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
 import { DbxFormActionModule } from '@dereekb/dbx-form';
@@ -25,7 +25,7 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
 @Component({
   templateUrl: './login.email.content.component.html',
   standalone: true,
-  imports: [NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet, MatButtonModule, DbxActionModule, DbxFormActionModule, DbxButtonModule, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent]
+  imports: [NgIf, NgSwitch, NgSwitchCase, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, NgTemplateOutlet, MatButtonModule, DbxActionModule, DbxFormActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent]
 })
 export class DbxFirebaseLoginEmailContentComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

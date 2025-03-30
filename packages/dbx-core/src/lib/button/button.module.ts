@@ -4,9 +4,18 @@ import { DbxButtonDirective } from './button.directive';
 import { DbxLoadingButtonDirective } from './button.loading.directive';
 import { DbxButtonSegueDirective } from './router/button.segue.directive';
 
+const importsAndExports = [DbxButtonDirective, DbxLoadingButtonDirective, DbxActionButtonTriggerDirective, DbxActionButtonDirective, DbxButtonSegueDirective];
+
+/**
+ * Exports the following directives:
+ * - DbxButtonDirective
+ * - DbxLoadingButtonDirective
+ * - DbxActionButtonTriggerDirective
+ * - DbxActionButtonDirective
+ * - DbxButtonSegueDirective
+ */
 @NgModule({
-  imports: [],
-  declarations: [DbxButtonDirective, DbxLoadingButtonDirective, DbxActionButtonTriggerDirective, DbxActionButtonDirective, DbxButtonSegueDirective],
-  exports: [DbxButtonDirective, DbxLoadingButtonDirective, DbxActionButtonTriggerDirective, DbxActionButtonDirective, DbxButtonSegueDirective]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxCoreButtonModule {}

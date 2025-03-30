@@ -1,16 +1,14 @@
-import { ChangeDetectorRef, OnDestroy, OnInit, Directive, Input, Output, HostListener, EventEmitter, inject } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, OnInit, Directive, Input, Output, HostListener, EventEmitter, inject, computed } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { CssClass, type Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Observable, shareReplay, map, BehaviorSubject, combineLatest, first, distinctUntilChanged } from 'rxjs';
-import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressButtonTargetedConfig, DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
+import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Directive()
-export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  readonly cdRef = inject(ChangeDetectorRef);
-  private readonly globalConfig = inject<DbxProgressButtonGlobalConfig>(DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, { optional: true }) ?? [];
-
-  private _computedOptions: Maybe<DbxProgressButtonOptions> = undefined;
+export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnDestroy {
+  private readonly globalConfig = inject<DbxProgressButtonGlobalConfig>(DBX_PROGRESS_BUTTON_GLOBAL_CONFIG, { optional: true }) ?? [];
 
   private readonly _working = new BehaviorSubject<boolean>(false);
   private readonly _disabled = new BehaviorSubject<boolean>(false);
@@ -69,15 +67,12 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     shareReplay(1)
   );
 
-  @Output()
-  readonly btnClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  readonly workingSignal = toSignal(this._working);
+  readonly disabledSignal = toSignal(this._disabled);
+  readonly optionsSignal = toSignal(this.options$);
 
-  ngOnInit(): void {
-    this.sub = this.options$.subscribe((options) => {
-      this._computedOptions = options;
-      safeMarkForCheck(this.cdRef);
-    });
-  }
+  readonly buttonDisabledSignal = computed(() => this.workingSignal() || this.disabledSignal());
+  readonly showProgressSignal = computed(() => this.workingSignal() && !this.disabledSignal());
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
@@ -86,6 +81,9 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     this._buttonId.complete();
     this._options.complete();
   }
+
+  @Output()
+  readonly btnClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   @HostListener('click', ['$event'])
   public handleClick(event: MouseEvent): void {
@@ -97,16 +95,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     });
   }
 
-  get customSpinnerStyle() {
-    const customSpinnerColor = (this._computedOptions as DbxProgressButtonOptions).customSpinnerColor;
-    return customSpinnerColor ? { stroke: customSpinnerColor } : undefined;
-  }
-
   @Input()
-  get options(): DbxProgressButtonOptions {
-    return this._computedOptions as DbxProgressButtonOptions;
-  }
-
   set options(options: DbxProgressButtonOptions) {
     this._options.next(options);
   }

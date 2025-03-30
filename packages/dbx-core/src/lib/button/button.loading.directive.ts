@@ -9,7 +9,8 @@ import { DbxButton } from './button';
  * It will be set working when the context is set loading.
  */
 @Directive({
-  selector: '[dbxLoadingButton]'
+  selector: '[dbxLoadingButton]',
+  standalone: true
 })
 export class DbxLoadingButtonDirective extends AbstractSubscriptionDirective {
   readonly dbxButton = inject(DbxButton, { host: true });

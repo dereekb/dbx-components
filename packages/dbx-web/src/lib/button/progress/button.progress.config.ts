@@ -51,4 +51,4 @@ export interface DbxProgressButtonTargetedConfig extends DbxProgressButtonOption
 
 export type DbxProgressButtonGlobalConfig = DbxProgressButtonTargetedConfig[];
 
-export const DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG = new InjectionToken<DbxProgressButtonGlobalConfig>('DbxMatProgressButtonGlobalConfig');
+export const DBX_PROGRESS_BUTTON_GLOBAL_CONFIG = new InjectionToken<DbxProgressButtonGlobalConfig>('DbxProgressButtonGlobalConfig');

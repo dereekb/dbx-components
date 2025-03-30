@@ -7,7 +7,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action/action.store.s
  * Context used for linking a button to an ActionContext and only look for triggers.
  */
 @Directive({
-  selector: '[dbxActionButtonTrigger]'
+  selector: '[dbxActionButtonTrigger]',
+  standalone: true
 })
 export class DbxActionButtonTriggerDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxButton = inject(DbxButton, { host: true });

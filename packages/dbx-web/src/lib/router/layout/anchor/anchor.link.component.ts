@@ -19,7 +19,7 @@ import { DbxAnchorComponent } from './anchor.component';
     class: 'd-inline dbx-link'
   }
 })
-export class DbxAnchorLinkComponent {
+export class DbxLinkComponent {
   @Input()
   anchor?: Maybe<ClickableAnchor>;
 

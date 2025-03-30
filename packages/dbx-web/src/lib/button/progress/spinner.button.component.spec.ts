@@ -1,21 +1,21 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { DbxSpinnerButtonComponent } from './spinner.button.component';
+import { DbxProgressSpinnerButtonComponent } from './spinner.button.component';
 import { DbxProgressButtonsModule } from './button.progress.module';
-import { DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
+import { DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 
 describe('DbxSpinnerButtonComponent', () => {
-  let component: DbxSpinnerButtonComponent;
-  let fixture: ComponentFixture<DbxSpinnerButtonComponent>;
+  let component: DbxProgressSpinnerButtonComponent;
+  let fixture: ComponentFixture<DbxProgressSpinnerButtonComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [DbxProgressButtonsModule.forRoot([{ working: true, text: 'test' }])],
-      providers: [{ provide: DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { working: true, text: 'test' } }]
+      providers: [{ provide: DBX_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { working: true, text: 'test' } }]
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DbxSpinnerButtonComponent);
+    fixture = TestBed.createComponent(DbxProgressSpinnerButtonComponent);
     component = fixture.componentInstance;
     component.options = {
       spinnerColor: 'primary',

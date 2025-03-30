@@ -4,7 +4,7 @@ import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core'
 import { type Maybe } from '@dereekb/util';
 import { DbxProgressButtonOptions } from './progress/button.progress.config';
 import { DbxThemeColor } from '../layout/style/style';
-import { DbxSpinnerButtonComponent } from './progress';
+import { DbxProgressSpinnerButtonComponent } from './progress';
 
 export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
 
@@ -30,7 +30,7 @@ export enum DbxButtonDisplayType {
   `,
   providers: provideDbxButton(DbxButtonComponent),
   standalone: true,
-  imports: [DbxSpinnerButtonComponent],
+  imports: [DbxProgressSpinnerButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {

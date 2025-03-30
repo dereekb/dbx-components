@@ -7,7 +7,8 @@ import { SubscriptionObject } from '@dereekb/rxjs';
  * Context used for linking a button to an ActionContext.
  */
 @Directive({
-  selector: '[dbxActionButton]'
+  selector: '[dbxActionButton]',
+  standalone: true
 })
 export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective implements OnInit, OnDestroy {
   private readonly cdRef = inject(ChangeDetectorRef);

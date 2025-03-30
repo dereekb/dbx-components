@@ -1,21 +1,21 @@
-import { DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
+import { DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { DbxBarButtonComponent } from './bar.button.component';
+import { DbxProgressBarButtonComponent } from './bar.button.component';
 import { DbxProgressButtonsModule } from './button.progress.module';
 
 describe('DbxBarButtonComponent', () => {
-  let component: DbxBarButtonComponent;
-  let fixture: ComponentFixture<DbxBarButtonComponent>;
+  let component: DbxProgressBarButtonComponent;
+  let fixture: ComponentFixture<DbxProgressBarButtonComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [DbxProgressButtonsModule.forRoot([{ working: true, text: 'test' }])],
-      providers: [{ provide: DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { working: true, text: 'test' } }]
+      imports: [DbxProgressButtonsModule],
+      providers: [{ provide: DBX_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { working: true, text: 'test' } }]
     }).compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DbxBarButtonComponent);
+    fixture = TestBed.createComponent(DbxProgressBarButtonComponent);
     component = fixture.componentInstance;
     component.options = {
       barColor: 'primary',

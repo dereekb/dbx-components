@@ -1,22 +1,24 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
-import { AbstractProgressButtonDirective } from './base.progress.button.directive';
-import { distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { spaceSeparatedCssClasses } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, signal, ViewChild } from '@angular/core';
+import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NgClass, NgStyle } from '@angular/common';
+import { filterMaybe } from '@dereekb/rxjs';
 
 @Component({
   selector: 'dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
-  standalone: true,
-  imports: [MatButton, MatIcon, MatProgressSpinner],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButton, MatIcon, MatProgressSpinner, NgClass, NgStyle],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
-  @ViewChild('button', { static: true, read: ElementRef })
-  readonly buttonRef!: ElementRef<HTMLElement>;
+export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDirective {
+  private readonly _buttonRef = new BehaviorSubject<Maybe<ElementRef<HTMLElement>>>(undefined);
 
   readonly buttonCss$ = this.baseCssClasses$.pipe(
     map((x) => {
@@ -37,32 +39,66 @@ export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
     shareReplay(1)
   );
 
-  get showText() {
-    return !(this.options.fab || this.options.iconOnly);
-  }
+  readonly spinnerSize$ = combineLatest([this.options$, this._buttonRef.pipe(filterMaybe())]).pipe(
+    map(([options, buttonRef]) => {
+      const elem = buttonRef.nativeElement;
+      const height = elem.clientHeight;
 
-  calcSpinnerSize() {
-    const options = this.options;
-    const elem = this.buttonRef?.nativeElement;
-    const height = elem.clientHeight;
+      let size;
 
-    let size;
-
-    if (options) {
-      if (options.fab || options.iconOnly) {
-        size = height;
-      } else {
-        size = options.spinnerSize;
+      if (options) {
+        if (options.fab || options.iconOnly) {
+          size = height;
+        } else {
+          size = options.spinnerSize;
+        }
       }
-    }
 
-    if (!size) {
-      const minimumSpinnerSize = 18;
-      const spinnerRatio = options.spinnerRatio ?? 0.33;
-      const targetSpinnerSize = height * Math.min(1, spinnerRatio);
-      size = Math.min(height, Math.max(minimumSpinnerSize, targetSpinnerSize));
-    }
+      if (!size) {
+        const minimumSpinnerSize = 18;
+        const spinnerRatio = options.spinnerRatio ?? 0.33;
+        const targetSpinnerSize = height * Math.min(1, spinnerRatio);
+        size = Math.min(height, Math.max(minimumSpinnerSize, targetSpinnerSize));
+      }
 
-    return size;
+      return size;
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly _buttonCssSignal = toSignal(this.buttonCss$);
+  readonly buttonCssSignal = this._buttonCssSignal;
+
+  readonly _spinnerSizeSignal = toSignal(this.spinnerSize$);
+  readonly spinnerSizeSignal = this._spinnerSizeSignal;
+
+  readonly showTextSignal = computed(() => {
+    const options = this.optionsSignal();
+    return !(options?.fab || options?.iconOnly);
+  });
+
+  readonly showIconSignal = computed(() => {
+    const options = this.optionsSignal();
+    return (
+      options &&
+      options.buttonIcon && // button icon must be defined
+      !this.showTextSignal()
+    ); // show icon if either fab or iconOnly is true
+  });
+
+  readonly customSpinnerStyleSignal = computed(() => {
+    const customSpinnerColor = this.optionsSignal()?.customSpinnerColor;
+    return customSpinnerColor ? { stroke: customSpinnerColor } : undefined;
+  });
+
+  readonly customSpinnerStyleClassSignal = computed(() => {
+    const hasCustomStyle = Boolean(this.customSpinnerStyleSignal());
+    return hasCustomStyle ? { 'dbx-spinner-custom': true } : undefined;
+  });
+
+  @ViewChild('button', { static: true, read: ElementRef })
+  set buttonRef(value: ElementRef<HTMLElement>) {
+    this._buttonRef.next(value);
   }
 }

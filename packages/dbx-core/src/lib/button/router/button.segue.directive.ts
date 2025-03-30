@@ -8,7 +8,8 @@ import { SegueRef, DbxRouterService } from '../../router';
 
 // MARK: Button Directives
 @Directive({
-  selector: '[dbxButtonSegue]'
+  selector: '[dbxButtonSegue]',
+  standalone: true
 })
 export class DbxButtonSegueDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly dbxButton = inject(DbxButton);
