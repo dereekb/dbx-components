@@ -165,6 +165,10 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
     this.useStore((x) => (disable ? x.disable(key) : x.enable(key)));
   }
 
+  public setIsSame(isSame?: boolean | Observable<boolean> | Observable<void>): void {
+    this.useStore((x) => x.setIsSame(isSame));
+  }
+
   public setIsModified(isModified?: boolean | Observable<boolean> | Observable<void>): void {
     this.useStore((x) => x.setIsModified(isModified));
   }

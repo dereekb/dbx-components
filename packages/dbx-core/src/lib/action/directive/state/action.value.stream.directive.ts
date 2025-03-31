@@ -1,8 +1,9 @@
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { switchMap, mergeMap, map, withLatestFrom, shareReplay, BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
-import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe, isDefinedAndNotFalse } from '@dereekb/util';
-import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
+import { IsEqualFunction, IsModifiedFunction, makeIsModifiedFunctionObservable, SubscriptionObject } from '@dereekb/rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
@@ -11,38 +12,25 @@ import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
   selector: '[dbxActionValueStream]',
   standalone: true
 })
-export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
+export class DbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
-  private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFunction<T>>>(undefined);
+  readonly dbxActionValueStream = input<Observable<T>>(EMPTY);
+  readonly dbxActionValueStreamIsEqualValue = input<Maybe<IsEqualFunction<T>>>();
+  readonly dbxActionValueStreamIsModifiedValue = input<Maybe<IsModifiedFunction<T>>>();
 
-  private _modifiedSub = new SubscriptionObject();
-  private _triggerSub = new SubscriptionObject();
+  private readonly _modifiedSub = new SubscriptionObject();
+  private readonly _triggerSub = new SubscriptionObject();
 
-  @Input()
-  set dbxActionValueStream(dbxActionValueStream: Observable<T>) {
-    this._valueObs.next(dbxActionValueStream);
-  }
+  readonly isModifiedFunction$: Observable<IsModifiedFunction<T>> = makeIsModifiedFunctionObservable({
+    isModified: toObservable(this.dbxActionValueStreamIsModifiedValue),
+    isEqual: toObservable(this.dbxActionValueStreamIsEqualValue)
+  }).pipe(shareReplay(1));
 
-  @Input()
-  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: unknown) {
-    if (isDefinedAndNotFalse(requireNonEmpty)) {
-      this.dbxActionValueStreamModified = (value) => {
-        return of(hasValueOrNotEmpty(value));
-      };
-    }
-  }
-
-  @Input()
-  set dbxActionValueStreamModified(dbxActionValueStreamModified: IsModifiedFunction<T>) {
-    this._isModifiedFn.next(dbxActionValueStreamModified);
-  }
-
-  readonly modifiedValue$ = this._valueObs.pipe(
+  readonly modifiedValue$ = toObservable(this.dbxActionValueStream).pipe(
     switchMap((obs) =>
       obs.pipe(
-        withLatestFrom(this._isModifiedFn),
+        withLatestFrom(this.isModifiedFunction$),
         mergeMap(([value, dbxActionValueStreamModified]) => {
           let result: Observable<[boolean, T]>;
 
@@ -60,13 +48,14 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
-    // Update Modified value.
+    // Update isModified on source
     this._modifiedSub.subscription = this.modifiedValue$.subscribe(([isModified]) => {
       this.source.setIsModified(isModified);
     });
 
     // Set the value on triggers.
     this._triggerSub.subscription = this.source.triggered$.pipe(switchMap(() => this.modifiedValue$)).subscribe(([isModified, value]) => {
+      // only mark ready once modified
       if (isModified) {
         this.source.readyValue(value);
       }
@@ -75,8 +64,6 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
-      this._valueObs.complete();
-      this._isModifiedFn.complete();
       this._modifiedSub.destroy();
       this._triggerSub.destroy();
     });

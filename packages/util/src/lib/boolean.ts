@@ -1,5 +1,10 @@
 import { type Factory } from './getter/getter';
 
+// MARK: Types
+export type IsValid = boolean;
+export type IsEqual = boolean;
+export type IsModified = boolean;
+
 // MARK: Reduce
 export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithAndFn(emptyArrayValue)(array);

@@ -15,9 +15,9 @@ import { toObservable } from '@angular/core/rxjs-interop';
   standalone: true
 })
 export class DbxActionSourceDirective implements SecondaryActionContextStoreSource {
-  readonly source = input<Maybe<ActionContextStoreSource>>(undefined);
+  readonly dbxActionSource = input<Maybe<ActionContextStoreSource>>();
 
-  readonly store$ = toObservable(this.source).pipe(
+  readonly store$ = toObservable(this.dbxActionSource).pipe(
     filterMaybe(),
     switchMap((x) => actionContextStoreSourcePipe(x.store$))
   );

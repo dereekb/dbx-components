@@ -10,10 +10,17 @@
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 
-      <h4>dbxActionFormModified</h4>
+      <h4>dbxActionFormIsModified</h4>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
-        <p>Using the dbxActionFormModified input, we can pass a function that returns an observable to have more control over whether or not the inital value was modified or not.</p>
-        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormModified]="isFormModified"></doc-action-form-example-form>
+        <p>Using the dbxActionFormIsModified input, we can pass a function that returns an observable to have more control over whether or not the initial value was modified or not.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormIsModified]="isFormModified"></doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>dbxActionFormIsEqual</h4>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
+        <p>Using the dbxActionFormIsEqual input, we can pass a function that returns an observable to have more control over whether or not the initial value is still the same or not.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormIsEqual]="isFormEqual"></doc-action-form-example-form>
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 

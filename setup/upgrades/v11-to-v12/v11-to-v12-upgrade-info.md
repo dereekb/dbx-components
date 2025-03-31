@@ -205,3 +205,8 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 - `DbxBarButtonComponent` has been renamed to `DbxProgressBarButtonComponent`.
 - `DbxSpinnerButtonComponent` has been renamed to `DbxProgressSpinnerButtonComponent`.
 - `DbxAnchorLinkComponent` has been renamed to `DbxLinkComponent`.
+- `AnchorType` has been renamed to `ClickableAnchorType`. and is no longer an enum.
+- `dbxActionForm` has changed `dbxActionFormModified` to `dbxActionFormIsModified`, but also has added `dbxActionFormIsEqual`
+- `dbxActionValueOnTrigger` has changed `dbxActionValueOnTriggerModified` to `dbxActionValueOnTriggerIsModified`, but also has added `dbxActionValueOnTriggerIsEqual`
+- `dbxActionPopover` has changed `dbxActionPopoverModified` to `dbxActionPopoverIsModified`, but also has added `dbxActionPopoverIsEqual`
+- `dbxActionDialog` has changed `dbxActionDialogModified` to `dbxActionDialogIsModified`, but also has added `dbxActionDialogIsEqual`

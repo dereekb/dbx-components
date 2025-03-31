@@ -7,14 +7,21 @@ import { DbxButtonModule } from '../../button';
 import { DbxPromptModule } from './../../interaction';
 import { DbxReadableErrorModule } from '../../error';
 
+export const importsAndExports = [DbxActionUIRouterTransitionSafetyDirective, DbxActionUIRouterTransitionSafetyDialogComponent];
+
 /**
  * Provides the DbxActionUIRouterTransitionSafetyDirective.
  *
  * NOTE: Only works with UIRouter
+ * 
+ * @deprecated import the standalone components directly
+ * 
+ * @see DbxActionUIRouterTransitionSafetyDirective
+ * @see DbxActionUIRouterTransitionSafetyDialogComponent
+ 
  */
 @NgModule({
-  imports: [CommonModule, DbxCoreActionModule, DbxPromptModule, DbxButtonModule, DbxReadableErrorModule],
-  declarations: [DbxActionUIRouterTransitionSafetyDirective, DbxActionUIRouterTransitionSafetyDialogComponent],
-  exports: [DbxActionUIRouterTransitionSafetyDirective]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxActionUIRouterTransitionModule {}

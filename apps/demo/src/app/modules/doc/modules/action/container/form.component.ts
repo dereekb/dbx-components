@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { WorkUsingObservable , IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
+import { WorkUsingObservable, IsModifiedFunction, IsValidFunction, IsEqualFunction } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
 import { DocActionFormExampleValue } from '../component/action.example.form.component';
@@ -18,8 +18,17 @@ export class DocActionFormComponent {
   readonly isFormModified: IsModifiedFunction<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     return this.defaultValue$.pipe(
       map((defaultValue) => {
-        const isModified = Boolean(value.name !== defaultValue.name) || !isSameMinute(value.date, defaultValue.date);
+        const isModified = value.name !== defaultValue.name || !isSameMinute(value.date, defaultValue.date);
         return isModified;
+      })
+    );
+  };
+
+  readonly isFormEqual: IsEqualFunction<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
+    return this.defaultValue$.pipe(
+      map((defaultValue) => {
+        const isEqual = value.name === defaultValue.name && isSameMinute(value.date, defaultValue.date);
+        return isEqual;
       })
     );
   };

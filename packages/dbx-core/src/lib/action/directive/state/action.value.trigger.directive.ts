@@ -1,37 +1,27 @@
-import { Directive, ElementRef, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
+import { Directive, Injector, OnDestroy, OnInit, Signal, effect, inject, input, runInInjectionContext } from '@angular/core';
+import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { DbxActionValueOnTriggerFunction, DbxActionValueOnTriggerInstance } from './action.value.trigger.instance';
+import { DbxActionValueOnTriggerValueGetterFunction, DbxActionValueOnTriggerInstance } from './action.value.trigger.instance';
+
+export interface DbxActionValueOnTriggerDirectiveComputeInputsConfig<T> {
+  readonly dbxActionValueOnTriggerSignal?: Signal<Maybe<DbxActionValueOnTriggerValueGetterFunction<T>>>;
+  readonly dbxActionValueOnTriggerIsModifiedSignal?: Signal<Maybe<IsModifiedFunction>>;
+  readonly dbxActionValueOnTriggerIsEqualSignal?: Signal<Maybe<IsEqualFunction>>;
+}
 
 /**
  * Abstract class for directives that may perform an action when trigger is called, and returns a value.
  */
 @Directive()
 export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+  private readonly _injector = inject(Injector);
+
   readonly source = inject(DbxActionContextStoreSourceInstance<T, unknown>);
 
   private readonly _triggerInstance: DbxActionValueOnTriggerInstance<T> = new DbxActionValueOnTriggerInstance<T>({
     source: this.source
   });
-
-  private _triggeredSub = new SubscriptionObject();
-
-  get valueGetter(): Maybe<DbxActionValueOnTriggerFunction<T>> {
-    return this._triggerInstance.valueGetter;
-  }
-
-  set valueGetter(valueGetter: Maybe<DbxActionValueOnTriggerFunction<T>>) {
-    this._triggerInstance.valueGetter = valueGetter;
-  }
-
-  get isModifiedFunction(): Maybe<IsModifiedFunction<T>> {
-    return this._triggerInstance.isModifiedFunction;
-  }
-
-  set isModifiedFunction(isModifiedFunction: Maybe<IsModifiedFunction<T>>) {
-    this._triggerInstance.isModifiedFunction = isModifiedFunction;
-  }
 
   ngOnInit(): void {
     this._triggerInstance.init();
@@ -39,7 +29,31 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnI
 
   ngOnDestroy(): void {
     this._triggerInstance.destroy();
-    this._triggeredSub.destroy();
+  }
+
+  setValueGetterFunction(valueGetterFunction: Maybe<DbxActionValueOnTriggerValueGetterFunction<T>>) {
+    this._triggerInstance.setValueGetterFunction(valueGetterFunction);
+  }
+
+  protected configureInputs(config: DbxActionValueOnTriggerDirectiveComputeInputsConfig<T>): void {
+    runInInjectionContext(this._injector, () => {
+      effect(() => {
+        if (config?.dbxActionValueOnTriggerIsModifiedSignal != null) {
+          const isModified = config?.dbxActionValueOnTriggerIsModifiedSignal();
+          this._triggerInstance.setIsModifiedFunction(isModified);
+        }
+
+        if (config?.dbxActionValueOnTriggerIsEqualSignal != null) {
+          const isEqual = config?.dbxActionValueOnTriggerIsEqualSignal();
+          this._triggerInstance.setIsEqualFunction(isEqual);
+        }
+
+        if (config?.dbxActionValueOnTriggerSignal != null) {
+          const trigger = config?.dbxActionValueOnTriggerSignal();
+          this._triggerInstance.setValueGetterFunction(trigger);
+        }
+      });
+    });
   }
 }
 
@@ -51,20 +65,17 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnI
   selector: '[dbxActionValueOnTrigger]',
   standalone: true
 })
-export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
-  readonly elementRef = inject(ElementRef);
-
-  @Input()
-  set dbxActionValueOnTrigger(dbxActionValueTrigger: Maybe<DbxActionValueOnTriggerFunction<T>>) {
-    this.valueGetter = dbxActionValueTrigger;
-  }
-
-  @Input()
-  set dbxActionValueTriggerModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
-    this.isModifiedFunction = isModifiedFunction;
-  }
+export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnDestroy {
+  readonly dbxActionValueOnTrigger = input<Maybe<DbxActionValueOnTriggerValueGetterFunction<T>>>();
+  readonly dbxActionValueOnTriggerIsModified = input<Maybe<IsModifiedFunction>>();
+  readonly dbxActionValueOnTriggerIsEqual = input<Maybe<IsEqualFunction>>();
 
   constructor() {
     super();
+    this.configureInputs({
+      dbxActionValueOnTriggerSignal: this.dbxActionValueOnTrigger,
+      dbxActionValueOnTriggerIsModifiedSignal: this.dbxActionValueOnTriggerIsModified,
+      dbxActionValueOnTriggerIsEqualSignal: this.dbxActionValueOnTriggerIsEqual
+    });
   }
 }

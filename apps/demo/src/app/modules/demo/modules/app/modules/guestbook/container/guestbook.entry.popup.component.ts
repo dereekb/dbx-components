@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
-import { WorkUsingContext, IsModifiedFunction } from '@dereekb/rxjs';
+import { WorkUsingContext, IsModifiedFunction, switchMapWhileTrue, IsEqualFunction } from '@dereekb/rxjs';
 import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
-import { map, of, switchMap } from 'rxjs';
+import { map } from 'rxjs';
 
 export interface DemoGuestbookEntryPopupComponentConfig {
   guestbookEntryDocumentStore: GuestbookEntryDocumentStore;
@@ -14,7 +14,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
     <dbx-dialog-content>
       <p class="dbx-note">Enter your message for the guest book.</p>
       <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateEntry">
-        <demo-guestbook-entry-form dbxActionForm [dbxFormSource]="data$" [dbxActionFormModified]="isFormModified"></demo-guestbook-entry-form>
+        <demo-guestbook-entry-form dbxActionForm [dbxFormSource]="data$" [dbxActionFormIsEqual]="isFormSame"></demo-guestbook-entry-form>
         <p></p>
         <dbx-button [raised]="true" [text]="(exists$ | async) ? 'Save Changes' : 'Create Guestbook Entry'" dbxActionButton></dbx-button>
         <dbx-error dbxActionError></dbx-error>
@@ -41,20 +41,17 @@ export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<un
     });
   }
 
-  readonly isFormModified: IsModifiedFunction<DemoGuestbookEntryFormValue> = (value) => {
+  readonly isFormSame: IsEqualFunction<DemoGuestbookEntryFormValue> = (value) => {
     return this.exists$.pipe(
-      switchMap((exists) => {
-        if (exists) {
-          return this.data$.pipe(
-            map((current) => {
-              const isModified = Boolean(current.message !== value.message) || Boolean(current.signed !== value.signed) || Boolean(current.published !== value.published);
-              return isModified;
-            })
-          );
-        } else {
-          return of(true);
-        }
-      })
+      switchMapWhileTrue<boolean>(
+        this.data$.pipe(
+          map((current) => {
+            const isSame = current.message === value.message && current.signed === value.signed && current.published === value.published;
+            return isSame;
+          })
+        ),
+        false
+      )
     );
   };
 

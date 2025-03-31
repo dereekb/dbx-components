@@ -1,7 +1,7 @@
 import { first, Observable } from 'rxjs';
-import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, ElementRef, inject, input } from '@angular/core';
 import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
-import { IsModifiedFunction } from '@dereekb/rxjs';
+import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { MatDialogRef } from '@angular/material/dialog';
 
@@ -17,17 +17,17 @@ export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, M
 export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);
 
-  @Input('dbxActionDialog')
-  fn?: DbxActionDialogFunction<T>;
-
-  @Input()
-  set dbxActionDialogModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
-    this.isModifiedFunction = isModifiedFunction;
-  }
+  readonly dbxActionDialog = input<Maybe<DbxActionDialogFunction<T>>>();
+  readonly dbxActionDialogIsModified = input<Maybe<IsModifiedFunction>>();
+  readonly dbxActionDialogIsEqual = input<Maybe<IsEqualFunction>>();
 
   constructor() {
     super();
-    this.valueGetter = () => this._getDataFromDialog();
+    this.configureInputs({
+      dbxActionValueOnTriggerIsModifiedSignal: this.dbxActionDialogIsModified,
+      dbxActionValueOnTriggerIsEqualSignal: this.dbxActionDialogIsEqual
+    });
+    this.setValueGetterFunction(() => this._getDataFromDialog());
   }
 
   protected _getDataFromDialog(): Observable<Maybe<T>> {
@@ -35,10 +35,12 @@ export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValu
   }
 
   protected _makeDialogRef(): MatDialogRef<unknown, Maybe<T>> {
-    if (!this.fn) {
+    const fn = this.dbxActionDialog();
+
+    if (!fn) {
       throw new Error('dbxActionDialog has no dialog function provided to it.');
     }
 
-    return this.fn();
+    return fn();
   }
 }

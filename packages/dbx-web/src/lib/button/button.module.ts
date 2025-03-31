@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { DbxButtonComponent } from './button.component';
-import { DbxButtonSpacerDirective } from './button.spacer.component';
+import { DbxButtonSpacerDirective } from './button.spacer.directive';
 import { DbxCoreButtonModule } from '@dereekb/dbx-core';
 import { DbxIconButtonComponent } from './icon';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';

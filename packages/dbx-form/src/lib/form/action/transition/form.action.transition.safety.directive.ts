@@ -1,4 +1,4 @@
-import { Directive, Input, inject } from '@angular/core';
+import { Directive, Input, effect, inject, input } from '@angular/core';
 import { HookResult, Transition } from '@uirouter/core';
 import { DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
 import { DbxActionFormDirective } from '../form.action.directive';
@@ -9,16 +9,23 @@ import { DbxActionFormDirective } from '../form.action.directive';
  * NOTE: Only works with UIRouter
  */
 @Directive({
-  selector: '[dbxActionFormSafety]'
+  selector: '[dbxActionFormSafety]',
+  standalone: true
 })
 export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
   readonly dbxActionForm = inject(DbxActionFormDirective<T>, { host: true });
 
-  @Input('dbxActionFormSafety')
-  override inputSafetyType?: DbxActionTransitionSafetyType = 'auto';
+  readonly dbxActionFormSafety = input<DbxActionTransitionSafetyType>('auto');
+
+  private readonly _dbxActionFormSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionFormSafety()));
 
   protected override _handleOnBeforeTransition(transition: Transition): HookResult {
     this.dbxActionForm.form.forceFormUpdate();
     return super._handleOnBeforeTransition(transition);
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._dbxActionFormSafetyUpdateEffect.destroy();
   }
 }

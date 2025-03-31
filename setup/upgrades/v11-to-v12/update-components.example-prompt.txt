@@ -1,0 +1,18 @@
+Take a look at @update-components-example.ts to understand how to update Angular 16 components to Angular 18 components. You will be working with a developer to save time making updates to modernize components.
+
+The updates follow the following rules:
+- directives and components should be marked as standalone
+- @Components should now declare imports: []. You can guess the imports but PLEASE DO NOT FIXING IMPORTS IF AN ERROR APPEARS. The developer will fix imports.
+- NgIf, NgSwitch, and NgSwitchCase should never end up being imported since they are being replaced with new Angular control flow syntax @if, @switch, and @case.
+- If you notice there are some import errors in the component file, DO NOT FIX THEM. Ignore them and wait for developer input first.
+- since we are using signals, add changeDetection: ChangeDetectionStrategy.OnPush to the @Component configuration
+- BehaviorSubjects should only be converted to signals if they were only used in the template using the `async` pipe and value set via @Input()
+- signal variables should be declared as private readonly with an underscore prefix and the Signal suffix. e.g. `private readonly _internalSignal = signal<number>(0);`
+- signal variable names have the Signal suffix. e.g. readonly internalSignal = this._internalSignal;
+- public signals of private signals can be redeclared as the private signal. e.g. `readonly internalSignal = this._internalSignal;`
+- public signals that are computed from private signals should use computed(). e.g. `readonly internalSignal = computed(() => !this._internalSignal());`
+- input signals should not have the Signal suffix. e.g. `readonly block = input<Maybe<boolean>>();`
+- input signals should typically use Maybe<...> if the @Input being replaced is optional. e.g. `readonly block = input<Maybe<boolean>>();` that replaces `@Input() block?: boolean;`
+- if removing all BehaviorSubjects or all destroyable variables that are destroyed in ngOnDestroy, then remove the ngOnDestroy method and update the class declaration to no longer implement OnDestroy.
+- All usage of the async pipe should be replaced with signals usage. e.g. `{{ block() }}` instead of `{{ block$ | async }}`
+

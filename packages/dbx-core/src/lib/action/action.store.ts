@@ -69,28 +69,31 @@ export function loadingStateTypeForActionContextState(state: ActionContextState)
 }
 
 export interface ActionContextState<T = unknown, O = unknown> {
-  actionState: DbxActionState;
-  isModified: boolean;
+  readonly actionState: DbxActionState;
+  /**
+   * Whether or not this action is flagged as having been modified.
+   */
+  readonly isModified: boolean;
   /**
    * Value that is set after a triggered action. Not to be confused with result.
    */
-  value?: Maybe<T>;
+  readonly value?: Maybe<T>;
   /**
    * Resolved result value.
    */
-  result?: Maybe<O>;
+  readonly result?: Maybe<O>;
   /**
    * Rejected error, if available.
    */
-  error?: Maybe<ReadableError>;
+  readonly error?: Maybe<ReadableError>;
   /**
    * Current disabled state.
    */
-  disabled?: BooleanStringKeyArray;
+  readonly disabled?: BooleanStringKeyArray;
   /**
    * Number of consecutive errors that have occured.
    */
-  errorCount?: number;
+  readonly errorCount?: number;
 }
 
 const INITIAL_STATE: ActionContextState = {
@@ -155,7 +158,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Pipes the result when the ActionState becomes rejected.
    */
-  readonly rejectedPair$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => ({ value: x.value, error: x.error } as DbxActionRejectedPair<T>));
+  readonly rejectedPair$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => ({ value: x.value, error: x.error }) as DbxActionRejectedPair<T>);
 
   /**
    * Pipes the result when the ActionState becomes working.
@@ -184,7 +187,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Pipes the result when the ActionState becomes success.
    */
-  readonly successPair$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => ({ value: x.value, result: x.result } as DbxActionSuccessPair<T, O>));
+  readonly successPair$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => ({ value: x.value, result: x.result }) as DbxActionSuccessPair<T, O>);
 
   /**
    * Whether or not it is currently in a success state.
@@ -260,12 +263,15 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
 
   /**
    * Triggers the modified state, if not disabled.
+   *
+   * Equivalent to calling setIsModified() with opposite input.
    */
-  readonly setIsModified = this.updater((state, isModified: void | boolean) => ({
-    ...state,
-    actionState: state.actionState === DbxActionState.RESOLVED ? DbxActionState.IDLE : state.actionState, // Set to idle from success.
-    isModified: (isModified as boolean) ?? true
-  }));
+  readonly setIsSame = this.updater<void, void | boolean>(updateIsSameOnActionContextState);
+
+  /**
+   * Triggers the modified state, if not disabled.
+   */
+  readonly setIsModified = this.updater<void, void | boolean>(updateIsModifiedOnActionContextState);
 
   /**
    * Triggers the action if the state is currently not idle. The current state is cleared, but the error is retained (as we may need the error from the previous attempt).
@@ -305,7 +311,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Completely resets the store.
    */
-  readonly reset = this.updater(() => ({ ...INITIAL_STATE } as ActionContextState<T, O>));
+  readonly reset = this.updater(() => ({ ...INITIAL_STATE }) as ActionContextState<T, O>);
 
   // MARK: Utility
   afterDistinctBoolean(fromState: (state: ActionContextState<T, O>) => boolean): Observable<boolean> {
@@ -349,4 +355,16 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
       super.ngOnDestroy();
     }, 2000);
   }
+}
+
+function updateIsSameOnActionContextState<T, O>(state: ActionContextState<T, O>, isSame?: void | boolean): ActionContextState<T, O> {
+  return updateIsModifiedOnActionContextState(state, isSame == null ? false : !isSame);
+}
+
+function updateIsModifiedOnActionContextState<T, O>(state: ActionContextState<T, O>, isModified?: void | boolean): ActionContextState<T, O> {
+  return {
+    ...state,
+    actionState: state.actionState === DbxActionState.RESOLVED ? DbxActionState.IDLE : state.actionState, // Set to idle from success.
+    isModified: (isModified as boolean) ?? true // if isModified is not input, default it to true
+  };
 }

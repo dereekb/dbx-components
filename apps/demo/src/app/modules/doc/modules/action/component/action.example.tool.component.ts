@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
-import { Component, Input, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnDestroy, inject, input } from '@angular/core';
 import { provideFormlyContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -12,6 +12,9 @@ import { type Maybe } from '@dereekb/util';
 })
 export class DocActionExampleToolsComponent implements OnDestroy {
   readonly hostSourceInstance = inject(DbxActionContextStoreSourceInstance, { host: true, optional: true });
+
+  readonly action = input<Maybe<DbxActionDirective>>();
+  readonly source = input<Maybe<DbxActionContextStoreSourceInstance>>(this.hostSourceInstance);
 
   private _source = new BehaviorSubject<Maybe<DbxActionContextStoreSourceInstance>>(this.hostSourceInstance);
   readonly source$ = this._source.pipe(filterMaybe(), shareReplay(1));
