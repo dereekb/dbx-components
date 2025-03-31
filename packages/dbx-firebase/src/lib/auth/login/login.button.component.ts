@@ -5,7 +5,7 @@ import { FirebaseLoginMethodType } from './login';
 import { DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 import { NgIf } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIcon, MatIconModule } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 
@@ -25,13 +25,13 @@ export interface DbxFirebaseLoginButtonConfig {
   selector: 'dbx-firebase-login-button',
   template: `
     <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue [dbxActionSuccessHandler]="onActionSuccess">
-      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal" [customButtonColor]="buttonColorSignal" [raised]="true">
+      <dbx-button dbxActionButton [customTextColor]="buttonTextColorSignal()" [customButtonColor]="buttonColorSignal()" [raised]="true">
         <div class="dbx-firebase-login-button-content">
           <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
-            <img *ngIf="iconUrlSignal" [src]="iconUrlSignal" />
-            <mat-icon *ngIf="iconSignal">{{ iconSignal }}</mat-icon>
+            <img *ngIf="iconUrlSignal()" [src]="iconUrlSignal()" />
+            <mat-icon *ngIf="iconSignal()">{{ iconSignal() }}</mat-icon>
           </span>
-          <span class="dbx-firebase-login-button-text">{{ textSignal }}</span>
+          <span class="dbx-firebase-login-button-text">{{ textSignal() }}</span>
         </div>
       </dbx-button>
     </ng-container>
@@ -40,7 +40,7 @@ export interface DbxFirebaseLoginButtonConfig {
     class: 'dbx-firebase-login-button'
   },
   standalone: true,
-  imports: [NgIf, MatIconModule, DbxActionModule, DbxButtonModule],
+  imports: [NgIf, MatIcon, DbxActionModule, DbxButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseLoginButtonComponent {

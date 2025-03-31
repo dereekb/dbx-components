@@ -17,7 +17,7 @@ const importsAndExports = [
 ];
 
 /**
- * Exports all dbx-core and dbx-web button components.
+ * Provides all base @dereekb/dbx-core and @dereekb/dbx-web button components.
  */
 @NgModule({
   imports: importsAndExports,

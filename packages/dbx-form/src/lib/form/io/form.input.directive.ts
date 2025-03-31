@@ -101,9 +101,10 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always' | 'every';
  * Used with a FormComponent to set the value based on the input value.
  */
 @Directive({
-  selector: '[dbxFormSource]'
+  selector: '[dbxFormSource]',
+  standalone: true
 })
-export class DbxFormSourceDirective<T> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFormSourceDirective<T = unknown> extends AbstractSubscriptionDirective implements OnDestroy {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
   private readonly _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');

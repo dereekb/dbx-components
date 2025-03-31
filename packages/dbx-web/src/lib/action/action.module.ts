@@ -6,7 +6,7 @@ import { DbxActionConfirmDirective } from './action.confirm.directive';
 const importsAndExports = [DbxCoreActionModule, DbxActionKeyTriggerDirective, DbxActionConfirmDirective];
 
 /**
- * Provides the base DbxAction-related components from @dereekb/web.
+ * Provides all base dbxAction-related components from both @dereekb/core and @dereekb/web.
  */
 @NgModule({
   imports: importsAndExports,

@@ -16,7 +16,7 @@ export class DbxPopoverControlsDirective {
 
   ngOnInit() {
     if (this.appPopoverContentComponent) {
-      this.appPopoverContentComponent.hasControls = true;
+      this.appPopoverContentComponent.hasControls.next(true);
     }
   }
 }

@@ -21,20 +21,22 @@ import { toSignal } from '@angular/core/rxjs-interop';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverContentComponent implements OnDestroy {
+  readonly hasControls = new BehaviorSubject<boolean>(false);
+  readonly hasHeader = new BehaviorSubject<boolean>(false);
+
   private readonly _height = new BehaviorSubject<string>('');
   readonly height$ = this._height.asObservable().pipe(throttleTime(100, undefined, { leading: true, trailing: true }));
 
   private readonly _heightSignal = toSignal(this.height$);
   readonly heightSignal = this._heightSignal;
 
-  hasControls = false;
-  hasHeader = false;
-
   onResized(event: ResizedEvent): void {
     this._height.next(`${event.newRect.height}px`);
   }
 
   ngOnDestroy(): void {
+    this.hasControls.complete();
+    this.hasHeader.complete();
     this._height.complete();
   }
 }

@@ -10,7 +10,8 @@ import { DbxForm } from '../form';
  * Emits undefined when the form is incomplete, and the value when the form is complete.
  */
 @Directive({
-  selector: '[dbxFormValueChange]'
+  selector: '[dbxFormValueChange]',
+  standalone: true
 })
 export class DbxFormValueChangesDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly form = inject(DbxForm<T>, { host: true });

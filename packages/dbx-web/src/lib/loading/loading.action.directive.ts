@@ -7,7 +7,8 @@ import { DbxLoadingComponent } from './loading.component';
  * Context used for linking a loadingComponent to an ActionContext by providing a LoadingContext.
  */
 @Directive({
-  selector: '[dbxActionLoadingContext]'
+  selector: '[dbxActionLoadingContext]',
+  standalone: true
 })
 export class DbxActionLoadingContextDirective implements OnInit, OnDestroy {
   readonly loadingComponent = inject(DbxLoadingComponent, { host: true });

@@ -115,6 +115,9 @@ const IMPORTS_AND_EXPORTS = [
   UIRouterModule
 ];
 
+/**
+ * @deprecated remove this in the future as most components are standalone now and should be referenced directly
+ */
 @NgModule({
   imports: IMPORTS_AND_EXPORTS,
   exports: IMPORTS_AND_EXPORTS

@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Popover scrollable content wrapper component.
@@ -11,7 +12,7 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   `,
   host: {
     class: 'd-block dbx-popover-scroll-content',
-    '[class]': 'sizingClasses'
+    '[class]': 'sizingClassesSignal()'
   },
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -19,9 +20,12 @@ import { DbxPopoverContentComponent } from './popover.content.component';
 export class DbxPopoverScrollContentComponent {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent);
 
-  get sizingClasses(): string {
-    const hasHeader = this.hasHeader;
-    const hasControls = this.hasControls;
+  readonly hasControlsSignal = toSignal(this.appPopoverContentComponent.hasControls);
+  readonly hasHeaderSignal = toSignal(this.appPopoverContentComponent.hasHeader);
+
+  readonly sizingClassesSignal = computed(() => {
+    const hasHeader = this.hasHeaderSignal();
+    const hasControls = this.hasControlsSignal();
 
     const classes: string[] = [];
 
@@ -34,13 +38,5 @@ export class DbxPopoverScrollContentComponent {
     }
 
     return classes.join(' ');
-  }
-
-  get hasHeader(): boolean {
-    return this.appPopoverContentComponent.hasHeader;
-  }
-
-  get hasControls(): boolean {
-    return this.appPopoverContentComponent.hasControls;
-  }
+  });
 }

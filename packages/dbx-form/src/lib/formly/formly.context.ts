@@ -1,9 +1,9 @@
-import { Provider } from '@angular/core';
+import { Injectable, OnDestroy, Provider } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, type Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Destroyable, type Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {
   fields: Observable<FormlyFieldConfig[]>;
@@ -25,27 +25,22 @@ export interface DbxFormlyContextDelegate<T = unknown> extends Omit<DbxMutableFo
  * Allows a directive to provide a formly context and form.
  */
 export function provideFormlyContext(): Provider[] {
-  return [
-    {
-      provide: DbxFormlyContext,
-      useClass: DbxFormlyContext
-    },
-    ...provideDbxMutableForm(DbxFormlyContext)
-  ];
+  return [DbxFormlyContext, ...provideDbxMutableForm(DbxFormlyContext)];
 }
 
 /**
  * DbxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
-export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
+@Injectable()
+export class DbxFormlyContext<T = unknown> implements DbxForm<T>, Destroyable, OnDestroy {
   private static INITIAL_STATE: DbxFormEvent = { isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' };
 
   readonly lockSet = new LockSet();
 
-  private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
-  private _initialValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
-  private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
-  private _delegate = new BehaviorSubject<Maybe<DbxFormlyContextDelegate<T>>>(undefined);
+  private readonly _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
+  private readonly _initialValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
+  private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
+  private readonly _delegate = new BehaviorSubject<Maybe<DbxFormlyContextDelegate<T>>>(undefined);
 
   readonly fields$ = this._fields.pipe(filterMaybe(), shareReplay(1));
   readonly disabled$ = this._disabled.pipe(filterMaybe(), shareReplay(1));
@@ -54,6 +49,10 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
     switchMap((x) => (x ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE))),
     shareReplay(1)
   );
+
+  ngOnDestroy(): void {
+    this.destroy();
+  }
 
   destroy(): void {
     this.lockSet.destroyOnNextUnlock(() => {

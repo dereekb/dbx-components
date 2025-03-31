@@ -1,29 +1,25 @@
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { OnInit, OnDestroy, Directive, Input, inject } from '@angular/core';
+import { OnInit, OnDestroy, Directive, Input, inject, input, effect } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
 import { type Maybe } from '@dereekb/util';
 import { DbxFormDisabledKey } from '../form/form';
 
 /**
- * Abstract component for wrapping a form.
+ * Abstract component for wrapping a DbxFormlyContext.
+ *
+ * The implementing component should use provideFormlyContext() to provide the DbxFormlyContext specific to this directive. The context is injected using only self.
  */
 @Directive()
 export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
-  readonly context = inject(DbxFormlyContext<T>);
+  readonly context = inject(DbxFormlyContext<T>, { self: true });
 
-  @Input()
-  get disabled(): boolean {
-    return this.context.isDisabled();
-  }
-
-  set disabled(disabled: boolean) {
-    this.context.setDisabled(undefined, disabled);
-  }
+  readonly disabled = input<boolean>(false);
+  private readonly _setDisabledOnContext = effect(() => this.context.setDisabled(undefined, this.disabled()));
 
   ngOnDestroy(): void {
-    this.context.destroy();
+    this._setDisabledOnContext.destroy();
   }
 
   // Utility Functions
@@ -70,7 +66,7 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
    */
   abstract readonly fields$: Observable<Maybe<FormlyFieldConfig[]>>;
 
-  private _fieldsSub = new SubscriptionObject();
+  private readonly _fieldsSub = new SubscriptionObject();
 
   ngOnInit(): void {
     this._fieldsSub.subscription = this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {

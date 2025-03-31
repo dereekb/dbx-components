@@ -9,7 +9,8 @@ import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from '.
  * Used with a FormComponent to set the value from a LoadingState when the value is available.
  */
 @Directive({
-  selector: '[dbxFormLoadingSource]'
+  selector: '[dbxFormLoadingSource]',
+  standalone: true
 })
 export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
   readonly form = inject(DbxMutableForm<T>, { host: true });

@@ -30,12 +30,12 @@ import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core'
       <ng-content></ng-content>
     </ng-template>
   `,
-  imports: [MatButton, MatIcon, MatIconButton],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxButton(DbxIconButtonComponent),
-  standalone: true,
   host: {
     class: 'dbx-icon-button'
-  }
+  },
+  imports: [MatButton, MatIcon, MatIconButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxIconButtonComponent extends AbstractDbxButtonDirective {}
