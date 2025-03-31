@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { computed, Directive, input, Input } from '@angular/core';
 
 export type DbxDialogContentContainerWidth = 'normal' | 'wide';
 
@@ -9,10 +9,11 @@ export type DbxDialogContentContainerWidth = 'normal' | 'wide';
   selector: 'dbx-dialog-content,[dbxDialogContent].dbx-dialog-content',
   host: {
     class: 'dbx-dialog-content',
-    '[class]': `width + '-dialog-content'`
-  }
+    '[class]': `classConfig()`
+  },
+  standalone: true
 })
 export class DbxDialogContentDirective {
-  @Input()
-  width = 'normal';
+  readonly width = input<DbxDialogContentContainerWidth>('normal');
+  readonly classConfig = computed(() => `${this.width()}-dialog-content`);
 }

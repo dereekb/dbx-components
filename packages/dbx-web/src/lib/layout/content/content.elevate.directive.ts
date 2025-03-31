@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, input, Input } from '@angular/core';
 
 /**
  * Section used to elevate content in a pre-configured manner.
@@ -7,10 +7,10 @@ import { Directive, Input } from '@angular/core';
   selector: 'dbx-content-elevate,[dbxContentElevate]',
   host: {
     class: 'd-block',
-    '[class.dbx-content-elevate]': 'elevate'
-  }
+    '[class.dbx-content-elevate]': 'elevate()'
+  },
+  standalone: true
 })
 export class DbxContentElevateDirective {
-  @Input()
-  elevate = true;
+  readonly elevate = input<boolean>(true);
 }

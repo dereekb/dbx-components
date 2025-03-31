@@ -95,7 +95,6 @@ export function isIterable<T = unknown>(values: unknown, treatStringAsIterable =
  * @returns
  */
 export function isEmptyIterable<T = unknown>(values: Iterable<T>): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for (const _ of values) {
     return false;
   }

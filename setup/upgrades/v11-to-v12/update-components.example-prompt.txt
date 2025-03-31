@@ -15,4 +15,3 @@ The updates follow the following rules:
 - input signals should typically use Maybe<...> if the @Input being replaced is optional. e.g. `readonly block = input<Maybe<boolean>>();` that replaces `@Input() block?: boolean;`
 - if removing all BehaviorSubjects or all destroyable variables that are destroyed in ngOnDestroy, then remove the ngOnDestroy method and update the class declaration to no longer implement OnDestroy.
 - All usage of the async pipe should be replaced with signals usage. e.g. `{{ block() }}` instead of `{{ block$ | async }}`
-

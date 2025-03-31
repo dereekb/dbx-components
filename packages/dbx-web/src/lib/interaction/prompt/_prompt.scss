@@ -17,7 +17,7 @@ $dbx-popup-controls-height: 33px;
     padding: 40px;
     max-width: $box-max-width;
 
-    &.elevated {
+    &.elevate {
       @include theming.elevation(2);
     }
   }

@@ -1,23 +1,13 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
-
-export enum DbxPromptConfirmTypes {
-  /**
-   * Dialog is for yes/no.
-   */
-  NORMAL = 'normal',
-  /**
-   * Dialog is for deleting something.
-   */
-  DELETE = 'delete'
-}
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { DbxPromptComponent } from './prompt.component';
+import { MatButton } from '@angular/material/button';
+import { DbxButtonSpacerDirective } from '../../button';
 
 export interface DbxPromptConfirmConfig {
-  type?: DbxPromptConfirmTypes;
-  title?: string;
-  prompt?: string;
-  confirmText?: string;
-  cancelText?: string;
+  readonly title?: string;
+  readonly prompt?: string;
+  readonly confirmText?: string;
+  readonly cancelText?: string;
 }
 
 /**
@@ -25,25 +15,26 @@ export interface DbxPromptConfirmConfig {
  */
 @Component({
   selector: 'dbx-prompt-confirm',
-  templateUrl: './prompt.confirm.component.html'
+  template: `
+    <dbx-prompt [header]="config()?.title" [prompt]="config()?.prompt">
+      <ng-content></ng-content>
+      <button mat-stroked-button (click)="onConfirm()">{{ confirmTextSignal() }}</button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <button mat-stroked-button color="warn" (click)="onCancel()">{{ cancelTextSignal() }}</button>
+    </dbx-prompt>
+  `,
+  standalone: true,
+  imports: [DbxPromptComponent, MatButton, DbxButtonSpacerDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPromptConfirmComponent {
-  private _config: DbxPromptConfirmConfig = {};
+  readonly config = input<DbxPromptConfirmConfig>({});
 
-  @Output()
-  readonly confirm = new EventEmitter<void>();
+  readonly confirmTextSignal = computed(() => this.config().confirmText || 'Confirm');
+  readonly cancelTextSignal = computed(() => this.config().cancelText || 'Cancel');
 
-  @Output()
-  readonly cancel = new EventEmitter<void>();
-
-  @Input()
-  get config(): DbxPromptConfirmConfig {
-    return this._config;
-  }
-
-  set config(config: Maybe<DbxPromptConfirmConfig>) {
-    this._config = config ?? {};
-  }
+  readonly confirm = output<void>();
+  readonly cancel = output<void>();
 
   onConfirm(): void {
     this.confirm.emit();

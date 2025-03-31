@@ -1,19 +1,21 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxDialogContentDirective } from './dialog.content.component';
-import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
+import { DbxDialogContentDirective } from './dialog.content.directive';
 import { DbxActionDialogDirective } from './dialog.action.directive';
 import { DbxDialogContentFooterComponent } from './dialog.content.footer.component';
-import { MatButtonModule } from '@angular/material/button';
 import { DbxDialogContentCloseComponent } from './dialog.content.close.component';
-import { MatIconModule } from '@angular/material/icon';
+
+const importsAndExports = [DbxDialogContentDirective, DbxActionDialogDirective, DbxDialogContentFooterComponent, DbxDialogContentCloseComponent];
 
 /**
- * Module for block components.
+ * @deprecated import components independently instead.
+ *
+ * @see DbxDialogContentDirective
+ * @see DbxActionDialogDirective
+ * @see DbxDialogContentFooterComponent
+ * @see DbxDialogContentCloseComponent
  */
 @NgModule({
-  imports: [CommonModule, DbxStyleLayoutModule, MatButtonModule, MatIconModule],
-  declarations: [DbxDialogContentDirective, DbxActionDialogDirective, DbxDialogContentFooterComponent, DbxDialogContentCloseComponent],
-  exports: [DbxDialogContentDirective, DbxActionDialogDirective, DbxDialogContentFooterComponent, DbxDialogContentCloseComponent]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxDialogInteractionModule {}

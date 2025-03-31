@@ -1,4 +1,4 @@
-import { Directive, Input, inject } from '@angular/core';
+import { Directive, Input, effect, inject, input } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { type Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
@@ -14,24 +14,24 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
   protected readonly matDialog = inject(MatDialog);
 
-  private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
-  private _dialogPromise?: Promise<boolean>;
+  private _currentDialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
+  private _currentDialogPromise?: Promise<boolean>;
 
-  abstract config?: Maybe<DbxPromptConfirmConfig>;
+  config?: Maybe<DbxPromptConfirmConfig>;
 
   showDialog(): Observable<boolean> {
-    if (!this._dialogPromise) {
-      this._dialogPromise = new Promise<boolean>((resolve) => {
-        this._dialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog, this.config);
-        this._dialogRef.afterClosed().subscribe((result: Maybe<boolean>) => {
-          this._dialogRef = undefined;
-          this._dialogPromise = undefined;
+    if (!this._currentDialogPromise) {
+      this._currentDialogPromise = new Promise<boolean>((resolve) => {
+        this._currentDialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog, this.config);
+        this._currentDialogRef.afterClosed().subscribe((result: Maybe<boolean>) => {
+          this._currentDialogRef = undefined;
+          this._currentDialogPromise = undefined;
           resolve(this._handleDialogResult(Boolean(result)));
         });
       });
     }
 
-    return from(this._dialogPromise);
+    return from(this._currentDialogPromise);
   }
 
   protected _handleDialogResult(result: boolean): boolean {
@@ -45,9 +45,13 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
  */
 @Directive({
   selector: '[dbxPromptConfirm]',
-  providers: provideDbxPromptConfirm(DbxPromptConfirmDirective)
+  providers: provideDbxPromptConfirm(DbxPromptConfirmDirective),
+  standalone: true
 })
 export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
-  @Input('dbxPromptConfirm')
-  override config?: Maybe<DbxPromptConfirmConfig>;
+  readonly dbxPromptConfirm = input<Maybe<DbxPromptConfirmConfig>>();
+
+  private readonly _dbxPromptConfirmConfigEffect = effect(() => {
+    this.config = this.dbxPromptConfirm();
+  });
 }

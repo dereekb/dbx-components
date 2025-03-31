@@ -1,4 +1,4 @@
-import { Input, Directive } from '@angular/core';
+import { Input, Directive, input, computed } from '@angular/core';
 
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 
@@ -11,16 +11,17 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'large' | 'wide' | '
   selector: 'dbx-content-container,[dbxContentContainer],.dbx-content-container',
   host: {
     class: 'd-block dbx-content-container',
-    '[class]': `"container-" + grow + " container-padding-" + padding + " container-top-padding-" + topPadding`
-  }
+    '[class]': `classConfig()`
+  },
+  standalone: true
 })
 export class DbxContentContainerDirective {
-  @Input()
-  grow: DbxContentContainerWidth = 'wide';
+  readonly grow = input<DbxContentContainerWidth>('wide');
+  readonly padding = input<DbxContentContainerPadding>('normal');
+  readonly topPadding = input<DbxContentContainerPadding>('none');
 
-  @Input()
-  padding: DbxContentContainerPadding = 'normal';
-
-  @Input()
-  topPadding: DbxContentContainerPadding = 'none';
+  readonly classConfig = computed(() => {
+    const classConfig = 'container-' + this.grow() + ' container-padding-' + this.padding() + ' container-top-padding-' + this.topPadding();
+    return classConfig;
+  });
 }

@@ -16,6 +16,7 @@
     "skipDefaultLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "noUnusedLocals": false,
     "noImplicitOverride": true,
     "strict": true,
     "baseUrl": ".",

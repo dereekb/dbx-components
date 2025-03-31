@@ -4,7 +4,7 @@ import { DbxFormValueChangesDirective } from './form.changes.directive';
 import { DbxFormSourceDirective } from './form.input.directive';
 import { DbxFormLoadingSourceDirective } from './form.loading.directive';
 
-export const importsAndExports = [DbxFormSourceDirective, DbxFormValueChangesDirective, DbxFormLoadingSourceDirective];
+const importsAndExports = [DbxFormSourceDirective, DbxFormValueChangesDirective, DbxFormLoadingSourceDirective];
 
 /**
  * @deprecated import the directives directly instead.

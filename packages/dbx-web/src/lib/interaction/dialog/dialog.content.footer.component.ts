@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 import { ThemePalette } from '@angular/material/core';
 import { type Maybe } from '@dereekb/util';
 
 export interface DbxDialogContentFooterConfig {
-  buttonColor?: ThemePalette;
-  closeText?: string;
+  readonly buttonColor?: ThemePalette;
+  readonly closeText?: string;
 }
 
 /**
@@ -13,33 +14,27 @@ export interface DbxDialogContentFooterConfig {
 @Component({
   selector: 'dbx-dialog-content-footer',
   template: `
-    <button mat-raised-button [color]="buttonColor" (click)="closeClicked()">{{ closeText }}</button>
+    <button mat-raised-button [color]="buttonColorSignal()" (click)="closeClicked()">{{ closeTextSignal() }}</button>
   `,
   host: {
     class: 'dbx-dialog-content-footer'
-  }
+  },
+  standalone: true,
+  imports: [MatButton],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDialogContentFooterComponent implements OnDestroy {
-  @Input()
-  closeText = 'Close';
+export class DbxDialogContentFooterComponent {
+  readonly config = input<Maybe<DbxDialogContentFooterConfig>>();
 
-  @Input()
-  buttonColor: ThemePalette = undefined;
+  readonly closeText = input<Maybe<string>>();
+  readonly buttonColor = input<Maybe<ThemePalette>>();
 
-  @Output()
-  readonly close = new EventEmitter<void>();
+  readonly closeTextSignal = computed(() => this.closeText() ?? this.config()?.closeText ?? 'Close');
+  readonly buttonColorSignal = computed(() => this.buttonColor() ?? this.config()?.buttonColor ?? undefined);
 
-  @Input()
-  set config(config: Maybe<DbxDialogContentFooterConfig>) {
-    this.closeText = config?.closeText ?? 'Close';
-    this.buttonColor = config?.buttonColor ?? undefined;
-  }
+  readonly close = output<void>();
 
   closeClicked() {
-    this.close.emit(undefined);
-  }
-
-  ngOnDestroy(): void {
-    this.close.complete();
+    this.close.emit();
   }
 }

@@ -10,14 +10,13 @@ import { DbxSectionPageComponent } from './section.page.component';
 import { DbxIntroActionSectionComponent } from './section.intro.component';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
-const declarations = [DbxSectionHeaderComponent, DbxSectionPageComponent, DbxSectionComponent, DbxSubSectionComponent, DbxIntroActionSectionComponent];
+const importsAndExports = [DbxSectionHeaderComponent, DbxSectionPageComponent, DbxSectionComponent, DbxSubSectionComponent, DbxIntroActionSectionComponent];
 
 /**
- * Module for container-type components.
+ * Module for dbx-section components.
  */
 @NgModule({
-  imports: [CommonModule, DbxRouterAnchorModule, MatButtonModule, MatRippleModule, MatIconModule],
-  declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxSectionLayoutModule {}

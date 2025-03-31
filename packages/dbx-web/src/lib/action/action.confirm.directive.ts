@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit, inject, input } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
@@ -12,7 +12,7 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
   /**
    * Optionally set the readyValue passed to the instance.
    */
-  readyValue?: T;
+  readonly readyValue?: T;
 }
 
 /**
@@ -28,10 +28,9 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
 export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  @Input('dbxActionConfirm')
-  override config?: Maybe<DbxActionConfirmConfig<T>>;
+  readonly dbxActionConfirm = input<DbxActionConfirmConfig<T>>();
 
-  private _sourceSubscription = new SubscriptionObject();
+  private readonly _sourceSubscription = new SubscriptionObject();
 
   ngOnInit(): void {
     this._sourceSubscription.subscription = this.source.triggered$.subscribe(() => {
@@ -45,7 +44,7 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
 
   protected override _handleDialogResult(result: boolean): boolean {
     if (result) {
-      this.source.readyValue(this.config?.readyValue as unknown as T);
+      this.source.readyValue(this.dbxActionConfirm()?.readyValue as unknown as T);
     } else {
       this.source.reject(undefined);
     }

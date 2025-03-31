@@ -7,7 +7,7 @@ import { DbxButtonModule } from '../../button';
 import { DbxPromptModule } from './../../interaction';
 import { DbxReadableErrorModule } from '../../error';
 
-export const importsAndExports = [DbxActionUIRouterTransitionSafetyDirective, DbxActionUIRouterTransitionSafetyDialogComponent];
+const importsAndExports = [DbxActionUIRouterTransitionSafetyDirective, DbxActionUIRouterTransitionSafetyDialogComponent];
 
 /**
  * Provides the DbxActionUIRouterTransitionSafetyDirective.

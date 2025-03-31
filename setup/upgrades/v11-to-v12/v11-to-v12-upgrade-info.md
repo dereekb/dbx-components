@@ -210,3 +210,40 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 - `dbxActionValueOnTrigger` has changed `dbxActionValueOnTriggerModified` to `dbxActionValueOnTriggerIsModified`, but also has added `dbxActionValueOnTriggerIsEqual`
 - `dbxActionPopover` has changed `dbxActionPopoverModified` to `dbxActionPopoverIsModified`, but also has added `dbxActionPopoverIsEqual`
 - `dbxActionDialog` has changed `dbxActionDialogModified` to `dbxActionDialogIsModified`, but also has added `dbxActionDialogIsEqual`
+- `DbxPromptConfirmTypes` has been removed.
+- `DbxPromptBoxComponent` has been renamed to `DbxPromptBoxDirective`, and the `elevated` input renamed to `elevate`.
+
+#### Creating private effect()
+Some components might have private Signal effects that will raise the issue "_ is declared but its value is never read".
+
+Make the following changes:
+
+Add the following rules to `.eslintrc.json`:
+```
+  "no-unused-vars": "off",
+  "@typescript-eslint/no-unused-vars": [
+    "warn",
+    {
+      "args": "all",
+      "argsIgnorePattern": "^_",
+      "caughtErrors": "all",
+      "caughtErrorsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_",
+      "ignoreRestSiblings": true
+    }
+  ],
+```
+
+Also update `tsconfig.base.json`:
+
+```
+  "noUnusedLocals": false,
+```
+
+Then finally for .`vscode/settings.json`:
+
+```
+  "editor.showUnused": false,
+```
+
+https://stackoverflow.com/a/76049970

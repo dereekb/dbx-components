@@ -17,7 +17,18 @@
         "*.jsx"
       ],
       "rules": {
-        "no-unused-vars": "warn",
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          {
+            "args": "all",
+            "argsIgnorePattern": "^_",
+            "caughtErrors": "all",
+            "caughtErrorsIgnorePattern": "^_",
+            "varsIgnorePattern": "^_",
+            "ignoreRestSiblings": true
+          }
+        ],
         "import/no-duplicates": "error",
         "unused-imports/no-unused-imports": "error",
         "no-restricted-imports": [

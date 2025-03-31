@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { DbxPromptConfirmConfig, DbxPromptConfirmTypes, AbstractDialogDirective, DbxPromptConfirmComponent } from '../../interaction';
+import { DbxPromptConfirmConfig, AbstractDialogDirective, DbxPromptConfirmComponent } from '../../interaction';
 import { DbxErrorComponent } from '../../error/error.component';
 import { DbxActionErrorDirective } from '../../error/error.action.directive';
 import { DbxButtonComponent } from '../../button/button.component';
@@ -26,7 +26,6 @@ export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discar
 })
 export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
   readonly config: DbxPromptConfirmConfig = {
-    type: DbxPromptConfirmTypes.NORMAL,
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',
     confirmText: 'Stay',
