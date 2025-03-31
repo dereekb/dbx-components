@@ -37,7 +37,6 @@ export interface DbxLoadingComponentState {
   standalone: true
 })
 export class DbxLoadingComponent implements OnDestroy {
-
   private readonly _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
   readonly contextStream$: Observable<LoadingContextEvent> = this._context.pipe(switchMapLoadingContextStream());
 
@@ -47,7 +46,7 @@ export class DbxLoadingComponent implements OnDestroy {
   readonly error = input<Maybe<ErrorInput>>();
 
   readonly stateSignal = computed<DbxLoadingComponentState>(() => {
-    let loadingState = this.contextStreamSignal() as (DbxLoadingComponentState | undefined);
+    let loadingState = this.contextStreamSignal() as DbxLoadingComponentState | undefined;
 
     if (loadingState == null) {
       loadingState = {
@@ -83,5 +82,4 @@ export class DbxLoadingComponent implements OnDestroy {
   set context(context: Maybe<LoadingContext>) {
     this._context.next(context);
   }
-
 }

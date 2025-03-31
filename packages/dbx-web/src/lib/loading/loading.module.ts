@@ -10,4 +10,4 @@ const importsAndExports = [DbxLoadingComponent, DbxBasicLoadingComponent, DbxLoa
   imports: importsAndExports,
   exports: importsAndExports
 })
-export class DbxLoadingModule { }
+export class DbxLoadingModule {}

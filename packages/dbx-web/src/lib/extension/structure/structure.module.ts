@@ -11,4 +11,4 @@ const importsAndExports = [DbxBodyDirective, DbxStructureDirective];
   imports: importsAndExports,
   exports: importsAndExports
 })
-export class DbxStructureModule { }
+export class DbxStructureModule {}

@@ -10,7 +10,6 @@ import { ChangeDetectorRef, Directive, ElementRef, Injector, inject } from '@ang
   standalone: true
 })
 export class DbxStructureDirective {
-
   readonly injector = inject(Injector);
   readonly element = inject(ElementRef);
 
@@ -18,5 +17,4 @@ export class DbxStructureDirective {
    * @deprecated do not use cdRef here anymore. Rely on signals instead. Will be removed in the future.
    */
   readonly cdRef = inject(ChangeDetectorRef);
-
 }

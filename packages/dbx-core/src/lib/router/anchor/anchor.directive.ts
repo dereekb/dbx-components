@@ -2,7 +2,7 @@ import { skipFirstMaybe } from '@dereekb/rxjs';
 import { map, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
 import { computed, Directive, Input, OnDestroy } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
+import { ClickableAnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
 import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -23,7 +23,7 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     distinctUntilChanged()
   );
 
-  readonly type$: Observable<AnchorType> = combineLatest([this.disabled$, this.anchor$]).pipe(
+  readonly type$: Observable<ClickableAnchorType> = combineLatest([this.disabled$, this.anchor$]).pipe(
     delay(0),
     map(([disabled, anchor]) => anchorTypeForAnchor(anchor, disabled)),
     distinctUntilChanged(),

@@ -1,4 +1,4 @@
-import { anchorTypeForAnchor, ClickableAnchor, AnchorType } from '@dereekb/dbx-core';
+import { anchorTypeForAnchor, ClickableAnchor, ClickableAnchorType } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared/lorem';
 import { Component } from '@angular/core';
 import { AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig, DbxListViewMetaIconComponent } from '@dereekb/dbx-web';

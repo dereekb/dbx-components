@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, TrackByFu
 import { shareReplay, map, Observable, BehaviorSubject, switchMap } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
-import { AnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';
+import { ClickableAnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
 import { Maybe, SpaceSeparatedCssClasses, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './list.view.value.group';
@@ -88,7 +88,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   onClickItem(item: I) {
     // do not emit clicks for disabled items.
     if (!item.disabled) {
-      if (this.emitAllClicks || !item.anchor || anchorTypeForAnchor(item.anchor) === AnchorType.PLAIN) {
+      if (this.emitAllClicks || !item.anchor || anchorTypeForAnchor(item.anchor) === 'plain') {
         // only emit clicks for items with no anchor, or plain anchors.
         this.onClickValue(item.itemValue);
       }

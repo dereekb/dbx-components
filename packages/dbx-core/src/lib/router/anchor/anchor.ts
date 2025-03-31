@@ -7,27 +7,27 @@ import { Observable } from 'rxjs';
 import { DbxInjectionComponentConfig } from '../../injection/injection';
 
 export interface ClickableAnchor extends ClickableFunction, MousableFunction, ClickableUrl, Partial<SegueRef> {
-  disabled?: boolean;
-  selected?: boolean;
+  readonly disabled?: boolean;
+  readonly selected?: boolean;
 }
 
 /**
  * Title and an optional icon.
  */
 export interface IconAndTitle {
-  title: string;
-  icon?: Maybe<string>;
+  readonly title: string;
+  readonly icon?: Maybe<string>;
 }
 
 export interface ClickableAnchorLink extends ClickableAnchor, IconAndTitle {
   /**
    * Optional detail string/content.
    */
-  hint?: string;
+  readonly hint?: string;
   /**
    * Custom injection content for this link.
    */
-  content?: DbxInjectionComponentConfig;
+  readonly content?: DbxInjectionComponentConfig;
 }
 
 /**
@@ -36,11 +36,11 @@ export interface ClickableAnchorLink extends ClickableAnchor, IconAndTitle {
 export type ClickableAnchorLinkSegueRef = ClickableAnchorLink & SegueRef;
 
 export interface ClickableIconAnchorLink extends Omit<ClickableAnchorLink, 'title'> {
-  icon: string;
+  readonly icon: string;
 }
 
 export interface ClickableAnchorLinkTree extends ClickableAnchorLink {
-  children?: ClickableAnchorLinkTree[];
+  readonly children?: ClickableAnchorLinkTree[];
 }
 
 export type ExpandedClickableAnchorLinkTree = TreeNode<ClickableAnchorLinkTree>;
@@ -67,33 +67,31 @@ export function expandClickableAnchorLinkTree(link: ClickableAnchorLinkTree): Ex
  */
 export const expandClickableAnchorLinkTrees = expandFlattenTreeFunction<ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree>(expandClickableAnchorLinkTreeNode, flattenExpandedClickableAnchorLinkTree);
 
-export enum AnchorType {
-  /**
-   * When the anchor has no specific content but is not disabled.
-   *
-   * Is a passthrough for the content.
-   */
-  PLAIN = 0,
-  CLICKABLE = 1,
-  SREF = 2,
-  HREF = 3,
-  DISABLED = 4
-}
+/**
+ * Describes the Anchor type given a ClickableAnchor.
+ *
+ * - plain: When the anchor has no specific content but is not disabled. It is a passthrough for the content.
+ * - clickable: When the anchor has a click handler
+ * - sref: When the anchor has a SegueRef
+ * - href: When the anchor has a URL
+ * - disabled: When the anchor is disabled.
+ */
+export type ClickableAnchorType = 'plain' | 'clickable' | 'sref' | 'href' | 'disabled';
 
-export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: Maybe<boolean>): AnchorType {
-  let type: AnchorType = AnchorType.DISABLED;
+export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: Maybe<boolean>): ClickableAnchorType {
+  let type: ClickableAnchorType = 'disabled';
 
   if (!disabled && anchor) {
     if (anchor.disabled) {
-      type = AnchorType.DISABLED;
+      type = 'disabled';
     } else if (anchor.ref) {
-      type = AnchorType.SREF;
+      type = 'sref';
     } else if (anchor.onClick) {
-      type = AnchorType.CLICKABLE;
+      type = 'clickable';
     } else if (anchor.url) {
-      type = AnchorType.HREF;
+      type = 'href';
     } else {
-      type = AnchorType.PLAIN;
+      type = 'plain';
     }
   }
 
@@ -107,7 +105,7 @@ export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract readonly disabled: Maybe<boolean>;
   abstract readonly selected: Maybe<boolean>;
   abstract readonly anchor: Maybe<T>;
-  abstract readonly type$: Observable<AnchorType>;
+  abstract readonly type$: Observable<ClickableAnchorType>;
 }
 
 export function provideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {

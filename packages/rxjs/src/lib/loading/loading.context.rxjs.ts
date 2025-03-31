@@ -12,5 +12,5 @@ export function switchMapLoadingContextStream(): OperatorFunction<Maybe<LoadingC
       switchMap((x: Maybe<LoadingContext>) => (x != null ? x.stream$ : of(undefined)) as Observable<Maybe<LoadingContextEvent>>),
       filterMaybe()
     );
-  }
+  };
 }

@@ -4,6 +4,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { OnInit, OnDestroy, Directive, Input, inject, input, effect } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
 import { type Maybe } from '@dereekb/util';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxFormDisabledKey } from '../form/form';
 
 /**
@@ -82,22 +83,8 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
 
 @Directive()
 export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> implements OnInit, OnDestroy {
-  private readonly _config = new BehaviorSubject<Maybe<C>>(undefined);
+  readonly config = input<Maybe<C>>(undefined);
 
-  readonly currentConfig$ = this._config.asObservable();
-  readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
-
-  @Input()
-  get config(): Maybe<C> {
-    return this._config.value;
-  }
-
-  set config(config: Maybe<C>) {
-    this._config.next(config);
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._config.complete();
-  }
+  readonly currentConfig$ = toObservable(this.config);
+  readonly config$ = this.currentConfig$.pipe(filterMaybe(), shareReplay(1));
 }
