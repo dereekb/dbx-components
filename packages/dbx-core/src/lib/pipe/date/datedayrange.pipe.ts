@@ -2,7 +2,11 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DateRange, formatToDayRangeString } from '@dereekb/date';
 
-@Pipe({ name: 'dateDayRange' })
+@Pipe({
+  name: 'dateDayRange',
+  standalone: true,
+  pure: true
+})
 export class DateDayRangePipe implements PipeTransform {
   transform(input: Maybe<DateRange>, unavailable: string = 'Not Available'): string {
     if (input) {

@@ -7,9 +7,13 @@ import { toJsDate } from '@dereekb/date';
 /**
  * Pipe that takes in a date and appends the distance to it in parenthesis.
  */
-@Pipe({ name: 'dateFormatDistance', pure: false })
+@Pipe({
+  name: 'dateFormatDistance',
+  standalone: true,
+  pure: false
+})
 export class DateFormatDistancePipe implements PipeTransform {
-  private locale = inject(LOCALE_ID);
+  private readonly locale = inject(LOCALE_ID);
 
   transform(input: Maybe<DateOrDateString>, format: string, includeSeconds = false): Maybe<string> {
     if (input) {

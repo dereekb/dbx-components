@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
+import { MatIcon } from '@angular/material/icon';
 
 /**
  * Component used to style a section's header.
@@ -9,96 +10,94 @@ import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
   selector: 'dbx-section-header,.dbx-section-header',
   template: `
     <div class="dbx-section-header-content">
-      <ng-container *ngIf="showTitle">
-        <ng-container [ngSwitch]="h ?? 1">
-          <h1 *ngSwitchCase="1" class="dbx-section-header-content-title">
-            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-          </h1>
-          <h2 *ngSwitchCase="2" class="dbx-section-header-content-title">
-            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-          </h2>
-          <h3 *ngSwitchCase="3" class="dbx-section-header-content-title">
-            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-          </h3>
-          <h4 *ngSwitchCase="4" class="dbx-section-header-content-title">
-            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-          </h4>
-          <h5 *ngSwitchCase="5" class="dbx-section-header-content-title">
-            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-          </h5>
-        </ng-container>
+      @if (showTitleSignal()) {
+        @switch (headerConfigSignal().h ?? 1) {
+          @case (1) {
+            <h1 class="dbx-section-header-content-title">
+              <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+            </h1>
+          }
+          @case (2) {
+            <h2 class="dbx-section-header-content-title">
+              <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+            </h2>
+          }
+          @case (3) {
+            <h3 class="dbx-section-header-content-title">
+              <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+            </h3>
+          }
+          @case (4) {
+            <h4 class="dbx-section-header-content-title">
+              <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+            </h4>
+          }
+          @case (5) {
+            <h5 class="dbx-section-header-content-title">
+              <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+            </h5>
+          }
+        }
         <span class="spacer"></span>
-      </ng-container>
+      }
       <ng-content></ng-content>
     </div>
-    <p *ngIf="hint && !hintInline" class="dbx-section-hint dbx-hint">{{ hint }}</p>
+    <!-- Show Hint Not Inline -->
+    @if (headerConfigSignal().hint && !headerConfigSignal().hintInline) {
+      <p class="dbx-section-hint dbx-hint">{{ headerConfigSignal().hint }}</p>
+    }
     <ng-template #headerContentTitleTemplate>
-      <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+      @if (headerConfigSignal().icon) {
+        <mat-icon>{{ headerConfigSignal().icon }}</mat-icon>
+      }
       <span class="title-text">
-        {{ header }}
-        <span *ngIf="hint && hintInline" class="dbx-section-hint-inline dbx-hint">{{ hint }}</span>
+        {{ headerConfigSignal().header }}
+        <!-- Show Hint Inline -->
+        @if (headerConfigSignal().hint && headerConfigSignal().hintInline) {
+          <span class="dbx-section-hint-inline dbx-hint">{{ headerConfigSignal().hint }}</span>
+        }
       </span>
     </ng-template>
   `,
+  standalone: true,
+  imports: [MatIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[class.dbx-section-header-full-title]': 'onlyHeader',
-    '[class.dbx-section-header-padded]': 'paddedHeader'
+    '[class.dbx-section-header-full-title]': 'headerConfigSignal().onlyHeader',
+    '[class.dbx-section-header-padded]': 'headerConfigSignal().paddedHeader'
   }
 })
 export class DbxSectionHeaderComponent {
-  @Input()
-  paddedHeader?: Maybe<boolean>;
+  readonly headerConfig = input<Maybe<DbxSectionHeaderConfig>>();
 
-  @Input()
-  h?: Maybe<DbxSectionHeaderHType>;
+  readonly h = input<Maybe<DbxSectionHeaderHType>>();
+  readonly paddedHeader = input<Maybe<boolean>>();
+  readonly header = input<Maybe<string>>();
+  readonly onlyHeader = input<Maybe<boolean>>();
+  readonly icon = input<Maybe<string>>();
+  readonly hint = input<Maybe<string>>();
+  readonly hintInline = input<Maybe<boolean>>();
 
-  @Input()
-  header?: Maybe<string>;
+  readonly hintInlineDefault = signal<Maybe<boolean>>(undefined);
 
-  @Input()
-  onlyHeader?: Maybe<boolean> = false;
+  readonly headerConfigSignal = computed(() => {
+    const headerConfig = this.headerConfig();
 
-  @Input()
-  icon?: Maybe<string>;
+    const config: DbxSectionHeaderConfig = {
+      h: this.h() ?? headerConfig?.h,
+      paddedHeader: this.paddedHeader() ?? headerConfig?.paddedHeader,
+      header: this.header() ?? headerConfig?.header,
+      onlyHeader: this.onlyHeader() ?? headerConfig?.onlyHeader,
+      icon: this.icon() ?? headerConfig?.icon,
+      hint: this.hint() ?? headerConfig?.hint,
+      hintInline: this.hintInline() ?? headerConfig?.hintInline ?? this.hintInlineDefault()
+    };
 
-  @Input()
-  hint?: Maybe<string>;
+    return config;
+  });
 
-  @Input()
-  hintInline?: Maybe<boolean>;
-
-  constructor() {}
-
-  @Input()
-  set headerConfig(headerConfig: Maybe<DbxSectionHeaderConfig>) {
-    if (headerConfig) {
-      if (headerConfig.h !== undefined) {
-        this.h = headerConfig.h;
-      }
-
-      if (headerConfig.header !== undefined) {
-        this.header = headerConfig.header;
-      }
-
-      if (headerConfig.onlyHeader !== undefined) {
-        this.onlyHeader = headerConfig.onlyHeader;
-      }
-
-      if (headerConfig.icon !== undefined) {
-        this.icon = headerConfig.icon;
-      }
-
-      if (headerConfig.hint !== undefined) {
-        this.hint = headerConfig.hint;
-      }
-
-      if (headerConfig.hintInline !== undefined) {
-        this.hintInline = headerConfig.hintInline;
-      }
-    }
-  }
-
-  get showTitle() {
-    return Boolean(this.header || this.icon);
-  }
+  readonly showTitleSignal = computed(() => {
+    const headerConfig = this.headerConfigSignal();
+    return Boolean(headerConfig.header || headerConfig.icon);
+  });
 }

@@ -1,20 +1,22 @@
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { ApplicationConfig, Injector } from '@angular/core';
-import { Category, StatesModule, UIRouter } from '@uirouter/angular';
+import { ApplicationConfig, importProvidersFrom, Injector } from '@angular/core';
+import { Category, provideUIRouter, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
-import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppAuthRouter, provideDbxAppContextState, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
+import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppAuthRouter, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from '@dereekb/dbx-form';
+import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS, defaultValidationMessages } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { STATES } from './app/app.router';
+import { FormlyModule } from '@ngx-formly/core';
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -110,6 +112,20 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // formly
+    importProvidersFrom(
+      FormlyModule.forRoot({
+        validationMessages: defaultValidationMessages()
+      })
+    ),
+    // ui-router
+    provideUIRouter({
+      useHash: false,
+      initial: { state: 'root' },
+      otherwise: { state: 'root' },
+      states: STATES,
+      config: routerConfigFn
+    }),
     // browser
     provideAnimations(),
     // ngRx
@@ -124,6 +140,7 @@ export const appConfig: ApplicationConfig = {
       dbxAnalyticsServiceConfigurationFactory
     }),
     // dbx-core
+    provideDbxAppEnviroment(environment),
     provideDbxScreenMediaService(),
     provideDbxAppContextState(),
     provideDbxUIRouterService(),
@@ -198,7 +215,8 @@ export const appConfig: ApplicationConfig = {
       },
       notifications: {
         appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
-      }
+      },
+      provideAnalyticsUserEventsListener: true
     }),
     provideDbxFirebaseLogin({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,

@@ -3,7 +3,11 @@ import { Maybe, DateOrDateString } from '@dereekb/util';
 import { formatDistance, isPast } from 'date-fns';
 import { ToJsDatePipe } from './tojsdate.pipe';
 
-@Pipe({ name: 'timeCountdownDistance', pure: false })
+@Pipe({
+  name: 'timeCountdownDistance',
+  standalone: true,
+  pure: false
+})
 export class TimeDistanceCountdownPipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, soonString: string = 'Soon', unavailable: string = 'Not Available'): string {
     if (input) {
@@ -23,7 +27,11 @@ export class TimeDistanceCountdownPipe implements PipeTransform {
   }
 }
 
-@Pipe({ name: 'timeDistance', pure: false })
+@Pipe({
+  name: 'timeDistance',
+  standalone: true,
+  pure: false
+})
 export class TimeDistancePipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, to?: Maybe<Date>, unavailable: string = 'Not Available'): string {
     if (input) {

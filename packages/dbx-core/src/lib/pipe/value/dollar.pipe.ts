@@ -6,7 +6,11 @@ import { dollarAmountString, type Maybe } from '@dereekb/util';
  *
  * Can provide a default string value to use when the input is null or undefined.
  */
-@Pipe({ name: 'dollarAmount' })
+@Pipe({
+  name: 'dollarAmount',
+  standalone: true,
+  pure: true
+})
 export class DollarAmountPipe implements PipeTransform {
   transform(input: Maybe<number>, defaultIfNull?: Maybe<string>): Maybe<string> {
     return defaultIfNull == null || input != null ? dollarAmountString(input) : defaultIfNull;

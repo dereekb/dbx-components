@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { DbxPromptComponent } from './prompt.component';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '../../button';
+import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
+import { Maybe } from '@dereekb/util';
 
 export interface DbxPromptConfirmConfig {
   readonly title?: string;
@@ -28,10 +29,10 @@ export interface DbxPromptConfirmConfig {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPromptConfirmComponent {
-  readonly config = input<DbxPromptConfirmConfig>({});
+  readonly config = input<Maybe<DbxPromptConfirmConfig>>({});
 
-  readonly confirmTextSignal = computed(() => this.config().confirmText || 'Confirm');
-  readonly cancelTextSignal = computed(() => this.config().cancelText || 'Cancel');
+  readonly confirmTextSignal = computed(() => this.config()?.confirmText || 'Confirm');
+  readonly cancelTextSignal = computed(() => this.config()?.cancelText || 'Cancel');
 
   readonly confirm = output<void>();
   readonly cancel = output<void>();

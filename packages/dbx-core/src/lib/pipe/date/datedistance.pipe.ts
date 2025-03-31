@@ -3,7 +3,11 @@ import { DateOrDateString, type Maybe } from '@dereekb/util';
 import { ToJsDatePipe } from './tojsdate.pipe';
 import { formatDateDistance } from '@dereekb/date';
 
-@Pipe({ name: 'dateDistance', pure: false })
+@Pipe({
+  name: 'dateDistance',
+  standalone: true,
+  pure: false
+})
 export class DateDistancePipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, inputTo?: Maybe<Date>, unavailable: string = 'Not Available'): string {
     if (input != null) {

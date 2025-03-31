@@ -4,9 +4,7 @@ import { DbxAppEnviroment } from './environment';
 /**
  * Service for accessing the app's environment details.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxAppEnviromentService {
   readonly environment = inject(DbxAppEnviroment);
 

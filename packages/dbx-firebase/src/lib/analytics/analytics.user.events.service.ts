@@ -9,16 +9,14 @@ import { DbxFirebaseAnalyticsUserSource } from './analytics.user.source';
 /**
  * Service that listens for DbxFirebaseAuthService changes and emits them a user events.
  */
-@Injectable({
-  providedIn: 'root'
-})
-export class DbxFirebaseAnalyticsUserEventsListener implements Initialized, Destroyable {
+@Injectable()
+export class DbxFirebaseAnalyticsUserEventsListenerService implements Initialized, Destroyable {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly dbxFirebaseAnalyticsUserSource = inject(DbxFirebaseAnalyticsUserSource);
   readonly dbxAnalyticsService = inject(DbxAnalyticsService);
 
-  private _loginSub = new SubscriptionObject();
-  private _logoutSub = new SubscriptionObject();
+  private readonly _loginSub = new SubscriptionObject();
+  private readonly _logoutSub = new SubscriptionObject();
 
   init(): void {
     this._loginSub.subscription = this.dbxFirebaseAuthService.onLogIn$.subscribe(() => {

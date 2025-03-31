@@ -6,7 +6,8 @@ import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 
 @Component({
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss']
+  styleUrls: ['./layout.component.scss'],
+  standalone: true
 })
 export class AppLayoutComponent {
   readonly dbxStyleService = inject(DbxStyleService);

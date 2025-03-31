@@ -22,7 +22,6 @@ import { MatIcon } from '@angular/material/icon';
 })
 export class DbxDialogContentCloseComponent {
   readonly padded = input<boolean>(true);
-
   readonly close = output<void>();
 
   closeClicked() {

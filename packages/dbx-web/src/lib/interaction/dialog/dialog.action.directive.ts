@@ -12,7 +12,8 @@ export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, M
  */
 @Directive({
   exportAs: 'dbxActionDialog',
-  selector: '[dbxActionDialog]'
+  selector: '[dbxActionDialog]',
+  standalone: true
 })
 export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);

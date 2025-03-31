@@ -1,9 +1,10 @@
-import { Observable, BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, inject } from '@angular/core';
+import { Observable, BehaviorSubject, Subscription } from 'rxjs';
+import { Directive, Input, OnDestroy, effect, inject, input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxMutableForm } from '../../form/form';
-import { LoadingState, isLoadingStateFinishedLoading } from '@dereekb/rxjs';
+import { LoadingState, ObservableOrValue, isLoadingStateFinishedLoading } from '@dereekb/rxjs';
 import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from './form.input.directive';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Used with a FormComponent to set the value from a LoadingState when the value is available.
@@ -15,41 +16,23 @@ import { dbxFormSourceObservableFromStream, DbxFormSourceDirectiveMode } from '.
 export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
   readonly form = inject(DbxMutableForm<T>, { host: true });
 
-  private readonly _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
+  readonly dbxFormLoadingSourceMode = input<Maybe<DbxFormSourceDirectiveMode>>();
+  readonly dbxFormLoadingSource = input<Maybe<ObservableOrValue<Maybe<Partial<T>>>>>();
 
-  @Input('dbxFormLoadingSourceMode')
-  get mode(): DbxFormSourceDirectiveMode {
-    return this._mode.value;
-  }
+  private readonly _setFormSourceObservableEffect = effect(() => {
+    const formSource = this.dbxFormLoadingSource();
+    const mode: DbxFormSourceDirectiveMode = this.dbxFormLoadingSourceMode() ?? 'reset';
 
-  set mode(mode: DbxFormSourceDirectiveMode) {
-    this._mode.next(mode);
-  }
+    let subscription: Maybe<Subscription>;
 
-  /**
-   * Sets a LoadingContext that is watched for the loading state.
-   */
-  @Input('dbxFormLoadingSource')
-  set obs(obs: Observable<LoadingState<T>>) {
-    this._setObs(obs);
-  }
-
-  private _setObs(inputObs: Observable<LoadingState<T>>): void {
-    let subscription;
-
-    if (inputObs) {
-      subscription = dbxFormSourceObservableFromStream(this.form.stream$, inputObs, this._mode).subscribe((x) => {
+    if (formSource) {
+      subscription = dbxFormSourceObservableFromStream(this.form.stream$, formSource, mode).subscribe((x) => {
         if (isLoadingStateFinishedLoading(x)) {
-          this.form.setValue(x.value);
+          this.form.setValue(x);
         }
       });
     }
 
     this.sub = subscription;
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._mode.complete();
-  }
+  });
 }

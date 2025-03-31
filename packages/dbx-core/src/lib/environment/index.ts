@@ -1,2 +1,3 @@
-export * from './service/environment';
-export * from './service/environment.service';
+export * from './environment';
+export * from './environment.service';
+export * from './environment.providers';

@@ -1,7 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
-@Pipe({ name: 'prettyjson' })
+@Pipe({
+  name: 'prettyjson',
+  standalone: true
+})
 export class PrettyJsonPipe implements PipeTransform {
   public static toPrettyJson(input: Maybe<unknown>, spacing: number = 2): Maybe<string> {
     let json: Maybe<string>;

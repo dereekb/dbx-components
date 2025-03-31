@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray } from '@dereekb/util';
+import { ArrayOrValue, asArray, Maybe } from '@dereekb/util';
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { FirebaseFunctionsMap } from '@dereekb/firebase';
 import { provideDbxFirebaseAuth, ProvideDbxFirebaseAuthConfig } from './auth//firebase.auth.providers';
@@ -11,6 +11,7 @@ import { provideDbxFirebaseDevelopment, ProvideDbxFirebaseDevelopmentConfig } fr
 import { provideDbxFirebaseNotifications, ProvideDbxFirebaseNotificationsConfig } from './modules/notification/notification.providers';
 import { provideDbxFirebaseModelContextService, ProvideDbxFirebaseModelContextServiceConfig } from './model/service/model.context.providers';
 import { provideDbxFirebaseModelTypesService, ProvideDbxFirebaseModelTypesServiceConfig } from './model/modules/model/model.types.providers';
+import { provideDbxFirebaseAnalyticsUserEventsListenerService } from './analytics';
 
 export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   // Required Configurations
@@ -42,6 +43,11 @@ export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = Fi
    * If not provided, provideDbxFirebaseNotifications() will not be provided/called.
    */
   readonly notifications?: ProvideDbxFirebaseNotificationsConfig;
+
+  /**
+   * If true, provideDbxFirebaseAnalyticsUserEventsListenerService() will be provided/called.
+   */
+  readonly provideAnalyticsUserEventsListener?: Maybe<boolean>;
 }
 
 /**
@@ -54,13 +60,17 @@ export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = Fi
  * @returns EnvironmentProviders for the DbxFirebase configuration.
  */
 export function provideDbxFirebase<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: ProvideDbxFirebaseConfig<T, M>) {
-  const { app, emulator, storage, auth, functions, firestores, modelContextService, modelTypesService, development, notifications } = config;
+  const { app, emulator, storage, auth, functions, firestores, modelContextService, modelTypesService, development, notifications, provideAnalyticsUserEventsListener } = config;
 
   const providers: EnvironmentProviders[] = [provideDbxFirebaseApp(app), provideDbxFirebaseEmulator(emulator), providedDbxFirebaseStorage(storage), provideDbxFirebaseAuth(auth), provideDbxFirebaseFunctions(functions), provideDbxFirebaseModelContextService(modelContextService), provideDbxFirebaseModelTypesService(modelTypesService)];
 
   asArray(firestores).forEach((firestore) => {
     providers.push(provideDbxFirestoreCollection(firestore));
   });
+
+  if (provideAnalyticsUserEventsListener) {
+    providers.push(provideDbxFirebaseAnalyticsUserEventsListenerService());
+  }
 
   if (development !== false) {
     providers.push(provideDbxFirebaseDevelopment(development ?? {}));

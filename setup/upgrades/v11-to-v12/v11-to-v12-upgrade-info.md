@@ -198,6 +198,18 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 #### Angular
 - Any "shared" modules, such as `DemoRootSharedModule`, need to be updated to import anything it exports. Prior these types of functions just exported, but now need an import declaration too for the same modules.
 
+#### Updating main.ts
+Previously, both `root.module.ts` and `root.firebase.module.ts` were used for configuring the app, but these have been replaced in favor of `root.app.config.ts` that uses the providers.
+
+`main.ts` now looks like:
+
+```
+...
+bootstrapApplication(UIView, appConfig)
+  .catch((err) => console.error(err));
+...
+```
+
 #### Breaking Changes
 - `TimerInstance` has been removed in favor of `makeTimer()`. The `timer()` function has been deprecated in favor of `makeTimer()`.
 - `DbxReadableErrorComponent` has been renamed to `DbxErrorComponent`.
@@ -213,7 +225,7 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 - `DbxPromptConfirmTypes` has been removed.
 - `DbxPromptBoxComponent` has been renamed to `DbxPromptBoxDirective`, and the `elevated` input renamed to `elevate`.
 
-#### Creating private effect()
+#### Creating private effect() calls
 Some components might have private Signal effects that will raise the issue "_ is declared but its value is never read".
 
 Make the following changes:
