@@ -2,8 +2,9 @@
   "name": "demo",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "apps/demo/src",
   "prefix": "app",
+  "sourceRoot": "apps/demo/src",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -18,10 +19,10 @@
       "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
+        "outputPath": "dist/apps/demo",
         "browser": "apps/demo/src/main.ts",
         "index": "apps/demo/src/index.html",
-        "polyfills": ["zone.js"],
-        "outputPath": "dist/apps/demo",
+        "polyfills": ["zone.js", "reflect-metadata"],
         "tsConfig": "apps/demo/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -35,7 +36,6 @@
           }
         ],
         "allowedCommonJsDependencies": ["core-js", "lodash", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
-        "externalDependencies": ["@angular/material/core"],
         "stylePreprocessorOptions": {
           "includePaths": ["packages", ""]
         },
@@ -118,6 +118,5 @@
       }
     }
   },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  "implicitDependencies": ["!util-test"]
 }

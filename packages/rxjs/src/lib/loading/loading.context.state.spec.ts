@@ -1,14 +1,13 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { LoadingStateContextInstance } from './loading.context.state.value';
+import { loadingStateContext, LoadingStateContext, MutableLoadingStateContext, SubscriptionObject } from '@dereekb/rxjs';
 import { isLoadingStateLoading, successResult } from './loading.state';
 import { delay, first, timeout, of } from 'rxjs';
 
-describe('LoadingStateContextInstance', () => {
+describe('loadingStateContext()', () => {
   describe('context', () => {
-    let context: LoadingStateContextInstance;
+    let context: MutableLoadingStateContext;
 
     beforeEach(() => {
-      context = new LoadingStateContextInstance();
+      context = loadingStateContext();
     });
 
     afterEach(() => {
@@ -103,7 +102,7 @@ describe('LoadingStateContextInstance', () => {
 
           expect(isLoadingStateLoading(state)).toBe(false);
 
-          const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoValue: true });
+          const context = loadingStateContext({ obs: of(state), showLoadingOnNoValue: true });
 
           context.stream$.pipe(first()).subscribe({
             next: ({ loading }) => {
@@ -121,7 +120,7 @@ describe('LoadingStateContextInstance', () => {
 
           expect(isLoadingStateLoading(state)).toBe(false);
 
-          const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoValue: false });
+          const context = loadingStateContext({ obs: of(state), showLoadingOnNoValue: false });
 
           context.stream$.pipe(first()).subscribe({
             next: (result) => {

@@ -128,10 +128,7 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
  */
 export function valueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
   return (obs: Observable<L>) => {
-    return obs.pipe(
-      filter(isLoadingStateWithDefinedValue),
-      map((x) => x.value as LoadingStateValue<L>)
-    );
+    return obs.pipe(map((x) => x.value as LoadingStateValue<L>));
   };
 }
 
@@ -221,7 +218,7 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
           // map the value
           mappedObs = of((state as LoadingStateWithDefinedValue<LoadingStateValue<L>>).value).pipe(
             operator,
-            map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>)),
+            map((value) => ({ ...state, value }) as unknown as LoadingStateWithValueType<L, O>),
             // if the operator does not return nearly instantly, then return the current state, minus a value
             timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as LoadingStateWithValueType<L, O>, 0)
           );

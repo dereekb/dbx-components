@@ -1,11 +1,12 @@
-import { ListLoadingStateContextInstance, successResult } from '@dereekb/rxjs';
+import { ListLoadingStateContext, MutableListLoadingStateContext } from './loading.context.state.list';
+import { listLoadingStateContext, successResult } from '@dereekb/rxjs';
 import { timeout, first, of } from 'rxjs';
 
-describe(' ListLoadingStateContextInstance', () => {
-  let context: ListLoadingStateContextInstance;
+describe('listLoadingStateContext()', () => {
+  let context: MutableListLoadingStateContext;
 
   beforeEach(() => {
-    context = new ListLoadingStateContextInstance();
+    context = listLoadingStateContext();
   });
 
   afterEach(() => {

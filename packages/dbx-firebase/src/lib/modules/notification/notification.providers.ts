@@ -47,16 +47,18 @@ export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotifi
     {
       provide: APP_INITIALIZER,
       useFactory: (dbxFirebaseNotificationItemWidgetService: DbxFirebaseNotificationItemWidgetService) => {
-        // register the default widget
-        if (config.defaultNotificationItemWidget !== false) {
-          const widget = config.defaultNotificationItemWidget ?? DbxFirebaseNotificationItemDefaultViewComponent;
+        return () => {
+          // register the default widget
+          if (config.defaultNotificationItemWidget !== false) {
+            const widget = config.defaultNotificationItemWidget ?? DbxFirebaseNotificationItemDefaultViewComponent;
 
-          dbxFirebaseNotificationItemWidgetService.registerDefaultWidget({
-            componentClass: widget
-          });
-        }
+            dbxFirebaseNotificationItemWidgetService.registerDefaultWidget({
+              componentClass: widget
+            });
+          }
+        };
       },
-      deps: [DbxFirebaseDevelopmentSchedulerService],
+      deps: [DbxFirebaseNotificationItemWidgetService],
       multi: true
     }
   ];

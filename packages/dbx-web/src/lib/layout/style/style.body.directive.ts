@@ -23,11 +23,18 @@ export class DbxStyleBodyDirective extends AbstractSubscriptionDirective {
   readonly styleClassNameSignal = this._styleClassNameSignal.asReadonly();
 
   ngOnInit(): void {
-    this.sub = this._styleService.styleClassName$.pipe(delay(0)).subscribe((style) => {
+    this.sub = this._styleService.styleClassName$.pipe(delay(0)).subscribe((newClassStyleToApply) => {
       const currentStyle = this._styleClassNameSignal();
-      currentStyle && this._renderer.removeClass(document.body, currentStyle);
-      style && this._renderer.addClass(document.body, style);
-      this._styleClassNameSignal.set(style);
+
+      if (currentStyle) {
+        this._renderer.removeClass(document.body, currentStyle);
+      }
+
+      if (newClassStyleToApply) {
+        this._renderer.addClass(document.body, newClassStyleToApply);
+      }
+
+      this._styleClassNameSignal.set(newClassStyleToApply);
     });
   }
 }

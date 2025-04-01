@@ -3,7 +3,7 @@ import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
 import { Output, EventEmitter, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
-import { type Maybe } from '@dereekb/util';
+import { Configurable, type Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
 
 export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
@@ -77,6 +77,7 @@ export type DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListV
 
 @Directive()
 export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> implements OnDestroy {
+
   @Output()
   selectionChange = new EventEmitter<ListSelectionState<T>>();
 
@@ -85,8 +86,9 @@ export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxL
   }
 
   protected override _buildListConfig(config: C): DbxListConfig<T, V> {
-    const result = super._buildListConfig(config);
-    result.onSelectionChange = (x) => this.selectionChange.next(x);
+    const result = super._buildListConfig(config) as Configurable<DbxListConfig<T, V>>;
+    result.onSelectionChange = ((x) => this.selectionChange.next(x));
     return result;
   }
+
 }

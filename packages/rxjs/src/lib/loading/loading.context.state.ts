@@ -1,109 +1,195 @@
-import { type Maybe, type Destroyable } from '@dereekb/util';
-import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, type Observable, of, combineLatestWith } from 'rxjs';
+import { type Maybe, type Destroyable, hasNonNullValue } from '@dereekb/util';
+import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, type Observable, of, combineLatestWith, filter } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
 import { filterMaybe } from '../rxjs/value';
-import { type LoadingContext, type LoadingContextEvent } from './loading.context';
-import { beginLoading, type LoadingState } from './loading.state';
+import { LoadingStateContextEvent, type LoadingContext, type LoadingContextEvent } from './loading.context';
+import { beginLoading, isLoadingStateLoading, type LoadingState } from './loading.state';
+import { valueFromFinishedLoadingState, valueFromLoadingState } from './loading.state.rxjs';
 
-export interface AbstractLoadingStateEvent<T = unknown> extends LoadingContextEvent {
-  value?: Maybe<T>;
+// MARK: New
+/**
+ * A LoadingContext that provides several accessors to a LoadingState<T> and corresponding LoadingContextEvent
+ */
+export interface LoadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent & S> extends LoadingContext<E> {
+  /**
+   * The current observable stream of the state observable.
+   */
+  readonly currentStateStream$: Observable<Maybe<Observable<Maybe<S>>>>;
+
+  /**
+   * The latest non-null observable stream of the state observable.
+   */
+  readonly stateStream$: Observable<Observable<Maybe<S>>>;
+
+  /**
+   * Current state.
+   */
+  readonly currentState$: Observable<Maybe<S>>;
+
+  /**
+   * Latest non-null state.
+   */
+  readonly state$: Observable<S>;
+
+  /**
+   * Observable for the current loading state from the event stream.
+   */
+  readonly loading$: Observable<boolean>;
+
+  /**
+   * The current value. Always provided, even while loading.
+   */
+  readonly currentValue$: Observable<Maybe<T>>;
+
+  /**
+   * The latest value from the most recent loaded state.
+   */
+  readonly valueAfterLoaded$: Observable<Maybe<T>>;
+
+  /**
+   * The latest non-null value from valueAfterLoaded$.
+   */
+  readonly value$: Observable<T>;
 }
 
-export interface AbstractLoadingEventForLoadingPairConfig<S extends LoadingState = LoadingState> {
+/**
+ * A LoadingStateContext that can be updated and destroyed.
+ */
+export interface MutableLoadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S> extends LoadingStateContext<T, S, E>, Destroyable {
+  /**
+   * Sets a new state observable.
+   *
+   * @param obs Observable
+   */
+  setStateObs(obs: Maybe<Observable<Maybe<S>>>): void;
+}
+
+/**
+ * Configuration for loadingStateContext().
+ */
+export interface LoadingStateContextConfig<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S> {
   /**
    * The initial observable.
    */
-  obs?: Observable<S>;
+  readonly obs?: Observable<Maybe<S>>;
   /**
-   * Whether or not to show loading if a value is defined.
+   * Whether or not to show loading if finished loading and the value is undefined.
+   *
+   * Defaults to false.
    */
-  showLoadingOnNoValue?: boolean;
+  readonly showLoadingOnUndefinedValue?: Maybe<boolean>;
+  /**
+   * Optional function to generate a LoadingContextEvent from a LoadingState and this config.
+   *
+   * @param state the current state
+   * @param config this config
+   * @returns the event to emit
+   */
+  readonly loadingEventForLoadingPair?: Maybe<(state: S, config: LoadingEventForLoadingPairConfigInput) => E>;
+
+  // MARK: Compat
+  /**
+   * Alias for showLoadingOnUndefinedValue.
+   *
+   * @deprecated Use showLoadingOnUndefinedValue instead.
+   */
+  readonly showLoadingOnNoValue?: Maybe<boolean>;
 }
 
-export interface AbstractLoadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent> {
-  readonly stateObs$: Observable<Maybe<Observable<S>>>;
-  readonly stateSubject$: Observable<Observable<S>>;
-  readonly state$: Observable<S>;
-  readonly stream$: Observable<E>;
-  readonly loading$: Observable<boolean>;
-}
+export type LoadingEventForLoadingPairConfigInput = Pick<LoadingStateContextConfig, 'showLoadingOnUndefinedValue'>;
 
-export type LoadingStateContextInstanceInputConfig<S, C> = Observable<S> | C;
+export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(state: S, input: LoadingEventForLoadingPairConfigInput): LoadingStateContextEvent<T> => {
+  const { showLoadingOnUndefinedValue } = input;
+  const { error, value } = state;
+  let loading: boolean = false;
+
+  if (!hasNonNullValue(error)) {
+    if (showLoadingOnUndefinedValue) {
+      loading = !hasNonNullValue(value);
+    } else {
+      loading = isLoadingStateLoading(state);
+    }
+  }
+
+  return {
+    loading,
+    error,
+    value
+  };
+};
+/**
+ * Input for loadingStateContext()
+ */
+export type LoadingStateContextInput<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S> = LoadingStateContextConfig<T, S, E> | LoadingStateContextConfig<T, S, E>['obs'];
 
 /**
- * Abstract LoadingContext implementation using LoadingState.
+ * Creates a new LoadingStateContext from the input.
+ 
+ * @param input LoadingStateContextInput
+ * @returns LoadingStateContext
  */
-export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends AbstractLoadingStateEvent<T> = AbstractLoadingStateEvent<T>, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>> implements AbstractLoadingStateContext<T, S, E>, LoadingContext, Destroyable {
-  private _stateSubject = new BehaviorSubject<Maybe<Observable<S>>>(undefined);
-  private _config = new BehaviorSubject<Maybe<C>>(undefined);
+export function loadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(input?: LoadingStateContextInput<T, S, E>): MutableLoadingStateContext<T, S, E> {
+  const _config: Maybe<LoadingStateContextConfig<T, S, E>> = input && isObservable(input) ? { obs: input } : input;
+  const loadingEventForLoadingPair = _config?.loadingEventForLoadingPair ?? DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION;
+  const showLoadingOnUndefinedValue = _config?.showLoadingOnUndefinedValue ?? _config?.showLoadingOnNoValue ?? false;
+  const config: LoadingStateContextConfig<T, S, E> = _config ?? {};
 
-  readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
-  readonly stateSubject$ = this._stateSubject.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
-  readonly state$ = this.stateSubject$.pipe(
-    switchMap((x) => x),
-    shareReplay(1)
-  );
-  readonly stateObs$: Observable<Maybe<Observable<S>>> = this._stateSubject.asObservable();
+  const _stateStream = new BehaviorSubject<Maybe<Observable<Maybe<S>>>>(_config?.obs);
 
-  readonly stream$: Observable<E> = this.stateObs$.pipe(
-    mergeMap((obs) => {
+  const currentStateStream$: Observable<Maybe<Observable<Maybe<S>>>> = _stateStream.asObservable();
+  const stateStream$: Observable<Observable<Maybe<S>>> = currentStateStream$.pipe(filterMaybe());
+
+  const eventStream$: Observable<E> = currentStateStream$.pipe(
+    switchMap((obs) => {
+      let result: Observable<E>;
+
       if (obs) {
-        return obs.pipe(
+        result = obs.pipe(
+          filterMaybe(),
           // If the observable did not pass a value immediately, we start with the start value.
-          timeoutStartWith<S>(beginLoading() as S),
-          combineLatestWith(this.config$),
-          map(([x, config]) => this.loadingEventForLoadingPair(x, config))
-        );
+          timeoutStartWith(beginLoading() as S),
+          map((x) => loadingEventForLoadingPair(x, { showLoadingOnUndefinedValue }))
+        ) as Observable<E>;
       } else {
-        return of(beginLoading() as E);
+        result = of(beginLoading() as E);
       }
+
+      return result;
     }),
-    distinctUntilChanged((a: E, b: E) => {
-      return a.loading === b.loading && a.error === b.error && a.value === b.value;
-    }),
+    distinctUntilChanged((a: E, b: E) => a.loading === b.loading && a.error === b.error && a?.value === b?.value),
     shareReplay(1)
   );
 
-  /**
-   * Emits when the input state has changed.
-   */
-  readonly stateChange$: Observable<void> = this._stateSubject.pipe(map(() => undefined));
-  readonly loading$: Observable<boolean> = this.stream$.pipe(
-    map((x) => x.loading),
-    shareReplay(1)
-  );
+  const currentState$: Observable<Maybe<S>> = currentStateStream$.pipe(switchMap((x) => (x ? x : of(undefined))));
+  const state$: Observable<S> = currentState$.pipe(filterMaybe(), shareReplay(1));
 
-  constructor(config?: LoadingStateContextInstanceInputConfig<S, C>) {
-    let nextConfig: C;
+  const loading$: Observable<boolean> = eventStream$.pipe(map(isLoadingStateLoading));
 
-    if (isObservable(config)) {
-      nextConfig = {
-        obs: config
-      } as C;
-    } else {
-      nextConfig =
-        config ??
-        ({
-          showLoadingOnNoValue: false
-        } as C);
-    }
+  const currentValue$: Observable<Maybe<T>> = state$.pipe(valueFromLoadingState(), shareReplay(1));
+  const valueAfterLoaded$: Observable<Maybe<T>> = state$.pipe(valueFromFinishedLoadingState(), shareReplay(1));
+  const value$: Observable<T> = valueAfterLoaded$.pipe(filterMaybe(), shareReplay(1));
 
-    this._config.next(nextConfig);
-
-    // Only set once
-    if (nextConfig.obs) {
-      this.setStateObs(nextConfig.obs);
-    }
+  function setStateObs(obs: Maybe<Observable<Maybe<S>>>) {
+    _stateStream.next(obs);
   }
 
-  protected abstract loadingEventForLoadingPair(state: S, config: C): E;
-
-  setStateObs(state: Maybe<Observable<S>>): void {
-    this._stateSubject.next(state);
+  function destroy() {
+    _stateStream.complete();
   }
 
-  destroy(): void {
-    this._stateSubject.complete();
-    this._config.complete();
-  }
+  const loadingStateContext: MutableLoadingStateContext<T, S, E> = {
+    currentStateStream$,
+    stateStream$,
+    stream$: eventStream$,
+    currentState$,
+    state$,
+    loading$,
+    currentValue$,
+    valueAfterLoaded$,
+    value$,
+    setStateObs,
+    destroy
+  };
+
+  return loadingStateContext;
 }

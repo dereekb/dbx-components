@@ -72,8 +72,10 @@ export function provideDbxFirebaseDevelopment(config: ProvideDbxFirebaseDevelopm
     {
       provide: APP_INITIALIZER,
       useFactory: (scheduler: DbxFirebaseDevelopmentSchedulerService) => {
-        // initialize the scheduler
-        scheduler.init();
+        return () => {
+          // initialize the scheduler
+          scheduler.init();
+        };
       },
       deps: [DbxFirebaseDevelopmentSchedulerService],
       multi: true

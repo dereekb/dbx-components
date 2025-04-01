@@ -13,7 +13,9 @@ export function provideDbxFirebaseAnalyticsUserEventsListenerService() {
     {
       provide: APP_INITIALIZER,
       useFactory: (dbxFirebaseAnalyticsUserEventsListenerService: DbxFirebaseAnalyticsUserEventsListenerService) => {
-        dbxFirebaseAnalyticsUserEventsListenerService.init();
+        return () => {
+          dbxFirebaseAnalyticsUserEventsListenerService.init();
+        };
       },
       deps: [DbxFirebaseAnalyticsUserEventsListenerService],
       multi: true

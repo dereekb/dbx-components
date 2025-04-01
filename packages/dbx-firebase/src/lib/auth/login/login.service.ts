@@ -73,7 +73,7 @@ export interface DbxFirebaseAuthLoginProviderAssets {
  */
 @Injectable()
 export class DbxFirebaseAuthLoginService {
-  readonly loginTermsComponentClass = inject<Type<unknown>>(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) ?? DbxFirebaseLoginTermsSimpleComponent;
+  readonly loginTermsComponentClass = inject<Type<unknown>>(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN, { optional: true }) ?? DbxFirebaseLoginTermsSimpleComponent;
 
   private readonly _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
   private readonly _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();

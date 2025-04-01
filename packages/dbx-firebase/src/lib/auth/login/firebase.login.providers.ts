@@ -50,16 +50,19 @@ export function provideDbxFirebaseLogin(config: ProvideDbxFirebaseLoginConfig): 
       provide: DBX_FIREBASE_LOGIN_TERMS_OF_SERVICE_URLS_CONFIG,
       useValue: loginTerms
     },
+    DbxFirebaseAuthLoginService,
     // service initialization
     {
       provide: APP_INITIALIZER,
       useFactory: (dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) => {
-        // initialize the scheduler
-        if (enabledLoginMethods === true) {
-          dbxFirebaseAuthLoginService.setEnableAll();
-        } else {
-          dbxFirebaseAuthLoginService.enable(enabledLoginMethods);
-        }
+        return () => {
+          // initialize the scheduler
+          if (enabledLoginMethods === true) {
+            dbxFirebaseAuthLoginService.setEnableAll();
+          } else {
+            dbxFirebaseAuthLoginService.enable(enabledLoginMethods);
+          }
+        };
       },
       deps: [DbxFirebaseAuthLoginService],
       multi: true

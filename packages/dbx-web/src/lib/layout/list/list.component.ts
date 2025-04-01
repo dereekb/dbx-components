@@ -1,7 +1,7 @@
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive, inject } from '@angular/core';
 import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading } from '@dereekb/rxjs';
+import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 
@@ -24,42 +24,42 @@ export interface DbxListConfig<T = unknown, V extends DbxListView<T> = DbxListVi
   /**
    * Whether or not to hide the list content when it is an empty list.
    */
-  hideOnEmpty?: boolean;
+  readonly hideOnEmpty?: boolean;
 
   /**
    * Whether or not this list should scroll upward from the bottom, like a message list.
    */
-  invertedList?: boolean;
+  readonly invertedList?: boolean;
 
   /**
    * Distance to scroll.
    */
-  scrollDistance?: number;
+  readonly scrollDistance?: number;
 
   /**
    * Number of ms to throttle scrolling events.
    */
-  throttle?: Milliseconds;
+  readonly throttle?: Milliseconds;
 
   /**
    * (Optional) onClick handler
    */
-  onClick?: (value: T) => void;
+  readonly onClick?: (value: T) => void;
 
   /**
    * (Optional) onSelection handler
    */
-  onSelectionChange?: (selection: ListSelectionState<T>) => void;
+  readonly onSelectionChange?: (selection: ListSelectionState<T>) => void;
 
   /**
    * (Optional) handler function to load more items.
    */
-  loadMore?: DbxListLoadMoreHandler;
+  readonly loadMore?: DbxListLoadMoreHandler;
 
   /**
    * Default selection list value. If not defined, will default to 'view'.
    */
-  defaultSelectionMode?: Maybe<DbxListSelectionMode>;
+  readonly defaultSelectionMode?: Maybe<DbxListSelectionMode>;
 }
 
 /**
@@ -104,7 +104,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   private _selectionModeSub = new SubscriptionObject();
   private _onSelectionChangeSub = new SubscriptionObject();
 
-  readonly context = new ListLoadingStateContextInstance<T, S>({ showLoadingOnNoValue: false });
+  readonly context = listLoadingStateContext<T, S>({ showLoadingOnNoValue: false });
   readonly isEmpty$ = this.context.isEmpty$;
   readonly isEmptyLoading$ = this.context.isEmptyLoading$;
   readonly isEmptyAndNotLoading$ = this.context.isEmptyAndNotLoading$;
@@ -210,7 +210,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     shareReplay(1)
   );
 
-  readonly hideContent$: Observable<boolean> = this.context.stateChange$.pipe(
+  readonly hideContent$: Observable<boolean> = this.context.currentStateStream$.pipe(
     switchMap(() =>
       this.context.state$.pipe(
         filter((x) => isLoadingStateFinishedLoading(x)),

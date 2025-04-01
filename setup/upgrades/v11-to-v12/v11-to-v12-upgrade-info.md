@@ -195,6 +195,9 @@ All `.forRoot()` methods have been deprecated in favor of provider functions.
 - `DbxAppAuthRouterStateModule` was replaced with `provideDbxAppAuthRouterStateModule()`
 - `DbxAppContextStateModule` was replaced with `provideDbxAppContextState()`.
 
+#### Polyfills.js
+- Remove this file. Polyfills are now handled by the build configuration in `project.json`.
+
 #### Angular
 - Any "shared" modules, such as `DemoRootSharedModule`, need to be updated to import anything it exports. Prior these types of functions just exported, but now need an import declaration too for the same modules.
 
@@ -211,6 +214,8 @@ bootstrapApplication(UIView, appConfig)
 ```
 
 #### Breaking Changes
+- `LoadingStateContextInstance` usage has been replaced with `loadingStateContext()`.
+- `ListLoadingStateContextInstance` usage has been replaced with `listLoadingStateContext()`.
 - `TimerInstance` has been removed in favor of `makeTimer()`. The `timer()` function has been deprecated in favor of `makeTimer()`.
 - `DbxReadableErrorComponent` has been renamed to `DbxErrorComponent`.
 - `DbxErrorComponent` `popoverOpen` event renamed to `popoverOpened`.
