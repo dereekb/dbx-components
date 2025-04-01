@@ -2,38 +2,43 @@ import { arrayToMap, filterUniqueValues } from '../array';
 import { makeKeyPairs, makeValuesGroupMap, restoreOrderWithValues, separateValues } from '../grouping';
 import { type Maybe } from '../value/maybe.type';
 
-export enum RelationChange {
+/**
+ * Type of relation change to perform on a collection of models.
+ */
+export const RelationChange = {
   /**
    * Adds a model to the relation. If the model already exists in
    * the relation, the new one is used.
    *
    * Use INSERT to merge the two values together.
    */
-  ADD = 'add',
+  ADD: 'add' as const,
   /**
    * Sets the relation to be equal to the input.
    */
-  SET = 'set',
+  SET: 'set' as const,
   /**
    * Variation of SET that performs REMOVE on the collection, and then follows it up with INSERT.
    *
    * This can allow the modification function to behave selectively with the items targeted for removal.
    */
-  REMOVE_AND_INSERT = 'remove_and_insert',
+  REMOVE_AND_INSERT: 'remove_and_insert' as const,
   /**
    * Removes a model from the relation.
    */
-  REMOVE = 'remove',
+  REMOVE: 'remove' as const,
   /**
    * Updates an existing relation, if it exists.
    * The existing object is merged with the update object.
    */
-  UPDATE = 'update',
+  UPDATE: 'update' as const,
   /**
    * Updates an existing relation, if it exists, or creates a new one.
    */
-  INSERT = 'insert'
-}
+  INSERT: 'insert' as const
+} as const;
+
+export type RelationChangeType = (typeof RelationChange)[keyof typeof RelationChange];
 
 export type RelationString = string;
 export type RelationObject = RelationString | object;
@@ -79,13 +84,13 @@ export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T
  * For instance, a string collection of keys.
  */
 export class ModelRelationUtility {
-  static modifyStringCollection(current: Maybe<RelationString[]>, change: RelationChange, mods: RelationString[]): RelationString[] {
+  static modifyStringCollection(current: Maybe<RelationString[]>, change: RelationChangeType, mods: RelationString[]): RelationString[] {
     return ModelRelationUtility.modifyCollection(current, change, mods, { readKey: (x) => x, merge: (a, b) => b });
   }
 
-  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChange, mods: T[], config: UpdateRelationConfig<T>): T[];
-  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChange, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
-  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChange, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T>): T[];
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { mask, readKey } = config;
 
     current = current ?? []; //init current if not set.
@@ -111,7 +116,7 @@ export class ModelRelationUtility {
     return restoreOrderWithValues(current, [...currentRetain, ...modifiedResults], { readKey });
   }
 
-  private static _modifyCollectionWithoutMask<T extends RelationObject>(current: T[], change: RelationChange, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
+  private static _modifyCollectionWithoutMask<T extends RelationObject>(current: T[], change: RelationChangeType, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { readKey, merge, shouldRemove } = config;
 
     const readType = (config as UpdateMiltiTypeRelationConfig<T>).readType;
