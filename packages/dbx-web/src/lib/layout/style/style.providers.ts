@@ -1,5 +1,6 @@
 import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
-import { DBX_STYLE_DEFAULT_CONFIG_TOKEN, DbxStyleConfig, DbxStyleService } from './style.service';
+import { DBX_STYLE_DEFAULT_CONFIG_TOKEN, DbxStyleService } from './style.service';
+import { DbxStyleConfig } from './style';
 
 /**
  * Configuration for provideDbxStyleService().

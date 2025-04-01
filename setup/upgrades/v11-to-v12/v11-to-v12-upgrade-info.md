@@ -214,16 +214,19 @@ bootstrapApplication(UIView, appConfig)
 - `TimerInstance` has been removed in favor of `makeTimer()`. The `timer()` function has been deprecated in favor of `makeTimer()`.
 - `DbxReadableErrorComponent` has been renamed to `DbxErrorComponent`.
 - `DbxErrorComponent` `popoverOpen` event renamed to `popoverOpened`.
-- `DbxBarButtonComponent` has been renamed to `DbxProgressBarButtonComponent`.
-- `DbxSpinnerButtonComponent` has been renamed to `DbxProgressSpinnerButtonComponent`.
+- `DbxBarButtonComponent` has been renamed to `DbxProgressBarButtonComponent`. Added the selector `dbx-progress-bar-button` to join `dbx-bar-button`.
+- `DbxSpinnerButtonComponent` has been renamed to `DbxProgressSpinnerButtonComponent`. Added the selector `dbx-progress-spinner-button` to join `dbx-spinner-button`.
 - `DbxAnchorLinkComponent` has been renamed to `DbxLinkComponent`.
 - `AnchorType` has been renamed to `ClickableAnchorType`. and is no longer an enum.
 - `dbxActionForm` has changed `dbxActionFormModified` to `dbxActionFormIsModified`, but also has added `dbxActionFormIsEqual`
 - `dbxActionValueOnTrigger` has changed `dbxActionValueOnTriggerModified` to `dbxActionValueOnTriggerIsModified`, but also has added `dbxActionValueOnTriggerIsEqual`
+- the input `formDisabledOnWorking` has been renamed to `dbxActionFormDisabledOnWorking`
+- the input `dbxActionFormValidator` has been renamed to `dbxActionFormIsValid`
 - `dbxActionPopover` has changed `dbxActionPopoverModified` to `dbxActionPopoverIsModified`, but also has added `dbxActionPopoverIsEqual`
 - `dbxActionDialog` has changed `dbxActionDialogModified` to `dbxActionDialogIsModified`, but also has added `dbxActionDialogIsEqual`
 - `DbxPromptConfirmTypes` has been removed.
 - `DbxPromptBoxComponent` has been renamed to `DbxPromptBoxDirective`, and the `elevated` input renamed to `elevate`.
+- Previously `dbxActionSnackbar` could be added to a template just by calling `dbxActionSnackbar`, but it should be added using `[dbxActionSnackbar]` instead.
 
 #### Creating private effect() calls
 Some components might have private Signal effects that will raise the issue "_ is declared but its value is never read".

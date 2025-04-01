@@ -10,7 +10,7 @@ import { NgClass, NgStyle } from '@angular/common';
 import { filterMaybe } from '@dereekb/rxjs';
 
 @Component({
-  selector: 'dbx-spinner-button',
+  selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
   imports: [MatButton, MatIcon, MatProgressSpinner, NgClass, NgStyle],
@@ -67,11 +67,8 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
     shareReplay(1)
   );
 
-  readonly _buttonCssSignal = toSignal(this.buttonCss$);
-  readonly buttonCssSignal = this._buttonCssSignal;
-
-  readonly _spinnerSizeSignal = toSignal(this.spinnerSize$);
-  readonly spinnerSizeSignal = this._spinnerSizeSignal;
+  readonly buttonCssSignal = toSignal(this.buttonCss$);
+  readonly spinnerSizeSignal = toSignal(this.spinnerSize$);
 
   readonly showTextSignal = computed(() => {
     const options = this.optionsSignal();

@@ -1,9 +1,11 @@
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { splitCommaSeparatedStringToSet, type Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay, BehaviorSubject, delay, combineLatest } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay, delay, combineLatest } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, Input, OnDestroy, ChangeDetectorRef, OnInit, inject } from '@angular/core';
-import { DbxStyleConfig, DbxStyleService } from './style.service';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { Directive, OnDestroy, OnInit, inject, signal, input } from '@angular/core';
+import { DbxStyleService } from './style.service';
+import { DbxStyleConfig, DbxStyleClass, DbxStyleName } from './style';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Used to denote which app style to use for all children below this.
@@ -14,62 +16,42 @@ import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-c
   selector: '[dbxSetStyle]',
   host: {
     class: 'dbx-style-root',
-    '[class]': 'outputStyle'
+    '[class]': 'outputStyleClassSignal()'
   },
   standalone: true
 })
 export class DbxSetStyleDirective extends AbstractSubscriptionDirective implements OnDestroy, OnInit {
-  private readonly _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
-  private readonly _style = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _styleService = inject(DbxStyleService);
 
-  readonly styleService = inject(DbxStyleService);
-  readonly cdRef = inject(ChangeDetectorRef);
+  /**
+   * The input DbxStyleName to style the host element with.
+   */
+  readonly dbxSetStyle = input<DbxStyleName>();
 
-  readonly style$ = this._style.pipe(filterMaybe());
-  readonly suffixes$ = this._suffixes.pipe(distinctUntilChanged(), map(splitCommaSeparatedStringToSet));
+  /**
+   * The input suffixes to allow to be applied to the
+   */
+  readonly suffixes = input<Maybe<string>>(undefined);
+
+  /**
+   * The output style class to apply to the host element.
+   */
+  readonly outputStyleClassSignal = signal<DbxStyleClass>('');
+
+  readonly style$ = toObservable(this.dbxSetStyle).pipe(filterMaybe());
+  readonly suffixes$ = toObservable(this.suffixes).pipe(distinctUntilChanged(), map(splitCommaSeparatedStringToSet));
 
   readonly config$: Observable<DbxStyleConfig> = combineLatest([this.style$, this.suffixes$]).pipe(
     map(([style, suffixes]) => ({ style, suffixes })),
     shareReplay(1)
   );
 
-  readonly outputStyle$ = this.styleService.getStyleWithConfig(this.config$);
-
-  outputStyle = '';
-
-  constructor() {
-    super();
-  }
+  readonly styleClass$: Observable<DbxStyleClass> = this._styleService.getStyleClassWithConfig(this.config$);
 
   ngOnInit(): void {
-    this.styleService.setConfig(this.config$);
-    this.sub = this.outputStyle$.pipe(delay(0)).subscribe((style) => {
-      this.outputStyle = style;
-      safeDetectChanges(this.cdRef);
+    this._styleService.setConfig(this.config$);
+    this.sub = this.styleClass$.pipe(delay(0)).subscribe((style) => {
+      this.outputStyleClassSignal.set(style);
     });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._suffixes.complete();
-    this._style.complete();
-  }
-
-  @Input('dbxSetStyle')
-  get style(): string {
-    return this._style.value ?? '';
-  }
-
-  set style(style: string) {
-    this._style.next(style);
-  }
-
-  @Input()
-  get suffixes(): Maybe<string> {
-    return this._suffixes.value;
-  }
-
-  set suffixes(suffixes: Maybe<string>) {
-    this._suffixes.next(suffixes);
   }
 }

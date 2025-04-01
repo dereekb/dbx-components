@@ -1,4 +1,4 @@
-<button class="dbx-base-button dbx-spinner-button" #button mat-button [type]="optionsSignal()?.type" [color]="optionsSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="optionsSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
+<button class="dbx-base-button dbx-progress-spinner-button" #button mat-button [type]="optionsSignal()?.type" [color]="optionsSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="optionsSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
   @if (showTextSignal()) {
     @if (optionsSignal()?.buttonIcon) {
       <mat-icon class="mat-button-icon" [class.is-mat-icon]="!optionsSignal()?.buttonIcon?.fontSet" [class.working]="showProgressSignal()" [ngClass]="optionsSignal()?.buttonIcon?.customClass" [fontSet]="optionsSignal()?.buttonIcon?.fontSet!" [fontIcon]="optionsSignal()?.buttonIcon?.fontIcon!" [color]="optionsSignal()?.buttonIcon?.color!" [svgIcon]="optionsSignal()?.buttonIcon?.svgIcon!">

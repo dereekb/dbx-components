@@ -20,11 +20,8 @@ export abstract class AbstractDbxSegueAnchorDirective {
     shareReplay(1)
   );
 
-  protected readonly _anchorSignal = toSignal(this.anchor$, { initialValue: undefined });
-  protected readonly _templateConfigSignal = toSignal(this.templateConfig$, { initialValue: undefined });
+  readonly anchorSignal = toSignal(this.anchor$, { initialValue: undefined });
+  readonly templateConfigSignal = toSignal(this.templateConfig$, { initialValue: undefined });
 
-  readonly anchorSignal = this._anchorSignal;
-  readonly targetSignal = computed(() => this._anchorSignal()?.target);
-
-  readonly templateConfigSignal = this._templateConfigSignal;
+  readonly targetSignal = computed(() => this.anchorSignal()?.target);
 }

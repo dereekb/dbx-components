@@ -29,11 +29,11 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
   readonly lockSet = new LockSet();
 
   /**
-   * Whether or not to disable the form while working.
+   * Whether or not to disable the form while the action is working.
    *
    * Defaults to true.
    */
-  readonly dbxActionFormDisabledWhileWorking = input<Maybe<boolean>>(true);
+  readonly dbxActionFormDisabledOnWorking = input<Maybe<boolean>>(true);
 
   /**
    * Optional validator that checks whether or not the value is
@@ -173,7 +173,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
       });
 
     // Watch the working state and disable form while working
-    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, toObservable(this.dbxActionFormDisabledWhileWorking)])
+    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, toObservable(this.dbxActionFormDisabledOnWorking)])
       .pipe(
         map(([isWorking, disableFormWhileWorking]: [boolean, Maybe<boolean>]) => disableFormWhileWorking !== false && isWorking),
         distinctUntilChanged()

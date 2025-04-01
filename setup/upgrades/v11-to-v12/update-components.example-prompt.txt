@@ -8,8 +8,9 @@ The updates follow the following rules:
 - since we are using signals, add changeDetection: ChangeDetectionStrategy.OnPush to the @Component configuration
 - BehaviorSubjects should only be converted to signals if they were only used in the template using the `async` pipe and value set via @Input()
 - signal variables should be declared as private readonly with an underscore prefix and the Signal suffix. e.g. `private readonly _internalSignal = signal<number>(0);`
-- signal variable names have the Signal suffix. e.g. readonly internalSignal = this._internalSignal;
-- public signals of private signals can be redeclared as the private signal. e.g. `readonly internalSignal = this._internalSignal;`
+- signal variable names have the Signal suffix. e.g. readonly internalSignal = this._internalSignal.asReadonly();
+- signals created via toSignal() or computed() can be made public directly.
+- public signals of private signals should be exposed using the private signal's .asReadonly() method. e.g. `readonly internalSignal = this._internalSignal.asReadonly();`. This does not apply to signals created via toSignal(...) as they are already readonly.
 - public signals that are computed from private signals should use computed(). e.g. `readonly internalSignal = computed(() => !this._internalSignal());`
 - input signals should not have the Signal suffix. e.g. `readonly block = input<Maybe<boolean>>();`
 - input signals should typically use Maybe<...> if the @Input being replaced is optional. e.g. `readonly block = input<Maybe<boolean>>();` that replaces `@Input() block?: boolean;`

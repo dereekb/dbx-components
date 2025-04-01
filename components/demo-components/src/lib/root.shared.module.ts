@@ -96,7 +96,8 @@ const ANGULAR_MATERIAL_MODULES = [
   PortalModule,
   ScrollingModule,
   // Other Modules
-  FlexLayoutModule
+  FlexLayoutModule,
+  UIRouterModule
 ];
 
 const DBX_MODULES = [DbxStructureModule, DbxReadableErrorModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];

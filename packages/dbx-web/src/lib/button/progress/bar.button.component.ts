@@ -10,7 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
 
 @Component({
-  selector: 'dbx-progress-bar-button',
+  selector: 'dbx-progress-bar-button,dbx-bar-button',
   templateUrl: './bar.button.component.html',
   styleUrls: ['./bar.button.component.scss', './shared.button.component.scss'],
   imports: [MatButton, MatIcon, MatProgressBar, NgClass, NgStyle],
@@ -24,6 +24,5 @@ export class DbxProgressBarButtonComponent extends AbstractProgressButtonDirecti
     shareReplay(1)
   );
 
-  readonly _buttonCssSignal = toSignal(this.buttonCss$);
-  readonly buttonCssSignal = this._buttonCssSignal;
+  readonly buttonCssSignal = toSignal(this.buttonCss$);
 }

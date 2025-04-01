@@ -24,9 +24,9 @@ export enum DbxButtonDisplayType {
 @Component({
   selector: 'dbx-button',
   template: `
-    <dbx-spinner-button (btnClick)="clickButton()" [options]="btnOptions">
+    <dbx-progress-spinner-button (btnClick)="clickButton()" [options]="btnOptions">
       <ng-content></ng-content>
-    </dbx-spinner-button>
+    </dbx-progress-spinner-button>
   `,
   providers: provideDbxButton(DbxButtonComponent),
   standalone: true,

@@ -41,9 +41,9 @@ export class DbxFirebaseLoginEmailContentComponent {
   private readonly _recoveryFormValueSignal = signal<Maybe<DbxFirebaseEmailRecoveryFormValue>>(undefined);
   private readonly _emailModeSignal = signal<DbxFirebaseLoginEmailContentMode>('login');
 
-  readonly emailFormValueSignal = this._emailFormValueSignal;
-  readonly recoveryFormValueSignal = this._recoveryFormValueSignal;
-  readonly emailModeSignal = this._emailModeSignal;
+  readonly emailFormValueSignal = this._emailFormValueSignal.asReadonly();
+  readonly recoveryFormValueSignal = this._recoveryFormValueSignal.asReadonly();
+  readonly emailModeSignal = this._emailModeSignal.asReadonly();
 
   readonly forgotAnchor: ClickableAnchor = {
     onClick: () => {
@@ -82,8 +82,8 @@ export class DbxFirebaseLoginEmailContentComponent {
   readonly handleLoginAction: WorkUsingObservable<DbxFirebaseEmailFormValue> = (value: DbxFirebaseEmailFormValue) => {
     // TODO(signals): double check that this performs as we want to.
 
-    this.emailFormValueSignal.set(value);
-    this.recoveryFormValueSignal.set({ email: value.username }); // cache value for recovery
+    this._emailFormValueSignal.set(value);
+    this._recoveryFormValueSignal.set({ email: value.username }); // cache value for recovery
 
     let result;
 
@@ -108,8 +108,8 @@ export class DbxFirebaseLoginEmailContentComponent {
   }
 
   readonly handleRecoveryAction: WorkUsingContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
-    this.recoveryFormValueSignal.set(value);
-    this.emailFormValueSignal.set({ username: value.email, password: '' });
+    this._recoveryFormValueSignal.set(value);
+    this._emailFormValueSignal.set({ username: value.email, password: '' });
     context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email));
   };
 

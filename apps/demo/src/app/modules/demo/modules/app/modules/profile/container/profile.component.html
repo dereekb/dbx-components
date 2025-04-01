@@ -9,7 +9,7 @@
     </dbx-content-box>
     <dbx-content-box [wide]="true">
       <dbx-section header="Information" dbxAction dbxActionAutoTrigger fastTrigger dbxActionEnforceModified [dbxActionHandler]="handleUpdateProfile" hint="Change your profile information.">
-        <demo-profile-form [formDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isProfileModified"></demo-profile-form>
+        <demo-profile-form [dbxActionFormDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isProfileModified"></demo-profile-form>
         <dbx-error dbxActionError></dbx-error>
         <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
         <div *dbxActionHasSuccess="3000" class="dbx-success" dbxActionSuccess>Saved Changes</div>

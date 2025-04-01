@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { computed, Directive, input, Input } from '@angular/core';
 import { DbxThemeColor, dbxColorBackground } from './style';
 import { type Maybe } from '@dereekb/util';
 
@@ -8,15 +8,11 @@ import { type Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxColor]',
   host: {
-    '[class]': 'cssClass'
+    '[class]': 'cssClassSignal()'
   },
   standalone: true
 })
 export class DbxColorDirective {
-  cssClass = '';
-
-  @Input()
-  set dbxColor(dbxColor: Maybe<DbxThemeColor | ''>) {
-    this.cssClass = dbxColorBackground(dbxColor);
-  }
+  readonly dbxColor = input<Maybe<DbxThemeColor | ''>>();
+  readonly cssClassSignal = computed(() => dbxColorBackground(this.dbxColor()));
 }

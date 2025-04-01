@@ -77,7 +77,7 @@ describe('FormActionDirective', () => {
     });
   });
 
-  // todo: test formDisabledOnWorking
+  // todo: test dbxActionFormDisabledOnWorking
 });
 
 @Component({

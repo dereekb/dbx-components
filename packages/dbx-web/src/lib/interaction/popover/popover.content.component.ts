@@ -27,8 +27,7 @@ export class DbxPopoverContentComponent implements OnDestroy {
   private readonly _height = new BehaviorSubject<string>('');
   readonly height$ = this._height.asObservable().pipe(throttleTime(100, undefined, { leading: true, trailing: true }));
 
-  private readonly _heightSignal = toSignal(this.height$);
-  readonly heightSignal = this._heightSignal;
+  readonly heightSignal = toSignal(this.height$);
 
   onResized(event: ResizedEvent): void {
     this._height.next(`${event.newRect.height}px`);

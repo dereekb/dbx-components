@@ -50,7 +50,7 @@ export class DocCustomItemListViewItemComponent extends AbstractDbxValueListView
   readonly lorem = LOREM;
 
   get anchorType() {
-    return AnchorType[anchorTypeForAnchor(this.item.anchor)];
+    return anchorTypeForAnchor(this.item.anchor);
   }
 
   get name() {

@@ -1,4 +1,4 @@
-<button class="dbx-base-button dbx-bar-button" mat-button [type]="optionsSignal()?.type" [color]="optionsSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="optionsSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
+<button class="dbx-base-button dbx-progress-bar-button" mat-button [type]="optionsSignal()?.type" [color]="optionsSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="optionsSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
   @if (optionsSignal()?.buttonIcon) {
     <mat-icon class="mat-button-icon" [class.is-mat-icon]="!optionsSignal()?.buttonIcon?.fontSet!" [ngClass]="optionsSignal()?.buttonIcon?.customClass!" [fontSet]="optionsSignal()?.buttonIcon?.fontSet!" [fontIcon]="optionsSignal()?.buttonIcon?.fontIcon!" [color]="optionsSignal()?.buttonIcon?.color!" [svgIcon]="optionsSignal()?.buttonIcon?.svgIcon!" [inline]="optionsSignal()?.buttonIcon?.inline!">
       {{ optionsSignal()?.buttonIcon?.fontSet! ? '' : optionsSignal()?.buttonIcon?.fontIcon! }}

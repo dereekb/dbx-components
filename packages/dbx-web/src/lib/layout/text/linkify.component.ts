@@ -45,8 +45,7 @@ export class DbxLinkifyComponent implements OnDestroy {
     shareReplay(1)
   );
 
-  readonly _linkifiedBodySignal = toSignal(this.linkifiedBody$);
-  readonly linkifiedBodySignal = this._linkifiedBodySignal;
+  readonly linkifiedBodySignal = toSignal(this.linkifiedBody$);
 
   ngOnDestroy(): void {
     this._text.complete();

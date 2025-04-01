@@ -5,7 +5,6 @@ import { first } from 'rxjs';
 
 @Component({
   templateUrl: './prompt.component.html',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionPromptComponent {

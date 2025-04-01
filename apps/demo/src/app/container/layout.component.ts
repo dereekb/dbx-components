@@ -1,12 +1,17 @@
-import { DbxStyleService } from '@dereekb/dbx-web';
-import { ClickableAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
+import { DbxAnchorComponent, DbxBodyDirective, DbxButtonSpacerDirective, DbxStyleDirective, DbxStyleService } from '@dereekb/dbx-web';
+import { ClickableAnchor, DbxAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { UIView } from '@uirouter/angular';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
+  imports: [UIView, DbxBodyDirective, DbxStyleDirective, MatToolbar, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatIcon],
   standalone: true
 })
 export class AppLayoutComponent {
