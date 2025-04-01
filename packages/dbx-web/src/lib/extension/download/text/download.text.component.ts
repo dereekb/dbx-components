@@ -7,7 +7,12 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { DownloadTextContent } from './download.text';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { DbxLoadingComponent } from '../../../loading/loading.component';
+import { NgTemplateOutlet } from '@angular/common';
+import { DbxButtonComponent } from '../../../button/button.component';
+import { DbxActionModule } from '../../../action/action.module';
+import { DbxButtonSpacerDirective } from '../../../button';
 
 /**
  * DbxStructureDirective used specifically on the body of the app.
@@ -16,6 +21,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
   templateUrl: './download.text.component.html',
   selector: 'dbx-download-text-view',
   standalone: true,
+  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective {
@@ -61,8 +67,6 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
 
   readonly contentData$ = this.content$.pipe(map((x) => x?.content));
 
-  readonly context = loadingStateContext({ obs: this.contentLoadingState$ });
-
   readonly fileName$ = this.content$.pipe(
     map((x) => x?.name ?? 'File'),
     shareReplay(1)
@@ -87,6 +91,15 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  readonly contentSignal = toSignal(this.content$);
+  readonly contentDataSignal = toSignal(this.contentData$);
+
+  readonly fileNameSignal = toSignal(this.fileName$);
+  readonly fileUrlSignal = toSignal(this.fileUrl$);
+  readonly downloadReadySignal = toSignal(this.downloadReady$);
+
+  readonly context = loadingStateContext({ obs: this.contentLoadingState$ });
 
   readonly handleCopyToClipboard: WorkUsingObservable = () => {
     return this.content$.pipe(

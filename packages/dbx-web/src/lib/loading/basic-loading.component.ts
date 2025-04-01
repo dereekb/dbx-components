@@ -9,6 +9,7 @@ import { DbxThemeColor } from '../layout/style/style';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxErrorComponent } from '../error/error.component';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
+import { NgTemplateOutlet } from '@angular/common';
 
 /**
  * DbxBasicLoadingComponent loading state.
@@ -21,7 +22,7 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
 @Component({
   selector: 'dbx-basic-loading',
   templateUrl: './basic-loading.component.html',
-  imports: [DbxErrorComponent, DbxLoadingProgressComponent],
+  imports: [DbxErrorComponent, DbxLoadingProgressComponent, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

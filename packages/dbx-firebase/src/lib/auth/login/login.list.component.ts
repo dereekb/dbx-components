@@ -4,7 +4,6 @@ import { DbxFirebaseLoginMode, FirebaseLoginMethodType, FirebaseLoginMethodCateg
 import { Component, Input, OnDestroy, Type, computed, inject, input } from '@angular/core';
 import { containsStringAnyCase, Maybe, ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { NgFor, NgIf, AsyncPipe } from '@angular/common';
 
 export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionComponentConfig & Pick<DbxFirebaseAuthLoginProvider, 'loginMethodType'>;
 
@@ -24,7 +23,7 @@ export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionCompo
     class: 'dbx-firebase-login-list'
   },
   standalone: true,
-  imports: [NgFor, NgIf, AsyncPipe, DbxInjectionComponent]
+  imports: [DbxInjectionComponent]
 })
 export class DbxFirebaseLoginListComponent {
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);

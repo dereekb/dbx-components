@@ -3,18 +3,18 @@ import { DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerF
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap } from 'rxjs';
-import { Component, EventEmitter, inject, signal, computed, Signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, EventEmitter, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DbxFirebaseLoginContext } from './login.context';
 import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
 import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
-import { NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonModule, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseEmailFormComponent } from './login.email.form.component';
 import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
-import { DbxFormActionModule, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
@@ -25,7 +25,7 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
 @Component({
   templateUrl: './login.email.content.component.html',
   standalone: true,
-  imports: [NgIf, NgSwitch, NgSwitchCase, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, NgTemplateOutlet, MatButtonModule, DbxActionModule, DbxFormActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent, DbxFormSourceDirective],
+  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent, DbxFormSourceDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseLoginEmailContentComponent {

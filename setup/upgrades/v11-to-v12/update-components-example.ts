@@ -120,7 +120,7 @@ import { AbstractDbxAnchorDirective, DbxInjectionComponent, DbxInjectionComponen
 import { type Maybe } from '@dereekb/util';
 import { map, distinctUntilChanged, shareReplay, BehaviorSubject } from 'rxjs';
 import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
-import { NgIf, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, NgTemplateOutlet, AsyncPipe } from '@angular/common';
+import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -160,7 +160,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
     </ng-template>
   `,
   standalone: true,
-  imports: [NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, NgTemplateOutlet, AsyncPipe, DbxInjectionComponent],
+  imports: [NgClass, NgTemplateOutlet, DbxInjectionComponent],
   host: {
     class: 'd-inline dbx-anchor',
     'dbx-anchor-block': 'block()'

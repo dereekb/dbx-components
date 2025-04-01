@@ -2,7 +2,6 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
 import { DbxSectionComponent } from './section.component';
 import { Maybe } from '@dereekb/util';
 import { MatButton } from '@angular/material/button';
-import { NgSwitch, NgSwitchCase } from '@angular/common';
 
 /**
  * Component used to format content that displays an intro until a button is pressed.

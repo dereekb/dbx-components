@@ -4,7 +4,6 @@ import { ArrayOrValue, type Maybe } from '@dereekb/util';
 import { DbxInjectionContextDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseLoginListComponent } from './login.list.component';
 import { DbxFirebaseLoginContextDirective } from './login.context.directive';
-import { NgIf } from '@angular/common';
 
 /**
  * Pre-configured login component that displays all configured login types.
@@ -12,7 +11,7 @@ import { NgIf } from '@angular/common';
 @Component({
   selector: 'dbx-firebase-login',
   standalone: true,
-  imports: [NgIf, DbxInjectionContextDirective, DbxFirebaseLoginContextDirective, DbxFirebaseLoginListComponent],
+  imports: [DbxInjectionContextDirective, DbxFirebaseLoginContextDirective, DbxFirebaseLoginListComponent],
   template: `
     <ng-container *dbxInjectionContext dbxFirebaseLoginContext>
       <dbx-firebase-login-list [providerTypes]="providerTypes()" [omitProviderTypes]="omitProviderTypes()" [providerCategories]="providerCategories()" [loginMode]="loginMode()"></dbx-firebase-login-list>

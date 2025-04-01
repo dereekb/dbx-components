@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, TrackByFunction } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, Input, OnDestroy, TrackByFunction } from '@angular/core';
 import { DbxInjectionArrayEntry } from './injection.array';
 import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponent } from './injection.component';
@@ -12,31 +12,14 @@ import { AsObservablePipe } from '../pipe/async/asobservable.pipe';
 @Component({
   selector: 'dbx-injection-array',
   template: `
-    <ng-container *ngFor="let entry of entries$ | async; trackBy: trackByKeyFn">
-      <dbx-injection [config]="entry.injectionConfig | asObservable | async"></dbx-injection>
-    </ng-container>
+    @for (entry of entries(); track entry.key) {
+      <dbx-injection [config]="entry.injectionConfig"></dbx-injection>
+    }
   `,
-  imports: [DbxInjectionComponent, NgFor, AsObservablePipe, AsyncPipe],
+  imports: [DbxInjectionComponent, NgFor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxInjectionArrayComponent implements OnDestroy {
-  private readonly _entries = new BehaviorSubject<DbxInjectionArrayEntry[]>([]);
-
-  readonly entries$ = this._entries.asObservable();
-
-  readonly trackByKeyFn: TrackByFunction<DbxInjectionArrayEntry> = (index, item) => item.key;
-
-  ngOnDestroy(): void {
-    this._entries.complete();
-  }
-
-  @Input()
-  get entries(): DbxInjectionArrayEntry[] {
-    return this._entries.getValue();
-  }
-
-  set entries(entries: Maybe<DbxInjectionArrayEntry[]>) {
-    this._entries.next(entries || []);
-  }
+export class DbxInjectionArrayComponent {
+  readonly entries = input<Maybe<DbxInjectionArrayEntry[]>>(undefined);
 }

@@ -1,10 +1,10 @@
 import { BehaviorSubject, combineLatest, map, Observable, of, shareReplay } from 'rxjs';
-import { Component, Input, OnDestroy, inject } from '@angular/core';
+import { signal, Component, Input, OnDestroy, inject, computed } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
-import { NgIf, AsyncPipe } from '@angular/common';
 import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Component that displays an anchor and a span with the title.
@@ -12,10 +12,14 @@ import { MatIcon, MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'dbx-anchor-content',
   standalone: true,
-  imports: [NgIf, AsyncPipe, MatIcon],
+  imports: [MatIcon],
   template: `
-    <mat-icon class="dbx-icon-spacer" *ngIf="icon$ | async">{{ icon$ | async }}</mat-icon>
-    <span *ngIf="title$ | async">{{ title$ | async }}</span>
+    @if (iconSignal()) {
+      <mat-icon class="dbx-icon-spacer">{{ iconSignal() }}</mat-icon>
+    }
+    @if (titleSignal()) {
+      <span>{{ titleSignal() }}</span>
+    }
   `,
   host: {
     class: 'dbx-anchor-content'
@@ -32,8 +36,10 @@ export class DbxAnchorContentComponent implements OnDestroy {
     shareReplay(1)
   );
 
-  readonly icon$ = this.anchor$.pipe(map((x) => x?.icon));
-  readonly title$ = this.anchor$.pipe(map((x) => x?.title));
+  readonly anchorSignal = toSignal(this.anchor$);
+
+  readonly iconSignal = computed(() => this.anchorSignal()?.icon);
+  readonly titleSignal = computed(() => this.anchorSignal()?.title);
 
   @Input()
   set anchor(anchor: Maybe<Partial<ClickableAnchorLink>>) {

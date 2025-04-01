@@ -58,6 +58,8 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
    */
   readonly dbxActionFormMapValue = input<Maybe<DbxActionFormMapValueFunction<T, O>>>();
 
+  readonly dbxActionFormDisabledOnWorking$ = toObservable(this.dbxActionFormDisabledOnWorking);
+
   readonly isValidFunction$ = toObservable(this.dbxActionFormIsValid).pipe(
     map((x) => x ?? (() => of(true))),
     shareReplay(1)
@@ -173,7 +175,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
       });
 
     // Watch the working state and disable form while working
-    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, toObservable(this.dbxActionFormDisabledOnWorking)])
+    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, this.dbxActionFormDisabledOnWorking$])
       .pipe(
         map(([isWorking, disableFormWhileWorking]: [boolean, Maybe<boolean>]) => disableFormWhileWorking !== false && isWorking),
         distinctUntilChanged()

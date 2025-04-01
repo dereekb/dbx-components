@@ -1,8 +1,8 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
-import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest, switchMap } from 'rxjs';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injection';
 import { Initialized, Destroyable, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
-import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
+import { MaybeObservableOrValue, ObservableOrValueGetter, SubscriptionObject, filterMaybe, maybeValueFromObservableOrValueGetter, skipFirstMaybe, valueFromObservableOrValue } from '@dereekb/rxjs';
 
 /**
  * Instance used by components to inject content based on the configuration into the view.
@@ -10,31 +10,31 @@ import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 export class DbxInjectionInstance<T> implements Initialized, Destroyable {
   private readonly _subscriptionObject = new SubscriptionObject();
 
-  private readonly _config = new BehaviorSubject<Maybe<DbxInjectionComponentConfig<T>>>(undefined);
-  private readonly _template = new BehaviorSubject<Maybe<DbxInjectionTemplateConfig<T>>>(undefined);
+  private readonly _config = new BehaviorSubject<Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>>>(undefined);
+  private readonly _template = new BehaviorSubject<Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>>>(undefined);
 
   private readonly _content = new BehaviorSubject<Maybe<ViewContainerRef>>(undefined);
   private readonly _componentRef = new BehaviorSubject<Maybe<ComponentRef<T>>>(undefined);
 
   private readonly _injector: Injector;
 
-  readonly config$ = this._config.pipe(distinctUntilChanged());
-  readonly template$ = this._template.pipe(distinctUntilChanged());
+  readonly config$ = this._config.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged());
+  readonly template$ = this._template.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged());
   readonly content$ = this._content.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
-  get config(): Maybe<DbxInjectionComponentConfig<T>> {
+  get config(): Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>> {
     return this._config.value;
   }
 
-  set config(config: Maybe<DbxInjectionComponentConfig<T>>) {
+  set config(config: Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>>) {
     this._config.next(config);
   }
 
-  get template(): Maybe<DbxInjectionTemplateConfig<T>> {
+  get template(): Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>> {
     return this._template.value;
   }
 
-  set template(template: Maybe<DbxInjectionTemplateConfig<T>>) {
+  set template(template: Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>>) {
     this._template.next(template);
   }
 

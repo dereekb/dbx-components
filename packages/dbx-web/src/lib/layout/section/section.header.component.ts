@@ -2,6 +2,7 @@ import { Component, computed, input, ChangeDetectionStrategy, signal } from '@an
 import { type Maybe } from '@dereekb/util';
 import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
 import { MatIcon } from '@angular/material/icon';
+import { NgTemplateOutlet } from '@angular/common';
 
 /**
  * Component used to style a section's header.
@@ -60,7 +61,7 @@ import { MatIcon } from '@angular/material/icon';
     </ng-template>
   `,
   standalone: true,
-  imports: [MatIcon],
+  imports: [MatIcon, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.dbx-section-header-full-title]': 'headerConfigSignal().onlyHeader',

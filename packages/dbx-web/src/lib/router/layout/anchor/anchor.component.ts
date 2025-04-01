@@ -1,8 +1,8 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
-import { Component, TemplateRef, OnDestroy, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { NgTemplateOutlet, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
+import { NgTemplateOutlet, NgClass } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';
 import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
@@ -14,7 +14,7 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
   selector: 'dbx-anchor, [dbx-anchor]',
   templateUrl: './anchor.component.html',
   standalone: true,
-  imports: [NgTemplateOutlet, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, DbxInjectionComponent],
+  imports: [NgTemplateOutlet, NgClass, DbxInjectionComponent],
   host: {
     class: 'd-inline dbx-anchor',
     'dbx-anchor-block': 'block()'

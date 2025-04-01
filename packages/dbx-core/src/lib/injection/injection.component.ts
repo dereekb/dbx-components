@@ -1,8 +1,9 @@
-import { Component, ViewChild, ViewContainerRef, Input } from '@angular/core';
+import { Component, ViewChild, ViewContainerRef, Input, input, viewChild, effect } from '@angular/core';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet } from '@angular/common';
+import { ObservableOrValueGetter } from '@dereekb/rxjs';
 
 /**
  * Component that injects content based on the configuration into the view.
@@ -16,18 +17,13 @@ import { NgTemplateOutlet } from '@angular/common';
   standalone: true
 })
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
-  @Input()
-  set config(config: Maybe<DbxInjectionComponentConfig<T>>) {
-    this.setConfig(config);
-  }
+  readonly content = viewChild('content', { read: ViewContainerRef });
 
-  @Input()
-  set template(template: Maybe<DbxInjectionTemplateConfig<T>>) {
-    this.setTemplate(template);
-  }
+  readonly config = input<Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>>>();
+  readonly template = input<Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>>>();
 
-  @ViewChild('content', { static: true, read: ViewContainerRef })
-  set content(content: Maybe<ViewContainerRef>) {
-    this.setContent(content);
-  }
+  private readonly _contentEffect = effect(() => this.setContent(this.content()));
+
+  private readonly _configEffect = effect(() => this.setConfig(this.config()));
+  private readonly _templateEffect = effect(() => this.setTemplate(this.template()));
 }
