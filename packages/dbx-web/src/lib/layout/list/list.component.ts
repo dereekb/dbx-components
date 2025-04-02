@@ -1,11 +1,44 @@
+import { InfiniteScrollDirective, InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, BehaviorSubject, first, distinctUntilChanged } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
-import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext } from '@dereekb/rxjs';
+import { DbxInjectionComponent, DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
+import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { DbxLoadingComponent } from '../../loading/loading.component';
 
+// MARK: DbxListInternalContentDirective
+/**
+ * Used internally by DbxListComponent
+ */
+@Directive({
+  selector: '[dbxListInternalContent]',
+  host: {
+    class: 'd-block dbx-list-content',
+    '[class.dbx-list-content-hidden]': 'hide()'
+  },
+  standalone: true
+})
+export class DbxListInternalContentDirective {
+  private readonly parent = inject(DbxListComponent);
+
+  readonly elementRef = inject(ElementRef);
+
+  readonly hide = input<Maybe<boolean>>(false);
+
+  constructor() {
+    this.parent.setInternalContent(this);
+  }
+
+  @HostListener('scroll', ['$event'])
+  onScrollEvent($event: Event): void {
+    const position = ($event.target as Element).scrollTop;
+    this.parent.contentScrolled.emit(position);
+  }
+}
+
+// MARK: DbxList
 /**
  * Direction the scroll was triggered moving.
  */
@@ -81,7 +114,7 @@ export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
     '[class.dbx-list-padded]': 'padded'
   },
   standalone: true,
-  imports: [],
+  imports: [DbxLoadingComponent, DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
@@ -95,7 +128,11 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
    */
   readonly padded = input<boolean>(true);
 
-  readonly state$ = input.required<Observable<S>>();
+  /**
+   * @deprecated use state instead.
+   */
+  // readonly state$ = input.required<Observable<S>>();
+  // readonly state = input.required<ObservableOrValue<S>>();
 
   readonly config = input<Maybe<DbxListConfig<T, V>>>(undefined);
 
@@ -253,8 +290,8 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     shareReplay(1)
   );
 
-  readonly infiniteScrollDistanceSignal = toSignal(this.scrollDistance$);
-  readonly infiniteScrollThrottleSignal = toSignal(this.throttleScroll$);
+  readonly infiniteScrollDistanceSignal = toSignal(this.scrollDistance$, { initialValue: DBX_LIST_DEFAULT_SCROLL_DISTANCE });
+  readonly infiniteScrollThrottleSignal = toSignal(this.throttleScroll$, { initialValue: DBX_LIST_DEFAULT_THROTTLE_SCROLL });
   readonly hideContentSignal = toSignal(this.hideContent$);
   readonly injectedComponentConfigSignal = toSignal(this.injectedComponentConfig$);
   readonly isEmptyAndNotLoadingSignal = toSignal(this.isEmptyAndNotLoading$);
@@ -330,34 +367,5 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     } else {
       throw new Error('Attempted to set internal content in DbxListComponent when it was already set.');
     }
-  }
-}
-
-/**
- * Used internally by DbxListComponent
- */
-@Directive({
-  selector: '[dbxListInternalContent]',
-  host: {
-    class: 'd-block dbx-list-content',
-    '[class.dbx-list-content-hidden]': 'hide()'
-  },
-  standalone: true
-})
-export class DbxListInternalContentDirective {
-  private readonly parent = inject(DbxListComponent);
-
-  readonly elementRef = inject(ElementRef);
-
-  readonly hide = input<Maybe<boolean>>(false);
-
-  constructor() {
-    this.parent.setInternalContent(this);
-  }
-
-  @HostListener('scroll', ['$event'])
-  onScrollEvent($event: Event): void {
-    const position = ($event.target as Element).scrollTop;
-    this.parent.contentScrolled.emit(position);
   }
 }

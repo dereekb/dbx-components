@@ -1,11 +1,11 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { OnDestroy, Component, Input, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { BehaviorSubject, Observable, shareReplay } from 'rxjs';
+import { OnDestroy, Component, Input, ChangeDetectionStrategy, input, computed, signal, Signal } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
-import { LoadingContext, LoadingContextEvent, switchMapLoadingContextStream } from '@dereekb/rxjs';
+import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
 import { ErrorInput, type Maybe } from '@dereekb/util';
 import { DbxThemeColor } from '../layout/style/style';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 
 /**
@@ -36,17 +36,21 @@ export interface DbxLoadingComponentState {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxLoadingComponent implements OnDestroy {
-  private readonly _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
-  readonly contextStream$: Observable<LoadingContextEvent> = this._context.pipe(switchMapLoadingContextStream());
+export class DbxLoadingComponent {
 
+  private readonly _contextOverrideSignal = signal<MaybeObservableOrValue<LoadingContext>>(undefined);
+  readonly context = input<MaybeObservableOrValue<LoadingContext>>();
+
+  readonly contextSignal: Signal<MaybeObservableOrValue<LoadingContext>> = computed(() => this._contextOverrideSignal() ?? this.context());
+
+  readonly contextStream$: Observable<Maybe<LoadingContextEvent>> = toObservable(this.contextSignal).pipe(maybeValueFromObservableOrValue(), switchMapMaybeLoadingContextStream(), shareReplay(1));
   readonly contextStreamSignal = toSignal(this.contextStream$);
 
   readonly loading = input<Maybe<boolean>>();
   readonly error = input<Maybe<ErrorInput>>();
 
   readonly stateSignal = computed<DbxLoadingComponentState>(() => {
-    let loadingState = this.contextStreamSignal() as DbxLoadingComponentState | undefined;
+    let loadingState = this.contextStreamSignal() as DbxLoadingComponentState;
 
     if (loadingState == null) {
       loadingState = {
@@ -70,16 +74,13 @@ export class DbxLoadingComponent implements OnDestroy {
    */
   readonly padding = input<Maybe<boolean>>();
 
-  ngOnDestroy() {
-    this._context.complete();
+  /**
+   * Sets/overrides the context directly.
+   * 
+   * @param context Context source to use as an override.
+   */
+  setContext(context: MaybeObservableOrValue<LoadingContext>) {
+    this._contextOverrideSignal.set(context);
   }
 
-  @Input()
-  get context(): Maybe<LoadingContext> {
-    return this._context.value;
-  }
-
-  set context(context: Maybe<LoadingContext>) {
-    this._context.next(context);
-  }
 }

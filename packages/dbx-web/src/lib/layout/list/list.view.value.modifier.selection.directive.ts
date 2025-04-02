@@ -16,9 +16,8 @@ export const DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION: DbxValueListItemDecisio
   standalone: true
 })
 export class DbxListItemIsSelectedModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
-
   readonly listItemIsSelected = input<Maybe<DbxValueListItemDecisionFunction<T>>>(undefined, {
-    alias: 'dbxListItemIsSelectedModifier',
+    alias: 'dbxListItemIsSelectedModifier'
   });
 
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.listItemIsSelected).pipe(
@@ -34,5 +33,4 @@ export class DbxListItemIsSelectedModifierDirective<T> extends AbstractDbxValueL
       return modifiers;
     })
   );
-
 }

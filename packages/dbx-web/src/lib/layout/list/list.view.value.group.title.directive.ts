@@ -4,6 +4,8 @@ import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewG
 import { BehaviorSubject, map } from 'rxjs';
 import { Building, Maybe, PrimativeKey, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
 import { DbxListTitleGroupData, DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
+import { MatIcon } from '@angular/material/icon';
+import { NgClass } from '@angular/common';
 
 export const DBX_LIST_TITLE_GROUP_DATA = new InjectionToken<unknown>('DbxListTitleGroupData');
 
@@ -19,7 +21,8 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
  */
 @Directive({
   selector: '[dbxListTitleGroup]',
-  providers: [provideDbxValueListViewGroupDelegate(DbxListTitleGroupDirective)]
+  providers: [provideDbxValueListViewGroupDelegate(DbxListTitleGroupDirective)],
+  standalone: true
 })
 export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListViewGroupDelegate<D, T, I> {
   private _delegate = new BehaviorSubject<Maybe<DbxListTitleGroupTitleDelegate<T, O, D, I>>>(undefined);
@@ -107,6 +110,8 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
       </div>
     </div>
   `,
+  standalone: true,
+  imports: [NgClass, MatIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-list-title-group-header'

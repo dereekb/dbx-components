@@ -1,11 +1,11 @@
 import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue, ObservableOrValueGetter, valueFromObservableOrValueGetter, maybeValueFromObservableOrValueGetter, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
-import { Output, EventEmitter, OnDestroy, Directive, Input, Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Output, EventEmitter, OnDestroy, Directive, Input, Component, ChangeDetectionStrategy, input, output, computed, Signal } from '@angular/core';
 import { DbxListComponent, DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Configurable, type Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 export const DEFAULT_STATIC_LIST_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: `
@@ -23,7 +23,7 @@ export const DEFAULT_STATIC_LIST_COMPONENT_CONFIGURATION: Pick<Component, 'templ
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: `
-  <dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled" [selectionMode]="selectionMode">
+  <dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled" [selectionMode]="selectionModeSignal()">
     <ng-content top select="[top]"></ng-content>
     <ng-content bottom select="[bottom]"></ng-content>
     <ng-content empty select="[empty]"></ng-content>
@@ -40,6 +40,8 @@ export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> =
 export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy, DbxListViewWrapper<T, S> {
   private readonly _initialConfig = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
   private readonly _stateOverride = new BehaviorSubject<Maybe<ObservableOrValue<S>>>(undefined);
+  private readonly _selectionModeOverride = new BehaviorSubject<Maybe<ObservableOrValue<DbxListSelectionMode>>>(undefined);
+  private readonly _selectionModeOverrideSignal = toSignal(this._selectionModeOverride.pipe(maybeValueFromObservableOrValue()));
 
   readonly clickItem = output<T>();
   readonly loadMore = output<void>();
@@ -51,9 +53,13 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   /**
    * @deprecated use state as the input instead.
    */
-  readonly state$ = input<Maybe<Observable<S>>>();
+  readonly deprecatedInputState$ = input<Maybe<Observable<S>>>(undefined, { alias: 'state$' });
 
-  readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state), toObservable(this.state$)]).pipe(
+  readonly selectionModeSignal: Signal<Maybe<DbxListSelectionMode>> = computed(() => {
+    return this._selectionModeOverrideSignal() ?? this.selectionMode();
+  });
+
+  readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state), toObservable(this.deprecatedInputState$)]).pipe(
     map(([stateOverride, state, state$]) => stateOverride ?? state ?? state$),
     maybeValueFromObservableOrValue(),
     shareReplay(1)
@@ -72,10 +78,16 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 
   ngOnDestroy(): void {
     this._initialConfig.complete();
+    this._stateOverride.complete();
+    this._selectionModeOverride.complete();
   }
 
-  setStateObs(stateObs: Maybe<Observable<S>>): void {
+  setState(stateObs: Maybe<ObservableOrValue<S>>): void {
     this._stateOverride.next(stateObs);
+  }
+
+  setSelectionMode(selectionMode: ObservableOrValue<DbxListSelectionMode>): void {
+    this._selectionModeOverride.next(selectionMode);
   }
 
   protected _buildListConfig(config: C): DbxListConfig<T, V> {
@@ -91,17 +103,12 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 export type DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListWrapperConfig<T, V>, 'onSelectionChange'>;
 
 @Directive()
-export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> implements OnDestroy {
-  @Output()
-  selectionChange = new EventEmitter<ListSelectionState<T>>();
-
-  override ngOnDestroy(): void {
-    this.selectionChange.complete();
-  }
+export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> {
+  readonly selectionChange = output<ListSelectionState<T>>();
 
   protected override _buildListConfig(config: C): DbxListConfig<T, V> {
     const result = super._buildListConfig(config) as Configurable<DbxListConfig<T, V>>;
-    result.onSelectionChange = (x) => this.selectionChange.next(x);
+    result.onSelectionChange = (x) => this.selectionChange.emit(x);
     return result;
   }
 }

@@ -16,12 +16,8 @@ export class DbxActionLoadingContextDirective implements OnInit, OnDestroy {
 
   private readonly _context = loadingStateContext({ obs: this.source.loadingState$ });
 
-  get context() {
-    return this._context;
-  }
-
   ngOnInit(): void {
-    this.loadingComponent.context = this._context;
+    this.loadingComponent.setContext(this._context);
   }
 
   ngOnDestroy(): void {

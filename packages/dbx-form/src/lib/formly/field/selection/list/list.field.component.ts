@@ -33,8 +33,8 @@ export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelecti
   templateUrl: 'list.field.component.html'
 })
 export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<DbxItemListFieldProps<T, C, K>>> implements OnInit, OnDestroy {
-  private _selectionEventSub = new SubscriptionObject();
-  private _loadMoreSub = new SubscriptionObject();
+  private readonly _selectionEventSub = new SubscriptionObject();
+  private readonly _loadMoreSub = new SubscriptionObject();
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
@@ -50,9 +50,8 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
       const config: DbxInjectionComponentConfig<C> = {
         componentClass,
         init: (listView) => {
-          listView.selectionMode = 'select'; // always enable select
-
-          listView.state$ = this.field.props.state$;
+          listView.setSelectionMode('select'); // always enable select
+          listView.setState(this.field.props.state$);
 
           if (loadMore != null) {
             this._loadMoreSub.subscription = listView.loadMore.subscribe(() => loadMore());

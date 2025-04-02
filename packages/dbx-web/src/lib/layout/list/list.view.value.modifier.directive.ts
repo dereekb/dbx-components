@@ -11,10 +11,10 @@ import { toObservable } from '@angular/core/rxjs-interop';
  */
 @Directive({
   selector: '[dbxListItemModifier]',
-  providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective)
+  providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective),
+  standalone: true
 })
 export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I>, OnDestroy {
-
   readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>>(undefined, {
     alias: 'dbxListItemModifier'
   });
@@ -40,7 +40,6 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
   removeModifiers(modifiers: ArrayOrValue<Modifier<I>>): void {
     this._modifiers.next(removeModifiers(modifiers, this._modifiers.value));
   }
-
 }
 
 /**
@@ -48,7 +47,6 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
  */
 @Directive()
 export abstract class AbstractDbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements OnInit, OnDestroy {
-
   readonly dbxValueListItemModifier = inject(DbxValueListItemModifier<T, I>);
 
   abstract readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<I>>>>;
@@ -58,7 +56,7 @@ export abstract class AbstractDbxValueListItemModifierDirective<T, I extends Dbx
 
   ngOnInit(): void {
     this._modifiersSub.subscription = this.modifiers$.subscribe((modifiers) => {
-      this._linkModifiers(modifiers);``
+      this._linkModifiers(modifiers);
     });
   }
 
@@ -81,5 +79,4 @@ export abstract class AbstractDbxValueListItemModifierDirective<T, I extends Dbx
       this._linkedModifiers = undefined;
     }
   }
-
 }

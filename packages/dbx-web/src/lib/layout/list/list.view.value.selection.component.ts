@@ -5,7 +5,7 @@ import { DbxListSelectionMode, ListSelectionState, ListSelectionStateItem } from
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { type Maybe } from '@dereekb/util';
-import { DbxValueListViewContentComponent } from './list.view.value.component';
+import { DbxValueListViewContentComponent, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from './list.view.value.component';
 import { NgSwitch, NgSwitchCase, NgSwitchDefault, NgFor, AsyncPipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
@@ -28,7 +28,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
       }
       @default {
         <mat-selection-list [disabled]="disabledSignal()" [multiple]="multiple()" (selectionChange)="matSelectionChanged($event)">
-          @for (item of items(); trackBy: trackByFunctionSignal()($index, item)) {
+          @for (item of items(); track trackByFunctionSignal()($index, item)) {
             <mat-list-option class="dbx-list-view-item" [selected]="item.selected" [disabled]="item.disabled" [value]="item.itemValue" (click)="onClickValue(item.itemValue)">
               @if (item.icon) {
                 <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
@@ -50,7 +50,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
 export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   readonly multiple = input<Maybe<boolean>>();
   readonly selectionMode = input<Maybe<DbxListSelectionMode>>();
-  readonly trackByFunctionSignal = toSignal(this.trackBy$);
+  readonly trackByFunctionSignal = toSignal(this.trackBy$, { initialValue: DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION });
 
   constructor() {
     super();
