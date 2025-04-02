@@ -224,7 +224,7 @@ bootstrapApplication(UIView, appConfig)
 - `DbxAnchorLinkComponent` has been renamed to `DbxLinkComponent`.
 - `AnchorType` has been renamed to `ClickableAnchorType`. and is no longer an enum.
 - `dbxActionForm` has changed `dbxActionFormModified` to `dbxActionFormIsModified`, but also has added `dbxActionFormIsEqual`
-- `dbxActionValueOnTrigger` has changed `dbxActionValueOnTriggerModified` to `dbxActionValueOnTriggerIsModified`, but also has added `dbxActionValueOnTriggerIsEqual`
+- `dbxActionValueOnTrigger` has been renamed to `dbxActionValueGetter`, and has changed `dbxActionValueOnTriggerModified` to `dbxActionValueGetterIsModified`, but also has added `dbxActionValueGetterIsEqual`
 - the input `formDisabledOnWorking` has been renamed to `dbxActionFormDisabledOnWorking`
 - the input `dbxActionFormValidator` has been renamed to `dbxActionFormIsValid`
 - `dbxActionPopover` has changed `dbxActionPopoverModified` to `dbxActionPopoverIsModified`, but also has added `dbxActionPopoverIsEqual`

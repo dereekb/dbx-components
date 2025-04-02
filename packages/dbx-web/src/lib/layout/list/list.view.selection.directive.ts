@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, Output } from '@angular/core';
+import { Directive, EventEmitter, output, Output } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ListSelectionState, ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';
@@ -11,8 +11,7 @@ export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = '<dbx-selecti
  */
 @Directive()
 export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractDbxListViewDirective<T> {
-  @Output()
-  readonly selectionChange = new EventEmitter<ListSelectionState<T>>();
+  readonly selectionChange = output<ListSelectionState<T>>();
 
   selectionChanged(selection: ListSelectionState<T>): void {
     this.selectionChange.emit(selection);

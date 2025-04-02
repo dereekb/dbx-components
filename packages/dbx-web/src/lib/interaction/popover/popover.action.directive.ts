@@ -1,7 +1,7 @@
 import { first, Observable, map } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef, inject, input } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
+import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
 import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
@@ -19,18 +19,18 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
   selector: '[dbxActionPopover]',
   standalone: true
 })
-export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);
 
-  readonly dbxActionPopover = input<Maybe<DbxActionPopoverFunction<T>>>();
+  readonly dbxActionPopover = input.required<DbxActionPopoverFunction<T>>();
   readonly dbxActionPopoverIsModified = input<Maybe<IsModifiedFunction>>();
   readonly dbxActionPopoverIsEqual = input<Maybe<IsEqualFunction>>();
 
   constructor() {
     super();
     this.configureInputs({
-      dbxActionValueOnTriggerIsModifiedSignal: this.dbxActionPopoverIsModified,
-      dbxActionValueOnTriggerIsEqualSignal: this.dbxActionPopoverIsEqual
+      isModifiedSignal: this.dbxActionPopoverIsModified,
+      isEqualSignal: this.dbxActionPopoverIsEqual
     });
     this.setValueGetterFunction(() => this._getDataFromPopover());
   }
@@ -45,10 +45,6 @@ export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionVal
   protected _makePopoverRef(): NgPopoverRef<unknown, Maybe<T>> {
     const origin = this.elementRef;
     const fn = this.dbxActionPopover();
-
-    if (!fn) {
-      throw new Error('dbxActionPopover has no function provided to it yet.');
-    }
 
     return fn({
       origin

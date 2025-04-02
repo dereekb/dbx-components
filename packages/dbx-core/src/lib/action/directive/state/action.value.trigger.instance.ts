@@ -4,11 +4,11 @@ import { ObservableOrValue, SubscriptionObject, IsModifiedFunction, asObservable
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
- * DbxActionValueOnTriggerInstance function. Returns an ObervableGetter that returns a value.
+ * DbxActionValueGetterInstance function. Returns an ObervableGetter that returns a value.
  */
-export type DbxActionValueOnTriggerValueGetterFunction<T> = () => ObservableOrValue<Maybe<T>>;
+export type DbxActionValueGetterValueGetterFunction<T> = () => ObservableOrValue<Maybe<T>>;
 
-export interface DbxActionValueOnTriggerResult<T = unknown> {
+export interface DbxActionValueGetterResult<T = unknown> {
   /**
    * The value to trigger with
    */
@@ -20,11 +20,11 @@ export interface DbxActionValueOnTriggerResult<T = unknown> {
 }
 
 /**
- * DbxActionValueOnTriggerInstance configuration.
+ * DbxActionValueGetterInstance configuration.
  */
-export interface DbxActionValueOnTriggerInstanceConfig<T> {
+export interface DbxActionValueGetterInstanceConfig<T> {
   readonly source: DbxActionContextStoreSourceInstance<T, unknown>;
-  readonly valueGetter?: Maybe<DbxActionValueOnTriggerValueGetterFunction<T>>;
+  readonly valueGetter?: Maybe<DbxActionValueGetterValueGetterFunction<T>>;
   readonly isEqualFunction?: Maybe<IsEqualFunction<T>>;
   readonly isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
 }
@@ -32,8 +32,8 @@ export interface DbxActionValueOnTriggerInstanceConfig<T> {
 /**
  * Utility class that handles trigger events to retrieve a value.
  */
-export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroyable {
-  private readonly _valueGetterFunction = new BehaviorSubject<Maybe<DbxActionValueOnTriggerValueGetterFunction<T>>>(undefined);
+export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable {
+  private readonly _valueGetterFunction = new BehaviorSubject<Maybe<DbxActionValueGetterValueGetterFunction<T>>>(undefined);
   readonly valueGetterFunction$ = this._valueGetterFunction.pipe(filterMaybe());
 
   private readonly _isModifiedFunction = new BehaviorSubject<Maybe<IsModifiedFunction<T>>>(undefined);
@@ -48,14 +48,14 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
 
   private readonly _triggeredSub = new SubscriptionObject();
 
-  constructor(config: DbxActionValueOnTriggerInstanceConfig<T>) {
+  constructor(config: DbxActionValueGetterInstanceConfig<T>) {
     this.source = config.source;
     this.setValueGetterFunction(config.valueGetter);
     this.setIsModifiedFunction(config.isModifiedFunction);
     this.setIsEqualFunction(config.isEqualFunction);
   }
 
-  setValueGetterFunction(valueGetterFunction: Maybe<DbxActionValueOnTriggerValueGetterFunction<T>>) {
+  setValueGetterFunction(valueGetterFunction: Maybe<DbxActionValueGetterValueGetterFunction<T>>) {
     this._valueGetterFunction.next(valueGetterFunction);
   }
 
@@ -72,7 +72,8 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
     this._triggeredSub.subscription = this.source.triggered$
       .pipe(
         switchMap(() =>
-          this.valueGetterFunction$.pipe(switchMap((valueGetter) => asObservable(valueGetter()))).pipe(
+          this.valueGetterFunction$.pipe(
+            switchMap((valueGetter) => asObservable(valueGetter())),
             combineLatestWith(this.isModifiedFunction$),
             // If the value is not null/undefined and is considered modified, then pass the value.
             switchMap(([value, isModifiedFunction]) => returnIfIs(isModifiedFunction, value, false).pipe(map((value) => ({ value })))),
@@ -81,7 +82,7 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
           )
         )
       )
-      .subscribe((result: DbxActionValueOnTriggerResult<T>) => {
+      .subscribe((result: DbxActionValueGetterResult<T>) => {
         if (result.value != null) {
           this.source.readyValue(result.value);
         } else {
@@ -99,9 +100,3 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
     });
   }
 }
-
-// MARK: Compat
-/**
- * @deprecated Use DbxActionValueOnTriggerValueGetterFunction instead.
- */
-export type DbxActionValueOnTriggerFunction<T> = DbxActionValueOnTriggerValueGetterFunction<T>;

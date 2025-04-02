@@ -62,12 +62,7 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
   readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);
   readonly group = input<Maybe<DbxValueListItemGroup<G, T, I>>>();
 
-  private readonly _trackBySignal = toSignal(this.dbxValueListViewContentComponent.dbxListView.trackBy$ ?? of(undefined));
-
-  readonly trackByFunctionSignal = computed(() => {
-    const trackBy = this._trackBySignal();
-    return trackBy ? (index: number, item: DbxValueListItemConfig<T, I>) => trackBy(index, item.itemValue) : () => undefined;
-  });
+  readonly trackByFunctionSignal = toSignal(this.dbxValueListViewContentComponent.trackBy$);
 
   readonly itemsSignal = computed(() => this.group()?.items ?? []);
   readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
@@ -109,8 +104,10 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
 })
 export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxListView = inject(DbxListView<T>);
-
   private readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I> = inject<Maybe<DbxValueListViewGroupDelegate<any, T, I>>>(DbxValueListViewGroupDelegate, { optional: true }) ?? defaultDbxValueListViewGroupDelegate();
+
+  private readonly _trackBy$ = this.dbxListView.trackBy$ ?? of(undefined);
+  readonly trackBy$ = this._trackBy$.pipe(map((trackBy) => (trackBy ? (index: number, item: DbxValueListItemConfig<T, I>) => trackBy(index, item.itemValue) : (index: number) => index)));
 
   readonly items = input<Maybe<DbxValueListItemConfig<T, I>[]>>();
   readonly emitAllClicks = input<Maybe<boolean>>();

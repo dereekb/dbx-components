@@ -1,6 +1,6 @@
-import { ListLoadingStateContext, switchMapMaybeObs } from '@dereekb/rxjs';
-import { BehaviorSubject, Observable, of, shareReplay } from 'rxjs';
-import { Directive, EventEmitter, Input, OnDestroy, Output, TrackByFunction } from '@angular/core';
+import { ListLoadingStateContext, MaybeObservableOrValue, maybeValueFromObservableOrValue, ObservableOrValue, switchMapMaybeObs } from '@dereekb/rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, Observable, of, shareReplay } from 'rxjs';
+import { Directive, effect, EventEmitter, input, Input, OnDestroy, output, Output, TrackByFunction } from '@angular/core';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { type Maybe } from '@dereekb/util';
 
@@ -9,33 +9,33 @@ import { type Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>, OnDestroy {
+  readonly valuesArray = input<Maybe<T[]>>();
+  readonly values = input<MaybeObservableOrValue<T[]>>();
+
+  private readonly _trackBy = new BehaviorSubject<Maybe<TrackByFunction<T>>>(undefined);
   private readonly _disabled = new BehaviorSubject<boolean>(false);
   private readonly _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
-  private readonly _values$ = new BehaviorSubject<Maybe<Observable<T[]>>>(undefined);
+  private readonly _values = new BehaviorSubject<MaybeObservableOrValue<T[]>>(undefined);
 
-  readonly trackBy?: TrackByFunction<T> | undefined;
+  private readonly _valuesArrayEffect = effect(() => this._values.next(this.valuesArray()));
+  private readonly _valuesEffect = effect(() => this._values.next(this.values()));
 
-  readonly values$ = this._values$.pipe(switchMapMaybeObs(), shareReplay(1));
+  readonly trackBy$ = this._trackBy.asObservable();
+  readonly values$: Observable<T[]> = this._values.pipe(
+    maybeValueFromObservableOrValue(),
+    map((x) => x ?? []),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
   readonly disabled$ = this._disabled.asObservable();
   readonly selectionMode$ = this._selectionMode.asObservable();
 
-  @Output()
-  readonly clickValue = new EventEmitter<T>();
-
-  @Input()
-  set valueArray(values: Maybe<T[]>) {
-    this.setValues(values ? of(values) : undefined);
-  }
-
-  @Input()
-  set values(values: Maybe<Observable<T[]>>) {
-    this.setValues(values);
-  }
+  readonly clickValue = output<T>();
 
   ngOnDestroy(): void {
     this._disabled.complete();
     this._selectionMode.complete();
-    this._values$.complete();
+    this._values.complete();
   }
 
   onClickValue(value: T) {
@@ -46,8 +46,8 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
     this.setValues(state.list$);
   }
 
-  setValues(valuesObs: Maybe<Observable<T[]>>): void {
-    this._values$.next(valuesObs);
+  setValues(valuesObs: MaybeObservableOrValue<T[]>): void {
+    this._values.next(valuesObs);
   }
 
   setDisabled(disabled: boolean): void {

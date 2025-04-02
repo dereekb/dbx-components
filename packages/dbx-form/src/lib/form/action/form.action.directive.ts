@@ -1,7 +1,7 @@
 import { Directive, OnInit, OnDestroy, Input, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged, shareReplay } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, DbxActionValueOnTriggerResult } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult } from '@dereekb/dbx-core';
 import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable, IsEqualFunction, makeIsModifiedFunction, switchMapToDefault, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { IsModified, IsValid, MapFunction, Maybe } from '@dereekb/util';
@@ -9,7 +9,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 
-export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrValue<DbxActionValueOnTriggerResult<O>>>;
+export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrValue<DbxActionValueGetterResult<O>>>;
 
 /**
  * Used with an action to bind a form to an action as it's value source.
@@ -94,7 +94,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
               const { isComplete } = stream;
               const doNothing = {}; // nothing, form not complete
 
-              let obs: Observable<DbxActionValueOnTriggerResult<O>>;
+              let obs: Observable<DbxActionValueGetterResult<O>>;
 
               if (isComplete) {
                 obs = this.form.getValue().pipe(
@@ -122,7 +122,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
           )
         )
       )
-      .subscribe((result: DbxActionValueOnTriggerResult<O>) => {
+      .subscribe((result: DbxActionValueGetterResult<O>) => {
         if (result.reject) {
           this.source.reject(result.reject);
         } else if (result.value != null) {
@@ -211,7 +211,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
     return this.checkIsValidAndIsModified(value);
   }
 
-  protected readyValue(value: T): Observable<DbxActionValueOnTriggerResult<O>> {
+  protected readyValue(value: T): Observable<DbxActionValueGetterResult<O>> {
     return this.mapValueFunction$.pipe(
       switchMap((mapFunction) => {
         if (mapFunction) {

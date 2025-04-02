@@ -34,7 +34,7 @@ export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrVa
  *
  * @returns OperatorFunction<Maybe<ObservableOrValue<T>>, Maybe<T>>
  */
-export function maybeValueFromObservableOrValue<T>(): OperatorFunction<Maybe<ObservableOrValue<T>>, Maybe<T>> {
+export function maybeValueFromObservableOrValue<T>(): OperatorFunction<MaybeObservableOrValue<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservable(x) : of(undefined)));
 }
 
