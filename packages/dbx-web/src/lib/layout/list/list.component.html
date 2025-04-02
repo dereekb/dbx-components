@@ -1,8 +1,8 @@
 <dbx-loading [context]="context" [linear]="true"></dbx-loading>
-<div dbxListInternalContent [hide]="hideContent$ | async" infinite-scroll [infiniteScrollDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE" [infiniteScrollUpDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE" [infiniteScrollThrottle]="(throttleScroll$ | async) ?? DEFAULT_THROTTLE_SCROLL" [scrollWindow]="false" (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">
+<div dbxListInternalContent [hide]="hideContentSignal()" infinite-scroll [infiniteScrollDistance]="infiniteScrollDistanceSignal()" [infiniteScrollUpDistance]="infiniteScrollDistanceSignal()" [infiniteScrollThrottle]="infiniteScrollThrottleSignal()" [scrollWindow]="false" (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">
   <ng-content select="[top]"></ng-content>
-  <dbx-injection [config]="injectedComponentConfig$ | async"></dbx-injection>
+  <dbx-injection [config]="injectedComponentConfigSignal()"></dbx-injection>
   <ng-content select="[bottom]"></ng-content>
 </div>
-<ng-content *ngIf="isEmptyAndNotLoading$ | async" select="[empty]"></ng-content>
-<ng-content *ngIf="isEmptyLoading$ | async" select="[emptyLoading]"></ng-content>
+<ng-content *ngIf="isEmptyAndNotLoadingSignal()" select="[empty]"></ng-content>
+<ng-content *ngIf="isEmptyLoadingSignal()" select="[emptyLoading]"></ng-content>

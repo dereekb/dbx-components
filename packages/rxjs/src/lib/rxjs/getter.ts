@@ -23,10 +23,19 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observ
 /**
  * Switch map for an ObservableGetter that pipes through the value.
  *
- * @returns
+ * @returns OperatorFunction<ObservableOrValue<T>, T>
  */
 export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
   return switchMap((x) => asObservable(x));
+}
+
+/**
+ * Switch map for an ObservableGetter that pipes through the Maybe value.
+ *
+ * @returns OperatorFunction<Maybe<ObservableOrValue<T>>, Maybe<T>>
+ */
+export function maybeValueFromObservableOrValue<T>(): OperatorFunction<Maybe<ObservableOrValue<T>>, Maybe<T>> {
+  return switchMap((x) => (x != null ? asObservable(x) : of(undefined)));
 }
 
 /**

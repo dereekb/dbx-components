@@ -1,28 +1,28 @@
-import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild, inject } from '@angular/core';
-import { AbstractPopoverRefDirective, DbxPopoverService } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild, inject, input, viewChild } from '@angular/core';
+import { AbstractPopoverRefDirective, DbxIconButtonComponent, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxFirebaseModelHistoryPopoverComponent, DbxFirebaseModelHistoryPopoverConfig } from './model.history.popover.component';
+import { DbxFirebaseModelHistoryPopoverComponent, DbxFirebaseModelHistoryPopoverConfig, DbxFirebaseModelHistoryPopoverConfigWithoutOrigin } from './model.history.popover.component';
+import { Maybe } from '@dereekb/util';
 
-export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistoryPopoverConfig;
+export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistoryPopoverConfigWithoutOrigin;
 
 @Component({
   selector: 'dbx-firebase-model-history-popover-button',
   template: `
     <dbx-icon-button #button (buttonClick)="showHistoryPopover()" icon="history"></dbx-icon-button>
   `,
+  standalone: true,
+  imports: [DbxIconButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);
 
-  @ViewChild('button', { read: ElementRef, static: false })
-  buttonElement!: ElementRef;
+  readonly buttonElement = viewChild.required<ElementRef>('button');
+  readonly config = input<DbxFirebaseModelHistoryPopoverConfigWithoutOrigin>();
 
-  @Input()
-  config?: DbxFirebaseModelHistoryPopoverButtonConfig;
-
-  protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
-    const config = this.config;
+  protected override _makePopoverRef(origin?: Maybe<ElementRef>): NgPopoverRef<unknown, unknown> {
+    const config = this.config();
 
     if (!origin) {
       throw new Error('Missing origin.');
@@ -35,7 +35,7 @@ export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopov
   }
 
   showHistoryPopover(): void {
-    const origin = this.buttonElement.nativeElement;
+    const origin = this.buttonElement()?.nativeElement;
     this.showPopover(origin);
   }
 }

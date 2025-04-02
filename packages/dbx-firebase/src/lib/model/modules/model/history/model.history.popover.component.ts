@@ -1,9 +1,10 @@
-import { Component, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, AnchorForValueFunction, DbxListEmptyContentComponent, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverKey, DbxPopoverScrollContentComponent, DbxPopoverService } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
 import { DbxFirebaseModelTrackerHistoryFilter } from './model.tracker.service';
+import { DbxFirebaseModelHistoryComponent } from './model.history.component';
 
 export interface DbxFirebaseModelHistoryPopoverConfig {
   /**
@@ -36,10 +37,15 @@ export interface DbxFirebaseModelHistoryPopoverConfig {
   readonly anchorForItem?: Maybe<AnchorForValueFunction<DbxFirebaseModelTypesServiceInstancePair>>;
 }
 
+export type DbxFirebaseModelHistoryPopoverConfigWithoutOrigin = Omit<DbxFirebaseModelHistoryPopoverConfig, 'origin'>;
+
 export const DEFAULT_DBX_FIREBASE_MODEL_HISTORY_COMPONENT_POPOVER_KEY = 'history';
 
 @Component({
-  templateUrl: './model.history.popover.component.html'
+  templateUrl: './model.history.popover.component.html',
+  standalone: true,
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseModelHistoryPopoverConfig> {
   static openPopover(popupService: DbxPopoverService, { origin, header, icon, emptyText, historyFilter, anchorForItem }: DbxFirebaseModelHistoryPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef {
@@ -61,36 +67,9 @@ export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDire
     return this.popover.data as DbxFirebaseModelHistoryPopoverConfig;
   }
 
-  get icon() {
-    return this.config.icon ?? 'history';
-  }
-
-  get header() {
-    return this.config.header ?? 'History';
-  }
-
-  get emptyText() {
-    return this.config.header ?? 'History is empty.';
-  }
-
-  get historyFilter() {
-    return this.config.historyFilter;
-  }
-
-  get anchorForItem() {
-    return this.config.anchorForItem;
-  }
-
-  /**
-   * @deprecated Use config instead.
-   */
-  get params() {
-    return this.config;
-  }
+  readonly icon = this.config.icon ?? 'history';
+  readonly header = this.config.header ?? 'History';
+  readonly emptyText = this.config.emptyText ?? 'History is empty.';
+  readonly historyFilter = this.config.historyFilter;
+  readonly anchorForItem = this.config.anchorForItem;
 }
-
-// MARK: Compat
-/**
- * @deprecated Use DbxFirebaseModelHistoryPopoverConfig instead.
- */
-export type DbxFirebaseModelHistoryPopoverParams = DbxFirebaseModelHistoryPopoverConfig;
