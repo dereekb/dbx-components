@@ -43,9 +43,9 @@ export const DEFAULT_DBX_FIREBASE_MODEL_HISTORY_COMPONENT_POPOVER_KEY = 'history
 
 @Component({
   templateUrl: './model.history.popover.component.html',
-  standalone: true,
   imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFirebaseModelHistoryPopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseModelHistoryPopoverConfig> {
   static openPopover(popupService: DbxPopoverService, { origin, header, icon, emptyText, historyFilter, anchorForItem }: DbxFirebaseModelHistoryPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef {

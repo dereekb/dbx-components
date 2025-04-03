@@ -12,13 +12,11 @@ export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DbxValueListItemDecisionFun
 };
 
 @Directive({
-  selector: '[dbxListItemDisableRippleModifier]',
+  selector: 'dbxListItemDisableRippleModifier,[dbxListItemDisableRippleModifier]',
   standalone: true
 })
 export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
-  readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>>(undefined, {
-    alias: 'dbxListItemDisableRippleModifier'
-  });
+  readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<string | DbxValueListItemDecisionFunction<T>>>(undefined, { alias: 'dbxListItemDisableRippleModifier', transform: (x) => (typeof x !== 'string' ? x : undefined) });
 
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.disableRippleForItem).pipe(
     map((x) => x ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION),

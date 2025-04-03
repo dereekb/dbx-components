@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
-import { TextPasswordFieldConfig, provideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue, DbxFormlyModule, AbstractConfigAsyncFormlyFormDirective } from '@dereekb/dbx-form';
+import { TextPasswordFieldConfig, provideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue, DbxFormlyModule, AbstractConfigAsyncFormlyFormDirective, FORMLY_FORM_COMPONENT_TEMPLATE } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, map, Observable } from 'rxjs';
@@ -8,19 +8,17 @@ import { DbxFirebaseLoginMode } from './login';
 export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue;
 
 export interface DbxFirebaseEmailFormConfig {
-  loginMode: DbxFirebaseLoginMode;
-  passwordConfig?: TextPasswordFieldConfig;
+  readonly loginMode: DbxFirebaseLoginMode;
+  readonly passwordConfig?: TextPasswordFieldConfig;
 }
 
 @Component({
-  template: `
-    <dbx-formly></dbx-formly>
-  `,
   selector: 'dbx-firebase-email-form',
-  standalone: true,
-  imports: [DbxFormlyModule],
-  providers: [provideFormlyContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  template: FORMLY_FORM_COMPONENT_TEMPLATE.template,
+  imports: FORMLY_FORM_COMPONENT_TEMPLATE.imports,
+  providers: FORMLY_FORM_COMPONENT_TEMPLATE.providers,
+  changeDetection: FORMLY_FORM_COMPONENT_TEMPLATE.changeDetection,
+  standalone: true
 })
 export class DbxFirebaseEmailFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> implements OnDestroy {
   readonly fields$: Observable<Maybe<FormlyFieldConfig[]>> = this.currentConfig$.pipe(

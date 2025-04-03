@@ -6,6 +6,12 @@ import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
 import { type Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '../subscription';
 
+export interface FilterSourceInstanceConfig<F> {
+  readonly initWithFilter?: Maybe<Observable<F>>;
+  readonly defaultFilter?: Maybe<Observable<Maybe<F>>>;
+  readonly filter?: Maybe<F>;
+}
+
 /**
  * A basic FilterSource implementation.
  */
@@ -34,6 +40,22 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     distinctUntilObjectValuesChanged(),
     shareReplay(1)
   );
+
+  constructor(config?: FilterSourceInstanceConfig<F>) {
+    const { initWithFilter, defaultFilter, filter } = config ?? {};
+
+    if (initWithFilter != null) {
+      this.initWithFilter(initWithFilter);
+    }
+
+    if (defaultFilter != null) {
+      this.setDefaultFilter(defaultFilter);
+    }
+
+    if (filter != null) {
+      this.setFilter(filter);
+    }
+  }
 
   initWithFilter(filterObs: Observable<F>): void {
     this._initialFilter.next(filterObs);

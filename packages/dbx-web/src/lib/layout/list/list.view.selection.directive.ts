@@ -1,9 +1,14 @@
-import { Directive, EventEmitter, output, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, EventEmitter, output, Output } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ListSelectionState, ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';
+import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 
-export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>';
+export const DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
+  template: '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>',
+  imports: [DbxSelectionValueListViewComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
+};
 
 // MARK: Selection List View
 /**
@@ -27,3 +32,9 @@ export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractD
     this.selectionChanged({ items });
   }
 }
+
+// MARK: Compat
+/**
+ * @deprecated use DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template instead.
+ */
+export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template;

@@ -1,10 +1,14 @@
-import { OnDestroy, Input, Component } from '@angular/core';
-import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Observable } from 'rxjs';
-import { ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
-import { type Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, computed, input, Signal } from '@angular/core';
+import { ClickableAnchorLinkTree, DbxInjectionComponent, ExpandedClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
+import { Configurable, type Maybe } from '@dereekb/util';
+import { DbxAnchorComponent } from '../anchor/anchor.component';
+import { MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatListModule, MatNavList } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDivider, MatDividerModule } from '@angular/material/divider';
+import { NgClass } from '@angular/common';
 
 export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLinkTree {
-  classes: string;
+  readonly classes: string;
 }
 
 /**
@@ -12,28 +16,19 @@ export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLink
  */
 @Component({
   selector: 'dbx-anchor-list',
-  templateUrl: './anchorlist.component.html'
+  templateUrl: './anchorlist.component.html',
+  imports: [NgClass, MatNavList, MatListItem, MatListItemIcon, MatListItemLine, MatListItemTitle, MatIconModule, MatDivider, DbxAnchorComponent, DbxInjectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxAnchorListComponent implements OnDestroy {
-  private _anchors = new BehaviorSubject<ClickableAnchorLinkTree[]>([]);
+export class DbxAnchorListComponent {
+  readonly anchors = input.required<ClickableAnchorLinkTree[], Maybe<ClickableAnchorLinkTree[]>>({ transform: (x) => x ?? [] });
 
-  readonly expandedAnchors$: Observable<DbxAnchorListExpandedAnchor[]> = this._anchors.pipe(
-    distinctUntilChanged(),
-    map((x) =>
-      expandClickableAnchorLinkTrees(x).map((y) => {
-        (y as DbxAnchorListExpandedAnchor).classes = `${y.depth > 0 ? `dbx-anchor-list-child` : 'dbx-anchor-list-root'} dbx-anchor-list-depth-${y.depth}`;
-        return y as DbxAnchorListExpandedAnchor;
-      })
-    ),
-    shareReplay(1)
-  );
-
-  @Input()
-  set anchors(anchors: Maybe<ClickableAnchorLinkTree[]>) {
-    this._anchors.next(anchors ?? []);
-  }
-
-  ngOnDestroy(): void {
-    this._anchors.complete();
-  }
+  readonly expandedAnchors: Signal<DbxAnchorListExpandedAnchor[]> = computed(() => {
+    const anchors = this.anchors();
+    return expandClickableAnchorLinkTrees(anchors).map((y) => {
+      (y as Configurable<DbxAnchorListExpandedAnchor>).classes = `${y.depth > 0 ? 'dbx-anchor-list-child' : 'dbx-anchor-list-root'} dbx-anchor-list-depth-${y.depth}`;
+      return y as DbxAnchorListExpandedAnchor;
+    });
+  });
 }

@@ -7,11 +7,10 @@ import { DbxFilterSourceConnectorDirective } from './filter.connector.directive'
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { DbxFilterConnectSourceDirective } from './filter.connect.source.directive';
 
-const declarations = [DbxFilterSourceDirective, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterSourceConnectorDirective, DbxFilterMapDirective, DbxFilterMapSourceDirective];
+const importsAndExports = [DbxFilterSourceDirective, DbxFilterMapSourceConnectorDirective, DbxFilterConnectSourceDirective, DbxFilterSourceConnectorDirective, DbxFilterMapDirective, DbxFilterMapSourceDirective];
 
 @NgModule({
-  imports: [CommonModule],
-  declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxCoreFilterModule {}

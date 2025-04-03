@@ -1,8 +1,10 @@
 import { of, Observable } from 'rxjs';
-import { Directive, forwardRef, OnDestroy, OnInit, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, inject, InjectionToken, OnDestroy, OnInit, Provider, Type } from '@angular/core';
 import { FilterSource, FilterSourceInstance, ObservableOrValue } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { provideFilterSource } from './filter.content';
+
+export const FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN = new InjectionToken<Maybe<Observable<Maybe<unknown>>>>('FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_SOURCE_TOKEN');
 
 export abstract class FilterSourceDirective<F = unknown> implements FilterSource<F> {
   abstract filter$: Observable<F>;
@@ -28,19 +30,21 @@ export function provideFilterSourceDirective<S extends FilterSourceDirective<F>,
  * Abstract FilterSource implementation and directive.
  */
 @Directive()
-export abstract class AbstractFilterSourceDirective<F = unknown> implements FilterSourceDirective<F>, OnInit, OnDestroy {
-  protected defaultFilterValue?: Maybe<F>;
+export abstract class AbstractFilterSourceDirective<F = unknown> implements FilterSourceDirective<F>, OnDestroy {
+  private readonly _defaultFilter = inject<Maybe<Observable<Maybe<F>>>>(FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN, { optional: true });
 
-  protected _defaultFilterSource = new FilterSourceInstance<F>();
+  protected readonly _defaultFilterSource = new FilterSourceInstance<F>({
+    defaultFilter: this._defaultFilter
+  });
 
   readonly filter$: Observable<F> = this._defaultFilterSource.filter$;
 
-  ngOnInit(): void {
-    this._defaultFilterSource.setDefaultFilter(this.makeDefaultFilter());
-  }
-
   ngOnDestroy(): void {
     this._defaultFilterSource.destroy();
+  }
+
+  protected setDefaultFilter(defaultFilter: Observable<Maybe<F>>): void {
+    this._defaultFilterSource.setDefaultFilter(defaultFilter);
   }
 
   initWithFilter(filterObs: Observable<F>): void {
@@ -61,10 +65,5 @@ export abstract class AbstractFilterSourceDirective<F = unknown> implements Filt
 
   set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
     this._defaultFilterSource.initialFilterTakesPriority = initialFilterTakesPriority;
-  }
-
-  // MARK: Internal
-  protected makeDefaultFilter(): ObservableOrValue<Maybe<F>> {
-    return of(this.defaultFilterValue);
   }
 }

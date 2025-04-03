@@ -1,22 +1,25 @@
 import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 
-export type DbxFirebaseModelTypeInstanceItem = DbxValueAsListItem<DbxFirebaseModelTypesServiceInstancePair>;
+export type DbxFirebaseModelTypeInstanceListItem = DbxValueAsListItem<DbxFirebaseModelTypesServiceInstancePair>;
 
 /**
  * Renders an item as configured from the DbxFirebaseModelTypesServiceInstancePair.
  */
 @Component({
   selector: 'dbx-firebase-model-type-instance-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListViewWrapper(DbxFirebaseModelTypeInstanceComponent)
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
+  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
+  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  providers: provideDbxListViewWrapper(DbxFirebaseModelTypeInstanceListComponent),
+  standalone: true
 })
-export class DbxFirebaseModelTypeInstanceComponent extends AbstractDbxSelectionListWrapperDirective<DbxFirebaseModelTypesServiceInstancePair> {
+export class DbxFirebaseModelTypeInstanceListComponent extends AbstractDbxSelectionListWrapperDirective<DbxFirebaseModelTypesServiceInstancePair> {
   constructor() {
     super({
-      componentClass: DbxFirebaseModelTypeInstanceViewComponent,
+      componentClass: DbxFirebaseModelTypeInstanceListViewComponent,
       defaultSelectionMode: 'view'
     });
   }
@@ -24,12 +27,15 @@ export class DbxFirebaseModelTypeInstanceComponent extends AbstractDbxSelectionL
 
 @Component({
   selector: 'dbx-firebase-model-type-instance-list-view',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListView(DbxFirebaseModelTypeInstanceViewComponent)
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
+  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
+  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  providers: provideDbxListView(DbxFirebaseModelTypeInstanceListViewComponent),
+  standalone: true
 })
-export class DbxFirebaseModelTypeInstanceViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseModelTypesServiceInstancePair> {
-  readonly config: DbxSelectionValueListViewConfig<DbxFirebaseModelTypeInstanceItem> = {
-    componentClass: DbxFirebaseModelTypeInstanceViewItemComponent,
+export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseModelTypesServiceInstancePair> {
+  readonly config: DbxSelectionValueListViewConfig<DbxFirebaseModelTypeInstanceListItem> = {
+    componentClass: DbxFirebaseModelTypeInstanceListViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ itemValue: y, icon: y.displayInfo.icon ?? y.icon, anchor: y.segueRef })))
   };
 }
@@ -39,8 +45,6 @@ export class DbxFirebaseModelTypeInstanceViewComponent extends AbstractDbxSelect
     <span>{{ title }}</span>
   `
 })
-export class DbxFirebaseModelTypeInstanceViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {
-  get title() {
-    return this.itemValue.displayInfo.title;
-  }
+export class DbxFirebaseModelTypeInstanceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {
+  readonly title = this.itemValue.displayInfo.title;
 }

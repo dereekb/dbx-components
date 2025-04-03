@@ -17,24 +17,10 @@ import { DbxRouterAnchorModule } from '../../router';
 import { DbxPartialPresetFilterMenuComponent } from './filter.partial.menu.component';
 import { DbxPartialPresetFilterListComponent } from './filter.partial.list.component';
 
-const declarations = [DbxPartialPresetFilterListComponent, DbxPartialPresetFilterMenuComponent, DbxFilterPopoverComponent, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent, DbxPresetFilterListComponent, DbxPresetFilterMenuComponent];
+const importsAndExports = [DbxPartialPresetFilterListComponent, DbxPartialPresetFilterMenuComponent, DbxFilterPopoverComponent, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent, DbxPresetFilterListComponent, DbxPresetFilterMenuComponent, DbxCoreFilterModule];
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxPopoverInteractionModule,
-    DbxCoreFilterModule,
-    DbxButtonModule,
-    DbxRouterAnchorModule,
-    DbxRouterAnchorListModule,
-    DbxInjectionComponentModule,
-    FlexLayoutModule,
-    // Material
-    MatMenuModule,
-    MatIconModule,
-    MatButtonModule
-  ],
-  declarations,
-  exports: [...declarations, DbxCoreFilterModule]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxFilterInteractionModule {}

@@ -35,7 +35,7 @@ export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopov
   }
 
   showHistoryPopover(): void {
-    const origin = this.buttonElement()?.nativeElement;
+    const origin = this.buttonElement();
     this.showPopover(origin);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
 @Component({
@@ -7,12 +7,7 @@ import { Maybe } from '@dereekb/util';
   styleUrls: ['./notificationitem.content.scss']
 })
 export class DbxFirebaseNotificationItemContentComponent {
-  @Input()
-  subject?: Maybe<string>;
-
-  @Input()
-  message?: Maybe<string>;
-
-  @Input()
-  date?: Maybe<Date>;
+  readonly subject = input<Maybe<string>>();
+  readonly message = input<Maybe<string>>();
+  readonly date = input<Maybe<Date>>();
 }

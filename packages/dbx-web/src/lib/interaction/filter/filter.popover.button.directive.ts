@@ -1,9 +1,10 @@
-import { Directive, ElementRef, Input, inject } from '@angular/core';
+import { Directive, ElementRef, Input, input, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxPopoverService } from '../popover/popover.service';
 import { DbxFilterPopoverComponent, DbxFilterComponentParams } from './filter.popover.component';
 import { AbstractPopoverRefDirective } from '../popover/abstract.popover.ref.directive';
 import { FilterSource, PresetFilterSource } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
 
 export type DbxFilterButtonConfig<F extends object> = DbxFilterComponentParams<F>;
 export type DbxFilterButtonConfigWithCustomFilter<F extends object, CF extends FilterSource<F> = FilterSource<F>> = Omit<DbxFilterComponentParams<F, any, CF, any>, 'presetFilter' | 'presetFilterComponentConfig'>;
@@ -13,16 +14,15 @@ export type DbxFilterButtonConfigWithPresetFilter<F extends object, PF extends P
 export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly popupService = inject(DbxPopoverService);
 
-  @Input()
-  config?: DbxFilterComponentParams<F, any, any, any>;
+  readonly config = input<Maybe<DbxFilterComponentParams<F, any, any, any>>>(undefined);
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
-    const config = this.config;
+    const config = this.config();
 
     if (!config) {
-      throw new Error('Missing filterButtonConfig.');
+      throw new Error('AbstractFilterPopoverButtonDirective(): Missing config.');
     } else if (!origin) {
-      throw new Error('Missing origin.');
+      throw new Error('AbstractFilterPopoverButtonDirective(): Missing origin.');
     }
 
     return DbxFilterPopoverComponent.openPopover(this.popupService, {

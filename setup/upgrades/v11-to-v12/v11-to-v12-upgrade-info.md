@@ -234,6 +234,13 @@ bootstrapApplication(UIView, appConfig)
 - Previously `dbxActionSnackbar` could be added to a template just by calling `dbxActionSnackbar`, but it should be added using `[dbxActionSnackbar]` instead.
 - `DbxListViewWrapper` has been updated to expose a readonly `currentState$`, and `loadMore` has been updated to be an `OutputRef<void>`.
 - `DbxListViewWrapper` now provides `setState` and `setSelectionMode` methods instead of assigning the value via getters/setters.
+- `trackBy` is no longer a variable in `AbstractDbxSelectionListViewDirective` and `AbstractDbxListViewDirective` and cannot be assigned directly. Set using `setTrackBy()` in the constructor.
+- Renamed `DbxFirebaseModelTypeInstanceComponent` to `DbxFirebaseModelTypeInstanceListComponent`, as it was a list component that was improperly named.
+- `DbxActionAutoTriggerDirective` has been updated to required being called like `[DbxActionAutoTriggerDirective]`
+- `DbxActionHandlerInstance` replaced setters with `setHandlerFunction` and `setHandlerValue`.
+
+#### Updating DbxList related views
+All views like this should consider being updated to standalone views. The template is still available, but now 
 
 #### Creating private effect() calls
 Some components might have private Signal effects that will raise the issue "_ is declared but its value is never read".

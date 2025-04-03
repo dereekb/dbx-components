@@ -12,13 +12,11 @@ export const DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION: DbxValueListItemDecisio
 };
 
 @Directive({
-  selector: '[dbxListItemIsSelectedModifier]',
+  selector: 'dbxListItemIsSelectedModifier,[dbxListItemIsSelectedModifier]',
   standalone: true
 })
 export class DbxListItemIsSelectedModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
-  readonly listItemIsSelected = input<Maybe<DbxValueListItemDecisionFunction<T>>>(undefined, {
-    alias: 'dbxListItemIsSelectedModifier'
-  });
+  readonly listItemIsSelected = input.required<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<string | DbxValueListItemDecisionFunction<T>>>({ alias: 'dbxListItemIsSelectedModifier', transform: (x) => (typeof x !== 'string' ? x : undefined) });
 
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.listItemIsSelected).pipe(
     map((x) => x ?? DEFAULT_DBX_LIST_ITEM_IS_SELECTED_FUNCTION),

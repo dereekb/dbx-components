@@ -10,3 +10,4 @@ export * from './action.working.directive';
 export * from './action.enforce.modified.directive';
 export * from './action.value.trigger.directive';
 export * from './action.value.trigger.instance';
+export * from './action.value.stream.directive';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, Signal, computed, inject, input, signal } from '@angular/core';
 import { shareReplay, map, BehaviorSubject, combineLatest, of, Observable, distinctUntilChanged } from 'rxjs';
 import { DbxValueListItem } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
@@ -41,10 +41,7 @@ export const DEFAULT_LIST_GRID_SIZE_CONFIG: DbxValueListGridItemViewGridSizeConf
   standalone: true
 })
 export class DbxValueListGridSizeDirective {
-  readonly gridSize = input<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>(undefined, {
-    alias: 'dbxListGridSize'
-  });
-
+  readonly gridSize = input.required<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>({ alias: 'dbxListGridSize' });
   readonly gridSize$ = toObservable(this.gridSize);
 }
 
@@ -54,7 +51,7 @@ export class DbxValueListGridSizeDirective {
 @Component({
   selector: 'dbx-list-grid-view-content',
   template: `
-    <div [gdGap]="gridConfigSignal()?.gap" [gdColumns]="gridConfigSignal()?.columns">
+    <div [gdGap]="gridConfigSignal().gap" [gdColumns]="gridConfigSignal().columns">
       @for (item of items(); track trackByFunctionSignal()($index, item)) {
         <dbx-anchor class="dbx-list-grid-view-item" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
           <div dbx-injection [config]="item.config"></div>
@@ -75,7 +72,7 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
   readonly inputGridConfig = input<Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>>(undefined, { alias: 'grid' });
   readonly gridConfigFromGridSizeSignal = toSignal(this._gridSizeOverride?.gridSize$ ?? of(undefined));
 
-  readonly gridConfigSignal = computed(() => {
+  readonly gridConfigSignal: Signal<DbxValueListGridItemViewGridSizeConfig> = computed(() => {
     return mergeObjects<DbxValueListGridItemViewGridSizeConfig>([DEFAULT_LIST_GRID_SIZE_CONFIG, this.inputGridConfig(), this.gridConfigFromGridSizeSignal()]) as DbxValueListGridItemViewGridSizeConfig;
   });
 
@@ -89,7 +86,7 @@ export class DbxValueListGridViewContentComponent<T, I extends DbxValueListItem<
 @Component({
   selector: 'dbx-list-grid-view',
   template: `
-    <dbx-list-grid-view-content [items]="itemsSignal()" [grid]="config()?.grid" [emitAllClicks]="config()?.emitAllClicks"></dbx-list-grid-view-content>
+    <dbx-list-grid-view-content [items]="itemsSignal()" [grid]="config().grid" [emitAllClicks]="config().emitAllClicks"></dbx-list-grid-view-content>
   `,
   standalone: true,
   imports: [DbxValueListGridViewContentComponent],

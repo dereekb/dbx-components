@@ -24,10 +24,7 @@ export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initi
         work = handlerFunction;
       } else if (handlerValue !== undefined) {
         const getter = asGetter(handlerValue) as FactoryWithInput<O, T>;
-
-        work = (x, c) => {
-          c.performTaskWithReturnValue(() => getter(x));
-        };
+        work = (x, c) => c.performTaskWithReturnValue(() => getter(x));
       }
 
       return work;
@@ -36,28 +33,28 @@ export class DbxActionHandlerInstance<T = unknown, O = unknown> implements Initi
     shareReplay(1)
   );
 
-  get handlerFunction(): Maybe<Work<T, O>> {
-    return this._handlerFunction.value;
-  }
-
-  set handlerFunction(handlerFunction: Maybe<Work<T, O>>) {
-    this._handlerFunction.next(handlerFunction);
-  }
-
-  get handlerValue(): Maybe<GetterOrValue<O> | FactoryWithInput<O, T>> {
-    return this._handlerValue.value;
-  }
-
-  set handlerValue(handlerValue: Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>) {
-    this._handlerValue.next(handlerValue);
-  }
-
   constructor(source: DbxActionContextStoreSourceInstance<T, O>) {
     this._delegate = new DbxActionWorkInstanceDelegate<T, O>(source);
   }
 
   get source(): DbxActionContextStoreSourceInstance<T, O> {
     return this._delegate.source;
+  }
+
+  get handlerFunction(): Maybe<Work<T, O>> {
+    return this._handlerFunction.value;
+  }
+
+  get handlerValue(): Maybe<GetterOrValue<O> | FactoryWithInput<O, T>> {
+    return this._handlerValue.value;
+  }
+
+  setHandlerFunction(handlerFunction: Maybe<Work<T, O>>): void {
+    this._handlerFunction.next(handlerFunction);
+  }
+
+  setHandlerValue(handlerValue: Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>): void {
+    this._handlerValue.next(handlerValue);
   }
 
   init(): void {

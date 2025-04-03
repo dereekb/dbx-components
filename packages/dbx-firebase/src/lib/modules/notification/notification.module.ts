@@ -13,7 +13,7 @@ import { DbxValuePipeModule } from '@dereekb/dbx-core';
 import { DbxFirebaseNotificationItemContentComponent } from './component/notificationitem.content.component';
 import { DbxFirebaseNotificationItemStorePopoverButtonComponent, DbxFirebaseNotificationItemStorePopoverComponent } from './container';
 
-const declarations = [
+const importsAndExports = [
   // components
   DbxFirebaseNotificationItemListComponent,
   DbxFirebaseNotificationItemListViewComponent,
@@ -40,8 +40,7 @@ const declarations = [
  * Used to initialize the DbxFirebaseNotificationModule.
  */
 @NgModule({
-  imports: [CommonModule, DbxButtonModule, DbxRouterListModule, DbxPopoverInteractionModule, DbxSectionLayoutModule, DbxListLayoutModule, DbxWidgetModule, DbxValuePipeModule],
-  declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxFirebaseNotificationModule {}

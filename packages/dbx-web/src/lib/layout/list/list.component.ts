@@ -111,7 +111,7 @@ export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
   templateUrl: './list.component.html',
   host: {
     class: 'd-block dbx-list',
-    '[class.dbx-list-padded]': 'padded'
+    '[class.dbx-list-padded]': 'padded()'
   },
   standalone: true,
   imports: [DbxLoadingComponent, DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective],
@@ -127,12 +127,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
    * Whether or not to add bottom padding to the list content.
    */
   readonly padded = input<boolean>(true);
-
-  /**
-   * @deprecated use state instead.
-   */
-  // readonly state$ = input.required<Observable<S>>();
-  // readonly state = input.required<ObservableOrValue<S>>();
 
   readonly config = input<Maybe<DbxListConfig<T, V>>>(undefined);
 

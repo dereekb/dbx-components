@@ -12,31 +12,32 @@ import { DbxFirebaseDevelopmentPopupContentFormComponent } from './development.p
 import { DbxFirebaseDevelopmentSchedulerListComponent, DbxFirebaseDevelopmentSchedulerListViewComponent, DbxFirebaseDevelopmentSchedulerListViewItemComponent } from './development.scheduler.list.component';
 import { DbxFirebaseDevelopmentSchedulerWidgetComponent } from './development.scheduler.widget.component';
 
-/**
- * Contains components related to logging in.
- */
-@NgModule({
-  imports: [CommonModule, MatIconModule, DbxWidgetModule, DbxTextModule, DbxBlockLayoutModule, DbxTwoColumnLayoutModule, MatButtonModule, DbxRouterAnchorModule, DbxPopupInteractionModule, DbxFormIoModule, DbxFormModule, DbxFormlyModule, DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxReadableErrorModule, DbxActionModule, DbxButtonModule, DbxInjectionComponentModule, DbxListLayoutModule],
-  declarations: [
-    //
-    DbxFirebaseDevelopmentPopupContentFormComponent,
-    DbxFirebaseDevelopmentDirective,
-    DbxFirebaseDevelopmentPopupComponent,
-    DbxFirebaseDevelopmentPopupContentComponent,
-    DbxFirebaseDevelopmentSchedulerWidgetComponent,
-    DbxFirebaseDevelopmentSchedulerListComponent,
-    DbxFirebaseDevelopmentSchedulerListViewComponent,
-    DbxFirebaseDevelopmentSchedulerListViewItemComponent
-  ],
-  exports: [
-    //
-    DbxFirebaseDevelopmentDirective,
-    DbxFirebaseDevelopmentPopupComponent,
-    DbxFirebaseDevelopmentPopupContentComponent,
-    DbxFirebaseDevelopmentSchedulerWidgetComponent,
-    DbxFirebaseDevelopmentSchedulerListComponent,
-    DbxFirebaseDevelopmentSchedulerListViewComponent,
-    DbxFirebaseDevelopmentSchedulerListViewItemComponent
-  ]
-})
-export class DbxFirebaseDevelopmentModule {}
+const importsAndExports =
+  /**
+   * Contains components related to logging in.
+   */
+  @NgModule({
+    imports: [CommonModule, MatIconModule, DbxWidgetModule, DbxTextModule, DbxBlockLayoutModule, DbxTwoColumnLayoutModule, MatButtonModule, DbxRouterAnchorModule, DbxPopupInteractionModule, DbxFormIoModule, DbxFormModule, DbxFormlyModule, DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxReadableErrorModule, DbxActionModule, DbxButtonModule, DbxInjectionComponentModule, DbxListLayoutModule],
+    declarations: [
+      //
+      DbxFirebaseDevelopmentPopupContentFormComponent,
+      DbxFirebaseDevelopmentDirective,
+      DbxFirebaseDevelopmentPopupComponent,
+      DbxFirebaseDevelopmentPopupContentComponent,
+      DbxFirebaseDevelopmentSchedulerWidgetComponent,
+      DbxFirebaseDevelopmentSchedulerListComponent,
+      DbxFirebaseDevelopmentSchedulerListViewComponent,
+      DbxFirebaseDevelopmentSchedulerListViewItemComponent
+    ],
+    exports: [
+      //
+      DbxFirebaseDevelopmentDirective,
+      DbxFirebaseDevelopmentPopupComponent,
+      DbxFirebaseDevelopmentPopupContentComponent,
+      DbxFirebaseDevelopmentSchedulerWidgetComponent,
+      DbxFirebaseDevelopmentSchedulerListComponent,
+      DbxFirebaseDevelopmentSchedulerListViewComponent,
+      DbxFirebaseDevelopmentSchedulerListViewItemComponent
+    ]
+  })
+  export class DbxFirebaseDevelopmentModule {};

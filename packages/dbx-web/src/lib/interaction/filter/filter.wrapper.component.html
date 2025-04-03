@@ -2,11 +2,13 @@
   <div class="dbx-filter-wrapper-content">
     <ng-content></ng-content>
   </div>
-  <div *ngIf="showButtons" fxLayout="row">
-    <dbx-button dbxActionButton [raised]="applyRaised" [text]="applyText" [icon]="applyIcon"></dbx-button>
-    <div class="spacer"></div>
-    <button mat-icon-button (click)="resetFilter()">
-      <mat-icon>clear</mat-icon>
-    </button>
-  </div>
+  @if (showButtons()) {
+    <div fxLayout="row">
+      <dbx-button dbxActionButton [raised]="applyRaised()" [text]="applyText()" [icon]="applyIcon()"></dbx-button>
+      <div class="spacer"></div>
+      <button mat-icon-button (click)="resetFilter()">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  }
 </div>

@@ -10,18 +10,16 @@ import { toObservable } from '@angular/core/rxjs-interop';
  * DbxValueListViewModifier implementation
  */
 @Directive({
-  selector: '[dbxListItemModifier]',
+  selector: 'dbxListItemModifier,[dbxListItemModifier]',
   providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective),
   standalone: true
 })
 export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I>, OnDestroy {
-  readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>>(undefined, {
-    alias: 'dbxListItemModifier'
-  });
+  readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>, Maybe<string | ArrayOrValue<Modifier<I>>>>(undefined, { alias: 'dbxListItemModifier', transform: (x) => (typeof x === 'string' ? undefined : x) });
 
-  private readonly _modifiers = new BehaviorSubject<Maybe<ModifierMap<I>>>(undefined);
+  private readonly _additionalModifiers = new BehaviorSubject<Maybe<ModifierMap<I>>>(undefined);
 
-  readonly modifiers$ = combineLatest([this._modifiers, toObservable(this.inputModifiers)]).pipe(
+  readonly modifiers$ = combineLatest([this._additionalModifiers, toObservable(this.inputModifiers)]).pipe(
     map(([modifiers, inputModifiers]) => {
       return combineMaps(modifiers, inputModifiers ? addModifiers(inputModifiers) : undefined);
     }),
@@ -29,16 +27,16 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
   );
 
   ngOnDestroy(): void {
-    this._modifiers.complete();
+    this._additionalModifiers.complete();
   }
 
   // MARK: Modifiers
   addModifiers(modifiers: ArrayOrValue<Modifier<I>>): void {
-    this._modifiers.next(addModifiers(modifiers, this._modifiers.value));
+    this._additionalModifiers.next(addModifiers(modifiers, this._additionalModifiers.value));
   }
 
   removeModifiers(modifiers: ArrayOrValue<Modifier<I>>): void {
-    this._modifiers.next(removeModifiers(modifiers, this._modifiers.value));
+    this._additionalModifiers.next(removeModifiers(modifiers, this._additionalModifiers.value));
   }
 }
 

@@ -1,16 +1,22 @@
-import { Component, inject } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
 import { NotificationItem } from '@dereekb/firebase';
-import { cachedGetter } from '@dereekb/util';
+import { cachedGetter, Maybe } from '@dereekb/util';
 import { of } from 'rxjs';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
+import { MaybeObservableOrValue, ObservableOrValue, ListLoadingState } from '@dereekb/rxjs';
+import { DatePipe } from '@angular/common';
+import { CutTextPipe } from '@dereekb/dbx-core';
 
 export type NotificationItemWithSelection = DbxValueAsListItem<NotificationItem>;
 
 @Component({
   selector: 'dbx-firebase-notificationitem-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListViewWrapper(DbxFirebaseNotificationItemListComponent)
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
+  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
+  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  providers: provideDbxListViewWrapper(DbxFirebaseNotificationItemListComponent),
+  standalone: true
 })
 export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelectionListWrapperDirective<NotificationItem> {
   constructor() {
@@ -23,8 +29,11 @@ export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelecti
 
 @Component({
   selector: 'dbx-firebase-notificationitem-list-view',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListView(DbxFirebaseNotificationItemListViewComponent)
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
+  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
+  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  providers: provideDbxListView(DbxFirebaseNotificationItemListViewComponent),
+  standalone: true
 })
 export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSelectionListViewDirective<NotificationItem> {
   readonly config: DbxSelectionValueListViewConfig<NotificationItemWithSelection> = {
@@ -42,7 +51,10 @@ export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSel
         <span class="notificationitem-date item-details-footnote">{{ date | date: 'medium' }}</span>
       </div>
     </div>
-  `
+  `,
+  imports: [DatePipe, CutTextPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFirebaseNotificationItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<NotificationItem> {
   readonly dbxFirebaseNotificationTemplateService = inject(DbxFirebaseNotificationTemplateService);

@@ -4,5 +4,9 @@
   <dbx-injection [config]="injectedComponentConfigSignal()"></dbx-injection>
   <ng-content select="[bottom]"></ng-content>
 </div>
-<ng-content *ngIf="isEmptyAndNotLoadingSignal()" select="[empty]"></ng-content>
-<ng-content *ngIf="isEmptyLoadingSignal()" select="[emptyLoading]"></ng-content>
+@if (isEmptyAndNotLoadingSignal()) {
+  <ng-content select="[empty]"></ng-content>
+}
+@if (isEmptyLoadingSignal()) {
+  <ng-content select="[emptyLoading]"></ng-content>
+}

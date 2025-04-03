@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit, effect, inject, input } from '@angular/core';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { FactoryWithInput, GetterOrValue, type Maybe } from '@dereekb/util';
 import { DbxActionHandlerInstance } from './action.handler.instance';
@@ -8,12 +8,11 @@ import { Work } from '@dereekb/rxjs';
  * Abstract directive that wraps and handles a DbxActionHandlerInstance lifecycle.
  */
 @Directive()
-export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> implements OnInit, OnDestroy {
+export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> implements OnDestroy {
   readonly source: DbxActionContextStoreSourceInstance<T, O> = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+  protected readonly _dbxActionHandlerInstance = new DbxActionHandlerInstance<T, O>(this.source);
 
-  protected _dbxActionHandlerInstance = new DbxActionHandlerInstance<T, O>(this.source);
-
-  ngOnInit(): void {
+  constructor() {
     this._dbxActionHandlerInstance.init();
   }
 
@@ -23,45 +22,29 @@ export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown
 }
 
 /**
- * Directive that wraps and controls a DbxActionHandlerInstance.
+ * Directive that passes a Work function to handle a valueReady$ event from an action context.
  */
 @Directive({
   selector: '[dbxActionHandler]',
   standalone: true
 })
 export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
-  @Input('dbxActionHandler')
-  get handlerFunction(): Maybe<Work<T, O>> {
-    return this._dbxActionHandlerInstance.handlerFunction;
-  }
-
-  set handlerFunction(handlerFunction: Maybe<Work<T, O>>) {
-    this._dbxActionHandlerInstance.handlerFunction = handlerFunction;
-  }
+  readonly handlerFunction = input.required<Maybe<Work<T, O>>>({ alias: 'dbxActionHandler' });
+  private readonly _handlerFunctionEffect = effect(() => {
+    this._dbxActionHandlerInstance.setHandlerFunction(this.handlerFunction());
+  });
 }
 
 /**
- * Directive that passes
+ * Directive that passes a value to handle a valueReady$ event from an action context.
  */
 @Directive({
   selector: '[dbxActionHandlerValue]',
   standalone: true
 })
 export class DbxActionHandlerValueDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
-  @Input('dbxActionHandlerValue')
-  get handlerValue(): Maybe<GetterOrValue<O> | FactoryWithInput<O, T>> {
-    return this._dbxActionHandlerInstance.handlerValue;
-  }
-
-  set handlerValue(handlerValue: Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>) {
-    this._dbxActionHandlerInstance.handlerValue = handlerValue;
-  }
-
-  override ngOnInit(): void {
-    super.ngOnInit();
-
-    if (this.handlerValue === undefined) {
-      this.handlerValue = null; // pass a default null value
-    }
-  }
+  readonly handlerValue = input.required<Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>>({ alias: 'dbxActionHandlerValue' });
+  private readonly _handlerValueEffect = effect(() => {
+    this._dbxActionHandlerInstance.setHandlerValue(this.handlerValue());
+  });
 }

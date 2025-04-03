@@ -10,6 +10,7 @@ The updates follow the following rules:
 - signal variables should be declared as private readonly with an underscore prefix and the Signal suffix. e.g. `private readonly _internalSignal = signal<number>(0);`
 - signal variable names have the Signal suffix. e.g. readonly internalSignal = this._internalSignal.asReadonly();
 - signals created via toSignal() or computed() can be made public directly.
+- signals created via toSignal() or computed() should always have the Signal suffix. e.g. `readonly presetAnchors = toSignal(this.presetAnchors$);`
 - public signals of private signals should be exposed using the private signal's .asReadonly() method. e.g. `readonly internalSignal = this._internalSignal.asReadonly();`. This does not apply to signals created via toSignal(...) as they are already readonly.
 - public signals that are computed from private signals should use computed(). e.g. `readonly internalSignal = computed(() => !this._internalSignal());`
 - input signals should not have the Signal suffix. e.g. `readonly block = input<Maybe<boolean>>();`
@@ -17,4 +18,7 @@ The updates follow the following rules:
 - if removing all BehaviorSubjects or all destroyable variables that are destroyed in ngOnDestroy, then remove the ngOnDestroy method and update the class declaration to no longer implement OnDestroy.
 - All usage of the async pipe should be replaced with signals usage. e.g. `{{ block() }}` instead of `{{ block$ | async }}`
 - Any @Output should be updated to use output() in instead. e.g. `@Output() block: EventEmitter<Maybe<boolean>> = new EventEmitter<Maybe<boolean>>();` is replaced by `readonly block = output<Maybe<boolean>>();`
-- If an EventEmitter was destroyed in ngOnDestroy, then remove the destroy call and if ngOnDestroy is now empty it can also be removed, along with implements OnDestroy.
+- EventEmitters no longer need to be destroyed
+- If an EventEmitter was destroyed in ngOnDestroy, then remove the destroy call
+- If ngOnDestroy is now empty it can also be removed, along with implements OnDestroy.
+- Do not add additional comments, but you can move or modify existing comments.

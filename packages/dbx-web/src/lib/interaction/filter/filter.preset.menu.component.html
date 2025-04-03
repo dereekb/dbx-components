@@ -1,12 +1,18 @@
 <button mat-button [matMenuTriggerFor]="menu" class="dbx-preset-filter-menu-button" aria-label="open filter">
-  <mat-icon class="dbx-icon-spacer" *ngIf="buttonIcon$ | async">{{ buttonIcon$ | async }}</mat-icon>
-  <span>{{ buttonText$ | async }}</span>
+  @if (buttonIconSignal()) {
+    <mat-icon class="dbx-icon-spacer">{{ buttonIconSignal() }}</mat-icon>
+  }
+  <span>{{ buttonTextSignal() }}</span>
 </button>
 <mat-menu #menu class="dbx-preset-filter-menu">
-  <dbx-anchor *ngFor="let anchor of presetAnchors$ | async" [anchor]="anchor">
-    <button mat-menu-item [ngClass]="anchor.selected ? 'active' : ''">
-      <mat-icon *ngIf="anchor.icon">{{ anchor.icon }}</mat-icon>
-      {{ anchor.title }}
-    </button>
-  </dbx-anchor>
+  @for (anchor of presetAnchorsSignal(); track $index) {
+    <dbx-anchor [anchor]="anchor">
+      <button mat-menu-item [ngClass]="anchor.selected ? 'active' : ''">
+        @if (anchor.icon) {
+          <mat-icon>{{ anchor.icon }}</mat-icon>
+        }
+        {{ anchor.title }}
+      </button>
+    </dbx-anchor>
+  }
 </mat-menu>

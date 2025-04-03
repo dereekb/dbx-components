@@ -1,30 +1,28 @@
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
-import { Directive, EventEmitter, Input, OnDestroy, Output, inject } from '@angular/core';
+import { Directive, EventEmitter, Input, OnDestroy, Output, inject, input, output } from '@angular/core';
 import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective, ClickablePartialFilterPreset, ClickableFilterPresetOrPartialPreset, isClickableFilterPreset } from '@dereekb/dbx-core';
 import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { FilterWithPreset } from '@dereekb/rxjs';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
-/**
- * Displays a button and menu for filtering presets.
- */
 @Directive()
-export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithPreset> implements OnDestroy {
+export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithPreset> {
   readonly filterSourceDirective = inject(FilterSourceDirective<F>);
 
-  @Output()
-  readonly presetSelected = new EventEmitter<ClickableFilterPresetOrPartialPreset<F>>();
+  readonly presetSelected = output<ClickableFilterPresetOrPartialPreset<F>>();
+  readonly presets = input<ClickableFilterPresetOrPartialPreset<F>[]>([]);
 
-  private _presets = new BehaviorSubject<ClickableFilterPresetOrPartialPreset<F>[]>([]);
+  readonly presets$ = toObservable(this.presets);
 
   readonly selected$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged(), shareReplay(1));
-  readonly presetsWithPresetStringOnly$: Observable<ClickableFilterPreset<F>[]> = this._presets.pipe(map((x) => x.filter((y) => Boolean((y as ClickableFilterPreset<F>).preset)) as ClickableFilterPreset<F>[]));
+  readonly presetsWithPresetStringOnly$: Observable<ClickableFilterPreset<F>[]> = this.presets$.pipe(map((x) => x.filter((y) => Boolean((y as ClickableFilterPreset<F>).preset)) as ClickableFilterPreset<F>[]));
 
   readonly selectedPresetString$: Observable<Maybe<string>> = this.selected$.pipe(
     map((selectedFilter) => (selectedFilter ? selectedFilter.preset : undefined)),
     distinctUntilChanged()
   );
 
-  readonly presetAnchorsPairs$: Observable<['preset' | 'partialPreset', ClickableFilterPresetOrPartialPreset<F>, ClickableAnchorLink][]> = combineLatest([this._presets, this.selected$, this.selectedPresetString$]).pipe(
+  readonly presetAnchorsPairs$: Observable<['preset' | 'partialPreset', ClickableFilterPresetOrPartialPreset<F>, ClickableAnchorLink][]> = combineLatest([this.presets$, this.selected$, this.selectedPresetString$]).pipe(
     map(([presets, currentFilterValue, selectedPresetString]) => {
       return presets.map((x) => {
         let selected: boolean;
@@ -75,14 +73,8 @@ export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithP
     shareReplay(1)
   );
 
-  @Input()
-  get presets(): ClickableFilterPresetOrPartialPreset<F>[] {
-    return this._presets.value;
-  }
-
-  set presets(presets: ClickableFilterPresetOrPartialPreset<F>[]) {
-    this._presets.next(presets);
-  }
+  readonly presetAnchorsSignal = toSignal(this.presetAnchors$, { initialValue: [] });
+  readonly selectedPresetSignal = toSignal(this.selectedPreset$);
 
   selectPreset(preset: ClickableFilterPresetOrPartialPreset<F>) {
     const presetString = (preset as ClickableFilterPreset<F>).preset;
@@ -105,11 +97,6 @@ export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithP
       this.filterSourceDirective.setFilter(filter);
     }
 
-    this.presetSelected.next(preset);
-  }
-
-  ngOnDestroy(): void {
-    this._presets.complete();
-    this.presetSelected.complete();
+    this.presetSelected.emit(preset);
   }
 }

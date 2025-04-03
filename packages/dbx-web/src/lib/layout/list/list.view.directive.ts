@@ -57,4 +57,8 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void {
     this._selectionMode.next(selectionMode);
   }
+
+  setTrackBy(trackBy: Maybe<TrackByFunction<T>>) {
+    this._trackBy.next(trackBy);
+  }
 }
