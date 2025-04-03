@@ -111,7 +111,7 @@ export class DbxFormSourceDirective<T = unknown> extends AbstractSubscriptionDir
   readonly dbxFormSourceMode = input<Maybe<DbxFormSourceDirectiveMode>>();
   readonly dbxFormSource = input<Maybe<ObservableOrValue<Maybe<Partial<T>>>>>();
 
-  private readonly _setFormSourceObservableEffect = effect(() => {
+  protected readonly _setFormSourceObservableEffect = effect(() => {
     const formSource = this.dbxFormSource();
     const mode: DbxFormSourceDirectiveMode = this.dbxFormSourceMode() ?? 'reset';
 

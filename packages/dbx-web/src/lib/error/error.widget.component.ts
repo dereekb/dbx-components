@@ -1,5 +1,4 @@
-import { Observable, BehaviorSubject, map } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { Maybe, ReadableError, ReadableErrorWithCode } from '@dereekb/util';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxErrorWidgetService } from './error.widget.service';
@@ -56,9 +55,13 @@ export class DbxErrorWidgetViewComponent {
     return config;
   });
 
-  @Input()
-  set error(error: Maybe<ReadableError>) {
-    const config = error && error.code ? (error as ReadableErrorWithCode) : undefined;
-    this._errorWithCodeSignal.set(config);
+  readonly error = input<Maybe<ReadableError>>();
+
+  constructor() {
+    // Set up effect to update the error code signal when the input changes
+    effect(() => {
+      const error = this.error();
+      this._errorWithCodeSignal.set(error && error.code ? (error as ReadableErrorWithCode) : undefined);
+    });
   }
 }

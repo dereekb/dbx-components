@@ -8,7 +8,8 @@ import { latLngPoint } from '@dereekb/util';
  * Directive that configures a MapComponent with content from DbxMapboxService. Connects a host MapService to a parent DbxMapboxMapStore if available.
  */
 @Directive({
-  selector: '[dbxMapboxMap]'
+  selector: '[dbxMapboxMap]',
+  standalone: true
 })
 export class DbxMapboxMapDirective implements OnInit {
   readonly mapService = inject(MapService, { host: true });

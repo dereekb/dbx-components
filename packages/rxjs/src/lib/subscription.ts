@@ -17,13 +17,13 @@ export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> imple
     return Boolean(this._subscription);
   }
 
-  public set subscription(sub: Maybe<T>) {
+  public set subscription(sub: Maybe<T | void>) {
     this.setSub(sub);
   }
 
-  public setSub(sub: Maybe<T>) {
+  public setSub(sub: Maybe<T | void>) {
     this.unsub();
-    this._subscription = sub;
+    this._subscription = sub as T | undefined;
   }
 
   public unsub() {

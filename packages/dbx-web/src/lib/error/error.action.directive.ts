@@ -15,7 +15,7 @@ export class DbxActionErrorDirective extends AbstractSubscriptionDirective imple
 
   ngOnInit(): void {
     this.sub = this.source.error$.subscribe((error) => {
-      this.error.error = error;
+      this.error.setError(error);
     });
   }
 }

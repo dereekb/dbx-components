@@ -1,7 +1,8 @@
 import { Observable, shareReplay } from 'rxjs';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { DbxInjectionArrayEntry } from '@dereekb/dbx-core';
+import { DbxInjectionArrayComponent, DbxInjectionArrayEntry } from '@dereekb/dbx-core';
 import { DbxMapboxInjectionStore } from './mapbox.injection.store';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Injects the components configured in the DbxMapboxInjectionStore into the view.
@@ -9,12 +10,13 @@ import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 @Component({
   selector: 'dbx-mapbox-injection',
   template: `
-    <dbx-injection-array [entries]="entries$ | async"></dbx-injection-array>
+    <dbx-injection-array [entries]="entriesSignal()"></dbx-injection-array>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionArrayComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxMapboxInjectionComponent {
   readonly dbxMapboxMapKeyInjectionStore = inject(DbxMapboxInjectionStore);
-
-  readonly entries$: Observable<DbxInjectionArrayEntry[]> = this.dbxMapboxMapKeyInjectionStore.allInjectionConfigs$.pipe(shareReplay(1));
+  readonly entriesSignal = toSignal(this.dbxMapboxMapKeyInjectionStore.allInjectionConfigs$);
 }

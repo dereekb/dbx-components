@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { from } from 'rxjs';
 import { DbxErrorComponent } from './error.component';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 export type DbxErrorSnackbarConfig = Omit<MatSnackBarConfig<any>, 'data' | 'viewContainerRef'>;
 
@@ -40,29 +41,29 @@ export class DbxErrorSnackbarComponent implements OnInit, OnDestroy {
   private readonly _popoverOpen = signal(false);
 
   private readonly _timer = makeTimer(this.data.duration ?? MS_IN_MINUTE, Boolean(this.data.duration));
-  private readonly _allowAutoDismiss = Boolean(this.data.duration);
+  private readonly _allowAutoDismiss = this.data.duration != null;
 
-  private readonly _popoverSyncEffect = effect(() => {
-    toggleTimerRunning(this._timer, !this._popoverOpen());
-  });
+  protected readonly _popoverSyncEffect = effect(() => toggleTimerRunning(this._timer, !this._popoverOpen()));
 
-  private readonly _autoDismissEffect = from(this._timer.promise).subscribe(() => this.dismiss());
+  private readonly _popoverAfterClosedSub = new SubscriptionObject();
+  private readonly _autoDismissSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    if (!this._allowAutoDismiss) {
+    if (this._allowAutoDismiss) {
+      this._autoDismissSub.subscription = from(this._timer.promise).subscribe(() => this.dismiss());
+    } else {
       this._popoverSyncEffect.destroy();
-      this._autoDismissEffect.unsubscribe();
     }
   }
 
   ngOnDestroy(): void {
-    this._autoDismissEffect.unsubscribe();
+    this._autoDismissSub.destroy();
     this._timer.destroy();
   }
 
   onPopoverOpened(popover: NgPopoverRef) {
     this._popoverOpen.set(true);
-    popover.afterClosed$.subscribe(() => this._popoverOpen.set(false));
+    this._popoverAfterClosedSub.subscription = popover.afterClosed$.subscribe(() => this._popoverOpen.set(false));
   }
 
   dismiss() {

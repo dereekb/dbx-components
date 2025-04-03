@@ -42,7 +42,7 @@ export class DbxFirebaseDevelopmentSchedulerListViewComponent extends AbstractDb
 
 @Component({
   template: `
-    <div dbxAction dbxActionValue fastTrigger [dbxActionHandler]="handleRun">
+    <div dbxAction dbxActionValue useFastTriggerPreset [dbxActionHandler]="handleRun">
       <dbx-button dbxActionButton [text]="'Run ' + name"></dbx-button>
       <div *dbxActionHasSuccess="3000" class="dbx-success" dbxActionSuccess>Success</div>
     </div>

@@ -17,8 +17,8 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   private readonly _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
   private readonly _values = new BehaviorSubject<MaybeObservableOrValue<T[]>>(undefined);
 
-  private readonly _valuesArrayEffect = effect(() => this._values.next(this.valuesArray()));
-  private readonly _valuesEffect = effect(() => this._values.next(this.values()));
+  protected readonly _valuesArrayEffect = effect(() => this._values.next(this.valuesArray()));
+  protected readonly _valuesEffect = effect(() => this._values.next(this.values()));
 
   readonly trackBy$ = this._trackBy.asObservable();
   readonly values$: Observable<T[]> = this._values.pipe(

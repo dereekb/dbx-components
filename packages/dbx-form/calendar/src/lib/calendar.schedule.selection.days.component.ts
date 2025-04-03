@@ -9,7 +9,7 @@ import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-days',
   template: `
-    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [instantTrigger]="true" [dbxActionHandler]="updateScheduleDays">
+    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [useInstantTriggerPreset]="true" [dbxActionHandler]="updateScheduleDays">
       <dbx-schedule-selection-calendar-date-days-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormIsModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-form>
     </div>
   `

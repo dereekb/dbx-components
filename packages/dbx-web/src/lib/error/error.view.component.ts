@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChild } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,10 +14,10 @@ export interface DbxErrorViewButtonEvent {
 @Component({
   selector: 'dbx-error-view',
   template: `
-    <button class="dbx-error-button" [disabled]="buttonDisabled" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
-      <mat-icon>{{ icon }}</mat-icon>
+    <button class="dbx-error-button" [disabled]="buttonDisabled()" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
+      <mat-icon>{{ icon() }}</mat-icon>
     </button>
-    <span class="dbx-error-message" *ngIf="message">{{ message }}</span>
+    <span class="dbx-error-message" @if(message()){}>{{ message() }}</span>
   `,
   host: {
     class: 'dbx-error dbx-warn dbx-b'
@@ -27,33 +27,24 @@ export interface DbxErrorViewButtonEvent {
   imports: [CommonModule, MatIconModule, MatButtonModule]
 })
 export class DbxErrorViewComponent {
-  @Input()
-  icon: string = 'error';
+  readonly icon = input<string>('error');
 
-  @Input()
-  message?: Maybe<string>;
+  readonly message = input<Maybe<string>>();
 
   /**
    * Whether or not the error button is disabled.
    */
-  @Input()
-  buttonDisabled?: Maybe<boolean>;
+  readonly buttonDisabled = input<Maybe<boolean>>();
 
-  @Output()
-  readonly buttonClick = new EventEmitter<DbxErrorViewButtonEvent>();
+  readonly buttonClick = output<DbxErrorViewButtonEvent>();
 
-  @ViewChild('buttonPopoverOrigin', { read: ElementRef })
-  buttonOrigin!: ElementRef;
+  readonly buttonOrigin = viewChild.required<ElementRef>('buttonPopoverOrigin');
 
   clickError() {
-    if (!this.buttonDisabled) {
+    if (!this.buttonDisabled()) {
       this.buttonClick.emit({
-        origin: this.buttonOrigin
+        origin: this.buttonOrigin()
       });
     }
-  }
-
-  ngOnDestroy(): void {
-    this.buttonClick.complete();
   }
 }

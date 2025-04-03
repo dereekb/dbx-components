@@ -66,14 +66,14 @@
 
       <button mat-raised-button (click)="resetValue()">Reset Value</button>
 
-      <h4>fastTrigger</h4>
-      <p>The fastTrigger and instantTrigger inputs exist to make it easy to set the trigger debounce and throttle times without explicitly passing them values.</p>
+      <h4>useFastTriggerPreset</h4>
+      <p>The useFastTriggerPreset and useInstantTriggerPreset inputs exist to make it easy to set the trigger debounce and throttle times without explicitly passing them values.</p>
       <p>The fast trigger is useful for autosave cases of forms. It has a 200ms debounce and 500ms throttle.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionAutoTrigger fastTrigger></dbx-action-example-tools>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionAutoTrigger useFastTriggerPreset></dbx-action-example-tools>
 
-      <h4>instantTrigger</h4>
+      <h4>useInstantTriggerPreset</h4>
       <p>The instant trigger is useful for cases where the action should go off immediately. It has no throttle and a minor debounce. An example is when an action receive it's value from a user popup.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionAutoTrigger instantTrigger></dbx-action-example-tools>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$" dbxActionAutoTrigger useInstantTriggerPreset></dbx-action-example-tools>
 
       <button mat-raised-button (click)="resetValue()">Reset Value</button>
     </doc-feature-example>

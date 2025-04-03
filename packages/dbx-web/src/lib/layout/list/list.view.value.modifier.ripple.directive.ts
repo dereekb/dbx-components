@@ -18,7 +18,7 @@ export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DbxValueListItemDecisionFun
 export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
   readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<string | DbxValueListItemDecisionFunction<T>>>(undefined, { alias: 'dbxListItemDisableRippleModifier', transform: (x) => (typeof x !== 'string' ? x : undefined) });
 
-  readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.disableRippleForItem).pipe(
+  readonly disableRippleForItemModifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.disableRippleForItem).pipe(
     map((x) => x ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION),
     map((disableRippleForItem) => {
       const modifiers: Modifier<DbxValueListItem<T>> = {
@@ -33,4 +33,9 @@ export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxVal
       return modifiers;
     })
   );
+
+  constructor() {
+    super();
+    this.setModifiers(this.disableRippleForItemModifiers$);
+  }
 }

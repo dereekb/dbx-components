@@ -1,13 +1,19 @@
-import { tap, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable } from 'rxjs';
-import { Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, Observable, Subscription, shareReplay, delay } from 'rxjs';
+import { Component, ElementRef, OnDestroy, OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, Signal } from '@angular/core';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { type Maybe } from '@dereekb/util';
-import { DbxThemeColor } from '@dereekb/dbx-web';
-import { ResizedEvent } from 'angular-resize-event-package';
+import { DbxColorDirective, DbxThemeColor } from '@dereekb/dbx-web';
+import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { MatDrawerContainer } from '@angular/material/sidenav';
+import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { MapboxEaseTo } from './mapbox';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { CommonModule, NgClass } from '@angular/common';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatButtonModule, MatIconButton } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { DbxMapboxLayoutDrawerComponent } from './mapbox.layout.drawer.component';
 
 export type DbxMapboxLayoutSide = 'left' | 'right';
 
@@ -23,82 +29,94 @@ export type DbxMapboxLayoutMode = 'side' | 'push';
 @Component({
   selector: 'dbx-mapbox-layout',
   templateUrl: './mapbox.layout.component.html',
-  styleUrls: ['./mapbox.layout.component.scss']
+  styleUrls: ['./mapbox.layout.component.scss'],
+  imports: [AngularResizeEventModule, NgClass, DbxMapboxLayoutDrawerComponent, MatDrawer, MatDrawerContainer, MatDrawerContent, MatIconModule, MatIconButton, DbxColorDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
 
-  @Output()
-  readonly openedChange = new EventEmitter<boolean>();
+  private readonly _viewResized = new Subject<ResizedEvent>();
+  private readonly _refreshContentMargins = new Subject<void>();
 
-  @ViewChild(MatDrawerContainer, { read: ElementRef })
-  readonly containerElement!: ElementRef;
+  readonly drawerOpenedChange = output<boolean>();
 
-  @ViewChild(MatDrawerContainer)
-  readonly drawerContainer!: MatDrawerContainer;
+  readonly drawerContainer = viewChild.required<MatDrawerContainer>(MatDrawerContainer);
+  readonly drawerContainerElement = viewChild.required<MatDrawerContainer, ElementRef<HTMLElement>>(MatDrawerContainer, { read: ElementRef<HTMLElement> });
+  readonly drawerContent = viewChild.required<ElementRef<HTMLElement>>('drawerContent');
 
-  @ViewChild('content', { read: ElementRef, static: true })
-  readonly content!: ElementRef;
+  readonly side = input<DbxMapboxLayoutSide, Maybe<DbxMapboxLayoutSide>>('right', { transform: (x) => x || 'right' });
+  readonly mode = input<DbxMapboxLayoutMode, Maybe<DbxMapboxLayoutMode>>('side', { transform: (x) => x || 'side' });
 
-  private readonly _resized = new Subject<ResizedEvent>();
-  private readonly _updateMargins = new Subject<void>();
-  private readonly _forceHasContent = new BehaviorSubject<boolean>(false);
-  private readonly _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
-  private readonly _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
-  private readonly _isOpen = new BehaviorSubject<boolean>(true);
-  private readonly _color = new BehaviorSubject<Maybe<DbxThemeColor>>('background');
-  private readonly _toggleSub = new SubscriptionObject();
+  /**
+   * Forces the drawer to assume the drawer has content if true, or assume it has no content if false.
+   */
+  readonly forceHasDrawerContent = input<Maybe<boolean>>(undefined);
+  readonly drawerButtonColor = input<DbxThemeColor, Maybe<DbxThemeColor>>('background', { transform: (x) => x ?? 'background' });
 
-  readonly resized$ = this._resized.asObservable();
-  readonly side$ = this._side.pipe(distinctUntilChanged(), shareReplay(1));
-  readonly mode$: Observable<DbxMapboxLayoutMode> = this._mode.pipe(distinctUntilChanged(), shareReplay(1));
+  readonly openDrawer = input<Maybe<boolean>>(undefined); // input open/close drawer config
+  readonly toggleDrawerSignal = signal<Maybe<boolean>>(undefined); // Signal to toggle the drawer
 
-  readonly hasContent$ = combineLatest([this._forceHasContent, this.dbxMapboxMapStore.hasContent$]).pipe(
-    map(([hasContent, forceHasContent]) => hasContent || forceHasContent),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly isDrawerOpenSignal = computed(() => {
+    const toggleDrawer = this.toggleDrawerSignal();
+    let drawerOpened = toggleDrawer;
 
-  readonly isOpen$ = this._isOpen.asObservable();
+    if (toggleDrawer == null) {
+      drawerOpened = this.openDrawer();
+    }
 
-  readonly isOpenAndHasContent$ = combineLatest([this.hasContent$, this._isOpen]).pipe(
-    map(([hasContent, open]) => hasContent && open),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+    return drawerOpened;
+  });
 
-  readonly position$: Observable<'start' | 'end'> = this.side$.pipe(
-    map((x) => (x === 'right' ? 'end' : 'start')),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly storeHasDrawerContent = toSignal(this.dbxMapboxMapStore.hasDrawerContent$);
+  readonly drawerHasContentSignal = computed(() => this.forceHasDrawerContent() ?? this.storeHasDrawerContent());
 
-  readonly drawerClasses$ = combineLatest([this.side$, this.dbxMapboxMapStore.hasContent$, this.isOpenAndHasContent$]).pipe(
-    //
-    map(([side, hasContent, open]) => (hasContent ? 'has-drawer-content' : 'no-drawer-content') + ` ${side}-drawer ` + (open ? 'open-drawer' : '')),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly refreshContentMargins$ = this._refreshContentMargins;
 
-  readonly drawerButtonColor$ = this._color.pipe(distinctUntilChanged(), shareReplay(1));
+  readonly isOpenAndHasContentSignal = computed(() => {
+    return this.drawerHasContentSignal() && this.isDrawerOpenSignal();
+  });
 
-  readonly buttonIcon$: Observable<string> = combineLatest([this.side$, this.isOpenAndHasContent$]).pipe(
-    map(([side, opened]) => {
-      let icons = ['chevron_right', 'chevron_left'];
+  readonly viewResized$ = this._viewResized.asObservable();
+  readonly side$ = toObservable(this.side);
+  readonly mode$ = toObservable(this.mode);
+  readonly drawerHasContent$ = toObservable(this.drawerHasContentSignal);
+  readonly isOpenAndHasContent$ = toObservable(this.isOpenAndHasContentSignal);
 
-      if (side === 'left') {
-        icons = icons.reverse();
-      }
+  readonly positionSignal: Signal<'start' | 'end'> = computed(() => {
+    return this.side() === 'right' ? 'end' : 'start';
+  });
 
-      return opened ? icons[0] : icons[1];
-    })
-  );
+  readonly drawerClassesSignal = computed(() => {
+    const side = this.side();
+    const hasContent = this.drawerHasContentSignal();
+    const isOpen = this.isDrawerOpenSignal(); // NOTE: isOpenAndHasContentSignal is not used here
+
+    return (hasContent ? 'has-drawer-content' : 'no-drawer-content') + ` ${side}-drawer ` + (isOpen ? 'open-drawer' : '');
+  });
+
+  readonly buttonIconSignal = computed(() => {
+    const side = this.side();
+    const opened = this.isDrawerOpenSignal(); // NOTE: isOpenAndHasContentSignal is not used here
+
+    let icons = ['chevron_right', 'chevron_left'];
+
+    if (side === 'left') {
+      icons = icons.reverse();
+    }
+
+    return opened ? icons[0] : icons[1];
+  });
+
+  private readonly _reszieSyncSub = new SubscriptionObject();
+  private readonly _toggleSyncSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    this.sub = (
+    this._reszieSyncSub.subscription = (
       this.side$.pipe(
         switchMap(() =>
-          this._resized.pipe(
+          this._viewResized.pipe(
             throttleTime(100, undefined, { leading: true, trailing: true }),
             map(() => 'r'),
             startWith('s')
@@ -111,37 +129,37 @@ export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective impl
 
         // side changed
         if (reason === 's') {
-          setTimeout(() => {
-            this._updateMargins.next();
-          });
+          this._refreshContentMargins.next();
         }
       });
     });
 
     let init = false;
 
-    this._toggleSub.subscription = this.mode$
+    this._toggleSyncSub.subscription = this.mode$
       .pipe(
         switchMap((mode) => {
           let obs: Observable<unknown>;
 
           if (mode === 'push') {
-            obs = combineLatest([this.isOpenAndHasContent$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
+            obs = combineLatest([this.isOpenAndHasContent$.pipe(distinctUntilChanged()), this.refreshContentMargins$]).pipe(
               tap(([opened]) => {
-                let { right } = this.drawerContainer._contentMargins;
+                const drawerContainer = this.drawerContainer();
 
-                this.drawerContainer.updateContentMargins();
+                let { right } = drawerContainer._contentMargins;
+
+                drawerContainer.updateContentMargins();
 
                 setTimeout(() => {
                   const flip = opened ? 1 : -1;
 
                   if (opened) {
-                    right = this.drawerContainer._contentMargins.right;
+                    right = drawerContainer._contentMargins.right;
                   }
 
                   right = (right || 0) * flip;
 
-                  const element: HTMLElement = this.content.nativeElement;
+                  const element: HTMLElement = this.drawerContent().nativeElement;
                   const width = element.clientWidth;
 
                   const margin = {
@@ -152,7 +170,7 @@ export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective impl
 
                   const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore.calculateNextCenterOffsetWithScreenMarginChange(margin).pipe(
                     first(),
-                    map((center) => ({ to: { center, duration: 3200, essential: false } } as MapboxEaseTo))
+                    map((center) => ({ to: { center, duration: 3200, essential: false } }) as MapboxEaseTo)
                   );
 
                   this.dbxMapboxMapStore.setMargin(opened ? margin : undefined);
@@ -166,11 +184,11 @@ export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective impl
               })
             );
           } else {
-            obs = combineLatest([this.isOpenAndHasContent$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
+            obs = combineLatest([this.isOpenAndHasContent$.pipe(distinctUntilChanged()), this._refreshContentMargins.pipe(delay(0))]).pipe(
               switchMap((_) => this.dbxMapboxMapStore.mapInstance$),
-              tap((x) => {
-                this.drawerContainer.updateContentMargins();
-                x.triggerRepaint();
+              tap((map) => {
+                this.drawerContainer().updateContentMargins();
+                map.triggerRepaint();
               })
             );
           }
@@ -181,68 +199,31 @@ export class DbxMapboxLayoutComponent extends AbstractSubscriptionDirective impl
       .subscribe();
   }
 
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this.openedChange.complete();
-    this._resized.complete();
-    this._updateMargins.complete();
-    this._side.complete();
-    this._isOpen.complete();
-    this._color.complete();
-    this._toggleSub.destroy();
-    this._forceHasContent.complete();
+  ngOnDestroy(): void {
+    this._viewResized.complete();
+    this._refreshContentMargins.complete();
+    this._reszieSyncSub.destroy();
+    this._toggleSyncSub.destroy();
   }
 
-  toggleDrawer(open?: boolean) {
+  toggleDrawer(open?: Maybe<boolean>) {
     if (open == null) {
-      open = !this._isOpen.value;
+      open = !this.isDrawerOpenSignal();
     }
 
-    this._isOpen.next(open);
+    this.toggleDrawerSignal.set(open);
   }
 
-  @Input()
-  set side(side: Maybe<DbxMapboxLayoutSide>) {
-    if (side != null) {
-      this._side.next(side);
-    }
+  viewResized(event: ResizedEvent): void {
+    this._viewResized.next(event);
   }
 
-  @Input()
-  set mode(mode: Maybe<DbxMapboxLayoutMode>) {
-    if (mode != null) {
-      this._mode.next(mode);
-    }
-  }
+  drawerOpened(opened: boolean) {
+    const currentToggleState = this.toggleDrawerSignal();
 
-  @Input()
-  set opened(opened: Maybe<boolean>) {
-    if (opened != null) {
-      this._isOpen.next(opened);
-    }
-  }
-
-  @Input()
-  set hasContent(hasContent: Maybe<boolean>) {
-    if (hasContent != null) {
-      this._forceHasContent.next(hasContent);
-    }
-  }
-
-  @Input()
-  set drawerButtonColor(color: Maybe<DbxThemeColor>) {
-    this._color.next(color);
-  }
-
-  onResized(event: ResizedEvent): void {
-    this._resized.next(event);
-  }
-
-  onOpened(opened: boolean) {
-    this.openedChange.next(opened);
-
-    if (this._isOpen.value !== opened) {
-      this.openedChange.next(opened);
+    if (currentToggleState !== opened) {
+      this.toggleDrawer(opened); // sync with drawer toggling
+      this.drawerOpenedChange.emit(opened);
     }
   }
 }

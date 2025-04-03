@@ -18,7 +18,7 @@ import { DbxMapboxMarkersComponent } from './mapbox.markers.component';
 import { DbxMapboxInjectionComponent } from './mapbox.injection.component';
 import { DbxMapboxLayoutVirtualResizeSyncComponent } from './mapbox.layout.resize.sync.directive';
 
-const declarations = [
+const importsAndExports = [
   //
   DbxMapboxLayoutVirtualResizeSyncComponent,
   DbxMapboxMapDirective,
@@ -32,31 +32,7 @@ const declarations = [
 ];
 
 @NgModule({
-  imports: [
-    //
-    CommonModule,
-    MatSidenavModule,
-    DbxStyleLayoutModule,
-    DbxInjectionComponentModule,
-    MatButtonModule,
-    MatIconModule,
-    AngularResizeEventModule,
-    DbxRouterAnchorModule,
-    NgxMapboxGLModule
-  ],
-  declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
-export class DbxMapboxModule {
-  static forRoot(config: DbxMapboxConfig): ModuleWithProviders<DbxMapboxModule> {
-    return {
-      ngModule: DbxMapboxModule,
-      providers: [
-        {
-          provide: DbxMapboxConfig,
-          useValue: config
-        }
-      ]
-    };
-  }
-}
+export class DbxMapboxModule {}

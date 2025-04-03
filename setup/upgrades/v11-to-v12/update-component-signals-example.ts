@@ -63,7 +63,7 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
    * Used in forms that are simple.
    */
   @Input()
-  set fastTrigger(fastTrigger: Maybe<boolean> | '') {
+  set useFastTriggerPreset(fastTrigger: Maybe<boolean> | '') {
     if (isDefinedAndNotFalse(fastTrigger)) {
       this.triggerDebounce = 200;
       this.triggerThrottle = 500;

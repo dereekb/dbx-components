@@ -58,7 +58,6 @@ export class DbxFirebaseNotificationItemListViewComponent extends AbstractDbxSel
 })
 export class DbxFirebaseNotificationItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<NotificationItem> {
   readonly dbxFirebaseNotificationTemplateService = inject(DbxFirebaseNotificationTemplateService);
-
   readonly pairGetter = cachedGetter(() => this.dbxFirebaseNotificationTemplateService.notificationItemSubjectMessagePairForNotificationSummaryItem(this.itemValue));
 
   get subject() {

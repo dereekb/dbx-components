@@ -103,9 +103,15 @@ export interface DbxMapboxStoreState {
    */
   readonly retainContent: boolean;
   /**
-   * Custom content configuration.
+   * Custom drawer content configuration.
+   *
+   * @deprecated use drawerContent instead.
    */
   readonly content?: Maybe<DbxInjectionComponentConfig<unknown>>;
+  /**
+   * Custom drawer content configuration.
+   */
+  readonly drawerContent?: Maybe<DbxInjectionComponentConfig<unknown>>;
   /**
    * Latest error
    */
@@ -1036,13 +1042,13 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     })
   );
 
-  readonly content$ = this.state$.pipe(
-    map((x) => x.content),
+  readonly drawerContent$ = this.state$.pipe(
+    map((x) => x.drawerContent),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  readonly hasContent$ = this.content$.pipe(map(Boolean));
+  readonly hasDrawerContent$ = this.drawerContent$.pipe(map(Boolean));
 
   readonly clickEvent$ = this.state$.pipe(
     map((x) => x.clickEvent),
@@ -1081,6 +1087,31 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   private readonly _setError = this.updater((state, error: Error) => ({ ...state, error }));
 
-  readonly clearContent = this.updater((state) => ({ ...state, content: undefined }));
-  readonly setContent = this.updater((state, content: Maybe<DbxInjectionComponentConfig<unknown>>) => ({ ...state, content }));
+  readonly clearDrawerContent = this.updater((state) => setDrawerContent(state, undefined));
+  readonly setDrawerContent = this.updater(setDrawerContent);
+
+  // MARK: Compat
+  /**
+   * @deprecated use drawerContent$ instead.
+   */
+  readonly content$ = this.drawerContent$;
+
+  /**
+   * @deprecated use hasDrawerContent$ instead.
+   */
+  readonly hasContent$ = this.hasDrawerContent$;
+
+  /**
+   * @deprecated use clearDrawerContent instead.
+   */
+  readonly clearContent = this.updater((state) => setDrawerContent(state, undefined));
+
+  /**
+   * @deprecated use setDrawerContent instead.
+   */
+  readonly setContent = this.updater(setDrawerContent);
+}
+
+function setDrawerContent(state: DbxMapboxStoreState, drawerContent: Maybe<DbxInjectionComponentConfig<unknown>>) {
+  return { ...state, drawerContent, content: drawerContent };
 }

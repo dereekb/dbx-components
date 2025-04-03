@@ -17,7 +17,7 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
 
   readonly dbxActionFormSafety = input<DbxActionTransitionSafetyType>('auto');
 
-  private readonly _dbxActionFormSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionFormSafety()));
+  protected readonly _dbxActionFormSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionFormSafety()));
 
   protected override _handleOnBeforeTransition(transition: Transition): HookResult {
     this.dbxActionForm.form.forceFormUpdate();

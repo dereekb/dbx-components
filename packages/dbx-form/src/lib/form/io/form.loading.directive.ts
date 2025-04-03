@@ -19,7 +19,7 @@ export class DbxFormLoadingSourceDirective<T extends object = object> extends Ab
   readonly dbxFormLoadingSourceMode = input<Maybe<DbxFormSourceDirectiveMode>>();
   readonly dbxFormLoadingSource = input<Maybe<ObservableOrValue<Maybe<Partial<T>>>>>();
 
-  private readonly _setFormSourceObservableEffect = effect(() => {
+  protected readonly _setFormSourceObservableEffect = effect(() => {
     const formSource = this.dbxFormLoadingSource();
     const mode: DbxFormSourceDirectiveMode = this.dbxFormLoadingSourceMode() ?? 'reset';
 

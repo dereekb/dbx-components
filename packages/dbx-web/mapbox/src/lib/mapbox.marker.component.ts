@@ -1,65 +1,60 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy, computed, inject, input } from '@angular/core';
 import { getValueFromGetter, latLngPointFunction, type Maybe } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
+import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
+import { DbxAnchorComponent } from '@dereekb/dbx-web';
+import { MatIcon } from '@angular/material/icon';
+import { NgClass, NgStyle } from '@angular/common';
 
 @Component({
   selector: 'dbx-mapbox-marker',
   template: `
-    <mgl-marker *ngIf="marker" [lngLat]="latLng">
-      <dbx-anchor [anchor]="anchor">
-        <div class="dbx-mapbox-marker" [ngClass]="presentationClasses">
-          <div class="dbx-mapbox-marker-icon-content" [ngStyle]="style">
-            <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+    @if (marker()) {
+      <mgl-marker [lngLat]="latLngSignal()">
+        <dbx-anchor [anchor]="marker()?.anchor">
+          <div class="dbx-mapbox-marker" [ngClass]="presentationClassesSignal()">
+            <div class="dbx-mapbox-marker-icon-content" [ngStyle]="styleSignal()">
+              @if (marker()?.icon) {
+                <mat-icon>{{ marker()?.icon }}</mat-icon>
+              }
+            </div>
+            @if (marker()?.label) {
+              <div class="dbx-mapbox-marker-label dbx-outlined-text">{{ marker()?.label }}</div>
+            }
           </div>
-          <div class="dbx-mapbox-marker-label dbx-outlined-text" *ngIf="label">{{ label }}</div>
-        </div>
-      </dbx-anchor>
-    </mgl-marker>
+        </dbx-anchor>
+      </mgl-marker>
+    }
   `,
   styleUrls: ['./mapbox.marker.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [NgxMapboxGLModule, DbxAnchorComponent, MatIcon, NgStyle, NgClass],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxMapboxMarkerComponent implements OnDestroy {
   private readonly _dbxMapboxChangeService = inject(DbxMapboxChangeService, { optional: true });
 
   private static _latLngPoint = latLngPointFunction({ wrap: true });
 
-  private _marker: Maybe<DbxMapboxMarker>;
+  readonly marker = input.required<Maybe<DbxMapboxMarker>>();
 
-  @Input()
-  get marker() {
-    return this._marker;
-  }
+  readonly latLngSignal = computed(() => {
+    const marker = this.marker();
+    return marker?.latLng ? DbxMapboxMarkerComponent._latLngPoint(marker.latLng) : undefined;
+  });
 
-  set marker(marker: Maybe<DbxMapboxMarker>) {
-    this._marker = marker;
-  }
+  readonly presentationSignal = computed(() => this.marker()?.presentation ?? 'normal');
 
-  get latLng() {
-    const input = this._marker?.latLng;
-    return input ? DbxMapboxMarkerComponent._latLngPoint(input) : undefined;
-  }
+  readonly styleSignal = computed(() => {
+    const marker = this.marker();
 
-  get anchor() {
-    return this._marker?.anchor;
-  }
-
-  get label() {
-    return this._marker?.label;
-  }
-
-  get icon() {
-    return this._marker?.icon;
-  }
-
-  get style() {
     let width = 0;
     let height = 0;
 
-    const size = this._marker?.size || 'medium';
+    const size = marker?.size || 'medium';
 
-    switch (this.presentation) {
+    switch (marker?.presentation) {
       case 'normal':
         if (typeof size === 'number') {
           width = size;
@@ -88,11 +83,11 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
       height = width;
     }
 
-    const imageInput = this._marker?.image;
+    const imageInput = marker?.image;
     const image = imageInput ? (typeof imageInput === 'string' ? imageInput : getValueFromGetter(imageInput, width)) : undefined;
 
     const style: any = {
-      ...this._marker?.style,
+      ...marker?.style,
       'background-image': image
     };
 
@@ -103,15 +98,12 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     }
 
     return style;
-  }
+  });
 
-  get presentation() {
-    return this._marker?.presentation ?? 'normal';
-  }
-
-  get presentationClasses() {
-    const presentation = this.presentation;
-    const markerClasses = this._marker?.markerClasses;
+  readonly presentationClassesSignal = computed(() => {
+    const marker = this.marker();
+    const presentation = this.presentationSignal();
+    const markerClasses = marker?.markerClasses;
 
     let cssClasses = '';
 
@@ -127,7 +119,7 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
         break;
     }
 
-    if (!this.icon) {
+    if (!marker?.icon) {
       cssClasses += ' dbx-mapbox-marker-no-icon';
     }
 
@@ -136,7 +128,7 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     }
 
     return cssClasses;
-  }
+  });
 
   ngOnDestroy(): void {
     this._dbxMapboxChangeService?.emitMarkerDestroyed();

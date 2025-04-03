@@ -22,8 +22,7 @@ export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
   readonly config = input<Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>>>();
   readonly template = input<Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>>>();
 
-  private readonly _contentEffect = effect(() => this.setContent(this.content()));
-
-  private readonly _configEffect = effect(() => this.setConfig(this.config()));
-  private readonly _templateEffect = effect(() => this.setTemplate(this.template()));
+  protected readonly _contentEffect = effect(() => this.setContent(this.content()));
+  protected readonly _configEffect = effect(() => this.setConfig(this.config()));
+  protected readonly _templateEffect = effect(() => this.setTemplate(this.template()));
 }

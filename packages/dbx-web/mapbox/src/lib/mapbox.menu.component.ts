@@ -1,11 +1,12 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, BehaviorSubject, of } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
-import { Maybe, DestroyFunctionObject } from '@dereekb/util';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy, NgZone, inject, signal, input, effect } from '@angular/core';
+import { Maybe, DestroyFunctionObject, isNotFalse } from '@dereekb/util';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Directive that connects a host MatMenuTrigger to a DbxMapboxMapStore and listens for right-clicks on the map.
@@ -17,34 +18,39 @@ import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
   template: '',
   host: {
     style: 'visibility: hidden; position: fixed',
-    '[style.top]': 'pos.y',
-    '[style.left]': 'pos.x'
+    '[style.top]': 'posSignal().y',
+    '[style.left]': 'posSignal().x'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
   readonly matMenuTrigger = inject(MatMenuTrigger, { host: true });
-  readonly ngZone = inject(NgZone);
-  readonly cdRef = inject(ChangeDetectorRef);
 
-  private _pos = { x: `0`, y: `0` };
+  readonly active = input<boolean, Maybe<boolean>>(true, { transform: isNotFalse });
 
-  private readonly _active = new BehaviorSubject<boolean>(true);
+  readonly openCloseSignal = signal<Maybe<boolean>>(undefined);
+  readonly posSignal = signal<{ x: string; y: string }>({ x: `0`, y: `0` });
+
+  protected readonly _openCloseEffect = effect(() => {
+    const openOrClose = this.openCloseSignal();
+
+    switch (openOrClose) {
+      case true:
+        this.matMenuTrigger.openMenu();
+        break;
+      case false:
+        this.matMenuTrigger.closeMenu();
+        break;
+    }
+  });
+
   private readonly _menuCloseSub = new SubscriptionObject();
   private readonly _preventRightClick = new DestroyFunctionObject();
 
-  get pos() {
-    return this._pos;
-  }
-
-  @Input()
-  set active(active: Maybe<boolean>) {
-    this._active.next(active ?? true);
-  }
-
   ngOnInit(): void {
-    this.sub = this._active
+    this.sub = toObservable(this.active)
       .pipe(
         switchMap((active) => {
           if (active) {
@@ -63,19 +69,17 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
           buttonEvent.preventDefault();
 
           // update position of this component for menu to open at
-          this._pos = {
+          this.posSignal.set({
             x: `${buttonEvent.x}px`,
             y: `${buttonEvent.y}px`
-          };
-
-          safeMarkForCheck(this.cdRef);
+          });
 
           // open menu
-          this.ngZone.run(() => this.matMenuTrigger.openMenu());
+          this.matMenuTrigger.openMenu();
 
           // prevent right clicks in the cdkOverlay while the menu is open
           this._preventRightClick.destroy = disableRightClickInCdkBackdrop(undefined, () => {
-            this.ngZone.run(() => this.matMenuTrigger.closeMenu());
+            this.matMenuTrigger.closeMenu();
           });
         }
       });
@@ -88,7 +92,6 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._active.complete();
     this._menuCloseSub.destroy();
     this._preventRightClick.destroy();
 

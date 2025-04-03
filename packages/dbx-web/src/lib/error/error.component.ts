@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, inject, signal } from '@angular/core';
 import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableError, Configurable } from '@dereekb/util';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxErrorPopoverComponent } from './error.popover.component';
@@ -36,22 +36,24 @@ interface DbxErrorComponentState {
     }
   `,
   standalone: true,
-  imports: [CommonModule, DbxErrorViewComponent, DbxInjectionComponent],
+  imports: [DbxErrorViewComponent, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorComponent {
   private readonly popoverService = inject(DbxPopoverService);
   private readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
 
-  @Output()
-  readonly popoverOpened = new EventEmitter<NgPopoverRef>();
+  readonly popoverOpened = output<NgPopoverRef>();
 
-  private readonly _inputError = signal<Maybe<ErrorInput>>(undefined);
-  private readonly _iconOnly = signal<Maybe<boolean>>(undefined);
+  readonly error = input<Maybe<ErrorInput>>();
+  readonly iconOnly = input<Maybe<boolean>>(false);
+
+  private readonly _errorOverrideSignal = signal<Maybe<ErrorInput>>(undefined);
+  readonly errorSignal = computed(() => this._errorOverrideSignal() ?? this.error());
 
   readonly state = computed<DbxErrorComponentState>(() => {
-    const rawError = this._inputError();
-    const iconOnly = this._iconOnly();
+    const rawError = this.errorSignal();
+    const iconOnly = this.iconOnly();
 
     if (rawError != null) {
       const error = toReadableError(rawError);
@@ -94,20 +96,8 @@ export class DbxErrorComponent {
   readonly messageSignal = computed(() => this.state().message);
   readonly customViewSignal = computed(() => this.state().customView);
 
-  @Input()
-  get error() {
-    return this._inputError();
-  }
-  set error(value: Maybe<ErrorInput>) {
-    this._inputError.set(value);
-  }
-
-  @Input()
-  get iconOnly() {
-    return this._iconOnly();
-  }
-  set iconOnly(value: Maybe<boolean>) {
-    this._iconOnly.set(value);
+  setError(error: Maybe<ErrorInput>) {
+    this._errorOverrideSignal.set(error);
   }
 
   openErrorPopover(event: DbxErrorViewButtonEvent) {
@@ -119,7 +109,7 @@ export class DbxErrorComponent {
         error
       });
 
-      this.popoverOpened.next(popoverRef);
+      this.popoverOpened.emit(popoverRef);
     }
   }
 }

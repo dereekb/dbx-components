@@ -14,7 +14,7 @@ export abstract class AbstractSubscriptionDirective<T extends Unsubscribable = U
     this._subscriptionObject.destroy();
   }
 
-  protected set sub(subscription: Maybe<T | undefined>) {
+  protected set sub(subscription: Maybe<T | void>) {
     this._subscriptionObject.subscription = subscription;
   }
 }

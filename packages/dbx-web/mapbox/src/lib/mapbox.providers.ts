@@ -1,5 +1,5 @@
 import { EnvironmentProviders, importProvidersFrom, makeEnvironmentProviders, Provider } from '@angular/core';
-import { DbxMapboxConfig } from './mapbox.service';
+import { DbxMapboxConfig, DbxMapboxService } from './mapbox.service';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 
 /**
@@ -7,7 +7,7 @@ import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
  */
 export interface ProvideDbxMapboxConfig {
   readonly dbxMapboxConfig: DbxMapboxConfig;
-  readonly ngxMapboxGLModuleConfig: Parameters<typeof NgxMapboxGLModule['withConfig']>[0];
+  readonly ngxMapboxGLModuleConfig: Parameters<(typeof NgxMapboxGLModule)['withConfig']>[0];
 }
 
 /**
@@ -20,11 +20,13 @@ export function provideDbxMapbox(config: ProvideDbxMapboxConfig): EnvironmentPro
   const { dbxMapboxConfig, ngxMapboxGLModuleConfig } = config;
 
   const providers: (Provider | EnvironmentProviders)[] = [
-    // DbxMapboxConfig
+    // config
     {
       provide: DbxMapboxConfig,
       useValue: dbxMapboxConfig
     },
+    // service
+    DbxMapboxService,
     // ngxMapboxGL
     importProvidersFrom(NgxMapboxGLModule.withConfig(ngxMapboxGLModuleConfig))
   ];

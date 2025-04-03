@@ -30,7 +30,7 @@ export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown
 })
 export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   readonly handlerFunction = input.required<Maybe<Work<T, O>>>({ alias: 'dbxActionHandler' });
-  private readonly _handlerFunctionEffect = effect(() => {
+  protected readonly _handlerFunctionEffect = effect(() => {
     this._dbxActionHandlerInstance.setHandlerFunction(this.handlerFunction());
   });
 }
@@ -44,7 +44,7 @@ export class DbxActionHandlerDirective<T = unknown, O = unknown> extends Abstrac
 })
 export class DbxActionHandlerValueDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   readonly handlerValue = input.required<Maybe<GetterOrValue<O> | FactoryWithInput<O, T>>>({ alias: 'dbxActionHandlerValue' });
-  private readonly _handlerValueEffect = effect(() => {
+  protected readonly _handlerValueEffect = effect(() => {
     this._dbxActionHandlerInstance.setHandlerValue(this.handlerValue());
   });
 }

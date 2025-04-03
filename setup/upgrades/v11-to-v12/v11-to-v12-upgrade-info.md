@@ -219,6 +219,7 @@ bootstrapApplication(UIView, appConfig)
 - `TimerInstance` has been removed in favor of `makeTimer()`. The `timer()` function has been deprecated in favor of `makeTimer()`.
 - `DbxReadableErrorComponent` has been renamed to `DbxErrorComponent`.
 - `DbxErrorComponent` `popoverOpen` event renamed to `popoverOpened`.
+- `DbxErrorComponent` setter for error has been replaced with `setError()`.
 - `DbxBarButtonComponent` has been renamed to `DbxProgressBarButtonComponent`. Added the selector `dbx-progress-bar-button` to join `dbx-bar-button`.
 - `DbxSpinnerButtonComponent` has been renamed to `DbxProgressSpinnerButtonComponent`. Added the selector `dbx-progress-spinner-button` to join `dbx-spinner-button`.
 - `DbxAnchorLinkComponent` has been renamed to `DbxLinkComponent`.
@@ -236,8 +237,10 @@ bootstrapApplication(UIView, appConfig)
 - `DbxListViewWrapper` now provides `setState` and `setSelectionMode` methods instead of assigning the value via getters/setters.
 - `trackBy` is no longer a variable in `AbstractDbxSelectionListViewDirective` and `AbstractDbxListViewDirective` and cannot be assigned directly. Set using `setTrackBy()` in the constructor.
 - Renamed `DbxFirebaseModelTypeInstanceComponent` to `DbxFirebaseModelTypeInstanceListComponent`, as it was a list component that was improperly named.
-- `DbxActionAutoTriggerDirective` has been updated to required being called like `[DbxActionAutoTriggerDirective]`
+- `DbxActionAutoTriggerDirective` has renamed `fastTrigger` to `useFastTriggerPreset` and `instantTrigger` to `useInstantTriggerPreset`.
 - `DbxActionHandlerInstance` replaced setters with `setHandlerFunction` and `setHandlerValue`.
+- Renamed `DbxFilterComponentParams` to `DbxFilterComponentConfig`
+- Renamed `DbxFilterPopoverComponentParams` to `DbxFilterPopoverComponentConfig`
 
 #### Updating DbxList related views
 All views like this should consider being updated to standalone views. The template is still available, but now 

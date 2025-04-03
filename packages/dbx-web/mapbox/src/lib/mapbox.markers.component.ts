@@ -1,7 +1,8 @@
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, Input, OnDestroy } from '@angular/core';
 import { DbxMapboxMarker, DbxMapboxMarkerFactory } from './mapbox.marker';
+import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 
 /**
  * Component used to render a set of DbxMapboxMarker values from the input data and marker factory.
@@ -9,49 +10,30 @@ import { DbxMapboxMarker, DbxMapboxMarkerFactory } from './mapbox.marker';
 @Component({
   selector: 'dbx-mapbox-markers',
   template: `
-    <dbx-mapbox-marker *ngFor="let marker of markers$ | async; trackBy: trackMarkerById" [marker]="marker"></dbx-mapbox-marker>
+    @for (marker of markersSignal(); track trackMarkerById($index, marker)) {
+      <dbx-mapbox-marker [marker]="marker"></dbx-mapbox-marker>
+    }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxMapboxMarkerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxMapboxMarkersComponent<T> implements OnDestroy {
-  private _data = new BehaviorSubject<Maybe<T[]>>(undefined);
-  private _markerFactory = new BehaviorSubject<Maybe<DbxMapboxMarkerFactory<T>>>(undefined);
+export class DbxMapboxMarkersComponent<T> {
+  readonly data = input.required<Maybe<T[]>>();
+  readonly markerFactory = input.required<Maybe<DbxMapboxMarkerFactory<T>>>();
 
-  readonly markers$ = combineLatest([this._data.pipe(distinctUntilChanged()), this._markerFactory.pipe(distinctUntilChanged())]).pipe(
-    map(([data, markerFactory]) => {
-      if (data?.length && markerFactory) {
-        return data.map(markerFactory);
-      } else {
-        return [];
-      }
-    }),
-    shareReplay(1)
-  );
+  readonly markersSignal = computed(() => {
+    const data = this.data();
+    const markerFactory = this.markerFactory();
+
+    if (data?.length && markerFactory) {
+      return data.map(markerFactory);
+    } else {
+      return [];
+    }
+  });
 
   trackMarkerById(index: number, marker: DbxMapboxMarker) {
     return marker.id;
-  }
-
-  @Input()
-  get data() {
-    return this._data.value;
-  }
-
-  set data(data: Maybe<T[]>) {
-    this._data.next(data || []);
-  }
-
-  @Input()
-  get markerFactory() {
-    return this._markerFactory.value;
-  }
-
-  set markerFactory(markerFactory: Maybe<DbxMapboxMarkerFactory<T>>) {
-    this._markerFactory.next(markerFactory);
-  }
-
-  ngOnDestroy(): void {
-    this._data.complete();
-    this._markerFactory.complete();
   }
 }

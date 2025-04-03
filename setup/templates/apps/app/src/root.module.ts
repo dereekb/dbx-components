@@ -127,8 +127,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     }),
     NgxMapboxGLModule.withConfig({
       accessToken: environment.mapbox.token
-    }),
-    DbxMapboxModule.forRoot(environment.mapbox)
+    })
   ],
   providers: [
     {

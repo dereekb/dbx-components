@@ -15,9 +15,7 @@ export const DEFAULT_MAPBOX_CENTER: LatLngPointInput = [30.2690138665, -97.74082
 export const DEFAULT_MAPBOX_ZOOM: MapboxZoomLevel = 8;
 export const DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD: Milliseconds = 200;
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxMapboxService {
   private readonly _config = inject(DbxMapboxConfig, { optional: true }) ?? {};
 

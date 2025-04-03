@@ -10,7 +10,7 @@ import { IsModifiedFunction } from '@dereekb/rxjs';
 @Component({
   selector: 'doc-interaction-test-date-filter-preset-filter',
   template: `
-    <dbx-filter-wrapper dbxAction dbxActionEnforceModified dbxActionAutoTrigger instantTrigger [showButtons]="false" style="display: block; padding: 12px 24px; overflow: hidden">
+    <dbx-filter-wrapper dbxAction dbxActionEnforceModified dbxActionAutoTrigger useInstantTriggerPreset [showButtons]="false" style="display: block; padding: 12px 24px; overflow: hidden">
       <doc-interaction-test-date-filter-form dbxActionForm [dbxActionFormIsModified]="dateRangeIsModified" [dbxFormSource]="formTemplate$" [dbxActionFormMapValue]="mapFormToFilterValue"></doc-interaction-test-date-filter-form>
     </dbx-filter-wrapper>
   `,
