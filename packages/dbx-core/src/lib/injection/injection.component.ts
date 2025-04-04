@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewContainerRef, Input, input, viewChild, effect } from '@angular/core';
+import { Component, ViewContainerRef, input, viewChild, effect } from '@angular/core';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
 import { AbstractDbxInjectionDirective } from './injection.directive';
 import { type Maybe } from '@dereekb/util';

@@ -1,15 +1,15 @@
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, ElementRef, Type, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { Observable, BehaviorSubject, map, skip, first, defaultIfEmpty } from 'rxjs';
+import { Observable, map, skip, first, defaultIfEmpty } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
-import { DbxPopoverConfigSizing, DbxPopoverService } from '../popover/popover.service';
-import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { DbxPopoverService } from '../popover/popover.service';
+import { FilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
 import { type Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxFilterComponentConfig } from './filter.config';
-import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverInteractionModule } from '../popover';
+import { DbxPopoverInteractionModule } from '../popover';
 import { MatButton } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button';
 

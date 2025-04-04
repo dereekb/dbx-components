@@ -1,10 +1,8 @@
-import { Observable, BehaviorSubject, map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxWidgetViewComponentConfig } from './widget';
 import { DbxWidgetService } from './widget.service';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Used to display a corresponding widget based on the input data.

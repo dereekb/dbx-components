@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, inject, OnInit } from '@angular/core';
 import { filterWithSearchString, ListLoadingState, mapLoadingStateValueWithOperator, successResult } from '@dereekb/rxjs';
 import { takeFront } from '@dereekb/util';
 import { Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
@@ -7,7 +7,7 @@ import { DocValue, makeDocValues } from '../component/item.list';
 @Component({
   templateUrl: './section.page.two.component.html'
 })
-export class DocLayoutSectionPageTwoComponent implements OnDestroy {
+export class DocLayoutSectionPageTwoComponent implements OnDestroy, OnInit {
   readonly cdRef = inject(ChangeDetectorRef);
 
   readonly numberToLoadPerUpdate = 50;

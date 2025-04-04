@@ -1,6 +1,5 @@
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
-import { Provider } from '@angular/core';
+import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
 import { DbxUIRouterService } from './uirouter.router.service';
 
 /**

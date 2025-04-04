@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
-import { ResizedDirective } from 'angular-resize-event-package';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { Maybe } from '@dereekb/util';

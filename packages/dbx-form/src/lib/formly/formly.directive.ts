@@ -1,7 +1,7 @@
 import { SubscriptionObject, filterMaybe, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
+import { Observable, shareReplay, distinctUntilChanged } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { OnInit, OnDestroy, Directive, Input, inject, input, effect } from '@angular/core';
+import { OnInit, OnDestroy, Directive, inject, input, effect } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';

@@ -16,14 +16,7 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "*",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.0",
-    "date-fns": "^2.30.0",
-    "rxjs": "^7.5.0",
-    "date-fns-tz": "^2.0.0",
-    "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
-    "@vvo/tzdb": "^6.0.0"
+    "@dereekb/util": "*"
   },
   "dependencies": {}
 }

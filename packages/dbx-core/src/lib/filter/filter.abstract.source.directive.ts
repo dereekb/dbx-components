@@ -1,7 +1,7 @@
-import { of, Observable } from 'rxjs';
-import { Directive, forwardRef, inject, InjectionToken, Injector, OnDestroy, OnInit, Provider, Type } from '@angular/core';
-import { FilterSource, FilterSourceInstance, MaybeObservableOrValue, ObservableOrValue } from '@dereekb/rxjs';
-import { GetterOrValue, type Maybe } from '@dereekb/util';
+import { Observable } from 'rxjs';
+import { Directive, forwardRef, inject, InjectionToken, Injector, OnDestroy, Provider, Type } from '@angular/core';
+import { FilterSource, FilterSourceInstance, MaybeObservableOrValue } from '@dereekb/rxjs';
+import { type Maybe } from '@dereekb/util';
 import { provideFilterSource } from './filter.content';
 
 export const FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN = new InjectionToken<Maybe<Observable<Maybe<unknown>>>>('FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_SOURCE_TOKEN');

@@ -1,10 +1,9 @@
-import { Directive, input, Input, OnDestroy, OnInit } from '@angular/core';
+import { Directive, input } from '@angular/core';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { ArrayOrValue, Maybe, Modifier } from '@dereekb/util';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { DbxValueListItem } from '../../../layout/list/list.view.value';
 import { AbstractDbxValueListItemModifierDirective } from '../../../layout/list/list.view.value.modifier.directive';
-import { asObservable } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 export type AnchorForValueFunction<T> = (value: T, item: DbxValueListItem<T>) => Maybe<ClickableAnchor>;

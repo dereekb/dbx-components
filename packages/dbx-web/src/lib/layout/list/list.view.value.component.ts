@@ -1,11 +1,11 @@
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, Signal, TrackByFunction, computed, inject, input } from '@angular/core';
-import { shareReplay, map, Observable, BehaviorSubject, switchMap, of } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Signal, TrackByFunction, computed, inject, input } from '@angular/core';
+import { shareReplay, map, Observable, switchMap, of } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
-import { ClickableAnchorType, DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
-import { Maybe, SpaceSeparatedCssClasses, spaceSeparatedCssClasses } from '@dereekb/util';
+import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
 import { MatListItem, MatNavList } from '@angular/material/list';

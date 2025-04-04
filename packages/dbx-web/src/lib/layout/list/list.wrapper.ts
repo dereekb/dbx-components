@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
-import { ListLoadingState, MaybeObservableOrValue, ObservableOrValue } from '@dereekb/rxjs';
-import { EventEmitter, forwardRef, OutputRef, Provider, Type } from '@angular/core';
+import { ListLoadingState, MaybeObservableOrValue } from '@dereekb/rxjs';
+import { forwardRef, OutputRef, Provider, Type } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxListSelectionMode } from './list.view';
 

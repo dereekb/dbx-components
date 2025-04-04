@@ -1,10 +1,8 @@
-import { ChangeDetectorRef, OnDestroy, OnInit, Directive, Input, Output, HostListener, EventEmitter, inject, computed, input, Signal, output } from '@angular/core';
-import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
+import { OnDestroy, Directive, HostListener, inject, computed, input, Signal, output } from '@angular/core';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { Configurable, CssClass, type Maybe } from '@dereekb/util';
-import { filterMaybe } from '@dereekb/rxjs';
-import { Observable, shareReplay, map, BehaviorSubject, combineLatest, first, distinctUntilChanged } from 'rxjs';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonConfig, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxButtonType } from '../button.component';
 
 @Directive()

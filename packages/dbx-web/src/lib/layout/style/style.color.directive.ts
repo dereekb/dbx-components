@@ -1,4 +1,4 @@
-import { computed, Directive, input, Input } from '@angular/core';
+import { computed, Directive, input } from '@angular/core';
 import { DbxThemeColor, dbxColorBackground } from './style';
 import { type Maybe } from '@dereekb/util';
 

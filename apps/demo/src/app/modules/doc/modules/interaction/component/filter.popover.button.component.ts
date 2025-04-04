@@ -1,6 +1,6 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, Input, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
 import { DocInteractionTestFilter } from './filter';

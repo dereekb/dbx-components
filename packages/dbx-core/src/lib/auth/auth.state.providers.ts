@@ -1,4 +1,4 @@
-import { EnvironmentProviders, importProvidersFrom, makeEnvironmentProviders } from '@angular/core';
+import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { provideEffects } from '@ngrx/effects';
 import { provideState } from '@ngrx/store';
 import { fromDbxAppAuth } from './state';

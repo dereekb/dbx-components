@@ -421,7 +421,7 @@ describe('firebase server nest auth', () => {
 
             describe('throwErrors=true', () => {
               itShouldFail('to send and instead throw a throttle error', async () => {
-                let claims = await authService.userContext(initializedUser.uid).loadClaims();
+                const claims = await authService.userContext(initializedUser.uid).loadClaims();
 
                 const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
 

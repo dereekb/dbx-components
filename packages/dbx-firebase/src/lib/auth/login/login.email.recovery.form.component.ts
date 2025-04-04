@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, emailField, DbxFormlyModule, DbxFormlyComponent, FORMLY_FORM_COMPONENT_TEMPLATE } from '@dereekb/dbx-form';
+import { AbstractSyncFormlyFormDirective, emailField, FORMLY_FORM_COMPONENT_TEMPLATE } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFirebaseEmailRecoveryFormValue {

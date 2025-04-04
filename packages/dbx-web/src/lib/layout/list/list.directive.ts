@@ -1,6 +1,6 @@
-import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue, ObservableOrValueGetter, valueFromObservableOrValueGetter, maybeValueFromObservableOrValueGetter, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
+import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
-import { Output, EventEmitter, OnDestroy, Directive, Input, Component, ChangeDetectionStrategy, input, output, computed, Signal } from '@angular/core';
+import { OnDestroy, Directive, Component, ChangeDetectionStrategy, input, output, computed, Signal } from '@angular/core';
 import { DbxListComponent, DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Configurable, type Maybe } from '@dereekb/util';

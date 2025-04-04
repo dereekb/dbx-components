@@ -4,7 +4,7 @@ import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { FirebaseLoginMethodType } from './login';
 import { DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
-import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatIcon } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 

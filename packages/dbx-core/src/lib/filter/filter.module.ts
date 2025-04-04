@@ -1,5 +1,4 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { DbxFilterMapDirective } from './filter.map.directive';
 import { DbxFilterMapSourceConnectorDirective } from './filter.map.connector.directive';
 import { DbxFilterSourceDirective } from './filter.source.directive';

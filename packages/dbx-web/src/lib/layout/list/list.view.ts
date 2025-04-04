@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { ListLoadingState, ListLoadingStateContext } from '@dereekb/rxjs';
-import { EventEmitter, forwardRef, OutputEmitterRef, OutputRef, Provider, TrackByFunction, Type } from '@angular/core';
+import { forwardRef, OutputEmitterRef, Provider, TrackByFunction, Type } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 export type DbxListSelectionMode = 'select' | 'view';

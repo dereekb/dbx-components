@@ -1,4 +1,4 @@
-import { Directive, input, Input } from '@angular/core';
+import { Directive, input } from '@angular/core';
 
 /**
  * Section used to elevate content in a pre-configured manner.

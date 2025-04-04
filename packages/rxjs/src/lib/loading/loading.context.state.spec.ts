@@ -1,4 +1,4 @@
-import { loadingStateContext, LoadingStateContext, MutableLoadingStateContext, SubscriptionObject } from '@dereekb/rxjs';
+import { loadingStateContext, type MutableLoadingStateContext, SubscriptionObject } from '@dereekb/rxjs';
 import { isLoadingStateLoading, successResult } from './loading.state';
 import { delay, first, timeout, of } from 'rxjs';
 

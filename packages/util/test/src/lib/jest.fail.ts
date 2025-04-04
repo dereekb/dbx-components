@@ -4,8 +4,8 @@
  * Since fail() was silently removed, we redefine it.
  */
 
-import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue, build, ClassType, Maybe, ClassLikeType } from '@dereekb/util';
-import { BaseError, Constructor } from 'make-error';
+import { type Building, isPromise, promiseReference, type PromiseReference, type PromiseOrValue, build, type ClassType, type Maybe, type ClassLikeType } from '@dereekb/util';
+import { BaseError } from 'make-error';
 
 // MARK: Types
 export interface JestDoneCallback {
@@ -61,7 +61,10 @@ export function failDueToSuccessError(message?: string): JestUnexpectedSuccessFa
  * Error thrown when the error type was different than the expected type.
  */
 export class JestExpectedErrorOfSpecificTypeError extends BaseError {
-  constructor(readonly encounteredType: unknown, readonly expectedType?: Maybe<ClassLikeType | string>) {
+  constructor(
+    readonly encounteredType: unknown,
+    readonly expectedType?: Maybe<ClassLikeType | string>
+  ) {
     super(`The error encountered was not of the expected type. Expected: ${expectedType ?? 'n/a'}, but encountered: ${encounteredType} `);
   }
 }

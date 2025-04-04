@@ -1,5 +1,4 @@
 import { filterMaybe, FilterMapKey, FilterMap } from '@dereekb/rxjs';
-import { BehaviorSubject } from 'rxjs';
 import { Directive, OnDestroy, inject, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';

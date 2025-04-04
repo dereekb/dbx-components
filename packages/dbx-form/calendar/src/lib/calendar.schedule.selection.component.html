@@ -15,7 +15,7 @@
 <ng-template #monthDayCellTemplate let-day="day" let-locale="locale">
   <div class="cal-cell-top">
     <span class="cal-day-badge" *ngIf="day.badgeTotal > 0">{{ day.badgeTotal }}</span>
-    <span class="cal-day-number">{{ day.date | calendarDate: 'monthViewDayNumber':locale }}</span>
+    <span class="cal-day-number">{{ day.date | calendarDate: 'monthViewDayNumber' : locale }}</span>
   </div>
   <dbx-schedule-selection-calendar-cell [day]="day"></dbx-schedule-selection-calendar-cell>
 </ng-template>

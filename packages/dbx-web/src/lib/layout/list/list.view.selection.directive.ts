@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Directive, EventEmitter, output, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, output } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ListSelectionState, ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';

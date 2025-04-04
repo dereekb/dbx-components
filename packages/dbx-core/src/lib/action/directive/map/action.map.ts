@@ -1,4 +1,4 @@
-import { BehaviorSubject, distinctUntilChanged, first, map, Observable, of, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
 import { Destroyable } from '@dereekb/util';
 

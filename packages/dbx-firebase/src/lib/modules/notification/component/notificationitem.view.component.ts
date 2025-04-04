@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, input, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, computed } from '@angular/core';
 import { DbxWidgetViewComponentConfig, DbxWidgetViewComponent } from '@dereekb/dbx-web';
 import { NotificationItem, NotificationItemMetadata } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
-import { map } from 'rxjs';
 import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotificationTemplateType } from '../service';
 
 @Component({

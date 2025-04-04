@@ -1,4 +1,4 @@
-import { ModuleWithProviders, NgModule, Injector } from '@angular/core';
+import { ModuleWithProviders, NgModule } from '@angular/core';
 import { provideDbxFirebaseApp } from './firebase.providers';
 import { DbxFirebaseAppOptions } from './firebase.options';
 

@@ -1,9 +1,9 @@
 import { BehaviorSubject, combineLatest, map, Observable, of, shareReplay } from 'rxjs';
-import { signal, Component, Input, OnDestroy, inject, computed } from '@angular/core';
+import { Component, Input, OnDestroy, inject, computed } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
-import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatIcon } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**

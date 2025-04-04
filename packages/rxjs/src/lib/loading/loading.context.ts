@@ -1,5 +1,5 @@
 import { type Observable } from 'rxjs';
-import { LoadingState, type LoadingErrorPair } from './loading.state';
+import { type LoadingState, type LoadingErrorPair } from './loading.state';
 
 /**
  * A LoadingErrorPair that always defines a loading value.

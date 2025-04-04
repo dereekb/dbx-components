@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective } from '@dereekb/dbx-web';
 import { ListLoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { BehaviorSubject, switchMap, shareReplay, Observable } from 'rxjs';
+import { switchMap, shareReplay, Observable } from 'rxjs';
 import { DbxFirebaseModelTrackerHistoryFilter, DbxFirebaseModelTrackerService } from './model.tracker.service';
 import { DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
 import { toObservable } from '@angular/core/rxjs-interop';

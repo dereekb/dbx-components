@@ -1,5 +1,5 @@
-import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util/test';
-import { TestFirebaseStorage, TestFirebaseStorageContextFixture, TestFirebaseStorageInstance } from '../storage/storage.instance';
+import { AbstractWrappedFixtureWithInstance, type JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util/test';
+import { type TestFirebaseStorage, type TestFirebaseStorageContextFixture, type TestFirebaseStorageInstance } from '../storage/storage.instance';
 
 // MARK: Test Item Testing Fixture
 export class MockItemStorageFixtureInstance implements TestFirebaseStorageInstance {

@@ -1,5 +1,5 @@
 import { DbxAnchorComponent, DbxBodyDirective, DbxButtonSpacerDirective, DbxStyleBodyDirective, DbxStyleDirective, DbxStyleService } from '@dereekb/dbx-web';
-import { ClickableAnchor, DbxAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
+import { ClickableAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';

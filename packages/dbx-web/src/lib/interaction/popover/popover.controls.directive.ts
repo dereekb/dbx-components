@@ -1,4 +1,4 @@
-import { Directive, inject } from '@angular/core';
+import { Directive, inject, OnInit } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
@@ -11,7 +11,7 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   },
   standalone: true
 })
-export class DbxPopoverControlsDirective {
+export class DbxPopoverControlsDirective implements OnInit {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });
 
   ngOnInit() {

@@ -1,6 +1,6 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, inject, input, OnInit } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { type Maybe } from '@dereekb/util';

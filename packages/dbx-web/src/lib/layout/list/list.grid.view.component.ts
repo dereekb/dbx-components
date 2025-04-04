@@ -1,12 +1,11 @@
-import { ChangeDetectionStrategy, Component, Directive, Input, OnDestroy, Signal, computed, inject, input, signal } from '@angular/core';
-import { shareReplay, map, BehaviorSubject, combineLatest, of, Observable, distinctUntilChanged } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Directive, Signal, computed, inject, input } from '@angular/core';
+import { of } from 'rxjs';
 import { DbxValueListItem } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe, mergeObjects } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DbxValueListViewConfig, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from './list.view.value.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { NgFor } from '@angular/common';
-import { MatRipple, MatRippleModule } from '@angular/material/core';
+import { MatRipple } from '@angular/material/core';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';

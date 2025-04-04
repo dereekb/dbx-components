@@ -1,6 +1,5 @@
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, Component, computed, input, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DbxMapboxMarker, DbxMapboxMarkerFactory } from './mapbox.marker';
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 

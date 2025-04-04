@@ -1,15 +1,14 @@
-import { Observable, map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, computed, input, signal } from '@angular/core';
+import { map, shareReplay, distinctUntilChanged, of } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MatListOption, MatSelectionList, MatSelectionListChange } from '@angular/material/list';
-import { DbxListSelectionMode, ListSelectionState, ListSelectionStateItem } from './list.view';
+import { DbxListSelectionMode, ListSelectionStateItem } from './list.view';
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { type Maybe } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from './list.view.value.component';
-import { NgSwitch, NgSwitchCase, NgSwitchDefault, NgFor, AsyncPipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   readonly multiple?: boolean;

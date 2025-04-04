@@ -1,7 +1,4 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxListLayoutModule } from '../../layout/list/list.layout.module';
 import { DbxWidgetViewComponent } from './widget.component';
 import { DbxWidgetListGridComponent, DbxWidgetListGridViewComponent, DbxWidgetListGridViewItemComponent } from './widget.list.component';
 

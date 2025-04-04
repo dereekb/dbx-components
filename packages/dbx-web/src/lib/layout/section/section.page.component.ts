@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**

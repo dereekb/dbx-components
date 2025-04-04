@@ -3,7 +3,7 @@ import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { FilterSource, PresetFilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
-import { DbxPopoverConfigSizing, DbxPopoverService } from '../popover/popover.service';
+import { DbxPopoverConfigSizing } from '../popover/popover.service';
 
 export interface DbxFilterComponentConfig<F extends object = object, P extends string = string, CF extends FilterSource<F> = FilterSource<F>, PF extends PresetFilterSource<F, P> = PresetFilterSource<F, P>> extends DbxPopoverConfigSizing {
   /**

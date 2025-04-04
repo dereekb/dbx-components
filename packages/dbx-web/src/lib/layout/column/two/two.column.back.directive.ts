@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, Output, OnInit, inject, output } from '@angular/core';
+import { Directive, OnInit, inject, output } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 

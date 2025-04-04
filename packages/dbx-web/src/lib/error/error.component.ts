@@ -3,11 +3,9 @@ import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableErr
 import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxErrorPopoverComponent } from './error.popover.component';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxErrorViewButtonEvent } from './error.view.component';
+import { DbxErrorViewButtonEvent, DbxErrorViewComponent } from './error.view.component';
 import { DbxErrorWidgetService } from './error.widget.service';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { CommonModule } from '@angular/common';
-import { DbxErrorViewComponent } from './error.view.component';
 
 type DbxErrorComponentViewType = 'none' | 'default' | 'custom';
 

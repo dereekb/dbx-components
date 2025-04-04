@@ -1,6 +1,6 @@
 import { FilterSource, FilterMapKey } from '@dereekb/rxjs';
 import { switchMap, first, Observable } from 'rxjs';
-import { Directive, effect, input, Input } from '@angular/core';
+import { Directive, effect, input } from '@angular/core';
 import { provideFilterSource } from './filter.content';
 import { AbstractDbxFilterMapInstanceDirective } from './filter.map.instance.directive';
 import { type Maybe } from '@dereekb/util';

@@ -1,8 +1,8 @@
 import { first } from 'rxjs';
-import { Directive, effect, input, Input } from '@angular/core';
+import { Directive, effect, input } from '@angular/core';
 import { FilterSourceConnector, FilterSource, FilterMapKey } from '@dereekb/rxjs';
 import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
-import { AbstractDbxFilterMapSourceDirective, DbxFilterMapSourceDirective } from './filter.map.source.directive';
+import { AbstractDbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { type Maybe } from '@dereekb/util';
 
 /**

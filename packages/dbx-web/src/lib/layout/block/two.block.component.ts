@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 
 /**

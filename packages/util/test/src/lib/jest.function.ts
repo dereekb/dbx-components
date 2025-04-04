@@ -1,4 +1,4 @@
-import { forwardFunction, Getter, mapObjectMap } from '@dereekb/util';
+import { forwardFunction, type Getter, mapObjectMap } from '@dereekb/util';
 
 export type UseJestFunctionFixtureFunctionGetter<I extends (...args: any[]) => O, O = any> = Getter<I>;
 

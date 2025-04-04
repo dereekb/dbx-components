@@ -1,9 +1,8 @@
-import { Directive, EventEmitter, Output, OnInit, OnDestroy, inject, output } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject, output } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { first, mergeMap, delay, map } from 'rxjs';
 import { DbxForm } from '../form';
-import { ObservableOrValue } from '@dereekb/rxjs';
 
 /**
  * Used to see form value changes.

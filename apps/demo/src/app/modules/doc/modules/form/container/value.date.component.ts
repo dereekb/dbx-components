@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField } from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
@@ -9,7 +9,7 @@ import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, da
 @Component({
   templateUrl: './value.date.component.html'
 })
-export class DocFormDateValueComponent {
+export class DocFormDateValueComponent implements OnDestroy {
   readonly dateValues$ = of({
     date: startOfDay(new Date()),
     dateAsString: addDays(new Date(), -6),

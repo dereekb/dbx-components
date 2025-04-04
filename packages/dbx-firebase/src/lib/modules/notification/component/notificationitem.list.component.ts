@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
 import { NotificationItem } from '@dereekb/firebase';
-import { cachedGetter, Maybe } from '@dereekb/util';
+import { cachedGetter } from '@dereekb/util';
 import { of } from 'rxjs';
 import { DbxFirebaseNotificationTemplateService } from '../service/notification.template.service';
-import { MaybeObservableOrValue, ObservableOrValue, ListLoadingState } from '@dereekb/rxjs';
 import { DatePipe } from '@angular/common';
 import { CutTextPipe } from '@dereekb/dbx-core';
 

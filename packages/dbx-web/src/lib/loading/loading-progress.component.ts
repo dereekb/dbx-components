@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar';
 import { MatProgressSpinner, ProgressSpinnerMode } from '@angular/material/progress-spinner';

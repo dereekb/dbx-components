@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Input, ElementRef, inject, signal, input, computed } from '@angular/core';
-import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
+import { OnDestroy, ChangeDetectionStrategy, OnInit, Component, ElementRef, inject, signal, input, computed } from '@angular/core';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
-import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxContentContainerDirective } from '../../content';

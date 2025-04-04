@@ -1,10 +1,4 @@
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxActionModule, DbxRouterAnchorModule, DbxButtonModule, DbxReadableErrorModule, DbxPopupInteractionModule, DbxTwoColumnLayoutModule, DbxBlockLayoutModule, DbxWidgetModule, DbxListLayoutModule, DbxTextModule } from '@dereekb/dbx-web';
-import { DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxFormIoModule, DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 import { DbxFirebaseDevelopmentPopupComponent } from './development.popup.component';
 import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
 import { DbxFirebaseDevelopmentDirective } from './development.directive';

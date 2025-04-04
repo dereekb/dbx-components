@@ -1,19 +1,17 @@
-import { DbxFirebaseEmailRecoveryFormValue } from './login.email.recovery.form.component';
+import { DbxFirebaseEmailRecoveryFormValue, DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
 import { DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap } from 'rxjs';
 import { Component, EventEmitter, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DbxFirebaseLoginContext } from './login.context';
-import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
+import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig, DbxFirebaseEmailFormComponent } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
 import { firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseEmailFormComponent } from './login.email.form.component';
-import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
 import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {

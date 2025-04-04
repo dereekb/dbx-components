@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
-import { WorkUsingContext, IsModifiedFunction, switchMapWhileTrue, IsEqualFunction } from '@dereekb/rxjs';
+import { WorkUsingContext, switchMapWhileTrue, IsEqualFunction } from '@dereekb/rxjs';
 import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
 import { map } from 'rxjs';
 

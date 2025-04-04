@@ -1,5 +1,5 @@
 import { BehaviorSubject, throttleTime } from 'rxjs';
-import { OnDestroy, Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
 import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 import { toSignal } from '@angular/core/rxjs-interop';
 

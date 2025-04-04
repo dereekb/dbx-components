@@ -5,7 +5,7 @@ import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe, M
 import { ClickableAnchorLinkSegueRef, IconAndTitle, SegueRef } from '@dereekb/dbx-core';
 import { ObservableOrValue, filterMaybeArray } from '@dereekb/rxjs';
 import { GrantedRole } from '@dereekb/model';
-import { Optional, Injectable, inject, Inject } from '@angular/core';
+import { Injectable, inject, Inject } from '@angular/core';
 import { DbxFirebaseModelContextService } from '../../service/model.context.service';
 import { DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../service/model.context';
 

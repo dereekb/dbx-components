@@ -1,10 +1,8 @@
-import { BehaviorSubject } from 'rxjs';
-import { ChangeDetectionStrategy, Component, input, Input, OnDestroy, TrackByFunction } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { DbxInjectionArrayEntry } from './injection.array';
 import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponent } from './injection.component';
-import { AsyncPipe, NgFor } from '@angular/common';
-import { AsObservablePipe } from '../pipe/async/asobservable.pipe';
+import { NgFor } from '@angular/common';
 
 /**
  * Component that injects content based on the configuration into the view.

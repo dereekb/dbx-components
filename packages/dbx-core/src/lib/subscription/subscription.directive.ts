@@ -1,5 +1,5 @@
 import { OnDestroy, Directive } from '@angular/core';
-import { Subscription, Unsubscribable } from 'rxjs';
+import { Unsubscribable } from 'rxjs';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 

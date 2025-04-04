@@ -1,4 +1,4 @@
-import { computed, Directive, input, Input } from '@angular/core';
+import { computed, Directive, input } from '@angular/core';
 
 export type DbxDialogContentContainerWidth = 'normal' | 'wide';
 

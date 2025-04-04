@@ -1,7 +1,6 @@
-import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
 import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginMode, FirebaseLoginMethodType, FirebaseLoginMethodCategory } from './login';
-import { Component, Input, OnDestroy, Type, computed, inject, input } from '@angular/core';
+import { Component, Type, computed, inject, input } from '@angular/core';
 import { containsStringAnyCase, Maybe, ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 

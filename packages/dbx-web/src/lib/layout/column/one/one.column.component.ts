@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { DbxTwoColumnComponent } from '../two/two.column.component';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from '../two/two.column.store';
 

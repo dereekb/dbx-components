@@ -3,14 +3,14 @@ import { ScreenMediaWidthType } from '../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, findNext, type Maybe } from '@dereekb/util';
 import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
-import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplay, DbxActionAutoModifyDirective, DbxAnchor } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxAnchorComponent } from '../anchor';
 import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
 import { DbxIconButtonComponent } from '../../../button/icon/icon.button.component';
 import { MatIcon } from '@angular/material/icon';
-import { MatMenu, MatMenuItem, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
 
 interface NavAnchorLink {

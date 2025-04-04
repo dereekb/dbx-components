@@ -1,6 +1,6 @@
-import { Directive, ChangeDetectorRef, Renderer2, inject, signal, Signal } from '@angular/core';
+import { Directive, Renderer2, inject, signal, OnInit } from '@angular/core';
 import { DbxStyleService } from './style.service';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { delay } from 'rxjs';
 import { DbxStyleClass } from './style';
 import { Maybe } from '@dereekb/util';
@@ -15,7 +15,7 @@ import { Maybe } from '@dereekb/util';
   },
   standalone: true
 })
-export class DbxStyleBodyDirective extends AbstractSubscriptionDirective {
+export class DbxStyleBodyDirective extends AbstractSubscriptionDirective implements OnInit {
   private readonly _styleService = inject(DbxStyleService);
   private readonly _renderer = inject(Renderer2);
 

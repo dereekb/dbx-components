@@ -1,7 +1,6 @@
-import { OperatorFunction, Observable, switchMap, of } from 'rxjs';
-import { LoadingContext, LoadingContextEvent } from './loading.context';
-import { Maybe } from '@dereekb/util';
-import { filterMaybe } from '../rxjs';
+import { type OperatorFunction, type Observable, switchMap, of } from 'rxjs';
+import { type LoadingContext, type LoadingContextEvent } from './loading.context';
+import { type Maybe } from '@dereekb/util';
 
 /**
  * Creates a switchMap operator that will emit the stream of events from the input LoadingContext as soon as a non-null LoadingContext is emitted.

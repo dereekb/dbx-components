@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, Directive, inject } from '@angular/core';
+import { computed, Directive, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 

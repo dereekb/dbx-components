@@ -20,7 +20,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   readonly disabled = input<boolean, Maybe<boolean>>(false, { transform: (value) => value ?? false });
   readonly working = input<boolean, Maybe<boolean>>(false, { transform: (value) => value ?? false });
-  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>(undefined, { alias: 'buttonDisplay' });
+  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>(undefined);
 
   private readonly _disabledSignal = signal<Maybe<boolean>>(undefined);
   private readonly _workingSignal = signal<Maybe<boolean>>(undefined);

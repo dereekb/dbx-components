@@ -1,4 +1,4 @@
-import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, StaticProvider, inject } from '@angular/core';
+import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, StaticProvider, inject, OnDestroy } from '@angular/core';
 import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
 import { BehaviorSubject, map } from 'rxjs';
@@ -24,7 +24,7 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
   providers: [provideDbxValueListViewGroupDelegate(DbxListTitleGroupDirective)],
   standalone: true
 })
-export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListViewGroupDelegate<D, T, I> {
+export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListViewGroupDelegate<D, T, I>, OnDestroy {
   private _delegate = new BehaviorSubject<Maybe<DbxListTitleGroupTitleDelegate<T, O, D, I>>>(undefined);
 
   readonly groupValues: DbxValueListViewGroupValuesFunction<D, T, I, unknown, unknown> = (items: DbxValueListItemConfig<T, I>[]) => {

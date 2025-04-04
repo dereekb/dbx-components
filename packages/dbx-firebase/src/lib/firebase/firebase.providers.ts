@@ -1,5 +1,5 @@
-import { ModuleWithProviders, NgModule, Injector, EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
-import { FirebaseOptions, initializeApp } from 'firebase/app';
+import { Injector, EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
+import { initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { FirebaseApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideStorage, getStorage, connectStorageEmulator } from '@angular/fire/storage';

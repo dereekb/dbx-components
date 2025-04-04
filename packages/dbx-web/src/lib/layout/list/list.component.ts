@@ -1,8 +1,8 @@
-import { InfiniteScrollDirective, InfiniteScrollModule } from 'ngx-infinite-scroll';
-import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, BehaviorSubject, first, distinctUntilChanged } from 'rxjs';
-import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
-import { DbxInjectionComponent, DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, ObservableOrValue } from '@dereekb/rxjs';
+import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
+import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, first, distinctUntilChanged } from 'rxjs';
+import { Component, OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';

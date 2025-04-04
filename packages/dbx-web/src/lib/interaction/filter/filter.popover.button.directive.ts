@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, input, inject } from '@angular/core';
+import { Directive, ElementRef, input, inject } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxPopoverService } from '../popover/popover.service';
 import { DbxFilterPopoverComponent } from './filter.popover.component';

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { DbxPopupController, DbxPopupWindowState, DbxPopupWindowStateType } from './popup';
+import { DbxPopupController, DbxPopupWindowState } from './popup';
 import { DbxButtonModule } from '../../button/button.module';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 

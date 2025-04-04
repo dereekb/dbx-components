@@ -1,5 +1,5 @@
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { NotificationItem } from '@dereekb/firebase';
 import { DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
@@ -11,7 +11,7 @@ import { ProfileDocumentStore } from '@dereekb/demo-components';
 @Component({
   templateUrl: './list.component.html'
 })
-export class DemoNotificationListPageComponent {
+export class DemoNotificationListPageComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
 
   readonly dbxRouterService = inject(DbxRouterService);

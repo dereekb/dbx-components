@@ -1,6 +1,6 @@
 import { distinctUntilModelKeyChange } from '@dereekb/rxjs';
 import { DbxModelObjectStateService, ModelViewContext } from '@dereekb/dbx-web';
-import { Directive, Input, NgZone, OnInit, inject, input } from '@angular/core';
+import { Directive, OnInit, inject, input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { combineLatestWith, first, map, switchMap } from 'rxjs';
 import { DbxFirebaseDocumentStoreDirective } from '../store/store.document.directive';

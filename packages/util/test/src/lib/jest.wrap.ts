@@ -1,4 +1,4 @@
-import { AbstractJestTestContextFixture, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixtureClearInstanceFunction } from './jest';
+import { AbstractJestTestContextFixture, type JestBuildTestsWithContextFunction, type JestTestContextFactory, type JestTestContextFixtureClearInstanceFunction } from './jest';
 
 export abstract class AbstractWrappedFixture<F> {
   constructor(readonly fixture: F) {}

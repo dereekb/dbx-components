@@ -1,4 +1,4 @@
-import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, Observable, Subscription, shareReplay, delay } from 'rxjs';
+import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, Observable, delay } from 'rxjs';
 import { Component, ElementRef, OnDestroy, OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, Signal } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
@@ -8,10 +8,8 @@ import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-pac
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawer, MatDrawerContainer, MatDrawerContent } from '@angular/material/sidenav';
 import { MapboxEaseTo } from './mapbox';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { CommonModule, NgClass } from '@angular/common';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatButtonModule, MatIconButton } from '@angular/material/button';
+import { NgClass } from '@angular/common';
+import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxMapboxLayoutDrawerComponent } from './mapbox.layout.drawer.component';
 

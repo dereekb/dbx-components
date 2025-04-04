@@ -1,5 +1,5 @@
-import { JestTestContextFactory } from '@dereekb/util/test';
-import { firebaseRulesUnitTestBuilder, RulesUnitTestFirebaseTestingContextFixture } from './firebase';
+import { type JestTestContextFactory } from '@dereekb/util/test';
+import { firebaseRulesUnitTestBuilder, type RulesUnitTestFirebaseTestingContextFixture } from './firebase';
 
 export const TESTING_AUTHORIZED_FIREBASE_USER_ID = '0';
 

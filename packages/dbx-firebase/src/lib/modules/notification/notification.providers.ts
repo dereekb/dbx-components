@@ -1,8 +1,7 @@
-import { APP_INITIALIZER, EnvironmentProviders, makeEnvironmentProviders, Provider, Type } from '@angular/core';
+import { APP_INITIALIZER, EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
 import { AppNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { DbxFirebaseNotificationTemplateService } from './service/notification.template.service';
 import { DbxFirebaseNotificationItemWidgetService } from './service/notificationitem.widget.service';
-import { DbxFirebaseDevelopmentSchedulerService } from '../../development';
 import { DbxFirebaseNotificationItemDefaultViewComponent } from './component/notificationitem.view.default.component';
 import { DbxWidgetEntry } from '@dereekb/dbx-web';
 

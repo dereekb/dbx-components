@@ -1,8 +1,8 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
-import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest, switchMap } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injection';
 import { Initialized, Destroyable, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
-import { MaybeObservableOrValue, ObservableOrValueGetter, SubscriptionObject, filterMaybe, maybeValueFromObservableOrValueGetter, skipFirstMaybe, valueFromObservableOrValue } from '@dereekb/rxjs';
+import { ObservableOrValueGetter, SubscriptionObject, filterMaybe, maybeValueFromObservableOrValueGetter, skipFirstMaybe } from '@dereekb/rxjs';
 
 /**
  * Instance used by components to inject content based on the configuration into the view.

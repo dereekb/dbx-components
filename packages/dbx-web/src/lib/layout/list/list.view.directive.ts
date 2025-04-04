@@ -1,6 +1,6 @@
-import { ListLoadingStateContext, MaybeObservableOrValue, maybeValueFromObservableOrValue, ObservableOrValue, switchMapMaybeObs } from '@dereekb/rxjs';
-import { BehaviorSubject, distinctUntilChanged, map, Observable, of, shareReplay } from 'rxjs';
-import { Directive, effect, EventEmitter, input, Input, OnDestroy, output, Output, TrackByFunction } from '@angular/core';
+import { ListLoadingStateContext, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
+import { Directive, effect, input, OnDestroy, output, TrackByFunction } from '@angular/core';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { type Maybe } from '@dereekb/util';
 

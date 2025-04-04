@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
 import { map, distinctUntilChanged, BehaviorSubject, switchMap, combineLatest } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
@@ -12,7 +12,7 @@ import { DbxTableColumn } from './table';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableElementDirective<T, C> {
+export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableElementDirective implements OnDestroy<T, C> {
   private readonly _column = new BehaviorSubject<Maybe<DbxTableColumn<C>>>(undefined);
   readonly column$ = this._column.pipe(filterMaybe(), distinctUntilChanged());
 

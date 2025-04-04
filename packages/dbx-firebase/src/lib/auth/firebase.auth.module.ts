@@ -1,6 +1,5 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { provideDbxFirebaseAuth } from './firebase.auth.providers';
-import { ProvideDbxFirebaseAuthConfig } from './firebase.auth.providers';
+import { provideDbxFirebaseAuth, ProvideDbxFirebaseAuthConfig } from './firebase.auth.providers';
 
 export type DbxFirebaseAuthModuleConfig = ProvideDbxFirebaseAuthConfig;
 

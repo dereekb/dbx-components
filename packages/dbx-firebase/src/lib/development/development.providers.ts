@@ -1,20 +1,9 @@
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
-import { APP_INITIALIZER, EnvironmentProviders, ModuleWithProviders, NgModule, Provider, inject, makeEnvironmentProviders } from '@angular/core';
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxActionModule, DbxRouterAnchorModule, DbxButtonModule, DbxReadableErrorModule, DbxPopupInteractionModule, DbxTwoColumnLayoutModule, DbxBlockLayoutModule, DbxWidgetModule, DbxListLayoutModule, DbxTextModule } from '@dereekb/dbx-web';
+import { APP_INITIALIZER, EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
 import { DbxFirebaseDevelopmentWidgetService, DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN } from './development.widget.service';
-import { DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxFormIoModule, DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
-import { DbxFirebaseDevelopmentPopupComponent } from './development.popup.component';
-import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
-import { DbxFirebaseDevelopmentDirective } from './development.directive';
 import { DbxFirebaseDevelopmentService, DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN } from './development.service';
-import { DbxFirebaseDevelopmentPopupContentFormComponent } from './development.popup.content.form.component';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
 import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
-import { DbxFirebaseDevelopmentSchedulerListComponent, DbxFirebaseDevelopmentSchedulerListViewComponent, DbxFirebaseDevelopmentSchedulerListViewItemComponent } from './development.scheduler.list.component';
-import { DbxFirebaseDevelopmentSchedulerWidgetComponent, developmentFirebaseServerSchedulerWidgetEntry } from './development.scheduler.widget.component';
+import { developmentFirebaseServerSchedulerWidgetEntry } from './development.scheduler.widget.component';
 
 /**
  * Configuration for provideDbxFirebaseDevelopment().

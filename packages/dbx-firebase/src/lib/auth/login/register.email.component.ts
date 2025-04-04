@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import { AbstractConfiguredDbxFirebaseLoginButtonDirective } from './login.button.component';
+import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_TEMPLATE } from './login.button.component';
 import { DbxFirebaseLoginEmailContentComponent } from './login.email.content.component';
-import { DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_TEMPLATE } from './login.button.component';
 
 @Component({
   imports: DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_TEMPLATE.imports,

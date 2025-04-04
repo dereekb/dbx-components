@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy, signal, effect } from '@angular/core';
 import { MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
 import { ErrorInput, MS_IN_MINUTE, makeTimer, toggleTimerRunning } from '@dereekb/util';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { signal, effect } from '@angular/core';
 import { DbxErrorViewComponent } from './error.view.component';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';

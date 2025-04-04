@@ -1,7 +1,7 @@
-import { EnvironmentProviders, Provider, importProvidersFrom, makeEnvironmentProviders } from '@angular/core';
+import { EnvironmentProviders, Provider, makeEnvironmentProviders } from '@angular/core';
 import { SimpleStorageAccessorFactory, StorageAccessor } from '@dereekb/dbx-core';
-import { EffectsModule, provideEffects } from '@ngrx/effects';
-import { provideState, StoreModule } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideState } from '@ngrx/store';
 import { DbxModelViewTrackerEventSet } from './model.tracker';
 import { DbxModelTrackerService } from './model.tracker.service';
 import { DBX_MODEL_VIEW_TRACKER_STORAGE_ACCESSOR_TOKEN, DbxModelViewTrackerStorage } from './model.tracker.view.storage';
