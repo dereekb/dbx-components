@@ -12,7 +12,37 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
  */
 @Component({
   selector: 'dbx-anchor, [dbx-anchor]',
-  templateUrl: './anchor.component.html',
+  template: `
+    @switch (typeSignal()) {
+      @case ('plain') {
+        <ng-container *ngTemplateOutlet="content"></ng-container>
+      }
+      @case ('clickable') {
+        <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+      @case ('sref') {
+        <dbx-injection [config]="srefAnchorConfig">
+          <!-- Injected in child. -->
+        </dbx-injection>
+      }
+      @case ('href') {
+        <a class="dbx-anchor-a dbx-anchor-href" [href]="urlSignal()" [attr.target]="targetSignal()">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+      @case ('disabled') {
+        <a class="dbx-anchor-a dbx-anchor-disabled">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+    }
+    <!-- Template content -->
+    <ng-template #content>
+      <ng-content></ng-content>
+    </ng-template>
+  `,
   standalone: true,
   imports: [NgTemplateOutlet, NgClass, DbxInjectionComponent],
   host: {

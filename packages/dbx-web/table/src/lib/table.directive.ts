@@ -1,4 +1,4 @@
-import { Input, Directive, inject } from '@angular/core';
+import { Directive, inject, input, effect } from '@angular/core';
 import { DbxTableStore } from './table.store';
 import { type Maybe } from '@dereekb/util';
 import { DbxTableContextDataDelegate, DbxTableViewDelegate } from './table';
@@ -8,23 +8,19 @@ import { DbxTableContextDataDelegate, DbxTableViewDelegate } from './table';
  */
 @Directive({
   selector: '[dbxTable]',
-  providers: [DbxTableStore]
+  providers: [DbxTableStore],
+  standalone: true
 })
 export class DbxTableDirective<I, C, T> {
   readonly tableStore = inject(DbxTableStore<I, C, T>);
 
-  @Input()
-  set dbxTableInput(input: Maybe<I>) {
-    this.tableStore.setInput(input);
-  }
+  readonly dbxTableInput = input<Maybe<I>>();
+  readonly dbxTableViewDelegate = input<Maybe<DbxTableViewDelegate<I, C, T>>>();
+  readonly dbxTableDataDelegate = input<Maybe<DbxTableContextDataDelegate<I, C, T>>>();
 
-  @Input()
-  set dbxTableViewDelegate(dbxTableViewDelegate: Maybe<DbxTableViewDelegate<I, C, T>>) {
-    this.tableStore.setViewDelegate(dbxTableViewDelegate);
-  }
-
-  @Input()
-  set dbxTableDataDelegate(dbxTableDataDelegate: Maybe<DbxTableContextDataDelegate<I, C, T>>) {
-    this.tableStore.setDataDelegate(dbxTableDataDelegate);
-  }
+  protected readonly _setOnTableStoreEffect = effect(() => {
+    this.tableStore.setInput(this.dbxTableInput());
+    this.tableStore.setViewDelegate(this.dbxTableViewDelegate());
+    this.tableStore.setDataDelegate(this.dbxTableDataDelegate());
+  });
 }

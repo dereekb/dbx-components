@@ -16,30 +16,13 @@ import { DbxTableColumnHeaderComponent } from './table.column.header.component';
 import { DbxTableDirective } from './table.directive';
 import { DbxTableColumnFooterComponent } from './table.column.footer.component';
 
-const exports = [DbxTableDirective, DbxTableViewComponent];
-const internalDeclarations = [
-  //
-  DbxTableColumnHeaderComponent,
-  DbxTableColumnFooterComponent,
-  DbxTableInputCellComponent,
-  DbxTableActionCellComponent,
-  DbxTableItemCellComponent,
-  DbxTableItemHeaderComponent,
-  DbxTableItemActionComponent,
-  DbxTableSummaryStartCellComponent,
-  DbxTableSummaryEndCellComponent
-];
+const importsAndExports = [DbxTableDirective, DbxTableViewComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableInputCellComponent, DbxTableActionCellComponent, DbxTableItemCellComponent, DbxTableItemHeaderComponent, DbxTableItemActionComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent];
 
+/**
+ * @deprecated import DbxTableDirective and DbxTableViewComponent directly instead.
+ */
 @NgModule({
-  imports: [
-    //
-    CommonModule,
-    DbxLoadingModule,
-    DbxInjectionComponentModule,
-    MatTableModule,
-    InfiniteScrollModule
-  ],
-  declarations: [...exports, ...internalDeclarations],
-  exports
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxTableModule {}

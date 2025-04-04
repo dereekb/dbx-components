@@ -1,33 +1,29 @@
-import { filterMaybe } from '@dereekb/rxjs';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
-import { map, distinctUntilChanged, BehaviorSubject, switchMap, combineLatest } from 'rxjs';
+import { filterMaybe, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { map, distinctUntilChanged, switchMap, combineLatest } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
 import { DbxTableColumn } from './table';
+import { DbxInjectionComponent } from '@dereekb/dbx-core';
 
 @Component({
   selector: 'dbx-table-item-cell',
   template: `
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DbxInjectionComponent],
+  standalone: true
 })
-export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableElementDirective implements OnDestroy<T, C> {
-  private readonly _column = new BehaviorSubject<Maybe<DbxTableColumn<C>>>(undefined);
-  readonly column$ = this._column.pipe(filterMaybe(), distinctUntilChanged());
+export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableElementDirective<T, C> {
+  readonly column = input<Maybe<DbxTableColumn<C>>>();
 
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    switchMap((viewDelegate) => combineLatest([this.column$, this.element$]).pipe(map(([column, element]) => viewDelegate.itemCell(column, element)))),
+    switchMap((viewDelegate) => combineLatest([toObservable(this.column).pipe(filterMaybe()), this.element$]).pipe(map(([column, element]) => viewDelegate.itemCell(column, element)))),
+    maybeValueFromObservableOrValue(),
     distinctUntilChanged()
   );
 
-  @Input()
-  set column(column: Maybe<DbxTableColumn<C>>) {
-    this._column.next(column);
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._column.complete();
-  }
+  readonly configSignal = toSignal(this.config$);
 }

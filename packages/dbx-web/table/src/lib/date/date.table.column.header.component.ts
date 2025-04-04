@@ -1,34 +1,38 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DbxInjectionComponentConfig, DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxTableColumn } from '../table';
+import { NgIf, DatePipe } from '@angular/common';
 
 /**
  * A table header component used for rendering date values on the header.
  */
 @Component({
   template: `
-    <div *ngIf="date" class="dbx-table-date-column-header">
-      <span class="dbx-table-date-column-header-left">{{ date | date: left }}</span>
-      <span>{{ date | date: right }}</span>
-    </div>
+    @if (dateSignal()) {
+      <div class="dbx-table-date-column-header">
+        <span class="dbx-table-date-column-header-left">{{ dateSignal() | date: left }}</span>
+        <span>{{ dateSignal() | date: right }}</span>
+      </div>
+    }
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DatePipe],
+  standalone: true
 })
 export class DbxTableDateHeaderComponent {
   left = 'E';
   right = 'MMM d';
 
-  private _date: Maybe<Date>;
-
-  constructor() {}
+  private readonly _dateSignal = signal<Maybe<Date>>(undefined);
+  readonly dateSignal = this._dateSignal.asReadonly();
 
   get date() {
-    return this._date;
+    return this._dateSignal();
   }
 
   set date(date: Maybe<Date>) {
-    this._date = date;
+    this._dateSignal.set(date);
   }
 }
 
