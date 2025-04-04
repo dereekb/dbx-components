@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverDirective, AnchorForValueFunction, DbxListEmptyContentComponent, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverKey, DbxPopoverScrollContentComponent, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, AnchorForValueFunction, DbxListEmptyContentComponent, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverKey, DbxPopoverScrollContentDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseModelTypesServiceInstancePair } from '../model.types.service';
 import { DbxFirebaseModelTrackerHistoryFilter } from './model.tracker.service';
@@ -43,7 +43,7 @@ export const DEFAULT_DBX_FIREBASE_MODEL_HISTORY_COMPONENT_POPOVER_KEY = 'history
 
 @Component({
   templateUrl: './model.history.popover.component.html',
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent],
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxFirebaseModelHistoryComponent, DbxListEmptyContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

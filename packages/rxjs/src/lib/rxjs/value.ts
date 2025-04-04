@@ -225,7 +225,7 @@ export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: May
 }
 
 /**
- * Combines both filterMaybe and switchMap to build a subscriber that emits only concrete values.
+ * Combines both filterMaybe and switchMap to build a subscriber that emits values only from a concrete Observable, filtering out null/undefined Observables.
  *
  * @returns
  */

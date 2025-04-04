@@ -3,9 +3,11 @@ import { NgModule } from '@angular/core';
 import { DbxTwoColumnLayoutModule } from '../two';
 import { DbxOneColumnComponent } from './one.column.component';
 
+/**
+ * @deprecated import DbxOneColumnComponent directly instead.
+ */
 @NgModule({
-  imports: [CommonModule, DbxTwoColumnLayoutModule],
-  declarations: [DbxOneColumnComponent],
+  imports: [DbxOneColumnComponent],
   exports: [DbxOneColumnComponent]
 })
 export class DbxOneColumnLayoutModule {}

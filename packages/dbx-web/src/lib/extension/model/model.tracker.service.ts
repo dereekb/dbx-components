@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
 import { first, Observable } from 'rxjs';
-import { DbxModelViewTrackerEvent, DbxModelViewTrackerEventSet } from './model.tracker';
+import { DbxModelViewTrackerEvent, DbxModelViewTrackerEventSet, ModelViewContext } from './model.tracker';
 import { DbxModelViewTrackerStorage } from './model.tracker.view.storage';
 
 /**
@@ -24,7 +24,7 @@ export class DbxModelTrackerService {
   }
 
   // MARK: View
-  trackViewedObject(modelKeyTypeNamePair: ModelKeyTypeNamePair, context?: string, folder: Maybe<string> = this._defaultFolder): void {
+  trackViewedObject(modelKeyTypeNamePair: ModelKeyTypeNamePair, context?: Maybe<ModelViewContext>, folder: Maybe<string> = this._defaultFolder): void {
     this._viewTrackerStorage
       .addTrackerEvent({
         m: modelKeyTypeNamePair,

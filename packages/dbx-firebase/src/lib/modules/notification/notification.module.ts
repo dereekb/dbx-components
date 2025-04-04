@@ -38,6 +38,23 @@ const importsAndExports = [
 
 /**
  * Used to initialize the DbxFirebaseNotificationModule.
+ *
+ * @deprecated import independent components instead
+ *
+ * @see DbxFirebaseNotificationItemListComponent
+ * @see DbxFirebaseNotificationItemListViewComponent
+ * @see DbxFirebaseNotificationItemListViewItemComponent
+ * @see DbxFirebaseNotificationItemContentComponent
+ * @see DbxFirebaseNotificationItemViewComponent
+ * @see DbxFirebaseNotificationItemDefaultViewComponent
+ * @see DbxFirebaseNotificationItemStorePopoverButtonComponent
+ * @see DbxFirebaseNotificationItemStorePopoverComponent
+ * @see DbxFirebaseNotificationBoxCollectionStoreDirective
+ * @see DbxFirebaseNotificationBoxDocumentStoreDirective
+ * @see DbxFirebaseNotificationSummaryCollectionStoreDirective
+ * @see DbxFirebaseNotificationSummaryDocumentStoreDirective
+ * @see DbxFirebaseNotificationUserCollectionStoreDirective
+ * @see DbxFirebaseNotificationUserDocumentStoreDirective
  */
 @NgModule({
   imports: importsAndExports,

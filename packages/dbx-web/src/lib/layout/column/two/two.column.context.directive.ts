@@ -1,6 +1,6 @@
-import { Input, OnDestroy, Directive, OnInit, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Directive, OnInit, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
 
 /**
@@ -8,23 +8,14 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.s
  */
 @Directive({
   selector: '[dbxTwoColumnContext]',
-  providers: provideTwoColumnsContext()
+  providers: provideTwoColumnsContext(),
+  standalone: true
 })
-export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
-  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
-
-  private _showRight = new BehaviorSubject<Maybe<boolean>>(undefined);
+export class DbxTwoColumnContextDirective implements OnInit {
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore, { self: true });
+  readonly showRight = input<boolean, Maybe<boolean | ''>>(false, { transform: (x) => Boolean(x) });
 
   ngOnInit(): void {
-    this.twoColumnsContextStore.setShowRight(this._showRight);
-  }
-
-  ngOnDestroy(): void {
-    this._showRight.complete();
-  }
-
-  @Input()
-  set showRight(showRight: Maybe<boolean | ''>) {
-    this._showRight.next(Boolean(showRight));
+    this.twoColumnsContextStore.setShowRight(toObservable(this.showRight));
   }
 }

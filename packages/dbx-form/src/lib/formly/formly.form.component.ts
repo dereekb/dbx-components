@@ -26,15 +26,15 @@ export interface DbxFormlyFormState {
       <formly-form [form]="form" [fields]="fieldsSignal()" [model]="model"></formly-form>
     </form>
   `,
-  providers: provideDbxMutableForm(DbxFormlyFormComponent),
   host: {
     class: 'dbx-formly'
   },
+  providers: provideDbxMutableForm(DbxFormlyComponent),
   imports: [FormsModule, ReactiveFormsModule, FormlyModule],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
+export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
   private readonly _dbxFormlyContext = inject(DbxFormlyContext<T>);
 
   private readonly _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
@@ -5,7 +6,7 @@ import { Maybe } from '@dereekb/util';
   selector: 'dbx-firebase-notificationitem-content',
   templateUrl: './notificationitem.content.component.html',
   styleUrls: ['./notificationitem.content.scss'],
-  imports: [],
+  imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

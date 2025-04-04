@@ -7,7 +7,8 @@ import { FilterMap } from '@dereekb/rxjs';
 @Directive({
   selector: '[dbxFilterMap]',
   exportAs: 'dbxFilterMap',
-  providers: [FilterMap]
+  providers: [FilterMap],
+  standalone: true
 })
 export class DbxFilterMapDirective<F> implements OnDestroy {
   readonly filterMap = inject(FilterMap<F>);

@@ -4,11 +4,18 @@ import { DbxListLayoutModule } from '@dereekb/dbx-web';
 import { DbxFirebaseModelTypeInstanceListComponent, DbxFirebaseModelTypeInstanceListViewComponent, DbxFirebaseModelTypeInstanceListViewItemComponent } from './model.types.list.component';
 import { DbxfirebaseModelViewedEventDirective } from './model.types.view.directive';
 
-const declarations = [DbxfirebaseModelViewedEventDirective, DbxFirebaseModelTypeInstanceListComponent, DbxFirebaseModelTypeInstanceListViewComponent, DbxFirebaseModelTypeInstanceListViewItemComponent];
+const importsAndExports = [DbxfirebaseModelViewedEventDirective, DbxFirebaseModelTypeInstanceListComponent, DbxFirebaseModelTypeInstanceListViewComponent, DbxFirebaseModelTypeInstanceListViewItemComponent];
 
+/**
+ * @deprecated import independent components instead
+ *
+ * @see DbxfirebaseModelViewedEventDirective
+ * @see DbxFirebaseModelTypeInstanceListComponent
+ * @see DbxFirebaseModelTypeInstanceListViewComponent
+ * @see DbxFirebaseModelTypeInstanceListViewItemComponent
+ */
 @NgModule({
-  imports: [CommonModule, DbxListLayoutModule],
-  declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxFirebaseModelTypesModule {}

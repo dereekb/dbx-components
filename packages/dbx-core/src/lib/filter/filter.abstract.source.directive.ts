@@ -1,7 +1,7 @@
 import { of, Observable } from 'rxjs';
-import { Directive, forwardRef, inject, InjectionToken, OnDestroy, OnInit, Provider, Type } from '@angular/core';
-import { FilterSource, FilterSourceInstance, ObservableOrValue } from '@dereekb/rxjs';
-import { type Maybe } from '@dereekb/util';
+import { Directive, forwardRef, inject, InjectionToken, Injector, OnDestroy, OnInit, Provider, Type } from '@angular/core';
+import { FilterSource, FilterSourceInstance, MaybeObservableOrValue, ObservableOrValue } from '@dereekb/rxjs';
+import { GetterOrValue, type Maybe } from '@dereekb/util';
 import { provideFilterSource } from './filter.content';
 
 export const FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN = new InjectionToken<Maybe<Observable<Maybe<unknown>>>>('FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_SOURCE_TOKEN');
@@ -13,17 +13,29 @@ export abstract class FilterSourceDirective<F = unknown> implements FilterSource
   abstract resetFilter(): void;
 }
 
+export type ProvideFilterSourceDirectiveDefaultFilterFactoryFunction<F = unknown> = (injector: Injector) => MaybeObservableOrValue<F>;
+
 /**
  * Angular provider convenience function for a FilterSourceDirective.
  */
-export function provideFilterSourceDirective<S extends FilterSourceDirective<F>, F = unknown>(sourceType: Type<S>): Provider[] {
-  return [
+export function provideFilterSourceDirective<S extends FilterSourceDirective<F>, F = unknown>(sourceType: Type<S>, defaultFilterFactory?: ProvideFilterSourceDirectiveDefaultFilterFactoryFunction): Provider[] {
+  const providers = [
     {
       provide: FilterSourceDirective,
       useExisting: forwardRef(() => sourceType)
     },
     ...provideFilterSource(sourceType)
   ];
+
+  if (defaultFilterFactory != null) {
+    providers.push({
+      provide: FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN,
+      useFactory: defaultFilterFactory,
+      deps: [Injector]
+    });
+  }
+
+  return providers;
 }
 
 /**
@@ -31,7 +43,7 @@ export function provideFilterSourceDirective<S extends FilterSourceDirective<F>,
  */
 @Directive()
 export abstract class AbstractFilterSourceDirective<F = unknown> implements FilterSourceDirective<F>, OnDestroy {
-  private readonly _defaultFilter = inject<Maybe<Observable<Maybe<F>>>>(FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN, { optional: true });
+  private readonly _defaultFilter = inject<MaybeObservableOrValue<F>>(FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN, { optional: true });
 
   protected readonly _defaultFilterSource = new FilterSourceInstance<F>({
     defaultFilter: this._defaultFilter
@@ -59,11 +71,15 @@ export abstract class AbstractFilterSourceDirective<F = unknown> implements Filt
     this._defaultFilterSource.resetFilter();
   }
 
-  get initialFilterTakesPriority() {
-    return this._defaultFilterSource.initialFilterTakesPriority;
+  setInitialFilterTakesPriority(initialFilterTakesPriority: boolean) {
+    this._defaultFilterSource.setInitialFilterTakesPriority(initialFilterTakesPriority);
   }
 
+  // MARK: Deprecated
+  /**
+   * @deprecated use setInitialFilterTakesPriority() instead.
+   */
   set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
-    this._defaultFilterSource.initialFilterTakesPriority = initialFilterTakesPriority;
+    this.setInitialFilterTakesPriority(initialFilterTakesPriority);
   }
 }

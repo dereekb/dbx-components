@@ -8,7 +8,8 @@ import { isNot } from '@dereekb/rxjs';
  * Used with a DbxTwoColumnComponent to control showing right when the current route is a child of the backRef.
  */
 @Directive({
-  selector: '[dbxTwoColumnSrefShowRight]'
+  selector: '[dbxTwoColumnSrefShowRight]',
+  standalone: true
 })
 export class DbxTwoColumnSrefShowRightDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);

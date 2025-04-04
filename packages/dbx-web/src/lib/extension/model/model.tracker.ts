@@ -1,7 +1,7 @@
 import { UnixDateTimeNumber, Maybe, ModelKey, ModelKeyTypeNamePair } from '@dereekb/util';
 
 /**
- * Context in which a model was viewed.
+ * String context in which a model was viewed.
  */
 export type ModelViewContext = string;
 
@@ -13,7 +13,7 @@ export interface DbxModelViewTrackerEvent {
   /**
    * Context
    */
-  readonly c?: ModelViewContext;
+  readonly c?: Maybe<ModelViewContext>;
   /**
    * Model info
    */

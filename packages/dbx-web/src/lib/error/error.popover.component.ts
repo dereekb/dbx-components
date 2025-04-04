@@ -3,7 +3,7 @@ import { ReadableError } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../interaction/popover/abstract.popover.directive';
 import { DbxPopoverKey } from '../interaction/popover/popover';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
-import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent } from '../interaction';
+import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../interaction';
 import { DbxErrorDetailsComponent } from './error.details.component';
 
 export const DEFAULT_ERROR_POPOVER_KEY = 'error';
@@ -22,7 +22,7 @@ export interface DbxErrorPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent, DbxErrorDetailsComponent],
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxErrorDetailsComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

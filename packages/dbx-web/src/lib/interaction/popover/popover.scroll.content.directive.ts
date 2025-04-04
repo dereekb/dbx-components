@@ -1,23 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, Directive, inject } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Popover scrollable content wrapper component.
  */
-@Component({
-  selector: 'dbx-popover-scroll-content',
-  template: `
-    <ng-content></ng-content>
-  `,
+@Directive({
+  selector: 'dbx-popover-scroll-content,[dbxPopoverScrollContent],.dbx-popover-scroll-content',
   host: {
     class: 'd-block dbx-popover-scroll-content',
     '[class]': 'sizingClassesSignal()'
   },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  standalone: true
 })
-export class DbxPopoverScrollContentComponent {
+export class DbxPopoverScrollContentDirective {
+
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent);
 
   readonly hasControlsSignal = toSignal(this.appPopoverContentComponent.hasControls);
@@ -39,4 +36,5 @@ export class DbxPopoverScrollContentComponent {
 
     return classes.join(' ');
   });
+
 }

@@ -8,31 +8,31 @@ export interface TwoColumnsState {
   /**
    * Whether or not to reverse the sizing.
    */
-  reverseSizing: boolean;
+  readonly reverseSizing: boolean;
   /**
    * Whether or not the right side should be shown.
    */
-  showRight: boolean;
+  readonly showRight: boolean;
   /**
    * Whether or not there is any registered right content currently.
    */
-  hasRight: boolean;
+  readonly hasRight: boolean;
   /**
    * Whether or not to allow the left to fill up the screen when no right is shown.
    */
-  fullLeft: boolean;
+  readonly fullLeft: boolean;
   /**
    * Optional ref to use with TwoColumns that use an sref for the back button.
    */
-  backRef?: Maybe<SegueRef>;
+  readonly backRef?: Maybe<SegueRef>;
   /**
    * Size of the view's total width in pixels.
    */
-  totalWidth?: Maybe<number>;
+  readonly totalWidth?: Maybe<number>;
   /**
    * Minimum right side size allowed before hiding the left content.
    */
-  minRightWidth: number;
+  readonly minRightWidth: number;
 }
 
 export const DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH = 320;

@@ -241,12 +241,16 @@ bootstrapApplication(UIView, appConfig)
 - `DbxActionHandlerInstance` replaced setters with `setHandlerFunction` and `setHandlerValue`.
 - Renamed `DbxFilterComponentParams` to `DbxFilterComponentConfig`
 - Renamed `DbxFilterPopoverComponentParams` to `DbxFilterPopoverComponentConfig`
+- Renamed `DbxPopoverScrollContentComponent` to `DbxPopoverScrollContentDirective`
+- Renamed `DbxTwoBlockComponent` to `DbxTwoBlockDirective`
+- Converted `DbxPopupWindowState` from an enum to a const object and added `DbxPopupWindowStateType`.
+- Renamed `DbxFormlyFormComponent` to `DbxFormlyComponent`.
 
 #### Updating DbxList related views
 All views like this should consider being updated to standalone views. The template is still available, but now 
 
 #### Creating private effect() calls
-Some components might have private Signal effects that will raise the issue "_ is declared but its value is never read".
+Some components might have private Signal effects that will raise the issue "_mySignalEffect is declared but its value is never read". It is suggested instead to create a protected effect reference instead.
 
 Make the following changes:
 
@@ -270,12 +274,6 @@ Also update `tsconfig.base.json`:
 
 ```
   "noUnusedLocals": false,
-```
-
-Then finally for .`vscode/settings.json`:
-
-```
-  "editor.showUnused": false,
 ```
 
 https://stackoverflow.com/a/76049970

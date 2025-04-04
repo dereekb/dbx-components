@@ -1,26 +1,25 @@
 import { distinctUntilModelKeyChange } from '@dereekb/rxjs';
 import { DbxModelObjectStateService, ModelViewContext } from '@dereekb/dbx-web';
-import { Directive, Input, NgZone, OnInit, inject } from '@angular/core';
+import { Directive, Input, NgZone, OnInit, inject, input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { combineLatestWith, first, map, switchMap } from 'rxjs';
 import { DbxFirebaseDocumentStoreDirective } from '../store/store.document.directive';
 import { DbxFirebaseModelTypesService } from './model.types.service';
-import { ModelKeyTypeNamePair } from '@dereekb/util';
+import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
 
 /**
  * Used with a DbxFirebaseDocumentStoreDirective to emit model viewed events.
  */
 @Directive({
-  selector: '[dbxFirebaseModelViewedEvent]'
+  selector: '[dbxFirebaseModelViewedEvent]',
+  standalone: true
 })
 export class DbxfirebaseModelViewedEventDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective);
   readonly dbxModelObjectStateService = inject(DbxModelObjectStateService);
   readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);
-  readonly ngZone = inject(NgZone);
 
-  @Input('dbxFirebaseModelViewedEvent')
-  context?: ModelViewContext | undefined;
+  readonly modelViewContext = input<Maybe<ModelViewContext>>(undefined, { alias: 'dbxFirebaseModelViewedEvent' });
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.data$
@@ -47,7 +46,8 @@ export class DbxfirebaseModelViewedEventDirective extends AbstractSubscriptionDi
         })
       )
       .subscribe((modelKeyTypeNamePair) => {
-        this.ngZone.run(() => this.dbxModelObjectStateService.emitModelViewEvent({ modelKeyTypeNamePair, context: this.context || undefined }));
+        const context = this.modelViewContext();
+        this.dbxModelObjectStateService.emitModelViewEvent({ modelKeyTypeNamePair, context });
       });
   }
 }

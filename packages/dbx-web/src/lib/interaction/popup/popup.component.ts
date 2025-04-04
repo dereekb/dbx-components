@@ -1,18 +1,19 @@
-import { Component, Type, OnDestroy, inject } from '@angular/core';
+import { Component, Type, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe, PixelsString } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
-import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxPopupController, DbxPopupKey, DbxPopupWindowState } from './popup';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponent, DbxInjectionComponentConfig, DbxInjectionComponentModule } from '@dereekb/dbx-core';
+import { DbxPopupController, DbxPopupKey, DbxPopupWindowState, DbxPopupWindowStateType } from './popup';
+import { DbxPopupCoordinatorComponent } from './popup.coordinator.component';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';
 export const APP_POPUP_MINIMIZED_WIDTH = '300px';
 export const APP_POPUP_NORMAL_HEIGHT = 'auto';
 
 export abstract class DbxPopupComponentController<O, I> extends DbxPopupController<O, I> {
-  getClosingValueFn?: (value?: I) => Promise<O>;
+  readonly getClosingValueFn?: (value?: I) => Promise<O>;
 }
 
 export interface DbxPopupComponentConfig<O, I, T> {
@@ -21,16 +22,16 @@ export interface DbxPopupComponentConfig<O, I, T> {
    *
    * Only one popup should exist at a time given a certain key.
    */
-  key: DbxPopupKey;
-  position?: PopupPosition;
-  offset?: PopupPositionOffset;
-  closeOnTransition?: boolean;
-  componentClass: Type<T>;
-  data?: I;
-  isDraggable?: boolean;
-  init?: (component: T, controller: DbxPopupController<O, I>) => void;
-  width?: PixelsString;
-  height?: PixelsString;
+  readonly key: DbxPopupKey;
+  readonly position?: Maybe<PopupPosition>;
+  readonly offset?: Maybe<PopupPositionOffset>;
+  readonly closeOnTransition?: Maybe<boolean>;
+  readonly componentClass: Type<T>;
+  readonly data?: Maybe<I>;
+  readonly isDraggable?: Maybe<boolean>;
+  readonly init?: (component: T, controller: DbxPopupController<O, I>) => void;
+  readonly width?: Maybe<PixelsString>;
+  readonly height?: Maybe<PixelsString>;
 }
 
 /**
@@ -50,13 +51,20 @@ export interface DbxPopupComponentConfig<O, I, T> {
     {
       provide: CompactContextStore
     }
-  ]
+  ],
+  imports: [DbxPopupCoordinatorComponent, DbxInjectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
-  private popoverRef = inject(NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>);
-  private compactContextState = inject(CompactContextStore);
+  private readonly popoverRef = inject(NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>);
+  private readonly compactContextState = inject(CompactContextStore);
 
   private _position: PopupGlobalPositionStrategy;
+
+  readonly config: DbxPopupComponentConfig<O, I, T> = this.popoverRef.data;
+  readonly key: DbxPopupKey = this.config.key;
+  readonly data: Maybe<I> = this.config.data;
 
   readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
@@ -72,7 +80,7 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
   );
   readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
-  private readonly _windowState = new BehaviorSubject<DbxPopupWindowState>(DbxPopupWindowState.NORMAL);
+  private readonly _windowState = new BehaviorSubject<DbxPopupWindowStateType>(DbxPopupWindowState.NORMAL);
   readonly windowState$ = this._windowState.asObservable();
 
   getClosingValueFn?: (value?: I) => Promise<O>;
@@ -80,20 +88,8 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
   constructor() {
     super();
     this.compactContextState.setMode(CompactMode.COMPACT);
-    this._position = new PopupGlobalPositionStrategy(this.config.position, this.config.offset);
+    this._position = new PopupGlobalPositionStrategy(this.config.position ?? undefined, this.config.offset ?? undefined);
     this.popoverRef.overlay.updatePositionStrategy(this._position);
-  }
-
-  get config(): DbxPopupComponentConfig<O, I, T> {
-    return this.popoverRef.data;
-  }
-
-  get key(): DbxPopupKey {
-    return this.config.key;
-  }
-
-  get data(): Maybe<I> {
-    return this.config.data;
   }
 
   override ngOnDestroy(): void {
@@ -126,26 +122,26 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
     }
   }
 
-  public return(value?: O): void {
+  return(value?: O): void {
     this.closing.next();
     this.popoverRef.close(value);
   }
 
-  public minimize(): void {
+  minimize(): void {
     this.popoverRef.isDraggable = false;
     this.popoverRef.resize(APP_POPUP_MINIMIZED_WIDTH, APP_POPUP_NORMAL_HEIGHT);
     this.popoverRef.overlay.updatePosition();
     this._windowState.next(DbxPopupWindowState.MINIMIZED);
   }
 
-  public normalscreen(): void {
-    this.popoverRef.isDraggable = this.config.isDraggable;
+  normalscreen(): void {
+    this.popoverRef.isDraggable = this.config.isDraggable ?? undefined;
     this.popoverRef.resize(APP_POPUP_NORMAL_WIDTH, APP_POPUP_NORMAL_HEIGHT);
     this.popoverRef.overlay.updatePosition();
     this._windowState.next(DbxPopupWindowState.NORMAL);
   }
 
-  public fullscreen(): void {
+  fullscreen(): void {
     this.popoverRef.isDraggable = false;
     this.popoverRef.resize('100%', '100%');
     this.popoverRef.overlay.updatePosition();

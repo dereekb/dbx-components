@@ -4,7 +4,7 @@ export * from './development.widget.service';
 export * from './development.popup.component';
 export * from './development.popup.content.component';
 export * from './development.popup.content.form.component';
-export * from './development.popup.directive';
+export * from './development.directive';
 export * from './development.scheduler.list.component';
 export * from './development.scheduler.service';
 export * from './development.scheduler.widget.component';

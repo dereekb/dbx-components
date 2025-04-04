@@ -6,10 +6,11 @@ import { DbxFirebaseDevelopmentPopupComponent } from './development.popup.compon
 import { DbxFirebaseDevelopmentService } from './development.service';
 
 /**
- * Directive for controlling and displaying
+ * Directive for showing the development tools snackbar when the app opens up and listening for keybindings for opening the popup.
  */
 @Directive({
-  selector: '[dbxFirebaseDevelopment]'
+  selector: '[dbxFirebaseDevelopment]',
+  standalone: true
 })
 export class DbxFirebaseDevelopmentDirective implements OnDestroy, AfterViewInit {
   readonly popupService = inject(DbxPopupService);

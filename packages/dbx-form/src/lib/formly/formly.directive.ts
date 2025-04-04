@@ -1,4 +1,4 @@
-import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
+import { SubscriptionObject, filterMaybe, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { OnInit, OnDestroy, Directive, Input, inject, input, effect } from '@angular/core';
@@ -83,8 +83,8 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
 
 @Directive()
 export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> implements OnInit, OnDestroy {
-  readonly config = input<Maybe<C>>(undefined);
+  readonly config = input<MaybeObservableOrValue<C>>(undefined);
 
-  readonly currentConfig$ = toObservable(this.config);
+  readonly currentConfig$ = toObservable(this.config).pipe(maybeValueFromObservableOrValue());
   readonly config$ = this.currentConfig$.pipe(filterMaybe(), shareReplay(1));
 }

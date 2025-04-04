@@ -39,7 +39,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>);
   readonly safetyType$ = this._safetyType.pipe(map((x) => x ?? 'dialog'));
 
-  private readonly _dbxActionTransitionSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionTransitionSafety()));
+  protected readonly _dbxActionTransitionSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionTransitionSafety()));
 
   private _currentDialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
   private stopWatchingTransition?: () => void;
@@ -61,7 +61,6 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
     }
 
     this._closeDialog();
-    this._dbxActionTransitionSafetyUpdateEffect.destroy();
   }
 
   protected _handleOnBeforeTransition(transition: Transition): HookResult {

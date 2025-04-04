@@ -1,8 +1,0 @@
-<dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
-  <div *ngIf="!v.hideLeftColumn && v.reverseSizing" (resized)="onResized($event)"></div>
-  <ng-content select="[left]"></ng-content>
-</dbx-content-container>
-<dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column" *ngIf="v.showRight">
-  <div *ngIf="v.hideLeftColumn || !v.reverseSizing" (resized)="onResized($event)"></div>
-  <ng-content select="[right]"></ng-content>
-</dbx-content-container>

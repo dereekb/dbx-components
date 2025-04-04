@@ -8,7 +8,7 @@ import { DbxFirebaseDevelopmentWidgetService, DEFAULT_FIREBASE_DEVELOPMENT_WIDGE
 import { DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxFormIoModule, DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 import { DbxFirebaseDevelopmentPopupComponent } from './development.popup.component';
 import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
-import { DbxFirebaseDevelopmentDirective } from './development.popup.directive';
+import { DbxFirebaseDevelopmentDirective } from './development.directive';
 import { DbxFirebaseDevelopmentService, DEFAULT_FIREBASE_DEVELOPMENT_ENABLED_TOKEN } from './development.service';
 import { DbxFirebaseDevelopmentPopupContentFormComponent } from './development.popup.content.form.component';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';

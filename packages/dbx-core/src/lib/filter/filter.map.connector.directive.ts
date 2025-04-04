@@ -1,8 +1,8 @@
 import { first } from 'rxjs';
-import { Directive, Input } from '@angular/core';
+import { Directive, effect, input, Input } from '@angular/core';
 import { FilterSourceConnector, FilterSource, FilterMapKey } from '@dereekb/rxjs';
 import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
-import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
+import { AbstractDbxFilterMapSourceDirective, DbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -11,17 +11,12 @@ import { type Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxFilterMapSourceConnector]',
   exportAs: 'dbxFilterMapSourceConnector',
-  providers: [...provideFilterSource(DbxFilterMapSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)]
+  providers: [...provideFilterSource(DbxFilterMapSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)],
+  standalone: true
 })
-export class DbxFilterMapSourceConnectorDirective<F> extends DbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {
-  @Input('dbxFilterMapSourceConnector')
-  override get key(): Maybe<FilterMapKey> {
-    return this._key.value;
-  }
-
-  override set key(key: Maybe<FilterMapKey>) {
-    this._key.next(key);
-  }
+export class DbxFilterMapSourceConnectorDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {
+  readonly dbxFilterMapSourceConnector = input<Maybe<FilterMapKey>>();
+  protected readonly _dbxFilterMapSourceConnectorEffect = effect(() => this.setFilterMapKey(this.dbxFilterMapSourceConnector()));
 
   // MARK: FilterSourceConnector
   connectWithSource(filterSource: FilterSource<F>): void {

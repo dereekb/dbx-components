@@ -13,6 +13,5 @@
     "**/tmp/**": true,
     "**/.hg/store/**": true
   },
-  "editor.showUnused": false,
   "eslint.validate": ["json"]
 }

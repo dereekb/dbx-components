@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
 import { NotificationItem } from '@dereekb/firebase';
 import { cachedGetter, Maybe } from '@dereekb/util';
 import { of } from 'rxjs';
@@ -12,9 +12,9 @@ export type NotificationItemWithSelection = DbxValueAsListItem<NotificationItem>
 
 @Component({
   selector: 'dbx-firebase-notificationitem-list',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
+  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
+  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
   providers: provideDbxListViewWrapper(DbxFirebaseNotificationItemListComponent),
   standalone: true
 })

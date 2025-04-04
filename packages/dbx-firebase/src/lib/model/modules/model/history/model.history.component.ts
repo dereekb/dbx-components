@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, inject, input } from '@angular/core';
-import { AnchorForValueFunction } from '@dereekb/dbx-web';
+import { AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective } from '@dereekb/dbx-web';
 import { ListLoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap, shareReplay, Observable } from 'rxjs';
@@ -15,7 +15,7 @@ import { DbxFirebaseModelTypeInstanceListComponent } from '../model.types.list.c
       <ng-content empty select="[empty]"></ng-content>
     </dbx-firebase-model-type-instance-list>
   `,
-  imports: [DbxFirebaseModelTypeInstanceListComponent],
+  imports: [DbxFirebaseModelTypeInstanceListComponent, DbxListItemAnchorModifierDirective, DbxValueListItemModifierDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

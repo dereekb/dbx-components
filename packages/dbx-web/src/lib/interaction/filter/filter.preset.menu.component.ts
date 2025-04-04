@@ -20,6 +20,7 @@ import { NgClass } from '@angular/common';
   standalone: true
 })
 export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuDirective<F> {
+
   readonly config = input<DbxPresetFilterMenuConfig>({});
   readonly config$ = toObservable(this.config);
 
@@ -28,4 +29,5 @@ export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends Ab
 
   readonly buttonTextSignal = toSignal(this.buttonText$);
   readonly buttonIconSignal = toSignal(this.buttonIcon$);
+
 }

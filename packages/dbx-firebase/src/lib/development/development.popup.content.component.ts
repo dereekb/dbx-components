@@ -1,22 +1,26 @@
-import { ClickableAnchor, DbxAuthService } from '@dereekb/dbx-core';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { DbxWidgetDataPair, TwoColumnsContextStore } from '@dereekb/dbx-web';
+import { ClickableAnchor, DbxActionAutoTriggerDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxAuthService } from '@dereekb/dbx-core';
+import { Component, OnDestroy, OnInit, computed, inject } from '@angular/core';
+import { DbxAnchorComponent, DbxTwoBlockComponent, DbxTwoColumnComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnRightComponent, DbxWidgetDataPair, DbxWidgetViewComponent, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
 import { WorkUsingContext, filterMaybe, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { first, BehaviorSubject, distinctUntilChanged, map, shareReplay, combineLatest, Observable } from 'rxjs';
 import { DbxFirebaseDevelopmentWidgetService } from './development.widget.service';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
-import { DbxFirebaseDevelopmentPopupContentFormValue } from './development.popup.content.form.component';
+import { DbxFirebaseDevelopmentPopupContentFormComponent, DbxFirebaseDevelopmentPopupContentFormValue } from './development.popup.content.form.component';
 import { msToSeconds } from '@dereekb/date';
 import { DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY } from './development.scheduler.widget.component';
 import { DbxFirebaseEmulatorService } from '../firebase/firebase.emulator.service';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
   selector: 'dbx-firebase-development-popup-content',
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
-  providers: [TwoColumnsContextStore]
+  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective],
+  providers: [TwoColumnsContextStore],
+  standalone: true
 })
 export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDestroy {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
@@ -50,13 +54,7 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
   );
 
   readonly showRight$ = this.currentActiveEntry$.pipe(map((x) => x != null));
-  readonly activeEntry$ = this.currentActiveEntry$.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
-
-  readonly rightTitle$ = this.activeEntry$.pipe(map((x) => x.label));
-  readonly widgetConfig$: Observable<DbxWidgetDataPair> = this.activeEntry$.pipe(
-    map((x) => ({ data: undefined, type: x.widget.type })),
-    shareReplay(1)
-  );
+  readonly activeEntry$ = this.currentActiveEntry$.pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly schedulerRunning$ = this.dbxFirebaseDevelopmentSchedulerService.running$;
   readonly schedulerInterval$ = this.dbxFirebaseDevelopmentSchedulerService.timerInterval$.pipe(
@@ -73,6 +71,23 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
     map((specifier) => ({ specifier }))
   );
 
+  readonly schedulerRunningSignal = toSignal(this.schedulerRunning$);
+  readonly schedulerIntervalSignal = toSignal(this.schedulerInterval$);
+  readonly schedulerErrorSignal = toSignal(this.schedulerError$);
+
+  readonly activeEntrySignal = toSignal(this.activeEntry$);
+  readonly rightTitleSignal = computed(() => this.activeEntrySignal()?.label);
+  readonly widgetConfigSignal = computed<Maybe<DbxWidgetDataPair>>(() => {
+    const widget = this.activeEntrySignal()?.widget;
+    let widgetConfig: Maybe<DbxWidgetDataPair> = undefined;
+
+    if (widget) {
+      widgetConfig = { type: widget.type, data: undefined };
+    }
+
+    return widgetConfig;
+  });
+
   ngOnInit(): void {
     this.twoColumnsContextStore.setShowRight(this.showRight$);
     this._backSub.subscription = this.twoColumnsContextStore.back$.subscribe(() => {
@@ -81,6 +96,7 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
   }
 
   ngOnDestroy(): void {
+    this._backSub.destroy();
     this._activeEntrySelector.complete();
   }
 

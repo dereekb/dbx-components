@@ -1,4 +1,4 @@
-Take a look at @update-components-example.ts to understand how to update Angular 16 components to Angular 18 components. You will be working with a developer to save time making updates to modernize components.
+Take a look at @update-component-signals-example.ts to understand how to update Angular 16 components to Angular 18 components. You will be working with a developer to save time making updates to modernize components.
 
 The updates follow the following rules:
 - directives and components should be marked as standalone
@@ -22,3 +22,7 @@ The updates follow the following rules:
 - If an EventEmitter was destroyed in ngOnDestroy, then remove the destroy call
 - If ngOnDestroy is now empty it can also be removed, along with implements OnDestroy.
 - Do not add additional comments, but you can move or modify existing comments.
+- Mark interface variables as readonly where possible, as this libarary does not typically allow reassigning variables, except when used in conjuction with the Configurable<...> type.
+- The transform function for input(...) should be a pure function, and not change or reference other values besides the input.
+- The transform function for input(...) should not have side effects. You use effect(...) for those cases.
+- Reduce usage of the get/set syntax in favor of just a set function. e.g. `set value(value: boolean) { ... }` should be replaced with `setValue(value: boolean) { ... }`

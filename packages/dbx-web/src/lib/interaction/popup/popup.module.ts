@@ -15,10 +15,10 @@ import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.compon
 import { DbxButtonModule } from '../../button/button.module';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
+const importsAndExports = [DbxPopupComponent, DbxPopupCoordinatorComponent, DbxPopupContentComponent, DbxPopupControlsComponent, DbxPopupControlButtonsComponent];
+
 @NgModule({
-  imports: [CommonModule, MatIconModule, MatButtonModule, DbxButtonModule, DbxRouterAnchorModule, DbxActionModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule],
-  declarations: [DbxPopupComponent, DbxPopupCoordinatorComponent, DbxPopupContentComponent, DbxPopupControlsComponent, DbxPopupControlButtonsComponent],
-  exports: [DbxPopupContentComponent, DbxPopupControlsComponent, DbxPopupControlButtonsComponent],
-  providers: [DbxPopupService]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxPopupInteractionModule {}

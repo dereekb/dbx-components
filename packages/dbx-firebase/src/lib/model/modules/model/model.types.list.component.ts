@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
@@ -43,7 +43,9 @@ export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSe
 @Component({
   template: `
     <span>{{ title }}</span>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFirebaseModelTypeInstanceListViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {
   readonly title = this.itemValue.displayInfo.title;

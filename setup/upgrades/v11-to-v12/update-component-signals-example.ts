@@ -1,3 +1,4 @@
+//// ========== DbxActionAutoTriggerDirective ==========
 // === Before ===
 import { inject, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
@@ -313,6 +314,393 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
     });
+  }
+
+}
+
+/// ========== DbxTwoColumnComponent ==========
+// === BEFORE ===
+import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Input, ElementRef, inject } from '@angular/core';
+import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
+import { ResizedEvent } from 'angular-resize-event-package';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { TwoColumnsContextStore } from './two.column.store';
+
+export interface DbxTwoColumnViewState {
+  showRight: boolean;
+  showFullLeft: boolean;
+  hideLeftColumn: boolean;
+  reverseSizing: boolean;
+  inSectionPage: boolean;
+}
+
+/**
+ * Responsive component meant to split a left and right column.
+ *
+ * The left column is smaller than the right column, which contains the primary content.
+ *
+ * Requires a TwoColumnsContextStore to be provided.
+ */
+@Component({
+  selector: 'dbx-two-column',
+  template: `
+  <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
+    <div *ngIf="!v.hideLeftColumn && v.reverseSizing" (resized)="onResized($event)"></div>
+    <ng-content select="[left]"></ng-content>
+  </dbx-content-container>
+  <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column" *ngIf="v.showRight">
+    <div *ngIf="v.hideLeftColumn || !v.reverseSizing" (resized)="onResized($event)"></div>
+    <ng-content select="[right]"></ng-content>
+  </dbx-content-container>
+  `,
+  exportAs: 'columns',
+  host: {
+    class: 'dbx-two-column',
+    '[class]': "{ 'right-shown': v.showRight, 'full-left': v.showFullLeft,'hide-left-column': v.hideLeftColumn, 'two-column-reverse-sizing': v.reverseSizing, 'dbx-section-page-two': v.inSectionPage }"
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  private readonly _elementRef = inject(ElementRef);
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+  readonly cdRef = inject(ChangeDetectorRef);
+
+  private _view: DbxTwoColumnViewState = { showRight: false, showFullLeft: true, hideLeftColumn: false, reverseSizing: false, inSectionPage: false };
+
+  private readonly _inSectionPage = new BehaviorSubject<boolean>(false);
+
+  readonly reverseSizing$ = this.twoColumnsContextStore.reverseSizing$;
+  readonly hideLeftColumn$: Observable<boolean> = this.twoColumnsContextStore.hideLeft$;
+  readonly showRight$: Observable<boolean> = this.twoColumnsContextStore.showRight$;
+  readonly showFullLeft$: Observable<boolean> = this.twoColumnsContextStore.showFullLeft$;
+
+  readonly hideRight$: Observable<boolean> = this.twoColumnsContextStore.hideRight$;
+
+  constructor() {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this.hideLeftColumn$, this.reverseSizing$, this._inSectionPage]).subscribe(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean, boolean]) => {
+      this._view = {
+        showRight,
+        showFullLeft,
+        hideLeftColumn,
+        reverseSizing,
+        inSectionPage
+      };
+
+      safeMarkForCheck(this.cdRef);
+    });
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._inSectionPage.complete();
+  }
+
+  get v(): DbxTwoColumnViewState {
+    return this._view;
+  }
+
+  @Input()
+  set reverseSizing(reverseSizing: boolean) {
+    this.twoColumnsContextStore.setReverseSizing(reverseSizing);
+  }
+
+  @Input()
+  set inSectionPage(inSectionPage: boolean) {
+    this._inSectionPage.next(inSectionPage);
+  }
+
+  onResized(event: ResizedEvent): void {
+    const totalWidth = (this._elementRef.nativeElement as HTMLElement).clientWidth;
+    this.twoColumnsContextStore.setTotalWidth(totalWidth);
+  }
+}
+
+// === AFTER ===
+import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Input, ElementRef, inject, signal, input, computed } from '@angular/core';
+import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
+import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
+import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { TwoColumnsContextStore } from './two.column.store';
+import { toObservable } from '@angular/core/rxjs-interop';
+
+export interface DbxTwoColumnViewState {
+  readonly showRight: boolean;
+  readonly showFullLeft: boolean;
+  readonly hideLeftColumn: boolean;
+  readonly reverseSizing: boolean;
+  readonly inSectionPage: boolean;
+}
+
+/**
+ * Responsive component meant to split a left and right column.
+ *
+ * The left column is smaller than the right column, which contains the primary content.
+ *
+ * Requires a TwoColumnsContextStore to be provided.
+ */
+@Component({
+  selector: 'dbx-two-column',
+  template: `
+  <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
+    @if (viewSignal().hideLeftColumn || !viewSignal().reverseSizing) {
+      <div (resized)="viewResized($event)"></div>
+    }
+    <ng-content select="[left]"></ng-content>
+  </dbx-content-container>
+  @if (viewSignal().showRight) {
+    <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column">
+      @if (viewSignal().hideLeftColumn || !viewSignal().reverseSizing) {
+        <div (resized)="viewResized($event)"></div>
+      }
+      <ng-content select="[right]"></ng-content>
+    </dbx-content-container>
+  }
+  `,
+  exportAs: 'columns',
+  host: {
+    class: 'dbx-two-column',
+    '[class]': "cssClassesSignal()"
+  },
+  imports: [AngularResizeEventModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
+})
+export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+
+  private readonly _elementRef = inject(ElementRef);
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
+  readonly reverseSizing = input<boolean>(false);
+  readonly inSectionPage = input<boolean>(false);
+
+  readonly viewSignal = signal<DbxTwoColumnViewState>({ showRight: false, showFullLeft: true, hideLeftColumn: false, reverseSizing: false, inSectionPage: false });
+
+  readonly cssClassesSignal = computed(() => {
+    const { showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage } = this.viewSignal();
+    return { 'right-shown': showRight, 'full-left': showFullLeft, 'hide-left-column': hideLeftColumn, 'two-column-reverse-sizing': reverseSizing, 'dbx-section-page-two': inSectionPage };
+  });
+
+  readonly reverseSizing$ = this.twoColumnsContextStore.reverseSizing$;
+  readonly hideLeftColumn$: Observable<boolean> = this.twoColumnsContextStore.hideLeft$;
+
+  readonly showRight$: Observable<boolean> = this.twoColumnsContextStore.showRight$;
+  readonly showFullLeft$: Observable<boolean> = this.twoColumnsContextStore.showFullLeft$;
+
+  ngOnInit(): void {
+    this.twoColumnsContextStore.setReverseSizing(toObservable(this.reverseSizing));
+    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this.hideLeftColumn$, this.reverseSizing$, toObservable(this.inSectionPage)])
+      .subscribe(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean, boolean]) => {
+        this.viewSignal.set({
+          showRight,
+          showFullLeft,
+          hideLeftColumn,
+          reverseSizing,
+          inSectionPage
+        });
+      });
+  }
+
+  onResized(event: ResizedEvent): void {
+    const totalWidth = (this._elementRef.nativeElement as HTMLElement).clientWidth;
+    this.twoColumnsContextStore.setTotalWidth(totalWidth);
+  }
+
+}
+
+/// ========== DbxTwoColumnRightComponent =========
+// === BEFORE ===
+import { AfterViewInit, OnDestroy, Component, Input, inject } from '@angular/core';
+import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
+import { ClickableAnchor } from '@dereekb/dbx-core';
+import { TwoColumnsContextStore } from './two.column.store';
+import { type Maybe } from '@dereekb/util';
+
+/**
+ * Optional responsive component that wraps content on the right side and shows a navigation bar.
+ *
+ * When rendered it will trigger the context to show left.
+ */
+@Component({
+  selector: 'dbx-two-column-right',
+  template: `
+  <dbx-two-column-head [block]="block" [full]="full">
+    <!-- Back Buttons -->
+    <ng-container *ngIf="showBack$ | async">
+      <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
+        <mat-icon>navigate_before</mat-icon>
+      </button>
+    </ng-container>
+    <ng-container *ngIf="ref$ | async">
+      <dbx-anchor [anchor]="ref$ | async">
+        <button mat-icon-button class="back-button" aria-label="back button">
+          <mat-icon>navigate_before</mat-icon>
+        </button>
+      </dbx-anchor>
+    </ng-container>
+    <span *ngIf="header" class="right-nav-title">{{ header }}</span>
+    <span class="right-nav-spacer"></span>
+    <span class="spacer"></span>
+    <ng-content select="[nav]"></ng-content>
+  </dbx-two-column-head>
+  <div class="dbx-two-column-right-content">
+    <ng-content></ng-content>
+  </div>
+  `,
+  host: {
+    class: 'dbx-two-column-right d-block'
+  }
+})
+export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
+  @Input()
+  full: boolean = false;
+
+  @Input()
+  header?: Maybe<string>;
+
+  @Input()
+  block?: boolean;
+
+  private _showBack = new BehaviorSubject<boolean>(true);
+
+  readonly ref$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
+
+  readonly showBack$: Observable<boolean> = combineLatest([
+    this._showBack,
+    this.ref$.pipe(map((x) => !x)) // TODO: Is this correct? Show back if ref is not defined?
+  ]).pipe(map(([a, b]: [boolean, boolean]) => a && b));
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.twoColumnsContextStore.setHasRight(true);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this._showBack.complete();
+    this.twoColumnsContextStore.setHasRight(false);
+  }
+
+  @Input()
+  get showBack(): boolean {
+    return this._showBack.value;
+  }
+
+  set showBack(showBack: boolean) {
+    this._showBack.next(showBack);
+  }
+
+  /**
+   * Minimum right-side width allowed in pixels.
+   */
+  @Input()
+  set minRightWidth(minRightWidth: Maybe<number | ''>) {
+    this.twoColumnsContextStore.setMinRightWidth(typeof minRightWidth === 'number' ? minRightWidth : undefined);
+  }
+
+  public backClicked(): void {
+    this.twoColumnsContextStore.back();
+  }
+}
+
+// === AFTER ===
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { Observable, map } from 'rxjs';
+import { ClickableAnchor } from '@dereekb/dbx-core';
+import { TwoColumnsContextStore } from './two.column.store';
+import { type Maybe } from '@dereekb/util';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { DbxTwoColumnColumnHeadDirective } from './two.column.head.directive';
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { DbxAnchorComponent } from '../../../router';
+
+/**
+ * Optional responsive component that wraps content on the right side and shows a navigation bar.
+ *
+ * When rendered it will trigger the context to show left.
+ */
+@Component({
+  selector: 'dbx-two-column-right',
+  template: `
+  <dbx-two-column-head [block]="block()" [full]="full()">
+    <!-- Back Buttons -->
+    @if (showBackSignal()) {
+      <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
+        <mat-icon>navigate_before</mat-icon>
+      </button>
+    }
+    @if (refSignal()) {
+      <dbx-anchor [anchor]="refSignal()">
+        <button mat-icon-button class="back-button" aria-label="back button">
+          <mat-icon>navigate_before</mat-icon>
+        </button>
+      </dbx-anchor>
+    }
+    @if (header()) {
+      <span class="right-nav-title">{{ header() }}</span>
+    }
+    <span class="right-nav-spacer"></span>
+    <span class="spacer"></span>
+    <ng-content select="[nav]"></ng-content>
+  </dbx-two-column-head>
+  <div class="dbx-two-column-right-content">
+    <ng-content></ng-content>
+  </div>
+  `,
+  host: {
+    class: 'dbx-two-column-right d-block'
+  },
+  imports: [DbxTwoColumnColumnHeadDirective, MatButtonModule, MatIconModule, DbxAnchorComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
+})
+export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
+
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+
+  readonly full = input<boolean>(false);
+  readonly header = input<Maybe<string>>();
+  readonly block = input<Maybe<boolean>>();
+
+  readonly showBack = input<boolean>(true);
+
+  readonly alternativeBackRef$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
+  readonly alternativeBackRefSignal = toSignal(this.alternativeBackRef$);
+
+  /**
+   * Minimum right-side width allowed in pixels.
+   */
+  readonly minRightWidth = input<Maybe<number>>();
+
+  private readonly _minRightWidthSub = new SubscriptionObject();
+
+  readonly showBackSignal = computed(() => {
+    const showBack = this.showBack();
+    const alternativeBackRef = this.alternativeBackRefSignal();
+
+    // show the back signal if true and there is no alternative back
+    return showBack && !alternativeBackRef;
+  });
+
+  ngOnInit(): void {
+    this._minRightWidthSub.subscription = this.twoColumnsContextStore.setMinRightWidth(toObservable(this.minRightWidth));
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.twoColumnsContextStore.setHasRight(true);
+    });
+  }
+
+  public backClicked(): void {
+    this.twoColumnsContextStore.back();
   }
 
 }

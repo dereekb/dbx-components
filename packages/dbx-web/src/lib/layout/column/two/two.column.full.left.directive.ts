@@ -1,36 +1,20 @@
-import { OnInit, Directive, Input, OnDestroy, inject } from '@angular/core';
-import { isNotNullOrEmptyString, type Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
+import { OnInit, Directive, inject, input, InputSignalWithTransform } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { isNotFalse, isNotNullOrEmptyString, type Maybe } from '@dereekb/util';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**
  * Used with a DbxTwoColumnComponent to set the full left to true.
  */
 @Directive({
-  selector: '[dbxTwoColumnFullLeft]'
+  selector: '[dbxTwoColumnFullLeft]',
+  standalone: true
 })
-export class DbxTwoColumnFullLeftDirective implements OnInit, OnDestroy {
+export class DbxTwoColumnFullLeftDirective implements OnInit {
   private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);
-
-  private _fullLeft = new BehaviorSubject<boolean>(true);
-
-  @Input('dbxTwoColumnFullLeft')
-  get fullLeft(): boolean {
-    return this._fullLeft.value;
-  }
-
-  set fullLeft(fullLeft: Maybe<boolean | ''>) {
-    if (isNotNullOrEmptyString(fullLeft)) {
-      // only respond to boolean values
-      this._fullLeft.next(Boolean(fullLeft));
-    }
-  }
+  readonly fullLeft = input<boolean, Maybe<boolean | ''>>(true, { alias: 'dbxTwoColumnFullLeft', transform: isNotFalse });
 
   ngOnInit(): void {
-    this._twoColumnsContextStore.setFullLeft(this._fullLeft);
-  }
-
-  ngOnDestroy(): void {
-    this._fullLeft.complete();
+    this._twoColumnsContextStore.setFullLeft(toObservable(this.fullLeft));
   }
 }

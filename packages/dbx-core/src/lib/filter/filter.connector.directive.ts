@@ -7,6 +7,7 @@ import { provideFilterSource, provideFilterSourceConnector } from './filter.cont
  */
 @Directive({
   selector: '[dbxFilterSourceConnector]',
-  providers: [...provideFilterSource(DbxFilterSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterSourceConnectorDirective)]
+  providers: [...provideFilterSource(DbxFilterSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterSourceConnectorDirective)],
+  standalone: true
 })
 export class DbxFilterSourceConnectorDirective<F = unknown> extends AbstractFilterSourceConnectorDirective<F> {}
