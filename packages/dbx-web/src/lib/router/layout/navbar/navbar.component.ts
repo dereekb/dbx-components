@@ -3,7 +3,7 @@ import { ScreenMediaWidthType } from '../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, findNext, type Maybe } from '@dereekb/util';
 import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
-import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent, DbxActionAutoModifyDirective, DbxAnchor } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplay, DbxActionAutoModifyDirective, DbxAnchor } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxAnchorComponent } from '../anchor';
@@ -100,9 +100,9 @@ export class DbxNavbarComponent extends AbstractTransitionDirective {
     shareReplay(1)
   );
 
-  readonly buttonDisplay$: Observable<DbxButtonDisplayContent> = combineLatest([toObservable(this.defaultIcon), toObservable(this.icon), toObservable(this.defaultText), this.buttonNavAnchor$, this.mode$]).pipe(
+  readonly buttonDisplay$: Observable<DbxButtonDisplay> = combineLatest([toObservable(this.defaultIcon), toObservable(this.icon), toObservable(this.defaultText), this.buttonNavAnchor$, this.mode$]).pipe(
     map(([defaultIcon, icon, defaultText, selectedAnchor, mode]) => {
-      let content: DbxButtonDisplayContent;
+      let content: DbxButtonDisplay;
 
       if (icon) {
         content = { icon, text: defaultText };

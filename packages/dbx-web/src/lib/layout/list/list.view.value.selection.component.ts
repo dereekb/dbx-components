@@ -43,9 +43,9 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   host: {
     class: 'dbx-list-view dbx-selection-list-view'
   },
-  standalone: true,
   imports: [MatSelectionList, MatListOption, MatIcon, DbxInjectionComponent, DbxValueListViewContentComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxSelectionValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListViewContentComponent<T, I> {
   readonly multiple = input<Maybe<boolean>>();

@@ -17,7 +17,7 @@ export interface DbxButtonInterceptor {
 /**
  * Text and icon display content for a button.
  */
-export interface DbxButtonDisplayContent {
+export interface DbxButtonDisplay {
   /**
    * button Icon, if applicable
    */
@@ -44,7 +44,7 @@ export abstract class DbxButton {
   /**
    * Observable of the display content of the button.
    */
-  abstract readonly displayContent$: Observable<DbxButtonDisplayContent>;
+  abstract readonly display$: Observable<DbxButtonDisplay>;
   /**
    * Sets the disabled state of the button. If null/undefined the button will be disabled.
    *
@@ -62,7 +62,7 @@ export abstract class DbxButton {
    *
    * @param content
    */
-  abstract setDisplayContent(content: DbxButtonDisplayContent): void;
+  abstract setDisplayContent(content: DbxButtonDisplay): void;
   /**
    * Sets the button interceptor. If any interceptor is already set, it is replaced.
    *
@@ -85,26 +85,32 @@ export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Prov
 }
 
 // MARK: Display
-export type DbxButtonDisplayContentType = 'text_button' | 'icon_button';
+/**
+ * The display type of a button.
+ *
+ * text_button: A text button has text or is empty.
+ * icon_button: An icon button only has an icon and no text.
+ */
+export type DbxButtonDisplayType = 'text_button' | 'icon_button';
 
 /**
- * Delegate class used for retrieving the DbxButtonDisplayContent given an input value.
+ * Delegate class used for retrieving the DbxButtonDisplay given an input value.
  */
 export interface DbxButtonDisplayDelegate<T> {
   /**
-   * Returns the DbxButtonDisplayContent for the input value.
+   * Returns the DbxButtonDisplay for the input value.
    *
    * @param value
    */
-  buttonDisplayContentForValue(value: T): DbxButtonDisplayContent;
+  buttonDisplayContentForValue(value: T): DbxButtonDisplay;
 }
 
 /**
- * Returns the DbxButtonDisplayContentType given the input content.
+ * Returns the DbxButtonDisplayType given the input content.
  *
  * @param content
  * @returns
  */
-export function dbxButtonDisplayContentType(content: DbxButtonDisplayContent): DbxButtonDisplayContentType {
+export function dbxButtonDisplayType(content: DbxButtonDisplay): DbxButtonDisplayType {
   return !content.text && content.icon ? 'icon_button' : 'text_button';
 }

@@ -2,7 +2,7 @@ import { Component, Injector, Input, OnDestroy, inject } from '@angular/core';
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { BehaviorSubject, distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
-import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -37,7 +37,7 @@ export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implemen
     switchMap((selectionMode) => {
       return this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(
         map((x) => {
-          let buttonDisplay: DbxButtonDisplayContent;
+          let buttonDisplay: DbxButtonDisplay;
 
           switch (x) {
             case 'all':

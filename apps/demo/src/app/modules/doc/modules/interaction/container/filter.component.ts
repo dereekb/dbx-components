@@ -1,6 +1,6 @@
 import { Component, OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { startOfDay } from 'date-fns';
@@ -24,9 +24,9 @@ export class DocInteractionFilterComponent implements OnDestroy {
   readonly menuFilter$ = this.filterMap.filterForKey(this.menuFilterKey);
   readonly listFilter$ = this.filterMap.filterForKey(this.listFilterKey);
 
-  readonly displayForFilter$: Observable<Maybe<DbxButtonDisplayContent>> = this.filter$.pipe(
+  readonly displayForFilter$: Observable<Maybe<DbxButtonDisplay>> = this.filter$.pipe(
     map((filter) => {
-      let result: Maybe<DbxButtonDisplayContent>;
+      let result: Maybe<DbxButtonDisplay>;
 
       if (filter) {
         if (filter.date) {
@@ -46,9 +46,9 @@ export class DocInteractionFilterComponent implements OnDestroy {
     })
   );
 
-  readonly displayForDateFilter$: Observable<Maybe<DbxButtonDisplayContent>> = this.filter$.pipe(
+  readonly displayForDateFilter$: Observable<Maybe<DbxButtonDisplay>> = this.filter$.pipe(
     map((filter) => {
-      let result: Maybe<DbxButtonDisplayContent>;
+      let result: Maybe<DbxButtonDisplay>;
 
       if (filter) {
         if (filter.date) {

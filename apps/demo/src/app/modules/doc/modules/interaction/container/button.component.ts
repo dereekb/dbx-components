@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxProgressButtonConfig } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
 
@@ -24,12 +24,12 @@ export class DocInteractionButtonComponent {
     };
   }
 
-  buttonDisplay1: DbxButtonDisplayContent = {
+  buttonDisplay1: DbxButtonDisplay = {
     icon: 'radio_button_checked',
     text: 'Magic Button'
   };
 
-  buttonDisplay2: DbxButtonDisplayContent = {
+  buttonDisplay2: DbxButtonDisplay = {
     icon: 'radio_button_unchecked'
   };
 

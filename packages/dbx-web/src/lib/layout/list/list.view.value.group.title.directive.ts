@@ -103,10 +103,14 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
   selector: 'dbx-list-title-group-header',
   template: `
     <div class="dbx-list-item-padded dbx-list-two-line-item" [ngClass]="{ 'dbx-list-two-line-item-with-icon': icon }">
-      <mat-icon class="item-icon" *ngIf="icon">{{ icon }}</mat-icon>
+      @if (icon) {
+        <mat-icon class="item-icon">{{ icon }}</mat-icon>
+      }
       <div class="item-left">
         <div class="mat-subtitle-2">{{ title }}</div>
-        <div *ngIf="hint" class="item-details">{{ hint }}</div>
+        @if (hint) {
+          <div class="item-details">{{ hint }}</div>
+        }
       </div>
     </div>
   `,
@@ -118,15 +122,7 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
   }
 })
 export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> extends AbstractDbxListTitleGroupHeaderComponent<O, D> {
-  get icon() {
-    return this.data.icon;
-  }
-
-  get title() {
-    return this.data.title;
-  }
-
-  get hint() {
-    return this.data.hint;
-  }
+  readonly icon = this.data.icon;
+  readonly title = this.data.title;
+  readonly hint = this.data.hint;
 }

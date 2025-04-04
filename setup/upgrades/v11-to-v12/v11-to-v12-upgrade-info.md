@@ -247,7 +247,8 @@ bootstrapApplication(UIView, appConfig)
 - Renamed `DbxFormlyFormComponent` to `DbxFormlyComponent`.
 - Renamed `DbxProgressButtonOptions` to `DbxProgressButtonConfig`.
 - Updated `dbx-progress-spinner-button` and `dbx-progress-bar-button` to use `[config]` instead of `[options]`.
-
+- Renamed `DbxButtonDisplayContent` to `DbxButtonDisplay` to be inline with the `buttonDisplay` input.
+- Updated inputs for `dbx-mapbox-layout`. Renamed `[opened]` to `[openDrawer]`, `[hasContent]` to `[forceHasDrawerContent]`, `(opened)` to `(drawerOpenedChange)`
 
 #### Updating DbxList related views
 All views like this should consider being updated to standalone views. The template is still available, but now 

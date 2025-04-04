@@ -1,24 +1,25 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
-import { Component, Input, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject, input } from '@angular/core';
 import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
 import { DocInteractionTestFilter } from './filter';
-import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 
 @Component({
   selector: 'doc-interaction-test-filter-popover-button',
   template: `
-    <dbx-filter-popover-button [buttonDisplay]="buttonDisplay" [config]="config" [disabled]="disabled"></dbx-filter-popover-button>
-  `
+    <dbx-filter-popover-button [buttonDisplay]="buttonDisplay()" [config]="config" [disabled]="disabled()"></dbx-filter-popover-button>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
   readonly filterSourceConnector = inject(FilterSourceConnector);
   readonly filterSource = inject(FilterSource<DocInteractionTestFilter>);
 
-  @Input()
-  disabled?: Maybe<boolean>;
+  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>();
+  readonly disabled = input<Maybe<boolean>>();
 
   readonly config: DbxFilterButtonConfig<DocInteractionTestFilter> = {
     icon: 'settings',
@@ -28,7 +29,4 @@ export class DocInteractionTestFilterPopoverButtonComponent {
     connector: this.filterSourceConnector,
     initialFilterObs: this.filterSource.filter$
   };
-
-  @Input()
-  buttonDisplay?: Maybe<DbxButtonDisplayContent>;
 }

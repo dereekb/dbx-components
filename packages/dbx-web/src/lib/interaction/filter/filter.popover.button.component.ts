@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, input, Input, viewChild, ViewChild } from '@angular/core';
 import { AbstractFilterPopoverButtonDirective } from './filter.popover.button.directive';
-import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxIconButtonComponent } from '../../button/icon/icon.button.component';
 
-const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplayContent = {
+const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
   icon: 'filter_list'
 };
 
@@ -20,7 +20,7 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplayContent = {
 export class DbxFilterPopoverButtonComponent<F extends object = object> extends AbstractFilterPopoverButtonDirective<F> {
   readonly buttonElement = viewChild<ElementRef>('button');
   readonly disabled = input<Maybe<boolean>>();
-  readonly buttonDisplay = input<Maybe<DbxButtonDisplayContent>, DbxButtonDisplayContent>(DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT, { transform: (x) => x ?? DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT });
+  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>, DbxButtonDisplay>(DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT, { transform: (x) => x ?? DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT });
 
   showFilterPopover(): void {
     const origin = this.buttonElement();

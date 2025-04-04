@@ -711,7 +711,7 @@ import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angu
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, of, Subject, filter, first, switchMap } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbxButton, DbxButtonDisplayContent, DbxButtonDisplayContentType, dbxButtonDisplayContentType, DbxButtonInterceptor, provideDbxButton } from './button';
+import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, provideDbxButton } from './button';
 
 /**
  * Abstract button component.
@@ -755,20 +755,20 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   text?: Maybe<string>;
 
   @Input()
-  get buttonDisplay(): DbxButtonDisplayContent {
+  get buttonDisplay(): DbxButtonDisplay {
     return {
       icon: this.icon,
       text: this.text
     };
   }
 
-  set buttonDisplay(buttonDisplay: Maybe<DbxButtonDisplayContent>) {
+  set buttonDisplay(buttonDisplay: Maybe<DbxButtonDisplay>) {
     this.icon = buttonDisplay?.icon;
     this.text = buttonDisplay?.text;
   }
 
-  get buttonDisplayType(): DbxButtonDisplayContentType {
-    return dbxButtonDisplayContentType(this.buttonDisplay);
+  get buttonDisplayType(): DbxButtonDisplayType {
+    return dbxButtonDisplayType(this.buttonDisplay);
   }
 
   @Output()
@@ -846,7 +846,7 @@ import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal }
 import { type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbxButton, DbxButtonDisplayContent, DbxButtonDisplayContentType, dbxButtonDisplayContentType, DbxButtonInterceptor, provideDbxButton } from './button';
+import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, provideDbxButton } from './button';
 import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 
 /**
@@ -865,11 +865,11 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   readonly disabled = input<boolean, Maybe<boolean>>(false, { transform: (value) => value ?? false });
   readonly working = input<boolean, Maybe<boolean>>(false, { transform: (value) => value ?? false });
-  readonly buttonDisplayContent = input<Maybe<DbxButtonDisplayContent>>(undefined, { alias: 'buttonDisplay' });
+  readonly buttonDisplayContent = input<Maybe<DbxButtonDisplay>>(undefined, { alias: 'buttonDisplay' });
 
   private readonly _disabledSignal = signal<Maybe<boolean>>(undefined);
   private readonly _workingSignal = signal<Maybe<boolean>>(undefined);
-  private readonly _buttonDisplayContentSignal = signal<Maybe<DbxButtonDisplayContent>>(undefined);
+  private readonly _buttonDisplayContentSignal = signal<Maybe<DbxButtonDisplay>>(undefined);
 
   readonly disabledSignal = computed(() => this._disabledSignal() ?? this.disabled());
   readonly workingSignal = computed(() => this._workingSignal() ?? this.working());
@@ -877,15 +877,15 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   readonly icon = input<Maybe<string>>();
   readonly text = input<Maybe<string>>();
 
-  readonly buttonDisplayContentSignal: Signal<DbxButtonDisplayContent> = computed(() => {
+  readonly buttonDisplayContentSignal: Signal<DbxButtonDisplay> = computed(() => {
     const icon = this.icon();
     const text = this.text();
     const buttonDisplayContent = this._buttonDisplayContentSignal() ?? this.buttonDisplayContent();
     return { icon: icon ?? buttonDisplayContent?.icon, text: text ?? buttonDisplayContent?.text };
   });
 
-  readonly buttonDisplayTypeSignal: Signal<DbxButtonDisplayContentType> = computed(() => {
-    return dbxButtonDisplayContentType(this.buttonDisplayContentSignal());
+  readonly buttonDisplayTypeSignal: Signal<DbxButtonDisplayType> = computed(() => {
+    return dbxButtonDisplayType(this.buttonDisplayContentSignal());
   });
 
   readonly disabled$ = toObservable(this.disabledSignal);
@@ -926,7 +926,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
     this._workingSignal.set(working);
   }
 
-  setDisplayContent(content: DbxButtonDisplayContent): void {
+  setDisplayContent(content: DbxButtonDisplay): void {
     this._buttonDisplayContentSignal.set(content);
   }
 
