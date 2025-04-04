@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
-import { DbxProgressButtonOptions } from '@dereekb/dbx-web';
+import { DbxProgressButtonConfig } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
@@ -33,7 +33,7 @@ export class DocInteractionButtonComponent {
     icon: 'radio_button_unchecked'
   };
 
-  demoButton1: DbxProgressButtonOptions = {
+  demoButton1: DbxProgressButtonConfig = {
     id: 'button1',
     text: 'Stroked Button',
     buttonColor: 'accent',
@@ -49,7 +49,7 @@ export class DocInteractionButtonComponent {
     }
   };
 
-  demoButton2: DbxProgressButtonOptions = {
+  demoButton2: DbxProgressButtonConfig = {
     id: 'button2',
     text: 'Raised Button',
     buttonColor: 'primary',
@@ -61,7 +61,7 @@ export class DocInteractionButtonComponent {
     disabled: false
   };
 
-  spinnerButtonOptions: DbxProgressButtonOptions = {
+  spinnerButtonConfig: DbxProgressButtonConfig = {
     working: false,
     text: 'Stroked Button',
     spinnerSize: 19,
@@ -78,7 +78,7 @@ export class DocInteractionButtonComponent {
     }
   };
 
-  spinnerButtonOptions1: DbxProgressButtonOptions = {
+  spinnerButtonConfig1: DbxProgressButtonConfig = {
     working: false,
     text: 'Raised Button',
     spinnerSize: 19,
@@ -91,7 +91,7 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate'
   };
 
-  spinnerButtonOptions2: DbxProgressButtonOptions = {
+  spinnerButtonConfig2: DbxProgressButtonConfig = {
     working: false,
     text: 'Default Button',
     spinnerSize: 19,
@@ -104,7 +104,7 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate'
   };
 
-  spinnerButtonOptions3: DbxProgressButtonOptions = {
+  spinnerButtonConfig3: DbxProgressButtonConfig = {
     working: false,
     text: 'Flat Button',
     spinnerSize: 19,
@@ -118,7 +118,7 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate'
   };
 
-  spinnerButtonOptions8: DbxProgressButtonOptions = {
+  spinnerButtonConfig8: DbxProgressButtonConfig = {
     working: false,
     spinnerSize: 19,
     raised: false,
@@ -134,7 +134,7 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate'
   };
 
-  spinnerButtonOptions4: DbxProgressButtonOptions = {
+  spinnerButtonConfig4: DbxProgressButtonConfig = {
     working: false,
     text: 'Fab',
     spinnerSize: 25, // ignored
@@ -152,13 +152,13 @@ export class DocInteractionButtonComponent {
     }
   };
 
-  spinnerButtonOptions5: DbxProgressButtonOptions = {
-    ...this.spinnerButtonOptions3,
+  spinnerButtonConfig5: DbxProgressButtonConfig = {
+    ...this.spinnerButtonConfig3,
     text: '',
     spinnerSize: undefined
   };
 
-  spinnerButtonOptions6: DbxProgressButtonOptions = {
+  spinnerButtonConfig6: DbxProgressButtonConfig = {
     working: false,
     text: 'Icon', // ignored
     spinnerSize: 25, // ignored
@@ -173,18 +173,18 @@ export class DocInteractionButtonComponent {
     }
   };
 
-  barButtonOptions: DbxProgressButtonOptions = {
+  barButtonConfig: DbxProgressButtonConfig = {
     text: 'Stroked Button'
   };
 
-  barButtonOptionsWorkingState = false;
+  barButtonConfigWorkingState = false;
 
-  barButtonOptions1: DbxProgressButtonOptions = {
+  barButtonConfig1: DbxProgressButtonConfig = {
     ...this.demoButton2,
     text: 'Raised Button'
   };
 
-  barButtonOptions2: DbxProgressButtonOptions = {
+  barButtonConfig2: DbxProgressButtonConfig = {
     working: false,
     text: 'Default Button',
     buttonColor: 'primary',
@@ -196,7 +196,7 @@ export class DocInteractionButtonComponent {
     disabled: false
   };
 
-  barButtonOptions3: DbxProgressButtonOptions = {
+  barButtonConfig3: DbxProgressButtonConfig = {
     working: false,
     text: 'Flat Button',
     buttonColor: 'primary',
@@ -209,7 +209,7 @@ export class DocInteractionButtonComponent {
     disabled: false
   };
 
-  barButtonOptions4: DbxProgressButtonOptions = {
+  barButtonConfig4: DbxProgressButtonConfig = {
     working: false,
     text: 'Flat Button',
     buttonColor: 'ok',
@@ -222,23 +222,23 @@ export class DocInteractionButtonComponent {
     disabled: false
   };
 
-  clickSpin1 = this.activateAndDeactivate('spinnerButtonOptions');
-  clickSpin2 = this.activateAndDeactivate('spinnerButtonOptions1');
-  clickSpin3 = this.activateAndDeactivate('spinnerButtonOptions2');
-  clickSpin4 = this.activateAndDeactivate('spinnerButtonOptions3');
-  clickSpin5 = this.activateAndDeactivate('spinnerButtonOptions4');
-  clickSpin6 = this.activateAndDeactivate('spinnerButtonOptions5');
-  clickSpin7 = this.activateAndDeactivate('spinnerButtonOptions6');
+  clickSpin1 = this.activateAndDeactivate('spinnerButtonConfig');
+  clickSpin2 = this.activateAndDeactivate('spinnerButtonConfig1');
+  clickSpin3 = this.activateAndDeactivate('spinnerButtonConfig2');
+  clickSpin4 = this.activateAndDeactivate('spinnerButtonConfig3');
+  clickSpin5 = this.activateAndDeactivate('spinnerButtonConfig4');
+  clickSpin6 = this.activateAndDeactivate('spinnerButtonConfig5');
+  clickSpin7 = this.activateAndDeactivate('spinnerButtonConfig6');
 
   clickBar1 = () => {
-    this.barButtonOptionsWorkingState = true;
+    this.barButtonConfigWorkingState = true;
     setTimeout(() => {
-      this.barButtonOptionsWorkingState = false;
+      this.barButtonConfigWorkingState = false;
     }, DEMO_SPINNER_TIME);
   };
 
-  clickBar2 = this.activateAndDeactivate('barButtonOptions1');
-  clickBar3 = this.activateAndDeactivate('barButtonOptions2');
-  clickBar4 = this.activateAndDeactivate('barButtonOptions3');
-  clickBar5 = this.activateAndDeactivate('barButtonOptions4');
+  clickBar2 = this.activateAndDeactivate('barButtonConfig1');
+  clickBar3 = this.activateAndDeactivate('barButtonConfig2');
+  clickBar4 = this.activateAndDeactivate('barButtonConfig3');
+  clickBar5 = this.activateAndDeactivate('barButtonConfig4');
 }

@@ -26,3 +26,5 @@ The updates follow the following rules:
 - The transform function for input(...) should be a pure function, and not change or reference other values besides the input.
 - The transform function for input(...) should not have side effects. You use effect(...) for those cases.
 - Reduce usage of the get/set syntax in favor of just a set function. e.g. `set value(value: boolean) { ... }` should be replaced with `setValue(value: boolean) { ... }`
+
+Stop after you have looked at that file.

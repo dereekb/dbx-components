@@ -5,6 +5,8 @@ import { type Maybe } from '@dereekb/util';
 /**
  * Convenience function used within observables for views that need to detect changes after a value changes.
  *
+ * @deprecated reminder to move to Angular signals
+ *
  * @param cdRef
  * @param timeout
  * @returns
@@ -15,6 +17,8 @@ export function tapDetectChanges<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0
 
 /**
  * Triggers a check for detecting any changes on the model safely to ve registered via detectChanges().
+ *
+ * @deprecated reminder to move to Angular signals
  *
  * @param cdRef
  */
@@ -27,6 +31,7 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
  *
  * NOTE: If the observable is being consumed via the "async" pipe, this may not be necessary.
  *
+ * @deprecated reminder to move to Angular signals
  * @param cdRef
  * @param timeout
  * @returns
@@ -38,6 +43,8 @@ export function tapSafeMarkForCheck<T>(cdRef: Maybe<ChangeDetectorRef>, timeout 
 /**
  * Marks the ChangeDetectorRef for changes as long as the view has not been destroyed.
  *
+ * @deprecated reminder to move to Angular signals
+ *
  * @param cdRef
  */
 export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
@@ -47,6 +54,7 @@ export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
 /**
  * Triggers a detection change on the input view as long as the view has not been destroyed.
  *
+ * @deprecated reminder to move to Angular signals
  * @param cdRef
  */
 export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetectorRef) => void): void {

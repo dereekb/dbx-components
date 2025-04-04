@@ -14,7 +14,6 @@ export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T
   providedIn: 'root'
 })
 export class DbxPopupService {
-
   private readonly _overlay = inject(Overlay);
   private readonly _injector = inject(Injector);
   private readonly _overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
@@ -41,5 +40,4 @@ export class DbxPopupService {
       }
     });
   }
-
 }

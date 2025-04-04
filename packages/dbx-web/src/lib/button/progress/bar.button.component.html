@@ -1,14 +1,14 @@
-<button class="dbx-base-button dbx-progress-bar-button" mat-button [type]="optionsSignal()?.type" [color]="optionsSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="optionsSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
-  @if (optionsSignal()?.buttonIcon) {
-    <mat-icon class="mat-button-icon" [class.is-mat-icon]="!optionsSignal()?.buttonIcon?.fontSet!" [ngClass]="optionsSignal()?.buttonIcon?.customClass!" [fontSet]="optionsSignal()?.buttonIcon?.fontSet!" [fontIcon]="optionsSignal()?.buttonIcon?.fontIcon!" [color]="optionsSignal()?.buttonIcon?.color!" [svgIcon]="optionsSignal()?.buttonIcon?.svgIcon!" [inline]="optionsSignal()?.buttonIcon?.inline!">
-      {{ optionsSignal()?.buttonIcon?.fontSet! ? '' : optionsSignal()?.buttonIcon?.fontIcon! }}
+<button class="dbx-base-button dbx-progress-bar-button" mat-button [type]="buttonTypeAttributeSignal()" [color]="configSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="configSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
+  @if (configSignal()?.buttonIcon) {
+    <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet!" [ngClass]="configSignal()?.buttonIcon?.customClass!" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!" [inline]="configSignal()?.buttonIcon?.inline!">
+      {{ configSignal()?.buttonIcon?.fontSet! ? '' : configSignal()?.buttonIcon?.fontIcon! }}
     </mat-icon>
   }
   <span>
-    {{ optionsSignal()?.text }}
+    {{ configSignal()?.text }}
     <ng-content></ng-content>
   </span>
   @if (showProgressSignal()) {
-    <mat-progress-bar class="bar" [color]="optionsSignal()?.barColor!" [mode]="optionsSignal()?.mode!" [value]="optionsSignal()?.value!"></mat-progress-bar>
+    <mat-progress-bar class="bar" [color]="configSignal()?.barColor!" [mode]="configSignal()?.mode!" [value]="configSignal()?.value!"></mat-progress-bar>
   }
 </button>

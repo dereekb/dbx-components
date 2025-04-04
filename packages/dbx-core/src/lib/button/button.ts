@@ -21,22 +21,57 @@ export interface DbxButtonDisplayContent {
   /**
    * button Icon, if applicable
    */
-  icon?: Maybe<string>;
+  readonly icon?: Maybe<string>;
   /**
    * button text, if applicable
    */
-  text?: Maybe<string>;
+  readonly text?: Maybe<string>;
 }
 
-export abstract class DbxButton implements DbxButtonDisplayContent {
+export abstract class DbxButton {
+  /**
+   * Observable of the disabled state of the button.
+   */
   abstract readonly disabled$: Observable<boolean>;
+  /**
+   * Observable of the working state of the button.
+   */
   abstract readonly working$: Observable<boolean>;
-  abstract disabled: Maybe<boolean>;
-  abstract working: Maybe<boolean>;
-  abstract icon?: Maybe<string>;
-  abstract text?: Maybe<string>;
+  /**
+   * Observable of the clicked event of the button.
+   */
   abstract readonly clicked$: Observable<unknown>;
+  /**
+   * Observable of the display content of the button.
+   */
+  abstract readonly displayContent$: Observable<DbxButtonDisplayContent>;
+  /**
+   * Sets the disabled state of the button. If null/undefined the button will be disabled.
+   *
+   * @param disabled
+   */
+  abstract setDisabled(disabled?: Maybe<boolean>): void;
+  /**
+   * Sets the working state of the button. IF null/undefined the button will be marked as working.
+   *
+   * @param working
+   */
+  abstract setWorking(working?: Maybe<boolean>): void;
+  /**
+   * Sets the display content of the button.
+   *
+   * @param content
+   */
+  abstract setDisplayContent(content: DbxButtonDisplayContent): void;
+  /**
+   * Sets the button interceptor. If any interceptor is already set, it is replaced.
+   *
+   * @param interceptor
+   */
   abstract setButtonInterceptor(interceptor: DbxButtonInterceptor): void;
+  /**
+   * Main function to use for handling clicks on the button.
+   */
   abstract clickButton(): void;
 }
 

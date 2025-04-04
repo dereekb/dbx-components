@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
-import { type Maybe } from '@dereekb/util';
-import { DbxProgressButtonOptions } from './progress/button.progress.config';
+import { Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
+import { DbxProgressButtonConfig } from './progress/button.progress.config';
 import { DbxThemeColor } from '../layout/style/style';
 import { DbxProgressSpinnerButtonComponent } from './progress';
 
@@ -24,130 +24,94 @@ export enum DbxButtonDisplayType {
 @Component({
   selector: 'dbx-button',
   template: `
-    <dbx-progress-spinner-button (btnClick)="clickButton()" [options]="btnOptions">
+    <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()">
       <ng-content></ng-content>
     </dbx-progress-spinner-button>
   `,
   providers: provideDbxButton(DbxButtonComponent),
-  standalone: true,
   imports: [DbxProgressSpinnerButtonComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
-  @Input()
-  type?: DbxButtonType;
+  readonly type = input<Maybe<DbxButtonType>>();
 
-  @Input()
-  get basic(): boolean {
-    return !this.type || this.type === 'basic';
-  }
+  readonly color = input<ThemePalette | DbxThemeColor>(undefined);
+  readonly spinnerColor = input<ThemePalette | DbxThemeColor>(undefined);
+  readonly customButtonColor = input<Maybe<string>>();
+  readonly customTextColor = input<Maybe<string>>();
+  readonly customSpinnerColor = input<Maybe<string>>();
 
-  set basic(basic: boolean) {
-    if (basic) {
-      this.type = 'basic';
+  readonly basic = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly raised = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly stroked = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+
+  readonly typeSignal = computed(() => {
+    let type = this.type();
+
+    if (!type) {
+      type = 'basic';
+
+      if (this.raised()) {
+        type = 'raised';
+      } else if (this.stroked()) {
+        type = 'stroked';
+      } else if (this.flat()) {
+        type = 'flat';
+      } else if (this.iconOnly()) {
+        type = 'icon';
+      }
     }
-  }
 
-  @Input()
-  get raised(): boolean {
-    return this.type === 'raised';
-  }
+    return type;
+  });
 
-  set raised(raised: boolean) {
-    if (raised) {
-      this.type = 'raised';
-    }
-  }
+  readonly configSignal = computed<DbxProgressButtonConfig>(() => {
+    const iconValue = this.icon();
+    const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
 
-  @Input()
-  get stroked(): boolean {
-    return this.type === 'stroked';
-  }
-
-  set stroked(stroked: boolean) {
-    if (stroked) {
-      this.type = 'stroked';
-    }
-  }
-
-  @Input()
-  get flat(): boolean {
-    return this.type === 'flat';
-  }
-
-  set flat(flat: boolean) {
-    if (flat) {
-      this.type = 'flat';
-    }
-  }
-
-  @Input()
-  get iconOnly(): boolean {
-    return this.type === 'icon';
-  }
-
-  set iconOnly(iconOnly: boolean) {
-    if (iconOnly) {
-      this.type = 'icon';
-    }
-  }
-
-  @Input()
-  public color: ThemePalette | DbxThemeColor = undefined;
-
-  @Input()
-  public spinnerColor: ThemePalette | DbxThemeColor = undefined;
-
-  @Input()
-  public customButtonColor: Maybe<string>;
-
-  @Input()
-  public customTextColor: Maybe<string>;
-
-  @Input()
-  public customSpinnerColor: Maybe<string>;
-
-  public get btnOptions(): DbxProgressButtonOptions {
-    const buttonIcon = this.icon
-      ? {
-          fontIcon: this.icon
-        }
-      : undefined;
-
+    // configure custom style
     const customStyle = {} as {
       [key: string]: string;
     };
 
-    if (this.customButtonColor) {
-      customStyle['background'] = this.customButtonColor;
+    const customButtonColorValue = this.customButtonColor();
+
+    if (customButtonColorValue) {
+      customStyle['background'] = customButtonColorValue;
     }
 
-    if (this.customTextColor) {
-      customStyle['color'] = this.customTextColor;
+    const customTextColorValue = this.customTextColor();
+
+    if (customTextColorValue) {
+      customStyle['color'] = customTextColorValue;
     }
 
-    const customSpinnerColor: Maybe<string> = this.customSpinnerColor ?? this.customTextColor;
-    const disabled = !this.working && this.disabled; // Only disabled if we're not working, in order to show the animation.
+    const customSpinnerColorValue = this.customSpinnerColor();
+    const customSpinnerColor: Maybe<string> = customSpinnerColorValue ?? customTextColorValue;
+    const disabled = !this.workingSignal() && this.disabledSignal(); // Only disabled if we're not working, in order to show the animation.
 
-    const isIconOnlyButton = buttonIcon && !this.text;
+    const textValue = this.text();
+    const isIconOnlyButton = buttonIcon && !textValue;
 
-    return {
+    const config: Configurable<DbxProgressButtonConfig> = {
       fab: false,
-      working: this.working,
+      working: this.workingSignal(),
       buttonIcon,
       customStyle,
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
-      text: this.text ?? '',
-      buttonColor: this.color,
+      text: textValue ?? '',
+      buttonType: this.type(),
+      buttonColor: this.color(),
       barColor: 'accent',
-      raised: this.raised,
-      stroked: this.stroked,
-      flat: this.flat,
-      iconOnly: this.iconOnly,
       mode: 'indeterminate',
-      spinnerColor: this.spinnerColor ?? this.color,
+      spinnerColor: this.spinnerColor() ?? this.color(),
       customSpinnerColor,
       disabled
     };
-  }
+
+    return config;
+  });
 }

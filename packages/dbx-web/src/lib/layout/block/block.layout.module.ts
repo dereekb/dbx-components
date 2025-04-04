@@ -6,11 +6,11 @@ import { AngularResizeEventModule } from 'angular-resize-event-package';
 
 /**
  * Module for block components.
- * 
+ *
  * @deprecated import DbxTwoBlockComponent directly instead.
  */
 @NgModule({
   imports: [DbxTwoBlockComponent],
   exports: [DbxTwoBlockComponent]
 })
-export class DbxBlockLayoutModule { }
+export class DbxBlockLayoutModule {}

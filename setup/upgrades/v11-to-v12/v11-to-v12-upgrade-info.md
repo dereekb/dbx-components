@@ -245,6 +245,9 @@ bootstrapApplication(UIView, appConfig)
 - Renamed `DbxTwoBlockComponent` to `DbxTwoBlockDirective`
 - Converted `DbxPopupWindowState` from an enum to a const object and added `DbxPopupWindowStateType`.
 - Renamed `DbxFormlyFormComponent` to `DbxFormlyComponent`.
+- Renamed `DbxProgressButtonOptions` to `DbxProgressButtonConfig`.
+- Updated `dbx-progress-spinner-button` and `dbx-progress-bar-button` to use `[config]` instead of `[options]`.
+
 
 #### Updating DbxList related views
 All views like this should consider being updated to standalone views. The template is still available, but now 

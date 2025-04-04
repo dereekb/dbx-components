@@ -14,7 +14,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
   standalone: true
 })
 export class DbxPopoverScrollContentDirective {
-
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent);
 
   readonly hasControlsSignal = toSignal(this.appPopoverContentComponent.hasControls);
@@ -36,5 +35,4 @@ export class DbxPopoverScrollContentDirective {
 
     return classes.join(' ');
   });
-
 }

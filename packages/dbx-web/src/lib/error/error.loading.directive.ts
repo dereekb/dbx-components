@@ -1,10 +1,8 @@
-import { ObservableOrValue } from './../../../../../.nx/cache/14608316092629526125/outputs/dist/packages/rxjs/src/lib/rxjs/getter.d';
-import { Directive, Input, effect, inject, input } from '@angular/core';
-import { LoadingContext, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { Directive, effect, inject, input } from '@angular/core';
+import { LoadingContext, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxErrorComponent } from './error.component';
 import { distinctUntilChanged, shareReplay, Subscription } from 'rxjs';
-import { Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
@@ -18,7 +16,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 })
 export class DbxLoadingErrorDirective extends AbstractSubscriptionDirective {
   readonly error = inject(DbxErrorComponent, { host: true });
-  readonly context = input.required<Maybe<ObservableOrValue<LoadingContext>>>({ alias: 'dbxLoadingError' });
+  readonly context = input.required<MaybeObservableOrValue<LoadingContext>>({ alias: 'dbxLoadingError' });
   readonly context$ = toObservable(this.context).pipe(maybeValueFromObservableOrValue(), distinctUntilChanged(), shareReplay(1));
   readonly contextSignal = toSignal(this.context$);
 

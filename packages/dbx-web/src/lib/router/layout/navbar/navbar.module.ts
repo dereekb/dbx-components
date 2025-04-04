@@ -9,19 +9,11 @@ import { DbxNavbarComponent } from './navbar.component';
 import { DbxIconButtonModule } from '../../../button';
 import { UIRouterModule } from '@uirouter/angular';
 
+/**
+ * @deprecated import DbxNavbarComponent directly
+ */
 @NgModule({
-  imports: [
-    //
-    CommonModule,
-    DbxIconButtonModule,
-    MatTabsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    UIRouterModule,
-    DbxRouterAnchorModule
-  ],
-  declarations: [DbxNavbarComponent],
+  imports: [DbxNavbarComponent],
   exports: [DbxNavbarComponent]
 })
 export class DbxRouterNavbarModule {}
