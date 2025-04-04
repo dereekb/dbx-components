@@ -1,5 +1,5 @@
 import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '@dereekb/firebase';
-import { itShouldFail, expectFail } from '@dereekb/util/test';
+import { itShouldFail, expectFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import { type AuthData } from 'firebase-functions/lib/common/providers/https';
 import { type DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import type * as admin from 'firebase-admin';
@@ -13,6 +13,7 @@ import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
 import { addDays } from 'date-fns';
+import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from '../../auth';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   a: { roles: [AUTH_ADMIN_ROLE] }
@@ -409,13 +410,45 @@ describe('firebase server nest auth', () => {
               expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
               expect(lastCommunicationDate).toBeDefined();
 
-              const claimsWereSent = await newUserService.sendSetupContent(initializedUser.uid, { sendSetupDetailsOnce: true });
+              const claimsWereSent = await newUserService.sendSetupContent(initializedUser.uid);
               expect(claimsWereSent).toBe(false);
 
               claims = await authService.userContext(initializedUser.uid).loadClaims();
 
               expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
               expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBe(lastCommunicationDate); // unchanged
+            });
+
+            describe('throwErrors=true', () => {
+              itShouldFail('to send and instead throw a throttle error', async () => {
+                let claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+                const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
+
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+                expect(lastCommunicationDate).toBeDefined();
+
+                await expectFail(() => newUserService.sendSetupContent(initializedUser.uid, { throwErrors: true }), jestExpectFailAssertErrorType(FirebaseServerAuthNewUserSendSetupDetailsThrottleError));
+              });
+            });
+
+            describe('ignoreThrottle=true', () => {
+              it('should send the content again after the send throttle period has ended', async () => {
+                let claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+                const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
+
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+                expect(lastCommunicationDate).toBeDefined();
+
+                const claimsWereSent = await newUserService.sendSetupContent(initializedUser.uid, { ignoreSendThrottleTime: true });
+                expect(claimsWereSent).toBe(true);
+
+                claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+                expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).not.toBe(lastCommunicationDate); // updated
+              });
             });
 
             describe('time since last send', () => {
@@ -458,6 +491,12 @@ describe('firebase server nest auth', () => {
 
                   expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
                   expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBe(lastCommunicationDate); // unchanged
+                });
+
+                describe('throwErrors=true', () => {
+                  itShouldFail('to send and instead throws a send once error', async () => {
+                    await expectFail(() => newUserService.sendSetupContent(initializedUser.uid, { sendSetupDetailsOnce: true, throwErrors: true }), jestExpectFailAssertErrorType(FirebaseServerAuthNewUserSendSetupDetailsSendOnceError));
+                  });
                 });
               });
             });

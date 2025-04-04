@@ -7,6 +7,7 @@ import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.co
 import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
+import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from './auth.service.error';
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' }); // 6 digits
 
@@ -401,6 +402,14 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly sendSetupDetailsOnce?: boolean;
   /**
+   * If true, will ignore throttling when sending setup content.
+   */
+  readonly sendSetupIgnoreThrottle?: boolean;
+  /**
+   * Whether or not to throw an error if sending setup content fails. Is false by default.
+   */
+  readonly sendSetupThrowErrors?: boolean;
+  /**
    * Whether or not to force sending the test details.
    */
   readonly sendDetailsInTestEnvironment?: boolean;
@@ -424,6 +433,17 @@ export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
    * Whether or not to skip sending again if the setup content has already been sent once.
    */
   readonly sendSetupDetailsOnce?: boolean;
+  /**
+   * Whether or not to force sending again even if the send is being throttled
+   */
+  readonly ignoreSendThrottleTime?: boolean;
+  /**
+   * Whether or not to throw errors if the send fails, instead of returning false.
+   *
+   * @see FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError
+   * @see FirebaseServerAuthNewUserSendSetupDetailsThrottleError
+   */
+  readonly throwErrors?: boolean;
   /**
    * Any additional setup context
    */
@@ -493,7 +513,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   }
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
-    const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, sendSetupDetailsOnce: onlySendSetupContentOnce, data, sendDetailsInTestEnvironment } = input;
+    const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, sendSetupDetailsOnce, sendSetupIgnoreThrottle, sendSetupThrowErrors, data, sendDetailsInTestEnvironment } = input;
 
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
@@ -527,7 +547,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
     // send content if necessary
     if ((createdUser && sendSetupContent === true) || sendSetupContentIfUserExists) {
-      const sentEmail = await this.sendSetupContent(userRecordId, { data, sendSetupDetailsOnce: onlySendSetupContentOnce, sendDetailsInTestEnvironment });
+      const sentEmail = await this.sendSetupContent(userRecordId, { data, sendSetupDetailsOnce, ignoreSendThrottleTime: sendSetupIgnoreThrottle, throwErrors: sendSetupThrowErrors, sendDetailsInTestEnvironment });
 
       // reload the user record
       if (sentEmail) {
@@ -556,12 +576,27 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
+      const hasSentCommunication = Boolean(setupCommunicationAt);
 
-      if (!setupCommunicationAt || (!config?.sendSetupDetailsOnce && !isThrottled(this.setupThrottleTime, new Date(setupCommunicationAt)))) {
-        await this.sendSetupContentToUser(setupDetails);
-        await this.updateSetupContentSentTime(setupDetails);
-        sentContent = true;
+      if (config?.sendSetupDetailsOnce && hasSentCommunication) {
+        // do not send.
+        if (config?.throwErrors) {
+          throw new FirebaseServerAuthNewUserSendSetupDetailsSendOnceError();
+        }
+      } else {
+        const lastSentAt = setupCommunicationAt ? new Date(setupCommunicationAt) : undefined;
+        const sendIsThrottled = hasSentCommunication && !config?.ignoreSendThrottleTime && isThrottled(this.setupThrottleTime, lastSentAt);
+
+        if (!sendIsThrottled) {
+          await this.sendSetupContentToUser(setupDetails);
+          await this.updateSetupContentSentTime(setupDetails);
+          sentContent = true;
+        } else if (config?.throwErrors) {
+          throw new FirebaseServerAuthNewUserSendSetupDetailsThrottleError(lastSentAt as Date);
+        }
       }
+    } else if (config?.throwErrors) {
+      throw new FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError();
     }
 
     return sentContent;
