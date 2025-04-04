@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util/fetch",
-  "version": "11.1.7",
+  "version": "11.1.8",
   ".": {
     "types": "./src/index.d.ts",
     "node": {

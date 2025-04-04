@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util/test",
-  "version": "11.1.7",
+  "version": "11.1.8",
   "type": "commonjs",
   "peerDependencies": {
     "@dereekb/util": "*"
