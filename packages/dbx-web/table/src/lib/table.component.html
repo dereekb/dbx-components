@@ -1,7 +1,7 @@
 <dbx-loading [context]="context">
   <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
-  <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance" [infiniteScrollThrottle]="throttleScroll" [scrollWindow]="false" (scrolled)="onScrollDown()">
-    <table class="dbx-table-view-table" mat-table [dataSource]="elementsSignal()" [trackBy]="trackByFunctionSignal() || DEFAULT_TRACK_BY_FUNCTION">
+  <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
+    <table class="dbx-table-view-table" mat-table [dataSource]="elements$" [trackBy]="trackByFunctionSignal() || DEFAULT_TRACK_BY_FUNCTION">
       <!-- Header/Item column -->
       <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
         <th mat-header-cell *matHeaderCellDef>

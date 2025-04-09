@@ -43,6 +43,9 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
     return dbxButtonDisplayType(this.buttonDisplayContentSignal());
   });
 
+  readonly iconSignal: Signal<Maybe<string>> = computed(() => this.buttonDisplayContentSignal()?.icon);
+  readonly textSignal: Signal<Maybe<string>> = computed(() => this.buttonDisplayContentSignal()?.text);
+
   readonly disabled$ = toObservable(this.disabledSignal);
   readonly working$ = toObservable(this.workingSignal);
   readonly display$ = toObservable(this.buttonDisplayContentSignal);

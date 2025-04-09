@@ -67,6 +67,31 @@
       <dbx-content-container>
         <p>Custom content not pushed by the bar.</p>
       </dbx-content-container>
+      <h3>Error Example</h3>
+      <p>If the loading context encounters an error, the error will be displayed.</p>
+      <dbx-loading [error]="readableError"></dbx-loading>
+      <h3>Custom Loading Content</h3>
+      <p>Custom loading content can be used to replace the other loading information by added loading as an attribute.</p>
+      <dbx-loading [loading]="true">
+        <dbx-content-pit loading>
+          <p>This is custom loading content in a pit. We're currently loading!</p>
+        </dbx-content-pit>
+      </dbx-loading>
+      <h3>Custom Error Content</h3>
+      <p>Custom error content can be used to replace the default dbx-error widget by added error as an attribute.</p>
+      <dbx-loading [error]="readableError">
+        <dbx-content-pit error>
+          <p>This is custom error content in a pit for the error. We encountered an error!</p>
+        </dbx-content-pit>
+      </dbx-loading>
+      <h3>Custom Error Action</h3>
+      <p>An error action view can be added by adding errorAction as an attribute and it will be shown when an error occurs.</p>
+      <dbx-loading [error]="readableError">
+        <dbx-content-pit errorAction>
+          <p>This is custom error action content in a pit for the error.</p>
+          <button mat-button>Retry</button>
+        </dbx-content-pit>
+      </dbx-loading>
     </doc-feature-example>
     <doc-feature-example header="dbx-loading-progress" hint="Component that displays the mat-progress-bar or mat-progress-spinner.">
       <dbx-loading-progress [linear]="true"></dbx-loading-progress>

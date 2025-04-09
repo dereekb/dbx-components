@@ -1,4 +1,4 @@
-<div [dbxActionSource]="source$ | async">
+<div [dbxActionSource]="sourceSignal()">
   <ng-content></ng-content>
   <mat-divider></mat-divider>
   <div class="">
@@ -7,43 +7,43 @@
       <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutWrap>
         <span>
           <span class="dbx-label">State:</span>
-          {{ state$ | async }}
+          {{ stateSignal() }}
         </span>
         <span>
           <span class="dbx-label">isModified:</span>
-          {{ isModified$ | async }}
+          {{ isModifiedSignal() }}
         </span>
         <span>
           <span class="dbx-label">canTrigger:</span>
-          {{ canTrigger$ | async }}
+          {{ canTriggerSignal() }}
         </span>
         <span>
           <span class="dbx-label">isModifiedAndCanTrigger:</span>
-          {{ isModifiedAndCanTrigger$ | async }}
+          {{ isModifiedAndCanTriggerSignal() }}
         </span>
         <span>
           <span class="dbx-label">isDisabled:</span>
-          {{ isDisabled$ | async }}
+          {{ isDisabledSignal() }}
         </span>
         <span>
           <span class="dbx-label">disabledKeys:</span>
-          {{ disabledKeys$ | async }}
+          {{ disabledKeysSignal() }}
         </span>
         <span>
           <span class="dbx-label">errorCountSinceLastSuccess:</span>
-          {{ errorCountSinceLastSuccess$ | async }}
+          {{ errorCountSinceLastSuccessSignal() }}
         </span>
         <span>
           <span class="dbx-label">valueReady:</span>
-          {{ valueReady$ | async | json }}
+          {{ valueReadySignal() | json }}
         </span>
         <span>
           <span class="dbx-label">success:</span>
-          {{ success$ | async | json }}
+          {{ successSignal() | json }}
         </span>
         <span>
           <span class="dbx-label">error:</span>
-          {{ error$ | async | json }}
+          {{ errorSignal() | json }}
         </span>
       </div>
       <dbx-error dbxActionError></dbx-error>

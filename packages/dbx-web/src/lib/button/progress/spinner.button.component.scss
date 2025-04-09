@@ -18,6 +18,8 @@
       // icon button fixes
       min-width: unset;
       --mdc-icon-button-icon-size: unset;
+      --mat-text-button-with-icon-horizontal-padding: 0px;
+      --mdc-icon-button-state-layer-size: 36px;
       border-radius: 50%; // sometimes the css order seems to be different, causing the button to lose its radius
     }
 
@@ -35,9 +37,13 @@
       }
     }
 
-    // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
-    .dbx-spinner-custom.mat-progress-spinner.mat-accent circle,
-    .dbx-spinner-custom.mat-spinner.mat-accent circle {
+    .mat-mdc-progress-spinner {
+      --mdc-icon-button-icon-size: 36px;
+    }
+
+    // mat-spinners marked with dbx-progress-spinner-custom should allow the stroke to be inherited.
+    .dbx-progress-spinner-custom.mat-progress-spinner.mat-accent circle,
+    .dbx-progress-spinner-custom.mat-mdc-progress-spinner.mat-accent circle {
       stroke: unset !important;
     }
 
@@ -58,6 +64,7 @@
         position: relative;
         top: 3px;
       }
+
       &.working {
         opacity: 0;
       }

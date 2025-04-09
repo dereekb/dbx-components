@@ -1,7 +1,7 @@
 import { Observable, combineLatest, map, shareReplay } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
-import { KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
+import { ChecklistItemDisplayContent } from './checklist.item';
+import { Configurable, KeyValueTransformMap, addPlusPrefixToNumber, type Maybe } from '@dereekb/util';
 import { checklistItemField, ChecklistItemFieldBuilderInput } from './checklist.item.field';
 
 export type ChecklistItemFieldDataSetFieldKey<D> = keyof D & string;
@@ -14,18 +14,18 @@ export interface ChecklistItemFieldDataSetItem<D, T extends ChecklistType<D>> {
   /**
    * Key for the field.
    */
-  key: ChecklistItemFieldDataSetFieldKey<T>;
+  readonly key: ChecklistItemFieldDataSetFieldKey<T>;
   /**
    * Base field configuration to use.
    */
-  field: ChecklistItemFieldBuilderInput<T>;
+  readonly field: ChecklistItemFieldBuilderInput<T>;
 }
 
 /**
  * Used for building a set of configurations for a data-type object that has as second object that is used as a checklist.
  */
 export class ChecklistItemFieldDataSetBuilder<D extends object, C extends ChecklistType<D> = ChecklistType<D>> {
-  private _fields = new Map<ChecklistItemFieldDataSetFieldKey<C>, ChecklistItemFieldDataSetItem<D, ChecklistType<D>>>();
+  private readonly _fields = new Map<ChecklistItemFieldDataSetFieldKey<C>, ChecklistItemFieldDataSetItem<D, ChecklistType<D>>>();
 
   readonly dataObs$: Observable<D>;
 
@@ -40,14 +40,14 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
    */
   merge<T>(key: ChecklistItemFieldDataSetFieldKey<D>, config: Partial<ChecklistItemFieldBuilderInput<T>>) {
     const currentField = this._assertFieldExists(key).field;
-    const mergedConfig: ChecklistItemFieldDataSetBuilderInput<D, T> = {
+    const mergedConfig: Configurable<ChecklistItemFieldDataSetBuilderInput<D, T>> = {
       ...currentField,
       ...config,
       key
     } as any;
 
-    if (currentField.displayContentObs && config.displayContentObs) {
-      mergedConfig.displayContentObs = combineLatest([currentField.displayContentObs, config.displayContentObs]).pipe(
+    if (currentField.displayContent && config.displayContent) {
+      mergedConfig.displayContent = combineLatest([currentField.displayContent, config.displayContent]).pipe(
         map(([a, b]) => {
           const result = {
             ...a,
@@ -88,7 +88,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
 
   showValueFieldArrayCount<T extends ChecklistItemFieldDataSetFieldValueForKey<D> & Array<unknown>>(key: ChecklistItemFieldDataSetFieldKey<D>, config?: Partial<ChecklistItemFieldDataSetBuilderInput<D, T>>) {
     return this.field({
-      displayContentObs: this.contentWithDisplayValueFromData(key, (x: T) => addPlusPrefixToNumber(x?.length)),
+      displayContent: this.contentWithDisplayValueFromData(key, (x: T) => addPlusPrefixToNumber(x?.length)),
       ...config,
       key
     });
@@ -96,7 +96,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
 
   showValueField<T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(key: ChecklistItemFieldDataSetFieldKey<D>, config?: Partial<ChecklistItemFieldDataSetBuilderInput<D, T>>, labelFn: (value: T) => Maybe<string> = (x: T) => (x as unknown as object | number | string)?.toString()) {
     return this.field({
-      displayContentObs: this.contentWithDisplayValueFromData(key, labelFn),
+      displayContent: this.contentWithDisplayValueFromData(key, labelFn),
       ...config,
       key
     });
@@ -121,11 +121,11 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
   }
 
   // MARK: Utility
-  customContentFromData<T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(mapFn: (data: D) => ChecklistItemDisplayContent<T>): ChecklistItemFieldDisplayContentObs<T> {
+  customContentFromData<T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(mapFn: (data: D) => ChecklistItemDisplayContent<T>): Observable<ChecklistItemDisplayContent<T>> {
     return this.dataObs$.pipe(map(mapFn));
   }
 
-  contentWithValueFromData<K extends keyof D = keyof D, T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(key: K, contentFn?: (value: T) => ChecklistItemDisplayContent<T>): ChecklistItemFieldDisplayContentObs<T> {
+  contentWithValueFromData<K extends keyof D = keyof D, T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(key: K, contentFn?: (value: T) => ChecklistItemDisplayContent<T>): Observable<ChecklistItemDisplayContent<T>> {
     return this.customContentFromData((data) => {
       const meta = data[key] as unknown as T;
       const content = contentFn?.(meta);
@@ -137,7 +137,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
     });
   }
 
-  contentWithDisplayValueFromData<T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(key: ChecklistItemFieldDataSetFieldKey<D>, labelFn: (value: T) => Maybe<string> = (x: T) => (x as unknown as object | number | string)?.toString()): ChecklistItemFieldDisplayContentObs<T> {
+  contentWithDisplayValueFromData<T extends ChecklistItemFieldDataSetFieldValueForKey<D> = ChecklistItemFieldDataSetFieldValueForKey<D>>(key: ChecklistItemFieldDataSetFieldKey<D>, labelFn: (value: T) => Maybe<string> = (x: T) => (x as unknown as object | number | string)?.toString()): Observable<ChecklistItemDisplayContent<T>> {
     function sanitizeLabel(label: Maybe<string>): string {
       return label ?? 'N/A';
     }

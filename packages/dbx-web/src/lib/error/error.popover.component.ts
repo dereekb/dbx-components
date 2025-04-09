@@ -16,9 +16,9 @@ export interface DbxErrorPopoverConfig {
 @Component({
   template: `
     <dbx-popover-content class="dbx-error-popover">
-      <dbx-popover-header [header]="code()" icon="error"></dbx-popover-header>
+      <dbx-popover-header [header]="code" icon="error"></dbx-popover-header>
       <dbx-popover-scroll-content>
-        <dbx-error-details [error]="error()"></dbx-error-details>
+        <dbx-error-details [error]="error"></dbx-error-details>
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
@@ -27,9 +27,8 @@ export interface DbxErrorPopoverConfig {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorPopoverComponent extends AbstractPopoverDirective<void, ReadableError> {
-  error = () => this.popover.data as ReadableError;
-
-  code = () => this.error().code;
+  readonly error = this.popover.data as ReadableError;
+  readonly code = this.error.code;
 
   static openPopover(popoverService: DbxPopoverService, { origin, error }: DbxErrorPopoverConfig, popoverKey?: DbxPopoverKey) {
     return popoverService.open({

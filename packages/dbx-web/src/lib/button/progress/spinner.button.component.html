@@ -1,9 +1,11 @@
 <button class="dbx-base-button dbx-progress-spinner-button" #button mat-button [type]="buttonTypeAttributeSignal()" [color]="configSignal()?.buttonColor" [ngClass]="buttonCssSignal()" [ngStyle]="configSignal()?.customStyle" [disabled]="buttonDisabledSignal()">
   @if (showTextSignal()) {
-    @if (configSignal()?.buttonIcon) {
-      <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet" [class.working]="showProgressSignal()" [ngClass]="configSignal()?.buttonIcon?.customClass" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!">
-        {{ configSignal()?.buttonIcon?.fontSet ? '' : configSignal()?.buttonIcon?.fontIcon }}
-      </mat-icon>
+    @if (showTextButtonIconSignal()) {
+      <ng-container>
+        <mat-icon class="mat-button-icon" [class.is-mat-icon]="!configSignal()?.buttonIcon?.fontSet" [class.working]="showProgressSignal()" [ngClass]="configSignal()?.buttonIcon?.customClass" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!">
+          {{ configSignal()?.buttonIcon?.fontSet ? '' : configSignal()?.buttonIcon?.fontIcon }}
+        </mat-icon>
+      </ng-container>
     }
     <span class="button-text" [class.working]="showProgressSignal()">
       {{ configSignal()?.text }}
@@ -11,9 +13,12 @@
     </span>
   }
   @if (showIconSignal()) {
-    <mat-icon class="mat-fab-icon" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!" [inline]="configSignal()?.fab && configSignal()?.buttonIcon?.inline!">
-      {{ configSignal()?.buttonIcon?.fontSet! ? '' : configSignal()?.buttonIcon?.fontIcon! }}
-    </mat-icon>
+    <!-- Use ng-container to prevent mat-icon from being a child of the button which changes the behavior -->
+    <ng-container>
+      <mat-icon class="mat-fab-icon" [fontSet]="configSignal()?.buttonIcon?.fontSet!" [fontIcon]="configSignal()?.buttonIcon?.fontIcon!" [color]="configSignal()?.buttonIcon?.color!" [svgIcon]="configSignal()?.buttonIcon?.svgIcon!" [inline]="configSignal()?.fab && configSignal()?.buttonIcon?.inline!">
+        {{ configSignal()?.buttonIcon?.fontSet! ? '' : configSignal()?.buttonIcon?.fontIcon! }}
+      </mat-icon>
+    </ng-container>
   }
   @if (showProgressSignal()) {
     <mat-spinner class="spinner" [diameter]="spinnerSizeSignal()" [color]="configSignal()?.spinnerColor!" [mode]="configSignal()?.mode!" [value]="configSignal()?.value!" [ngStyle]="customSpinnerStyleSignal()" [ngClass]="customSpinnerStyleClassSignal()" [class.working]="showProgressSignal()"></mat-spinner>

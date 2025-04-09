@@ -1,5 +1,5 @@
 import { map, BehaviorSubject, delay } from 'rxjs';
-import { OnDestroy, Component, ViewChild, ElementRef, input, computed, ChangeDetectionStrategy } from '@angular/core';
+import { OnDestroy, Component, ViewChild, ElementRef, input, computed, ChangeDetectionStrategy, viewChild, effect } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { ErrorInput, type Maybe } from '@dereekb/util';
@@ -26,15 +26,9 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxBasicLoadingComponent implements OnDestroy {
-  // TODO: Test that the delay that is used by the behavior subjects is no longer needed to properly compute the result
-  /**
-  private readonly _customErrorViewChild = viewChild('customError');
-  private readonly _customLoadingViewChild = viewChild('customLoading');
-   */
-
-  private readonly _customErrorContent = new BehaviorSubject<Maybe<ElementRef>>(undefined);
-  private readonly _customLoadingContent = new BehaviorSubject<Maybe<ElementRef>>(undefined);
+export class DbxBasicLoadingComponent {
+  readonly customError = viewChild<string, Maybe<ElementRef>>('customError', { read: ElementRef });
+  readonly customLoading = viewChild<string, Maybe<ElementRef>>('customLoading', { read: ElementRef });
 
   readonly diameter = input<Maybe<number>>();
   readonly mode = input<ProgressBarMode | ProgressSpinnerMode>('indeterminate');
@@ -67,31 +61,6 @@ export class DbxBasicLoadingComponent implements OnDestroy {
     return state;
   });
 
-  readonly hasNoCustomErrorSignal = toSignal(
-    this._customErrorContent.pipe(
-      delay(0),
-      map((x) => !checkNgContentWrapperHasContent(x))
-    )
-  );
-  readonly hasNoCustomLoadingSignal = toSignal(
-    this._customLoadingContent.pipe(
-      delay(0),
-      map((x) => !checkNgContentWrapperHasContent(x))
-    )
-  );
-
-  ngOnDestroy() {
-    this._customErrorContent.complete();
-    this._customLoadingContent.complete();
-  }
-
-  @ViewChild('customError')
-  set customErrorContent(customErrorContent: Maybe<ElementRef>) {
-    this._customErrorContent.next(customErrorContent);
-  }
-
-  @ViewChild('customLoading')
-  set customLoadingContent(customLoadingContent: Maybe<ElementRef>) {
-    this._customLoadingContent.next(customLoadingContent);
-  }
+  readonly hasNoCustomErrorSignal = computed(() => !checkNgContentWrapperHasContent(this.customError()));
+  readonly hasNoCustomLoadingSignal = computed(() => !checkNgContentWrapperHasContent(this.customLoading()));
 }

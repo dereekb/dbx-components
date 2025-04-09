@@ -53,8 +53,9 @@ export interface DbxProgressButtonConfig {
    * @deprecated use buttonType=flat instead
    */
   readonly flat?: Maybe<boolean>;
+
   /**
-   * @deprecated use buttonType=fab instead
+   * Whether or not this is a floating action button.
    */
   readonly fab?: Maybe<boolean>;
 

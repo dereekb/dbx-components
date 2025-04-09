@@ -21,9 +21,11 @@ import { DbxErrorWidgetService } from './error.widget.service';
 export class DbxErrorWidgetViewComponent {
   readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
 
-  private readonly _errorWithCodeSignal = signal<Maybe<ReadableErrorWithCode>>(undefined);
+  readonly error = input<Maybe<ReadableError>>();
+
   readonly errorWithCodeSignal = computed<Maybe<DbxInjectionComponentConfig>>(() => {
-    const error: Maybe<ReadableErrorWithCode> = this._errorWithCodeSignal();
+    const currentError = this.error();
+    const error: Maybe<ReadableErrorWithCode> = currentError && currentError.code ? (currentError as ReadableErrorWithCode) : undefined;
 
     let config: Maybe<DbxInjectionComponentConfig>;
 
@@ -54,14 +56,4 @@ export class DbxErrorWidgetViewComponent {
 
     return config;
   });
-
-  readonly error = input<Maybe<ReadableError>>();
-
-  constructor() {
-    // Set up effect to update the error code signal when the input changes
-    effect(() => {
-      const error = this.error();
-      this._errorWithCodeSignal.set(error && error.code ? (error as ReadableErrorWithCode) : undefined);
-    });
-  }
 }

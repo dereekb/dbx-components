@@ -7,7 +7,7 @@ import { provideFilterSource } from './filter.content';
 export const FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN = new InjectionToken<Maybe<Observable<Maybe<unknown>>>>('FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_SOURCE_TOKEN');
 
 export abstract class FilterSourceDirective<F = unknown> implements FilterSource<F> {
-  abstract filter$: Observable<F>;
+  abstract readonly filter$: Observable<F>;
   abstract initWithFilter(filterObs: Observable<F>): void;
   abstract setFilter(filter: F): void;
   abstract resetFilter(): void;

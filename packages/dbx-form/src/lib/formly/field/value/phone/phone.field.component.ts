@@ -21,7 +21,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 @Component({
   templateUrl: 'phone.field.component.html'
 })
-export class DbxPhoneFieldComponent extends FieldType implements OnInit<FieldTypeConfig<InternationalPhoneFormlyFieldProps>>, OnDestroy {
+export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<InternationalPhoneFormlyFieldProps>> implements OnInit, OnDestroy {
   readonly inputSync = new SubscriptionObject();
   readonly outputSync = new SubscriptionObject();
   readonly extensionErrorSync = new SubscriptionObject();

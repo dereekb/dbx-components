@@ -16,7 +16,6 @@ import { type Maybe } from '@dereekb/util';
 })
 export class DbxFilterMapSourceConnectorDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {
   readonly dbxFilterMapSourceConnector = input<Maybe<FilterMapKey>>();
-  protected readonly _dbxFilterMapSourceConnectorEffect = effect(() => this.setFilterMapKey(this.dbxFilterMapSourceConnector()));
 
   // MARK: FilterSourceConnector
   connectWithSource(filterSource: FilterSource<F>): void {

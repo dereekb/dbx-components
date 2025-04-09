@@ -19,7 +19,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
         @case (true) {
           <mat-progress-bar [mode]="bmode()" [color]="color()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
         }
-        @case (false) {
+        @default {
           <mat-progress-spinner [diameter]="diameter() || 96" [mode]="smode()" [color]="color()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
         }
       }

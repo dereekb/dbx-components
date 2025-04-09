@@ -95,80 +95,97 @@
 @mixin color($theme-config) {
   .dbx-primary {
     color: theming.$dbx-primary-color;
+    --mdc-text-button-label-text-color: theming.$dbx-primary-color;
   }
 
   .dbx-primary-bg {
     background: theming.$dbx-primary-color;
     color: theming.$dbx-primary-color-contrast;
+    --mdc-text-button-label-text-color: theming.$dbx-primary-color-contrast;
   }
 
   .dbx-accent {
     color: theming.$dbx-accent-color;
+    --mdc-text-button-label-text-color: theming.$dbx-accent-color;
   }
 
   .dbx-accent-bg {
     background: theming.$dbx-accent-color;
     color: theming.$dbx-accent-color-contrast;
+    --mdc-text-button-label-text-color: theming.$dbx-primary-color-contrast;
   }
 
   .dbx-warn {
     color: theming.$dbx-warn-color;
+    --mdc-text-button-label-text-color: theming.$dbx-warn-color;
   }
 
   .dbx-warn-bg {
     background: theming.$dbx-warn-color;
     color: theming.$dbx-warn-color-contrast;
+    --mdc-text-button-label-text-color: theming.$dbx-warn-color-contrast;
   }
 
   .dbx-notice {
     color: theming.$dbx-notice-color;
+    --mdc-text-button-label-text-color: theming.$dbx-notice-color;
   }
 
   .dbx-notice-bg {
     background: theming.$dbx-notice-color;
     color: theming.$dbx-notice-color-contrast;
+    --mdc-text-button-label-text-color: theming.$dbx-notice-color-contrast;
   }
 
   .dbx-success {
     color: theming.$dbx-success-color;
+    --mdc-text-button-label-text-color: theming.$dbx-success-color;
   }
 
   .dbx-success-bg {
     background: theming.$dbx-success-color;
     color: theming.$dbx-success-color-contrast;
+    --mdc-text-button-label-text-color: theming.$dbx-success-color-contrast;
   }
 
   .dbx-ok {
     color: theming.$dbx-ok-color;
+    --mdc-text-button-label-text-color: theming.$dbx-ok-color;
   }
 
   .dbx-ok-bg {
     background: theming.$dbx-ok-color;
     color: theming.$dbx-ok-color-contrast;
+    --mdc-text-button-label-text-color: theming.$dbx-ok-color-contrast;
   }
 
   .dbx-grey {
     color: theming.$dbx-grey-color;
+    --mdc-text-button-label-text-color: theming.$dbx-grey-color;
   }
 
   .dbx-grey-bg {
     background: theming.$dbx-grey-color-contrast; // intentionally use the contrast for the bg
     color: theming.$dbx-grey-color;
+    --mdc-text-button-label-text-color: theming.$dbx-grey-color;
   }
 
   .dbx-disabled {
     color: theming.$dbx-disabled-color;
+    --mdc-text-button-label-text-color: theming.$dbx-disabled-color;
   }
 
   .dbx-disabled-bg {
     background: theming.$dbx-disabled-color-contrast; // intentionally use the contrast for the bg
     color: theming.$dbx-disabled-color;
+    --mdc-text-button-label-text-color: theming.$dbx-disabled-color;
   }
 
   .dbx-background,  // COMPAT: Remove dbx-background later
   .dbx-bg {
     background: theming.$dbx-bg-color-contrast;
     color: theming.$dbx-bg-color;
+    --mdc-text-button-label-text-color: theming.$dbx-bg-color;
   }
 }
 

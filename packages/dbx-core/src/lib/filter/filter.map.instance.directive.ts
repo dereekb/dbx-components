@@ -1,7 +1,7 @@
-import { filterMaybe, FilterMapKey, FilterMap } from '@dereekb/rxjs';
-import { Directive, OnDestroy, inject, signal } from '@angular/core';
+import { filterMaybe, FilterMapKey, FilterMap, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { Directive, OnDestroy, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, delay, distinctUntilChanged } from 'rxjs';
 
 /**
  * Provides a FilterSource from a parent FilterMap.
@@ -9,22 +9,16 @@ import { toObservable } from '@angular/core/rxjs-interop';
 @Directive()
 export abstract class AbstractDbxFilterMapInstanceDirective<F> implements OnDestroy {
   readonly dbxFilterMap = inject(FilterMap<F>);
-  private readonly _currentFilterMapKeySignal = signal<Maybe<FilterMapKey>>(undefined);
+  private readonly _currentFilterMapKey = new BehaviorSubject<MaybeObservableOrValue<FilterMapKey>>(undefined);
 
-  readonly filterMapKey$ = toObservable(this._currentFilterMapKeySignal).pipe(filterMaybe());
+  readonly filterMapKey$ = this._currentFilterMapKey.pipe(maybeValueFromObservableOrValue(), filterMaybe(), delay(0), distinctUntilChanged());
   readonly instance$ = this.dbxFilterMap.instanceObsForKeyObs(this.filterMapKey$);
 
   ngOnDestroy(): void {
-    this._currentFilterMapKeySignal.set(undefined);
+    this._currentFilterMapKey.complete();
   }
 
-  setFilterMapKey(filterMapKey: Maybe<FilterMapKey>) {
-    this._currentFilterMapKeySignal.set(filterMapKey);
+  setFilterMapKey(filterMapKey: MaybeObservableOrValue<FilterMapKey>) {
+    this._currentFilterMapKey.next(filterMapKey);
   }
-
-  // MARK: Compat
-  /**
-   * @deprecated use filterMapKey$ instead.
-   */
-  readonly key$ = this.filterMapKey$;
 }

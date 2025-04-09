@@ -17,7 +17,9 @@ export interface DbxErrorViewButtonEvent {
     <button class="dbx-error-button" [disabled]="buttonDisabled()" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
       <mat-icon>{{ icon() }}</mat-icon>
     </button>
-    <span class="dbx-error-message" @if(message()){}>{{ message() }}</span>
+    @if (message()) {
+      <span class="dbx-error-message">{{ message() }}</span>
+    }
   `,
   host: {
     class: 'dbx-error dbx-warn dbx-b'
@@ -38,7 +40,7 @@ export class DbxErrorViewComponent {
 
   readonly buttonClick = output<DbxErrorViewButtonEvent>();
 
-  readonly buttonOrigin = viewChild.required<ElementRef>('buttonPopoverOrigin');
+  readonly buttonOrigin = viewChild.required<ElementRef, ElementRef>('buttonPopoverOrigin', { read: ElementRef });
 
   clickError() {
     if (!this.buttonDisabled()) {

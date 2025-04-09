@@ -1,6 +1,7 @@
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
-import { Component, Input, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy, computed, inject, input } from '@angular/core';
 import { provideFormlyContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -8,36 +9,32 @@ import { type Maybe } from '@dereekb/util';
 @Component({
   templateUrl: './action.example.tool.component.html',
   selector: 'dbx-action-example-tools',
-  providers: [provideFormlyContext()]
+  providers: [provideFormlyContext()],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocActionExampleToolsComponent implements OnDestroy {
+export class DocActionExampleToolsComponent {
   readonly hostSourceInstance = inject(DbxActionContextStoreSourceInstance, { host: true, optional: true });
 
-  private readonly _source = new BehaviorSubject<Maybe<DbxActionContextStoreSourceInstance>>(this.hostSourceInstance);
-  readonly source$ = this._source.pipe(filterMaybe(), shareReplay(1));
+  readonly action = input<Maybe<DbxActionDirective>>(undefined);
+  readonly source = input<Maybe<DbxActionContextStoreSourceInstance>>(undefined);
 
-  readonly state$ = this.source$.pipe(switchMap((x) => x.actionState$));
-  readonly isModified$ = this.source$.pipe(switchMap((x) => x.isModified$));
-  readonly canTrigger$ = this.source$.pipe(switchMap((x) => x.canTrigger$));
-  readonly isModifiedAndCanTrigger$ = this.source$.pipe(switchMap((x) => x.isModifiedAndCanTrigger$));
-  readonly errorCountSinceLastSuccess$ = this.source$.pipe(switchMap((x) => x.errorCountSinceLastSuccess$));
-  readonly valueReady$ = this.source$.pipe(switchMap((x) => x.valueReady$));
-  readonly success$ = this.source$.pipe(switchMap((x) => x.success$));
-  readonly error$ = this.source$.pipe(switchMap((x) => x.error$));
-  readonly disabledKeys$ = this.source$.pipe(switchMap((x) => x.disabledKeys$));
-  readonly isDisabled$ = this.source$.pipe(switchMap((x) => x.isDisabled$));
+  readonly sourceSignal = computed(() => {
+    const source = this.source();
+    const action = this.action();
 
-  ngOnDestroy(): void {
-    this._source.complete();
-  }
+    return source ?? action?.sourceInstance ?? this.hostSourceInstance;
+  });
 
-  @Input()
-  set action(action: DbxActionDirective) {
-    this.source = action.sourceInstance;
-  }
+  readonly source$ = toObservable(this.sourceSignal).pipe(filterMaybe(), shareReplay(1));
 
-  @Input()
-  set source(source: DbxActionContextStoreSourceInstance) {
-    this._source.next(source);
-  }
+  readonly stateSignal = toSignal(this.source$.pipe(switchMap((x) => x.actionState$)));
+  readonly isModifiedSignal = toSignal(this.source$.pipe(switchMap((x) => x.isModified$)));
+  readonly canTriggerSignal = toSignal(this.source$.pipe(switchMap((x) => x.canTrigger$)));
+  readonly isModifiedAndCanTriggerSignal = toSignal(this.source$.pipe(switchMap((x) => x.isModifiedAndCanTrigger$)));
+  readonly errorCountSinceLastSuccessSignal = toSignal(this.source$.pipe(switchMap((x) => x.errorCountSinceLastSuccess$)));
+  readonly valueReadySignal = toSignal(this.source$.pipe(switchMap((x) => x.valueReady$)));
+  readonly successSignal = toSignal(this.source$.pipe(switchMap((x) => x.success$)));
+  readonly errorSignal = toSignal(this.source$.pipe(switchMap((x) => x.error$)));
+  readonly disabledKeysSignal = toSignal(this.source$.pipe(switchMap((x) => x.disabledKeys$)));
+  readonly isDisabledSignal = toSignal(this.source$.pipe(switchMap((x) => x.isDisabled$)));
 }

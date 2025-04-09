@@ -47,6 +47,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly stroked = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+  readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly typeSignal = computed(() => {
     let type = this.type();
@@ -97,13 +98,13 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const isIconOnlyButton = buttonIcon && !textValue;
 
     const config: Configurable<DbxProgressButtonConfig> = {
-      fab: false,
+      fab: this.fab(),
       working: this.workingSignal(),
       buttonIcon,
       customStyle,
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
       text: textValue ?? '',
-      buttonType: this.type(),
+      buttonType: this.typeSignal(),
       buttonColor: this.color(),
       barColor: 'accent',
       mode: 'indeterminate',

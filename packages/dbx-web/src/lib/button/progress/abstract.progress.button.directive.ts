@@ -80,6 +80,9 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
       case 'flat':
         classes.push('mat-mdc-unelevated-button mdc-button--unelevated');
         break;
+      default:
+        classes.push('mat-unthemed');
+        break;
     }
 
     return classes;

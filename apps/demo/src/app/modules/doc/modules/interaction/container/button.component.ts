@@ -123,6 +123,7 @@ export class DocInteractionButtonComponent {
     spinnerSize: 19,
     raised: false,
     stroked: false,
+    text: 'HELLO WORLD',
     flat: true,
     buttonColor: 'primary',
     spinnerColor: 'accent',
@@ -136,12 +137,10 @@ export class DocInteractionButtonComponent {
 
   spinnerButtonConfig4: DbxProgressButtonConfig = {
     working: false,
-    text: 'Fab',
     spinnerSize: 25, // ignored
     raised: false,
     stroked: false,
     flat: false,
-    fab: true,
     buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,

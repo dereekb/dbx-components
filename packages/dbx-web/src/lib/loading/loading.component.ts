@@ -24,7 +24,7 @@ export interface DbxLoadingComponentState {
   template: `
     <dbx-basic-loading [show]="show()" [color]="color()" [text]="text()" [mode]="mode()" [linear]="linear()" [diameter]="diameter()" [error]="stateSignal().error" [loading]="stateSignal().loading">
       <ng-content loading select="[loading]"></ng-content>
-      @if (linear() && padding() && stateSignal().loading) {
+      @if (showPaddingSignal()) {
         <div class="dbx-loading-linear-done-padding"></div>
       }
       <ng-content></ng-content>
@@ -38,6 +38,18 @@ export interface DbxLoadingComponentState {
 })
 export class DbxLoadingComponent {
   private readonly _contextOverrideSignal = signal<MaybeObservableOrValue<LoadingContext>>(undefined);
+
+  /**
+   * Whether or not to add padding to the linear presentation when linear is complete. This prevents the linear bar from pushing content around.
+   */
+  readonly padding = input<Maybe<boolean>>(false);
+  readonly show = input<Maybe<boolean>>();
+  readonly text = input<Maybe<string>>();
+  readonly mode = input<ProgressBarMode>('indeterminate');
+  readonly color = input<ThemePalette | DbxThemeColor>('primary');
+  readonly diameter = input<Maybe<number>>();
+  readonly linear = input<Maybe<boolean>>();
+
   readonly context = input<MaybeObservableOrValue<LoadingContext>>();
 
   readonly contextSignal: Signal<MaybeObservableOrValue<LoadingContext>> = computed(() => this._contextOverrideSignal() ?? this.context());
@@ -61,17 +73,12 @@ export class DbxLoadingComponent {
     return loadingState;
   });
 
-  readonly show = input<Maybe<boolean>>();
-  readonly text = input<Maybe<string>>();
-  readonly mode = input<ProgressBarMode>('indeterminate');
-  readonly color = input<ThemePalette | DbxThemeColor>('primary');
-  readonly diameter = input<Maybe<number>>();
-  readonly linear = input<Maybe<boolean>>();
-
-  /**
-   * Whether or not to add padding to the linear presentation when linear is complete. This prevents the linear bar from pushing content around.
-   */
-  readonly padding = input<Maybe<boolean>>();
+  readonly showPaddingSignal = computed(() => {
+    const linear = this.linear();
+    const padding = this.padding();
+    const loading = this.stateSignal()?.loading;
+    return linear && padding && !loading;
+  });
 
   /**
    * Sets/overrides the context directly.

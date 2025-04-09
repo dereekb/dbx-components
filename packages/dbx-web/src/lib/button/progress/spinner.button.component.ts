@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } from '@angular/core';
 import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { spaceSeparatedCssClasses } from '@dereekb/util';
+import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
@@ -17,7 +17,7 @@ import { NgClass, NgStyle } from '@angular/common';
   standalone: true
 })
 export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDirective {
-  readonly buttonRef = viewChild.required<ElementRef<HTMLElement>>('button');
+  readonly buttonRef = viewChild.required<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });
 
   readonly buttonCssArraySignal = computed(() => {
     const config = this.configSignal();
@@ -28,7 +28,7 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
     }
 
     if (config?.fab) {
-      classes.push('mat-fab');
+      classes.push('fab-button');
     }
 
     return classes;
@@ -39,12 +39,13 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
   readonly spinnerSizeSignal = computed(() => {
     const config = this.configSignal();
     const buttonRef = this.buttonRef();
+
     const elem = buttonRef.nativeElement;
     const height = elem.clientHeight;
 
-    let size;
+    let size: Maybe<number>;
 
-    if (config) {
+    if (config != null) {
       if (config.fab || config.iconOnly) {
         size = height;
       } else {
@@ -69,6 +70,12 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
     return !(config?.fab || config?.iconOnly);
   });
 
+  readonly showTextButtonIconSignal = computed(() => {
+    const config = this.configSignal();
+    const showText = this.showTextSignal();
+    return showText && config?.buttonIcon; // shows the button icon with showing the text.
+  });
+
   readonly showIconSignal = computed(() => {
     const config = this.configSignal();
     return (
@@ -85,6 +92,6 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
 
   readonly customSpinnerStyleClassSignal = computed(() => {
     const hasCustomStyle = Boolean(this.customSpinnerStyleSignal());
-    return hasCustomStyle ? { 'dbx-spinner-custom': true } : undefined;
+    return hasCustomStyle ? { 'dbx-progress-spinner-custom': true } : undefined;
   });
 }
