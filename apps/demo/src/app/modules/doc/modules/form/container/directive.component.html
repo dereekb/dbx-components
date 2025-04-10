@@ -18,11 +18,15 @@
       <p>If the loading state has an error, the form is set to an empty value.</p>
       <doc-form-example-form #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$"></doc-form-example-form>
       <button mat-raised-button color="warn" (click)="b.resetForm()">Reset Form</button>
+
+      <h3>dbxFormLoadingSourceMode="always"</h3>
+      <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
+      <doc-form-example-form [dbxFormlyFields]="testFieldsD" [dbxFormLoadingSource]="loadingData$" dbxFormLoadingSourceMode="always"></doc-form-example-form>
     </doc-feature-example>
 
     <doc-feature-example header="dbxFormValueChange" hint="Emits form value changed events.">
       <p>If the form is complete, the value of the form is emitted, otherwise emits undefined.</p>
-      <doc-form-example-form [dbxFormlyFields]="testFieldsD" (dbxFormValueChange)="value = $event" [dbxFormSource]="data$"></doc-form-example-form>
+      <doc-form-example-form [dbxFormlyFields]="testFieldsE" (dbxFormValueChange)="value = $event" [dbxFormSource]="data$"></doc-form-example-form>
 
       <dbx-content-border>
         <p>Changed: {{ value | json }}</p>
@@ -31,7 +35,7 @@
     <doc-feature-example header="AbstractFormlyFormDirective" hint="This is the base directive most forms will extend from, or a subclass of this type.">
       <h3>Disabled</h3>
       <p>Disabled is an input on an AbstractFormlyFormDirective subclass and can be used to disable the form.</p>
-      <doc-form-example-form [dbxFormlyFields]="testFieldsD" [dbxFormSource]="data$" [disabled]="true"></doc-form-example-form>
+      <doc-form-example-form [dbxFormlyFields]="testFieldsF" [dbxFormSource]="data$" [disabled]="true"></doc-form-example-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

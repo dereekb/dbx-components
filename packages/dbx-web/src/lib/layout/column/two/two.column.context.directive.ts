@@ -1,6 +1,5 @@
-import { toObservable } from '@angular/core/rxjs-interop';
-import { Directive, OnInit, inject, input } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { Directive, OnInit, effect, inject, input } from '@angular/core';
+import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
 
 /**
@@ -11,11 +10,14 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.s
   providers: provideTwoColumnsContext(),
   standalone: true
 })
-export class DbxTwoColumnContextDirective implements OnInit {
+export class DbxTwoColumnContextDirective {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore, { self: true });
-  readonly showRight = input<boolean, Maybe<boolean | ''>>(false, { transform: (x) => Boolean(x) });
+  readonly showRight = input<Maybe<boolean>, Maybe<boolean | ''>>(undefined, { transform: isDefinedAndNotFalse });
 
-  ngOnInit(): void {
-    this.twoColumnsContextStore.setShowRight(toObservable(this.showRight));
-  }
+  protected readonly _showRightEffect = effect(
+    () => {
+      this.twoColumnsContextStore.setShowRightOverride(this.showRight());
+    },
+    { allowSignalWrites: true }
+  );
 }

@@ -172,6 +172,11 @@ export class DocInteractionButtonComponent {
     }
   };
 
+  spinnerButtonConfig6Fab: DbxProgressButtonConfig = {
+    ...this.spinnerButtonConfig6,
+    fab: true
+  };
+
   barButtonConfig: DbxProgressButtonConfig = {
     text: 'Stroked Button'
   };
@@ -228,6 +233,7 @@ export class DocInteractionButtonComponent {
   clickSpin5 = this.activateAndDeactivate('spinnerButtonConfig4');
   clickSpin6 = this.activateAndDeactivate('spinnerButtonConfig5');
   clickSpin7 = this.activateAndDeactivate('spinnerButtonConfig6');
+  clickSpin8 = this.activateAndDeactivate('spinnerButtonConfig6Fab');
 
   clickBar1 = () => {
     this.barButtonConfigWorkingState = true;

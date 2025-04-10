@@ -28,7 +28,7 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
     }
 
     if (config?.fab) {
-      classes.push('fab-button');
+      classes.push('dbx-progress-spinner-fab');
     }
 
     return classes;
@@ -46,15 +46,19 @@ export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDir
     let size: Maybe<number>;
 
     if (config != null) {
-      if (config.fab || config.iconOnly) {
-        size = height;
+      if (config.iconOnly) {
+        if (config.fab) {
+          size = 48;
+        } else {
+          size = height;
+        }
       } else {
         size = config.spinnerSize;
       }
     }
 
     if (!size) {
-      const minimumSpinnerSize = 18;
+      const minimumSpinnerSize = 24;
       const spinnerRatio = config?.spinnerRatio ?? 0.33;
       const targetSpinnerSize = height * Math.min(1, spinnerRatio);
       size = Math.min(height, Math.max(minimumSpinnerSize, targetSpinnerSize));

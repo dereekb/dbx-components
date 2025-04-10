@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 
 /**
@@ -12,7 +12,7 @@ import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-pac
 @Component({
   selector: 'dbx-two-block',
   template: `
-    <div #two class="dbx-two-block-content" [ngStyle]="{ '--dbx-two-block-top-height': topHeightSignal() }">
+    <div #two class="dbx-two-block-content" [ngStyle]="{ '--dbx-two-block-top-height': topHeightPixelsSignal() }">
       <div #top class="dbx-two-block-top" (resized)="viewResized($event)">
         <ng-content select="[top]"></ng-content>
       </div>
@@ -35,15 +35,11 @@ export class DbxTwoBlockComponent {
    */
   readonly fixedTop = input<boolean>(true);
 
-  // readonly twoElement = viewChild.required<ElementRef>('two');
   readonly topHeightSignal = signal<number>(0);
+  readonly topHeightPixelsSignal = computed(() => `${this.topHeightSignal()}px`);
 
   viewResized(event: ResizedEvent): void {
     const height = event.newRect.height;
     this.topHeightSignal.set(height);
-
-    // const element: HTMLElement = this.twoElement().nativeElement;
-
-    // element.style.setProperty('--dbx-two-block-top-height', `${height}px`);
   }
 }

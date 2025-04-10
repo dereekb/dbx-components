@@ -15,9 +15,12 @@ export class DbxTwoColumnSrefDirective {
 
   readonly dbxTwoColumnSref = input.required<Maybe<SegueRefOrSegueRefRouterLink>>();
 
-  protected readonly _dbxTwoColumnSrefEffect = effect(() => {
-    const sref = this.dbxTwoColumnSref();
-    const segueRef = sref ? asSegueRef(sref) : undefined;
-    this._twoColumnsContextStore.setBackRef(segueRef);
-  });
+  protected readonly _dbxTwoColumnSrefEffect = effect(
+    () => {
+      const sref = this.dbxTwoColumnSref();
+      const segueRef = sref ? asSegueRef(sref) : undefined;
+      this._twoColumnsContextStore.setBackRef(segueRef);
+    },
+    { allowSignalWrites: true }
+  );
 }

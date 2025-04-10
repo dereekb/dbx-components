@@ -1,6 +1,6 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, inject, input, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Observable } from 'rxjs';
+import { delay, Observable } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { type Maybe } from '@dereekb/util';
@@ -50,7 +50,7 @@ import { DbxAnchorComponent } from '../../../router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
+export class DbxTwoColumnRightComponent {
   readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
 
   readonly full = input<boolean>(false);
@@ -60,14 +60,19 @@ export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
   readonly showBack = input<boolean>(true);
 
   readonly alternativeBackRef$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
-  readonly alternativeBackRefSignal = toSignal(this.alternativeBackRef$);
+  readonly alternativeBackRefSignal = toSignal(this.alternativeBackRef$.pipe(delay(0)));
 
   /**
    * Minimum right-side width allowed in pixels.
    */
   readonly minRightWidth = input<Maybe<number>>();
 
-  private readonly _minRightWidthSub = new SubscriptionObject();
+  protected readonly _setMinRightWidthEffect = effect(
+    () => {
+      this.twoColumnsContextStore.setMinRightWidth(this.minRightWidth());
+    },
+    { allowSignalWrites: true }
+  );
 
   readonly showBackSignal = computed(() => {
     const showBack = this.showBack();
@@ -77,14 +82,8 @@ export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
     return showBack && !alternativeBackRef;
   });
 
-  ngOnInit(): void {
-    this._minRightWidthSub.subscription = this.twoColumnsContextStore.setMinRightWidth(toObservable(this.minRightWidth));
-  }
-
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.twoColumnsContextStore.setHasRight(true);
-    });
+  constructor() {
+    this.twoColumnsContextStore.setHasRight(true);
   }
 
   public backClicked(): void {

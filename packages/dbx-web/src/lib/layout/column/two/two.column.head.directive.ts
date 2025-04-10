@@ -7,7 +7,7 @@ import { type Maybe } from '@dereekb/util';
 @Directive({
   selector: 'dbx-two-column-head,[dbxTwoColumnHead],.dbx-two-column-head',
   host: {
-    class: 'd-block dbx-two-column-head',
+    class: 'd-flex dbx-two-column-head',
     '[class.d-block]': 'block()',
     '[class.full]': 'full()'
   },

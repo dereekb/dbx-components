@@ -31,6 +31,11 @@
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-button icon="settings" [iconOnly]="true" [working]="true"></dbx-button>
 
+      <h4>Icon Only - Fab</h4>
+      <dbx-button icon="settings" fab iconOnly></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button icon="settings" fab iconOnly [working]="true"></dbx-button>
+
       <h4>With Colors (and spinning/working)</h4>
       <div class="dbx-pb2">
         <dbx-button icon="settings" [color] text="Default Button"></dbx-button>
@@ -310,6 +315,10 @@
       <dbx-progress-spinner-button (btnClick)="clickSpin7()" [config]="spinnerButtonConfig6"></dbx-progress-spinner-button>
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-progress-spinner-button (btnClick)="clickSpin7()" [config]="spinnerButtonConfig6" [working]="true"></dbx-progress-spinner-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-progress-spinner-button (btnClick)="clickSpin8()" [config]="spinnerButtonConfig6Fab"></dbx-progress-spinner-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-progress-spinner-button (btnClick)="clickSpin8()" [config]="spinnerButtonConfig6Fab" [working]="true"></dbx-progress-spinner-button>
       <p></p>
       <dbx-progress-spinner-button (btnClick)="clickSpin6()" [config]="spinnerButtonConfig5">
         <div style="width: 400px; height: 200px">

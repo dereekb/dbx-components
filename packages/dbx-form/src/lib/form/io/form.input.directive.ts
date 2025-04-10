@@ -16,6 +16,7 @@ export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFo
     map((x) => x.state),
     distinctUntilChanged()
   );
+
   const mode$ = asObservable(modeObs).pipe(distinctUntilChanged());
 
   return combineLatest([mode$, value$]).pipe(
@@ -38,14 +39,14 @@ export function dbxFormSourceObservableFromStream<T>(streamObs: Observable<DbxFo
                     return [value, false] as [T, boolean];
                   }
                 }),
-                tap(([value, send]) => {
+                tap(([_, send]) => {
                   firstValueSent = true;
                   if (!send) {
                     doneSubject.next(undefined);
                   }
                 }),
-                filter(([value, send]) => send),
-                map((x) => x[0]),
+                filter(([_, send]) => send),
+                map(([value, _]) => value),
                 takeUntil(doneSubject),
                 cleanup(() => {
                   doneSubject.complete();

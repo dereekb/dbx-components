@@ -32,6 +32,8 @@ export class DocFormDirectiveComponent implements OnInit, OnDestroy {
   readonly testFieldsB: FormlyFieldConfig[] = this.testFields();
   readonly testFieldsC: FormlyFieldConfig[] = this.testFields();
   readonly testFieldsD: FormlyFieldConfig[] = this.testFields();
+  readonly testFieldsE: FormlyFieldConfig[] = this.testFields();
+  readonly testFieldsF: FormlyFieldConfig[] = this.testFields();
 
   ngOnInit(): void {
     this._sub.subscription = incrementingNumberTimer().subscribe((i) => {
