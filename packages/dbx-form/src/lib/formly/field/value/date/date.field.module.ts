@@ -28,7 +28,6 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
     DbxButtonModule,
     MatButtonModule,
     MatDatepickerModule,
-    MatNativeDateModule,
     MatMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,

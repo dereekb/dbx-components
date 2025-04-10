@@ -1,4 +1,4 @@
-import { inject, Directive, OnInit, OnDestroy, input, computed, signal } from '@angular/core';
+import { inject, Directive, OnInit, OnDestroy, input, computed, signal, Signal } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, combineLatest, Observable } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -28,8 +28,8 @@ const DBX_ACTION_AUTO_TRIGGER_INSTANT_TRIGGER_DEBOUNCE = 10;
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  readonly triggerDebounce = input<number, Maybe<number>>(DEFAULT_DEBOUNCE_MS, { transform: (x) => x ?? DEFAULT_DEBOUNCE_MS });
-  readonly triggerThrottle = input<number, Maybe<number>>(DEFAULT_THROTTLE_MS, { transform: (x) => x ?? DEFAULT_THROTTLE_MS });
+  readonly triggerDebounce = input<Maybe<number>>(undefined);
+  readonly triggerThrottle = input<Maybe<number>>(undefined);
   readonly triggerErrorThrottle = input<number, Maybe<number>>(DEFAULT_ERROR_THROTTLE_MS, { transform: (x) => x ?? DEFAULT_ERROR_THROTTLE_MS });
   readonly maxErrorsForThrottle = input<number, Maybe<number>>(MAX_ERRORS_TO_THROTTLE_ON, { transform: (x) => x ?? MAX_ERRORS_TO_THROTTLE_ON });
   readonly triggerLimit = input<Maybe<number>>();
@@ -38,9 +38,9 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
   readonly useInstantTriggerPreset = input<boolean, Maybe<string | boolean>>(false, { transform: isDefinedAndNotFalse });
 
   readonly triggerDebounceSignal = computed(() => {
-    let debounce = this.triggerDebounce() as number;
+    let debounce = this.triggerDebounce();
 
-    if (debounce === undefined) {
+    if (debounce == null) {
       const useFastTrigger = this.useFastTriggerPreset();
       const useInstantTrigger = this.useInstantTriggerPreset();
 
@@ -51,13 +51,13 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
       }
     }
 
-    return debounce;
+    return debounce ?? DEFAULT_DEBOUNCE_MS;
   });
 
-  readonly triggerThrottleSignal = computed(() => {
-    let throttle = this.triggerThrottle() as number;
+  readonly triggerThrottleSignal: Signal<number> = computed(() => {
+    let throttle = this.triggerThrottle();
 
-    if (throttle === undefined) {
+    if (throttle == null) {
       const useFastTrigger = this.useFastTriggerPreset();
       const useInstantTrigger = this.useInstantTriggerPreset();
 
@@ -68,7 +68,7 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
       }
     }
 
-    return throttle;
+    return throttle ?? DEFAULT_THROTTLE_MS;
   });
 
   readonly triggerCountSignal = signal<number>(0);

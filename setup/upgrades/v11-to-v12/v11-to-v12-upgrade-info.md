@@ -250,6 +250,7 @@ bootstrapApplication(UIView, appConfig)
 - Renamed `DbxButtonDisplayContent` to `DbxButtonDisplay` to be inline with the `buttonDisplay` input.
 - Updated inputs for `dbx-mapbox-layout`. Renamed `[opened]` to `[openDrawer]`, `[hasContent]` to `[forceHasDrawerContent]`, `(opened)` to `(drawerOpenedChange)`
 - Renamed `displayContentObs` in `DbxChecklistItemFieldProps` (and related config) to `displayContent`.
+- `valueFromLoadingState()` now always returns the value from the loading state, where as prior it was equivalent to `valueFromFinishedLoadingState()`, which only returned the value if the loading state was finished loading.
 
 #### Updating DbxList related views
 All views like this should consider being updated to standalone views. The template is still available, but now 

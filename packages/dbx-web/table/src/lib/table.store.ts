@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { beginLoading, filterMaybe, LoadingState, PageListLoadingState, valueFromLoadingState } from '@dereekb/rxjs';
+import { beginLoading, filterMaybe, LoadingState, PageListLoadingState, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of } from 'rxjs';
@@ -84,7 +84,8 @@ export class DbxTableStore<I = unknown, C = unknown, T = unknown> extends Compon
 
   readonly data$: Observable<DbxTableContextData<I, C, T>> = this.dataState$.pipe(
     //
-    valueFromLoadingState(),
+    valueFromFinishedLoadingState(),
+    filterMaybe(),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -99,7 +100,7 @@ export class DbxTableStore<I = unknown, C = unknown, T = unknown> extends Compon
     shareReplay(1)
   );
 
-  readonly items$: Observable<T[]> = this.itemsState$.pipe(valueFromLoadingState(), shareReplay(1));
+  readonly items$: Observable<T[]> = this.itemsState$.pipe(valueFromFinishedLoadingState(), filterMaybe(), shareReplay(1));
 
   // MARK: State Changes
   readonly setInput = this.updater((state, input: Maybe<I>) => ({ ...state, input }));

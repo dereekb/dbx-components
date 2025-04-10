@@ -1,4 +1,4 @@
-import { filterMaybe, LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState, WorkUsingContext } from '@dereekb/rxjs';
+import { filterMaybe, LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, Observable, combineLatest, of } from 'rxjs';
 import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -245,7 +245,11 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     shareReplay(1)
   );
 
-  readonly allOptionGroups$: Observable<SourceSelectDisplayValueGroup<T, M>[]> = this.allOptionGroupsState$.pipe(valueFromLoadingState(), shareReplay(1));
+  readonly allOptionGroups$: Observable<SourceSelectDisplayValueGroup<T, M>[]> = this.allOptionGroupsState$.pipe(
+    valueFromFinishedLoadingState(),
+    map((x) => x ?? []),
+    shareReplay(1)
+  );
 
   readonly options$: Observable<SourceSelectOptions<T, M>> = this.allOptionGroups$.pipe(
     map((x) => {

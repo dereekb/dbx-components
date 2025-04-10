@@ -27,7 +27,6 @@ import { DbxActionModule, DbxButtonModule, DbxLoadingModule } from '@dereekb/dbx
     MatSelectModule,
     MatButtonModule,
     MatDatepickerModule,
-    MatNativeDateModule,
     MatMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,
