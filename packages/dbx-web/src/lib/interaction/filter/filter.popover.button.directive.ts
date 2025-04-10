@@ -14,7 +14,6 @@ export type DbxFilterButtonConfigWithPresetFilter<F extends object, PF extends P
 @Directive()
 export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly popupService = inject(DbxPopoverService);
-
   readonly config = input<Maybe<DbxFilterComponentConfig<F, any, any, any>>>(undefined);
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {

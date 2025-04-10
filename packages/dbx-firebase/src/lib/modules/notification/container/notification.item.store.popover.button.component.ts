@@ -21,8 +21,13 @@ export class DbxFirebaseNotificationItemStorePopoverButtonComponent extends Abst
   private readonly _dbxPopoverService = inject(DbxPopoverService);
   private readonly _dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore, { optional: true });
 
-  readonly buttonElement = viewChild<ElementRef>('button');
+  readonly buttonElement = viewChild<string, Maybe<ElementRef>>('button', { read: ElementRef });
   readonly config = input<Maybe<Partial<DbxFirebaseNotificationItemStorePopoverButtonConfig>>>();
+
+  showNotificationsPopover(): void {
+    const origin = this.buttonElement()?.nativeElement;
+    this.showPopover(origin);
+  }
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
     const config = this.config();
@@ -39,10 +44,5 @@ export class DbxFirebaseNotificationItemStorePopoverButtonComponent extends Abst
       notificationItemsLoadingState$,
       ...config
     });
-  }
-
-  showNotificationsPopover(): void {
-    const origin = this.buttonElement();
-    this.showPopover(origin);
   }
 }

@@ -9,7 +9,7 @@ import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbo
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS, defaultValidationMessages } from '@dereekb/dbx-form';
+import { DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS, defaultValidationMessages, provideDbxForm, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
@@ -170,18 +170,7 @@ export const appConfig: ApplicationConfig = {
     // dbx-web extensions
     provideDbxModelService(),
     // dbx-form, form related
-    {
-      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
-      useValue: {
-        subscriptSizing: 'dynamic',
-        floatLabel: 'always',
-        appearance: 'outline'
-      }
-    },
-    {
-      provide: DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN,
-      useValue: DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS
-    },
+    provideDbxFormConfiguration(),
     // dbx-firebase
     provideDbxFirebase({
       app: {

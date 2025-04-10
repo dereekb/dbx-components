@@ -1,4 +1,4 @@
-import { OnDestroy, Directive, EventEmitter, Output, ElementRef } from '@angular/core';
+import { OnDestroy, Directive, EventEmitter, Output, ElementRef, output } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 
@@ -40,23 +40,14 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> exte
  */
 @Directive()
 export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unknown> extends AbstractPopoverRefDirective<T, R> implements OnDestroy {
-  @Output()
-  readonly popoverOpened = new EventEmitter<NgPopoverRef<T, R>>();
-
-  @Output()
-  readonly popoverClosed = new EventEmitter<NgPopoverCloseEvent<R>>();
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this.popoverClosed.complete();
-    this.popoverOpened.complete();
-  }
+  readonly popoverOpened = output<NgPopoverRef<T, R>>();
+  readonly popoverClosed = output<NgPopoverCloseEvent<R>>();
 
   protected override _afterOpened(popoverRef: NgPopoverRef<T, R>): void {
-    this.popoverOpened.next(popoverRef);
+    this.popoverOpened.emit(popoverRef);
   }
 
   protected override _afterClosed(event: NgPopoverCloseEvent<R>): void {
-    this.popoverClosed.next(event);
+    this.popoverClosed.emit(event);
   }
 }

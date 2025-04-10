@@ -18,12 +18,12 @@ const DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT: DbxButtonDisplay = {
   standalone: true
 })
 export class DbxFilterPopoverButtonComponent<F extends object = object> extends AbstractFilterPopoverButtonDirective<F> {
-  readonly buttonElement = viewChild<ElementRef>('button');
+  readonly buttonElement = viewChild<string, Maybe<ElementRef>>('button', { read: ElementRef });
   readonly disabled = input<Maybe<boolean>>();
   readonly buttonDisplay = input<DbxButtonDisplay, Maybe<DbxButtonDisplay>>(DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT, { transform: (x) => x ?? DEFAULT_FILTER_POPOVER_BUTTON_DISPLAY_CONTENT });
 
   showFilterPopover(): void {
-    const origin = this.buttonElement();
+    const origin = this.buttonElement()?.nativeElement;
     this.showPopover(origin);
   }
 }

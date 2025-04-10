@@ -28,5 +28,5 @@ export abstract class AbstractDbxFilterMapSourceDirective<F> extends AbstractDbx
 })
 export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapSourceDirective<F> implements FilterSource<F> {
   readonly dbxFilterMapSource = input<Maybe<FilterMapKey>>();
-  protected readonly _dbxFilterMapSourceEffect = effect(() => this.setFilterMapKey(this.dbxFilterMapSource()));
+  protected readonly _dbxFilterMapSourceEffect = effect(() => this.setFilterMapKey(this.dbxFilterMapSource()), { allowSignalWrites: true });
 }

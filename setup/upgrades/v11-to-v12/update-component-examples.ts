@@ -163,7 +163,7 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
 
   readonly block = input<Maybe<boolean>>();
 
-  readonly templateRef = viewChild<TemplateRef<unknown>>('content');
+  readonly templateRef = viewChild<string, Maybe<TemplateRef<unknown>>>('content', { read: TemplateRef });
   readonly templateRef$ = toObservable(this.templateRef).pipe(skipFirstMaybe(), shareReplay(1));
 
   readonly selectedClassSignal = computed(() => (this.selectedSignal() ? 'dbx-anchor-selected' : ''));

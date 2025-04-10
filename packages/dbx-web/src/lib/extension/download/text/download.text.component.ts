@@ -29,7 +29,7 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
   private readonly _matSnackbar = inject(MatSnackBar);
   private readonly _sanitizer = inject(DomSanitizer);
 
-  readonly downloadButton = viewChild<ElementRef>('downloadButton');
+  readonly downloadButton = viewChild<string, Maybe<ElementRef>>('downloadButton', { read: ElementRef });
 
   readonly loadingText = input<Maybe<string>>(undefined);
   readonly linear = input<Maybe<boolean>>(undefined);

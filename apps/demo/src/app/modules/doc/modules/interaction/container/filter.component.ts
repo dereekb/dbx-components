@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject } from '@angular/core';
 import { formatToDayRangeString, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
@@ -6,10 +6,12 @@ import { type Maybe } from '@dereekb/util';
 import { startOfDay } from 'date-fns';
 import { map, of, Observable } from 'rxjs';
 import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './filter.component.html',
-  providers: [FilterMap]
+  providers: [FilterMap],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionFilterComponent implements OnDestroy {
   readonly filterMap = inject(FilterMap<DocInteractionTestFilter>);
@@ -74,6 +76,12 @@ export class DocInteractionFilterComponent implements OnDestroy {
       return result;
     })
   );
+
+  readonly filterSignal = toSignal(this.filter$);
+  readonly menuFilterSignal = toSignal(this.menuFilter$);
+  readonly listFilterSignal = toSignal(this.listFilter$);
+  readonly displayForFilterSignal = toSignal(this.displayForFilter$);
+  readonly displayForDateFilterSignal = toSignal(this.displayForDateFilter$);
 
   constructor() {
     this.filterMap.addDefaultFilterObs(this.buttonFilterKey, of({}));

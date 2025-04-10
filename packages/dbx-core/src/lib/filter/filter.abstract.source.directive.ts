@@ -57,6 +57,7 @@ export abstract class AbstractFilterSourceDirective<F = unknown> implements Filt
 
   protected setDefaultFilter(defaultFilter: Observable<Maybe<F>>): void {
     this._defaultFilterSource.setDefaultFilter(defaultFilter);
+    console.log('Setting default filter: ', defaultFilter);
   }
 
   initWithFilter(filterObs: Observable<F>): void {

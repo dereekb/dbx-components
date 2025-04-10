@@ -80,6 +80,9 @@ export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithP
     const presetString = (preset as ClickableFilterPreset<F>).preset;
     const presetValue = (preset as ClickableFilterPreset<F>).presetValue || (preset as ClickablePartialFilterPreset<F>).partialPresetValue;
 
+    // emit before setting filter, as the view might be destroyed as a result of the filter being set
+    this.presetSelected.emit(preset);
+
     if (presetValue == null || (typeof presetValue !== 'function' && objectHasNoKeys(presetValue))) {
       // set and then reset if the value is null or empty
       this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
@@ -96,7 +99,5 @@ export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithP
 
       this.filterSourceDirective.setFilter(filter);
     }
-
-    this.presetSelected.emit(preset);
   }
 }

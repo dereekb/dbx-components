@@ -1,8 +1,8 @@
 import { switchMap, distinctUntilChanged, shareReplay, map, type Observable, BehaviorSubject, of, combineLatest, EMPTY, skip, defaultIfEmpty } from 'rxjs';
 import { type FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
-import { asObservable, type MaybeObservableOrValue, maybeValueFromObservableOrValue } from '../rxjs/getter';
-import { filterMaybe } from '../rxjs/value';
+import { asObservable, MaybeObservableOrValue } from '../rxjs/getter';
+import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
 import { type Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '../subscription';
 
@@ -20,14 +20,17 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   private readonly _initialFilterTakesPriority = new BehaviorSubject<boolean>(false);
 
   private readonly _filter = new BehaviorSubject<Maybe<F>>(undefined);
-  private readonly _initialFilter = new BehaviorSubject<MaybeObservableOrValue<F>>(undefined);
-  private readonly _defaultFilter = new BehaviorSubject<MaybeObservableOrValue<F>>(undefined);
 
-  readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(maybeValueFromObservableOrValue());
+  /**
+   * The initial filter can only pass through observables that always emit a value.
+   */
+  private readonly _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);
+  private readonly _defaultFilter = new BehaviorSubject<Maybe<Observable<Maybe<F>>>>(undefined);
+
+  readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(switchMapMaybeObs());
   readonly initialFilter$: Observable<Maybe<F>> = combineLatest([this._initialFilter, this._defaultFilter]).pipe(
     map(([a, b]) => a ?? b),
-    filterMaybe(), // observable or value should not be null/undefined
-    maybeValueFromObservableOrValue(),
+    switchMapMaybeObs(),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -58,7 +61,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     }
   }
 
-  initWithFilter(filterObs: MaybeObservableOrValue<F>): void {
+  initWithFilter(filterObs: Observable<F>): void {
     this._initialFilter.next(filterObs);
     this.initFilterTakesPriority();
   }
@@ -92,7 +95,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
           switchMap((clearFilterOnInitialFilterPush) => {
             if (clearFilterOnInitialFilterPush) {
               return this._initialFilter.pipe(
-                switchMap((x) => (x ? asObservable(x) : EMPTY)),
+                switchMap((x) => (x ? x : EMPTY)),
                 filterMaybe(),
                 map(() => true),
                 skip(1) // skip the first emission
