@@ -1,21 +1,27 @@
 <div class="dbx-source-select-field">
   <div class="dbx-source-select-field-content">
     <mat-select class="dbx-source-select-field-select" [id]="id" [formControl]="formControl" [multiple]="props.multiple">
-      <mat-option *ngFor="let value of nonGroupedValues$ | async" [value]="value.value">
-        {{ value.label }}
-      </mat-option>
-      <mat-optgroup *ngFor="let optionGroup of groupedOptions$ | async" [label]="optionGroup.label">
-        <mat-option *ngFor="let value of optionGroup.values" [value]="value.value">
+      @for (value of nonGroupedValuesSignal(); track value.value) {
+        <mat-option [value]="value.value">
           {{ value.label }}
         </mat-option>
-      </mat-optgroup>
+      }
+      @for (optionGroup of groupedOptionsSignal(); track optionGroup.label) {
+        <mat-optgroup [label]="optionGroup.label">
+          @for (value of optionGroup.values; track value.value) {
+            <mat-option [value]="value.value">
+              {{ value.label }}
+            </mat-option>
+          }
+        </mat-optgroup>
+      }
     </mat-select>
-    <ng-container *ngIf="showOpenSourceButton">
+    @if (showOpenSourceButton) {
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" class="dbx-source-select-field-button">
         <dbx-button #button dbxActionButton [iconOnly]="true" [icon]="selectButtonIcon"></dbx-button>
       </dbx-action>
-    </ng-container>
+    }
   </div>
   <dbx-loading class="dbx-source-select-field-loading" [linear]="true" [context]="context"></dbx-loading>
 </div>

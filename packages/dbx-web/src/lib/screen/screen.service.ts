@@ -46,15 +46,15 @@ export const DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG: DbxScreenMediaServiceConfig = 
 export class DbxScreenMediaService implements Destroyable {
   private readonly _media = inject(MediaMatcher);
 
-  private _microQuery: MediaQueryList;
-  private _smallQuery: MediaQueryList;
-  private _tabletQuery: MediaQueryList;
-  private _largeQuery: MediaQueryList;
+  private readonly _microQuery: MediaQueryList;
+  private readonly _smallQuery: MediaQueryList;
+  private readonly _tabletQuery: MediaQueryList;
+  private readonly _largeQuery: MediaQueryList;
 
-  private _tinyHeightQuery: MediaQueryList;
+  private readonly _tinyHeightQuery: MediaQueryList;
 
-  private _updateWidth = new Subject<void>();
-  private _updateHeight = new Subject<void>();
+  private readonly _updateWidth = new Subject<void>();
+  private readonly _updateHeight = new Subject<void>();
 
   readonly widthType$: Observable<ScreenMediaWidthType> = this._updateWidth.pipe(
     initialize(() => this._updateWidth.next()),

@@ -652,7 +652,7 @@ export interface DbxTwoColumnViewState {
   exportAs: 'columns',
   host: {
     class: 'dbx-two-column',
-    '[class]': "cssClassesSignal()"
+    '[class]': "cssClassSignal()"
   },
   imports: [AngularResizeEventModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -668,7 +668,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
   readonly viewSignal = signal<DbxTwoColumnViewState>({ showRight: false, showFullLeft: true, hideLeftColumn: false, reverseSizing: false, inSectionPage: false });
 
-  readonly cssClassesSignal = computed(() => {
+  readonly cssClassSignal = computed(() => {
     const { showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage } = this.viewSignal();
     return { 'right-shown': showRight, 'full-left': showFullLeft, 'hide-left-column': hideLeftColumn, 'two-column-reverse-sizing': reverseSizing, 'dbx-section-page-two': inSectionPage };
   });

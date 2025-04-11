@@ -44,7 +44,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     return completeConfig;
   });
 
-  readonly baseCssClassesSignal = computed(() => {
+  readonly baseCssClassSignal = computed(() => {
     const config = this.configSignal();
     const classes: CssClass[] = [config?.customClass ?? ''];
 
@@ -88,7 +88,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     return classes;
   });
 
-  readonly baseCssClasses$ = toObservable(this.baseCssClassesSignal);
+  readonly baseCssClasses$ = toObservable(this.baseCssClassSignal);
 
   readonly workingSignal = computed(() => (this.working() || this.configSignal()?.working) ?? false);
   readonly disabledSignal = computed(() => (this.disabled() || this.configSignal()?.disabled) ?? false);

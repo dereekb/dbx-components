@@ -52,7 +52,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
   `,
   host: {
     class: 'dbx-list-view-group',
-    '[class]': 'cssClassesSignal()'
+    '[class]': 'cssClassSignal()'
   },
   standalone: true,
   imports: [DbxInjectionComponent, DbxAnchorComponent, MatListItem, MatIcon],
@@ -67,7 +67,7 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
   readonly itemsSignal = computed(() => this.group()?.items ?? []);
   readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
   readonly footerConfigSignal = computed(() => this.group()?.footerConfig);
-  readonly cssClassesSignal = computed(() => spaceSeparatedCssClasses(this.group()?.cssClasses));
+  readonly cssClassSignal = computed(() => spaceSeparatedCssClasses(this.group()?.cssClasses));
 
   onClickItem(item: I) {
     this.dbxValueListViewContentComponent.onClickItem(item);

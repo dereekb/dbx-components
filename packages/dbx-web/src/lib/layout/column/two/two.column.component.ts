@@ -45,7 +45,7 @@ export interface DbxTwoColumnViewState {
   exportAs: 'columns',
   host: {
     class: 'dbx-two-column',
-    '[class]': 'cssClassesSignal()'
+    '[class]': 'cssClassSignal()'
   },
   imports: [AngularResizeEventModule, DbxContentContainerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,7 +81,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
     map(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]) => ({ 'right-shown': showRight, 'full-left': showFullLeft, 'hide-left-column': hideLeftColumn, 'two-column-reverse-sizing': reverseSizing, 'dbx-section-page-two': inSectionPage }))
   );
 
-  readonly cssClassesSignal = toSignal(this.cssClasses$);
+  readonly cssClassSignal = toSignal(this.cssClasses$);
 
   protected readonly _reverseSizingEffect = effect(
     () => {

@@ -69,7 +69,7 @@ export interface SourceSelectOpenFunctionParams {
   /**
    * Origin of the button for the SourceSelect
    */
-  origin: ElementRef;
+  readonly origin: ElementRef;
 }
 
 /**
