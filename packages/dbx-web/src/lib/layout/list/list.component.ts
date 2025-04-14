@@ -2,7 +2,7 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, first, distinctUntilChanged } from 'rxjs';
 import { Component, OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext } from '@dereekb/rxjs';
+import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, tapLog, switchMapFilterMaybe, switchMapMaybe } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -128,6 +128,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
    */
   readonly padded = input<boolean>(true);
 
+  readonly state = input<Maybe<Observable<Maybe<S>>>>(undefined);
   readonly config = input<Maybe<DbxListConfig<T, V>>>(undefined);
 
   readonly disabled = input<Maybe<boolean>>(false);
@@ -145,7 +146,8 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   private readonly _selectionModeSub = new SubscriptionObject();
   private readonly _onSelectionChangeSub = new SubscriptionObject();
 
-  readonly context = listLoadingStateContext<T, S>({ showLoadingOnNoValue: false });
+  readonly currentState$: Observable<Maybe<S>> = toObservable(this.state).pipe(switchMapMaybe(), tapLog('state'));
+  readonly context = listLoadingStateContext<T, S>({ obs: this.currentState$, showLoadingOnNoValue: false });
 
   readonly isEmpty$ = this.context.isEmpty$;
   readonly isEmptyLoading$ = this.context.isEmptyLoading$;
@@ -157,6 +159,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   readonly selectionMode$ = toObservable(this.selectionMode).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly hideOnEmpty$: Observable<boolean> = this.config$.pipe(
@@ -262,6 +265,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   );
 
   readonly hideContent$: Observable<boolean> = this.context.currentStateStream$.pipe(
+    tapLog('current stream state'),
     switchMap(() =>
       this.context.state$.pipe(
         filter((x) => isLoadingStateFinishedLoading(x)),
@@ -281,6 +285,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
       }
     }),
     distinctUntilChanged(),
+    tapLog('hide content'),
     shareReplay(1)
   );
 

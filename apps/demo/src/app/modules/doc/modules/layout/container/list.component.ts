@@ -1,7 +1,7 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
 import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListTitleGroupTitleDelegate } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
-import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
+import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading, tapLog } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
@@ -22,7 +22,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   selectionState?: ListSelectionState<DocValue>;
 
   private _values = new BehaviorSubject<DocValue[]>([]);
-  private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
+  private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>('view');
 
   readonly selectionMode$ = this._selectionMode.asObservable();
 
@@ -41,7 +41,8 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
             return item;
           })
       })
-    )
+    ),
+    tapLog('stateWithSelection$')
   );
 
   readonly stateWithAnchors$: Observable<ListLoadingState<CustomDocValue>> = this.state$.pipe(

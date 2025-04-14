@@ -7,7 +7,7 @@ import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
 import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
-import { asObservable } from '@dereekb/rxjs';
+import { asObservable, tapLog } from '@dereekb/rxjs';
 import { MatListItem, MatNavList } from '@angular/material/list';
 import { MatIcon } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
@@ -28,7 +28,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
           <dbx-injection [config]="headerConfigSignal()"></dbx-injection>
         </div>
       }
-      @for (item of itemsSignal(); track trackByFunctionSignal()?.($index, item)) {
+      @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
         <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
           <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
             @if (item.icon) {
@@ -62,7 +62,7 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
   readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);
   readonly group = input<Maybe<DbxValueListItemGroup<G, T, I>>>();
 
-  readonly trackByFunctionSignal = toSignal(this.dbxValueListViewContentComponent.trackBy$);
+  readonly trackByFunctionSignal = toSignal(this.dbxValueListViewContentComponent.trackBy$, { initialValue: DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION });
 
   readonly itemsSignal = computed(() => this.group()?.items ?? []);
   readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
@@ -115,7 +115,9 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly emitAllClicks = input<Maybe<boolean>>();
 
   readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
+    tapLog('items'),
     switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
+    tapLog('groups'),
     shareReplay(1)
   );
 

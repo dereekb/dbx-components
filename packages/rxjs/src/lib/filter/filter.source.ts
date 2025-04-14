@@ -2,7 +2,7 @@ import { switchMap, distinctUntilChanged, shareReplay, map, type Observable, Beh
 import { type FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
 import { asObservable, MaybeObservableOrValue } from '../rxjs/getter';
-import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
+import { switchMapFilterMaybe, filterMaybe } from '../rxjs/value';
 import { type Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '../subscription';
 
@@ -27,10 +27,10 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   private readonly _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);
   private readonly _defaultFilter = new BehaviorSubject<Maybe<Observable<Maybe<F>>>>(undefined);
 
-  readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(switchMapMaybeObs());
+  readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(switchMapFilterMaybe());
   readonly initialFilter$: Observable<Maybe<F>> = combineLatest([this._initialFilter, this._defaultFilter]).pipe(
     map(([a, b]) => a ?? b),
-    switchMapMaybeObs(),
+    switchMapFilterMaybe(),
     distinctUntilChanged(),
     shareReplay(1)
   );

@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, Type } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
-import { distinctUntilHasDifferentValues, filterMaybe, ListLoadingState, SubscriptionObject, switchMapMaybeObs } from '@dereekb/rxjs';
+import { distinctUntilHasDifferentValues, filterMaybe, ListLoadingState, SubscriptionObject, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory, Maybe, PrimativeKey, ReadKeyFunction, readKeysFrom } from '@dereekb/util';
 import { FormlyFieldProps, FieldType, FieldTypeConfig } from '@ngx-formly/core';
 import { map, Observable, shareReplay, BehaviorSubject, startWith, switchMap } from 'rxjs';
@@ -43,7 +43,7 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
   readonly values$: Observable<K[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
   private _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
-  readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapMaybeObs());
+  readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapFilterMaybe());
   readonly config$: Observable<DbxInjectionComponentConfig<C>> = this.listComponentClass$.pipe(
     map((componentClass) => {
       const loadMore = this.loadMore;

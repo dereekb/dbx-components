@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type, inject, signal } from '@angular/core';
 import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { ObservableOrValue, switchMapMaybeObs } from '@dereekb/rxjs';
+import { ObservableOrValue, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, Observable } from 'rxjs';
 import { ValidationErrors, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { FieldType, FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
@@ -56,7 +56,7 @@ export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProp
 export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<FieldTypeConfig<DbxChecklistItemFieldProps<T>>> implements OnInit {
   private readonly _displayContentObs = signal<Maybe<Observable<ChecklistItemDisplayContent<T>>>>(undefined);
 
-  readonly displayContent$: Observable<ChecklistItemDisplayContent<T>> = toObservable(this._displayContentObs).pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
+  readonly displayContent$: Observable<ChecklistItemDisplayContent<T>> = toObservable(this._displayContentObs).pipe(switchMapFilterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   readonly anchor$ = this.displayContent$.pipe(
     map((x: ChecklistItemDisplayContent<T>) => x.anchor),

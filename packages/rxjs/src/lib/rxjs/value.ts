@@ -229,13 +229,25 @@ export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: May
  *
  * @returns
  */
-export function switchMapMaybeObs<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, T> {
+export function switchMapFilterMaybe<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, T> {
   return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
     const subscriber: Observable<T> = source.pipe(
       filterMaybe(),
       switchMap((x) => x)
     ) as Observable<T>;
 
+    return subscriber;
+  };
+}
+
+/**
+ * Converts a Maybe<Observable<Maybe<T>>> to an Observable<Maybe<T>> that emits null/undefined if the input observable is also null/undefined.
+ *
+ * @returns
+ */
+export function switchMapMaybe<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
+  return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
+    const subscriber: Observable<Maybe<T>> = source.pipe(switchMap((x) => (x != null ? x : of(undefined)))) as Observable<Maybe<T>>;
     return subscriber;
   };
 }
@@ -292,3 +304,9 @@ export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<numbe
 export function emitAfterDelay<T>(value: T, delayTime: number): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => obs.pipe(switchMap((x) => of(value).pipe(delay(delayTime), startWith(x))));
 }
+
+// MARK: Compat
+/**
+ * @deprecated use switchMapFilterMaybe instead.
+ */
+const switchMapMaybeObs = switchMapFilterMaybe;

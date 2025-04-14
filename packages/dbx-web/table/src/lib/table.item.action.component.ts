@@ -4,7 +4,7 @@ import { map, distinctUntilChanged, switchMap, of, Observable } from 'rxjs';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeObs } from '@dereekb/rxjs';
+import { MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapFilterMaybe } from '@dereekb/rxjs';
 
 @Component({
   selector: 'dbx-table-item-action',

@@ -1,4 +1,4 @@
-import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
+import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue, tapLog } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
 import { OnDestroy, Directive, Component, ChangeDetectionStrategy, input, output, computed, Signal } from '@angular/core';
 import { DbxListComponent, DbxListConfig } from './list.component';
@@ -7,23 +7,10 @@ import { Configurable, type Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
-export const DEFAULT_STATIC_LIST_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
-  template: `
-  <dbx-list [config]="config">
-    <ng-content top select="[top]"></ng-content>
-    <ng-content bottom select="[bottom]"></ng-content>
-    <ng-content empty select="[empty]"></ng-content>
-    <ng-content emptyLoading select="[emptyLoading]"></ng-content>
-  </dbx-list>
-  `,
-  imports: [DbxListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
-};
-
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
   template: `
-  <dbx-list [config]="configSignal()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
+  <dbx-list [state]="currentState$" [config]="configSignal()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
     <ng-content top select="[top]"></ng-content>
     <ng-content bottom select="[bottom]"></ng-content>
     <ng-content empty select="[empty]"></ng-content>
@@ -60,6 +47,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   });
 
   readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state), toObservable(this.deprecatedInputState$)]).pipe(
+    tapLog('xxx'),
     map(([stateOverride, state, state$]) => stateOverride ?? state ?? state$),
     maybeValueFromObservableOrValue(),
     shareReplay(1)
@@ -115,11 +103,6 @@ export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxL
 }
 
 // MARK: COMPAT
-/**
- * @deprecated update components to use DEFAULT_STATIC_LIST_COMPONENT_CONFIGURATION instead of just referencing only the template.
- */
-export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = DEFAULT_STATIC_LIST_COMPONENT_CONFIGURATION.template;
-
 /**
  * @deprecated update components to use DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION instead of just referencing only the template.
  */

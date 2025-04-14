@@ -71,7 +71,7 @@ export interface LoadingStateContextConfig<T = unknown, S extends LoadingState<T
   /**
    * The initial observable.
    */
-  readonly obs?: Observable<Maybe<S>>;
+  readonly obs?: Maybe<Observable<Maybe<S>>>;
   /**
    * Whether or not to show loading if finished loading and the value is undefined.
    *
@@ -132,7 +132,6 @@ export function loadingStateContext<T = unknown, S extends LoadingState<T> = Loa
   const _config: Maybe<LoadingStateContextConfig<T, S, E>> = input && isObservable(input) ? { obs: input } : input;
   const loadingEventForLoadingPair = _config?.loadingEventForLoadingPair ?? DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION;
   const showLoadingOnUndefinedValue = _config?.showLoadingOnUndefinedValue ?? _config?.showLoadingOnNoValue ?? false;
-  const config: LoadingStateContextConfig<T, S, E> = _config ?? {};
 
   const _stateStream = new BehaviorSubject<Maybe<Observable<Maybe<S>>>>(_config?.obs);
 

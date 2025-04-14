@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, startOfDay, addDays } from 'date-fns';
-import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs } from '@dereekb/rxjs';
+import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { DateTimePreset, DateTimePresetConfiguration, dateTimePreset } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeIsSameDateTimeFieldValue, dbxDateTimeOutputValueFactory } from './date.value';
@@ -420,7 +420,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     if (dateValuesOnly) {
       return DbxDateTimeFieldTimeMode.NONE;
     } else {
-      return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
+      return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED);
     }
   }
 
@@ -593,7 +593,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly dateTimePickerConfig$: Observable<Maybe<DbxDateTimePickerConfiguration>> = combineLatest([this._config.pipe(switchMapMaybeObs()), this.syncConfigBeforeValue$, this.syncConfigAfterValue$]).pipe(
+  readonly dateTimePickerConfig$: Observable<Maybe<DbxDateTimePickerConfiguration>> = combineLatest([this._config.pipe(switchMapFilterMaybe()), this.syncConfigBeforeValue$, this.syncConfigAfterValue$]).pipe(
     map(([x, dateInputMin, dateInputMax]) => {
       let result: Maybe<DbxDateTimePickerConfiguration> = x;
 
@@ -708,7 +708,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   );
 
   readonly presets$: Observable<DateTimePreset[]> = this._presets.pipe(
-    switchMapMaybeObs(),
+    switchMapFilterMaybe(),
     map((x: DateTimePresetConfiguration[]) => x.map(dateTimePreset)),
     shareReplay(1)
   );

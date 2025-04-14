@@ -5,7 +5,7 @@ import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Ob
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
-import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
+import { scanCount, switchMapFilterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, iterablesAreSetEquivalent, type Maybe } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -52,7 +52,7 @@ export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective impleme
   model: T = {} as T;
   options: FormlyFormOptions = {};
 
-  readonly fields$ = this._fields.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
+  readonly fields$ = this._fields.pipe(switchMapFilterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   readonly stream$: Observable<DbxFormEvent> = this._reset.pipe(
     switchMap((lastResetAt) =>
