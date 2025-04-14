@@ -11,7 +11,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxFilterComponentConfig } from './filter.config';
 import { DbxPopoverInteractionModule } from '../popover';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '../../button';
+import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 
 export interface DbxFilterPopoverComponentConfig<F extends object = object> extends DbxFilterComponentConfig<F> {
   /**

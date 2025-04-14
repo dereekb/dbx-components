@@ -4,7 +4,7 @@ import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextO
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { DbxAnchorComponent } from '../../router';
+import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
 

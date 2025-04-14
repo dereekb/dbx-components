@@ -6,9 +6,10 @@ import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
 import { AbstractSubscriptionDirective, DbxActionDirective, DbxActionValueStreamDirective, DbxActionSuccessHandlerFunction, DbxActionSourceDirective, DbxActionSuccessHandlerDirective } from '@dereekb/dbx-core';
 import { NgClass } from '@angular/common';
-import { DbxButtonComponent, DbxButtonSpacerDirective } from '../../button';
+import { DbxButtonComponent } from '../../button/button.component';
+import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxSpacerDirective } from '../../layout';
+import { DbxSpacerDirective } from '../../layout/style/spacer.directive';
 
 /**
  * Component for a snackbar that contains an action.

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { AbstractDbxActionHandlerDirective, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxButtonModule } from '../../button';
+import { DbxButtonModule } from '../../button/button.module';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { WorkInstance } from '@dereekb/rxjs';
 

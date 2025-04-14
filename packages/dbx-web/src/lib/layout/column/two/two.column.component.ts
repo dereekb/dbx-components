@@ -4,9 +4,7 @@ import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-pac
 import { Observable, combineLatest, delay, distinct, distinctUntilChanged, map, throttleTime } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { DbxContentContainerDirective } from '../../content';
-import { de } from 'date-fns/locale';
-import { tapLog } from '@dereekb/rxjs';
+import { DbxContentContainerDirective } from '../../content/content.container.directive';
 import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
 
 export interface DbxTwoColumnViewState {

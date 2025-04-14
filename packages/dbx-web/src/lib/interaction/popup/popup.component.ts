@@ -1,7 +1,8 @@
 import { Component, Type, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe, PixelsString } from '@dereekb/util';
-import { CompactMode, CompactContextStore } from '../../layout';
+import { CompactContextStore } from '../../layout/compact/compact.store';
+import { CompactMode } from '../../layout/compact/compact';
 import { BehaviorSubject, Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
 import { AbstractTransitionWatcherDirective, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';

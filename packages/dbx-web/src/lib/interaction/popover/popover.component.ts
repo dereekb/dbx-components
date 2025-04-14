@@ -10,7 +10,7 @@ import { asPromise, Maybe, PromiseOrValue, SpaceSeparatedCssClasses } from '@der
 import { DbxPopoverController, DbxPopoverKey } from './popover';
 import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { DbxWindowKeyDownListenerDirective } from '../../keypress';
-import { DbxStyleDirective } from '../../layout';
+import { DbxStyleDirective } from '../../layout/style/style.directive';
 
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
   getClosingValueFn?: (value?: I) => Promise<O>;

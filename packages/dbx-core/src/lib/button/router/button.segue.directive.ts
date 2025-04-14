@@ -1,10 +1,11 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../subscription';
+import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
 import { shareReplay, distinctUntilChanged, switchMap, tap, BehaviorSubject } from 'rxjs';
 import { DbxButton } from '../button';
-import { SegueRef, DbxRouterService } from '../../router';
+import { DbxRouterService } from '../../router/router/service/router.service';
+import { SegueRef } from '../../router/segue';
 
 // MARK: Button Directives
 @Directive({

@@ -13,7 +13,7 @@ import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
 import { addDays } from 'date-fns';
-import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from '../../auth';
+import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from '../../auth/auth.service.error';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   a: { roles: [AUTH_ADMIN_ROLE] }
