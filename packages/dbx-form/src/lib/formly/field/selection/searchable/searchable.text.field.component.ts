@@ -1,37 +1,43 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { ChangeDetectionStrategy, Component, computed, OnDestroy, OnInit } from '@angular/core';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent, MatOption } from '@angular/material/autocomplete';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
-import { map, shareReplay, skipWhile, distinctUntilChanged } from 'rxjs';
-import { tapDetectChanges } from '@dereekb/dbx-core';
-import { PrimativeKey } from '@dereekb/util';
+import { map, shareReplay } from 'rxjs';
+import { Maybe, PrimativeKey } from '@dereekb/util';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIcon } from '@angular/material/icon';
+import { DbxLoadingModule } from '@dereekb/dbx-web';
+import { DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.autocomplete.item.component';
+import { NgClass } from '@angular/common';
+import { MatInput } from '@angular/material/input';
+import { MatOptionModule } from '@angular/material/core';
+import { SearchableValueFieldDisplayValue } from './searchable';
 
 export interface SearchableTextValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldProps<T, M, H> {
-  showSelectedValue?: boolean;
+  readonly showSelectedValue?: boolean;
 }
 
 /**
  * Display component for selecting a single item/value.
  */
 @Component({
-  templateUrl: 'searchable.text.field.component.html'
+  templateUrl: 'searchable.text.field.component.html',
+  imports: [FormsModule, MatInput, NgClass, ReactiveFormsModule, DbxLoadingModule, MatOptionModule, MatAutocompleteModule, MatChipsModule, MatIcon, DbxSearchableFieldAutocompleteItemComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxSearchableTextFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableTextValueFieldsFieldProps<T, M, H>> implements OnInit, OnDestroy {
   override allowSyncValueToInput = true;
 
   readonly selectedDisplayValue$ = this.displayValues$.pipe(
     map((x) => x[0]),
-    shareReplay(1),
-    tapDetectChanges(this.cdRef)
+    shareReplay(1)
   );
 
-  readonly hasValue$ = this.selectedDisplayValue$.pipe(map((x) => Boolean(x)));
-  readonly showSelectedDisplayValue$ = this.selectedDisplayValue$.pipe(
-    map((x) => this.showSelectedValue && Boolean(x)),
-    distinctUntilChanged(),
-    shareReplay(1),
-    tapDetectChanges(this.cdRef)
-  );
+  readonly selectedDisplayValueSignal = toSignal(this.selectedDisplayValue$);
+  readonly hasValueSignal = computed(() => Boolean(this.selectedDisplayValueSignal()));
+  readonly showSelectedDisplayValueSignal = computed(() => this.showSelectedValue && this.hasValueSignal());
 
   override get searchableField(): SearchableTextValueFieldsFieldProps<T, M, H> {
     return this.props;
@@ -45,6 +51,7 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
     return false;
   }
 
+  /*
   private _clearInputSub = new SubscriptionObject();
 
   override ngOnInit(): void {
@@ -61,8 +68,17 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
     super.ngOnDestroy();
     this._clearInputSub.destroy();
   }
+  */
 
   selected(event: MatAutocompleteSelectedEvent): void {
-    this.addWithDisplayValue(event.option.value);
+    const value = event.option.value as SearchableValueFieldDisplayValue<T> | { _ignore?: true } | { _clear?: true };
+
+    console.log('selected', value);
+
+    if ((value as any)._clear) {
+      this.clearValues();
+    } else if (!(value as any)._ignore) {
+      this.addWithDisplayValue(value as SearchableValueFieldDisplayValue<T>);
+    }
   }
 }

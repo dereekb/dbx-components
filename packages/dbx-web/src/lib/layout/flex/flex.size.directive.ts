@@ -12,8 +12,6 @@ import { DbxFlexSize } from './flex';
   standalone: true
 })
 export class DbxFlexSizeDirective {
-
   readonly dbxFlexSize = input.required<DbxFlexSize>();
   readonly cssClassSignal = computed(() => `dbx-flex-${this.dbxFlexSize()}`);
-
 }

@@ -7,7 +7,7 @@ export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValu
   /**
    * Optional anchor metadata on the field.
    */
-  anchor?: ClickableAnchor;
+  readonly anchor?: ClickableAnchor;
 }
 
 /**
@@ -17,11 +17,11 @@ export interface SearchableValueFieldDisplayValue<T, M = unknown> extends Select
   /**
    * Display override configuration
    */
-  display?: Partial<DbxInjectionComponentConfig>;
+  readonly display?: Partial<DbxInjectionComponentConfig>;
 }
 
 export interface ConfiguredSearchableValueFieldDisplayValue<T, M = unknown> extends Omit<SearchableValueFieldDisplayValue<T, M>, 'display'> {
-  display: DbxInjectionComponentConfig;
+  readonly display: DbxInjectionComponentConfig;
 }
 
 /**

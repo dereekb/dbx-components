@@ -19,7 +19,7 @@
     @if (showOpenSourceButton) {
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" class="dbx-source-select-field-button">
-        <dbx-button #button dbxActionButton [iconOnly]="true" [icon]="selectButtonIcon"></dbx-button>
+        <dbx-button #button dbxActionButton [fab]="true" [iconOnly]="true" [icon]="selectButtonIcon"></dbx-button>
       </dbx-action>
     }
   </div>

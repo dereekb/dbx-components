@@ -1,7 +1,7 @@
-import { ArrayOrValue, Maybe, convertMaybeToArray, lastValue, PrimativeKey, separateValues, asArray, filterUniqueValues } from '@dereekb/util';
+import { ArrayOrValue, Maybe, convertMaybeToArray, lastValue, PrimativeKey, separateValues, asArray, filterUniqueValues, Configurable } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
-import { filterMaybe, SubscriptionObject, LoadingState, successResult, startWithBeginLoading, loadingStateContext } from '@dereekb/rxjs';
-import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { filterMaybe, SubscriptionObject, LoadingState, successResult, startWithBeginLoading, loadingStateContext, isLoadingStateInLoadingState } from '@dereekb/rxjs';
+import { Directive, ElementRef, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
@@ -9,76 +9,79 @@ import { debounceTime, distinctUntilChanged, first, map, mergeMap, shareReplay, 
 import { SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableValueFieldAnchorFn, ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
 import { camelCase } from 'change-case';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface StringValueFieldsFieldProps extends FormlyFieldProps {
   /**
    * Custom input validators.
    */
-  textInputValidator?: ValidatorFn | ValidatorFn[];
+  readonly textInputValidator?: ValidatorFn | ValidatorFn[];
 }
 
 export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldProps, StringValueFieldsFieldProps {
   /**
    * Whether or not to allow string values to be used directly, or if values can only be chosen from searching.
    */
-  allowStringValues?: boolean;
+  readonly allowStringValues?: boolean;
   /**
    * Whether or not to set/get values as an array or a single value. If set false, multiSelect is ignored.
    */
-  asArrayValue?: boolean;
+  readonly asArrayValue?: boolean;
   /**
    * Optional conversion function. If provided, allowStringValues is considered true.
    */
-  convertStringValue?: (text: string) => T;
+  readonly convertStringValue?: (text: string) => T;
   /**
    * Used for hashing display values and omitting repeat values.
    *
    * If hashForValue is not provided, the value's value will be used as is.
    */
-  hashForValue?: SearchableValueFieldHashFn<T, H>;
+  readonly hashForValue?: SearchableValueFieldHashFn<T, H>;
   /**
    * Performs a search.
    */
-  search: SearchableValueFieldStringSearchFn<T, M>;
+  readonly search: SearchableValueFieldStringSearchFn<T, M>;
   /**
    * Whether or not to allow searches on empty text. Is false by default.
    */
-  searchOnEmptyText?: boolean;
+  readonly searchOnEmptyText?: boolean;
   /**
    * Default injected config to use for display values.
    */
-  display?: Partial<DbxInjectionComponentConfig>;
+  readonly display?: Partial<DbxInjectionComponentConfig>;
   /**
    * Used for building a display value given the input.
    */
-  displayForValue: SearchableValueFieldDisplayFn<T, M>;
+  readonly displayForValue: SearchableValueFieldDisplayFn<T, M>;
   /**
    * Whether or not to use the anchor field on value elements.
    *
    * This has no default effect if a component class is provided.
    */
-  useAnchor?: boolean;
+  readonly useAnchor?: boolean;
   /**
    * Used for retrieving an anchor value for values that have no anchor value set.
    *
    * Only used when useAnchor is true.
    */
-  anchorForValue?: SearchableValueFieldAnchorFn<T, M>;
+  readonly anchorForValue?: SearchableValueFieldAnchorFn<T, M>;
   /**
    * Whether or not to show "Clear" in the autcomplete list.
    */
-  showClearValue?: boolean;
+  readonly showClearValue?: boolean;
   /**
    * Label for the search input.
    *
    * Defaults to "Search"
    */
-  searchLabel?: string;
+  readonly searchLabel?: string;
   /**
    * (Optional) observable that will trigger the clearing of all cached display values.
    */
-  refreshDisplayValues$?: Observable<unknown>;
+  readonly refreshDisplayValues$?: Observable<unknown>;
 }
+
+const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';
 
 /**
  * Abstract searchable field that provides a feature for searching for values, and for displaying values using Observables.
@@ -87,25 +90,27 @@ export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends Prima
  */
 @Directive()
 export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFieldProps<T, M, H> = SearchableValueFieldsFieldProps<T, M, H>> extends FieldType<FieldTypeConfig<C>> implements OnInit, OnDestroy {
-  readonly cdRef = inject(ChangeDetectorRef);
-
-  /**
-   * Whether or not to allow syncing to
-   */
-  allowSyncValueToInput = false;
-
   /**
    * Whether or not to set/get values as an array.
    */
   abstract get multiSelect(): boolean;
 
   /**
+   * Optional override set by the parent class for whether or not to allow the current value to sync to the input.
+   */
+  allowSyncValueToInput = false;
+
+  /**
    * Optional override set by the parent class for picking a default display for this directive.
    */
   defaultDisplay?: DbxInjectionComponentConfig;
 
-  @ViewChild('textInput')
-  textInput!: ElementRef<HTMLInputElement>;
+  /**
+   * Default placeholder text to use when searchOnEmptyText is false.
+   */
+  defaultSearchInputPlaceholder?: Maybe<string> = DEFAULT_SEARCH_INPUT_PLACEHOLDER;
+
+  readonly textInput = viewChild<string, ElementRef<HTMLInputElement>>('textInput', { read: ElementRef<HTMLInputElement> });
 
   readonly inputCtrl = new FormControl<string>('');
 
@@ -119,6 +124,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     startWith(this.inputCtrl.value),
     map((x) => x || '')
   );
+
   readonly inputValueString$: Observable<string> = this.inputValue$.pipe(debounceTime(200), distinctUntilChanged());
 
   readonly searchResultsState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.inputValueString$.pipe(
@@ -135,8 +141,11 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   private readonly _singleValueSyncSubscription = new SubscriptionObject();
 
   readonly searchContext = loadingStateContext({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
-
-  readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(map((x) => x?.value ?? []));
+  readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(
+    map((x) => x?.value ?? []),
+    shareReplay(1)
+  );
+  readonly isLoadingSearchResults$: Observable<boolean> = this.searchResultsState$.pipe(map(isLoadingStateInLoadingState), distinctUntilChanged(), shareReplay(1));
 
   readonly _formControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
 
@@ -149,6 +158,12 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   );
 
   readonly displayValues$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.displayValuesState$.pipe(map((x) => x?.value ?? []));
+
+  readonly inputValueSignal = toSignal(this.inputValue$);
+  readonly searchResultsSignal = toSignal(this.searchResults$);
+  readonly displayValuesSignal = toSignal(this.displayValues$);
+
+  readonly isLoadingSearchResultsSignal = toSignal(this.isLoadingSearchResults$);
 
   get name(): string {
     return this.field.name ?? camelCase(this.label ?? (this.key as string));
@@ -180,6 +195,13 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   get searchOnEmptyText(): boolean {
     return this.searchableField.searchOnEmptyText ?? false;
+  }
+
+  get searchInputPlaceholder(): string | '' {
+    const searchOnEmpty = this.searchOnEmptyText;
+    const placeholder = this.searchableField.placeholder;
+    const test = placeholder || (searchOnEmpty ? undefined : this.defaultSearchInputPlaceholder) || '';
+    return test;
   }
 
   get autocomplete(): string {
@@ -269,7 +291,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
             first(),
             map((displayResults) => {
               // Assign the default component classes to complete configuration.
-              displayResults.forEach((x) => {
+              (displayResults as Configurable<SearchableValueFieldDisplayValue<T, M>>[]).forEach((x) => {
                 if (!x.display) {
                   x.display = defaultDisplay;
                 } else {
@@ -360,8 +382,6 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
       this.inputCtrl.setValue(text.trim());
     }
 
-    // console.log('Add: ', text, this.inputCtrl.valid);
-
     if (!this.inputCtrl.valid) {
       return;
     }
@@ -396,7 +416,12 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   }
 
   addValue(value: T): void {
-    this.textInput.nativeElement.value = '';
+    const textInput = this.textInput();
+
+    if (textInput) {
+      textInput.nativeElement.value = '';
+    }
+
     this.inputCtrl.setValue(null);
     this.setValues([...this.values, value]);
   }
