@@ -3,7 +3,7 @@ import { ThemePalette } from '@angular/material/core';
 import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar';
 import { MatProgressSpinner, ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
-import { DbxThemeColor } from '../layout/style/style';
+import { type DbxThemeColor } from '../layout/style/style';
 import { NgClass } from '@angular/common';
 
 export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
@@ -20,7 +20,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
           <mat-progress-bar [mode]="bmode()" [color]="color()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
         }
         @default {
-          <mat-progress-spinner [diameter]="diameter() || 96" [mode]="smode()" [color]="color()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
+          <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smode()" [color]="color()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
         }
       }
       @if (text()) {
@@ -36,6 +36,7 @@ export class DbxLoadingProgressComponent {
   readonly defaultDiameter = DEFAULT_LOADING_PROGRESS_DIAMETER;
 
   readonly diameter = input<Maybe<number>>(this.defaultDiameter);
+
   readonly text = input<Maybe<string>>();
   readonly linear = input<Maybe<boolean>>();
   readonly mode = input<ProgressBarMode | ProgressSpinnerMode>('indeterminate');
@@ -45,4 +46,6 @@ export class DbxLoadingProgressComponent {
 
   readonly bmode = computed(() => this.mode() as ProgressBarMode);
   readonly smode = computed(() => this.mode() as ProgressSpinnerMode);
+
+  readonly diameterSignal = computed(() => this.diameter() || this.defaultDiameter);
 }

@@ -2,13 +2,16 @@ import { OnDestroy, OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
-import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from '@dereekb/demo-components';
+import { DemoAppSharedModule, DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from '@dereekb/demo-components';
+import { DbxLoadingProgressComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './profile.component.html',
-  providers: [ProfileDocumentStore]
+  providers: [ProfileDocumentStore],
+  imports: [DemoAppSharedModule, DbxLoadingProgressComponent],
+  standalone: true
 })
-export class DemoProfileViewComponent implements OnInit, OnDestroy {
+export class DemoProfileViewComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
   readonly auth = inject(DbxFirebaseAuthService);
   readonly storage = inject(DbxFirebaseStorageService);
@@ -21,8 +24,6 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.profileDocumentStore.setId(this.auth.userIdentifier$);
   }
-
-  ngOnDestroy(): void {}
 
   readonly isUsernameModified: IsModifiedFunction<DemoProfileUsernameFormValue> = (value) => {
     return this.profileDocumentStore.currentData$.pipe(

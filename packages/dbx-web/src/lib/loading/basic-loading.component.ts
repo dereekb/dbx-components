@@ -1,13 +1,11 @@
-import { map, BehaviorSubject, delay } from 'rxjs';
-import { OnDestroy, Component, ViewChild, ElementRef, input, computed, ChangeDetectionStrategy, viewChild, effect } from '@angular/core';
+import { Component, ElementRef, input, computed, ChangeDetectionStrategy, viewChild } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { ErrorInput, type Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
-import { DbxThemeColor } from '../layout/style/style';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxErrorComponent } from '../error/error.component';
+import { type DbxThemeColor } from '../layout/style/style';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { NgTemplateOutlet } from '@angular/common';
 

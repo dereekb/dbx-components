@@ -3,7 +3,7 @@ import { ThemePalette } from '@angular/material/core';
 import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
 import { Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonConfig } from './progress/button.progress.config';
-import { DbxThemeColor } from '../layout/style/style';
+import { type DbxThemeColor } from '../layout/style/style';
 import { DbxProgressSpinnerButtonComponent } from './progress';
 
 export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';

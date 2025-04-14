@@ -50,7 +50,7 @@ export type DbxErrorWidgetEntryWithPopupComponentClass = Omit<DbxErrorWidgetEntr
   providedIn: 'root'
 })
 export class DbxErrorWidgetService {
-  private _entries = new Map<StringErrorCode, DbxErrorWidgetEntry>();
+  private readonly _entries = new Map<StringErrorCode, DbxErrorWidgetEntry>();
 
   constructor() {
     const defaultEntry = { widgetComponentClass: DbxErrorDefaultErrorWidgetComponent };

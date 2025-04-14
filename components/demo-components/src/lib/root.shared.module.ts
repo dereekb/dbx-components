@@ -44,7 +44,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule, DbxListLayoutModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 import { DbxAppContextStateModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxPipesModule } from '@dereekb/dbx-core';
 import { DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
@@ -99,7 +99,7 @@ const ANGULAR_MATERIAL_MODULES = [
   UIRouterModule
 ];
 
-const DBX_MODULES = [DbxStructureModule, DbxReadableErrorModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
+const DBX_MODULES = [DbxStructureModule, DbxReadableErrorModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxActionModule, DbxListLayoutModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
 
 const DBX_STANDALONE_COMPONENTS = [
   // dbx-analytics

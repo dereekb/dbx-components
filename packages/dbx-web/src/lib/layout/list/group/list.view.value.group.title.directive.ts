@@ -1,20 +1,11 @@
-import { Directive, Input, InjectionToken, Component, ChangeDetectionStrategy, StaticProvider, inject, OnDestroy } from '@angular/core';
-import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
+import { Directive, input, StaticProvider } from '@angular/core';
+import { DbxValueListItem, DbxValueListItemConfig } from '../list.view.value';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, DbxValueListViewGroupValuesFunction, provideDbxValueListViewGroupDelegate } from './list.view.value.group';
-import { BehaviorSubject, map } from 'rxjs';
+import { map } from 'rxjs';
 import { Building, Maybe, PrimativeKey, compareWithMappedValuesFunction, makeValuesGroupMap } from '@dereekb/util';
 import { DbxListTitleGroupData, DbxListTitleGroupTitleDelegate } from './list.view.value.group.title';
-import { MatIcon } from '@angular/material/icon';
-import { NgClass } from '@angular/common';
-
-export const DBX_LIST_TITLE_GROUP_DATA = new InjectionToken<unknown>('DbxListTitleGroupData');
-
-/**
- * Abstract DbxListTitleGroupHeaderComponent that already has the data injected.
- */
-export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> {
-  readonly data = inject<D>(DBX_LIST_TITLE_GROUP_DATA);
-}
+import { toObservable } from '@angular/core/rxjs-interop';
+import { DbxListTitleGroupHeaderComponent, DBX_LIST_TITLE_GROUP_DATA } from './list.view.value.group.title.header.component';
 
 /**
  * Delegate used to for grouping DbxValueListItemConfig<T, I> values.
@@ -24,11 +15,13 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
   providers: [provideDbxValueListViewGroupDelegate(DbxListTitleGroupDirective)],
   standalone: true
 })
-export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListViewGroupDelegate<D, T, I>, OnDestroy {
-  private _delegate = new BehaviorSubject<Maybe<DbxListTitleGroupTitleDelegate<T, O, D, I>>>(undefined);
+export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey, D extends DbxListTitleGroupData<O> = DbxListTitleGroupData<O>, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListViewGroupDelegate<D, T, I> {
+  readonly delegate = input<Maybe<DbxListTitleGroupTitleDelegate<T, O, D, I>>>(undefined, { alias: 'dbxListTitleGroup' });
+
+  private readonly _delegate$ = toObservable(this.delegate);
 
   readonly groupValues: DbxValueListViewGroupValuesFunction<D, T, I, unknown, unknown> = (items: DbxValueListItemConfig<T, I>[]) => {
-    return this._delegate.pipe(
+    return this._delegate$.pipe(
       map((delegate) => {
         let groups: DbxValueListItemGroup<D, T, I>[];
 
@@ -81,48 +74,4 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
       })
     );
   };
-
-  ngOnDestroy(): void {
-    this._delegate.complete();
-  }
-
-  @Input('dbxListTitleGroup')
-  get delegate() {
-    return this._delegate.value;
-  }
-
-  set delegate(delegate: Maybe<DbxListTitleGroupTitleDelegate<T, O, D, I>>) {
-    this._delegate.next(delegate);
-  }
-}
-
-/**
- *
- */
-@Component({
-  selector: 'dbx-list-title-group-header',
-  template: `
-    <div class="dbx-list-item-padded dbx-list-two-line-item" [ngClass]="{ 'dbx-list-two-line-item-with-icon': icon }">
-      @if (icon) {
-        <mat-icon class="item-icon">{{ icon }}</mat-icon>
-      }
-      <div class="item-left">
-        <div class="mat-subtitle-2">{{ title }}</div>
-        @if (hint) {
-          <div class="item-details">{{ hint }}</div>
-        }
-      </div>
-    </div>
-  `,
-  standalone: true,
-  imports: [NgClass, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    class: 'dbx-list-title-group-header'
-  }
-})
-export class DbxListTitleGroupHeaderComponent<O extends PrimativeKey, D extends DbxListTitleGroupData<O>> extends AbstractDbxListTitleGroupHeaderComponent<O, D> {
-  readonly icon = this.data.icon;
-  readonly title = this.data.title;
-  readonly hint = this.data.hint;
 }

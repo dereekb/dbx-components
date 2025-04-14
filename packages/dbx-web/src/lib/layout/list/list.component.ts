@@ -113,9 +113,9 @@ export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
     class: 'd-block dbx-list',
     '[class.dbx-list-padded]': 'padded()'
   },
-  standalone: true,
-  imports: [DbxLoadingComponent, DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent, InfiniteScrollDirective, DbxListInternalContentDirective, DbxLoadingComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
   /**

@@ -63,7 +63,7 @@
       <dbx-loading [loading]="true" text="Loading in a line!" [linear]="true"></dbx-loading>
       <h3>Padding</h3>
       <span style="padding-bottom: 12px">The loading bar can be configured to provide padding to prevent content from jumping around when loading begins/ends. Useful in cases where the loading bar doesn't control any content but removing it would push the content upward to fill the empty space.</span>
-      <dbx-loading [loading]="loading$ | async" [linear]="true" [padding]="true"></dbx-loading>
+      <dbx-loading [loading]="loadingSignal()" [linear]="true" [padding]="true"></dbx-loading>
       <dbx-content-container>
         <p>Custom content not pushed by the bar.</p>
       </dbx-content-container>

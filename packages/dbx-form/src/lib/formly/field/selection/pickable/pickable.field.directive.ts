@@ -1,7 +1,7 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
 import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues } from '@dereekb/util';
-import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Directive, OnDestroy, OnInit, viewChild, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
@@ -10,6 +10,7 @@ import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTi
 import { PickableValueFieldDisplayFunction, PickableValueFieldDisplayValue, PickableValueFieldFilterFunction, PickableValueFieldHashFunction, PickableValueFieldLoadValuesFunction, PickableValueFieldValue } from './pickable';
 import { DbxValueListItem } from '@dereekb/dbx-web';
 import { camelCase } from 'change-case';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Wraps the selected state with the items.
@@ -22,69 +23,69 @@ export interface PickableValueFieldsFieldProps<T, M = unknown, H extends Primati
   /**
    * Loads all pickable values.
    */
-  loadValues: PickableValueFieldLoadValuesFunction<T, M>;
+  readonly loadValues: PickableValueFieldLoadValuesFunction<T, M>;
   /**
    * Used for building a display value given the input.
    */
-  displayForValue: PickableValueFieldDisplayFunction<T, M>;
+  readonly displayForValue: PickableValueFieldDisplayFunction<T, M>;
   /**
    * Used for hashing display values and omitting repeat values.
    *
    * If hashForValue is not provided, the value's value will be used as is.
    */
-  hashForValue?: PickableValueFieldHashFunction<T, H>;
+  readonly hashForValue?: PickableValueFieldHashFunction<T, H>;
   /**
    * Used for filtering values via the search text.
    */
-  filterValues?: PickableValueFieldFilterFunction<T, M>;
+  readonly filterValues?: PickableValueFieldFilterFunction<T, M>;
   /**
    * Used for sorting the items before they are displayed.
    *
    * Should only be used to sort values.
    */
-  sortItems?: PickableItemFieldItemSortFn<T, M>;
+  readonly sortItems?: PickableItemFieldItemSortFn<T, M>;
   /**
    * Whether or not to allow multiple items to be selected.
    */
-  multiSelect?: boolean;
+  readonly multiSelect?: boolean;
   /**
    * Whether or not to set/get values as an array or a single value. If set false, multiSelect is ignored.
    */
-  asArrayValue?: boolean;
+  readonly asArrayValue?: boolean;
   /**
    * Whether or not to show the text filter. True by default if filterValues is provided.
    */
-  showTextFilter?: boolean;
+  readonly showTextFilter?: boolean;
   /**
    * Whether or not to skip the filter function when the input is empty.
    *
    * True by default.
    */
-  skipFilterFnOnEmpty?: boolean;
+  readonly skipFilterFnOnEmpty?: boolean;
   /**
    * Filter Label
    */
-  filterLabel?: string;
+  readonly filterLabel?: string;
   /**
    * The maximum number of values that can be picked
    */
-  maxPicks?: number;
+  readonly maxPicks?: number;
   /**
    * Optional description/hint to display.
    */
-  description?: string;
+  readonly description?: string;
   /**
    * Footer Display
    */
-  footerConfig?: DbxInjectionComponentConfig;
+  readonly footerConfig?: DbxInjectionComponentConfig;
   /**
    * Changes the selection mode of the list to "view" mode on disabled, hiding the selection boxes.
    */
-  changeSelectionModeToViewOnDisabled?: boolean;
+  readonly changeSelectionModeToViewOnDisabled?: boolean;
   /**
    * (Optional) observable that will trigger the clearing of all cached display values.
    */
-  refreshDisplayValues$?: Observable<unknown>;
+  readonly refreshDisplayValues$?: Observable<unknown>;
 }
 
 /**
@@ -99,16 +100,15 @@ export interface PickableValueFieldDisplayValueWithHash<T, M = unknown, H extend
  */
 @Directive()
 export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<PickableValueFieldsFieldProps<T, M, H>>> implements OnInit, OnDestroy {
-  @ViewChild('filterMatInput', { static: true })
-  filterMatInput!: MatInput;
+  readonly filterMatInput = viewChild<string, MatInput>('matInput', { read: MatInput });
 
   readonly inputCtrl = new FormControl('');
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private _clearDisplayHashMapSub = new SubscriptionObject();
-  private _displayHashMap = new BehaviorSubject<Map<H, PickableValueFieldDisplayValue<T, M>>>(new Map());
+  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
+  private readonly _displayHashMap = new BehaviorSubject<Map<H, PickableValueFieldDisplayValue<T, M>>>(new Map());
 
   readonly filterInputValue$: Observable<Maybe<string>> = this.inputCtrl.valueChanges.pipe(startWith(undefined));
   readonly filterInputValueString$: Observable<Maybe<string>> = this.filterInputValue$.pipe(debounceTime(200), distinctUntilChanged(), shareReplay(1));
@@ -233,12 +233,15 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     shareReplay(1)
   );
 
+  readonly noItemsAvailable$ = this.filterItemsLoadingState$.pipe(mapIsListLoadingStateWithEmptyValue(), distinctUntilChanged());
+
   /**
    * Context used for searching/filtering.
    */
   readonly filterResultsContext = listLoadingStateContext({ obs: this.filteredSearchResultsState$, showLoadingOnNoValue: true });
 
-  readonly noItemsAvailable$ = this.filterItemsLoadingState$.pipe(mapIsListLoadingStateWithEmptyValue(), distinctUntilChanged());
+  readonly itemsSignal = toSignal(this.items$);
+  readonly noItemsAvailableSignal = toSignal(this.noItemsAvailable$);
 
   get readonly(): Maybe<boolean> {
     return this.props.readonly;
@@ -422,7 +425,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
         first()
       )
       .subscribe(() => {
-        this.filterMatInput?.focus();
+        this.filterMatInput()?.focus();
       });
   }
 

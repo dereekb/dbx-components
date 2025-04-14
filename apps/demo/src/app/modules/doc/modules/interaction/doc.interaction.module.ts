@@ -58,7 +58,7 @@ import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidget
     // container
     DocInteractionLayoutComponent,
     DocInteractionHomeComponent,
-    DocInteractionLoadingComponent,
+    // DocInteractionLoadingComponent,    // standalone
     DocInteractionButtonComponent,
     DocInteractionErrorComponent,
     DocInteractionDialogComponent,

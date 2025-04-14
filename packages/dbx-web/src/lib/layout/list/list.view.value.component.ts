@@ -6,11 +6,11 @@ import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
 import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
-import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './list.view.value.group';
+import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
 import { MatListItem, MatNavList } from '@angular/material/list';
-import { DbxAnchorComponent } from '../../router';
 import { MatIcon } from '@angular/material/icon';
+import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 
 export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   readonly emitAllClicks?: boolean;
@@ -54,9 +54,9 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  standalone: true,
   imports: [DbxInjectionComponent, DbxAnchorComponent, MatListItem, MatIcon],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);

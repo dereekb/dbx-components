@@ -4,8 +4,8 @@ import { DbxWidgetDataPair } from './widget';
 import { DbxWidgetViewComponent } from './widget.component';
 import { AbstractDbxValueListViewItemComponent } from '../../layout/list/list.view.value.item.directive';
 import { DbxValueAsListItem } from '../../layout/list/list.view.value';
-import { AbstractDbxListGridViewDirective, DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE_CONFIGURATION } from '../../layout/list/list.grid.view.directive';
-import { DbxValueListGridViewConfig } from '../../layout/list/list.grid.view.component';
+import { AbstractDbxListGridViewDirective, DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE_CONFIGURATION } from '../../layout/list/grid/list.grid.view.directive';
+import { DbxValueListGridViewConfig } from '../../layout/list/grid/list.grid.view.component';
 import { provideDbxListView } from '../../layout/list/list.view';
 import { AbstractDbxListWrapperDirective, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION } from '../../layout/list/list.directive';
 

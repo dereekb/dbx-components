@@ -3,36 +3,31 @@ import { DbxListComponent } from './list.component';
 import { DbxListEmptyContentComponent } from './list.content.empty.component';
 import { DbxSelectionValueListViewContentComponent, DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 import { DbxValueListViewContentComponent, DbxValueListViewComponent, DbxValueListViewContentGroupComponent } from './list.view.value.component';
-import { DbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
-import { DbxListItemDisableRippleModifierDirective } from './list.view.value.modifier.ripple.directive';
-import { DbxValueListGridViewContentComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent } from './list.grid.view.component';
-import { DbxListItemIsSelectedModifierDirective } from './list.view.value.modifier.selection.directive';
-import { DbxListTitleGroupDirective, DbxListTitleGroupHeaderComponent } from './list.view.value.group.title.directive';
-import { DbxListViewMetaIconComponent } from './list.view.meta.icon.component';
+import { DbxValueListGridViewContentComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent } from './grid/list.grid.view.component';
+import { DbxListModifierModule } from './modifier/list.modifier.module';
+import { DbxListTitleGroupDirective } from './group';
 
 const importsAndExports = [
-  // directives
-  DbxListComponent,
+  // modules
+  DbxListModifierModule,
+  // components/directives
   DbxListEmptyContentComponent,
+  DbxListComponent,
   DbxValueListViewComponent,
   DbxValueListViewContentComponent,
   DbxValueListViewContentGroupComponent,
   DbxValueListGridSizeDirective,
   DbxValueListGridViewComponent,
   DbxValueListGridViewContentComponent,
-  DbxListViewMetaIconComponent,
   DbxListTitleGroupDirective,
-  DbxListTitleGroupHeaderComponent,
   DbxSelectionValueListViewComponent,
-  DbxSelectionValueListViewContentComponent,
-  DbxValueListItemModifierDirective,
-  DbxListItemDisableRippleModifierDirective,
-  DbxListItemIsSelectedModifierDirective
+  DbxSelectionValueListViewContentComponent
 ];
 
 /**
- * @deprecated Import the standalone modules instead.
+ * @deprecated Import the standalone modules instead or DbxListModule.
  *
+ * @see DbxListModule
  * @see DbxListComponent
  * @see DbxListEmptyContentComponent
  * @see DbxValueListViewComponent

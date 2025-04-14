@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, OnDestroy, OnInit } from '@angular/core';
-import { MatAutocompleteModule, MatAutocompleteSelectedEvent, MatOption } from '@angular/material/autocomplete';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { map, shareReplay } from 'rxjs';
-import { Maybe, PrimativeKey } from '@dereekb/util';
+import { PrimativeKey } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';

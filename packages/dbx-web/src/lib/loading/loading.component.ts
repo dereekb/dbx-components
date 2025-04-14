@@ -4,7 +4,7 @@ import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
 import { ErrorInput, type Maybe } from '@dereekb/util';
-import { DbxThemeColor } from '../layout/style/style';
+import { type DbxThemeColor } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 

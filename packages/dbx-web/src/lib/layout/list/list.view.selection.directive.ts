@@ -5,9 +5,9 @@ import { AbstractDbxListViewDirective } from './list.view.directive';
 import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 
 export const DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
-  template: '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>',
-  imports: [DbxSelectionValueListViewComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  template: '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>' as const,
+  imports: [DbxSelectionValueListViewComponent] as const,
+  changeDetection: ChangeDetectionStrategy.OnPush as const
 };
 
 // MARK: Selection List View

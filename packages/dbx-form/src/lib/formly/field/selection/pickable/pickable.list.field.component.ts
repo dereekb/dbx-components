@@ -1,29 +1,25 @@
-import { Component, inject } from '@angular/core';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DbxLoadingComponent, DbxSelectionValueListViewContentComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
-import { map, shareReplay } from 'rxjs';
+import { map, Observable, of, shareReplay } from 'rxjs';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';
-
-/**
- * Used for picking pre-set values using a selection list as the presentation.
- */
-@Component({
-  templateUrl: 'pickable.list.field.component.html'
-})
-export class DbxPickableListFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
-  onSelectionChange(event: unknown) {
-    const items = (event as ListSelectionState<PickableValueFieldDisplayValue<T>>).items;
-    const values = items.map((x) => x.itemValue.value);
-    this.setValues(values);
-  }
-}
+import { MatIcon } from '@angular/material/icon';
+import { MatDivider } from '@angular/material/divider';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 // MARK: Selection List
 @Component({
   selector: 'dbx-form-pickable-item-field-item-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
+  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
+  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  providers: provideDbxListViewWrapper(DbxPickableListFieldItemListComponent),
+  standalone: true
 })
 export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelectionListWrapperDirective<PickableItemFieldItem<T>> {
   constructor() {
@@ -38,9 +34,11 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
  */
 @Component({
   template: `
-    <dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="items$ | async"></dbx-selection-list-view-content>
+    <dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="itemsSignal()"></dbx-selection-list-view-content>
   `,
-  providers: provideDbxListView(DbxPickableListFieldItemListViewComponent)
+  providers: provideDbxListView(DbxPickableListFieldItemListViewComponent),
+  imports: [DbxSelectionValueListViewContentComponent],
+  standalone: true
 })
 export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<any> {
   readonly dbxPickableListFieldComponent = inject(DbxPickableListFieldComponent<T>);
@@ -70,27 +68,46 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
     map((x) => addConfigToValueListItems(this.config, x)),
     shareReplay(1)
   );
+
+  readonly itemsSignal = toSignal(this.items$);
 }
 
 @Component({
   template: `
     <div class="dbx-default-pickable-item-field-list-item dbx-flex-bar">
-      <mat-icon class="dbx-icon-spacer" *ngIf="icon">{{ icon }}</mat-icon>
+      @if (icon) {
+        <mat-icon class="dbx-icon-spacer">{{ icon }}</mat-icon>
+      }
       <span class="dbx-chip-label">{{ label }}</span>
-      <span class="dbx-chip-sublabel" *ngIf="sublabel">({{ sublabel }})</span>
+      @if (sublabel) {
+        <span class="dbx-chip-sublabel">({{ sublabel }})</span>
+      }
     </div>
-  `
+  `,
+  imports: [MatIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
-  get label(): string {
-    return this.itemValue.label;
-  }
+  readonly label = this.itemValue.label;
+  readonly sublabel = this.itemValue.sublabel;
+  readonly icon = this.itemValue.icon;
+}
 
-  get sublabel() {
-    return this.itemValue.sublabel;
-  }
-
-  get icon() {
-    return this.itemValue.icon;
+// List Field Component
+/**
+ * Used for picking pre-set values using a selection list as the presentation.
+ */
+@Component({
+  templateUrl: 'pickable.list.field.component.html',
+  imports: [DbxPickableListFieldItemListComponent, NgTemplateOutlet, FormsModule, ReactiveFormsModule, MatInputModule, MatDivider, DbxLoadingComponent, DbxInjectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
+})
+export class DbxPickableListFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
+  onSelectionChange(event: unknown) {
+    const items = (event as ListSelectionState<PickableValueFieldDisplayValue<T>>).items;
+    const values = items.map((x) => x.itemValue.value);
+    this.setValues(values);
   }
 }

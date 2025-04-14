@@ -1,5 +1,5 @@
 import { CssClassesArray, Maybe, UniqueModel } from '@dereekb/util';
-import { DbxValueListItem, DbxValueListItemConfig } from './list.view.value';
+import { DbxValueListItem, DbxValueListItemConfig } from '../list.view.value';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Provider, Type, forwardRef } from '@angular/core';
 import { ObservableOrValue } from '@dereekb/rxjs';
