@@ -3,7 +3,7 @@ import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { mergeArraysIntoArray } from '@dereekb/util';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 
 export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
 
@@ -61,7 +61,7 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
       }
     </div>
   `,
-  imports: [MatIcon],
+  imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

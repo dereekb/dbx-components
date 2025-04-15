@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } f
 import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
-import { MatButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
@@ -12,7 +12,7 @@ import { NgClass, NgStyle } from '@angular/common';
   selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
-  imports: [MatButton, MatIcon, MatProgressSpinner, NgClass, NgStyle],
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

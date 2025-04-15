@@ -6,7 +6,7 @@ import { PrimativeKey } from '@dereekb/util';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.autocomplete.item.component';
 import { NgClass } from '@angular/common';
@@ -23,7 +23,7 @@ export interface SearchableTextValueFieldsFieldProps<T, M = unknown, H extends P
  */
 @Component({
   templateUrl: 'searchable.text.field.component.html',
-  imports: [FormsModule, MatInput, NgClass, ReactiveFormsModule, DbxLoadingModule, MatOptionModule, MatAutocompleteModule, MatChipsModule, MatIcon, DbxSearchableFieldAutocompleteItemComponent],
+  imports: [FormsModule, MatInput, NgClass, ReactiveFormsModule, DbxLoadingModule, MatOptionModule, MatAutocompleteModule, MatChipsModule, MatIconModule, DbxSearchableFieldAutocompleteItemComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

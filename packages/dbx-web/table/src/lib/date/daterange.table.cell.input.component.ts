@@ -11,7 +11,7 @@ import { distinctUntilChanged, filter, map, Observable, of, startWith, switchMap
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AsyncPipe } from '@angular/common';
 import { MatDateRangeInput, MatDateRangePicker } from '@angular/material/datepicker';
-import { MatButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 
 @Injectable()
 export class DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {
@@ -76,7 +76,7 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [MatDateRangeInput, ReactiveFormsModule, MatButton, MatDateRangePicker, AsyncPipe]
+  imports: [MatDateRangeInput, ReactiveFormsModule, MatButtonModule, MatDateRangePicker, AsyncPipe]
 })
 export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnInit, OnDestroy {
   readonly tableStore = inject(DbxTableStore<DateRangeDayDistanceInput>);

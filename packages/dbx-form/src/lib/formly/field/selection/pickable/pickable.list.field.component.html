@@ -6,7 +6,7 @@
     <!-- Content -->
     <div class="dbx-pickable-item-field-list">
       <div class="dbx-pickable-item-field-list-content">
-        <dbx-form-pickable-item-field-item-list [disabled]="isReadonlyOrDisabled" [state]="filterItemsLoadingState$" (selectionChange)="onSelectionChange($event)"></dbx-form-pickable-item-field-item-list>
+        <dbx-form-pickable-item-field-item-list [disabled]="isReadonlyOrDisabled" [state$]="filterItemsLoadingState$" (selectionChange)="onSelectionChange($event)"></dbx-form-pickable-item-field-item-list>
       </div>
       <dbx-injection [config]="footerConfig"></dbx-injection>
     </div>

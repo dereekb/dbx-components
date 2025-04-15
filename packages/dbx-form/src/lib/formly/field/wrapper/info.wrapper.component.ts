@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FieldWrapper, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatIconButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface DbxFormInfoConfig extends FormlyFieldProps {
   readonly onInfoClick: () => void;
@@ -20,7 +20,7 @@ export interface DbxFormInfoConfig extends FormlyFieldProps {
       </div>
     </div>
   `,
-  imports: [MatIconButton, MatIcon],
+  imports: [MatIconButton, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

@@ -14,7 +14,7 @@
       <div class="dbx-download-text-preview dbx-json dbx-content-pit dbx-content-pit-scrollable dbx-mb3">{{ contentDataSignal() }}</div>
     }
     <div class="dbx-download-text-view-actions">
-      <dbx-button dbxAction dbxActionValue [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard"></dbx-button>
+      <dbx-button dbxAction dbxActionValue dbxActionLogger [raised]="true" [dbxActionHandler]="handleCopyToClipboard" icon="content_copy" dbxActionButton text="Copy To Clipboard"></dbx-button>
       <dbx-button-spacer></dbx-button-spacer>
       <a #downloadButton [href]="fileUrlSignal()" [attr.download]="fileNameSignal()"><dbx-button icon="download" text="Download" [raised]="true" [working]="!downloadReadySignal()" [disabled]="!downloadReadySignal()"></dbx-button></a>
     </div>

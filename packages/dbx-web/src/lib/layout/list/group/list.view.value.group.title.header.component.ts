@@ -1,7 +1,7 @@
 import { InjectionToken, Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { PrimativeKey } from '@dereekb/util';
 import { DbxListTitleGroupData } from './list.view.value.group.title';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { NgClass } from '@angular/common';
 
 export const DBX_LIST_TITLE_GROUP_DATA = new InjectionToken<unknown>('DbxListTitleGroupData');
@@ -31,7 +31,7 @@ export abstract class AbstractDbxListTitleGroupHeaderComponent<O extends Primati
       </div>
     </div>
   `,
-  imports: [NgClass, MatIcon],
+  imports: [NgClass, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-list-title-group-header'

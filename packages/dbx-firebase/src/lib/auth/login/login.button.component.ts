@@ -4,7 +4,7 @@ import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { FirebaseLoginMethodType } from './login';
 import { DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 
@@ -43,7 +43,7 @@ export interface DbxFirebaseLoginButtonConfig {
     class: 'dbx-firebase-login-button'
   },
   standalone: true,
-  imports: [MatIcon, DbxActionModule, DbxButtonModule],
+  imports: [MatIconModule, DbxActionModule, DbxButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseLoginButtonComponent {

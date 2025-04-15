@@ -8,8 +8,8 @@ import { DbxListView } from './list.view';
 import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable, tapLog } from '@dereekb/rxjs';
-import { MatListItem, MatNavList } from '@angular/material/list';
-import { MatIcon } from '@angular/material/icon';
+import { MatListItem, MatListModule, MatNavList } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 
 export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
@@ -54,7 +54,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
     class: 'dbx-list-view-group',
     '[class]': 'cssClassSignal()'
   },
-  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListItem, MatIcon],
+  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -115,9 +115,7 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   readonly emitAllClicks = input<Maybe<boolean>>();
 
   readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
-    tapLog('items'),
     switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
-    tapLog('groups'),
     shareReplay(1)
   );
 

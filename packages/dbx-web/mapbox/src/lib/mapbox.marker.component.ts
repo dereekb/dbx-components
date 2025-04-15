@@ -4,7 +4,7 @@ import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { NgClass, NgStyle } from '@angular/common';
 
 @Component({
@@ -28,7 +28,7 @@ import { NgClass, NgStyle } from '@angular/common';
     }
   `,
   styleUrls: ['./mapbox.marker.component.scss'],
-  imports: [NgxMapboxGLModule, DbxAnchorComponent, MatIcon, NgStyle, NgClass],
+  imports: [NgxMapboxGLModule, DbxAnchorComponent, MatIconModule, NgStyle, NgClass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

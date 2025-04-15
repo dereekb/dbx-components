@@ -1,8 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { MatIcon } from '@angular/material/icon';
-import { MatButton } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { DbxAnchorComponent } from './anchor.component';
 
 /**
@@ -11,7 +11,7 @@ import { DbxAnchorComponent } from './anchor.component';
 @Component({
   selector: 'dbx-anchor-icon',
   standalone: true,
-  imports: [MatIcon, MatButton, DbxAnchorComponent],
+  imports: [MatIconModule, MatButtonModule, DbxAnchorComponent],
   template: `
     <dbx-anchor [anchor]="anchor">
       <button mat-icon-button>

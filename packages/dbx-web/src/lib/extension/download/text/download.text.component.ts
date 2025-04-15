@@ -6,7 +6,7 @@ import { Observable, combineLatest, distinctUntilChanged, first, map, of, shareR
 import { Clipboard } from '@angular/cdk/clipboard';
 import { DownloadTextContent } from './download.text';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../../loading/loading.component';
 import { NgTemplateOutlet } from '@angular/common';
@@ -21,7 +21,7 @@ import { DbxButtonSpacerDirective } from '../../../button';
   templateUrl: './download.text.component.html',
   selector: 'dbx-download-text-view',
   standalone: true,
-  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective],
+  imports: [NgTemplateOutlet, DbxLoadingComponent, DbxActionModule, DbxActionButtonDirective, DbxButtonComponent, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective {

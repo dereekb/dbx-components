@@ -5,7 +5,7 @@ import { type Maybe } from '@dereekb/util';
 import { map, Observable, of, shareReplay } from 'rxjs';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -84,7 +84,7 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
       }
     </div>
   `,
-  imports: [MatIcon],
+  imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

@@ -1,12 +1,12 @@
 import { map, shareReplay, distinctUntilChanged, of } from 'rxjs';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatListOption, MatSelectionList, MatSelectionListChange } from '@angular/material/list';
+import { MatListModule, MatListOption, MatSelectionList, MatSelectionListChange } from '@angular/material/list';
 import { DbxListSelectionMode, ListSelectionStateItem } from './list.view';
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { type Maybe } from '@dereekb/util';
 import { DbxValueListViewContentComponent, DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION } from './list.view.value.component';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -42,7 +42,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   host: {
     class: 'dbx-list-view dbx-selection-list-view'
   },
-  imports: [MatSelectionList, MatListOption, MatIcon, DbxInjectionComponent, DbxValueListViewContentComponent],
+  imports: [MatSelectionList, MatListModule, MatIconModule, DbxInjectionComponent, DbxValueListViewContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

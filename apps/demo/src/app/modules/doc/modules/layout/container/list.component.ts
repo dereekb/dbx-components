@@ -41,8 +41,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
             return item;
           })
       })
-    ),
-    tapLog('stateWithSelection$')
+    )
   );
 
   readonly stateWithAnchors$: Observable<ListLoadingState<CustomDocValue>> = this.state$.pipe(
@@ -85,8 +84,8 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly statePermanentlyLoading$: Observable<ListLoadingState<any>> = of(beginLoading() as ListLoadingState<any>);
   readonly stateWithNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of(
     successResult<DocValue[]>([
-      { name: 'A', icon: 'a' },
-      { name: 'B', icon: 'b' }
+      { name: 'A', icon: 'warning' },
+      { name: 'B', icon: 'person' }
     ])
   );
 
@@ -94,8 +93,8 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly statePermanentlyLoadingAfterEmptyResult$: Observable<ListLoadingState<any>> = this.statePermanentlyLoading$.pipe(startWith(successResult([])));
   readonly statePermanentlyLoadingAfterNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of({
     ...successResult<DocValue[]>([
-      { name: 'A', icon: 'a' },
-      { name: 'B', icon: 'b' }
+      { name: 'A', icon: 'warning' },
+      { name: 'B', icon: 'person' }
     ]),
     ...beginLoading()
   } as ListLoadingState<any>);

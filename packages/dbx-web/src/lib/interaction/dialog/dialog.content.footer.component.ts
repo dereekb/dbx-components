@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MatButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { ThemePalette } from '@angular/material/core';
 import { type Maybe } from '@dereekb/util';
 
@@ -20,7 +20,7 @@ export interface DbxDialogContentFooterConfig {
     class: 'dbx-dialog-content-footer'
   },
   standalone: true,
-  imports: [MatButton],
+  imports: [MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDialogContentFooterComponent {

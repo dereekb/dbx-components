@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxPopoverComponent } from './popover.component';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 
 /**
@@ -11,7 +11,7 @@ import { MatIconButton } from '@angular/material/button';
   template: `
     <button mat-icon-button (click)="dbxPopoverComponent.close()"><mat-icon>close</mat-icon></button>
   `,
-  imports: [MatIcon, MatIconButton],
+  imports: [MatIconModule, MatIconButton],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -3,7 +3,7 @@ import { Component, Input, OnDestroy, inject, computed } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
@@ -12,7 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-anchor-content',
   standalone: true,
-  imports: [MatIcon],
+  imports: [MatIconModule],
   template: `
     @if (iconSignal()) {
       <mat-icon class="dbx-icon-spacer">{{ iconSignal() }}</mat-icon>

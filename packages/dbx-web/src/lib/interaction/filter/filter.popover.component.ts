@@ -10,7 +10,7 @@ import { type Maybe } from '@dereekb/util';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxFilterComponentConfig } from './filter.config';
 import { DbxPopoverInteractionModule } from '../popover';
-import { MatButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 
 export interface DbxFilterPopoverComponentConfig<F extends object = object> extends DbxFilterComponentConfig<F> {
@@ -24,7 +24,7 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
 
 @Component({
   templateUrl: './filter.popover.component.html',
-  imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButton, DbxButtonSpacerDirective],
+  imports: [DbxPopoverInteractionModule, DbxInjectionComponent, MatButtonModule, DbxButtonSpacerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

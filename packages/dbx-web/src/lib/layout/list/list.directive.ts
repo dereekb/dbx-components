@@ -47,7 +47,6 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   });
 
   readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state), toObservable(this.deprecatedInputState$)]).pipe(
-    tapLog('xxx'),
     map(([stateOverride, state, state$]) => stateOverride ?? state ?? state$),
     maybeValueFromObservableOrValue(),
     shareReplay(1)

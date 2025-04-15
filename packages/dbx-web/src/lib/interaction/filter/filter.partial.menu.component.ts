@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextObservable, DbxPresetFilterMenuConfig } from './filter.menu';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { MatButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 import { MatMenuModule } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
@@ -14,7 +14,7 @@ import { NgClass } from '@angular/common';
 @Component({
   selector: 'dbx-partial-preset-filter-menu',
   templateUrl: './filter.partial.menu.component.html', // share the same template as the preset menu
-  imports: [NgClass, MatMenuModule, MatButton, MatIcon, DbxAnchorComponent],
+  imports: [NgClass, MatMenuModule, MatButtonModule, MatIconModule, DbxAnchorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

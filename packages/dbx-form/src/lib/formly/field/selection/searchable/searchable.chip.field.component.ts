@@ -8,7 +8,7 @@ import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
 import { PrimativeKey } from '@dereekb/util';
 import { SearchableValueFieldDisplayValue } from './searchable';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.autocomplete.item.component';
@@ -23,7 +23,7 @@ export interface SearchableChipValueFieldsFieldProps<T, M = unknown, H extends P
 
 @Component({
   templateUrl: 'searchable.chip.field.component.html',
-  imports: [MatChipsModule, MatIcon, FormsModule, ReactiveFormsModule, DbxLoadingModule, MatAutocompleteModule, MatOptionModule, DbxSearchableFieldAutocompleteItemComponent],
+  imports: [MatChipsModule, MatIconModule, FormsModule, ReactiveFormsModule, DbxLoadingModule, MatAutocompleteModule, MatOptionModule, DbxSearchableFieldAutocompleteItemComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

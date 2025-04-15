@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, Type } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl } from '@angular/forms';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
@@ -36,14 +37,15 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
   private readonly _selectionEventSub = new SubscriptionObject();
   private readonly _loadMoreSub = new SubscriptionObject();
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly _formControlValue$: Observable<Maybe<K[]>> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
   readonly values$: Observable<K[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
-  private _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
+  private readonly _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
   readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapFilterMaybe());
+
   readonly config$: Observable<DbxInjectionComponentConfig<C>> = this.listComponentClass$.pipe(
     map((componentClass) => {
       const loadMore = this.loadMore;
@@ -73,6 +75,9 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
     }),
     shareReplay(1)
   );
+
+  readonly configSignal = toSignal(this.config$);
+  readonly isSelectedModifierFunctionSignal = toSignal(this.isSelectedModifierFunction$);
 
   get label() {
     return this.field.props.label;

@@ -9,7 +9,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxAnchorComponent } from '../anchor';
 import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
 import { DbxIconButtonComponent } from '../../../button/icon/icon.button.component';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { NgClass } from '@angular/common';
 
@@ -31,7 +31,7 @@ export type NavbarButtonMode = 'menu' | 'rotate';
   host: {
     class: 'dbx-navbar'
   },
-  imports: [DbxAnchorComponent, MatTabNav, MatTabNavPanel, MatTabLink, DbxIconButtonComponent, MatIcon, MatMenu, MatMenuItem, NgClass, MatMenuTrigger],
+  imports: [DbxAnchorComponent, MatTabNav, MatTabNavPanel, MatTabLink, DbxIconButtonComponent, MatIconModule, MatMenu, MatMenuItem, NgClass, MatMenuTrigger],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

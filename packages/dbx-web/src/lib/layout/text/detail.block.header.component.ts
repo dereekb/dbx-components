@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 
 @Component({
@@ -17,7 +17,7 @@ import { type Maybe } from '@dereekb/util';
     class: 'dbx-detail-block-header',
     '[class]': '{ "dbx-detail-block-header-no-icon": !icon }'
   },
-  imports: [MatIcon],
+  imports: [MatIconModule],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

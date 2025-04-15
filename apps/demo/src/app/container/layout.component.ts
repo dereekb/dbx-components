@@ -5,14 +5,14 @@ import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { UIView } from '@uirouter/angular';
 import { MatToolbar } from '@angular/material/toolbar';
-import { MatButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
-  imports: [UIView, DbxStyleBodyDirective, DbxBodyDirective, DbxStyleDirective, MatToolbar, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatIcon],
+  imports: [UIView, DbxStyleBodyDirective, DbxBodyDirective, DbxStyleDirective, MatToolbar, DbxAnchorComponent, MatButtonModule, DbxButtonSpacerDirective, MatIconModule],
   standalone: true
 })
 export class AppLayoutComponent {

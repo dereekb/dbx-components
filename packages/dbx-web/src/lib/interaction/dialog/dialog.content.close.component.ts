@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Component used to show a close button at the top of a dialog, floating in a corner.
@@ -17,7 +17,7 @@ import { MatIcon } from '@angular/material/icon';
     '[class.dbx-dialog-content-close-padding]': 'padded()'
   },
   standalone: true,
-  imports: [MatIcon, MatIconButton],
+  imports: [MatIconModule, MatIconButton],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDialogContentCloseComponent {

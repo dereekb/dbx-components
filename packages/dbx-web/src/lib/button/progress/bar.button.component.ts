@@ -3,8 +3,8 @@ import { AbstractProgressButtonDirective } from './abstract.progress.button.dire
 import { map, shareReplay } from 'rxjs';
 import { spaceSeparatedCssClasses } from '@dereekb/util';
 import { distinctUntilItemsHaveDifferentValues } from '@dereekb/rxjs';
-import { MatButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
@@ -13,7 +13,7 @@ import { NgClass, NgStyle } from '@angular/common';
   selector: 'dbx-progress-bar-button,dbx-bar-button',
   templateUrl: './bar.button.component.html',
   styleUrls: ['./bar.button.component.scss', './shared.button.component.scss'],
-  imports: [MatButton, MatIcon, MatProgressBar, NgClass, NgStyle],
+  imports: [MatButtonModule, MatIconModule, MatProgressBar, NgClass, NgStyle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

@@ -7,14 +7,14 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Used for picking pre-set values using chips as the presentation.
  */
 @Component({
   templateUrl: 'pickable.chip.field.component.html',
-  imports: [MatChipsModule, NgTemplateOutlet, FormsModule, ReactiveFormsModule, MatIcon, MatInputModule, DbxLoadingComponent, MatDivider, DbxInjectionComponent],
+  imports: [MatChipsModule, NgTemplateOutlet, FormsModule, ReactiveFormsModule, MatIconModule, MatInputModule, DbxLoadingComponent, MatDivider, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

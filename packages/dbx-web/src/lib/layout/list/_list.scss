@@ -40,8 +40,15 @@ $list-item-padded-min-height: 42px;
   }
 
   .dbx-list-view {
+    // --mat-list-list-item-leading-icon-start-space: 16px;
+    --mat-list-list-item-leading-icon-end-space: 8px;
+
     .mat-mdc-list-base .dbx-list-view-item.mat-mdc-list-item {
       height: 100%; // inherit height from embedded items
+
+      .mdc-list-item__content {
+        user-select: none;
+      }
 
       .mdc-list-item__content > .mat-mdc-list-item-unscoped-content.mdc-list-item__primary-text {
         white-space: normal;
@@ -58,6 +65,12 @@ $list-item-padded-min-height: 42px;
         .mat-mdc-list-item-content {
           min-height: 56px;
         }
+      }
+
+      // Fixes:
+      &.mdc-list-item--disabled .mdc-list-item__start.mat-icon {
+        color: var(--mdc-list-list-item-disabled-leading-icon-color, var(--mat-app-on-surface));
+        opacity: var(--mdc-list-list-item-disabled-leading-icon-opacity);
       }
     }
 

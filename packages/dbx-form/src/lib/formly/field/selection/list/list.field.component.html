@@ -1,8 +1,12 @@
-<div class="dbx-list-item-field" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunction$ | async">
-  <span class="dbx-label dbx-label-padded" *ngIf="label">{{ label }}</span>
+<div class="dbx-list-item-field" dbxListItemModifier [dbxListItemIsSelectedModifier]="isSelectedModifierFunctionSignal()">
+  @if (label) {
+    <span class="dbx-label dbx-label-padded">{{ label }}</span>
+  }
   <div class="dbx-list-item-field-content">
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-injection [config]="configSignal()"></dbx-injection>
   </div>
   <mat-divider></mat-divider>
-  <div class="dbx-form-description" *ngIf="description">{{ description }}</div>
+  @if (description) {
+    <div class="dbx-form-description">{{ description }}</div>
+  }
 </div>

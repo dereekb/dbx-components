@@ -265,7 +265,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   );
 
   readonly hideContent$: Observable<boolean> = this.context.currentStateStream$.pipe(
-    tapLog('current stream state'),
     switchMap(() =>
       this.context.state$.pipe(
         filter((x) => isLoadingStateFinishedLoading(x)),
@@ -285,7 +284,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
       }
     }),
     distinctUntilChanged(),
-    tapLog('hide content'),
     shareReplay(1)
   );
 

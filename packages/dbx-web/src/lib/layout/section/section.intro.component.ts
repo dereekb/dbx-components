@@ -1,6 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { MatButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 
 /**
  * Component used to format content that displays an intro until a button is pressed.
@@ -28,7 +28,7 @@ import { MatButton } from '@angular/material/button';
     </div>
   `,
   standalone: true,
-  imports: [MatButton],
+  imports: [MatButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxIntroActionSectionComponent {

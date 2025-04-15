@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { Maybe } from '@dereekb/util';
 
@@ -24,7 +24,7 @@ import { Maybe } from '@dereekb/util';
     </div>
     <mat-divider></mat-divider>
   `,
-  imports: [MatIcon, MatDivider],
+  imports: [MatIconModule, MatDivider],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

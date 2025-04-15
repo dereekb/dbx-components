@@ -3,9 +3,9 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuDirective } from './filter.preset.directive';
 import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextObservable, DbxPresetFilterMenuConfig } from './filter.menu';
-import { MatButton } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 import { NgClass } from '@angular/common';
 
@@ -15,7 +15,7 @@ import { NgClass } from '@angular/common';
 @Component({
   selector: 'dbx-preset-filter-menu',
   templateUrl: './filter.preset.menu.component.html',
-  imports: [NgClass, MatButton, MatMenuModule, MatIcon, DbxAnchorComponent],
+  imports: [NgClass, MatButtonModule, MatMenuModule, MatIconModule, DbxAnchorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
