@@ -1,6 +1,6 @@
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { addSeconds } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { DateRangeType, dateRange } from '../date/date.range';
 import { type DateDayTimezoneHintFilter, type DateItemOccuringFilter, type DateItemQueryStartsEndsFilter, type DateItemRangeFilter } from './query.filter';
 
@@ -83,7 +83,7 @@ export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): 
   result.timezone = find.timezone;
 
   // Apply the timezone to the date range if provided.
-  const range = find.timezone ? { ...find.range, date: utcToZonedTime(find.range.date, find.timezone) } : find.range;
+  const range = find.timezone ? { ...find.range, date: toZonedTime(find.range.date, find.timezone) } : find.range;
   const dates = dateRange(range);
 
   switch (range.type) {
@@ -145,7 +145,7 @@ export function makeDaysAndTimeFiltersFunction<R, F>(builder: DateQueryBuilder<R
     let daysFilter: Maybe<F>;
 
     function tzDate(date: Maybe<Date>): Maybe<Date> {
-      return date ? utcToZonedTime(date, timezone as string) : undefined;
+      return date ? toZonedTime(date, timezone as string) : undefined;
     }
 
     if (timezone) {
