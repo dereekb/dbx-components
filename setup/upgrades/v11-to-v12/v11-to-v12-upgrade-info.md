@@ -295,3 +295,27 @@ Option "tsConfig" is deprecated: Use the ts-jest configuration options in the je
 ```
 
 Remove the `tsConfig` property from all `@nx/jest:jest` configurations in your application. There are other configurations where tsConfig is still used, so be careful not to remove it from those.
+
+#### Other Errors
+```
+Error: Pruned lock file creation failed. The following package was not found in the root lock file
+```
+
+The fix for this issue seems to be setting `"excludeLibsInPackageJson": true` in the `build-base` target.
+
+### Migrate to Nx 20
+Nx 20 release info is here:
+
+https://nx.dev/blog/announcing-nx-20
+
+First run the following:
+
+```nx migrate 20```
+
+This will setup the migration.json. It will also modify package.json, but it is best to manually check for the latest compatable versions of the dependencies. Compare the changes with the `package.json` for the v11 of dbxcomponents.
+
+When performing this migration the `package.json` will attempt to be updated for Angular 19, but we need to stay on Angular 18.
+
+https://nx.dev/nx-api/angular/documents/angular-nx-version-matrix
+
+The latest version of Nx (v20 at time of writing) supports Angular 18.
