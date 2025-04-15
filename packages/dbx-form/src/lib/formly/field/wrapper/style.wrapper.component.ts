@@ -24,8 +24,8 @@ export interface DbxFormStyleWrapperConfig {
   standalone: true
 })
 export class DbxFormStyleWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormStyleWrapperConfig>> implements OnInit, OnDestroy {
-  private _style = new BehaviorSubject<Maybe<Observable<DbxFormStyleObject>>>(undefined);
-  private _class = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
+  private readonly _style = new BehaviorSubject<Maybe<Observable<DbxFormStyleObject>>>(undefined);
+  private readonly _class = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
 
   readonly style$ = this._style.pipe(switchMapMaybeDefault({}), shareReplay(1));
   readonly class$ = this._class.pipe(switchMapMaybeDefault(''), shareReplay(1));

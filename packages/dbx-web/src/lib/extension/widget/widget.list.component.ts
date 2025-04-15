@@ -4,10 +4,10 @@ import { DbxWidgetDataPair } from './widget';
 import { DbxWidgetViewComponent } from './widget.component';
 import { AbstractDbxValueListViewItemComponent } from '../../layout/list/list.view.value.item.directive';
 import { DbxValueAsListItem } from '../../layout/list/list.view.value';
-import { AbstractDbxListGridViewDirective, DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE_CONFIGURATION } from '../../layout/list/grid/list.grid.view.directive';
+import { AbstractDbxListGridViewDirective, DbxListGridViewDirectiveImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE } from '../../layout/list/grid/list.grid.view.directive';
 import { DbxValueListGridViewConfig } from '../../layout/list/grid/list.grid.view.component';
 import { provideDbxListView } from '../../layout/list/list.view';
-import { AbstractDbxListWrapperDirective, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION } from '../../layout/list/list.directive';
+import { AbstractDbxListWrapperDirective, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE } from '../../layout/list/list.directive';
 
 export type DbxWidgetDataPairWithSelection = DbxValueAsListItem<DbxWidgetDataPair>;
 
@@ -16,9 +16,9 @@ export type DbxWidgetDataPairWithSelection = DbxValueAsListItem<DbxWidgetDataPai
  */
 @Component({
   selector: 'dbx-widget-grid',
-  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<DbxWidgetDataPair> {
@@ -32,9 +32,9 @@ export class DbxWidgetListGridComponent extends AbstractDbxListWrapperDirective<
 
 @Component({
   selector: 'dbx-widget-grid-view',
-  template: DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE_CONFIGURATION.template,
-  imports: DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE_CONFIGURATION.imports,
-  changeDetection: DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE_CONFIGURATION.changeDetection,
+  template: DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE,
+  imports: [DbxListGridViewDirectiveImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   providers: provideDbxListView(DbxWidgetListGridViewComponent)
 })

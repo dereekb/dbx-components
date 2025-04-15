@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component, Directive, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Directive, NgModule, output } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ListSelectionState, ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';
 import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 
-export const DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
-  template: '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>' as const,
-  imports: [DbxSelectionValueListViewComponent] as const,
-  changeDetection: ChangeDetectionStrategy.OnPush as const
-};
+export const DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-selection-list-view [config]="config"></dbx-selection-list-view>';
+
+@NgModule({
+  exports: [DbxSelectionValueListViewComponent],
+  imports: [DbxSelectionValueListViewComponent]
+})
+export class DbxSelectionValueListViewComponentImportsModule {}
 
 // MARK: Selection List View
 /**
@@ -35,6 +37,6 @@ export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractD
 
 // MARK: Compat
 /**
- * @deprecated use DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template instead.
+ * @deprecated use DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE instead and import DbxSelectionValueListViewComponentImportsModule
  */
-export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template;
+export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE;

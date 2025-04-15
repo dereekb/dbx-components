@@ -1,25 +1,30 @@
 import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
-import { OnDestroy, Directive, Component, ChangeDetectionStrategy, input, output, computed, Signal } from '@angular/core';
+import { OnDestroy, Directive, Component, ChangeDetectionStrategy, input, output, computed, Signal, Type, NgModule } from '@angular/core';
 import { DbxListComponent, DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Configurable, type Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { NgModel } from '@angular/forms';
 
 // MARK: Wrapper
-export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION: Pick<Component, 'template' | 'imports' | 'changeDetection'> = {
-  template: `
+export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `
   <dbx-list [state]="currentState$" [config]="configSignal()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
     <ng-content top select="[top]"></ng-content>
     <ng-content bottom select="[bottom]"></ng-content>
     <ng-content empty select="[empty]"></ng-content>
     <ng-content emptyLoading select="[emptyLoading]"></ng-content>
   </dbx-list>
-  `,
-  imports: [DbxListComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
-};
+  `;
+
+const dbxListWrapperComponentImportsAndExports = [DbxListComponent];
+
+@NgModule({
+  exports: dbxListWrapperComponentImportsAndExports,
+  imports: dbxListWrapperComponentImportsAndExports
+})
+export class DbxListWrapperComponentImportsModule { }
 
 export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>;
 
@@ -103,6 +108,6 @@ export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxL
 
 // MARK: COMPAT
 /**
- * @deprecated update components to use DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION instead of just referencing only the template.
+ * @deprecated update components to use DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION instead of just referencing only the template and DbxListWrapperComponentImportsModule.
  */
-export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template;
+export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE;

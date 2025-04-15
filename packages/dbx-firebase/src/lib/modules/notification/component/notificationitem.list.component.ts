@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule } from '@dereekb/dbx-web';
 import { NotificationItem } from '@dereekb/firebase';
 import { cachedGetter } from '@dereekb/util';
 import { of } from 'rxjs';
@@ -11,9 +11,9 @@ export type NotificationItemWithSelection = DbxValueAsListItem<NotificationItem>
 
 @Component({
   selector: 'dbx-firebase-notificationitem-list',
-  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxFirebaseNotificationItemListComponent),
   standalone: true
 })
@@ -28,9 +28,9 @@ export class DbxFirebaseNotificationItemListComponent extends AbstractDbxSelecti
 
 @Component({
   selector: 'dbx-firebase-notificationitem-list-view',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxSelectionValueListViewComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListView(DbxFirebaseNotificationItemListViewComponent),
   standalone: true
 })

@@ -12,7 +12,7 @@ import { DbxActionFormDirective } from '../form.action.directive';
   selector: '[dbxActionFormSafety]',
   standalone: true
 })
-export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective implements OnDestroy<T, O> {
+export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
   readonly dbxActionForm = inject(DbxActionFormDirective<T>, { host: true });
   readonly dbxActionFormSafety = input<DbxActionTransitionSafetyType>('auto');
 

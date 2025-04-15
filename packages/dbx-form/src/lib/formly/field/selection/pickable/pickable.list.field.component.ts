@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, provideDbxListViewWrapper, DbxLoadingComponent, DbxSelectionValueListViewContentComponent } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, provideDbxListViewWrapper, DbxLoadingComponent, DbxSelectionValueListViewContentComponent, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { map, shareReplay } from 'rxjs';
 import { PickableValueFieldDisplayValue } from './pickable';
@@ -15,9 +15,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 // MARK: Selection List
 @Component({
   selector: 'dbx-form-pickable-item-field-item-list',
-  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxPickableListFieldItemListComponent),
   standalone: true
 })

@@ -4,6 +4,7 @@ export * from './expand.wrapper.component';
 export * from './flex.wrapper.component';
 export * from './form.wrapper.module';
 export * from './info.wrapper.component';
+export * from './style.wrapper.component';
 export * from './section.wrapper.component';
 export * from './subsection.wrapper.component';
 export * from './toggle.wrapper.component';

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
 
@@ -10,9 +10,9 @@ export type DbxFirebaseModelTypeInstanceListItem = DbxValueAsListItem<DbxFirebas
  */
 @Component({
   selector: 'dbx-firebase-model-type-instance-list',
-  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxFirebaseModelTypeInstanceListComponent),
   standalone: true
 })
@@ -27,9 +27,9 @@ export class DbxFirebaseModelTypeInstanceListComponent extends AbstractDbxSelect
 
 @Component({
   selector: 'dbx-firebase-model-type-instance-list-view',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxSelectionValueListViewComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListView(DbxFirebaseModelTypeInstanceListViewComponent),
   standalone: true
 })

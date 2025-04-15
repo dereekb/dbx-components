@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, DbxActionModule, DbxButtonComponent } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DbxSelectionValueListViewConfig, provideDbxListView, DbxValueAsListItem, provideDbxListViewWrapper, DbxActionModule, DbxButtonComponent, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxSelectionValueListViewComponentImportsModule, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE } from '@dereekb/dbx-web';
 import { from, of } from 'rxjs';
 import { ScheduledFunctionDevelopmentFirebaseFunctionListEntry } from '@dereekb/firebase';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
@@ -10,9 +10,9 @@ export type ScheduledFunctionDevelopmentFirebaseFunctionListEntryWithSelection =
 
 @Component({
   selector: 'dbx-firebase-development-scheduler-list',
-  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListViewWrapper(DbxFirebaseDevelopmentSchedulerListComponent),
   standalone: true
 })
@@ -27,9 +27,9 @@ export class DbxFirebaseDevelopmentSchedulerListComponent extends AbstractDbxSel
 
 @Component({
   selector: 'dbx-firebase-development-scheduler-list-view',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.template,
-  imports: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.imports,
-  changeDetection: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION.changeDetection,
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxSelectionValueListViewComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: provideDbxListView(DbxFirebaseDevelopmentSchedulerListViewComponent),
   standalone: true
 })
