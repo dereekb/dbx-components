@@ -286,3 +286,12 @@ Also update `tsconfig.base.json`:
 ```
 
 https://stackoverflow.com/a/76049970
+
+#### Remove "tsConfig" from "@nx/jest:jest" configurations
+The tsConfig configuration has been deprecated. When running tests you'll see the warning:
+
+```
+Option "tsConfig" is deprecated: Use the ts-jest configuration options in the jest config file instead.
+```
+
+Remove the `tsConfig` property from all `@nx/jest:jest` configurations in your application. There are other configurations where tsConfig is still used, so be careful not to remove it from those.

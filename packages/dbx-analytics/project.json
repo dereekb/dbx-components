@@ -43,7 +43,6 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-analytics", "{projectRoot}/.reports/jest/dbx-analytics.junit.xml"],
       "options": {
-        "tsConfig": "packages/dbx-analytics/tsconfig.lib.json",
         "jestConfig": "packages/dbx-analytics/jest.config.ts"
       }
     },

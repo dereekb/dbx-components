@@ -45,7 +45,6 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
-        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "jestConfig": "packages/dbx-firebase/jest.config.ts"
       }
     },

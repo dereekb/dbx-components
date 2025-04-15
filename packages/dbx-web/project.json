@@ -45,7 +45,6 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web", "{projectRoot}/.reports/jest/dbx-web.junit.xml"],
       "options": {
-        "tsConfig": "packages/dbx-web/tsconfig.lib.json",
         "jestConfig": "packages/dbx-web/jest.config.ts"
       }
     },
