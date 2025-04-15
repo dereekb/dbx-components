@@ -49,20 +49,20 @@ describe('Action Button', () => {
 
       it('button should be working.', () => {
         testComponent.button!.clickButton();
-        expect(testComponent.button!.working).toBe(true);
+        expect(testComponent.button?.workingSignal()).toBe(true);
       });
     });
 
     it('should stop working when the action completed.', () => {
       testComponent.directive!.sourceInstance.trigger();
-      expect(testComponent.button!.working).toBe(true);
+      expect(testComponent.button?.workingSignal()).toBe(true);
 
       testComponent.directive!.sourceInstance.readyValue(1);
 
       const SUCCESS_RESULT = 1;
       testComponent.directive!.sourceInstance.resolve(SUCCESS_RESULT);
 
-      expect(testComponent.button!.working).toBe(false);
+      expect(testComponent.button?.workingSignal()).toBe(false);
     });
   });
 

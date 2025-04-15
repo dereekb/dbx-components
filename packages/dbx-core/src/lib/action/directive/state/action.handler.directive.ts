@@ -30,6 +30,7 @@ export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown
 })
 export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   readonly handlerFunction = input.required<Maybe<Work<T, O>>>({ alias: 'dbxActionHandler' });
+
   protected readonly _handlerFunctionEffect = effect(() => {
     this._dbxActionHandlerInstance.setHandlerFunction(this.handlerFunction());
   });

@@ -1,16 +1,19 @@
+import { isLoadingStateWithError, loadingStateHasError } from './loading.state';
 import { type Destroyable, type Maybe, type ReadableError } from '@dereekb/util';
 import { BehaviorSubject, type Observable } from 'rxjs';
 import { type LoadingContext, type LoadingContextEvent } from './loading.context';
+import { tapLog } from '../rxjs';
 
 /**
  * Simple LoadingContext implementation
  */
 export class SimpleLoadingContext implements LoadingContext, Destroyable {
-  private _subject: BehaviorSubject<LoadingContextEvent>;
-  private _error: Maybe<ReadableError>;
+  private readonly _subject = new BehaviorSubject<LoadingContextEvent>({ loading: true });
+
+  readonly stream$: Observable<LoadingContextEvent> = this._subject.asObservable();
 
   constructor(loading = true) {
-    this._subject = new BehaviorSubject<LoadingContextEvent>({ loading });
+    this.setLoading(loading);
   }
 
   destroy(): void {
@@ -18,15 +21,14 @@ export class SimpleLoadingContext implements LoadingContext, Destroyable {
   }
 
   public hasError(): boolean {
-    return Boolean(this._error);
+    return isLoadingStateWithError(this._subject.value);
   }
 
   public clearError(): void {
-    delete this._error;
-  }
-
-  public get stream$(): Observable<LoadingContextEvent> {
-    return this._subject.asObservable();
+    this._subject.next({
+      ...this._subject.value,
+      error: undefined
+    });
   }
 
   public setSuccess(): void {
@@ -34,6 +36,7 @@ export class SimpleLoadingContext implements LoadingContext, Destroyable {
   }
 
   public setLoading(loading: boolean = true): void {
+    // clears the current error
     this._subject.next({
       loading
     });

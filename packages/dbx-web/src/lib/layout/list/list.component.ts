@@ -146,7 +146,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   private readonly _selectionModeSub = new SubscriptionObject();
   private readonly _onSelectionChangeSub = new SubscriptionObject();
 
-  readonly currentState$: Observable<Maybe<S>> = toObservable(this.state).pipe(switchMapMaybe(), tapLog('state'));
+  readonly currentState$: Observable<Maybe<S>> = toObservable(this.state).pipe(switchMapMaybe());
   readonly context = listLoadingStateContext<T, S>({ obs: this.currentState$, showLoadingOnNoValue: false });
 
   readonly isEmpty$ = this.context.isEmpty$;

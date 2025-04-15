@@ -92,7 +92,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
     const customSpinnerColorValue = this.customSpinnerColor();
     const customSpinnerColor: Maybe<string> = customSpinnerColorValue ?? customTextColorValue;
-    const disabled = !this.workingSignal() && this.disabledSignal(); // Only disabled if we're not working, in order to show the animation.
+
+    const disabledSignalValue = this.disabledSignal();
+    const disabled = !this.workingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.
 
     const textValue = this.text();
     const isIconOnlyButton = buttonIcon && !textValue;

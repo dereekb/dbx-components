@@ -2,7 +2,7 @@ import { Observable, shareReplay } from 'rxjs';
 import { Component, ChangeDetectionStrategy, input, computed, signal, Signal } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
-import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
+import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream, tapLog } from '@dereekb/rxjs';
 import { ErrorInput, type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -49,6 +49,8 @@ export class DbxLoadingComponent {
   readonly color = input<ThemePalette | DbxThemeColor>('primary');
   readonly diameter = input<Maybe<number>>();
   readonly linear = input<Maybe<boolean>>();
+  readonly loading = input<Maybe<boolean>>();
+  readonly error = input<Maybe<ErrorInput>>();
 
   readonly context = input<MaybeObservableOrValue<LoadingContext>>();
 
@@ -57,16 +59,15 @@ export class DbxLoadingComponent {
   readonly contextStream$: Observable<Maybe<LoadingContextEvent>> = toObservable(this.contextSignal).pipe(maybeValueFromObservableOrValue(), switchMapMaybeLoadingContextStream(), shareReplay(1));
   readonly contextStreamSignal = toSignal(this.contextStream$);
 
-  readonly loading = input<Maybe<boolean>>();
-  readonly error = input<Maybe<ErrorInput>>();
-
   readonly stateSignal = computed<DbxLoadingComponentState>(() => {
+    const loading = this.loading();
+    const error = this.error();
     let loadingState = this.contextStreamSignal() as DbxLoadingComponentState;
 
     if (loadingState == null) {
       loadingState = {
-        loading: this.loading() ?? false,
-        error: this.error()
+        loading: loading ?? false,
+        error: error
       };
     }
 
