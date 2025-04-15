@@ -319,3 +319,27 @@ When performing this migration the `package.json` will attempt to be updated for
 https://nx.dev/nx-api/angular/documents/angular-nx-version-matrix
 
 The latest version of Nx (v20 at time of writing) supports Angular 18.
+
+Many of the migrations that will be generated in `migrations.json` will be for Angular 19 and will be ignored, so they can be deleted.
+
+#### Run the migrations
+- run ```npx nx migrate --run-migrations```
+
+#### Nx Legacy Cache
+There is a new cache in Nx. The legacy cache setting is added as part of the Nx 20 migration. You can disable the legacy cache by removing the `useLegacyCache` setting from the `nx.json` file.
+
+https://nx.dev/deprecated/legacy-cache
+
+##### New Nx Cache Error
+You may encounter an error like this below:
+
+```
+ Unable to set journal_mode: DB pragma update error: SqliteFailure(Error { code: SystemIoFailure, extended_code: 522 }, Some("disk I/O error"))
+```
+
+To remedy, we just had to delete `node_modules` and rerun `npm install`.
+
+#### Updating Nx Global Installation
+You can update the global Nx installation by running:
+
+```npm install -g nx@v20.8.0``
