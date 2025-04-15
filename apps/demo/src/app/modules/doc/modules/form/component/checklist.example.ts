@@ -1,6 +1,5 @@
-import { Configurable } from '@dereekb/util';
+import { Configurable, KeyValueTransformMap } from '@dereekb/util';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDataSetBuilder, ChecklistType, ChecklistItemFieldBuilderInput, flexLayoutWrapper } from '@dereekb/dbx-form';
-import { KeyValueTransformMap } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable } from 'rxjs';
 

@@ -1,8 +1,8 @@
-import { Directive, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxRouterService, isSegueRefActive } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { shareReplay, distinctUntilChanged, Subscription } from 'rxjs';
-import { isNot, tapLog } from '@dereekb/rxjs';
+import { isNot } from '@dereekb/rxjs';
 
 /**
  * Used with a DbxTwoColumnComponent to control showing right when the current route is a child of the backRef.

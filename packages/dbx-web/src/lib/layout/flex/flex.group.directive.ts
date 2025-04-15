@@ -1,8 +1,8 @@
 import { ScreenMediaWidthType } from '../../screen/screen';
 import { DbxScreenMediaService } from '../../screen/screen.service';
-import { Directive, ChangeDetectorRef, OnInit, OnDestroy, inject, input, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { map, distinctUntilChanged, shareReplay } from 'rxjs';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 

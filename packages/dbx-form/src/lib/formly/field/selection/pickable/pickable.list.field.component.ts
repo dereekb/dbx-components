@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, provideDbxListViewWrapper, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION, DbxLoadingComponent, DbxSelectionValueListViewContentComponent } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION, provideDbxListViewWrapper, DbxLoadingComponent, DbxSelectionValueListViewContentComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
-import { map, Observable, of, shareReplay } from 'rxjs';
+import { map, shareReplay } from 'rxjs';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';
 import { MatIconModule } from '@angular/material/icon';

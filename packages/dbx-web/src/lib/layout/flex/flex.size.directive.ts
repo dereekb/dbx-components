@@ -1,4 +1,4 @@
-import { Input, Directive, input, computed } from '@angular/core';
+import { Directive, input, computed } from '@angular/core';
 import { DbxFlexSize } from './flex';
 
 /**

@@ -4,7 +4,7 @@
   "peerDependencies": {
     "@angular/common": "^18.0.0",
     "@angular/core": "^18.0.0",
-    "date-fns": "^2.30.0",
+    "date-fns": "^3.0.0",
     "rxjs": "^7.5.0",
     "@dereekb/dbx-core": "*",
     "@dereekb/rxjs": "*",
@@ -20,7 +20,9 @@
     "@ngbracket/ngx-layout": "^18.0.0",
     "ngx-mat-intl-tel-input": "^5.0.0",
     "@dereekb/model": "*",
-    "@angular/platform-browser": "^18.0.0"
+    "@angular/platform-browser": "^18.0.0",
+    "@angular/material-date-fns-adapter": "^18.0.0",
+    "@angular/cdk": "^18.0.0"
   },
   "dependencies": {},
   "exports": {

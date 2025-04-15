@@ -1,5 +1,5 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { delay, Observable } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
@@ -7,7 +7,6 @@ import { type Maybe } from '@dereekb/util';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxTwoColumnColumnHeadDirective } from './two.column.head.directive';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxAnchorComponent } from '../../../router';
 
 /**

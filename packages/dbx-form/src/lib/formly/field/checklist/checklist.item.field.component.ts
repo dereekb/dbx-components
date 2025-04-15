@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type, inject, signal } from '@angular/core';
-import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges, DbxInjectionComponent } from '@dereekb/dbx-core';
-import { ObservableOrValue, switchMapFilterMaybe } from '@dereekb/rxjs';
+import { ChangeDetectionStrategy, Component, OnInit, Type, inject, signal } from '@angular/core';
+import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, DbxInjectionComponent } from '@dereekb/dbx-core';
+import { switchMapFilterMaybe } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, Observable } from 'rxjs';
 import { ValidationErrors, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { FieldType, FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';

@@ -7,8 +7,8 @@ import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
 import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
-import { asObservable, tapLog } from '@dereekb/rxjs';
-import { MatListItem, MatListModule, MatNavList } from '@angular/material/list';
+import { asObservable } from '@dereekb/rxjs';
+import { MatListModule, MatNavList } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 

@@ -12,7 +12,9 @@
     "@ngrx/store": "^18.0.0",
     "@uirouter/core": "^6.0.8",
     "@dereekb/date": "*",
-    "date-fns": "^2.30.0"
+    "date-fns": "^3.0.0",
+    "@angular/router": "^18.0.0",
+    "class-validator": "^0.14.0"
   },
   "dependencies": {},
   "devDependencies": {

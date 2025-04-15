@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, distinctUntilChanged, switchMap, of, Observable } from 'rxjs';
+import { map, distinctUntilChanged } from 'rxjs';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
-import { MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapFilterMaybe } from '@dereekb/rxjs';
+import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 
 @Component({
   selector: 'dbx-table-item-action',

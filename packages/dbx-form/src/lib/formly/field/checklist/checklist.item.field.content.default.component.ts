@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from './checklist.item';
 import { NgIf } from '@angular/common';
 import { type Maybe } from '@dereekb/util';
-import { toSignal } from '@angular/core/rxjs-interop';
 
 // MARK: Default
 @Component({

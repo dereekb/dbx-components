@@ -15,7 +15,6 @@ import { DbxTableItemHeaderComponent } from './table.item.header.component';
 import { DbxTableItemActionComponent } from './table.item.action.component';
 import { DbxTableActionCellComponent } from './table.cell.action.component';
 import { DbxTableColumnHeaderComponent } from './table.column.header.component';
-import { CdkTableDataSourceInput } from '@angular/cdk/table';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';

@@ -1,7 +1,7 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
 import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues } from '@dereekb/util';
-import { Directive, OnDestroy, OnInit, viewChild, ViewChild } from '@angular/core';
+import { Directive, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';

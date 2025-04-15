@@ -1,7 +1,7 @@
-import { OnDestroy, ChangeDetectionStrategy, OnInit, Component, ElementRef, inject, signal, input, computed, effect } from '@angular/core';
+import { OnDestroy, ChangeDetectionStrategy, Component, ElementRef, inject, input, effect } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
-import { Observable, combineLatest, delay, distinct, distinctUntilChanged, map, throttleTime } from 'rxjs';
+import { Observable, combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentContainerDirective } from '../../content/content.container.directive';

@@ -1,5 +1,4 @@
-import { OnInit, Directive, inject, input, effect } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { Directive, inject, input, effect } from '@angular/core';
 import { isNotFalse, type Maybe } from '@dereekb/util';
 import { TwoColumnsContextStore } from './two.column.store';
 

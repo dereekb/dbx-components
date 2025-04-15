@@ -1,7 +1,7 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
 import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListTitleGroupTitleDelegate } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
-import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading, tapLog } from '@dereekb/rxjs';
+import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
