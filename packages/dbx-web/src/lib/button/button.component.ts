@@ -70,9 +70,6 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   });
 
   readonly configSignal = computed<DbxProgressButtonConfig>(() => {
-    const iconValue = this.icon();
-    const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
-
     // configure custom style
     const customStyle = {} as {
       [key: string]: string;
@@ -96,7 +93,10 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const disabledSignalValue = this.disabledSignal();
     const disabled = !this.workingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.
 
-    const textValue = this.text();
+    const iconValue = this.iconSignal();
+    const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
+
+    const textValue = this.textSignal();
     const isIconOnlyButton = buttonIcon && !textValue;
 
     const config: Configurable<DbxProgressButtonConfig> = {

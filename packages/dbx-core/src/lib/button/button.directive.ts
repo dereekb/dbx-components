@@ -35,8 +35,10 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   readonly buttonDisplayContentSignal: Signal<DbxButtonDisplay> = computed(() => {
     const icon = this.icon();
     const text = this.text();
-    const buttonDisplayContent = this._buttonDisplayContentSignal() ?? this.buttonDisplay();
-    return { icon: icon ?? buttonDisplayContent?.icon, text: text ?? buttonDisplayContent?.text };
+    const buttonDisplay = this.buttonDisplay();
+
+    const buttonDisplayContent = this._buttonDisplayContentSignal() ?? buttonDisplay;
+    return { icon: icon || buttonDisplayContent?.icon, text: text || buttonDisplayContent?.text };
   });
 
   readonly buttonDisplayTypeSignal: Signal<DbxButtonDisplayType> = computed(() => {

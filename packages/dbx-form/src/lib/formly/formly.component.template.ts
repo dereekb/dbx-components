@@ -1,10 +1,24 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { provideFormlyContext } from './formly.context';
 import { DbxFormlyComponent } from './formly.form.component';
 
-export const FORMLY_FORM_COMPONENT_TEMPLATE: Pick<Component, 'template' | 'imports' | 'providers' | 'changeDetection'> = {
-  template: `<dbx-formly></dbx-formly>`,
-  imports: [DbxFormlyComponent],
-  providers: [provideFormlyContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
-};
+/**
+ * Default template for a view that extends AbstractFormlyFormDirective.
+ */
+export const DBX_FORMLY_FORM_COMPONENT_TEMPLATE = `<dbx-formly></dbx-formly>`;
+
+/**
+ * Default providers for a view that extends AbstractFormlyFormDirective.
+ */
+export const dbxFormlyFormComponentProviders = provideFormlyContext;
+
+const dbxFormlyFormComponentImports = [DbxFormlyComponent];
+
+/**
+ * Default imports module for a view that extends AbstractFormlyFormDirective.
+ */
+@NgModule({
+  imports: dbxFormlyFormComponentImports,
+  exports: dbxFormlyFormComponentImports
+})
+export class DbxFormlyFormComponentImportsModule {}

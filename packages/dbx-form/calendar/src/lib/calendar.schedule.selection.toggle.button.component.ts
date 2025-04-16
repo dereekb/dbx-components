@@ -1,9 +1,9 @@
-import { Component, Injector, Input, OnDestroy, inject } from '@angular/core';
-import { DbxPopoverService } from '@dereekb/dbx-web';
-import { BehaviorSubject, distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, input } from '@angular/core';
+import { DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Toggle button for selecting and clearing the current selection.
@@ -11,67 +11,61 @@ import { type Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-schedule-selection-calendar-selection-toggle-button',
   template: `
-    <dbx-button [disabled]="disableButton$ | async" [buttonDisplay]="buttonDisplay$ | async" [raised]="true" (buttonClick)="toggleSelection()"></dbx-button>
-  `
+    <dbx-button [disabled]="disableButtonSignal()" [buttonDisplay]="buttonDisplaySignal()" [raised]="true" (buttonClick)="toggleSelection()"></dbx-button>
+  `,
+  imports: [DbxButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent implements OnDestroy {
-  readonly popoverService = inject(DbxPopoverService);
+export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {
+  readonly disabled = input<Maybe<boolean>>();
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
-  readonly injector = inject(Injector);
 
-  private _disabled = new BehaviorSubject<Maybe<boolean>>(false);
+  readonly selectionModeSignal = toSignal(this.dbxCalendarScheduleSelectionStore.selectionMode$, { initialValue: 'multiple' });
+  readonly nextToggleSelectionSignal = toSignal(this.dbxCalendarScheduleSelectionStore.nextToggleSelection$, { initialValue: 'none' });
 
-  readonly disableButton$ = this._disabled.pipe(
-    switchMap((disabled) => {
-      if (disabled) {
-        return of(true);
-      } else {
-        return this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(map((x) => !x));
-      }
-    }),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly disableButtonSignal = computed(() => {
+    const disabled = this.disabled();
+    const nextToggleSelection = this.nextToggleSelectionSignal();
+    let disableButton = false;
 
-  readonly buttonDisplay$ = this.dbxCalendarScheduleSelectionStore.selectionMode$.pipe(
-    switchMap((selectionMode) => {
-      return this.dbxCalendarScheduleSelectionStore.nextToggleSelection$.pipe(
-        map((x) => {
-          let buttonDisplay: DbxButtonDisplay;
+    if (disabled) {
+      disableButton = true;
+    } else {
+      disableButton = !nextToggleSelection;
+    }
 
-          switch (x) {
-            case 'all':
-              buttonDisplay = {
-                icon: 'select_all',
-                text: 'Select All'
-              };
-              break;
-            default:
-            case 'none':
-              buttonDisplay = {
-                icon: 'clear',
-                text: selectionMode === 'multiple' ? 'Clear All' : 'Clear'
-              };
-              break;
-          }
+    return disableButton;
+  });
 
-          return buttonDisplay;
-        })
-      );
-    }),
-    shareReplay(1)
-  );
+  readonly buttonDisplaySignal = computed(() => {
+    const selectionMode = this.selectionModeSignal();
+    const nextToggleSelection = this.nextToggleSelectionSignal();
 
-  ngOnDestroy(): void {
-    this._disabled.complete();
-  }
+    let buttonDisplay: DbxButtonDisplay;
+
+    switch (nextToggleSelection) {
+      case 'all':
+        buttonDisplay = {
+          icon: 'select_all',
+          text: 'Select All'
+        };
+        break;
+      default:
+      case 'none':
+        buttonDisplay = {
+          icon: 'clear',
+          text: selectionMode === 'multiple' ? 'Clear All' : 'Clear'
+        };
+        break;
+    }
+
+    console.log({ buttonDisplay });
+
+    return buttonDisplay;
+  });
 
   toggleSelection() {
     this.dbxCalendarScheduleSelectionStore.toggleSelection();
-  }
-
-  @Input()
-  set disabled(disabled: Maybe<boolean>) {
-    this._disabled.next(disabled);
   }
 }
