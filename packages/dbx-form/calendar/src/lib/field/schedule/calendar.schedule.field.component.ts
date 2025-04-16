@@ -87,15 +87,15 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
-  private _syncSub = new SubscriptionObject();
-  private _valueSub = new SubscriptionObject();
-  private _timezoneSub = new SubscriptionObject();
-  private _minMaxDateRangeSub = new SubscriptionObject();
-  private _defaultWeekSub = new SubscriptionObject();
-  private _filterSub = new SubscriptionObject();
-  private _exclusionsSub = new SubscriptionObject();
+  private readonly _syncSub = new SubscriptionObject();
+  private readonly _valueSub = new SubscriptionObject();
+  private readonly _timezoneSub = new SubscriptionObject();
+  private readonly _minMaxDateRangeSub = new SubscriptionObject();
+  private readonly _defaultWeekSub = new SubscriptionObject();
+  private readonly _filterSub = new SubscriptionObject();
+  private readonly _exclusionsSub = new SubscriptionObject();
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(

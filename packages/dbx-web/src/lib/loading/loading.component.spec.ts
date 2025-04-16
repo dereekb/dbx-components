@@ -1,14 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext } from '@angular/core';
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
-import { tapLog, ValuesLoadingContext } from '@dereekb/rxjs';
+import { ValuesLoadingContext } from '@dereekb/rxjs';
 import { DbxErrorComponent } from '../error';
 import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
 import { filter, first } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { ErrorInput, Maybe } from '@dereekb/util';
+import { Maybe } from '@dereekb/util';
 import { DbxLoadingComponent } from './loading.component';
 
 describe('DbxLoadingComponent', () => {

@@ -17,7 +17,7 @@
             <button mat-icon-button [disabled]="isLookingAtMinimumDateSignal()" [attr.aria-label]="'Previous ' + displayTypeSignal() + ' button'" (click)="previousButtonClicked()">
               <mat-icon>navigate_before</mat-icon>
             </button>
-            <button mat-icon-button [disabled]="isLookingAtMaximumDateSignal()" [attr.aria-label]="'Next' + displayTypeSignal() + ' button'" (click)="nextButtonClicked()">
+            <button mat-icon-button [disabled]="isLookingAtMaximumDateSignal()" [attr.aria-label]="'Next ' + displayTypeSignal() + ' button'" (click)="nextButtonClicked()">
               <mat-icon>navigate_next</mat-icon>
             </button>
             @if (showPageButtonsSignal()) {

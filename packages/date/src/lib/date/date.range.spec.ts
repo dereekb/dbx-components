@@ -1,6 +1,6 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
-import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitUTCDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
+import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeStart, DateRangeType, expandDaysForDateRangeFunction, fitUTCDateRangeToDayPeriod, getDaysOfWeekInDateRange, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
 
 describe('dateRange()', () => {
   const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
@@ -239,6 +239,11 @@ describe('dateRangeOverlapsDateRangeFunction()', () => {
       expect(overlapsDateRange(containedDateRange)).toBe(false);
     });
 
+    it('should return false if the dateRangeStart value is before range.', () => {
+      const containedDateRange: DateRangeStart = { start: new Date(-10) };
+      expect(overlapsDateRange(containedDateRange)).toBe(false);
+    });
+
     it('should return false if the dateRange is after the range.', () => {
       const containedDateRange = { start: addHours(dateRange.end, 1), end: addHours(dateRange.end, 2) };
       expect(overlapsDateRange(containedDateRange)).toBe(false);
@@ -246,6 +251,11 @@ describe('dateRangeOverlapsDateRangeFunction()', () => {
 
     it('should return true if the dateRange is contained within the range.', () => {
       const containedDateRange = { start: new Date(1), end: new Date(2) };
+      expect(overlapsDateRange(containedDateRange)).toBe(true);
+    });
+
+    it('should return true if the dateRangeStart value is contained within the range.', () => {
+      const containedDateRange: DateRangeStart = { start: new Date(1) };
       expect(overlapsDateRange(containedDateRange)).toBe(true);
     });
 

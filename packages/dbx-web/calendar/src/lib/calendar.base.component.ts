@@ -8,7 +8,6 @@ import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
-import { CalendarDatePipe } from 'angular-calendar/modules/common/calendar-date/calendar-date.pipe';
 import { CalendarModule } from 'angular-calendar';
 
 @Component({
@@ -48,12 +47,14 @@ export class DbxCalendarBaseComponent<T> {
   readonly viewDateSignal = toSignal(this.viewDate$, { initialValue: new Date() });
   readonly showTodayButtonSignal = toSignal(this.showTodayButton$);
   readonly canJumpToTodaySignal = toSignal(this.canJumpToToday$);
-  readonly isLookingAtMinimumDateSignal = toSignal(this.isLookingAtMinimumDate$);
-  readonly isLookingAtMaximumDateSignal = toSignal(this.isLookingAtMaximumDate$);
-  readonly hasMultiplePagesSignal = toSignal(this.hasMultiplePages$);
+  readonly isLookingAtMinimumDateSignal = toSignal(this.isLookingAtMinimumDate$, { initialValue: false });
+  readonly isLookingAtMaximumDateSignal = toSignal(this.isLookingAtMaximumDate$, { initialValue: false });
+  readonly hasMultiplePagesSignal = toSignal(this.hasMultiplePages$, { initialValue: false });
   readonly showPageButtonsSignal = toSignal(this.showPageButtons$);
   readonly activeDayIsOpenSignal = toSignal(this.activeDayIsOpen$);
   readonly displayTypeSignal = toSignal(this.displayType$);
+
+  constructor() {}
 
   todayClicked(): void {
     this.calendarStore.tapDay(new Date());
