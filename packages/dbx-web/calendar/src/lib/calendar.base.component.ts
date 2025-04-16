@@ -54,8 +54,6 @@ export class DbxCalendarBaseComponent<T> {
   readonly activeDayIsOpenSignal = toSignal(this.activeDayIsOpen$);
   readonly displayTypeSignal = toSignal(this.displayType$);
 
-  constructor() {}
-
   todayClicked(): void {
     this.calendarStore.tapDay(new Date());
   }

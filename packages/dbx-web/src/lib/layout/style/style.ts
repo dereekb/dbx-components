@@ -1,4 +1,4 @@
-import { CssClass, type Maybe } from '@dereekb/util';
+import { CharacterPrefixSuffixCleanString, CssClass, DASH_CHARACTER_PREFIX_INSTANCE, DashPrefixString, type Maybe } from '@dereekb/util';
 
 // MARK: App Styling
 /**
@@ -11,9 +11,25 @@ export type DbxStyleName = string;
 /**
  * A suffix that can be added to a style class to differentiate a separate mode.
  *
+ * Dark mode is an example, with the suffix 'dark' or '-dark'. The suffix does not have to
+ */
+export type DbxStyleClassSuffix = DbxStyleClassCleanSuffix | DbxStyleClassDashSuffix;
+
+/**
+ * A DbxStyleClassSuffix that does not start with a dash.
+ *
+ * Dark mode is an example, with the suffix 'dark'.
+ */
+export type DbxStyleClassCleanSuffix = CharacterPrefixSuffixCleanString;
+
+/**
+ * A DbxStyleClassSuffix that starts with a dash.
+ *
  * Dark mode is an example, with the suffix '-dark'.
  */
-export type DbxStyleClassSuffix = string | `-${string}`;
+export type DbxStyleClassDashSuffix = DashPrefixString;
+
+export const dbxStyleClassCleanSuffix = DASH_CHARACTER_PREFIX_INSTANCE.cleanString;
 
 /**
  * A style class that is a combination of a style name and a suffix.
