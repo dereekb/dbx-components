@@ -1,14 +1,22 @@
 <dbx-calendar-base>
   <ng-container controls>
-    <mat-button-toggle-group name="calendarDisplayStyle" [value]="(displayType$ | async)!" (change)="typeToggleChanged($event)" aria-label="Display Style">
+    <mat-button-toggle-group name="calendarDisplayStyle" [value]="displayTypeSignal()" (change)="typeToggleChanged($event)" aria-label="Display Style">
       <mat-button-toggle value="month">Month</mat-button-toggle>
       <mat-button-toggle value="week">Week</mat-button-toggle>
       <mat-button-toggle value="day">Day</mat-button-toggle>
     </mat-button-toggle-group>
   </ng-container>
-  <div class="dbx-calendar-content" [ngClass]="'dbx-calendar-content-' + (displayType$ | async)!" [ngSwitch]="displayType$ | async">
-    <mwl-calendar-month-view *ngSwitchCase="'month'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" [activeDayIsOpen]="(activeDayIsOpen$ | async)!" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-month-view>
-    <mwl-calendar-week-view *ngSwitchCase="'week'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-week-view>
-    <mwl-calendar-day-view *ngSwitchCase="'day'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-day-view>
+  <div class="dbx-calendar-content" [ngClass]="displayTypeClassSignal()">
+    @switch (displayTypeSignal()) {
+      @case ('month') {
+        <mwl-calendar-month-view [viewDate]="viewDateSignal()" [events]="eventsSignal()" [activeDayIsOpen]="activeDayIsOpenSignal()" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-month-view>
+      }
+      @case ('week') {
+        <mwl-calendar-week-view [viewDate]="viewDateSignal()" [events]="eventsSignal()" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-week-view>
+      }
+      @case ('day') {
+        <mwl-calendar-day-view [viewDate]="viewDateSignal()" [events]="eventsSignal()" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-day-view>
+      }
+    }
   </div>
 </dbx-calendar-base>

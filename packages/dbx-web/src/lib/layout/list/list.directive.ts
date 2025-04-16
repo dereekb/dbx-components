@@ -15,8 +15,7 @@ export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `
     <ng-content bottom select="[bottom]"></ng-content>
     <ng-content empty select="[empty]"></ng-content>
     <ng-content emptyLoading select="[emptyLoading]"></ng-content>
-  </dbx-list>
-  `;
+  </dbx-list>`;
 
 const dbxListWrapperComponentImportsAndExports = [DbxListComponent];
 
@@ -24,7 +23,7 @@ const dbxListWrapperComponentImportsAndExports = [DbxListComponent];
   exports: dbxListWrapperComponentImportsAndExports,
   imports: dbxListWrapperComponentImportsAndExports
 })
-export class DbxListWrapperComponentImportsModule { }
+export class DbxListWrapperComponentImportsModule {}
 
 export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>;
 

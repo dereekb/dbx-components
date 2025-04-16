@@ -1,24 +1,32 @@
 <div class="dbx-calendar">
-  <h3 class="dbx-calendar-title">{{ (viewDate$ | async)! | calendarDate: (displayType$ | async) + 'ViewTitle' : 'en' }}</h3>
+  <h3 class="dbx-calendar-title">{{ viewDateSignal() | calendarDate: displayTypeSignal() + 'ViewTitle' : 'en' }}</h3>
   <div class="dbx-calendar-header">
     <div class="dbx-calendar-controls" fxLayout="row" fxLayout.xs="column" ngClass.xs="dbx-calendar-controls-compact">
       <span class="dbx-calendar-controls-left dbx-flex-bar" fxFlex="nogrow">
-        <button *ngIf="showTodayButton$ | async" mat-stroked-button [disabled]="!(canJumpToToday$ | async)" (click)="todayClicked()">Today</button>
+        @if (showTodayButtonSignal()) {
+          <button mat-stroked-button [disabled]="!canJumpToTodaySignal()" (click)="todayClicked()">Today</button>
+        }
         <dbx-button-spacer></dbx-button-spacer>
-        <div class="d-iblock" *ngIf="hasMultiplePages$ | async">
-          <button *ngIf="showPageButtons$ | async" mat-icon-button [disabled]="isLookingAtMinimumDate$ | async" aria-label="first page button" (click)="firstPageButtonClicked()">
-            <mat-icon>first_page</mat-icon>
-          </button>
-          <button mat-icon-button [disabled]="isLookingAtMinimumDate$ | async" [attr.aria-label]="'Previous ' + (displayType$ | async) + ' button'" (click)="previousButtonClicked()">
-            <mat-icon>navigate_before</mat-icon>
-          </button>
-          <button mat-icon-button [disabled]="isLookingAtMaximumDate$ | async" [attr.aria-label]="'Next' + (displayType$ | async)! + ' button'" (click)="nextButtonClicked()">
-            <mat-icon>navigate_next</mat-icon>
-          </button>
-          <button *ngIf="showPageButtons$ | async" mat-icon-button [disabled]="isLookingAtMaximumDate$ | async" aria-label="last page button" (click)="lastPageButtonClicked()">
-            <mat-icon>last_page</mat-icon>
-          </button>
-        </div>
+        @if (hasMultiplePagesSignal()) {
+          <div class="d-iblock">
+            @if (showPageButtonsSignal()) {
+              <button mat-icon-button [disabled]="isLookingAtMinimumDateSignal()" aria-label="first page button" (click)="firstPageButtonClicked()">
+                <mat-icon>first_page</mat-icon>
+              </button>
+            }
+            <button mat-icon-button [disabled]="isLookingAtMinimumDateSignal()" [attr.aria-label]="'Previous ' + displayTypeSignal() + ' button'" (click)="previousButtonClicked()">
+              <mat-icon>navigate_before</mat-icon>
+            </button>
+            <button mat-icon-button [disabled]="isLookingAtMaximumDateSignal()" [attr.aria-label]="'Next' + displayTypeSignal() + ' button'" (click)="nextButtonClicked()">
+              <mat-icon>navigate_next</mat-icon>
+            </button>
+            @if (showPageButtonsSignal()) {
+              <button mat-icon-button [disabled]="isLookingAtMaximumDateSignal()" aria-label="last page button" (click)="lastPageButtonClicked()">
+                <mat-icon>last_page</mat-icon>
+              </button>
+            }
+          </div>
+        }
       </span>
       <span class="spacer"></span>
       <span class="dbx-calendar-controls-right" fxFlex="nogrow">

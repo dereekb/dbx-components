@@ -83,6 +83,10 @@ export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends Prima
 
 const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';
 
+const DEFAULT_SEARCHABLE_FIELD_DISPLAY: Partial<DbxInjectionComponentConfig> = {
+  componentClass: DbxDefaultSearchableFieldDisplayComponent
+};
+
 /**
  * Abstract searchable field that provides a feature for searching for values, and for displaying values using Observables.
  *
@@ -99,11 +103,6 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
    * Optional override set by the parent class for whether or not to allow the current value to sync to the input.
    */
   allowSyncValueToInput = false;
-
-  /**
-   * Optional override set by the parent class for picking a default display for this directive.
-   */
-  defaultDisplay?: DbxInjectionComponentConfig;
 
   /**
    * Default placeholder text to use when searchOnEmptyText is false.
@@ -284,7 +283,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
         if (needsDisplay.length > 0) {
           // Go get the display value.
           const displayValuesObs = this.displayForValue(needsDisplay.map((x) => x[2]));
-          const defaultDisplay = mergeDbxInjectionComponentConfigs([this.defaultDisplay, this.display]);
+          const defaultDisplay = mergeDbxInjectionComponentConfigs([DEFAULT_SEARCHABLE_FIELD_DISPLAY, this.display]);
+
           const anchorForValue = this.useAnchor && this.anchorForValue;
 
           obs = displayValuesObs.pipe(
@@ -336,13 +336,6 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
     if (this.searchableField.textInputValidator) {
       this.inputCtrl.setValidators(this.searchableField.textInputValidator);
-    }
-
-    if (!this.defaultDisplay?.componentClass) {
-      this.defaultDisplay = {
-        ...this.defaultDisplay,
-        componentClass: DbxDefaultSearchableFieldDisplayComponent
-      };
     }
 
     if (this.allowSyncValueToInput && this.multiSelect === false) {

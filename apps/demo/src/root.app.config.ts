@@ -16,6 +16,7 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
 import { FormlyModule } from '@ngx-formly/core';
+import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -167,6 +168,7 @@ export const appConfig: ApplicationConfig = {
       }
     }),
     // dbx-web extensions
+    provideDbxCalendar(),
     provideDbxModelService(),
     // dbx-form, form related
     provideDbxFormConfiguration(),

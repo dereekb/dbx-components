@@ -1,4 +1,4 @@
-Take a look at @update-component-signals-example.ts to understand how to update Angular 16 components to Angular 18 components. You will be working with a developer to save time making updates to modernize components.
+Take a look at @update-component-example.ts to understand how to update Angular 16 components to Angular 18 components. You will be working with a developer to save time making updates to modernize components.
 
 The updates follow the following rules:
 - Angular Directives and Components should be marked as `standalone: true`

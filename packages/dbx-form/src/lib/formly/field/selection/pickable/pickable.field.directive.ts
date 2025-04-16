@@ -1,6 +1,6 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, mapIsListLoadingStateWithEmptyValue, startWithBeginLoading, SubscriptionObject, listLoadingStateContext } from '@dereekb/rxjs';
-import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues } from '@dereekb/util';
+import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues, Configurable } from '@dereekb/util';
 import { Directive, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
@@ -154,7 +154,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
         return this.loadDisplayValuesForValues(valuesNotInDisplayMap).pipe(
           map((x) =>
             mapLoadingStateResults(x, {
-              mapValue: (loadedValues: PickableValueFieldDisplayValueWithHash<T, M, H>[]) => {
+              mapValue: (loadedValues: Configurable<PickableValueFieldDisplayValueWithHash<T, M, H>>[]) => {
                 loadedValues.forEach((x) => (x.isUnknown = x.isUnknown ?? true)); // Assign unknown flag.
                 return [...displayValues, ...loadedValues];
               }

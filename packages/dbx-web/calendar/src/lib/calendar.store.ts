@@ -13,18 +13,18 @@ export enum CalendarDisplayType {
 }
 
 export interface CalendarViewDateRange {
-  type: CalendarDisplayType;
-  start: Date;
-  end: Date;
-  distance: number;
+  readonly type: CalendarDisplayType;
+  readonly start: Date;
+  readonly end: Date;
+  readonly distance: number;
   /**
    * Whether or not the min navigation date is currently visible. This implies that we're at the minimum date.
    */
-  isMinDateVisible: boolean;
+  readonly isMinDateVisible: boolean;
   /**
    * Whether or not the maximum navigation date is visible. This implies that we're at the maximum date.
    */
-  isMaxDateVisible: boolean;
+  readonly isMaxDateVisible: boolean;
 }
 
 export interface CalendarState<T = any> {

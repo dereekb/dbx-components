@@ -4,23 +4,23 @@ export interface SelectionValue<T, M = unknown> {
   /**
    * Value associated with this field.
    */
-  value: T;
+  readonly value: T;
   /**
    * Optional metadata on the field.
    */
-  meta?: Maybe<M>;
+  readonly meta?: Maybe<M>;
 }
 
 /**
  * Displayed value.
  */
 export interface SelectionDisplayValue<T, M = unknown> extends SelectionValue<T, M>, LabelRef {
-  sublabel?: string;
-  icon?: string;
+  readonly sublabel?: string;
+  readonly icon?: string;
   /**
    * Whether or not the value is known.
    */
-  isUnknown?: Maybe<boolean>;
+  readonly isUnknown?: Maybe<boolean>;
 }
 
 /**

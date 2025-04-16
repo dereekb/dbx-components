@@ -100,6 +100,10 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
 
     const { init, injector: inputInjector, providers, ngModuleRef, componentClass, data } = config;
 
+    if (!componentClass) {
+      throw new Error('DbxInjectionInstance: componentClass was expected in the config but it was unavailable.');
+    }
+
     const parentInjector = inputInjector ?? this._injector;
     let injector: Injector | undefined = parentInjector;
 

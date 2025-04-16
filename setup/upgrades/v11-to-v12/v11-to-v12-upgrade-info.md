@@ -253,7 +253,7 @@ bootstrapApplication(UIView, appConfig)
 - `valueFromLoadingState()` now always returns the value from the loading state, where as prior it was equivalent to `valueFromFinishedLoadingState()`, which only returned the value if the loading state was finished loading.
 - dbxButton now has a new icon-only sizing presentation for icon-only buttons that is smaller than a fab. Previously the presentation would be equivalent to what now requires [fab]="true" configuration.
 - Renamed `switchMapMaybeObs` to `switchMapFilterMaybe`.
-  
+- Removed `DbxCalendarRootModule` and replaced with `provideDbxCalendar()`.
 
 #### Updating DbxList related views
 All views like this should consider being updated to standalone views. The template is still available, but now 
