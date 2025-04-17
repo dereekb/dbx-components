@@ -18,9 +18,9 @@ import { DbxSectionHeaderComponent } from './section.header.component';
     class: 'd-block dbx-section',
     '[class]': 'classConfig()'
   },
-  standalone: true,
   imports: [DbxSectionHeaderComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
   readonly elevate = input<boolean>(false);

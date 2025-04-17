@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit, Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, Type } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl } from '@angular/forms';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
+import { MatDividerModule } from '@angular/material/divider';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListModifierModule } from '@dereekb/dbx-web';
 import { distinctUntilHasDifferentValues, filterMaybe, ListLoadingState, SubscriptionObject, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory, Maybe, PrimativeKey, ReadKeyFunction, readKeysFrom } from '@dereekb/util';
 import { FormlyFieldProps, FieldType, FieldTypeConfig } from '@ngx-formly/core';
@@ -31,7 +32,10 @@ export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelecti
  * Used for picking items by identifier from a DbxList component.
  */
 @Component({
-  templateUrl: 'list.field.component.html'
+  templateUrl: 'list.field.component.html',
+  imports: [DbxListModifierModule, DbxInjectionComponent, MatDividerModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<DbxItemListFieldProps<T, C, K>>> implements OnInit, OnDestroy {
   private readonly _selectionEventSub = new SubscriptionObject();

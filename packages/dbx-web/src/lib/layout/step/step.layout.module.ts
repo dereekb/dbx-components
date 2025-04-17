@@ -1,11 +1,13 @@
-import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxStepComponent } from './step.component';
 
+const importsAndExports = [DbxStepComponent];
+
+/**
+ * @deprecated import DbxStepComponent directly instead.
+ */
 @NgModule({
-  imports: [CommonModule, MatIconModule],
-  declarations: [DbxStepComponent],
-  exports: [DbxStepComponent]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxStepLayoutModule {}

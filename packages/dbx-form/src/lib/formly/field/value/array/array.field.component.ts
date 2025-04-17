@@ -1,60 +1,65 @@
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { Component, TrackByFunction } from '@angular/core';
+import { CdkDragDrop, CdkDragHandle, CdkDropList, CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
+import { Component, TrackByFunction, ChangeDetectionStrategy } from '@angular/core';
 import { asDecisionFunction, cachedGetter, DecisionFunction, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, type Maybe } from '@dereekb/util';
-import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps, FormlyModule } from '@ngx-formly/core';
+import { DbxBarDirective, DbxBarLayoutModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxSubSectionComponent } from '@dereekb/dbx-web';
+import { DbxButtonDirective } from '@dereekb/dbx-core';
+import { MatIconModule } from '@angular/material/icon';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 export interface DbxFormRepeatArrayPair<T = unknown> extends IndexRef {
-  value?: T | undefined;
+  readonly value?: T | undefined;
 }
 
 export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends Partial<DbxFormRepeatArrayPair<T>> {
-  fieldConfig: FormlyFieldConfig;
+  readonly fieldConfig: FormlyFieldConfig;
 }
 
 export type DbxFormRepeatArrayAddTemplateFunction<T> = FactoryWithRequiredInput<Partial<Maybe<T>>, number>;
 
 export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldProps, 'maxLength' | 'label' | 'description'> {
-  labelForField?: string | FactoryWithRequiredInput<string, DbxFormRepeatArrayFieldConfigPair<T>>;
+  readonly labelForField?: string | FactoryWithRequiredInput<string, DbxFormRepeatArrayFieldConfigPair<T>>;
   /**
    * Text for the add button.
    */
-  addText?: string;
+  readonly addText?: string;
   /**
    * Optional template function to create a new template when using the add button.
    */
-  addTemplate?: DbxFormRepeatArrayAddTemplateFunction<T>;
+  readonly addTemplate?: DbxFormRepeatArrayAddTemplateFunction<T>;
   /**
    * Text for the duplicate button.
    */
-  duplicateText?: string;
+  readonly duplicateText?: string;
   /**
    * Text for the remove button.
    */
-  removeText?: string;
+  readonly removeText?: string;
   /**
    * Whethe or not to disable rearranging items.
    *
    * False by default.
    */
-  disableRearrange?: boolean;
+  readonly disableRearrange?: boolean;
   /**
    * Wether or not to show the add button.
    *
    * True by default.
    */
-  allowAdd?: boolean;
+  readonly allowAdd?: boolean;
   /**
    * Whether or not to allow duplicateing items. Can optionally pass a decision function that decides whether or not a specific item can be removed.
    */
-  allowDuplicate?: boolean | DecisionFunction<DbxFormRepeatArrayPair<T>>;
+  readonly allowDuplicate?: boolean | DecisionFunction<DbxFormRepeatArrayPair<T>>;
   /**
    * Whether or not to allow removing items. Can optionally pass a decision function that decides whether or not a specific item can be removed.
    */
-  allowRemove?: boolean | DecisionFunction<DbxFormRepeatArrayPair<T>>;
+  readonly allowRemove?: boolean | DecisionFunction<DbxFormRepeatArrayPair<T>>;
   /**
    * Adds the duplicate to the end of the values
    */
-  addDuplicateToEnd?: boolean;
+  readonly addDuplicateToEnd?: boolean;
 }
 
 @Component({
@@ -63,33 +68,46 @@ export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldP
       <dbx-subsection [header]="label" [hint]="description">
         <!-- Fields -->
         <div class="dbx-form-repeat-array-fields" cdkDropList [cdkDropListDisabled]="disableRearrange" (cdkDropListDropped)="drop($event)">
-          <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" *ngFor="let field of field.fieldGroup; trackBy: trackByFunction; let i = index; let last = last">
-            <div class="dbx-form-repeat-array-drag-placeholder" *cdkDragPlaceholder></div>
-            <dbx-bar class="dbx-form-repeat-array-bar dbx-bar-fixed-height">
-              <button class="dbx-form-repeat-array-drag-button" *ngIf="!disableRearrange" cdkDragHandle mat-stroked-button><mat-icon>drag_handle</mat-icon></button>
-              <dbx-button-spacer></dbx-button-spacer>
-              <h4>
-                <span class="repeat-array-number">{{ i + 1 }}</span>
-                <span>{{ labelForItem(field, i) }}</span>
-              </h4>
-              <span class="dbx-spacer"></span>
-              <dbx-button *ngIf="allowDuplicate(i)" [stroked]="true" [text]="duplicateText" (buttonClick)="duplicate(i)"></dbx-button>
-              <dbx-button-spacer></dbx-button-spacer>
-              <dbx-button *ngIf="allowRemove(i)" color="warn" [stroked]="true" [text]="removeText" (buttonClick)="remove(i)"></dbx-button>
-            </dbx-bar>
-            <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
-          </div>
+          @for (field of field.fieldGroup; track field.key; let i = $index; let last = $last) {
+            <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y">
+              <div class="dbx-form-repeat-array-drag-placeholder" *cdkDragPlaceholder></div>
+              <dbx-bar class="dbx-form-repeat-array-bar dbx-bar-fixed-height">
+                @if (!disableRearrange) {
+                  <button class="dbx-form-repeat-array-drag-button" cdkDragHandle mat-stroked-button><mat-icon>drag_handle</mat-icon></button>
+                  <dbx-button-spacer></dbx-button-spacer>
+                }
+                <h4>
+                  <span class="repeat-array-number">{{ i + 1 }}</span>
+                  <span>{{ labelForItem(field, i) }}</span>
+                </h4>
+                <span class="dbx-spacer"></span>
+                @if (allowDuplicate(i)) {
+                  <dbx-button [stroked]="true" [text]="duplicateText" (buttonClick)="duplicate(i)"></dbx-button>
+                  <dbx-button-spacer></dbx-button-spacer>
+                }
+                @if (allowRemove(i)) {
+                  <dbx-button color="warn" [stroked]="true" [text]="removeText" (buttonClick)="remove(i)"></dbx-button>
+                }
+              </dbx-bar>
+              <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
+            </div>
+          }
         </div>
         <!-- Add Button -->
         <div class="dbx-form-repeat-array-footer">
-          <dbx-button *ngIf="allowAdd" [raised]="true" [disabled]="addItemDisabled" [text]="addText" (buttonClick)="addClicked()"></dbx-button>
+          @if (allowAdd) {
+            <dbx-button [raised]="true" [disabled]="addItemDisabled" [text]="addText" (buttonClick)="addClicked()"></dbx-button>
+          }
         </div>
       </dbx-subsection>
     </div>
-  `
+  `,
+  imports: [DbxSubSectionComponent, DbxBarDirective, DbxButtonComponent, FormlyModule, DragDropModule, MatIconModule, DbxButtonSpacerDirective, MatFormFieldModule, FormsModule, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType<FieldArrayTypeConfig<DbxFormRepeatArrayConfig>> {
-  private _labelForField = cachedGetter(() => {
+  private readonly _labelForField = cachedGetter(() => {
     const input = this.repeatArrayField.labelForField;
 
     if (typeof input === 'function') {
@@ -99,11 +117,11 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
     }
   });
 
-  private _allowRemove: Getter<DecisionFunction<DbxFormRepeatArrayPair<T>>> = cachedGetter(() => {
+  private readonly _allowRemove: Getter<DecisionFunction<DbxFormRepeatArrayPair<T>>> = cachedGetter(() => {
     return asDecisionFunction(this.field.props.allowRemove, true);
   });
 
-  private _allowDuplicate: Getter<DecisionFunction<DbxFormRepeatArrayPair<T>>> = cachedGetter(() => {
+  private readonly _allowDuplicate: Getter<DecisionFunction<DbxFormRepeatArrayPair<T>>> = cachedGetter(() => {
     return asDecisionFunction(this.field.props.allowDuplicate || false, false);
   });
 
@@ -186,10 +204,6 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
       return this.count < max;
     }
   }
-
-  readonly trackByFunction: TrackByFunction<FormlyFieldConfig> = (i, x) => {
-    return x.key;
-  };
 
   /**
    * Moves the target index up one value.

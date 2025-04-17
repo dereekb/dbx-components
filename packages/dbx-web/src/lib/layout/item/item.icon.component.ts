@@ -1,5 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Section piece that puts an icon on the left, and arbitrary content on the right with a header.
@@ -8,22 +9,26 @@ import { type Maybe } from '@dereekb/util';
   selector: 'dbx-icon-item',
   template: `
     <div class="dbx-icon-item">
-      <div class="left" *ngIf="icon">
-        <mat-icon>{{ icon }}</mat-icon>
-      </div>
+      @if (icon()) {
+        <div class="left">
+          <mat-icon>{{ icon() }}</mat-icon>
+        </div>
+      }
       <div class="right">
-        <h3 *ngIf="header" class="dbx-icon-item-header">{{ header }}</h3>
+        @if (header()) {
+          <h3 class="dbx-icon-item-header">{{ header() }}</h3>
+        }
         <div class="right-content">
           <ng-content></ng-content>
         </div>
       </div>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxIconItemComponent {
-  @Input()
-  icon?: Maybe<string>;
-
-  @Input()
-  header?: Maybe<string>;
+  readonly icon = input<Maybe<string>>();
+  readonly header = input<Maybe<string>>();
 }

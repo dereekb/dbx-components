@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, input } from '@angular/core';
-import { getValueFromGetter, latLngPointFunction, type Maybe } from '@dereekb/util';
+import { CssClassesArray, getValueFromGetter, latLngPointFunction, spaceSeparatedCssClasses, type Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
@@ -13,7 +13,7 @@ import { NgClass, NgStyle } from '@angular/common';
     @if (marker()) {
       <mgl-marker [lngLat]="latLngSignal()">
         <dbx-anchor [anchor]="marker()?.anchor">
-          <div class="dbx-mapbox-marker" [ngClass]="presentationClassesSignal()">
+          <div class="dbx-mapbox-marker" [ngClass]="presentationCssClassSignal()">
             <div class="dbx-mapbox-marker-icon-content" [ngStyle]="styleSignal()">
               @if (marker()?.icon) {
                 <mat-icon>{{ marker()?.icon }}</mat-icon>
@@ -100,34 +100,34 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     return style;
   });
 
-  readonly presentationClassesSignal = computed(() => {
+  readonly presentationCssClassSignal = computed(() => {
     const marker = this.marker();
     const presentation = this.presentationSignal();
     const markerClasses = marker?.markerClasses;
 
-    let cssClasses = '';
+    let cssClasses: CssClassesArray = [];
 
     switch (presentation) {
       case 'chip':
       case 'chip-small':
-        cssClasses = 'dbx-mapbox-marker-chip dbx-chip mat-standard-chip dbx-bg';
+        cssClasses = ['dbx-mapbox-marker-chip', 'dbx-chip', 'mat-standard-chip', 'dbx-bg'];
 
         if (presentation === 'chip-small') {
-          cssClasses += ' dbx-chip-small';
+          cssClasses.push('dbx-chip-small');
         }
 
         break;
     }
 
     if (!marker?.icon) {
-      cssClasses += ' dbx-mapbox-marker-no-icon';
+      cssClasses.push('dbx-mapbox-marker-no-icon');
     }
 
     if (markerClasses) {
-      cssClasses += ` ${markerClasses}`;
+      pushItemOrArrayItemsIntoArray(cssClasses, markerClasses);
     }
 
-    return cssClasses;
+    return spaceSeparatedCssClasses(cssClasses);
   });
 
   ngOnDestroy(): void {

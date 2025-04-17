@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed } from '@angular/core';
 import { shareReplay, map, Observable, combineLatest } from 'rxjs';
-import { DbxMapboxMarker } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldComponent } from './latlng.field.component';
 import { type Maybe } from '@dereekb/util';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   template: `
-    <dbx-mapbox-marker [marker]="marker$ | async"></dbx-mapbox-marker>
+    <dbx-mapbox-marker [marker]="markerSignal()"></dbx-mapbox-marker>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxMapboxMarkerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormMapboxLatLngFieldMarkerComponent {
   readonly fieldComponent = inject(DbxFormMapboxLatLngFieldComponent);
@@ -23,4 +26,6 @@ export class DbxFormMapboxLatLngFieldMarkerComponent {
     }),
     shareReplay(1)
   );
+
+  readonly markerSignal = toSignal(this.marker$);
 }

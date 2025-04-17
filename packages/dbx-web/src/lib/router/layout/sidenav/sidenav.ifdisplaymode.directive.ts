@@ -1,21 +1,31 @@
-import { OnDestroy, Input, Directive, inject } from '@angular/core';
+import { OnDestroy, input, Directive, inject, signal, computed, Signal } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
 import { ArrayOrValue, Maybe, asArray, filterMaybeArrayValues } from '@dereekb/util';
-import { shareReplay, BehaviorSubject, switchMap, distinctUntilChanged, map } from 'rxjs';
+import { shareReplay, switchMap, distinctUntilChanged, map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';
 import { SideNavDisplayMode } from './sidenav';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Structural directive that displays the content if the Sidenav has a specific sidenav size.
  */
 @Directive({
-  selector: '[dbxIfSidenavDisplayMode]'
+  selector: '[dbxIfSidenavDisplayMode]',
+  standalone: true
 })
-export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective implements OnDestroy {
-  private _sidenavModes = new BehaviorSubject<Set<SideNavDisplayMode>>(new Set([SideNavDisplayMode.NONE]));
-
+export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective {
   readonly dbxSidenavComponent = inject(DbxSidenavComponent);
-  readonly show$ = this._sidenavModes.pipe(
+
+  readonly modes = input<Maybe<ArrayOrValue<SideNavDisplayMode | string>>>(undefined, { alias: 'dbxIfSidenavDisplayMode' });
+
+  readonly modesSetSignal: Signal<Set<SideNavDisplayMode>> = computed(() => {
+    const modes = this.modes();
+    return new Set(filterMaybeArrayValues(asArray(modes as SideNavDisplayMode)));
+  });
+
+  readonly modes$ = toObservable(this.modesSetSignal);
+
+  readonly show$ = this.modes$.pipe(
     switchMap((modes) => {
       return this.dbxSidenavComponent.mode$.pipe(map((mode) => modes.has(mode)));
     }),
@@ -23,16 +33,5 @@ export class DbxIfSidenavDisplayModeDirective extends AbstractIfDirective implem
     shareReplay(1)
   );
 
-  @Input('dbxIfSidenavDisplayMode')
-  get modes() {
-    return Array.from(this._sidenavModes.value);
-  }
-
-  set modes(modes: Maybe<ArrayOrValue<SideNavDisplayMode | string>>) {
-    this._sidenavModes.next(new Set(filterMaybeArrayValues(asArray(modes as SideNavDisplayMode))));
-  }
-
-  override ngOnDestroy(): void {
-    this._sidenavModes.complete();
-  }
+  readonly showSignal = toSignal(this.show$, { initialValue: false });
 }

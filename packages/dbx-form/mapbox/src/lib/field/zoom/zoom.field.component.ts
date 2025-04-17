@@ -1,12 +1,16 @@
-import { AbstractControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, shareReplay, startWith, switchMap, Observable } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { ZoomLevel, Maybe, LatLngPoint, latLngPoint } from '@dereekb/util';
-import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL, DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import { NgClass } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldProps, 'min' | 'max'> {
   /**
@@ -14,35 +18,37 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
    *
    * Defaults to true.
    */
-  showMap?: boolean;
+  readonly showMap?: boolean;
   /**
    * Default center
    */
-  center?: LatLngPoint;
+  readonly center?: LatLngPoint;
   /**
    * Whether or not to lock the map itself to the min and max zoom levels.
    */
-  lockMapToZoomLevels?: boolean;
+  readonly lockMapToZoomLevels?: boolean;
   /**
    * Min zoom level allowed
    */
-  minZoom?: MapboxZoomLevel;
+  readonly minZoom?: MapboxZoomLevel;
   /**
    * Max zoom level allowed.
    */
-  maxZoom?: MapboxZoomLevel;
+  readonly maxZoom?: MapboxZoomLevel;
   /**
    * Step size when using arrow keys.
    */
-  zoomStep?: number;
+  readonly zoomStep?: number;
 }
 
 @Component({
   template: `
-    <div class="dbx-mapbox-input-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
-      <div *ngIf="showMap" class="dbx-mapbox-input-field-map">
-        <mgl-map dbxMapboxMap></mgl-map>
-      </div>
+    <div class="dbx-mapbox-input-field" [ngClass]="compactClassSignal()" [formGroup]="formGroup">
+      @if (showMap) {
+        <div class="dbx-mapbox-input-field-map">
+          <mgl-map dbxMapboxMap></mgl-map>
+        </div>
+      }
       <div class="dbx-mapbox-input-field-input">
         <mat-form-field class="dbx-mapbox-input-field-input-field">
           <mat-label>Zoom Level</mat-label>
@@ -52,24 +58,29 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
     </div>
   `,
   providers: [provideMapboxStoreIfParentIsUnavailable()],
-  styleUrls: ['../mapbox.field.component.scss']
+  styleUrls: ['../mapbox.field.component.scss'],
+  imports: [NgClass, DbxMapboxModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponentFieldProps = DbxFormMapboxZoomComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
+
   readonly dbxMapboxService = inject(DbxMapboxService);
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
-  readonly ngZone = inject(NgZone);
 
   private _undoZoomLimit = false;
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-mapbox-input-field-compact'
-  });
+  }).pipe(filterMaybe());
 
-  private _sub = new SubscriptionObject();
-  private _center = new BehaviorSubject<Maybe<LatLngPoint>>(undefined);
+  readonly compactClassSignal = toSignal(this.compactClass$, { initialValue: '' });
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _sub = new SubscriptionObject();
+  private readonly _center = new BehaviorSubject<Maybe<LatLngPoint>>(undefined);
+
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(
@@ -155,9 +166,7 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
 
     this._sub.subscription = this.dbxMapboxMapStore.zoom$.subscribe((zoom) => {
       if (!this.isReadonlyOrDisabled) {
-        this.ngZone.run(() => {
-          this.setValue(zoom);
-        });
+        this.setValue(zoom);
       }
     });
   }

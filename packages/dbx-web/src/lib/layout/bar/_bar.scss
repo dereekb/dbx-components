@@ -10,10 +10,6 @@ $bar-fixed-height: 40px;
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-banner {
-    @include theming.elevation(3);
-  }
-
   .dbx-pagebar.mat-toolbar {
     height: $pagebar-height;
   }

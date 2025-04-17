@@ -1,38 +1,16 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
-import { MatButtonModule } from '@angular/material/button';
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxListLayoutModule } from '@dereekb/dbx-web';
 import { DbxItemListFieldComponent } from './list.field.component';
-import { MatDividerModule } from '@angular/material/divider';
+
+const importsAndExports = [DbxItemListFieldComponent];
 
 @NgModule({
   imports: [
-    CommonModule,
-    DbxTextModule,
-    DbxLoadingModule,
-    DbxButtonModule,
-    FormsModule,
-    MatDividerModule,
-    MatButtonModule,
-    MatInputModule,
-    MatFormFieldModule,
-    ReactiveFormsModule,
-    MatAutocompleteModule,
-    MatIconModule,
-    DbxInjectionComponentModule,
-    DbxListLayoutModule,
+    ...importsAndExports,
     FormlyModule.forChild({
       types: [{ name: 'dbxlistfield', component: DbxItemListFieldComponent }]
     })
   ],
-  declarations: [DbxItemListFieldComponent],
-  exports: [DbxItemListFieldComponent]
+  exports: importsAndExports
 })
 export class DbxFormFormlyDbxListFieldModule {}

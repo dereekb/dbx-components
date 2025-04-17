@@ -8,20 +8,15 @@ import { FormlyModule } from '@ngx-formly/core';
 import { NgxEditorModule } from 'ngx-editor';
 import { DbxTextEditorFieldComponent } from './texteditor.field.component';
 
+const importsAndExports = [DbxTextEditorFieldComponent];
+
 @NgModule({
   imports: [
-    CommonModule,
-    DbxTextModule,
-    FormsModule,
-    ReactiveFormsModule,
-    NgxEditorModule,
-    MatFormFieldModule,
-    MatInputModule,
+    ...importsAndExports,
     FormlyModule.forChild({
       types: [{ name: 'texteditor', component: DbxTextEditorFieldComponent }]
     })
   ],
-  declarations: [DbxTextEditorFieldComponent],
-  exports: []
+  exports: importsAndExports
 })
 export class DbxFormFormlyTextEditorFieldModule {}

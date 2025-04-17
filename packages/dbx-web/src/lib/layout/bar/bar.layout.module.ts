@@ -1,17 +1,15 @@
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxBarDirective } from './bar.directive';
 import { DbxBarHeaderComponent } from './bar.header.component';
 import { DbxPagebarComponent } from './pagebar.component';
 
+const importsAndExports = [DbxBarDirective, DbxBarHeaderComponent, DbxPagebarComponent];
+
 /**
- * Module for block components.
+ * Module for dbx-bar components.
  */
 @NgModule({
-  imports: [CommonModule, MatToolbarModule, MatIconModule],
-  declarations: [DbxBarDirective, DbxBarHeaderComponent, DbxPagebarComponent],
-  exports: [DbxBarDirective, DbxBarHeaderComponent, DbxPagebarComponent]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxBarLayoutModule {}

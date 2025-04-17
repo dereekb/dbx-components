@@ -12,7 +12,7 @@ import { DbxLoadingComponent } from '../../../loading/loading.component';
 import { NgTemplateOutlet } from '@angular/common';
 import { DbxButtonComponent } from '../../../button/button.component';
 import { DbxActionModule } from '../../../action/action.module';
-import { DbxButtonSpacerDirective } from '../../../button';
+import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directive';
 
 /**
  * DbxStructureDirective used specifically on the body of the app.

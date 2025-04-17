@@ -12,13 +12,13 @@ import { DbxMapboxMapStore } from './mapbox.store';
 export class DbxMapboxChangeService implements OnDestroy {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
 
-  private _markerDestroyed = new Subject<void>();
-  private _applyChanges = new Subject<void>();
+  private readonly _markerDestroyed = new Subject<void>();
+  private readonly _applyChanges = new Subject<void>();
 
   readonly markerDestroyed$ = this._markerDestroyed;
   readonly applyChanges$ = merge(this._applyChanges, this.markerDestroyed$).pipe(throttleTime(100, undefined, { leading: false, trailing: true }));
 
-  private _applyChangesSub = new SubscriptionObject(
+  private readonly _applyChangesSub = new SubscriptionObject(
     this.dbxMapboxMapStore.mapService$
       .pipe(
         switchMap((mapService) =>
