@@ -52,8 +52,7 @@ export class DbxStyleService implements Destroyable {
         return styleClass;
       }),
       distinctUntilChanged(),
-      shareReplay(1),
-      tapLog('styleClassName$')
+      shareReplay(1)
     );
   }
 

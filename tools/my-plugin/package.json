@@ -2,7 +2,7 @@
   "name": "@dereekb/my-plugin",
   "version": "0.0.1",
   "dependencies": {
-    "@nx/devkit": "19.8.9",
+    "@nx/devkit": "20.8.0",
     "tslib": "^2.3.0"
   },
   "type": "commonjs",

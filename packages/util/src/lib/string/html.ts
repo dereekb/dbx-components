@@ -2,7 +2,7 @@ import { type ArrayOrValue, asArray } from './../array/array';
 import { type Maybe } from '../value/maybe.type';
 import { joinStringsWithSpaces } from './string';
 import { iterableToArray } from '../iterable';
-import { PrimativeValue } from '../type';
+import { type PrimativeValue } from '../type';
 
 /**
  * Represents a single CSS Class

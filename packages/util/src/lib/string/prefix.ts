@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe.type';
+import { type Maybe } from '../value/maybe.type';
 
 /**
  * A character or string that is added to the start of a string.

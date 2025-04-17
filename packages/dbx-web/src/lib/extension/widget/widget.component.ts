@@ -3,6 +3,7 @@ import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxWidgetViewComponentConfig } from './widget';
 import { DbxWidgetService } from './widget.service';
+import { NgTemplateOutlet } from '@angular/common';
 
 /**
  * Used to display a corresponding widget based on the input data.
@@ -29,7 +30,7 @@ import { DbxWidgetService } from './widget.service';
     class: 'dbx-widget-view'
   },
   standalone: true,
-  imports: [DbxInjectionComponent],
+  imports: [DbxInjectionComponent, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxWidgetViewComponent {

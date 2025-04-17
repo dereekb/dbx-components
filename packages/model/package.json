@@ -15,7 +15,10 @@
       "default": "./index.cjs.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0"
+  },
   "peerDependencies": {
     "@dereekb/util": "*"
   }

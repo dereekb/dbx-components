@@ -9,7 +9,7 @@ import { DbxBarColor } from './bar';
   selector: 'dbx-bar,[dbxBar]',
   host: {
     class: 'dbx-bar',
-    '[class]': 'cssClassSignal'
+    '[class]': 'cssClassSignal()'
   },
   standalone: true
 })
