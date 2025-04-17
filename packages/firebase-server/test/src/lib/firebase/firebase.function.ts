@@ -1,4 +1,4 @@
-import { CloudFunction as CloudFunctionV1 } from 'firebase-functions';
+import { CloudFunction as CloudFunctionV1 } from 'firebase-functions/v1';
 import { CloudFunction as CloudFunctionV2, CloudEvent } from 'firebase-functions/v2';
 import { CallableContextOptions, wrap, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
 import { Getter, PromiseOrValue } from '@dereekb/util';

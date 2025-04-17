@@ -533,7 +533,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
 
               const result = isAdminInRequest(request);
@@ -547,7 +548,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
 
               const result = isAdminOrTargetUserInRequestData(request);
@@ -576,7 +578,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
 
               const result = isAdminInRequest(request);
@@ -592,7 +595,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
             });
 

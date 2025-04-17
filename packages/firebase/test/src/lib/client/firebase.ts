@@ -10,22 +10,22 @@ import { TestFirebaseContextFixture, type TestFirebaseInstance } from '../common
 export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 
 export interface RulesUnitTestingContextConfig {
-  userId: string;
-  tokenOptions?: Maybe<TokenOptions>;
+  readonly userId: string;
+  readonly tokenOptions?: Maybe<TokenOptions>;
 }
 
 export interface RulesUnitTestingTestEnvironmentConfig extends TestEnvironmentConfig {
   /**
    * List of collection names used in the environment. Is required if using testing drivers.
    */
-  collectionNames?: string[];
-  firestore?: EmulatorConfig;
-  storage?: EmulatorConfig;
+  readonly collectionNames?: string[];
+  readonly firestore?: EmulatorConfig;
+  readonly storage?: EmulatorConfig;
 }
 
 export interface RulesUnitTestingConfig {
-  testEnvironment: RulesUnitTestingTestEnvironmentConfig;
-  rulesContext?: Maybe<RulesUnitTestingContextConfig>;
+  readonly testEnvironment: RulesUnitTestingTestEnvironmentConfig;
+  readonly rulesContext?: Maybe<RulesUnitTestingContextConfig>;
 }
 
 export interface RulesUnitTestTestFirestoreContext extends TestFirestoreContext {

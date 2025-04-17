@@ -1,5 +1,5 @@
 import { type PromiseOrValue } from '@dereekb/util';
-import { type BlockingFunction } from 'firebase-functions';
+import { type BlockingFunction } from 'firebase-functions/v1';
 import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
 import { type NestContextRequest } from '../nest';
 

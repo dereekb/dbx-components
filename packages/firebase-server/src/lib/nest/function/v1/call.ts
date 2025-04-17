@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import { type INestApplicationContext } from '@nestjs/common';
 import { type RunnableHttpFunction } from '../../../function/type';
 import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
@@ -8,6 +8,7 @@ import { mapIdentityFunction } from '@dereekb/util';
 export function makeOnCallWithNestApplicationRequest<I>(nestApplication: INestApplicationContext, data: I, context: functions.https.CallableContext): OnCallWithNestApplicationRequest<I> {
   return {
     ...context,
+    acceptsStreaming: false,
     nestApplication,
     data
   };

@@ -1,5 +1,5 @@
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import { onEventWithDemoNestContext } from '../function';
 
 /**

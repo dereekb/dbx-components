@@ -1,8 +1,7 @@
-import { type HttpsError } from 'firebase-functions/lib/common/providers/https';
 import { type ErrorMessageOrPartialServerError, isServerError, partialServerError, type ServerError, type StringErrorCode, type ThrowErrorFunction } from '@dereekb/util';
-import * as functions from 'firebase-functions';
 import type * as admin from 'firebase-admin';
 import { type FirebaseErrorCode } from '@dereekb/firebase';
+import { HttpsError } from 'firebase-functions/https';
 
 export const NO_AUTH_ERROR_CODE = 'NO_AUTH';
 
@@ -27,7 +26,7 @@ export const UNAUTHENTICATED_ERROR_CODE = 'UNAUTHENTICATED';
 
 export function unauthenticatedError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('unauthenticated', serverError?.message || 'unauthenticated', {
+  return new HttpsError('unauthenticated', serverError?.message || 'unauthenticated', {
     status: 401,
     code: UNAUTHENTICATED_ERROR_CODE,
     ...serverError,
@@ -39,7 +38,7 @@ export const FORBIDDEN_ERROR_CODE = 'FORBIDDEN';
 
 export function forbiddenError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('permission-denied', serverError?.message || 'forbidden', {
+  return new HttpsError('permission-denied', serverError?.message || 'forbidden', {
     status: 403,
     code: FORBIDDEN_ERROR_CODE,
     ...serverError,
@@ -51,7 +50,7 @@ export const PERMISSION_DENIED_ERROR_CODE = 'PERMISSION_DENIED';
 
 export function permissionDeniedError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('permission-denied', serverError?.message || 'permission denied', {
+  return new HttpsError('permission-denied', serverError?.message || 'permission denied', {
     status: 403,
     code: PERMISSION_DENIED_ERROR_CODE,
     ...serverError,
@@ -63,7 +62,7 @@ export const NOT_FOUND_ERROR_CODE = 'NOT_FOUND';
 
 export function notFoundError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('not-found', serverError?.message || 'not found', {
+  return new HttpsError('not-found', serverError?.message || 'not found', {
     status: 404,
     code: NOT_FOUND_ERROR_CODE,
     ...serverError,
@@ -75,7 +74,7 @@ export const MODEL_NOT_AVAILABLE_ERROR_CODE = 'MODEL_NOT_AVAILABLE';
 
 export function modelNotAvailableError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('not-found', serverError?.message || 'model was not available', {
+  return new HttpsError('not-found', serverError?.message || 'model was not available', {
     status: 404,
     code: MODEL_NOT_AVAILABLE_ERROR_CODE,
     ...serverError,
@@ -87,7 +86,7 @@ export const BAD_REQUEST_ERROR_CODE = 'BAD_REQUEST';
 
 export function badRequestError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('invalid-argument', serverError?.message || 'bad request', {
+  return new HttpsError('invalid-argument', serverError?.message || 'bad request', {
     status: 400,
     code: BAD_REQUEST_ERROR_CODE,
     ...serverError,
@@ -99,7 +98,7 @@ export const CONFLICT_ERROR_CODE = 'CONFLICT';
 
 export function preconditionConflictError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('failed-precondition', serverError?.message || 'conflict', {
+  return new HttpsError('failed-precondition', serverError?.message || 'conflict', {
     status: 409,
     code: CONFLICT_ERROR_CODE,
     ...serverError,
@@ -111,7 +110,7 @@ export const ALREADY_EXISTS_ERROR_CODE = 'ALREADY_EXISTS';
 
 export function alreadyExistsError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('already-exists', serverError?.message || 'already exists', {
+  return new HttpsError('already-exists', serverError?.message || 'already exists', {
     status: 409,
     code: ALREADY_EXISTS_ERROR_CODE,
     ...serverError,
@@ -123,7 +122,7 @@ export const UNAVAILABLE_ERROR_CODE = 'UNAVAILABLE';
 
 export function unavailableError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('unavailable', serverError?.message || 'service unavailable', {
+  return new HttpsError('unavailable', serverError?.message || 'service unavailable', {
     status: 503,
     code: UNAVAILABLE_ERROR_CODE,
     ...serverError,
@@ -135,7 +134,7 @@ export const UNAVAILABLE_OR_DEACTIVATED_FUNCTION_ERROR_CODE = 'UNAVAILABLE_OR_DE
 
 export function unavailableOrDeactivatedFunctionError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('unimplemented', serverError?.message || 'the requested function is not available or has been deactivated for use', {
+  return new HttpsError('unimplemented', serverError?.message || 'the requested function is not available or has been deactivated for use', {
     status: 501,
     code: UNAVAILABLE_OR_DEACTIVATED_FUNCTION_ERROR_CODE,
     ...serverError,
@@ -147,7 +146,7 @@ export const INTERNAL_SERVER_ERROR_CODE = 'INTERNAL_ERROR';
 
 export function internalServerError(messageOrError?: ErrorMessageOrPartialServerError) {
   const serverError = partialServerError(messageOrError);
-  return new functions.https.HttpsError('internal', serverError?.message || 'internal error', {
+  return new HttpsError('internal', serverError?.message || 'internal error', {
     status: 500,
     code: INTERNAL_SERVER_ERROR_CODE,
     ...serverError,

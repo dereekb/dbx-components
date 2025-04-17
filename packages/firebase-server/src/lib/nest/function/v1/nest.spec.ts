@@ -3,7 +3,7 @@ import { Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { onCallWithNestApplicationFactory } from './call';
 import { onEventWithNestApplicationFactory, type NestApplicationEventHandler, type OnEventWithNestApplicationBuilder } from './event';
-import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions/v1';
 import { type NestApplicationFunctionFactory } from '../../nest.provider';
 import { type OnCallWithNestApplication } from '../call';
 import { type OnScheduleConfig, type OnScheduleWithNestApplication } from '../schedule';

@@ -1,6 +1,6 @@
 import { type PromiseOrValue } from '@dereekb/util';
-import type * as functions from 'firebase-functions';
-import { type EventContext } from 'firebase-functions';
+import type * as functions from 'firebase-functions/v1';
+import { type EventContext } from 'firebase-functions/v1';
 import { type MakeNestContext, type NestApplicationFunctionFactory, type NestApplicationPromiseGetter } from '../../nest.provider';
 import { type NestApplicationContextRequest, type NestContextRequest } from '../nest';
 
