@@ -70,7 +70,9 @@ describe('nest function utilities', () => {
         const testFunction = f.fnWrapper.wrapV1CloudFunction<typeof testData>(runnable);
 
         // Now we test the wrapped function. This should call our handler.
-        const result = await testFunction(testData);
+        const result = await testFunction(testData, {
+          auth: null
+        });
 
         expect(result).toBe(expectedValue);
         expect(retrievedNestApplication).toBe(true);
@@ -106,7 +108,7 @@ describe('nest function utilities', () => {
 
         // Create our runnable factory.
         // This type will take in a NestApplicationPromiseGetter to build the final runnable.
-        const runnableFactory: NestApplicationFunctionFactory<any> = factory(handlerBuilder);
+        const runnableFactory: NestApplicationFunctionFactory<functions.CloudFunction<UserRecord>> = factory(handlerBuilder);
 
         // For our tests, we pass it the testing context's nest getter.
         // This runnable is now the cloud function that the "firebase-functions" library can consume.
@@ -115,7 +117,7 @@ describe('nest function utilities', () => {
         // For our tests, we use the "firebase-functions-test" wrap function to wrap our event into a function we can use.
         // We can now execute our event. This event does not execute automatically and is not magically subscribed.
         // Do not expect it to be listening for the events it is subscribed to. For those kinds of tests, look at headless E2E testing that uses the functions emulator.
-        const testEvent = f.fnWrapper.wrapV1CloudFunction<typeof testData>(runnable);
+        const testEvent = f.fnWrapper.wrapV1CloudFunction(runnable);
 
         const testData: UserRecord = {} as any;
         const result = await testEvent(testData);

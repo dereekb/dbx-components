@@ -8,12 +8,17 @@ export type CloudEventNestContextRequest<N, E extends CloudEvent<unknown>> = Nes
 // MARK: From Firebase/Cloud Event
 export type CloudEventHandler<E extends CloudEvent<unknown>, O = unknown> = (event: E) => PromiseOrValue<O>;
 
+export interface CloudFunctionBuilder<E extends CloudEvent<unknown>, O = unknown> {
+  (handler: (event: E) => PromiseOrValue<O>): CloudFunction<E>;
+}
+
 // MARK: Event
 export type NestContextCloudEventHandler<N, E extends CloudEvent<unknown>, O = unknown> = (request: CloudEventNestContextRequest<N, E>) => PromiseOrValue<O>;
 
 export type NestContextCloudEventHandlerBuilder<N, E extends CloudEvent<unknown>, O = unknown> = (handler: NestContextCloudEventHandler<N, E, O>) => CloudEventHandler<E, O>;
 export type NestContextCloudEventHandlerWithData<N, I, O = unknown> = NestContextCloudEventHandler<N, CloudEvent<I>, O>;
 export type CloudEventHandlerWithNestContextBuilder<N, E extends CloudEvent<unknown>, O = unknown> = (nest: NestContextCloudEventHandlerBuilder<N, E, O>) => CloudFunction<E>;
+export type CloudEventHandlerWithNestContextBuilderForBuilder<N, B extends CloudFunctionBuilder<any, any>> = B extends CloudFunctionBuilder<infer E, infer O> ? CloudEventHandlerWithNestContextBuilder<N, E, O> : never;
 
 /**
  * Factory function for generating a firebase CloudFunction for a specific event.

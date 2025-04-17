@@ -59,7 +59,7 @@ describe('nest function utilities', () => {
 
         // Create our runnable factory.
         // This type will take in a NestApplicationPromiseGetter to build the final runnable.
-        const runnableFactory: NestApplicationFunctionFactory<any> = factory(handler);
+        const runnableFactory = factory(handler);
 
         // For our tests, we pass it the testing context's nest getter.
         // This runnable is now the cloud function that the "firebase-functions" library can consume.
@@ -67,7 +67,7 @@ describe('nest function utilities', () => {
 
         // For our tests, we use the "firebase-functions-test" wrap function to wrap it once more into a function we can use.
         // We can now execute this test function against the emulators and in our test nest context.
-        const testFunction = f.fnWrapper.wrapV2CallableRequest<typeof testData>(runnable); // TODO: Update with a specific wrapOnCall when firebase functions v2 interfaces improve
+        const testFunction = f.fnWrapper.wrapCallableRequest(runnable);
 
         // Now we test the wrapped function. This should call our handler.
         const result = await testFunction(testData, {

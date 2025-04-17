@@ -2,6 +2,7 @@ export * from './firebase.admin.auth';
 export * from './firebase.admin.collection';
 export * from './firebase.admin.function';
 export * from './firebase.admin.nest.function.context';
+export * from './firebase.admin.nest.function.context.v1';
 export * from './firebase.admin.nest.function';
 export * from './firebase.admin.nest';
 export * from './firebase.admin.test.server';

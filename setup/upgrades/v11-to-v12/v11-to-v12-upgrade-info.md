@@ -343,3 +343,23 @@ To remedy, we just had to delete `node_modules` and rerun `npm install`.
 You can update the global Nx installation by running:
 
 ```npm install -g nx@v20.8.0``
+
+### Updating to gen 2 Firebase Functions
+https://firebase.google.com/docs/functions/2nd-gen-upgrade
+
+@dereekb/firebase-server functions that used Gen 1 functions are now deprecated. Because of the abstraction, updating should be straightforward. There are several updates that need to occur:
+
+In your app (typically the dbx-components `functions.ts` file), you will need to replace:
+- `onCallWithNestApplicationFactory()` with ` onCallHandlerWithNestApplicationFactory()`
+- `onCallWithNestContextFactory()` with `onCallHandlerWithNestContextFactory()`
+- `onScheduleWithNestApplicationFactory()` with `onScheduleHandlerWithNestApplicationFactory()`
+- `onScheduleWithNestContextFactory()` with `onScheduleHandlerWithNestContextFactory()`
+- `onEventWithNestContextFactory()` with `cloudEventHandlerWithNestContextFactory()`
+
+In your tests:
+- After updating the above, any `wrapV1CloudFunction()` call should be replaced with `wrapCallableRequest()`
+- Replace `describeCloudFunctionTest` with `describeCallableRequestTest`
+- Replace `callCloudFunction()` with `callWrappedFunction()`
+- The `CloudFn` suffix for a CallableRequestTestMultipleConfig has been replaced with `WrappedFn`
+
+You should be able to just search replace each of these.

@@ -2,7 +2,7 @@ import { type INestApplicationContext, Injectable, Module } from '@nestjs/common
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { type StorageEvent } from 'firebase-functions/v2/storage';
 import { storage } from 'firebase-functions/v2';
-import { type CloudEventHandlerWithNestContextBuilder, cloudEventHandlerWithNestContextFactory, type NestContextCloudEventHandler } from './event';
+import { type CloudEventHandlerWithNestContextBuilder, CloudEventHandlerWithNestContextBuilderForBuilder, cloudEventHandlerWithNestContextFactory, type NestContextCloudEventHandler } from './event';
 import { type MakeNestContext } from '../../nest.provider';
 
 @Injectable()
@@ -54,7 +54,7 @@ describe('nest function utilities', () => {
           return expectedResult;
         };
 
-        const handlerBuilder: CloudEventHandlerWithNestContextBuilder<TestAppNestContext, StorageEvent> = (withNest) => storage.onObjectFinalized(withNest(handler));
+        const handlerBuilder: CloudEventHandlerWithNestContextBuilderForBuilder<TestAppNestContext, typeof storage.onObjectFinalized> = (withNest) => storage.onObjectFinalized(withNest(handler));
 
         // Create our runnable factory.
         const runnableFactory = factory(handlerBuilder);
@@ -62,7 +62,7 @@ describe('nest function utilities', () => {
         // make the runnable
         const runnable = runnableFactory(f.nestAppPromiseGetter);
 
-        const testEvent = f.fnWrapper.wrapV2CloudFunction(runnable);
+        const testEvent = f.fnWrapper.wrapCloudFunction(runnable);
 
         const testData: StorageEvent = { x: 1 } as any;
         const result = await testEvent(testData);

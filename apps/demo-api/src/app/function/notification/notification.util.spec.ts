@@ -1,4 +1,4 @@
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { Notification, NotificationBox, NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigArrayEntryParam, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, firestoreDummyKey, firestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
@@ -7,7 +7,7 @@ import { expandNotificationRecipients } from '@dereekb/firebase-server/model';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f) => {
-  describeCloudFunctionTest('notification.util', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
+  describeCallableRequestTest('notification.util', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserContext({ f, addContactInfo: true }, (u) => {
       demoProfileContext({ f, u }, (p) => {
         describe('expandNotificationRecipients()', () => {

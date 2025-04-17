@@ -1,11 +1,11 @@
 import { ExampleReadParams, ExampleReadResponse } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { onCallReadModelParams, systemStateIdentity } from '@dereekb/firebase';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCloudFunctionTest('systemStateExampleRead', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
+  describeCallableRequestTest('systemStateExampleRead', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserAdminContext({ f }, (u) => {
       it('should return the message', async () => {
         const message = 'test message';
@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           message
         };
 
-        const result: ExampleReadResponse = await u.callCloudFunction(demoCallModelCloudFn, onCallReadModelParams(systemStateIdentity, params, 'exampleread'));
+        const result: ExampleReadResponse = await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(systemStateIdentity, params, 'exampleread'));
 
         expect(result).toBeDefined();
         expect(result.message).toBe(message);

@@ -20,7 +20,11 @@ import {
   OnCallDevelopmentFunction,
   OnCallDevelopmentFunctionMap,
   OnCallReadModelFunction,
-  OnCallReadModelMap
+  OnCallReadModelMap,
+  onCallHandlerWithNestContextFactory,
+  onCallHandlerWithNestApplicationFactory,
+  onScheduleHandlerWithNestApplicationFactory,
+  onScheduleHandlerWithNestContextFactory
 } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
@@ -65,11 +69,13 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 }
 
 export const mapDemoApiNestContext = (nest: INestApplicationContext) => new DemoApiNestContext(nest);
-export const onCallWithDemoNest = onCallWithNestApplicationFactory();
-export const onCallWithDemoNestContext = onCallWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
-export const onScheduleWithDemoNest = onScheduleWithNestApplicationFactory();
-export const onScheduleWithDemoNestContext = onScheduleWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
-export const onEventWithDemoNestContext = onEventWithNestContextFactory(mapDemoApiNestContext);
+export const onCallWithDemoNest = onCallHandlerWithNestApplicationFactory();
+export const onCallWithDemoNestContext = onCallHandlerWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
+
+export const onScheduleWithDemoNest = onScheduleHandlerWithNestApplicationFactory();
+export const onScheduleWithDemoNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
+export const onEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
+
 export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);

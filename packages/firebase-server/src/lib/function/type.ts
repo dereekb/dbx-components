@@ -4,6 +4,10 @@ import { type CallableFunction } from 'firebase-functions/v2/https';
 
 /**
  * Firebase Functions V1 - Union of firebase-functions HttpsFunction and Runnable.
+ *
+ * @deprecated deprecated gen 1 firebase function type
+ *
+ * @see CallableHttpFunction
  */
 export type RunnableHttpFunction<I> = HttpsFunction & Runnable<I>;
 
