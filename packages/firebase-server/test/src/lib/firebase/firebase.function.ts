@@ -1,35 +1,43 @@
-import { BlockingFunction, CloudFunction as CloudFunctionV1 } from 'firebase-functions/v1';
+import { BlockingFunction, CloudFunction as CloudFunctionV1Input } from 'firebase-functions/v1';
 import { CloudFunction as CloudFunctionV2, CloudEvent } from 'firebase-functions/v2';
-import { CallableContextOptions, wrap, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
+import { CallableContextOptions, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
 import { Getter, PromiseOrValue } from '@dereekb/util';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { BlockingFunctionMaybeWithHandler, CallableHttpFunction } from '@dereekb/firebase-server';
 import { CallableRequest } from 'firebase-functions/https';
 
+/**
+ * Type fix used for compatability with firebase-functions/v2 the CloudFunction types in unions.
+ */
+export type CloudFunctionV1TypeFix<T> = Omit<CloudFunctionV1Input<T>, '__trigger'> & { __trigger?: any };
+export type CloudFunctionV1<T> = CloudFunctionV1TypeFix<T>;
+
 // gen 1
 /**
  * @deprecated deprecated gen 1 firebase function type
  */
-export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedScheduledFunction | WrappedFunction<T>;
+export type WrappedCloudFunctionV1<T> = WrappedScheduledFunction | WrappedFunction<T>;
+
+/**
+ * @deprecated deprecated gen 1 firebase function type
+ */
+export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedCloudFunctionV1<T>;
 
 /**
  * @deprecated deprecated gen 1 firebase function type
  */
 export type WrapCloudFunctionV1Input<T> = CloudFunctionV1<T>;
 
-/**
- * @deprecated deprecated gen 1 firebase function type
- */
-export type WrappedCloudFunctionV1<T> = WrappedScheduledFunction | WrappedFunction<T>;
-
 // gen 2
 /**
  * Wrapped callable function that only takes in data and options that are used to simulate a Firebase request, then returns the result.
  */
-export type WrappedCallableRequest<I, O = unknown> = (data: I, options: CallableContextOptions) => PromiseOrValue<O>; // NOTE: This is typically/usually the same as WrappedFunction<I>;
+export type WrappedCallableRequest<I, O = unknown> = (data: I, options: CallableContextOptions) => PromiseOrValue<O>;
 
 export type WrappedCallableRequestParams<W extends WrappedCallableRequest<any, any>> = W extends WrappedCallableRequest<infer I> ? I : unknown | undefined | void;
-export type WrappedCallableRequestOutput<W extends WrappedCallableRequest<any, any>> = W extends WrappedCallableRequest<any, infer O> ? O : unknown | undefined | void;
+export type WrappedCallableRequestOutput<W extends WrappedCallableRequest<any, any>> = W extends WrappedCallableRequest<infer _, infer O> ? O : unknown;
+
+// export type WrappedCallableRequestOutput<W extends WrappedCallableRequest<any, any>> = W extends WrappedCallableRequest<infer _, infer O> ? O extends unknown ? any : O : any;
 
 /**
  * WrapCallableRequestV2 input.
@@ -44,7 +52,7 @@ export type WrapCallableRequest = <I, O>(callable: WrapCallableRequestInput<I, O
 /**
  * Function to wrap a gen 2 CloudFunction into a WrappedV2Function type.
  */
-export type WrapCloudFunctionV2 = <T extends CloudEvent<unknown>>(cloudFunction: CloudFunctionV2<T>) => WrappedV2Function<T>;
+export type WrapCloudFunctionV2 = <T extends CloudEvent<any>>(cloudFunction: CloudFunctionV2<T>) => WrappedV2Function<T>;
 
 export type WrapCloudFunctionV2Input<E extends CloudEvent<unknown>> = CloudFunctionV2<E>;
 export type WrappedCloudFunctionV2<E extends CloudEvent<unknown>> = WrappedV2Function<E>;
@@ -56,13 +64,17 @@ export type WrapBlockingFunctionWithoutHandlerFunction = (blockingFunction: Bloc
 
 export interface WrapBlockingFunction extends WrapBlockingFunctionWithHandlerFunction, WrapBlockingFunctionWithoutHandlerFunction {}
 
+export type WrappedGen2CloudOrBlockingFunction<I extends object> = I extends CloudEvent<unknown> ? WrappedCloudFunctionV2<I> | WrappedBlockingFunctionWithHandler<I, unknown> | WrappedBlockingFunction : WrappedBlockingFunction | WrappedBlockingFunctionWithHandler<I, unknown>;
+export type WrapGen2CloudOrBlockingFunction = WrapCloudFunctionV2 | WrapBlockingFunction;
+
 // MARK: Wrapped
 /**
- * A common interface that both gen 1 and gen 2 share.
+ * A common interface for a all known types of wrapped cloud functions that excludes WrappedCallableRequest.
+ *
+ * All of these functions are wrapped by FirebaseAdminCloudFunctionWrapper.
  */
-export type WrappedCloudFunction<I, O = unknown> = WrappedCloudFunctionV1<I> & WrappedCallableRequest<I, O>;
-export type WrappedCloudFunctionParams<W extends WrappedCloudFunction<any, any>> = W extends WrappedCloudFunction<infer I> ? I : unknown | undefined | void;
-export type WrappedCloudFunctionOutput<W extends WrappedCloudFunction<any, any>> = W extends WrappedCloudFunction<any, infer O> ? O : unknown | undefined | void;
+export type WrappedCloudFunction<I extends object, O = unknown> = (input: I, context?: CallableContextOptions) => Promise<O>; //WrappedGen2CloudOrBlockingFunction<I> | WrappedCloudFunctionV1<I>;
+export type WrapCloudFunction = WrapGen2CloudOrBlockingFunction & WrapCloudFunctionV1;
 
 // MARK: Wrapper
 export interface FirebaseAdminCloudFunctionWrapperSource {
@@ -87,18 +99,18 @@ export interface FirebaseAdminCloudFunctionWrapper {
    */
   readonly wrapCallableRequest: WrapCallableRequest;
   /**
-   * WrapCloudFunctionV2 function. Use for wrapping a gen 2 CloudFunction.
-   */
-  readonly wrapCloudFunction: WrapCloudFunctionV2;
-  /**
    * WrapBlockingFunction function. Use for wrapping a gen 2 BlockingFunction.
    */
   readonly wrapBlockingFunction: WrapBlockingFunction;
+  /**
+   * WrapCloudFunction function. Use for wrapping a gen 2 CloudFunction or gen 1 CloudFunction.
+   */
+  readonly wrapCloudFunction: WrapCloudFunction;
 }
 
 export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): FirebaseAdminCloudFunctionWrapper {
   const wrapV1CloudFunction: FirebaseAdminCloudFunctionWrapper['wrapV1CloudFunction'] = (x) => {
-    return instance.wrap(x);
+    return instance.wrap(x as CloudFunctionV1Input<any>);
   };
 
   const wrapV2CallableRequest: WrapCallableRequest = (x) => {
@@ -127,13 +139,17 @@ export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): Fireb
     return instance.wrap(blockingFunction);
   }) as WrapBlockingFunction;
 
+  const wrapCloudFunction: WrapCloudFunction = (x: any) => {
+    return instance.wrap(x);
+  };
+
   const wrapper: FirebaseAdminCloudFunctionWrapper = {
     wrapV1CloudFunction,
     wrapV2CloudFunction,
     wrapV2CallableRequest,
     wrapCallableRequest: wrapV2CallableRequest,
-    wrapCloudFunction: wrapV2CloudFunction,
-    wrapBlockingFunction
+    wrapBlockingFunction,
+    wrapCloudFunction
   };
 
   return wrapper;
@@ -144,6 +160,10 @@ export function wrapCloudFunctionV1ForTests<I, T extends WrapCloudFunctionV1Inpu
 }
 
 export function wrapCloudFunctionV2ForTests<E extends CloudEvent<unknown>, T extends WrapCloudFunctionV2Input<E> = WrapCloudFunctionV2Input<E>>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<T>): Getter<WrappedCloudFunctionV2<E>> {
+  return () => wrapper.wrapV2CloudFunction(getter());
+}
+
+export function wrapCloudFunctionTests<I extends object>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<any>): Getter<WrappedCloudFunction<I>> {
   return () => wrapper.wrapCloudFunction(getter());
 }
 

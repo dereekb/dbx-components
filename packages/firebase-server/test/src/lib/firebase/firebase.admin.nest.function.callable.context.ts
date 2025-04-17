@@ -5,14 +5,14 @@ import { WrappedCallableRequest } from './firebase.function';
 
 // MARK: V1
 export interface CallableRequestTestBaseConfig {
-  f: FirebaseAdminFunctionNestTestContext;
+  readonly f: FirebaseAdminFunctionNestTestContext;
 }
 
-export interface CallableRequestTestSingleConfig<I> extends CallableRequestTestBaseConfig {
-  fn: WrapCallableRequestForNestTestsInput<I>;
+export interface CallableRequestTestSingleConfig<I, O = unknown> extends CallableRequestTestBaseConfig {
+  readonly fn: WrapCallableRequestForNestTestsInput<I, O>;
 }
 
-export type CallableRequestTestSingleFunction<I> = (fn: WrappedCallableRequest<I>) => void;
+export type CallableRequestTestSingleFunction<I, O = unknown> = (fn: WrappedCallableRequest<I, O>) => void;
 
 export type CallableRequestTestConfigMapObject = {
   [key: string]: WrapCallableRequestForNestTestsInput<any>;
@@ -25,7 +25,7 @@ export interface CallableRequestTestMultipleConfig<I, T extends CallableRequestT
 export const CallableRequestTestMultipleFixtureSuffix = 'WrappedFn';
 
 export type CallableRequestTestMultipleFixture<T extends CallableRequestTestConfigMapObject> = {
-  [K in keyof T as K extends string ? `${K}${typeof CallableRequestTestMultipleFixtureSuffix}` : never]: T[K] extends WrapCallableRequestForNestTestsInput<infer I> ? WrappedCallableRequest<I> : never;
+  [K in keyof T as K extends string ? `${K}${typeof CallableRequestTestMultipleFixtureSuffix}` : never]: T[K] extends WrapCallableRequestForNestTestsInput<infer I, infer O> ? WrappedCallableRequest<I, O> : never;
 };
 
 export type CallableRequestTestMultipleFunction<T extends CallableRequestTestConfigMapObject> = (fn: CallableRequestTestMultipleFixture<T>) => void;

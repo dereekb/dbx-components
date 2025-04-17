@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           message
         };
 
-        const result: ExampleReadResponse = await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(systemStateIdentity, params, 'exampleread'));
+        const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(systemStateIdentity, params, 'exampleread'))) as ExampleReadResponse;
 
         expect(result).toBeDefined();
         expect(result.message).toBe(message);

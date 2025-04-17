@@ -1,7 +1,7 @@
 import { type INestApplicationContext, Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { type StorageEvent } from 'firebase-functions/v2/storage';
-import { storage } from 'firebase-functions/v2';
+import { CloudFunction, storage } from 'firebase-functions/v2';
 import { type CloudEventHandlerWithNestContextBuilder, CloudEventHandlerWithNestContextBuilderForBuilder, cloudEventHandlerWithNestContextFactory, type NestContextCloudEventHandler } from './event';
 import { type MakeNestContext } from '../../nest.provider';
 
@@ -60,7 +60,7 @@ describe('nest function utilities', () => {
         const runnableFactory = factory(handlerBuilder);
 
         // make the runnable
-        const runnable = runnableFactory(f.nestAppPromiseGetter);
+        const runnable: CloudFunction<StorageEvent> = runnableFactory(f.nestAppPromiseGetter);
 
         const testEvent = f.fnWrapper.wrapCloudFunction(runnable);
 

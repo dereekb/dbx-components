@@ -357,9 +357,15 @@ In your app (typically the dbx-components `functions.ts` file), you will need to
 - `onEventWithNestContextFactory()` with `cloudEventHandlerWithNestContextFactory()`
 
 In your tests:
-- After updating the above, any `wrapV1CloudFunction()` call should be replaced with `wrapCallableRequest()`
-- Replace `describeCloudFunctionTest` with `describeCallableRequestTest`
-- Replace `callCloudFunction()` with `callWrappedFunction()`
-- The `CloudFn` suffix for a CallableRequestTestMultipleConfig has been replaced with `WrappedFn`
+- After updating the above, any `wrapV1CloudFunction()` call should be replaced with `wrapCallableRequest()` or `wrapCloudFunction()`. See below for more info.
+- Replace `describeCloudFunctionTest` with `describeCallableRequestTest` for callable functions. Use `describeCloudFunctionTest` for non-callable functions.
+- Replace `callCloudFunction()` with `callWrappedFunction()`, except for the above case.
+- The `CloudFn` suffix for a CallableRequestTestMultipleConfig has been replaced with `WrappedFn` so if using `describeCallableRequestTest()`, update the function suffix.
 
 You should be able to just search replace each of these.
+
+There are some caveats though:
+
+- If you are testing scheduled functions or other non-callable functions, you should continue to use `describeCloudFunctionTest()`, otherwise you will get an error.
+- At the time of writing, some auth events, namely onCreate() for an auth user, does not have a gen 2 equivalent. Continue to use the gen 1 implementation. See more: https://firebase.google.com/docs/functions/auth-events
+- The `callWrappedFunction()` result type is no longer `any`, and now returns `unknown`, so casting to the expected type will be required.

@@ -41,9 +41,14 @@ export type BlockingFunctionHandlerWithNestContextBuilder<N, E extends object, O
 export type BlockingFunctionHandlerWithNestContextBuilderForBuilder<N, B extends BlockingFunctionBuilder<any, any>> = B extends BlockingFunctionBuilder<infer E, infer O> ? BlockingFunctionHandlerWithNestContextBuilder<N, E, O> : never;
 
 /**
+ * Factory produced by BlockingFunctionHandlerWithNestContextFactory.
+ */
+export type NestApplicationBlockingFunctionFactory<E extends object, O> = NestApplicationFunctionFactory<BlockingFunctionMaybeWithHandler<E, O>>;
+
+/**
  * Factory function for generating a firebase BlockingFunction for a specific event.
  */
-export type BlockingFunctionHandlerWithNestContextFactory<N> = <E extends object, O>(fn: BlockingFunctionHandlerWithNestContextBuilder<N, E, O>) => NestApplicationFunctionFactory<BlockingFunctionMaybeWithHandler<E, O>>;
+export type BlockingFunctionHandlerWithNestContextFactory<N> = <E extends object, O>(fn: BlockingFunctionHandlerWithNestContextBuilder<N, E, O>) => NestApplicationBlockingFunctionFactory<E, O>;
 
 /**
  * Creates a BlockingFunctionHandlerWithNestContextFactory.

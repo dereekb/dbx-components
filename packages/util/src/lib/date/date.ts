@@ -12,6 +12,15 @@ export type DateRelativeDirection = 'past' | 'future';
 export type DateHourMinuteOrSecond = 'hour' | 'minute' | 'second';
 
 /**
+ * A valid RFC3339 formatted date string.
+ *
+ * I.E. "2020-04-30 00:00:00.000Z" and "2020-04-30T00:00:00.000Z"
+ *
+ * The only difference between this and an ISO8601DateString is the spacing between the date and time is allowed, while in ISO8601DateString it is not.
+ */
+export type RFC3339DateString = string;
+
+/**
  * A valid ISO8601 formatted date string.
  *
  * I.E. "2020-04-30T00:00:00.000Z"

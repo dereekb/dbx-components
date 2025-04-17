@@ -125,7 +125,7 @@ export interface OnCallCreateModelResult {
   /**
    * Key(s)/Paths of the created object(s)
    */
-  modelKeys: ArrayOrValue<FirestoreModelKey>;
+  readonly modelKeys: ArrayOrValue<FirestoreModelKey>;
 }
 
 export function onCallCreateModelResultWithDocs(result: ArrayOrValue<DocumentReferenceRef<unknown>>): OnCallCreateModelResult {

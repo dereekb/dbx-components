@@ -80,6 +80,11 @@ export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFac
 export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 
+/**
+ * Required for gen 1 auth events
+ */
+export const onGen1EventWithDemoNestContext = onEventWithNestContextFactory(mapDemoApiNestContext);
+
 // MARK: CRUD Functions
 export type DemoCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallCreateModelMap = OnCallCreateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
