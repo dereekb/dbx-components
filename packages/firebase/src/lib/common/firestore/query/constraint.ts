@@ -4,17 +4,41 @@ import { type DocumentSnapshot, type DocumentData, type FieldPath } from '../typ
 
 /**
  * Type identifier for a Firestore query constraint.
+ *
+ * Used to uniquely identify different types of query constraints, such as
+ * where, limit, orderBy, etc.
  */
 export type FirestoreQueryConstraintType = string;
 
 /**
- * A constraint. Used by drivers to apply native firebase query constraints.
+ * A constraint used by drivers to apply native Firebase query constraints.
+ *
+ * This is an abstraction over Firestore's query constraints that allows for
+ * uniform handling of different types of constraints in a type-safe manner.
+ * Each constraint has a type identifier and associated data specific to that type.
+ *
+ * @template T - The type of data stored in the constraint, varies by constraint type
  */
 export interface FirestoreQueryConstraint<T = unknown> {
+  /**
+   * The type identifier for this constraint
+   */
   readonly type: FirestoreQueryConstraintType;
+
+  /**
+   * The data associated with this constraint
+   */
   readonly data: T;
 }
 
+/**
+ * Creates a Firestore query constraint.
+ *
+ * @template T - Type of data stored in the constraint
+ * @param type - The constraint type identifier
+ * @param data - The constraint data
+ * @returns A Firestore query constraint object
+ */
 /**
  * Creates a Firestore query constraint.
  *
@@ -33,8 +57,20 @@ export function firestoreQueryConstraint<T = unknown>(type: string, data: T): Fi
 /**
  * Creates a factory function for producing constraints of a specific type.
  *
+ * This is a higher-order function that returns a specialized constraint creator
+ * for a particular constraint type, making it easier to create multiple constraints
+ * of the same type with different data.
+ *
  * @param type - The constraint type identifier
  * @returns A function that creates constraints of the specified type
+ *
+ * @example
+ * // Create a factory for 'where' constraints
+ * const whereFactory = firestoreQueryConstraintFactory('where');
+ *
+ * // Use the factory to create constraints
+ * const nameConstraint = whereFactory({ field: 'name', op: '==', value: 'John' });
+ * const ageConstraint = whereFactory({ field: 'age', op: '>', value: 21 });
  */
 export function firestoreQueryConstraintFactory(type: string): <T = unknown>(data: T) => FirestoreQueryConstraint<T> {
   return <T>(data: T) => firestoreQueryConstraint(type, data);
@@ -49,6 +85,11 @@ export const FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE = 'limit';
 /**
  * Configuration data for a limit constraint.
  */
+/**
+ * Configuration data for a limit constraint.
+ *
+ * Used to specify the maximum number of documents to return in a query.
+ */
 export interface LimitQueryConstraintData {
   /**
    * Maximum number of documents to return
@@ -59,8 +100,15 @@ export interface LimitQueryConstraintData {
 /**
  * Creates a constraint that limits the maximum number of documents to return.
  *
+ * This constraint restricts the number of documents returned by a query to at most
+ * the specified limit. This is useful for pagination and reducing query result size.
+ *
  * @param limit - Maximum number of documents to return
  * @returns A Firestore query constraint for limiting results
+ *
+ * @example
+ * // Limit results to 10 documents
+ * const query = applyConstraints(baseQuery, [limit(10)]);
  */
 export function limit(limit: number): FirestoreQueryConstraint<LimitQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, { limit });
@@ -74,6 +122,9 @@ export const FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = 'limit_to_last';
 
 /**
  * Configuration data for a limitToLast constraint.
+ *
+ * Used to specify the maximum number of documents to return from the end of
+ * the query results, based on the specified ordering.
  */
 export interface LimitToLastQueryConstraintData {
   /**
@@ -85,10 +136,21 @@ export interface LimitToLastQueryConstraintData {
 /**
  * Creates a constraint that returns the last matching documents in the query, up to the limit.
  *
- * Does not work with queries with streamed results.
+ * This constraint returns documents from the end of the result set, based on the
+ * ordering of the query. It's useful for getting the most recent items when
+ * ordering by timestamp or similar fields.
+ *
+ * Important: Does not work with queries that use streaming results.
  *
  * @param limit - Maximum number of documents to return from the end of the results
  * @returns A Firestore query constraint for limiting results to the last N documents
+ *
+ * @example
+ * // Get the 5 most recent documents when ordered by timestamp
+ * const query = applyConstraints(baseQuery, [
+ *   orderBy('timestamp', 'desc'),
+ *   limitToLast(5)
+ * ]);
  */
 export function limitToLast(limit: number): FirestoreQueryConstraint<LimitToLastQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, { limit });
@@ -102,6 +164,9 @@ export const FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE = 'offset';
 
 /**
  * Configuration data for an offset constraint.
+ *
+ * Used to specify how many documents to skip before returning results in a query.
+ * This is commonly used for pagination in combination with a limit constraint.
  */
 export interface OffsetQueryConstraintData {
   /**
@@ -113,8 +178,19 @@ export interface OffsetQueryConstraintData {
 /**
  * Creates a constraint that skips the first N documents in the query results.
  *
+ * This constraint is useful for implementing pagination when combined with a limit
+ * constraint. Note that performance can degrade with large offset values as Firestore
+ * still needs to read all skipped documents.
+ *
  * @param offset - Number of documents to skip
  * @returns A Firestore query constraint for offsetting results
+ *
+ * @example
+ * // Skip the first 20 documents and take the next 10 (for page 3 with page size 10)
+ * const query = applyConstraints(baseQuery, [
+ *   offset(20),
+ *   limit(10)
+ * ]);
  */
 export function offset(offset: number): FirestoreQueryConstraint<OffsetQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE, { offset });
@@ -512,9 +588,24 @@ export type FullFirestoreQueryConstraintHandlersMapping<B> = {
 /**
  * Creates a function that adds or replaces limit constraints in a list of constraints.
  *
+ * This is a specialized utility for handling pagination limits. It will either:
+ * 1. Replace any existing limit or limitToLast constraint with a new one, or
+ * 2. Add a new limit constraint if none exists
+ *
+ * It preserves the existing limit type (regular limit vs limitToLast) if one exists.
+ *
  * @param limit - Maximum number of documents to return
  * @param addedLimitType - Type of limit constraint to add (default: regular limit)
  * @returns A function that adds or replaces limit constraints
+ *
+ * @example
+ * // Replace any existing limit with a limit of 25
+ * const withLimit25 = addOrReplaceLimitInConstraints(25);
+ * const newConstraints = withLimit25(existingConstraints);
+ *
+ * // Replace any existing limit with a limitToLast of 10
+ * const withLastLimit10 = addOrReplaceLimitInConstraints(10, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE);
+ * const newConstraints = withLastLimit10(existingConstraints);
  */
 export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
   const replace = replaceConstraints(
@@ -542,14 +633,26 @@ export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: ty
 
 /**
  * Function type for transforming a list of query constraints into another list of constraints.
+ *
+ * These functions are used to manipulate constraint collections, such as adding, removing,
+ * or replacing constraints of specific types. They provide a way to modify queries in a
+ * structured and composable manner.
  */
 export type FirestoreQueryConstraintMapFunction = (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[];
 
 /**
  * Creates a function that filters out constraints of specific types.
  *
+ * This is useful when you want to remove certain constraint types from a query,
+ * for example removing existing limit or where constraints before adding new ones.
+ *
  * @param types - Constraint types to filter out
  * @returns A function that filters constraints by type
+ *
+ * @example
+ * // Remove all limit and offset constraints from the query
+ * const withoutPagination = filterConstraintsOfType('limit', 'offset');
+ * const newConstraints = withoutPagination(existingConstraints);
  */
 export function filterConstraintsOfType(...types: FirestoreQueryConstraintType[]): FirestoreQueryConstraintMapFunction {
   const typesToFilterOut = new Set(types);
@@ -559,9 +662,21 @@ export function filterConstraintsOfType(...types: FirestoreQueryConstraintType[]
 /**
  * Creates a function that replaces constraints of specific types with new constraints.
  *
- * @param replaceFn - Function that generates replacement constraints
+ * This function allows for targeted replacement of specific constraint types while
+ * preserving all other constraints. It's useful for updating pagination settings,
+ * changing filters, or modifying sorting without rebuilding the entire constraint list.
+ *
+ * @param replaceFn - Function that generates replacement constraints based on the filtered constraints
  * @param types - Constraint types to replace
  * @returns A function that replaces constraints of specified types
+ *
+ * @example
+ * // Replace any existing limit constraint with a new limit of 20
+ * const replaceLimit = replaceConstraints(
+ *   () => limit(20),
+ *   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]
+ * );
+ * const newConstraints = replaceLimit(existingConstraints);
  */
 export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstraint[]) => Maybe<ArrayOrValue<FirestoreQueryConstraint>>, types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
   const separateFn = separateConstraints(...types);
@@ -576,8 +691,19 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
 /**
  * Creates a function that separates constraints of specific types from others.
  *
+ * This utility function divides a list of constraints into two groups: those matching
+ * the specified types and those that don't. This is used internally by other constraint
+ * manipulation functions and can be useful for custom constraint processing.
+ *
  * @param types - Constraint types to separate
  * @returns A function that separates constraints into included and excluded groups
+ *
+ * @example
+ * // Separate pagination constraints from filtering constraints
+ * const separatePagination = separateConstraints('limit', 'offset');
+ * const { included, excluded } = separatePagination(allConstraints);
+ * // included contains constraints that aren't limit or offset
+ * // excluded contains only the limit and offset constraints
  */
 export function separateConstraints(...types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => SeparateResult<FirestoreQueryConstraint> {
   return (constraints) => {

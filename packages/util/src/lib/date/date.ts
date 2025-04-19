@@ -28,10 +28,18 @@ export type RFC3339DateString = string;
 export type ISO8601DateString = string;
 
 /**
+ * Regular expression for validating ISO8601 date strings.
+ *
  * TODO(FUTURE): Need to improve to support negative years.
  */
 export const ISO_8601_DATE_STRING_REGEX = /(\d{4,})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})(Z|[+-](\d{2})\:(\d{2}))?/;
 
+/**
+ * Determines if a string is a valid ISO8601 date string.
+ *
+ * @param input - The string to test
+ * @returns True if the input is a valid ISO8601 date string
+ */
 export function isISO8601DateString(input: string): input is ISO8601DateString {
   return ISO_8601_DATE_STRING_REGEX.test(input);
 }
@@ -52,6 +60,12 @@ export type UTCDateString = string;
  */
 export const UTC_DATE_STRING_REGEX = /^([a-zA-Z]{3}, [0-9]{2} [a-zA-Z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} [A-Z]{3})$/;
 
+/**
+ * Determines if a string is a valid UTC date string.
+ *
+ * @param input - The string to test
+ * @returns True if the input is a valid UTC date string
+ */
 export function isUTCDateString(input: string): boolean {
   return UTC_DATE_STRING_REGEX.test(input);
 }
@@ -85,9 +99,9 @@ export interface TimezoneStringRef {
 /**
  * Returns true only if the inputs have the same timezone, or both do not have a timezone set.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - First object that may contain a timezone reference
+ * @param b - Second object that may contain a timezone reference
+ * @returns True if both objects have the same timezone or neither has a timezone set
  */
 export function hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<Partial<TimezoneStringRef>>): boolean {
   const tzA = a?.timezone;
@@ -106,10 +120,11 @@ export const UTC_TIMEZONE_STRING = 'UTC';
 export type UTCTimezoneAbbreviation = typeof UTC_TIMEZONE_STRING;
 
 /**
- * Whether or not the input timezone string is considered UTC.
+ * Determines whether the input timezone string is considered UTC.
+ * Returns true for null, undefined, or the string 'UTC'.
  *
- * @param timezone
- * @returns
+ * @param timezone - The timezone string to check
+ * @returns True if the timezone is considered UTC
  */
 export function isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): boolean;
 export function isConsideredUtcTimezoneString(timezone: TimezoneString): boolean;
@@ -190,10 +205,22 @@ export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString
  * @param input
  * @returns
  */
+/**
+ * Determines if a string is a valid ISO8601 day string (YYYY-MM-DD format).
+ *
+ * @param input - The string to test
+ * @returns True if the input is a valid ISO8601 day string
+ */
 export function isISO8601DayString(input: string): input is ISO8601DayString {
   return ISO8601_DAY_STRING_REGEX.test(input);
 }
 
+/**
+ * Determines if a string starts with a valid ISO8601 day string pattern (YYYY-MM-DD).
+ *
+ * @param input - The string to test
+ * @returns True if the input starts with a valid ISO8601 day string pattern
+ */
 export function isISO8601DayStringStart(input: string): input is ISO8601DayString {
   return ISO8601_DAY_STRING_START_REGEX.test(input);
 }
@@ -208,15 +235,23 @@ export type MonthDaySlashDate = string; // 11/1/2020
  */
 export const MONTH_DAY_SLASH_DATE_STRING_REGEX = /^\d{1,2}\/\d{1,2}\/\d+$/;
 
+/**
+ * Determines if a string is a valid Month/Day/Year slash date format.
+ *
+ * @param input - The string to test
+ * @returns True if the input is a valid Month/Day/Year slash date
+ */
 export function isMonthDaySlashDate(input: string): input is MonthDaySlashDate {
   return MONTH_DAY_SLASH_DATE_STRING_REGEX.test(input);
 }
 
 /**
- * Converts the input MonthDaySlashDate to an ISO8601DayString.
+ * Converts the input MonthDaySlashDate (MM/DD/YYYY) to an ISO8601DayString (YYYY-MM-DD).
+ * Handles single digit months and days by adding leading zeros.
+ * If year is only 2 digits, prepends '20' to make a 4-digit year.
  *
- * @param slashDate
- * @returns
+ * @param slashDate - The slash date string to convert (e.g., '1/1/20' or '11/15/2022')
+ * @returns An ISO8601 formatted day string (YYYY-MM-DD)
  */
 export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO8601DayString {
   let [month, day, year] = slashDate.split('/');
@@ -255,13 +290,44 @@ export type Minutes = number;
 export type Hours = number;
 export type Days = number;
 
+/**
+ * Number of hours in a day.
+ */
 export const HOURS_IN_DAY = 24;
+
+/**
+ * Number of seconds in a minute.
+ */
 export const SECONDS_IN_MINUTE = 60;
+
+/**
+ * Number of minutes in a day.
+ */
 export const MINUTES_IN_DAY = 1440;
+
+/**
+ * Number of minutes in an hour.
+ */
 export const MINUTES_IN_HOUR = 60;
+
+/**
+ * Number of milliseconds in a second.
+ */
 export const MS_IN_SECOND = 1000;
+
+/**
+ * Number of milliseconds in a minute.
+ */
 export const MS_IN_MINUTE = MS_IN_SECOND * 60;
+
+/**
+ * Number of milliseconds in an hour.
+ */
 export const MS_IN_HOUR = MS_IN_MINUTE * 60;
+
+/**
+ * Number of milliseconds in a day.
+ */
 export const MS_IN_DAY = MS_IN_HOUR * HOURS_IN_DAY;
 
 /**
@@ -282,19 +348,32 @@ export type MonthOfYear = number;
 export type DateMonth = number;
 
 /**
- * Retrieves the MonthOfYear value from the input Date.
+ * Retrieves the MonthOfYear value (1-12) from the input Date.
+ * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
  *
- * @param date
- * @returns
+ * @param date - The date to extract the month from
+ * @returns The month of year as a number from 1-12
  */
 export function monthOfYearFromDate(date: Date): MonthOfYear {
   return monthOfYearFromDateMonth(date.getMonth());
 }
 
+/**
+ * Converts a JavaScript Date month (0-11) to a MonthOfYear (1-12).
+ *
+ * @param dateMonth - JavaScript Date month (0-11)
+ * @returns The month of year as a number from 1-12
+ */
 export function monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear {
   return dateMonth + 1;
 }
 
+/**
+ * Converts a MonthOfYear (1-12) to a JavaScript Date month (0-11).
+ *
+ * @param monthOfYear - Month of year (1-12)
+ * @returns JavaScript Date month (0-11)
+ */
 export function makeDateMonthForMonthOfYear(monthOfYear: MonthOfYear): DateMonth {
   return monthOfYear - 1;
 }
@@ -310,43 +389,45 @@ export type YearNumber = number;
 export type DateRelativeState = DateRelativeDirection | 'present';
 
 /**
- * Returns true if the value is a date.
+ * Returns true if the value is a Date object.
+ * Uses both instanceof and Object.prototype.toString for reliable type checking.
  *
- * @param value
- * @returns
+ * @param value - The value to check
+ * @returns True if the value is a Date object
  */
 export function isDate(value: unknown): value is Date {
   return value instanceof Date || (typeof value === 'object' && Object.prototype.toString.call(value) === '[object Date]');
 }
 
 /**
- * Returns true if the two input dates are equal.
+ * Returns true if the two input dates represent the same point in time.
+ * Compares the timestamp values rather than the object references.
  *
- * @param a
- * @param b
- * @returns
+ * @param a - First date to compare
+ * @param b - Second date to compare
+ * @returns True if the dates represent the same point in time
  */
 export function isEqualDate(a: Date, b: Date): boolean {
   return a.getTime() === b.getTime();
 }
 
 /**
- * Returns true if the input date is in the past.
+ * Returns true if the input date is in the past relative to the current time.
  *
- * @param input
- * @returns
+ * @param input - The date to check
+ * @returns True if the date is in the past
  */
 export function isPast(input: Date): boolean {
   return input.getTime() < Date.now();
 }
 
 /**
- * Adds milliseconds to the input date.
+ * Adds milliseconds to the input date, returning a new Date object.
+ * If no date is input, then returns the input unchanged.
  *
- * If no date is input, then returns the input.
- *
- * @param input
- * @param ms
+ * @param input - The date to add milliseconds to
+ * @param ms - The number of milliseconds to add (defaults to 0 if null or undefined)
+ * @returns A new Date with the added milliseconds, or the original input if not a Date
  */
 export function addMilliseconds(input: Date, ms: Maybe<Milliseconds>): Date;
 export function addMilliseconds(input: MaybeNot, ms: Maybe<Milliseconds>): MaybeNot;
