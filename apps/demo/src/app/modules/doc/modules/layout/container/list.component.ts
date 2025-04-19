@@ -6,7 +6,7 @@ import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } fro
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, takeFront } from '@dereekb/util';
-import { pascalCase } from 'change-case';
+import { pascalCase } from 'change-case-all';
 
 @Component({
   templateUrl: './list.component.html'

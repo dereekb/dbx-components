@@ -8,7 +8,7 @@ import { FieldType } from '@ngx-formly/material';
 import { debounceTime, distinctUntilChanged, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
 import { SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableValueFieldAnchorFn, ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
-import { camelCase } from 'change-case';
+import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface StringValueFieldsFieldProps extends FormlyFieldProps {

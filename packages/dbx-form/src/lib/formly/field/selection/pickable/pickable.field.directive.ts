@@ -9,7 +9,7 @@ import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
 import { PickableValueFieldDisplayFunction, PickableValueFieldDisplayValue, PickableValueFieldFilterFunction, PickableValueFieldHashFunction, PickableValueFieldLoadValuesFunction, PickableValueFieldValue } from './pickable';
 import { DbxValueListItem } from '@dereekb/dbx-web';
-import { camelCase } from 'change-case';
+import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**

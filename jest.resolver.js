@@ -29,10 +29,10 @@ module.exports = (path, options) => {
         //
         'uuid',
         'rxjs',
+        'change-case-all',
         '@dereekb/firebase-server',
         '@dereekb/firebase',
         '@dereekb/util',
-        'change-case',
         '@firebase/auth',
         '@firebase/storage',
         '@firebase/functions',

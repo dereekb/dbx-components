@@ -1,5 +1,5 @@
 import { Injectable, Injector, inject } from '@angular/core';
-import { capitalCase } from 'change-case';
+import { capitalCase } from 'change-case-all';
 import { map, shareReplay, Observable, BehaviorSubject } from 'rxjs';
 import { ArrayOrValue, Building, ModelTypeString, useIterableOrValue } from '@dereekb/util';
 import { DbxModelTypeConfiguration, DbxModelTypeConfigurationMap } from './model.types';
