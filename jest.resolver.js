@@ -32,6 +32,7 @@ module.exports = (path, options) => {
         '@dereekb/firebase-server',
         '@dereekb/firebase',
         '@dereekb/util',
+        'change-case',
         '@firebase/auth',
         '@firebase/storage',
         '@firebase/functions',

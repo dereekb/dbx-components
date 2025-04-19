@@ -24,7 +24,7 @@ switch (appTestType) {
     // angular needs jsdom and serializers
     // globalSetup = 'jest-preset-angular/global-setup';
     snapshotSerializers = jestPresetAngularSerializers;
-    testEnvironment = 'jsdom';
+    testEnvironment = `${rootPath}/jest.environment.jsdom.ts`; // 'jsdom';
     transform = {
       '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$' }]
     };
