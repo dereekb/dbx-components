@@ -371,5 +371,5 @@ There are some caveats though:
 - The `callWrappedFunction()` result type is no longer `any`, and now returns `unknown`, so casting to the expected type will be required.
 
 #### Gen 2 Cloud Functions
-- Gen 2 functions have additional configuration available that you'll want to configure. Cloud run is more expensive than the gen 1 implementation so it is important to change the configuration to keep costs in check.
+Gen 2 functions have additional configuration available that you'll want to configure. Cloud run is more expensive than the gen 1 implementation so it is important to change the configuration to keep costs in check. All @dereekb/firebase-server onCall/schedule/etc. configuration allows for setting default configuration created by the `onCallWithNestContextFactory`/`onScheduleWithNestContextFactory`/`onEventWithNestContextFactory` functions.
 

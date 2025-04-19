@@ -15,7 +15,6 @@
     "@angular/forms": "^18.0.0",
     "@ngx-formly/core": "^6.0.0",
     "@ngx-formly/material": "^6.0.0",
-    "change-case": "^5.0.0",
     "@dereekb/date": "*",
     "@ngbracket/ngx-layout": "^18.0.0",
     "ngx-mat-intl-tel-input": "^5.0.0",
