@@ -48,9 +48,9 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"11.0.0"}    # change every major version
-NX_VERSION=${NX_SETUP_VERSIONS:-"16.10.0"}
-ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"~16.2.11"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.0"}    # update every major version
+NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"~18.2.13"}
 
 echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
 
@@ -355,7 +355,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver@3.4.1 husky pretty-quick@^3.1.3 @commitlint/cli @commitlint/config-angular
+npm install -D @jscutlery/semver@3.4.1 husky pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -377,7 +377,7 @@ git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
 echo "Adding jest configurations..."
-npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@13.1.4 ts-jest@^29.1.1 jest-date@^1.1.4 jest-junit@^16.0.0
+npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@14.1.1 ts-jest@^29.3.2 jest-date@^1.1.4 jest-junit@^16.0.0
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
@@ -407,10 +407,10 @@ git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install rxjs@^7.5.0 firebase@^10.10.0 firebase-admin@^12.0.0 firebase-functions@^4.8.2 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
 
 # install mapbox dependencies
-npm install mapbox-gl ngx-mapbox-gl@^10.0.0 @ng-web-apis/geolocation @ng-web-apis/common
+npm install mapbox-gl ngx-mapbox-gl@git+https://git@github.com/dereekb/ngx-mapbox-gl#e55fbfa2f334348f0ff6b4705776c958c67ffbb5 @ng-web-apis/geolocation @ng-web-apis/common
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -424,8 +424,8 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing specific angular version"
-npm install -D @nx/angular@$NX_VERSION jest-preset-angular@13.1.4 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
-npm install @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.0.8 @uirouter/angular@^12.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#269911244911ee51f8977ce2293f0ef9f219f94f @ngbracket/ngx-layout@16.1.3 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
+npm install -D @nx/angular@$NX_VERSION jest-preset-angular@14.1.1 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
+npm install @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.1.1 @uirouter/angular@^15.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#32c69f7009db3a9b85148705c00e923d5a858807 @ngbracket/ngx-layout@^18.0.0 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
@@ -450,7 +450,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@^13.6.0 @ngrx/store-devtools@16.3.0 @ngx-formly/schematics@6.2.2 @firebase/rules-unit-testing@^3.0.2 firebase-functions-test@^3.1.1 envfile env-cmd
+npm install -D firebase-tools@^14.2.0 @ngrx/store-devtools@18.1.1 @ngx-formly/schematics@6.3.12 @firebase/rules-unit-testing@^4.0.1 firebase-functions-test@^3.4.1 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
