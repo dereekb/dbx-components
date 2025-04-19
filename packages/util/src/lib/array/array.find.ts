@@ -10,6 +10,7 @@ export type ArrayFindDecisionFunction<T> = (value: T, index: number, obj: T[]) =
 
 /**
  * Returns a decision about an array based on its input values using a preconfigured DecisionFunction and SetIncludesMode.
+ *
  * @template T - The type of elements in the array
  */
 export type ArrayDecisionFunction<T> = (values: T[]) => boolean;

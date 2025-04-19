@@ -3,6 +3,8 @@ import { type DecisionFunction } from '../value/decision';
 import { copyArray } from './array';
 import { expandIndexSet, findBestIndexSetPair, findToIndexSet } from './array.index';
 import { forEachInIterable } from '../iterable/iterable';
+import { sortByNumberFunction } from '../number/sort';
+import { AscendingSortCompareFunction } from '../sort';
 
 /**
  * Filters the input values by distance while maintaining the original order of elements.
@@ -28,7 +30,7 @@ export function filterValuesByDistance<T>(input: T[], minDistance: number, getVa
  * we are only interested in seeing one of those items.
  *
  * @param input - The array of values to filter
- * @param minDistance - The minimum distance required between values
+ * @param minDistance - The minimum distance required between values (inclusive)
  * @param getValue - Function that extracts a numeric value from each item for distance comparison
  * @returns A filtered array with only values that are at least minDistance apart, sorted by the extracted value
  */
@@ -43,7 +45,7 @@ export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number
  * Internal helper function for filtering values by distance.
  *
  * @param values - Array of tuples containing the original value and its numeric representation
- * @param minDistance - The minimum distance required between values
+ * @param minDistance - The minimum distance required between values (inclusive).
  * @param toOutputValue - Function to convert a value-number tuple to the output format
  * @returns A filtered array with only values that are at least minDistance apart
  */
@@ -57,17 +59,16 @@ function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: numbe
   }
 
   // Sort values
-  values.sort((a, b) => a[1] - b[1]);
+  values.sort(sortByNumberFunction((x) => x[1]));
 
   let prev = values[0];
-
   const filtered: Y[] = [toOutputValue(prev)];
 
   for (let i = 1, n = values.length; i < n; i += 1) {
     const current = values[i];
     const distance = Math.abs(current[1] - prev[1]);
 
-    if (distance > minDistance) {
+    if (distance >= minDistance) {
       filtered.push(toOutputValue(current));
       prev = current;
     }
@@ -81,11 +82,11 @@ function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: numbe
  *
  * @param input - The array to filter for the best fit
  * @param filter - Function that determines which items are candidates for the best fit
- * @param compare - Function to compare two values to determine which is the best fit
+ * @param compare - AscendingSortCompareFunction to compare two values to determine which is the best fit
  * @param updateNonBestFit - Function that transforms non-best-fit items
  * @returns A new array with only the best fit item and transformed non-best-fit items
  */
-export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compare: (a: T, b: T) => number, updateNonBestFit: (value: T) => T): T[] {
+export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
   return applyBestFit<T>(copyArray(input), filter, compare, updateNonBestFit);
 }
 
@@ -97,11 +98,11 @@ export function makeBestFit<T>(input: T[], filter: (value: T) => boolean, compar
  *
  * @param input - The array to modify in-place
  * @param filter - Function that determines which items are candidates for the best fit
- * @param compare - Function to compare two values to determine which is the best fit
+ * @param compare - AscendingSortCompareFunction to compare two values to determine which is the best fit
  * @param updateNonBestFit - Function that transforms non-best-fit items
  * @returns The modified input array with only the best fit item and transformed non-best-fit items
  */
-export function applyBestFit<T>(input: T[], filter: (value: T) => boolean, compare: (a: T, b: T) => number, updateNonBestFit: (value: T) => T): T[] {
+export function applyBestFit<T>(input: T[], filter: (value: T) => boolean, compare: AscendingSortCompareFunction<T>, updateNonBestFit: (value: T) => T): T[] {
   const matchIndexSet = findToIndexSet(input, filter);
 
   if (matchIndexSet.length > 1) {

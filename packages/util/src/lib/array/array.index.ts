@@ -1,3 +1,4 @@
+import { AscendingSortCompareFunction } from '../sort';
 import { type IndexNumber, type IndexRef, type IndexRangeInput, indexRange } from '../value/indexed';
 import { type Maybe } from '../value/maybe.type';
 
@@ -69,13 +70,14 @@ export function findBest<T>(input: T[], compare: (a: T, b: T) => number): IndexS
  * @param compare
  * @returns
  */
-export function findBestIndexSetPair<T>(input: IndexSetPairSet<T>, compare: (a: T, b: T) => number): IndexSetPair<T> {
+export function findBestIndexSetPair<T>(input: IndexSetPairSet<T>, compare: AscendingSortCompareFunction<T>): IndexSetPair<T> {
   let best = input[0];
 
   for (let i = 1; i < input.length; i += 1) {
     const next = input[i];
 
-    if (best.item == null || (next.item != null && compare(best.item, next.item) < 0)) {
+    // set default if best.item is null/unset
+    if (next.item != null && (best.item == null || compare(best.item, next.item) < 0)) {
       best = next;
     }
   }
