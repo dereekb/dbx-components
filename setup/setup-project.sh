@@ -33,7 +33,6 @@ PARENT_DIRECTORY=${5:-'../../'}                               # parent directory
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
-IS_NOT_CI_TEST=true
 
 # - Other Configuration
 DEFAULT_SOURCE_BRANCH="main"
@@ -103,12 +102,14 @@ FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STOR
 ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
 # - Setup Details
-
+NX_CLOUD_CONFIG_TYPE="yes"
+#
+#
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
   # Mark IS_NOT_CI_TEST as false and skip the login
   echo "Looks like this is being run as a CI test (DBX_SETUP_PROJECT_IS_CI_TEST=y)"
-  IS_NOT_CI_TEST=false
+  NX_CLOUD_CONFIG_TYPE="skip"
 
   # will configure the app to install from the CI built version instead of npm/remote
   CI_DIST_PATH=file:~/code/dist/packages
@@ -134,7 +135,6 @@ then
   DBX_COMPONENTS_VERSION_UTIL=$CI_DIST_PATH/util
 
 else
-
   DBX_COMPONENTS_VERSION_BROWSER=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_DATE=$DBX_COMPONENTS_VERSION
   DBX_COMPONENTS_VERSION_DBX_ANALYTICS=$DBX_COMPONENTS_VERSION
@@ -160,7 +160,7 @@ cd $PARENT_DIRECTORY
 
 # Create NX Workspace
 echo "Creating new dbx-components project in folder \"$NAME\" with project name \"$PROJECT_NAME\"..."
-npx --yes create-nx-workspace@$NX_VERSION --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST --interactive=false --style=scss --preset=angular-monorepo --e2eTestRunner=cypress --standaloneApi=false --ssr=false --routing=false
+npx --yes create-nx-workspace@$NX_VERSION --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$NX_CLOUD_CONFIG_TYPE --interactive=false --style=scss --preset=angular-monorepo --e2eTestRunner=cypress --standaloneApi=false --ssr=false --routing=false
 
 # Enter Folder
 echo "Entering new project folder, \"$NAME\""
