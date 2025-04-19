@@ -29,6 +29,7 @@ import {
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { SECONDS_IN_MINUTE } from '@dereekb/util';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get actionContext(): DemoFirebaseServerActionsContext {
@@ -72,7 +73,10 @@ export const mapDemoApiNestContext = (nest: INestApplicationContext) => new Demo
 export const onCallWithDemoNest = onCallHandlerWithNestApplicationFactory();
 export const onCallWithDemoNestContext = onCallHandlerWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
 
-export const onScheduleWithDemoNest = onScheduleHandlerWithNestApplicationFactory();
+export const onScheduleWithDemoNest = onScheduleHandlerWithNestApplicationFactory({
+  timeoutSeconds: 10 * SECONDS_IN_MINUTE, // 10 minute timeout default
+  maxInstances: 1 // only one instance allowed for scheduled functions
+});
 export const onScheduleWithDemoNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
 export const onEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 

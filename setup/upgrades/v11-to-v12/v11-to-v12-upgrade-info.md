@@ -369,3 +369,7 @@ There are some caveats though:
 - If you are testing scheduled functions or other non-callable functions, you should continue to use `describeCloudFunctionTest()`, otherwise you will get an error.
 - At the time of writing, some auth events, namely onCreate() for an auth user, does not have a gen 2 equivalent. Continue to use the gen 1 implementation. See more: https://firebase.google.com/docs/functions/auth-events
 - The `callWrappedFunction()` result type is no longer `any`, and now returns `unknown`, so casting to the expected type will be required.
+
+#### Gen 2 Cloud Functions
+- Gen 2 functions have additional configuration available that you'll want to configure. Cloud run is more expensive than the gen 1 implementation so it is important to change the configuration to keep costs in check.
+
