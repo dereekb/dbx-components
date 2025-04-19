@@ -1,5 +1,7 @@
-//// ========== DbxAnchorComponent ==========
-// === Before ===
+//// ───────────────────────────────────────────────────────────────────────────────
+//// DbxAnchorComponent
+//// ───────────────────────────────────────────────────────────────────────────────
+//// ========== Before ==========
 import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild, OnDestroy, HostListener, inject } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
@@ -104,7 +106,7 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
   }
 }
 
-// === After ===
+//// ========== After ==========
 import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
@@ -187,8 +189,10 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
   }
 }
 
-//// ========== DbxActionAutoTriggerDirective ==========
-// === Before ===
+//// ───────────────────────────────────────────────────────────────────────────────
+//// DbxActionAutoTriggerDirective
+//// ───────────────────────────────────────────────────────────────────────────────
+//// ========== Before ==========
 import { inject, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, Subject, combineLatest, Observable, BehaviorSubject } from 'rxjs';
@@ -353,7 +357,7 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
 
 }
 
-// === After ===
+//// ========== After ==========
 import { inject, Directive, Input, OnInit, OnDestroy, input, computed, signal, InputSignalWithTransform } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, Subject, combineLatest, Observable, BehaviorSubject, tap } from 'rxjs';
@@ -507,8 +511,10 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
 
 }
 
-/// ========== DbxTwoColumnComponent ==========
-// === BEFORE ===
+//// ───────────────────────────────────────────────────────────────────────────────
+//// DbxTwoColumnComponent
+//// ───────────────────────────────────────────────────────────────────────────────
+//// ========== Before ==========
 import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Input, ElementRef, inject } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { ResizedEvent } from 'angular-resize-event-package';
@@ -608,7 +614,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
   }
 }
 
-// === AFTER ===
+//// ========== After ==========
 import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Input, ElementRef, inject, signal, input, computed } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
@@ -700,8 +706,10 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
 }
 
-/// ========== DbxTwoColumnRightComponent =========
-// === BEFORE ===
+//// ───────────────────────────────────────────────────────────────────────────────
+//// DbxTwoColumnRightComponent
+//// ───────────────────────────────────────────────────────────────────────────────
+//// ========== Before ==========
 import { AfterViewInit, OnDestroy, Component, Input, inject } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
@@ -797,7 +805,7 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
   }
 }
 
-// === AFTER ===
+//// ========== After ==========
 import { AfterViewInit, ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, map } from 'rxjs';
@@ -894,8 +902,10 @@ export class DbxTwoColumnRightComponent implements OnInit, AfterViewInit {
 
 }
 
-/// ========== DbxButtonDirective =========
-// === BEFORE ===
+//// ───────────────────────────────────────────────────────────────────────────────
+//// DbxButtonDirective
+//// ───────────────────────────────────────────────────────────────────────────────
+//// ========== Before ==========
 import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, of, Subject, filter, first, switchMap } from 'rxjs';
@@ -1030,7 +1040,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 })
 export class DbxButtonDirective extends AbstractDbxButtonDirective {}
 
-// === AFTER ===
+//// ========== After =========
 import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
@@ -1155,3 +1165,226 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   standalone: true
 })
 export class DbxButtonDirective extends AbstractDbxButtonDirective { }
+
+
+//// ───────────────────────────────────────────────────────────────────────────────
+//// DbxLoadingComponent
+//// ───────────────────────────────────────────────────────────────────────────────
+//// ========== Before ==========
+import { BehaviorSubject, shareReplay, Observable, distinctUntilChanged, map, switchMap, combineLatest, of } from 'rxjs';
+import { OnDestroy, Component, Input, ChangeDetectorRef, ChangeDetectionStrategy, inject } from '@angular/core';
+import { ThemePalette } from '@angular/material/core';
+import { ProgressBarMode } from '@angular/material/progress-bar';
+import { LoadingContext } from '@dereekb/rxjs';
+import { ErrorInput, type Maybe } from '@dereekb/util';
+import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
+import { DbxThemeColor } from '../layout/style/style';
+
+export interface DbxLoadingComponentState {
+  loading: boolean;
+  error: Maybe<ErrorInput>;
+}
+
+/**
+ * Loading View component that provides content sections for loading, error, and an error action.
+ */
+@Component({
+  selector: 'dbx-loading',
+  template: `
+    <dbx-basic-loading [show]="show" [color]="color" [text]="text" [mode]="mode" [linear]="linear" [diameter]="diameter" [error]="error$ | async" [loading]="loading$ | async">
+      <ng-content loading select="[loading]"></ng-content>
+      <div class="dbx-loading-linear-done-padding" *ngIf="linear && padding && !(loading$ | async)"></div>
+      <ng-content></ng-content>
+      <ng-content error select="[error]"></ng-content>
+      <ng-content errorAction select="[errorAction]"></ng-content>
+    </dbx-basic-loading>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DbxLoadingComponent implements OnDestroy {
+  readonly cdRef = inject(ChangeDetectorRef);
+
+  private _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
+  private _inputLoading = new BehaviorSubject<Maybe<boolean>>(true);
+  private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
+
+  readonly state$: Observable<DbxLoadingComponentState> = combineLatest([this._inputLoading, this._inputError, this._context.pipe(switchMap((x) => (x != null ? x.stream$ : of(undefined))))]).pipe(
+    map(([inputLoading, inputError, loadingState]) => {
+      if (loadingState) {
+        return loadingState as DbxLoadingComponentState;
+      } else {
+        return {
+          loading: inputLoading ?? false,
+          error: inputError
+        };
+      }
+    }),
+    distinctUntilChanged((a, b) => a.loading === b.loading && a.error === b.error),
+    tapSafeMarkForCheck(this.cdRef),
+    shareReplay(1)
+  );
+
+  readonly loading$ = this.state$.pipe(
+    map((x) => x.loading),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly error$ = this.state$.pipe(
+    map((x) => x.error),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  @Input()
+  show?: Maybe<boolean>;
+
+  @Input()
+  text?: Maybe<string>;
+
+  @Input()
+  mode: ProgressBarMode = 'indeterminate';
+
+  @Input()
+  color: ThemePalette | DbxThemeColor = 'primary';
+
+  @Input()
+  diameter?: Maybe<number>;
+
+  @Input()
+  linear?: Maybe<boolean>;
+
+  /**
+   * Whether or not to add padding to the linear presentation when linear is complete. This prevents the linear bar from pushing content around.
+   */
+  @Input()
+  padding?: Maybe<boolean>;
+
+  ngOnDestroy() {
+    this._context.complete();
+    this._inputError.complete();
+    this._inputLoading.complete();
+  }
+
+  @Input()
+  get context(): Maybe<LoadingContext> {
+    return this._context.value;
+  }
+
+  set context(context: Maybe<LoadingContext>) {
+    this._context.next(context);
+  }
+
+  @Input()
+  get loading(): Maybe<boolean> {
+    return this._inputLoading.value;
+  }
+
+  set loading(loading: Maybe<boolean>) {
+    this._inputLoading.next(loading ?? false);
+  }
+
+  @Input()
+  get error(): Maybe<ErrorInput> {
+    return this._inputError.value;
+  }
+
+  set error(error: Maybe<ErrorInput>) {
+    this._inputError.next(error);
+  }
+}
+
+//// ========== After =========
+import { Observable, shareReplay } from 'rxjs';
+import { Component, ChangeDetectionStrategy, input, computed, signal, Signal } from '@angular/core';
+import { ThemePalette } from '@angular/material/core';
+import { ProgressBarMode } from '@angular/material/progress-bar';
+import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream, tapLog } from '@dereekb/rxjs';
+import { ErrorInput, type Maybe } from '@dereekb/util';
+import { type DbxThemeColor } from '../layout/style/style';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { DbxBasicLoadingComponent } from './basic-loading.component';
+
+/**
+ * State of a DbxLoadingComponent.
+ */
+export interface DbxLoadingComponentState {
+  readonly loading: boolean;
+  readonly error: Maybe<ErrorInput>;
+}
+
+/**
+ * Loading View component that provides content sections for loading, error, and an error action.
+ */
+@Component({
+  selector: 'dbx-loading',
+  template: `
+    <dbx-basic-loading [show]="show()" [color]="color()" [text]="text()" [mode]="mode()" [linear]="linear()" [diameter]="diameter()" [error]="stateSignal().error" [loading]="stateSignal().loading">
+      <ng-content loading select="[loading]"></ng-content>
+      @if (showPaddingSignal()) {
+        <div class="dbx-loading-linear-done-padding"></div>
+      }
+      <ng-content></ng-content>
+      <ng-content error select="[error]"></ng-content>
+      <ng-content errorAction select="[errorAction]"></ng-content>
+    </dbx-basic-loading>
+  `,
+  imports: [DbxBasicLoadingComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
+})
+export class DbxLoadingComponent {
+  private readonly _contextOverrideSignal = signal<MaybeObservableOrValue<LoadingContext>>(undefined);
+
+  /**
+   * Whether or not to add padding to the linear presentation when linear is complete. This prevents the linear bar from pushing content around.
+   */
+  readonly padding = input<Maybe<boolean>>(false);
+  readonly show = input<Maybe<boolean>>();
+  readonly text = input<Maybe<string>>();
+  readonly mode = input<ProgressBarMode>('indeterminate');
+  readonly color = input<ThemePalette | DbxThemeColor>('primary');
+  readonly diameter = input<Maybe<number>>();
+  readonly linear = input<Maybe<boolean>>();
+  readonly loading = input<Maybe<boolean>>();
+  readonly error = input<Maybe<ErrorInput>>();
+
+  readonly context = input<MaybeObservableOrValue<LoadingContext>>();
+
+  readonly contextSignal: Signal<MaybeObservableOrValue<LoadingContext>> = computed(() => this._contextOverrideSignal() ?? this.context());
+
+  readonly contextStream$: Observable<Maybe<LoadingContextEvent>> = toObservable(this.contextSignal).pipe(maybeValueFromObservableOrValue(), switchMapMaybeLoadingContextStream(), shareReplay(1));
+  readonly contextStreamSignal = toSignal(this.contextStream$);
+
+  readonly stateSignal = computed<DbxLoadingComponentState>(() => {
+    const loading = this.loading();
+    const error = this.error();
+    let loadingState = this.contextStreamSignal() as DbxLoadingComponentState;
+
+    if (loadingState == null) {
+      loadingState = {
+        loading: loading ?? false,
+        error: error
+      };
+    }
+
+    return loadingState;
+  });
+
+  readonly showPaddingSignal = computed(() => {
+    const linear = this.linear();
+    const padding = this.padding();
+    const loading = this.stateSignal()?.loading;
+    return linear && padding && !loading;
+  });
+
+  /**
+   * Sets/overrides the context directly.
+   *
+   * @param context Context source to use as an override.
+   */
+  setContext(context: MaybeObservableOrValue<LoadingContext>) {
+    this._contextOverrideSignal.set(context);
+  }
+}
+

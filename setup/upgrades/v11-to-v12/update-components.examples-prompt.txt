@@ -1,86 +1,104 @@
-Take a look at @update-component-example.ts to understand how to update Angular 16 components to Angular 18 components. You will be working with a developer to save time making updates to modernize components.
+Angular 16 → 18 Conversion Rules (LLM‑Optimized)
+==================================================
 
-The updates follow the following rules:
-- Angular Directives and Components should be marked as `standalone: true`
-- @Components should now declare imports: [ ... ] that are used in the template. The developer will fix imports.
-- NgIf, NgSwitch, and NgSwitchCase should not be imported since they are being replaced with new Angular control flow syntax @if, @switch, and @case.
-- If you notice there are some import errors in the component file, DO NOT FIX THEM. Ignore them and wait for developer input first.
-- since we are using signals, add changeDetection: ChangeDetectionStrategy.OnPush to the @Component configuration
-- BehaviorSubjects should only be converted to signals if they were only used in the template using the `async` pipe and value set via @Input()
-- Signals created with the signal(...) function should be declared as private readonly with an underscore prefix and the Signal suffix. e.g. `private readonly _internalSignal = signal<number>(0);`
-- all Signal related variables, variables set/created using `toSignal(...)`, `computed(...)`, `signal(...)`, or `asReadonly()` should have the Signal suffix. e.g. `readonly internalSignal = this._numberSignal.asReadonly();`, `readonly numberSignal = toSignal(this.number$);`, `readonly numberSignal = computed(() => this._numberSignal() + 1);`
-- You can retain usage of existing Observables, but you should create a signal for them using `toSignal(...)` that is used in your template.
-- Do not create a signal using computed(...) that references only one other signal exactly. If the signal is public or a signal input then just use that signal directly. If the signal being referenced is private you can use `.toReadonly()`.
-- signals created via toSignal() or computed() should be public.
-- signals created via toSignal() or computed() should always have the Signal suffix. e.g. `readonly presetAnchors = toSignal(this.presetAnchors$);`
-- When replacing an @Input() getter that calls a setter function, create the new Input and then create an effect(...) to call the setter function. e.g. Replace `@Input() set block(value: boolean) { this.service.setBlock(value;) }` with `readonly block = input<Maybe<boolean>>();` and `protected readonly _blockEffect = effect(() => this.service.setBlock(this.block()));`;
-- When converting an @Input() setter to a signal-based input with an effect, avoid creating redundant state. Instead, just use the input signal directly in your effect. The input signal itself already stores the value, so there's no need for a separate private signal. e.g. `readonly block = input<Maybe<boolean>>();` and `protected readonly _blockEffect = effect(() => this.service.setBlock(this.block()));`;
+Use this deterministic checklist when modernizing any Angular component/directive.
 
-REPLACING THE FOLLOWING:
+───────────────────────────────────────────────────────────────────────────────
+A. Component / Directive Metadata
+───────────────────────────────────────────────────────────────────────────────
+1. `standalone: true`
+2. `imports: [ … ]` for everything used in the template (exclude `NgIf`, `NgSwitch`, `NgSwitchCase`).
+3. `changeDetection: ChangeDetectionStrategy.OnPush`
+4. Ignore compile‑time import errors; developer will resolve later.
+
+───────────────────────────────────────────────────────────────────────────────
+B. Signals vs. RxJS
+───────────────────────────────────────────────────────────────────────────────
+General
+• Expose remaining Observables to templates via `toSignal(obs$)`.
+• Convert a `BehaviorSubject` to `signal` **only** when:
+  – Consumed in template with `| async`, **and**
+  – Value originates from an `@Input`.
+
+Naming
+| Scope  | Declaration                                                       | Example                       |
+|--------|-------------------------------------------------------------------|-------------------------------|
+| Private| `private readonly _fooSignal = signal<T>(init)`                   | `_fooSignal`                  |
+| Public | `readonly fooSignal = this._fooSignal.asReadonly()`               | `fooSignal`                   |
+| Derived| `readonly barSignal = computed(…)` / `toSignal(obs$)`              | `barSignal`                   |
+| Input  | `readonly foo = input<Maybe<T>>()`  (no “Signal” suffix)           | `foo`                         |
+
+Rules
+1. Do **not** wrap a single signal in a no‑op `computed()`.
+2. All public signals (including `toSignal`) must end with `Signal`.
+3. Template: replace `{{ obs$ | async }}` with `{{ fooSignal() }}`.
+
+───────────────────────────────────────────────────────────────────────────────
+C. Inputs, Outputs, ViewChild
+───────────────────────────────────────────────────────────────────────────────
+| v16 Syntax                                            | v18 Replacement |
+|-------------------------------------------------------|-----------------|
+| `@Input() foo?: T;`                                   | `readonly foo = input<Maybe<T>>();` |
+| Setter input:
+```ts
+@Input() set foo(x) { svc.setFoo(x); }
 ```
-private readonly _column = new BehaviorSubject<Maybe<DbxTableColumn<C>>>(undefined);
-readonly column$ = this._column.pipe(filterMaybe(), distinctUntilChanged());
+  →
+```ts
+readonly foo = input<Maybe<T>>();
+protected readonly _fooEffect = effect(() => svc.setFoo(this.foo()));
+```
+| `@Output() foo = new EventEmitter<T>();`              | `readonly foo = output<T>();` |
+| `@ViewChild(…) bar!: X;`                              | `readonly bar = viewChild<X>(…);` |
 
-@Input()
-set column(column: Maybe<DbxTableColumn<C>>) {
-  this._column.next(column);
-}
+Notes: No EventEmitter cleanup; remove related `ngOnDestroy` logic.
+
+───────────────────────────────────────────────────────────────────────────────
+D. Template Control Flow
+───────────────────────────────────────────────────────────────────────────────
+```html
+*ngIf="cond"                →   @if (cond) { … }
+*ngSwitch="val"             →   @switch (val) { @case (…) { … } }
+*ngSwitchCase="x"           →   @case (x) { … }
 ```
 
-INCORRECT APPROACH - redundant state
-```
-// DON'T DO THIS - redundant state
-private readonly _columnSignal = signal<Maybe<Column>>(undefined);
-readonly column = input<Maybe<Column>>();
+───────────────────────────────────────────────────────────────────────────────
+E. Lifecycle Cleanup
+───────────────────────────────────────────────────────────────────────────────
+• If `ngOnDestroy` becomes empty, delete it and drop `implements OnDestroy`.
 
-protected readonly _columnInputEffect = effect(() => {
-  this._columnSignal.set(this.column()); // Unnecessary intermediate signal
-});
-
-protected readonly _columnSignalEffect = effect(() => {
-  this.doSomethingWith(this._columnSignal());
-});
-```
-
-INCORRECT APPROACH - redundant computed()
-```
-// DON'T DO THIS - redundant computed()
-readonly column = input<Maybe<DbxTableColumn<C>>>();
-readonly columnSignal = computed(() => this.column());  // this signal does not compute anything different from this.column().
-
-protected readonly _columnEffect = effect(() => {
-  this.doSomethingWith(this._columnSignal());
-});
+───────────────────────────────────────────────────────────────────────────────
+F. Coding Conventions
+───────────────────────────────────────────────────────────────────────────────
+• Fields should be `readonly` where feasible.
+• Prefer explicit setters (`setValue(x)`) over property setters unless using `input()`.
+• Single `return` per function (except guard clauses).
+• For optional returns: `let result: Maybe<T> = undefined;` then set/return.
+• `SubscriptionObject` instances should be `readonly`.
+• NgModule refactor:
+```ts
+const importsAndExports = [ … ];
+@NgModule({ imports: importsAndExports, exports: importsAndExports })
+export class FooModule {}
 ```
 
-CORRECT APPROACH:
+───────────────────────────────────────────────────────────────────────────────
+G. Anti‑Patterns to Avoid
+───────────────────────────────────────────────────────────────────────────────
+1. Redundant state signal
+```ts
+// ❌
+private readonly _colSignal = signal<Maybe<X>>(undefined);
+readonly col = input<Maybe<X>>();
+effect(() => this._colSignal.set(this.col()));
 ```
-// DO THIS - direct usage
-readonly column = input<Maybe<Column>>();
+   → Use `this.col()` directly.
 
-protected readonly _columnEffect = effect(() => {
-  this.doSomethingWith(this.column()); // Use input signal directly
-});
+2. Pointless computed wrapper
+```ts
+// ❌
+readonly col = input<Maybe<X>>();
+readonly colSignal = computed(() => this.col());
 ```
 
-- The transform function for Signals in input(...) should be a pure function, and not change or reference other values besides the input.
-- The transform function for Signals in input(...) should not have side effects. You use effect(...) for those cases.
-- public signals of private signals should be exposed using the private signal's .asReadonly() method. e.g. `readonly internalSignal = this._internalSignal.asReadonly();`. This does not apply to signals created via toSignal(...) as they are already readonly.
-- public signals that are computed from private signals should use computed(). e.g. `readonly internalSignal = computed(() => !this._internalSignal());`
-- input signals should not have the Signal suffix. e.g. `readonly block = input<Maybe<boolean>>();`
-- input signals should typically use Maybe<...> if the @Input being replaced is optional. e.g. `readonly block = input<Maybe<boolean>>();` that replaces `@Input() block?: boolean;`
-- if removing all BehaviorSubjects or all destroyable variables that are destroyed in ngOnDestroy, then remove the ngOnDestroy method and update the class declaration to no longer implement OnDestroy.
-- All usage of the async pipe should be replaced with signals usage. e.g. `{{ block() }}` instead of `{{ block$ | async }}`
-- Any @Output should be updated to use output() in instead. e.g. `@Output() block: EventEmitter<Maybe<boolean>> = new EventEmitter<Maybe<boolean>>();` is replaced by `readonly block = output<Maybe<boolean>>();`
-- EventEmitters no longer need to be destroyed
-- If an EventEmitter was destroyed in ngOnDestroy, then remove the destroy call
-- If ngOnDestroy is now empty it can also be removed, along with implements OnDestroy.
-- Do not add additional comments, but you can move or modify existing comments.
-- Mark interface variables as readonly where possible, as this libarary does not typically allow reassigning variables, except when used in conjuction with the Configurable<...> type.
-- Reduce usage of the get/set syntax in favor of just a set function. e.g. `set value(value: boolean) { ... }` should be replaced with `setValue(value: boolean) { ... }`
-- You can retain usage of existing Observables, but you should create a signal for them using `toSignal(...)` that is used in your template.
-- Only have a single return statement in any function, unless returning early to avoid additional function execution. Functions that might return nullish/Maybe values should have a variable called result. e.g. `let result: Maybe<...> = undefined;`
-- When updating an Angular module of all standalone components and directives, create a new variable (or rename the declarations variable) to importsAndExports and reference all that module's imports and exports there. e.g. `const importsAndExports = []` then update the module to be `@NgModule({ imports: importsAndExports, exports: importsAndExports }) export class ...Module {}`
-- Update any SubscriptionObject() variable declarations in a class to be readonly if they are not already. e.g. `private readonly _syncSub = new SubscriptionObject();`
-  
-Stop after you have looked at that file.
+Stop reading here. Use this sheet as the single source of truth for upgrades.
