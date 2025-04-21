@@ -1,7 +1,7 @@
 import { type INestApplicationContext, Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
 import { onCallHandlerWithNestApplicationFactory } from './call';
-import { type MakeNestContext, type NestApplicationFunctionFactory } from '../../nest.provider';
+import { type MakeNestContext } from '../../nest.provider';
 import { type OnCallWithNestApplication } from '../call';
 
 @Injectable()

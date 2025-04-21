@@ -1,8 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import {
-  onCallWithNestApplicationFactory,
-  onCallWithNestContextFactory,
   taskQueueFunctionHandlerWithNestContextFactory,
   cloudEventHandlerWithNestContextFactory,
   blockingFunctionHandlerWithNestContextFactory,
@@ -14,8 +12,6 @@ import {
   OnCallDeleteModelFunction,
   OnCallCreateModelFunction,
   OnCallCreateModelMap,
-  onScheduleWithNestApplicationFactory,
-  onScheduleWithNestContextFactory,
   OnScheduleWithNestContext,
   OnCallDevelopmentFunction,
   OnCallDevelopmentFunctionMap,

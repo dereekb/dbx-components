@@ -10,7 +10,7 @@ import { decode as decodeJwt } from 'jsonwebtoken';
 import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
 import { EventContext } from 'firebase-functions/lib/v1/cloud-functions';
 import { AuthData } from 'firebase-functions/lib/common/providers/https';
-import { WrapBlockingFunctionWithHandlerFunction, WrappedBlockingFunction, WrappedBlockingFunctionWithHandler, WrappedCallableRequest, WrappedCallableRequestOutput, WrappedCallableRequestParams, WrappedCloudFunction, WrappedCloudFunctionV1 } from './firebase.function';
+import { WrappedBlockingFunction, WrappedBlockingFunctionWithHandler, WrappedCallableRequest, WrappedCallableRequestOutput, WrappedCallableRequestParams, WrappedCloudFunction, WrappedCloudFunctionV1 } from './firebase.function';
 import { ScheduledEvent } from 'firebase-functions/scheduler';
 
 // gen 1

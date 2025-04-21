@@ -1,7 +1,6 @@
 import { type Configurable, type Minutes, type PromiseOrValue } from '@dereekb/util';
 import { type MakeNestContext, type NestApplicationFunctionFactory } from '../nest.provider';
 import { type NestApplicationContextRequest, type NestContextRequest } from './nest';
-import { ScheduleOptions } from 'firebase-functions/scheduler';
 
 export interface OnScheduleConfig {
   /**

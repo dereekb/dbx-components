@@ -1,4 +1,4 @@
-import { AscendingSortCompareFunction } from '../sort';
+import { type AscendingSortCompareFunction } from '../sort';
 import { type IndexNumber, type IndexRef, type IndexRangeInput, indexRange } from '../value/indexed';
 import { type Maybe } from '../value/maybe.type';
 

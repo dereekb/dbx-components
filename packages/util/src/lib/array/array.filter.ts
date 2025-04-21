@@ -4,7 +4,7 @@ import { copyArray } from './array';
 import { expandIndexSet, findBestIndexSetPair, findToIndexSet } from './array.index';
 import { forEachInIterable } from '../iterable/iterable';
 import { sortByNumberFunction } from '../number/sort';
-import { AscendingSortCompareFunction } from '../sort';
+import { type AscendingSortCompareFunction } from '../sort';
 
 /**
  * Filters the input values by distance while maintaining the original order of elements.

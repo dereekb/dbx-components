@@ -1,4 +1,4 @@
-import { findToIndexSet, expandIndexSet, findBest, findBestIndexSetPair, sliceIndexRangeFunction, type IndexSet, type IndexSetPair, type IndexSetPairSet } from './array.index';
+import { findToIndexSet, expandIndexSet, findBest, findBestIndexSetPair, sliceIndexRangeFunction, type IndexSet, type IndexSetPairSet } from './array.index';
 
 describe('Array Index Functions', () => {
   describe('findToIndexSet', () => {
