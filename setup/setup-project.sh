@@ -49,7 +49,9 @@ PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
 DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.0"}    # update every major version
 NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
-ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"~18.2.13"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^18.0.0"}
+TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.5.0 <5.6.0"}
+FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"^14.2.0"}
 
 echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
 
@@ -100,6 +102,9 @@ FIREBASE_LOCALHOST=0.0.0.0
 FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STORAGE_PORT"
 
 ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
+# other config
+LINTER="eslint"
+UNIT_TEST_RUNNER="jest"
 
 # - Setup Details
 NX_CLOUD_CONFIG_TYPE="yes"
@@ -156,11 +161,12 @@ else
 fi
 
 ## Setup NX Project
+mkdir -p $PARENT_DIRECTORY
 cd $PARENT_DIRECTORY
 
 # Create NX Workspace
 echo "Creating new dbx-components project in folder \"$NAME\" with project name \"$PROJECT_NAME\"..."
-npx --yes create-nx-workspace@$NX_VERSION --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$NX_CLOUD_CONFIG_TYPE --interactive=false --style=scss --preset=angular-monorepo --e2eTestRunner=cypress --standaloneApi=false --ssr=false --routing=false
+npx --yes create-nx-workspace@$NX_VERSION --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --useGitHub --nxCloud=$NX_CLOUD_CONFIG_TYPE --interactive=false --style=scss --preset=angular-monorepo --workspaceType=package-based --unitTestRunner=$UNIT_TEST_RUNNER --e2eTestRunner=cypress --standaloneApi=true --ssr=false --routing=false
 
 # Enter Folder
 echo "Entering new project folder, \"$NAME\""
@@ -192,50 +198,61 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
 npm install -D @nx/nest@$NX_VERSION
-npx -y nx@$NX_VERSION g @nx/nest:app $API_APP_NAME
+npx -y nx@$NX_VERSION g @nx/nest:app --name=$API_APP_NAME --directory=$API_APP_FOLDER --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
-npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=false --simpleName=true
+# NOTE: Nx may install a different version of angular, so we want to override all the installs here
+echo "Installing angular@$ANGULAR_VERSION...";
+npm install typescript@$TYPESCRIPT_VERSION --force
+npm install @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION -d --force
+npm install zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION --force
+
+npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --simpleName=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
 npm install -D @nx/node@$NX_VERSION
-npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
+npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --directory=$FIREBASE_COMPONENTS_FOLDER --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
+
+npm install -D firebase-tools@$FIREBASE_TOOLS_VERSION
 
 # Init Firebase
 if [[ "$MANUAL_SETUP" =~ ^([yY][eE][sS]|[yY])$ ]] 
 then
   # manual configuration asks only for the name. Other commands are performed automatically using the firebase command
   echo "Follow the instructions to init Firebase for this project."
-  echo "Instructions: Follow the prompt and log into the existing project you described above."
+  echo "Instructions: Follow the prompt and log into the existing project you described above or create a new project."
   echo "Instructions: Setting up Firebase Storage - Hit Enter to keep default name."
-  firebase init storage
+  npx firebase init storage
 
   echo "Instructions: Firebase Firestore - Keep the rules and indexes the default name."
   echo "NOTE: If the project has configuration already, it will pull the current configuration down from Firebase."
-  (sleep 1; echo; sleep 1; echo;) | firebase init firestore
+  (sleep 3; echo; sleep 2; echo;) | npx firebase init firestore
 
   echo "Instructions: Firebase Hosting - Setup single page application. Do not setup github actions."
-  (sleep 2; echo; sleep 1; echo 'y'; sleep 1; echo 'N'; sleep 1; echo 'n') | firebase init hosting
+  (sleep 3; echo; sleep 1; echo 'y'; sleep 1; echo 'N'; sleep 1; echo 'n') | npx firebase init hosting
 
   echo "Instructions: Firebase Functions - This configuration will be ignored."
-  (sleep 1; echo; sleep 1; echo 'N'; sleep 1; echo 'N';) | firebase init functions
+  (sleep 3; echo; sleep 1; echo 'N'; sleep 1; echo 'N';) | npx firebase init functions
 
   echo "Adding alias prod to default"
+  # add prod alias to .firebaserc
   npx --yes json -I -f .firebaserc -e "this.projects = { ...this.projects, prod: this.projects.default }";
     
-  # remove the public folder. We will use the $ANGULAR_APP_DIST_FOLDER instead.
+  # remove the public folder. We will use the app instead.
+  echo "Removing public folder. (We will use the app instead)"
   rm -r public
 
-  # remove the functions folder. We will use the $API_APP_DIST_FOLDER instead.
+  # remove the functions folder. We will use the api-app instead.
+  echo "Removing functions folder. (We will use the api-app instead)"
   rm -r functions
 
 else
@@ -355,14 +372,13 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver@3.4.1 husky pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular
+npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/commit-msg -o .husky/commit-msg
 chmod +x .husky/commit-msg  # make executable
-npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: 'husky install' };";
-npm run prepare
+npx husky init
 
 mkdir -p ./.github/workflows
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o .github/workflows/commitlint.yml
@@ -450,7 +466,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@^14.2.0 @ngrx/store-devtools@18.1.1 @ngx-formly/schematics@6.3.12 @firebase/rules-unit-testing@^4.0.1 firebase-functions-test@^3.4.1 envfile env-cmd
+npm install -D firebase-tools@$FIREBASE_TOOLS_VERSION @ngrx/store-devtools@18.1.1 @ngx-formly/schematics@6.3.12 @firebase/rules-unit-testing@^4.0.1 firebase-functions-test@^3.4.1 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
