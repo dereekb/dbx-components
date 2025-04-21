@@ -206,16 +206,20 @@ git commit --no-verify -m "checkpoint: added nest app"
 # Add App Components
 # NOTE: Nx may install a different version of angular, so we want to override all the installs here
 echo "Installing angular@$ANGULAR_VERSION...";
-npm install typescript@$TYPESCRIPT_VERSION --force
-npm install @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION -d --force
-npm install zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION --force
+rm -r node_modules
+rm package-lock.json
+npm install -D --force typescript@$TYPESCRIPT_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
+npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
+echo "Creating angular components package..."
 npx -y nx@$NX_VERSION g @nx/angular:library --name=$ANGULAR_COMPONENTS_NAME --directory=$ANGULAR_COMPONENTS_FOLDER --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standalone=true --simpleName=true --changeDetection=OnPush --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
+echo "Creating firebase components package..."
 npm install -D @nx/node@$NX_VERSION
 npx -y nx@$NX_VERSION g @nx/node:library --name=$FIREBASE_COMPONENTS_NAME --directory=$FIREBASE_COMPONENTS_FOLDER --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME --linter=$LINTER --unitTestRunner=$UNIT_TEST_RUNNER
 
@@ -416,7 +420,7 @@ sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS
 
 # make build-base and run-tests cacheable in nx cloud
 echo "Making tests cacheable in nx cloud..."
-npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']])); this.targetDefaults={ 'build': { 'dependsOn': ['^build'] }, 'publish': { 'dependsOn': ['build'] }, 'publish-npmjs': { 'dependsOn': ['build'] }, 'test': { 'dependsOn': ['build'] }, 'deploy': { 'dependsOn': ['build'] }, 'ci-deploy': { 'dependsOn': ['build'] } };";
+npx --yes json -I -f nx.json -e "this.targetDefaults['build-base'] = { cache: true }";
 
 git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
