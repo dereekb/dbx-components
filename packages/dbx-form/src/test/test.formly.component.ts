@@ -35,7 +35,7 @@ export function testTextField(): FormlyFieldConfig {
   providers: [provideFormlyContext()]
 })
 export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
-  private _fields = new BehaviorSubject<FormlyFieldConfig[]>([testTextField()]);
+  private readonly _fields = new BehaviorSubject<FormlyFieldConfig[]>([testTextField()]);
 
   readonly fields$: Observable<FormlyFieldConfig[]> = this._fields.asObservable();
 

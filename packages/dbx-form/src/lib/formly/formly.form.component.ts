@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FormlyFieldConfig, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
+import { FormlyFieldConfig, FormlyForm, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timer, first, merge, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm, toggleDisableFormControl } from '../form/form';
@@ -23,7 +23,7 @@ export interface DbxFormlyFormState {
   exportAs: 'formly',
   template: `
     <form [formGroup]="form" class="dbx-formly">
-      <formly-form [form]="form" [fields]="fieldsSignal()" [model]="model"></formly-form>
+      <formly-form [form]="form" [options]="options" [fields]="fieldsSignal()" [model]="modelSignal()"></formly-form>
     </form>
   `,
   host: {
@@ -37,6 +37,8 @@ export interface DbxFormlyFormState {
 export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
   private readonly _dbxFormlyContext = inject(DbxFormlyContext<T>);
 
+  readonly formlyForm = viewChild(FormlyForm);
+
   private readonly _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private readonly _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
   private readonly _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
@@ -48,9 +50,9 @@ export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective impleme
   private readonly _enforceDisabledSub = new SubscriptionObject();
 
   readonly form = new FormGroup({});
+  readonly modelSignal = signal<T>({} as T);
 
-  model: T = {} as T;
-  options: FormlyFormOptions = {};
+  readonly options: FormlyFormOptions = {};
 
   readonly fields$ = this._fields.pipe(switchMapFilterMaybe(), distinctUntilChanged(), shareReplay(1));
 
@@ -186,8 +188,7 @@ export class DbxFormlyComponent<T> extends AbstractSubscriptionDirective impleme
   }
 
   setValue(value: T): void {
-    // console.log('set value: ', value);
-    this.model = structuredClone(value) as T;
+    this.modelSignal.set(structuredClone(value) as T);
 
     if (this.options.updateInitialValue) {
       this.options.updateInitialValue();

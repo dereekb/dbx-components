@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild } from '@angular/core';
+import { Component, viewChild, ViewChild } from '@angular/core';
 import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from './form.action.directive';
 import { FORM_TEST_PROVIDERS } from '../../../test/test.formly';
 import { DbxTestDbxFormComponent } from '../../../test/test.formly.component';
-import { first } from 'rxjs';
+import { filter, first, switchMap } from 'rxjs';
 
 describe('FormActionDirective', () => {
   beforeEach(async () => {
@@ -24,8 +24,8 @@ describe('FormActionDirective', () => {
     fixture = TestBed.createComponent(TestDbxActionFormDirectiveComponent);
     testComponent = fixture.componentInstance;
 
-    directive = testComponent.directive;
-    form = testComponent.form;
+    directive = testComponent.directive();
+    form = testComponent.form();
 
     fixture.detectChanges();
   });
@@ -40,37 +40,49 @@ describe('FormActionDirective', () => {
 
   describe('when form valid', () => {
     beforeEach((done) => {
+      // set the text value
       form.setTextForTest('text value', fixture);
 
-      form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
-        expect(isComplete).toBe(true);
-        done();
-      });
+      // wait until it is marked as complete
+      form.context.stream$
+        .pipe(
+          filter((x) => x.isComplete),
+          first()
+        )
+        .subscribe(() => {
+          done();
+        });
     });
 
     it('should provide the value when triggered.', (done) => {
       directive.trigger();
 
-      testComponent.directive.sourceInstance.valueReady$.subscribe((valueReady) => {
-        expect(valueReady).toBeDefined();
-        done();
-      });
+      directive.sourceInstance.triggered$
+        .pipe(
+          filter((x) => x),
+          switchMap(() => directive.sourceInstance.valueReady$),
+          first()
+        )
+        .subscribe((valueReady) => {
+          expect(valueReady).toBeDefined();
+          done();
+        });
     });
   });
 
   describe('when form is invalid', () => {
     beforeEach(() => {
       form.setInvalidTextForTest(fixture);
-
-      form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
-        expect(isComplete).toBe(false);
-      });
     });
 
     it('isModifiedAndCanTrigger$ should be false.', (done) => {
+      form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
+        expect(isComplete).toBe(false);
+      });
+
       directive.trigger();
 
-      testComponent.directive.sourceInstance.isModifiedAndCanTrigger$.pipe(first()).subscribe((canTrigger) => {
+      directive.sourceInstance.isModifiedAndCanTrigger$.pipe(first()).subscribe((canTrigger) => {
         expect(canTrigger).toBe(false);
         done();
       });
@@ -88,12 +100,7 @@ describe('FormActionDirective', () => {
   `
 })
 class TestDbxActionFormDirectiveComponent {
-  @ViewChild(DbxActionDirective, { static: true })
-  directive!: DbxActionDirective<number, number>;
-
-  @ViewChild(DbxActionFormDirective, { static: true })
-  formDirective!: DbxActionFormDirective;
-
-  @ViewChild(DbxTestDbxFormComponent, { static: true })
-  form!: DbxTestDbxFormComponent;
+  readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);
+  readonly formDirective = viewChild.required<DbxActionFormDirective>(DbxActionFormDirective);
+  readonly form = viewChild.required<DbxTestDbxFormComponent>(DbxTestDbxFormComponent);
 }
