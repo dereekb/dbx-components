@@ -1,11 +1,11 @@
 import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest, of, catchError } from 'rxjs';
 import { FirestoreCollectionType, FirestoreDocument, FirestoreDocumentData, FirestoreModelIdentity, FirestoreModelKey } from '@dereekb/firebase';
 import { DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
-import { ArrayOrValue, asArray, FactoryWithRequiredInput, Maybe, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, asArray, Configurable, FactoryWithRequiredInput, Maybe, ModelTypeString } from '@dereekb/util';
 import { ClickableAnchorLinkSegueRef, IconAndTitle, SegueRef } from '@dereekb/dbx-core';
 import { ObservableOrValue, filterMaybeArray } from '@dereekb/rxjs';
 import { GrantedRole } from '@dereekb/model';
-import { Optional, Injectable, inject, Inject } from '@angular/core';
+import { Injectable, inject, Inject } from '@angular/core';
 import { DbxFirebaseModelContextService } from '../../service/model.context.service';
 import { DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../service/model.context';
 
@@ -13,6 +13,9 @@ import { DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../serv
  * Configuration provided in the root module for configuring entries.
  */
 export abstract class DbxFirebaseModelTypesServiceConfig {
+  /**
+   * Entries to register.
+   */
   abstract entries: DbxFirebaseModelTypesServiceEntry[];
 }
 
@@ -43,21 +46,19 @@ export type DbxFirebaseModelTypesMap = DbxModelTypesMap<DbxFirebaseModelTypeInfo
  *
  * Automatically configures the DbxModelTypesService.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseModelTypesService {
   readonly dbxFirebaseModelContextService = inject(DbxFirebaseModelContextService);
   readonly dbxModelTypesService = inject(DbxModelTypesService<DbxFirebaseModelTypeInfo>);
 
-  constructor(@Optional() @Inject(DbxFirebaseModelTypesServiceConfig) initialConfig?: DbxFirebaseModelTypesServiceConfig) {
-    if (initialConfig) {
+  constructor(@Inject(DbxFirebaseModelTypesServiceConfig) initialConfig: DbxFirebaseModelTypesServiceConfig) {
+    if (initialConfig.entries) {
       this.register(initialConfig.entries);
     }
   }
 
-  getDisplayInfo<T>(typeInfo: DbxFirebaseModelTypeInfo<T>, data: T) {
-    let displayInfo: DbxFirebaseModelDisplayInfo;
+  getDisplayInfo<T>(typeInfo: DbxFirebaseModelTypeInfo<T>, data: T): DbxFirebaseModelDisplayInfo {
+    let displayInfo: Configurable<DbxFirebaseModelDisplayInfo>;
 
     if (data != null) {
       displayInfo = typeInfo.displayInfoFactory(data);

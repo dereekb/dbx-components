@@ -1,5 +1,5 @@
 import { urlWithoutParameters } from '@dereekb/util';
-import { DBX_FIREBASE_OPTIONS_TOKEN, DbxFirebaseOptions } from '../../firebase/options';
+import { DBX_FIREBASE_APP_OPTIONS_TOKEN, DbxFirebaseAppOptions } from '../../firebase/firebase.options';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { getToken } from 'firebase/app-check';
 import { Observable, switchMap, first, map, from } from 'rxjs';
@@ -18,7 +18,7 @@ interface EnabledAppCheckRoute {
 export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
   private appCheck = inject(AppCheck);
 
-  private _appCheckRoutes: EnabledAppCheckRoute[] = ((dbxFirebaseOptions: DbxFirebaseOptions) => {
+  private _appCheckRoutes: EnabledAppCheckRoute[] = ((dbxFirebaseOptions: DbxFirebaseAppOptions) => {
     const { appCheck } = dbxFirebaseOptions;
 
     let routes: EnabledAppCheckRoute[] = [];
@@ -37,7 +37,7 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
     }
 
     return routes;
-  })(inject<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN));
+  })(inject<DbxFirebaseAppOptions>(DBX_FIREBASE_APP_OPTIONS_TOKEN));
 
   private _isEnabled: boolean = this._appCheckRoutes.length > 0;
 

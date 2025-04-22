@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
-import { AbstractConfiguredDbxFirebaseLoginButtonDirective } from './login.button.component';
+import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION } from './login.button.component';
 import { DbxFirebaseLoginEmailContentComponent } from './login.email.content.component';
 
 @Component({
-  templateUrl: './register.email.component.html'
+  imports: DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION.imports,
+  template: DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION.template,
+  changeDetection: DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION.changeDetection,
+  standalone: true
 })
 export class DbxFirebaseRegisterEmailComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
   readonly loginProvider = 'email';

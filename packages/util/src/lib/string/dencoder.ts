@@ -131,7 +131,7 @@ export interface PrimativeKeyStringDencoderConfig<D extends PrimativeKey, E exte
  *
  * If a single value is input that produces a nullish value, an error is thrown.
  */
-export type PrimativeKeyStringDencoderFunction<D extends PrimativeKey, E extends PrimativeKey> = ((encodedValues: string) => (E | D)[]) & ((decodedValues: (E | D)[]) => string);
+export type PrimativeKeyStringDencoderFunction<D extends PrimativeKey, E extends PrimativeKey, S extends string = string> = ((encodedValues: S) => (E | D)[]) & ((decodedValues: (E | D)[]) => S);
 
 /**
  * Creates a new PrimativeKeyStringDencoderFunction.

@@ -1,8 +1,11 @@
 import { NgModule } from '@angular/core';
 import { DbxTwoColumnLayoutModule } from './two';
-import { DbxOneColumnLayoutModule } from './one';
+import { DbxOneColumnComponent } from './one';
+
+const importsAndExports = [DbxOneColumnComponent, DbxTwoColumnLayoutModule];
 
 @NgModule({
-  exports: [DbxOneColumnLayoutModule, DbxTwoColumnLayoutModule]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxColumnLayoutModule {}

@@ -1,8 +1,10 @@
-import { Component, OnDestroy, OnInit, Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, Type } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl } from '@angular/forms';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
-import { distinctUntilHasDifferentValues, filterMaybe, ListLoadingState, SubscriptionObject, switchMapMaybeObs } from '@dereekb/rxjs';
+import { MatDividerModule } from '@angular/material/divider';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListModifierModule } from '@dereekb/dbx-web';
+import { distinctUntilHasDifferentValues, filterMaybe, ListLoadingState, SubscriptionObject, switchMapFilterMaybe } from '@dereekb/rxjs';
 import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory, Maybe, PrimativeKey, ReadKeyFunction, readKeysFrom } from '@dereekb/util';
 import { FormlyFieldProps, FieldType, FieldTypeConfig } from '@ngx-formly/core';
 import { map, Observable, shareReplay, BehaviorSubject, startWith, switchMap } from 'rxjs';
@@ -30,29 +32,32 @@ export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelecti
  * Used for picking items by identifier from a DbxList component.
  */
 @Component({
-  templateUrl: 'list.field.component.html'
+  templateUrl: 'list.field.component.html',
+  imports: [DbxListModifierModule, DbxInjectionComponent, MatDividerModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<DbxItemListFieldProps<T, C, K>>> implements OnInit, OnDestroy {
-  private _selectionEventSub = new SubscriptionObject();
-  private _loadMoreSub = new SubscriptionObject();
+  private readonly _selectionEventSub = new SubscriptionObject();
+  private readonly _loadMoreSub = new SubscriptionObject();
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly _formControlValue$: Observable<Maybe<K[]>> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
   readonly values$: Observable<K[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
-  private _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
-  readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapMaybeObs());
+  private readonly _listComponentClassObs = new BehaviorSubject<Maybe<Observable<Type<C>>>>(undefined);
+  readonly listComponentClass$ = this._listComponentClassObs.pipe(switchMapFilterMaybe());
+
   readonly config$: Observable<DbxInjectionComponentConfig<C>> = this.listComponentClass$.pipe(
     map((componentClass) => {
       const loadMore = this.loadMore;
       const config: DbxInjectionComponentConfig<C> = {
         componentClass,
         init: (listView) => {
-          listView.selectionMode = 'select'; // always enable select
-
-          listView.state$ = this.field.props.state$;
+          listView.setSelectionMode('select'); // always enable select
+          listView.setState(this.field.props.state$);
 
           if (loadMore != null) {
             this._loadMoreSub.subscription = listView.loadMore.subscribe(() => loadMore());
@@ -74,6 +79,9 @@ export class DbxItemListFieldComponent<T = unknown, C extends AbstractDbxSelecti
     }),
     shareReplay(1)
   );
+
+  readonly configSignal = toSignal(this.config$);
+  readonly isSelectedModifierFunctionSignal = toSignal(this.isSelectedModifierFunction$);
 
   get label() {
     return this.field.props.label;

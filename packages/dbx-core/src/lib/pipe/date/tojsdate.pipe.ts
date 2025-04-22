@@ -3,7 +3,11 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { toJsDate } from '@dereekb/date';
 import { DateOrDateString, type Maybe } from '@dereekb/util';
 
-@Pipe({ name: 'toJsDate' })
+@Pipe({
+  name: 'toJsDate',
+  standalone: true,
+  pure: true
+})
 export class ToJsDatePipe implements PipeTransform {
   public static toJsDate(input: DateOrDateString): Date;
   public static toJsDate(input: Maybe<DateOrDateString>): Maybe<Date>;

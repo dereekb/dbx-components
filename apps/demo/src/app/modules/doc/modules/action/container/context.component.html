@@ -1,25 +1,41 @@
-<dbx-content-container>
-  <doc-feature-layout header="Action Context" hint="Action contexts are the centerpiece of actions.">
-    <!-- Examples -->
-    <doc-feature-example header="dbx-action" hint="Primary action directive that sets up an action context.">
-      <dbx-action-example-tools #action="action" dbxAction [action]="action">
+<ng-container #action="action" dbxAction>
+  <dbx-content-container>
+    <doc-feature-layout header="Action Context" hint="Action contexts are the centerpiece of actions.">
+      <!-- Examples -->
+      <doc-feature-example header="dbx-action" hint="Primary action directive that sets up an action context.">
         <p>There are several states to an action.</p>
+        <!-- Idle State -->
+        <h4>Idle State</h4>
         <p>The first is Idle. This action is waiting for the "trigger" event.</p>
         <button mat-raised-button (click)="action.trigger()">Trigger</button>
         <p class="dbx-warn" *ngIf="action.sourceInstance.isDisabled$ | async">The action is disabled.</p>
+        <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
+        <!-- Triggered -->
+        <h4>Triggered State</h4>
         <p>The second state is "triggered". This state instructs any listeners waiting for this to gather data that will be passed to the action. If ReadyValue is called before the "triggered" state is reached, it is ignored.</p>
         <button mat-raised-button (click)="action.readyValue('abc')">Ready Value ('abc')</button>
+        <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
+        <!-- ValueReady -->
+        <h4>Value Ready State</h4>
         <p>After a value is readied, the state is updated to "valueReady", which instructs any listeners to perform the action using the passed value.</p>
         <p>Working can be set at any time, regardless of the current state, allowing for cases where we may have an action that fires off immediately without waiting for a trigger.</p>
-        <button mat-raised-button (click)="beginWorking(action)">Begin Working</button>
+
+        <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
+        <!-- Begin Working-->
+        <h4>Working State</h4>
         <p>The working state can be resolved or rejected, similar to promises.</p>
         <p>These states can also be set at any time, regardless of the current state.</p>
+        <!-- Success State -->
+        <h4>Success and Error States</h4>
+        <p>The success state is reached when the action is resolved successfully. This state is reached after the working state is resolved.</p>
+        <p>The error state is reached when an action is rejected with an error.</p>
         <div>
           <button mat-raised-button (click)="stopWorking(action, true)">Resolve Successfully</button>
           <dbx-button-spacer></dbx-button-spacer>
           <button mat-raised-button (click)="stopWorking(action, false)">Reject With Error</button>
         </div>
         <p>The state also provides the number of errors since the last success: {{ action.sourceInstance.errorCountSinceLastSuccess$ | async }}</p>
+        <!-- isDisabled and disabledKeys -->
         <h4>isDisabled and disabledKeys</h4>
         <p>Actions have an additional state: isDisabled</p>
         <p>This is a computed state, based on the current number of "disabledKeys" within the action. This lets us know why an action is disabled. This disabled flag is only for blocking the triggered and readyValue states. We can begin working or resolve/reject without issue.</p>
@@ -33,6 +49,8 @@
           <button mat-raised-button (click)="action.enable('example_2')">Enable (Key 2)</button>
         </div>
         <p>Disabled Keys: {{ action.sourceInstance.disabledKeys$ | async }}</p>
+        <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
+        <!-- isModified Flag -->
         <h4>isModified</h4>
         <p>Actions has an additional flag: isModified.</p>
         <p>isModified is used in some cases where the data we are providing may not be different. For example, updating a model on a server. This flag is generally set prior to trigger being called.</p>
@@ -41,20 +59,33 @@
           <dbx-button-spacer></dbx-button-spacer>
           <button mat-raised-button (click)="action.setIsModified(false)">Set Not Modified</button>
         </div>
+        <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
+        <!-- Loading State -->
         <h4>Loading State</h4>
         <p>A loading state is available that represents the action.</p>
+        <ng-container *ngTemplateOutlet="beginWorkingTemplate"></ng-container>
         <p>Loading State: {{ action.sourceInstance.loadingState$ | async | json }}</p>
         <p>Loading State Type: {{ action.sourceInstance.loadingStateType$ | async }}</p>
         <dbx-content-border>
           <div class="dbx-label">dbx-loading with dbxActionLoadingContext</div>
           <dbx-loading dbxActionLoadingContext>
-            <p>Success view.</p>
+            <p>Not loading view.</p>
           </dbx-loading>
         </dbx-content-border>
         <p>There are various integrations with other components, including dbx-form, dbx-error, loadingState, interactions, etc.</p>
         <button mat-raised-button color="warn" (click)="action.reset()">Reset Action</button>
-        <p></p>
-      </dbx-action-example-tools>
-    </doc-feature-example>
-  </doc-feature-layout>
-</dbx-content-container>
+        <ng-container *ngTemplateOutlet="actionStateTemplate"></ng-container>
+      </doc-feature-example>
+    </doc-feature-layout>
+  </dbx-content-container>
+
+  <!-- Templates -->
+  <ng-template #beginWorkingTemplate>
+    <button mat-raised-button (click)="beginWorking(action)">Begin Working</button>
+  </ng-template>
+
+  <!-- Action State -->
+  <ng-template #actionStateTemplate>
+    <dbx-action-example-tools [action]="action"></dbx-action-example-tools>
+  </ng-template>
+</ng-container>

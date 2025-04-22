@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -12,7 +12,9 @@ import { type Maybe } from '@dereekb/util';
   `,
   host: {
     class: 'dbx-label-block'
-  }
+  },
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxLabelBlockComponent {
   @Input()

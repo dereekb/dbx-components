@@ -1,54 +1,35 @@
-import { type LimitArrayConfig, hasNonNullValue, limitArray, type Maybe } from '@dereekb/util';
+import { type LimitArrayConfig, hasNonNullValue, limitArray, type Maybe, type Configurable } from '@dereekb/util';
 import { type Observable, distinctUntilChanged, map, shareReplay, skipWhile } from 'rxjs';
 import { isLoadingStateLoading, type ListLoadingState } from './loading.state';
-import { type AbstractLoadingEventForLoadingPairConfig, type AbstractLoadingStateContext, AbstractLoadingStateContextInstance, type AbstractLoadingStateEvent, type LoadingStateContextInstanceInputConfig } from './loading.context.state';
+import { DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION, type LoadingEventForLoadingPairConfigInput, loadingStateContext, type LoadingStateContext, type LoadingStateContextConfig, type LoadingStateContextInput, type MutableLoadingStateContext } from './loading.context.state';
 import { mapIsListLoadingStateWithEmptyValue, isListLoadingStateWithEmptyValue } from './loading.state.list';
+import { type LoadingContextEvent, type LoadingStateContextEvent } from './loading.context';
 
-export interface ListLoadingStateContextEvent<T> extends AbstractLoadingStateEvent<T[]> {
-  value?: Maybe<T[]>;
-}
-
-export interface LoadingEventForListLoadingStateConfig<S extends ListLoadingState<unknown> = ListLoadingState<unknown>> extends AbstractLoadingEventForLoadingPairConfig<S>, Partial<LimitArrayConfig> {}
-
-export interface ListLoadingStateContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContext<L[], S, ListLoadingStateContextEvent<L>> {
+export interface ListLoadingStateContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> extends Omit<LoadingStateContext<L[], S>, 'value$' | 'currentValue$' | 'valueAfterLoaded$'> {
+  /**
+   * The current list. Always provided, even while loading.
+   */
+  readonly currentList$: Observable<Maybe<L[]>>;
+  /**
+   * The latest list from the most recent loaded state.
+   */
+  readonly listAfterLoaded$: Observable<Maybe<L[]>>;
+  /**
+   * The latest list from listAfterLoaded$, or a default value if the list was empty.
+   */
   readonly list$: Observable<L[]>;
-  readonly isEmpty$: Observable<boolean>;
-}
-
-/**
- * LoadingContext implementation that uses a ListLoadingState observable.
- */
-export class ListLoadingStateContextInstance<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContextInstance<L[], S, ListLoadingStateContextEvent<L>, LoadingEventForListLoadingStateConfig<S>> {
   /**
-   * Returns the current values or an empty list.
-   */
-  readonly list$: Observable<L[]> = this.stream$.pipe(
-    map((x) => x.value ?? []),
-    shareReplay(1)
-  );
-
-  /**
-   * Returns true while loading and the current value is considered empty.
-   */
-  readonly isEmptyLoading$: Observable<boolean> = this.stream$.pipe(
-    map((x) => isLoadingStateLoading(x) && isListLoadingStateWithEmptyValue(x)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
-  /**
-   * Whether or not the current value is empty.
+   * Whether or not the currentList$ value is empty.
    *
-   * Only resolves when the first non-loading event has occured.
+   * Only resolves after the first non-loading event has occured.
    *
    * After that, will return true if the value is empty even if loading a new value.
    */
-  readonly isEmpty$: Observable<boolean> = this.stream$.pipe(
-    skipWhile((x) => isLoadingStateLoading(x)), // skip until the first non-loading event has occured
-    mapIsListLoadingStateWithEmptyValue(),
-    distinctUntilChanged()
-  );
-
+  readonly isEmpty$: Observable<boolean>;
+  /**
+   * Returns true while loading and the current value is considered empty.
+   */
+  readonly isEmptyLoading$: Observable<boolean>;
   /**
    * Whether or not the current value is empty and not loading.
    *
@@ -56,42 +37,77 @@ export class ListLoadingStateContextInstance<L = unknown, S extends ListLoadingS
    *
    * After that, will return true if the value is empty even if loading a new value.
    */
-  readonly isEmptyAndNotLoading$: Observable<boolean> = this.stream$.pipe(
+  readonly isEmptyAndNotLoading$: Observable<boolean>;
+}
+
+/**
+ * A ListLoadingStateContext that can be updated and destroyed.
+ */
+export type MutableListLoadingStateContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> = ListLoadingStateContext<L, S> & Pick<MutableLoadingStateContext<L[], S>, 'setStateObs' | 'destroy'>;
+
+/**
+ * Configuration for listLoadingStateContext().
+ */
+export type ListLoadingStateContextConfig<L, S extends ListLoadingState<L> = ListLoadingState<L>> = Omit<LoadingStateContextConfig<L[], S>, 'loadingEventForLoadingPair'> & Partial<LimitArrayConfig>;
+
+/**
+ * Input for listLoadingStateContext().
+ */
+export type ListLoadingStateContextInput<L, S extends ListLoadingState<L> = ListLoadingState<L>> = Omit<LoadingStateContextInput<L[], S>, 'loadingEventForLoadingPair'> | ListLoadingStateContextConfig<L, S>;
+
+/**
+ * Creates a ListLoadingStateContext.
+ *
+ * @param input Optional configuration for the ListLoadingStateContext.
+ * @returns A ListLoadingStateContext.
+ */
+export function listLoadingStateContext<L, S extends ListLoadingState<L> = ListLoadingState<L>>(input?: ListLoadingStateContextInput<L, S>): MutableListLoadingStateContext<L, S> {
+  const limitArrayConfig = (typeof input === 'object' ? input : undefined) as Maybe<Partial<LimitArrayConfig>>;
+
+  const loadingState = loadingStateContext<L[], S>({
+    ...input,
+    loadingEventForLoadingPair: (state: S, config: LoadingEventForLoadingPairConfigInput) => {
+      const result = DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION(state, config) as Configurable<LoadingStateContextEvent<L[]>>;
+      const hasValue = hasNonNullValue(result.value);
+
+      if (hasValue) {
+        result.value = limitArray(result.value, limitArrayConfig); // Always limit the value/results.
+      }
+
+      return result as LoadingContextEvent & S;
+    }
+  });
+
+  const currentList$ = loadingState.value$;
+  const listAfterLoaded$ = loadingState.valueAfterLoaded$;
+  const list$ = loadingState.valueAfterLoaded$.pipe(map((x) => x ?? []));
+
+  const isEmpty$ = loadingState.stream$.pipe(
     skipWhile((x) => isLoadingStateLoading(x)), // skip until the first non-loading event has occured
+    mapIsListLoadingStateWithEmptyValue(),
+    distinctUntilChanged()
+  );
+
+  const isEmptyLoading$ = loadingState.stream$.pipe(
+    map((x) => isLoadingStateLoading(x) && isListLoadingStateWithEmptyValue(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  const isEmptyAndNotLoading$ = loadingState.stream$.pipe(
     map((x) => !isLoadingStateLoading(x) && isListLoadingStateWithEmptyValue(x)),
     distinctUntilChanged()
   );
 
-  protected loadingEventForLoadingPair(state: S, config: LoadingEventForListLoadingStateConfig = {}): ListLoadingStateContextEvent<L> {
-    const { showLoadingOnNoValue } = config;
+  const result: MutableListLoadingStateContext<L, S> = {
+    ...loadingState,
+    currentList$,
+    listAfterLoaded$,
+    list$,
+    isEmpty$,
+    isEmptyLoading$,
+    isEmptyAndNotLoading$
+  };
 
-    let loading = state?.loading;
-    const error = state?.error;
-    let value = state?.value;
-
-    const hasValue = value != null;
-
-    if (hasValue) {
-      value = limitArray(value, config); // Always limit the value/results.
-    }
-
-    // If there is no error
-    if (!hasNonNullValue(error)) {
-      if (showLoadingOnNoValue) {
-        loading = !hasValue;
-      } else {
-        loading = isLoadingStateLoading(state);
-      }
-    }
-
-    return {
-      loading: Boolean(loading),
-      error,
-      value
-    };
-  }
-}
-
-export function listLoadingStateContext<T = unknown, S extends ListLoadingState<T> = ListLoadingState<T>>(config: LoadingStateContextInstanceInputConfig<S, LoadingEventForListLoadingStateConfig<S>>): ListLoadingStateContextInstance<T, S> {
-  return new ListLoadingStateContextInstance(config);
+  return result;
 }

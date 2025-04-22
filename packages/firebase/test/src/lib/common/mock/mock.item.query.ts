@@ -1,5 +1,5 @@
-import { MockItem } from './mock.item';
-import { where, FirestoreQueryConstraint, DocumentReference, allChildDocumentsUnderParent } from '@dereekb/firebase';
+import { type MockItem } from './mock.item';
+import { where, type FirestoreQueryConstraint, type DocumentReference, allChildDocumentsUnderParent } from '@dereekb/firebase';
 
 export function mockItemWithValue(value: string): FirestoreQueryConstraint {
   return where<MockItem>('value', '==', value);

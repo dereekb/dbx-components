@@ -1,7 +1,9 @@
-import { Directive, ChangeDetectorRef, inject } from '@angular/core';
+import { Directive, inject, signal, OnInit } from '@angular/core';
 import { DbxStyleService } from './style.service';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { delay } from 'rxjs';
+import { Maybe } from '@dereekb/util';
+import { DbxStyleClass } from './style';
 
 /**
  * Used to retrieve the current app styling from the DbxStyleService.
@@ -9,23 +11,18 @@ import { delay } from 'rxjs';
 @Directive({
   selector: 'dbx-style, [dbxStyle], .dbx-style',
   host: {
-    '[class]': 'cssClass'
-  }
+    '[class]': 'styleClassNameSignal()'
+  },
+  standalone: true
 })
-export class DbxStyleDirective extends AbstractSubscriptionDirective {
+export class DbxStyleDirective extends AbstractSubscriptionDirective implements OnInit {
   private readonly _styleService = inject(DbxStyleService);
-  private readonly _cdRef = inject(ChangeDetectorRef);
 
-  cssClass = '';
-
-  constructor() {
-    super();
-  }
+  readonly styleClassNameSignal = signal<Maybe<DbxStyleClass>>(undefined);
 
   ngOnInit(): void {
-    this.sub = this._styleService.style$.pipe(delay(0)).subscribe((classes) => {
-      this.cssClass = classes;
-      safeDetectChanges(this._cdRef);
+    this.sub = this._styleService.styleClassName$.pipe(delay(0)).subscribe((classes) => {
+      this.styleClassNameSignal.set(classes);
     });
   }
 }

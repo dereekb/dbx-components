@@ -1,10 +1,11 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { DbxActionFormSafetyDirective } from './form.action.transition.safety.directive';
 
+/**
+ * @deprecated import DbxActionFormSafetyDirective directly
+ */
 @NgModule({
-  imports: [CommonModule],
-  declarations: [DbxActionFormSafetyDirective],
+  imports: [DbxActionFormSafetyDirective],
   exports: [DbxActionFormSafetyDirective]
 })
 export class DbxFormActionTransitionModule {}

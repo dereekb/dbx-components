@@ -7,6 +7,7 @@ import { Directive } from '@angular/core';
   selector: 'dbx-icon-spacer,[dbxIconSpacer]',
   host: {
     class: 'dbx-icon-spacer d-inline'
-  }
+  },
+  standalone: true
 })
 export class DbxIconSpacerDirective {}

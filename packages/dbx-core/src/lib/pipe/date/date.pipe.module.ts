@@ -16,7 +16,7 @@ import { TimezoneAbbreviationPipe } from './timezoneabbreviation.pipe';
 import { SystemDateToTargetDatePipe } from './systemdatetotargetdate.pipe';
 import { DateRangeDistancePipe } from './daterangedistance.pipe';
 
-const declarations = [
+const importsAndExports = [
   //
   DateDistancePipe,
   DateRangeDistancePipe,
@@ -37,8 +37,29 @@ const declarations = [
   ToMinutesPipe
 ];
 
+/**
+ * @deprecated import the standalone pipes directly as needed.
+ *
+ * @see DateDistancePipe
+ * @see DateRangeDistancePipe
+ * @see TargetDateToSystemDatePipe
+ * @see SystemDateToTargetDatePipe
+ * @see TimezoneAbbreviationPipe
+ * @see DateFromToTimePipe
+ * @see DateDayRangePipe
+ * @see DateDayTimeRangePipe
+ * @see DateTimeRangeOnlyPipe
+ * @see DateTimeRangePipe
+ * @see DateTimeRangeOnlyDistancePipe
+ * @see DateFormatDistancePipe
+ * @see MinutesStringPipe
+ * @see TimeDistanceCountdownPipe
+ * @see TimeDistancePipe
+ * @see ToJsDatePipe
+ * @see ToMinutesPipe
+ */
 @NgModule({
-  declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxDatePipeModule {}

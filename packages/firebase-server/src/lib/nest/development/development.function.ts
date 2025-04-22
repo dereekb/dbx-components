@@ -22,7 +22,7 @@ export interface OnCallDevelopmentConfig<N> {
  * @param map
  * @returns
  */
-export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N>, config: OnCallDevelopmentConfig<N> = {}): OnCallWithNestContext<N, OnCallDevelopmentParams, unknown> {
+export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N>, config: OnCallDevelopmentConfig<N> = {}): OnCallWithNestContext<N, OnCallDevelopmentParams> {
   const { preAssert = () => undefined } = config;
 
   return (request) => {

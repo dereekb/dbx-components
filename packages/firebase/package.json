@@ -27,11 +27,11 @@
     "@dereekb/model": "*",
     "@dereekb/date": "*",
     "rxjs": "^7.5.0",
-    "firebase": "^10.5.0",
-    "ts-essentials": "^9.1.2",
+    "firebase": "^11.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
-    "date-fns": "^2.30.0"
+    "ts-essentials": "^9.1.2",
+    "date-fns": "^3.0.0"
   },
   "dependencies": {}
 }

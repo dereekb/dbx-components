@@ -1,17 +1,25 @@
 <dbx-popover-content>
   <!-- Header -->
   <dbx-popover-header [icon]="icon" [header]="header">
-    <ng-container *ngIf="showSwitchButtons" [ngSwitch]="showPreset$ | async">
-      <button *ngSwitchCase="true" mat-flat-button color="accent" (click)="showCustom()">{{ customizeButtonText }}</button>
-      <button *ngSwitchCase="false" mat-flat-button color="accent" (click)="showPresets()">Presets</button>
-    </ng-container>
-    <ng-container *ngIf="showCloseButton">
-      <dbx-button-spacer *ngIf="showSwitchButtons"></dbx-button-spacer>
+    @if (showSwitchButtons) {
+      @switch (showPresetSignal()) {
+        @case (true) {
+          <button mat-flat-button color="accent" (click)="showCustom()">{{ customizeButtonText }}</button>
+        }
+        @case (false) {
+          <button mat-flat-button color="accent" (click)="showPresets()">Presets</button>
+        }
+      }
+    }
+    @if (showCloseButton) {
+      @if (showSwitchButtons) {
+        <dbx-button-spacer></dbx-button-spacer>
+      }
       <button mat-stroked-button color="accent" (click)="close()">{{ closeButtonText }}</button>
-    </ng-container>
+    }
   </dbx-popover-header>
   <!-- Content -->
   <dbx-popover-scroll-content>
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-injection [config]="configSignal()"></dbx-injection>
   </dbx-popover-scroll-content>
 </dbx-popover-content>

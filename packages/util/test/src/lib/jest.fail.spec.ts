@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, JestDoneCallback, JestExpectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
+import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, type JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, type JestDoneCallback, JestExpectedErrorOfSpecificTypeError, jestExpectFailAssertErrorType } from './jest.fail';
 
 class TestError extends BaseError {}
 

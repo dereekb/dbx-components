@@ -17,3 +17,6 @@
 .commitlintrc.json
 .eslintrc.json
 *.md
+
+/.nx/cache
+/.nx/workspace-data

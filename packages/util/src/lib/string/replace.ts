@@ -9,11 +9,11 @@ export interface ReplaceStringsConfig {
   /**
    * Strings to target/replace.
    */
-  replace: ArrayOrValue<string>;
+  readonly replace: ArrayOrValue<string>;
   /**
    * Value to replace all recurrences with.
    */
-  replaceWith: string;
+  readonly replaceWith: string;
 }
 
 export function replaceStringsFunction(config: ReplaceStringsConfig) {
@@ -82,11 +82,12 @@ export function escapeStringCharactersFunction(config: EscapeStringCharactersFun
       case 0:
         result = input;
         break;
-      case 1:
+      case 1: {
         const charToReplace = input[occurrences[0]];
         result = replaceCharacterAtIndexWith(input, occurrences[0], escapeCharacter(charToReplace)); //Add an escape to the character
         break;
-      default:
+      }
+      default: {
         const parts: string[] = [];
         const endAt = occurrences.length;
 
@@ -110,6 +111,7 @@ export function escapeStringCharactersFunction(config: EscapeStringCharactersFun
         // join all parts together
         result = parts.join('');
         break;
+      }
     }
 
     return result;

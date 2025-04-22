@@ -1,5 +1,5 @@
+import { Configurable, KeyValueTransformMap } from '@dereekb/util';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDataSetBuilder, ChecklistType, ChecklistItemFieldBuilderInput, flexLayoutWrapper } from '@dereekb/dbx-form';
-import { KeyValueTransformMap } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable } from 'rxjs';
 
@@ -58,10 +58,10 @@ export function docFormExampleChecklistFields({ dataObs, display }: DocFormExamp
   if (display) {
     (Object.keys(display) as (keyof DocFormExampleChecklistValues)[]).forEach((key) => {
       const config: DocFormExampleChecklistFieldsCustomDisplayFieldConfig = display[key];
-      const contentToMerge: Partial<ChecklistItemFieldBuilderInput> = {};
+      const contentToMerge: Partial<Configurable<ChecklistItemFieldBuilderInput>> = {};
 
       if (config.displayWithData) {
-        contentToMerge.displayContentObs = config.displayWithData(b);
+        contentToMerge.displayContent = config.displayWithData(b);
       }
 
       b.merge(key, contentToMerge);

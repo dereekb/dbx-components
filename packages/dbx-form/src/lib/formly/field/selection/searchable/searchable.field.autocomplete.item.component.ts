@@ -1,53 +1,45 @@
-import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, map, Observable, shareReplay } from 'rxjs';
-import { Component, Directive, inject, InjectionToken, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, Directive, inject, InjectionToken, input } from '@angular/core';
 import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
-import { Maybe, mergeArraysIntoArray } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { mergeArraysIntoArray } from '@dereekb/util';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxAnchorComponent } from '@dereekb/dbx-web';
+import { MatIconModule } from '@angular/material/icon';
 
 export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
 
 @Component({
   selector: 'dbx-searchable-field-autocomplete-item',
   template: `
-    <dbx-anchor [block]="true" [anchor]="anchor$ | async">
-      <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-anchor [block]="true" [anchor]="anchorSignal()">
+      <dbx-injection [config]="configSignal()"></dbx-injection>
     </dbx-anchor>
-  `
+  `,
+  imports: [DbxAnchorComponent, DbxInjectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy {
-  private _displayValue = new BehaviorSubject<Maybe<ConfiguredSearchableValueFieldDisplayValue<T>>>(undefined);
-  readonly displayValue$ = this._displayValue.pipe(filterMaybe(), shareReplay(1));
+export class DbxSearchableFieldAutocompleteItemComponent<T> {
+  readonly displayValue = input.required<ConfiguredSearchableValueFieldDisplayValue<T>>();
 
-  readonly config$: Observable<DbxInjectionComponentConfig> = this.displayValue$.pipe(
-    map((x) => {
-      const config: DbxInjectionComponentConfig = {
-        ...x.display,
-        providers: mergeArraysIntoArray(
-          [
-            {
-              provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,
-              useValue: x
-            }
-          ],
-          x.display.providers
-        )
-      };
+  readonly configSignal = computed(() => {
+    const displayValue = this.displayValue();
+    const config: DbxInjectionComponentConfig = {
+      ...displayValue.display,
+      providers: mergeArraysIntoArray(
+        [
+          {
+            provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,
+            useValue: displayValue
+          }
+        ],
+        displayValue.display.providers
+      )
+    };
 
-      return config;
-    })
-  );
+    return config;
+  });
 
-  readonly anchor$ = this.displayValue$.pipe(map((x) => x.anchor));
-
-  @Input()
-  set displayValue(displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) {
-    this._displayValue.next(displayValue);
-  }
-
-  ngOnDestroy(): void {
-    this._displayValue.complete();
-  }
+  readonly anchorSignal = computed(() => this.displayValue().anchor);
 }
 
 // MARK: Default
@@ -60,14 +52,19 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
   selector: 'dbx-default-searchable-field-display',
   template: `
     <div class="dbx-default-searchable-field-display dbx-flex-bar">
-      <mat-icon class="dbx-icon-spacer" *ngIf="icon">{{ icon }}</mat-icon>
+      @if (icon) {
+        <mat-icon class="dbx-icon-spacer">{{ icon }}</mat-icon>
+      }
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
-      <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
+      @if (displayValue.sublabel) {
+        <span class="dbx-chip-sublabel">({{ displayValue.sublabel }})</span>
+      }
     </div>
-  `
+  `,
+  imports: [MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {
-  get icon() {
-    return this.displayValue.icon;
-  }
+  readonly icon = this.displayValue.icon;
 }

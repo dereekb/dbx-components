@@ -1,5 +1,5 @@
 import { OnDestroy, Directive } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Unsubscribable } from 'rxjs';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
@@ -7,14 +7,14 @@ import { type Maybe } from '@dereekb/util';
  * Abstract component that contains a SubscriptionObject and will clean it up automatically.
  */
 @Directive()
-export abstract class AbstractSubscriptionDirective implements OnDestroy {
+export abstract class AbstractSubscriptionDirective<T extends Unsubscribable = Unsubscribable> implements OnDestroy {
   private readonly _subscriptionObject = new SubscriptionObject();
 
   ngOnDestroy(): void {
     this._subscriptionObject.destroy();
   }
 
-  protected set sub(subscription: Maybe<Subscription | undefined>) {
+  protected set sub(subscription: Maybe<T | void>) {
     this._subscriptionObject.subscription = subscription;
   }
 }
@@ -23,7 +23,7 @@ export abstract class AbstractSubscriptionDirective implements OnDestroy {
  * AbstractSubscriptionDirective extension that prevents the OnDestroy from occuring until the lockset is unlocked.
  */
 @Directive()
-export abstract class AbstractLockSetSubscriptionDirective extends AbstractSubscriptionDirective implements OnDestroy {
+export abstract class AbstractLockSetSubscriptionDirective<T extends Unsubscribable = Unsubscribable> extends AbstractSubscriptionDirective<T> implements OnDestroy {
   readonly lockSet = new LockSet();
 
   override ngOnDestroy(): void {

@@ -1,18 +1,23 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { dateCellScheduleDayCodesAreSetsEquivalent, dateCellScheduleDayCodesFromEnabledDays, enabledDaysFromDateCellScheduleDayCodes } from '@dereekb/date';
 import { WorkUsingObservable, IsModifiedFunction } from '@dereekb/rxjs';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { map, shareReplay, Observable, of } from 'rxjs';
-import { DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
+import { DbxScheduleSelectionCalendarDateDaysFormComponent, DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
+import { DbxActionModule } from '@dereekb/dbx-web';
+import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-days',
   template: `
-    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [instantTrigger]="true" [dbxActionHandler]="updateScheduleDays">
-      <dbx-schedule-selection-calendar-date-days-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-form>
+    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [useInstantTriggerPreset]="true" [dbxActionHandler]="updateScheduleDays">
+      <dbx-schedule-selection-calendar-date-days-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormIsModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-form>
     </div>
-  `
+  `,
+  imports: [DbxScheduleSelectionCalendarDateDaysFormComponent, DbxFormSourceDirective, DbxActionModule, DbxActionFormDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxScheduleSelectionCalendarDateDaysComponent {
   readonly dbxCalendarStore = inject(DbxCalendarStore);

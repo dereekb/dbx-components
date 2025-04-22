@@ -1,37 +1,27 @@
-import { Directive, ElementRef, Input, OnDestroy, OnInit, inject } from '@angular/core';
-import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
+import { Directive, Injector, OnDestroy, OnInit, Signal, effect, inject, input, runInInjectionContext } from '@angular/core';
+import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { DbxActionValueOnTriggerFunction, DbxActionValueOnTriggerInstance } from './action.value.trigger.instance';
+import { DbxActionValueGetterValueGetterFunction, DbxActionValueGetterInstance } from './action.value.trigger.instance';
+
+export interface DbxActionValueGetterDirectiveComputeInputsConfig<T> {
+  readonly valueGetterSignal?: Signal<Maybe<DbxActionValueGetterValueGetterFunction<T>>>;
+  readonly isModifiedSignal?: Signal<Maybe<IsModifiedFunction>>;
+  readonly isEqualSignal?: Signal<Maybe<IsEqualFunction>>;
+}
 
 /**
  * Abstract class for directives that may perform an action when trigger is called, and returns a value.
  */
 @Directive()
-export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
+  private readonly _injector = inject(Injector);
+
   readonly source = inject(DbxActionContextStoreSourceInstance<T, unknown>);
 
-  private readonly _triggerInstance: DbxActionValueOnTriggerInstance<T> = new DbxActionValueOnTriggerInstance<T>({
+  private readonly _triggerInstance: DbxActionValueGetterInstance<T> = new DbxActionValueGetterInstance<T>({
     source: this.source
   });
-
-  private _triggeredSub = new SubscriptionObject();
-
-  get valueGetter(): Maybe<DbxActionValueOnTriggerFunction<T>> {
-    return this._triggerInstance.valueGetter;
-  }
-
-  set valueGetter(valueGetter: Maybe<DbxActionValueOnTriggerFunction<T>>) {
-    this._triggerInstance.valueGetter = valueGetter;
-  }
-
-  get isModifiedFunction(): Maybe<IsModifiedFunction<T>> {
-    return this._triggerInstance.isModifiedFunction;
-  }
-
-  set isModifiedFunction(isModifiedFunction: Maybe<IsModifiedFunction<T>>) {
-    this._triggerInstance.isModifiedFunction = isModifiedFunction;
-  }
 
   ngOnInit(): void {
     this._triggerInstance.init();
@@ -39,31 +29,56 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnI
 
   ngOnDestroy(): void {
     this._triggerInstance.destroy();
-    this._triggeredSub.destroy();
+  }
+
+  setValueGetterFunction(valueGetterFunction: Maybe<DbxActionValueGetterValueGetterFunction<T>>) {
+    this._triggerInstance.setValueGetterFunction(valueGetterFunction);
+  }
+
+  protected configureInputs(config: DbxActionValueGetterDirectiveComputeInputsConfig<T>): void {
+    runInInjectionContext(this._injector, () => {
+      effect(() => {
+        if (config?.isModifiedSignal != null) {
+          const isModified = config?.isModifiedSignal();
+          this._triggerInstance.setIsModifiedFunction(isModified);
+        }
+
+        if (config?.isEqualSignal != null) {
+          const isEqual = config?.isEqualSignal();
+          this._triggerInstance.setIsEqualFunction(isEqual);
+        }
+
+        if (config?.valueGetterSignal != null) {
+          const valueGetter = config?.valueGetterSignal();
+          this._triggerInstance.setValueGetterFunction(valueGetter);
+        }
+      });
+    });
   }
 }
 
 /**
- * Action directive that is used to trigger/display a popover, then watches that popover for a value.
+ * Action directive that uses a getter function instead and waits for the trigger to be called before calling the function.
+ *
+ * Similar to DbxActionValueDirective, but the getter is called when a trigger is activated.
+ * The DbxActionValueDirective always pipes the latests value while waiting for a trigger, and does not allow using a getter.
  */
 @Directive({
-  exportAs: 'dbxActionValueOnTrigger',
-  selector: '[dbxActionValueOnTrigger]'
+  exportAs: 'dbxActionValueGetter',
+  selector: '[dbxActionValueGetter]',
+  standalone: true
 })
-export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
-  readonly elementRef = inject(ElementRef);
-
-  @Input()
-  set dbxActionValueOnTrigger(dbxActionValueTrigger: Maybe<DbxActionValueOnTriggerFunction<T>>) {
-    this.valueGetter = dbxActionValueTrigger;
-  }
-
-  @Input()
-  set dbxActionValueTriggerModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
-    this.isModifiedFunction = isModifiedFunction;
-  }
+export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueGetterDirective<T> implements OnDestroy {
+  readonly dbxActionValueGetter = input<Maybe<DbxActionValueGetterValueGetterFunction<T>>>();
+  readonly dbxActionValueGetterIsModified = input<Maybe<IsModifiedFunction>>();
+  readonly dbxActionValueGetterIsEqual = input<Maybe<IsEqualFunction>>();
 
   constructor() {
     super();
+    this.configureInputs({
+      valueGetterSignal: this.dbxActionValueGetter,
+      isModifiedSignal: this.dbxActionValueGetterIsModified,
+      isEqualSignal: this.dbxActionValueGetterIsEqual
+    });
   }
 }

@@ -1,16 +1,19 @@
-import { OnDestroy, OnInit, Component, Input, ViewChild, inject } from '@angular/core';
-import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
-import { DbxScreenMediaService } from '../../../screen';
+import { Component, input, viewChild, inject, ChangeDetectionStrategy, computed, effect } from '@angular/core';
+import { MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
+import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { AbstractTransitionWatcherDirective, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { SubscriptionObject } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
-import { distinctUntilChanged, map, shareReplay, Observable, first } from 'rxjs';
 import { SideNavDisplayMode } from './sidenav';
+import { NgClass } from '@angular/common';
+import { DbxRouterAnchorModule } from '../anchor/anchor.module';
+import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
 
 export interface DbxSidenavSidebarState {
-  mode: SideNavDisplayMode;
-  drawer: MatDrawerMode;
-  open?: boolean;
+  readonly mode: SideNavDisplayMode;
+  readonly drawer: MatDrawerMode;
+  readonly open?: boolean;
 }
 
 /**
@@ -19,16 +22,30 @@ export interface DbxSidenavSidebarState {
 @Component({
   selector: 'dbx-sidenav',
   exportAs: 'sidenav',
-  templateUrl: './sidenav.component.html'
+  template: `
+    <mat-sidenav-container class="dbx-sidenav" [ngClass]="sizeCssClassSignal()">
+      <mat-sidenav class="dbx-sidenav-nav" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
+        <ng-content select="[top]"></ng-content>
+        <dbx-anchor-list class="dbx-sidenav-anchor-list" [anchors]="anchors()"></dbx-anchor-list>
+        <span class="spacer"></span>
+        <ng-content select="[bottom]"></ng-content>
+        <div class="dbx-sidenav-nav-end"></div>
+      </mat-sidenav>
+      <mat-sidenav-content>
+        <ng-content></ng-content>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  `,
+  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
-  private _screenMediaService = inject(DbxScreenMediaService);
+export class DbxSidenavComponent extends AbstractTransitionWatcherDirective {
+  private readonly _screenMediaService = inject(DbxScreenMediaService);
 
-  @Input()
-  anchors?: Maybe<ClickableAnchorLinkTree[]>;
+  readonly sidenav = viewChild.required<MatSidenav>(MatSidenav);
 
-  @ViewChild(MatSidenav, { static: true })
-  readonly sidenav!: MatSidenav;
+  readonly anchors = input<Maybe<ClickableAnchorLinkTree[]>>();
 
   readonly mode$: Observable<SideNavDisplayMode> = this._screenMediaService.widthType$.pipe(
     distinctUntilChanged(),
@@ -51,71 +68,48 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
       return mode;
     }),
-    shareReplay(1)
-  );
-
-  readonly disableBackdrop$: Observable<boolean> = this.mode$.pipe(
-    map((x) => x !== SideNavDisplayMode.MOBILE),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  readonly sizeClass$: Observable<string> = this.mode$.pipe(
-    map((mode) => `dbx-sidenav-${mode}`),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly modeSignal = toSignal(this.mode$);
+  readonly disableBackdropSignal = computed(() => this.modeSignal() !== SideNavDisplayMode.MOBILE);
+  readonly sizeCssClassSignal = computed(() => `dbx-sidenav-${this.modeSignal()}`);
 
-  readonly state$: Observable<DbxSidenavSidebarState> = this.mode$.pipe(
-    map((mode) => {
-      let drawer!: MatDrawerMode;
-      let open!: boolean;
+  readonly stateSignal = computed(() => {
+    const mode = this.modeSignal();
 
-      switch (mode) {
-        case SideNavDisplayMode.MOBILE:
-          drawer = 'over';
-          open = false;
-          break;
-        case SideNavDisplayMode.ICON:
-        case SideNavDisplayMode.FULL:
-          drawer = 'side';
-          open = true;
-          break;
-      }
+    let drawer: MatDrawerMode = 'over';
+    let open: boolean = false;
 
-      return {
-        mode,
-        drawer,
-        open
-      };
-    }),
-    shareReplay(1)
-  );
+    switch (mode) {
+      case SideNavDisplayMode.MOBILE:
+        drawer = 'over';
+        open = false;
+        break;
+      case SideNavDisplayMode.ICON:
+      case SideNavDisplayMode.FULL:
+        drawer = 'side';
+        open = true;
+        break;
+    }
 
-  readonly drawer$: Observable<MatDrawerMode> = this.state$.pipe(
-    map((x) => x.drawer),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+    return {
+      mode,
+      drawer,
+      open
+    };
+  });
 
-  private _watcherSub = new SubscriptionObject();
-  private _stateSub = new SubscriptionObject();
+  readonly drawerSignal = computed(() => this.stateSignal().drawer);
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  protected readonly _stateSignalToggleEffect = effect(() => {
+    const state = this.stateSignal();
 
-    this._stateSub.subscription = this.state$.subscribe((state) => {
-      if (state.open != null) {
-        this._toggleNav(state.open, true);
-      }
-    });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._watcherSub.destroy();
-    this._stateSub.destroy();
-  }
+    if (state.open != null) {
+      this._toggleNav(state.open, true);
+    }
+  });
 
   protected updateForSuccessfulTransition(): void {
     this.closeNav();
@@ -129,33 +123,33 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
     this._toggleNav(open);
   }
 
-  private _toggleNav(toggleOpen = !this.sidenav.opened, forced = false): void {
-    this.state$.pipe(first()).subscribe(({ mode }) => {
-      this.ngZone.run(() => {
-        let open: Maybe<boolean>;
+  private _toggleNav(toggleOpen?: Maybe<boolean>, forced = false): void {
+    toggleOpen = toggleOpen ?? !this.sidenav().opened;
 
-        if (!forced) {
-          switch (mode) {
-            case SideNavDisplayMode.MOBILE:
-              open = toggleOpen;
-              break;
-            case SideNavDisplayMode.ICON:
-            case SideNavDisplayMode.FULL:
-              // Do nothing. Should be always open.
-              break;
-          }
-        } else {
+    const mode = this.stateSignal().mode;
+
+    let open: Maybe<boolean>;
+
+    if (!forced) {
+      switch (mode) {
+        case SideNavDisplayMode.MOBILE:
           open = toggleOpen;
-        }
+          break;
+        case SideNavDisplayMode.ICON:
+        case SideNavDisplayMode.FULL:
+          // Do nothing. Should be always open.
+          break;
+      }
+    } else {
+      open = toggleOpen;
+    }
 
-        if (open != null) {
-          if (open) {
-            this.sidenav.open();
-          } else {
-            this.sidenav.close();
-          }
-        }
-      });
-    });
+    if (open != null) {
+      if (open) {
+        this.sidenav().open();
+      } else {
+        this.sidenav().close();
+      }
+    }
   }
 }

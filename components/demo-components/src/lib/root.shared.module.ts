@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSortModule } from '@angular/material/sort';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatNativeDateModule, MatRippleModule } from '@angular/material/core';
+import { MatRippleModule } from '@angular/material/core';
 import { MatTreeModule } from '@angular/material/tree';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -44,10 +44,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule, DbxStructureModule, DbxListLayoutModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 import { DbxAppContextStateModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxPipesModule } from '@dereekb/dbx-core';
-import { DbxAnalyticsActionModule } from '@dereekb/dbx-analytics';
+import { DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
 
 const ANGULAR_MODULES = [CommonModule];
 
@@ -67,7 +67,6 @@ const ANGULAR_MATERIAL_MODULES = [
   MatExpansionModule,
   MatGridListModule,
   MatIconModule,
-  MatNativeDateModule,
   MatRippleModule,
   MatSidenavModule,
   MatSortModule,
@@ -96,18 +95,31 @@ const ANGULAR_MATERIAL_MODULES = [
   PortalModule,
   ScrollingModule,
   // Other Modules
-  FlexLayoutModule
+  FlexLayoutModule,
+  UIRouterModule
 ];
 
-const DBX_MODULES = [DbxStructureModule, DbxReadableErrorModule, DbxAnalyticsActionModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
+const DBX_MODULES = [DbxStructureModule, DbxReadableErrorModule, DbxCoreAuthModule, DbxCoreRouterModelModule, DbxActionModule, DbxListLayoutModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
 
+const DBX_STANDALONE_COMPONENTS = [
+  // dbx-analytics
+  DbxActionAnalyticsDirective
+];
+
+const IMPORTS_AND_EXPORTS = [
+  ...ANGULAR_MODULES,
+  ...ANGULAR_MATERIAL_MODULES,
+  ...DBX_MODULES,
+  ...DBX_STANDALONE_COMPONENTS,
+  // UI Router
+  UIRouterModule
+];
+
+/**
+ * @deprecated remove this in the future as most components are standalone now and should be referenced directly
+ */
 @NgModule({
-  exports: [
-    ...ANGULAR_MODULES,
-    ...ANGULAR_MATERIAL_MODULES,
-    ...DBX_MODULES,
-    // UI Router
-    UIRouterModule
-  ]
+  imports: IMPORTS_AND_EXPORTS,
+  exports: IMPORTS_AND_EXPORTS
 })
 export class DemoRootSharedModule {}

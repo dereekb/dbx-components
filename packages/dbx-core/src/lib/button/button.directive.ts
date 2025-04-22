@@ -1,71 +1,57 @@
-import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { BehaviorSubject, of, Subject, filter, first, switchMap } from 'rxjs';
+import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbxButton, DbxButtonDisplayContent, DbxButtonDisplayContentType, dbxButtonDisplayContentType, DbxButtonInterceptor, provideDbxButton } from './button';
+import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, provideDbxButton } from './button';
+import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract button component.
  */
 @Directive()
 export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDirective implements DbxButton, OnInit, OnDestroy {
-  private readonly _disabled = new BehaviorSubject<boolean>(false);
-  private readonly _working = new BehaviorSubject<boolean>(false);
-
   /**
    * Pre-interceptor button click.
    */
   protected readonly _buttonClick = new Subject<void>();
   protected readonly _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
 
-  readonly disabled$ = this._disabled.asObservable();
-  readonly working$ = this._working.asObservable();
+  readonly buttonClick = output();
 
-  @Input()
-  get disabled(): boolean {
-    return this._disabled.value;
-  }
+  readonly disabled = input<boolean, Maybe<boolean>>(false, { transform: (value) => value ?? false });
+  readonly working = input<boolean, Maybe<boolean>>(false, { transform: (value) => value ?? false });
+  readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>(undefined);
 
-  set disabled(disabled: Maybe<boolean>) {
-    this._disabled.next(disabled ?? false);
-  }
+  private readonly _disabledSignal = signal<Maybe<boolean>>(undefined);
+  private readonly _workingSignal = signal<Maybe<boolean>>(undefined);
+  private readonly _buttonDisplayContentSignal = signal<Maybe<DbxButtonDisplay>>(undefined);
 
-  @Input()
-  get working(): boolean {
-    return this._working.value;
-  }
+  readonly disabledSignal = computed(() => this._disabledSignal() ?? this.disabled());
+  readonly workingSignal = computed(() => this._workingSignal() ?? this.working());
 
-  set working(working: Maybe<boolean>) {
-    this._working.next(working ?? false);
-  }
+  readonly icon = input<Maybe<string>>();
+  readonly text = input<Maybe<string>>();
 
-  @Input()
-  icon?: Maybe<string>;
+  readonly buttonDisplayContentSignal: Signal<DbxButtonDisplay> = computed(() => {
+    const icon = this.icon();
+    const text = this.text();
+    const buttonDisplay = this.buttonDisplay();
 
-  @Input()
-  text?: Maybe<string>;
+    const buttonDisplayContent = this._buttonDisplayContentSignal() ?? buttonDisplay;
+    return { icon: icon || buttonDisplayContent?.icon, text: text || buttonDisplayContent?.text };
+  });
 
-  @Input()
-  get buttonDisplay(): DbxButtonDisplayContent {
-    return {
-      icon: this.icon,
-      text: this.text
-    };
-  }
+  readonly buttonDisplayTypeSignal: Signal<DbxButtonDisplayType> = computed(() => {
+    return dbxButtonDisplayType(this.buttonDisplayContentSignal());
+  });
 
-  set buttonDisplay(buttonDisplay: Maybe<DbxButtonDisplayContent>) {
-    this.icon = buttonDisplay?.icon;
-    this.text = buttonDisplay?.text;
-  }
+  readonly iconSignal: Signal<Maybe<string>> = computed(() => this.buttonDisplayContentSignal()?.icon);
+  readonly textSignal: Signal<Maybe<string>> = computed(() => this.buttonDisplayContentSignal()?.text);
 
-  get buttonDisplayType(): DbxButtonDisplayContentType {
-    return dbxButtonDisplayContentType(this.buttonDisplay);
-  }
-
-  @Output()
-  readonly buttonClick = new EventEmitter();
-
-  readonly clicked$ = this.buttonClick.asObservable();
+  readonly disabled$ = toObservable(this.disabledSignal);
+  readonly working$ = toObservable(this.workingSignal);
+  readonly display$ = toObservable(this.buttonDisplayContentSignal);
+  readonly clicked$ = outputToObservable(this.buttonClick);
 
   ngOnInit(): void {
     this.sub = this._buttonClick
@@ -90,10 +76,20 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._disabled.complete();
-    this._working.complete();
     this._buttonClick.complete();
     this._buttonInterceptor.complete();
+  }
+
+  setDisabled(disabled?: Maybe<boolean>): void {
+    this._disabledSignal.set(disabled);
+  }
+
+  setWorking(working?: Maybe<boolean>): void {
+    this._workingSignal.set(working);
+  }
+
+  setDisplayContent(content: DbxButtonDisplay): void {
+    this._buttonDisplayContentSignal.set(content);
   }
 
   /**
@@ -107,7 +103,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
    * Main function to use for handling clicks on the button.
    */
   public clickButton(): void {
-    if (!this.disabled) {
+    if (!this.disabled()) {
       this._buttonClick.next();
     }
   }
@@ -127,6 +123,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 @Directive({
   selector: '[dbxButton]',
   exportAs: 'dbxButton',
-  providers: provideDbxButton(DbxButtonDirective)
+  providers: provideDbxButton(DbxButtonDirective),
+  standalone: true
 })
 export class DbxButtonDirective extends AbstractDbxButtonDirective {}

@@ -1,9 +1,10 @@
-import { DbxAnalyticsModule } from '@dereekb/dbx-analytics';
+import { provideDbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { TestBed } from '@angular/core/testing';
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsUserSource, AbstractDbxAnalyticsServiceListener } from './analytics.service';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { DbxAnalyticsUser } from './analytics';
 import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
+import { Injector } from '@angular/core';
 
 class TestAnalyticsServiceListener extends AbstractDbxAnalyticsServiceListener {
   readonly events = new Subject<DbxAnalyticsStreamEvent>();
@@ -24,7 +25,7 @@ describe('DbxAnalyticsService', () => {
 
   let analyticsService: DbxAnalyticsService;
 
-  function analyticsServiceConfigurationFactory(): DbxAnalyticsServiceConfiguration {
+  function analyticsServiceConfigurationFactory(injector: Injector): DbxAnalyticsServiceConfiguration {
     const config: DbxAnalyticsServiceConfiguration = {
       listeners: [testListener],
       isProduction: true,
@@ -36,12 +37,9 @@ describe('DbxAnalyticsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [
-        DbxAnalyticsModule.forRoot({
-          analyticsConfigurationProvider: {
-            provide: DbxAnalyticsServiceConfiguration,
-            useFactory: analyticsServiceConfigurationFactory
-          }
+      providers: [
+        provideDbxAnalyticsService({
+          dbxAnalyticsServiceConfigurationFactory: analyticsServiceConfigurationFactory
         })
       ],
       declarations: []

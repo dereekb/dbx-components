@@ -1,27 +1,35 @@
-<ng-container [ngSwitch]="state$ | async">
-  <ng-container *ngSwitchCase="0">
+@switch (stateSignal()) {
+  @case ('none') {
     <!-- Loading -->
     <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
-  </ng-container>
-  <ng-container *ngSwitchCase="1">
+  }
+  @case ('loading') {
+    <!-- Loading -->
+    <ng-container *ngTemplateOutlet="loadingTemplate"></ng-container>
+  }
+  @case ('content') {
     <!-- Content -->
     <ng-content></ng-content>
-  </ng-container>
-  <ng-container *ngSwitchCase="2">
+  }
+  @case ('error') {
     <!-- Error -->
     <ng-container *ngTemplateOutlet="errorTemplate"></ng-container>
-  </ng-container>
-</ng-container>
+  }
+}
 
 <ng-template #loadingTemplate>
-  <dbx-loading-progress *ngIf="hasNoCustomLoading$ | async" [mode]="mode" [color]="color" [text]="text" [linear]="linear" [diameter]="diameter"></dbx-loading-progress>
+  @if (hasNoCustomLoadingSignal()) {
+    <dbx-loading-progress [mode]="mode()" [color]="color()" [text]="text()" [linear]="linear()" [diameter]="diameter()"></dbx-loading-progress>
+  }
   <div #customLoading>
     <ng-content select="[loading]"></ng-content>
   </div>
 </ng-template>
 
 <ng-template #errorTemplate>
-  <dbx-error *ngIf="hasNoCustomError$ | async" [error]="error$ | async"></dbx-error>
+  @if (hasNoCustomErrorSignal()) {
+    <dbx-error [error]="error()"></dbx-error>
+  }
   <div #customError>
     <ng-content select="[error]"></ng-content>
   </div>

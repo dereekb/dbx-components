@@ -1,4 +1,5 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Pre-styled top/title component.
@@ -9,14 +10,15 @@ import { Component, Input } from '@angular/core';
     <div class="app-side-nav-bar-title">
       <div class="app-side-nav-bar-title-header">
         <img src="assets/brand/icon.png" />
-        <span>{{ header }}</span>
+        <span>{{ header() }}</span>
       </div>
       <ng-content></ng-content>
     </div>
   `,
-  styleUrls: ['./side.scss']
+  styleUrls: ['./side.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class AppSideNavBarTitleComponent {
-  @Input()
-  header!: string;
+  readonly header = input<Maybe<string>>();
 }

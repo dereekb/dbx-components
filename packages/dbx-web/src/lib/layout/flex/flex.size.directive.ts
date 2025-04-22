@@ -1,4 +1,4 @@
-import { Input, Directive } from '@angular/core';
+import { Directive, input, computed } from '@angular/core';
 import { DbxFlexSize } from './flex';
 
 /**
@@ -7,10 +7,11 @@ import { DbxFlexSize } from './flex';
 @Directive({
   selector: '[dbxFlexSize]',
   host: {
-    '[class]': '"dbx-flex-" + size'
-  }
+    '[class]': 'cssClassSignal()'
+  },
+  standalone: true
 })
 export class DbxFlexSizeDirective {
-  @Input('dbxFlexSize')
-  size: DbxFlexSize = 1;
+  readonly dbxFlexSize = input.required<DbxFlexSize>();
+  readonly cssClassSignal = computed(() => `dbx-flex-${this.dbxFlexSize()}`);
 }

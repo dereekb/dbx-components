@@ -1,4 +1,5 @@
-import { OnInit, OnDestroy, Component } from '@angular/core';
+import { OnInit, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
+import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
@@ -18,7 +19,10 @@ export type DbxFormWorkingWrapperConfig = object;
       <ng-container #fieldComponent></ng-container>
       <dbx-loading [linear]="true" [context]="workingContext"></dbx-loading>
     </div>
-  `
+  `,
+  imports: [DbxLoadingComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormWorkingWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormWorkingWrapperConfig>> implements OnInit, OnDestroy {
   readonly sub = new SubscriptionObject();

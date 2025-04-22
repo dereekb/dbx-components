@@ -1,6 +1,6 @@
-import { Component, Type, OnInit, OnDestroy, ElementRef, inject } from '@angular/core';
+import { Component, Type, OnInit, OnDestroy, ElementRef, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';
@@ -8,6 +8,9 @@ import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
 import { asPromise, Maybe, PromiseOrValue, SpaceSeparatedCssClasses } from '@dereekb/util';
 import { DbxPopoverController, DbxPopoverKey } from './popover';
+import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
+import { DbxWindowKeyDownListenerDirective } from '../../keypress';
+import { DbxStyleDirective } from '../../layout/style/style.directive';
 
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
   getClosingValueFn?: (value?: I) => Promise<O>;
@@ -19,34 +22,40 @@ export interface DbxPopoverComponentConfig<O, I, T> {
    *
    * Only one popover should exist at a time given a certain key.
    */
-  key: DbxPopoverKey;
+  readonly key: DbxPopoverKey;
   /**
    * Origin element to position on.
    */
-  origin: ElementRef;
+  readonly origin: ElementRef;
   /**
    * Whether or not to close if a transition occurs.
    */
-  closeOnTransition?: boolean;
+  readonly closeOnTransition?: boolean;
   /**
    * Whether or not to dismiss when the escape button is pressed.
    *
    * False by default.
    */
-  closeOnEscape?: boolean;
+  readonly closeOnEscape?: boolean;
   /**
    * Component to inject into the popover.
    */
-  componentClass: Type<T>;
+  readonly componentClass: Type<T>;
   /**
    * Panel classes to add to the popover.
    */
-  panelClass?: Maybe<SpaceSeparatedCssClasses>;
+  readonly panelClass?: Maybe<SpaceSeparatedCssClasses>;
   /**
    * Data available to the popover.
    */
-  data?: Maybe<I>;
-  init?: (component: T, controller: DbxPopoverController<O, I>) => void;
+  readonly data?: Maybe<I>;
+  /**
+   * Optional function to initialize the popover component.
+   *
+   * @param component
+   * @param controller
+   */
+  readonly init?: (component: T, controller: DbxPopoverController<O, I>) => void;
 }
 
 export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T> {
@@ -73,7 +82,10 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
   ],
   host: {
     '[class]': 'config.panelClass'
-  }
+  },
+  imports: [DbxPopoverCoordinatorComponent, DbxWindowKeyDownListenerDirective, DbxStyleDirective, DbxInjectionComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
   private readonly popoverRef = inject(NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>);

@@ -1,21 +1,23 @@
-<dbx-calendar-base class="dbx-schedule-selection-calendar" [ngClass]="(readonly$ | async) ? 'dbx-schedule-selection-calendar-readonly' : ''">
+<dbx-calendar-base class="dbx-schedule-selection-calendar" [ngClass]="readonlySignal() ? 'dbx-schedule-selection-calendar-readonly' : ''">
   <ng-container controls>
-    <ng-container *ngIf="showClearSelectionButton$ | async">
-      <dbx-schedule-selection-calendar-selection-toggle-button [disabled]="readonly$ | async"></dbx-schedule-selection-calendar-selection-toggle-button>
+    @if (showClearSelectionButtonSignal()) {
+      <dbx-schedule-selection-calendar-selection-toggle-button [disabled]="readonlySignal()"></dbx-schedule-selection-calendar-selection-toggle-button>
       <dbx-button-spacer></dbx-button-spacer>
-    </ng-container>
-    <dbx-injection [config]="datePopoverButtonInjectionConfig$ | async"></dbx-injection>
+    }
+    <dbx-injection [config]="datePopoverButtonInjectionConfigSignal()"></dbx-injection>
   </ng-container>
   <div class="dbx-calendar-content dbx-calendar-content-month">
-    <mwl-calendar-month-view [refresh]="refresh$" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)" (beforeViewRender)="beforeMonthViewRender($event)" [cellTemplate]="monthDayCellTemplate"></mwl-calendar-month-view>
+    <mwl-calendar-month-view [refresh]="refresh$" [viewDate]="viewDateSignal()!" [events]="eventsSignal()" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)" (beforeViewRender)="beforeMonthViewRender($event)" [cellTemplate]="monthDayCellTemplate"></mwl-calendar-month-view>
   </div>
 </dbx-calendar-base>
 
 <!-- Cell -->
 <ng-template #monthDayCellTemplate let-day="day" let-locale="locale">
   <div class="cal-cell-top">
-    <span class="cal-day-badge" *ngIf="day.badgeTotal > 0">{{ day.badgeTotal }}</span>
-    <span class="cal-day-number">{{ day.date | calendarDate: 'monthViewDayNumber':locale }}</span>
+    @if (day.badgeTotal > 0) {
+      <span class="cal-day-badge">{{ day.badgeTotal }}</span>
+    }
+    <span class="cal-day-number">{{ day.date | calendarDate: 'monthViewDayNumber' : locale }}</span>
   </div>
   <dbx-schedule-selection-calendar-cell [day]="day"></dbx-schedule-selection-calendar-cell>
 </ng-template>

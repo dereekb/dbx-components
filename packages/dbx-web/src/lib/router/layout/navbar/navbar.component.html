@@ -1,34 +1,44 @@
-<ng-container [ngSwitch]="mode$ | async">
-  <!-- Button -->
-  <ng-container *ngSwitchDefault>
-    <ng-container [ngSwitch]="buttonMode$ | async">
-      <ng-container *ngSwitchCase="'menu'">
-        <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchors$ | async">
-          <mat-icon *ngIf="showMenuCaret">arrow_drop_down</mat-icon>
-        </dbx-icon-button>
-        <mat-menu #menu>
-          <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
-            <button mat-menu-item [ngClass]="x.selected ? 'active' : ''">
-              <mat-icon *ngIf="x.anchor.icon">{{ x.anchor.icon }}</mat-icon>
-              {{ x.anchor.title }}
-            </button>
-          </dbx-anchor>
-        </mat-menu>
-      </ng-container>
-      <ng-container *ngSwitchCase="'rotate'">
-        <dbx-anchor [anchor]="(nextRotateAnchor$ | async)?.anchor">
-          <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplay$ | async" [disabled]="hasNoAnchors$ | async"></dbx-icon-button>
+@switch (modeSignal()) {
+  @case ('bar') {
+    <!-- Bar -->
+    <nav mat-tab-nav-bar [tabPanel]="tabPanel" [attr.mat-align-tabs]="navAlign()">
+      @for (x of anchorsSignal(); track x.anchor) {
+        <dbx-anchor [anchor]="x.anchor">
+          <a mat-tab-link [active]="x.selected">{{ x.anchor.title }}</a>
         </dbx-anchor>
-      </ng-container>
-    </ng-container>
-  </ng-container>
-  <!-- Bar -->
-  <ng-container *ngSwitchCase="'bar'">
-    <nav mat-tab-nav-bar [tabPanel]="tabPanel" [attr.mat-align-tabs]="navAlign">
-      <dbx-anchor *ngFor="let x of anchors$ | async; trackBy: trackByFunction" [anchor]="x.anchor">
-        <a mat-tab-link [active]="x.selected">{{ x.anchor.title }}</a>
-      </dbx-anchor>
+      }
     </nav>
     <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
-  </ng-container>
-</ng-container>
+  }
+  @default {
+    <!-- Button -->
+    @switch (buttonMode()) {
+      <!-- Menu -->
+      @case ('menu') {
+        <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplaySignal()" [matMenuTriggerFor]="menu" [disabled]="hasNoAnchorsSignal()">
+          @if (showMenuCaret()) {
+            <mat-icon>arrow_drop_down</mat-icon>
+          }
+        </dbx-icon-button>
+        <mat-menu #menu>
+          @for (x of anchorsSignal(); track x) {
+            <dbx-anchor [anchor]="x.anchor">
+              <button mat-menu-item [ngClass]="x.selected ? 'active' : ''">
+                @if (x.anchor.icon) {
+                  <mat-icon>{{ x.anchor.icon }}</mat-icon>
+                }
+                {{ x.anchor.title }}
+              </button>
+            </dbx-anchor>
+          }
+        </mat-menu>
+      }
+      <!-- Rotate -->
+      @case ('rotate') {
+        <dbx-anchor [anchor]="nextRotateAnchorSignal()?.anchor">
+          <dbx-icon-button class="nav-menu-button" aria-label="open navigation" [buttonDisplay]="buttonDisplaySignal()" [disabled]="hasNoAnchorsSignal()"></dbx-icon-button>
+        </dbx-anchor>
+      }
+    }
+  }
+}

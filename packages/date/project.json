@@ -50,26 +50,21 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/date/**/*.ts", "packages/date/package.json", "packages/date/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml"],
       "options": {
-        "jestConfig": "packages/date/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/date/jest.config.ts"
       }
     },
     "test-skip-build": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/date", "{projectRoot}/.reports/jest/utc.date.junit.xml"],
       "options": {
-        "jestConfig": "packages/date/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/date/jest.config.ts"
       }
     },
     "test-timezones-usa": {

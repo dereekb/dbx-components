@@ -11,7 +11,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * Can be configured to hide for a temporary period.
  */
 @Directive({
-  selector: '[dbxActionPreSuccess]'
+  selector: '[dbxActionPreSuccess]',
+  standalone: true
 })
 export class DbxActionPreSuccessDirective extends AbstractIfDirective {
   @Input('dbxActionPreSuccess')

@@ -1,5 +1,5 @@
 import { Directive, OnInit, inject } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../../subscription';
+import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
 import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 
@@ -7,7 +7,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action/action.store.s
  * Context used for linking a button to an ActionContext and only look for triggers.
  */
 @Directive({
-  selector: '[dbxActionButtonTrigger]'
+  selector: '[dbxActionButtonTrigger]',
+  standalone: true
 })
 export class DbxActionButtonTriggerDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxButton = inject(DbxButton, { host: true });

@@ -1,56 +1,56 @@
-import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, Observable, shareReplay, switchMap } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Directive that provides a default value when triggered.
  *
  * No value is required, allowing the directive to automatically call readyValue.
+ *
+ * The valueOrFunction will filter on null/undefined input and wait until the input value is non-null.
+ *
+ * Use a getter if null/undefined values should be passed to the action.
  */
 @Directive({
-  selector: '[dbxActionValue]'
+  selector: 'dbxActionValue,[dbxActionValue]',
+  standalone: true
 })
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+  readonly valueOrFunction = input<Maybe<GetterOrValue<T> | ''>>('', { alias: 'dbxActionValue' });
+
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private readonly _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
-  readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
+  private readonly _valueOrFunctionOverride = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
+
+  readonly valueOrFunction$: Observable<GetterOrValue<T>> = combineLatest([this._valueOrFunctionOverride, toObservable(this.valueOrFunction)]).pipe(
+    map(([x, y]) => x ?? (y as Maybe<GetterOrValue<T>>)),
+    filterMaybe(),
+    shareReplay(1)
+  );
 
   constructor() {
     super();
   }
 
   ngOnInit(): void {
-    this.sub = this.valueOrFunction$
-      .pipe(
-        switchMap((valueOrFunction) =>
-          this.source.triggered$.pipe(
-            tap(() => {
-              const value: T = getValueFromGetter(valueOrFunction);
-              this.source.readyValue(value);
-            })
-          )
-        )
-      )
-      .subscribe();
+    this.sub = this.valueOrFunction$.pipe(switchMap((valueOrFunction) => this.source.triggered$.pipe(map(() => valueOrFunction)))).subscribe((valueOrFunction) => {
+      const value: T = getValueFromGetter(valueOrFunction);
+      this.source.readyValue(value);
+    });
+  }
+
+  setValueOrFunction(value: Maybe<GetterOrValue<T>>) {
+    this._valueOrFunctionOverride.next(value);
   }
 
   override ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
-      this._valueOrFunction.complete();
+      this._valueOrFunctionOverride.complete();
     });
-  }
-
-  @Input('dbxActionValue')
-  get valueOrFunction(): Maybe<GetterOrValue<T>> {
-    return this._valueOrFunction.value;
-  }
-
-  set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
-    this._valueOrFunction.next(valueOrFunction);
   }
 }

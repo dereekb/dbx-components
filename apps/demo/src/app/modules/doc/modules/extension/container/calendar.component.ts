@@ -1,6 +1,6 @@
 import { OnInit, Component, inject } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes } from '@dereekb/date';
+import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
@@ -36,6 +36,7 @@ export class DocExtensionCalendarComponent implements OnInit {
   event: Maybe<DbxCalendarEvent<TestCalendarEventData>>;
 
   readonly defaultDateCellScheduleRangeFieldValue$ = of({
+    // first two
     futureDateSchedule: {
       start: addDays(startOfDay(new Date()), 1),
       end: addDays(startOfDay(new Date()), 3),
@@ -47,14 +48,15 @@ export class DocExtensionCalendarComponent implements OnInit {
       w: '8',
       ex: [0, 3, 4, 5]
     },
+    // last two
     dateScheduleForUtcTimezone: {
-      start: startOfDay(new Date()),
-      end: addDays(startOfDay(new Date()), 2),
+      start: UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()),
+      end: addDays(UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()), 2),
       w: '89'
     },
     dateScheduleForUtcTimezoneWithFilter: {
-      start: startOfDay(new Date()),
-      end: addDays(startOfDay(new Date()), 2)
+      start: UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()),
+      end: addDays(UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()), 2)
     }
   });
 
@@ -80,15 +82,16 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       outputTimezone: this.timezone$,
       key: 'dateScheduleWithFilter',
-      required: true,
+      label: 'Date Schedule with Filter',
+      required: false,
       description: 'Date schedule with a filter applied to it, and an initial selection of everything. Contains custom close config.',
       filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
       computeSelectionResultRelativeToFilter: true,
       initialSelectionState: 'all',
       dialogContentConfig: {
         dialogConfig: {
-          panelClass: 'hello-world dbx-schedule-selection-calendar-compact',
-          maxWidth: '420px'
+          panelClass: 'dbx-schedule-selection-calendar-compact',
+          maxWidth: '540px'
         },
         closeConfig: {
           closeText: 'Save Changes',
@@ -99,7 +102,8 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       outputTimezone: this.timezone$,
       key: 'dateScheduleWithMinMaxDateRange',
-      required: true,
+      label: 'Date Schedule with Min/Max Date Range',
+      required: false,
       description: 'Date schedule with a min and max date range applied to it and all days selected.',
       minMaxDateRange: of({ start: addDays(new Date(), -25), end: addDays(new Date(), 25) }),
       computeSelectionResultRelativeToFilter: true,
@@ -108,7 +112,8 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       outputTimezone: this.timezone$,
       key: 'dateScheduleWithFilterAndExclusions',
-      required: true,
+      label: 'Date Schedule with Filter and Exclusions',
+      required: false,
       description: 'Date schedule with a filter applied to it and additional exclusions.',
       filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
       computeSelectionResultRelativeToFilter: true,
@@ -118,7 +123,8 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       outputTimezone: this.timezone$,
       key: 'dateScheduleWithTimingFilterAndMinDateRange',
-      required: true,
+      label: 'Date Schedule with Timing Filter and Min Date Range',
+      required: false,
       description: 'Date schedule with a filter and an explicit min date to be 4 days from now',
       filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
       minMaxDateRange: { start: addDays(new Date(), 4) },
@@ -127,6 +133,7 @@ export class DocExtensionCalendarComponent implements OnInit {
     }),
     dateScheduleRangeField({
       key: 'dateScheduleForUtcTimezone',
+      label: 'Date Schedule for UTC Timezone',
       required: true,
       description: 'Date schedule for the UTC timezone.',
       outputTimezone: 'UTC'
@@ -139,8 +146,9 @@ export class DocExtensionCalendarComponent implements OnInit {
       filter: {
         //
         ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-        startsAt: startOfDay(new Date()),
-        end: addDays(new Date(), 3),
+        startsAt: UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()),
+        end: addDays(UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()), 5),
+        timezone: 'UTC',
         w: '89',
         ex: []
       }

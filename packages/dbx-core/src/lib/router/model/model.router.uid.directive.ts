@@ -7,7 +7,8 @@ import { AbstractSubscriptionDirective } from '../../subscription/subscription.d
  * Used for retrieving the user's current id DbxAuthService and passes it as an identifier for a DbxRouteModelIdDirectiveDelegate.
  */
 @Directive({
-  selector: '[dbxRouteModelIdFromAuthUserId]'
+  selector: '[dbxRouteModelIdFromAuthUserId]',
+  standalone: true
 })
 export class DbxRouteModelIdFromAuthUserIdDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxAuthService = inject(DbxAuthService);

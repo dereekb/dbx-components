@@ -1,23 +1,28 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FieldWrapper, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { MatIconButton } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface DbxFormInfoConfig extends FormlyFieldProps {
-  onInfoClick: () => void;
+  readonly onInfoClick: () => void;
 }
 
 @Component({
   template: `
-    <div class="dbx-form-info-wrapper" fxLayout="row">
-      <div class="dbx-form-info-wrapper-content" fxFlex="grow">
+    <div class="dbx-form-info-wrapper dbx-flex-bar">
+      <div class="dbx-form-info-wrapper-content dbx-flex-grow">
         <ng-container #fieldComponent></ng-container>
       </div>
-      <div class="dbx-form-info-wrapper-info" fxFlex="noshrink" fxLayout="column" fxLayoutAlign="center center">
+      <div class="dbx-form-info-wrapper-info dbx-flex-noshrink dbx-flex-column dbx-flex-center">
         <button mat-icon-button [attr.aria-label]="'show info button for ' + (to.label || 'section')" (click)="onInfoClick()">
           <mat-icon>info</mat-icon>
         </button>
       </div>
     </div>
-  `
+  `,
+  imports: [MatIconButton, MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormInfoWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormInfoConfig>> {
   get infoWrapper(): DbxFormInfoConfig {

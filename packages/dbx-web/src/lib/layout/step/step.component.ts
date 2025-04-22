@@ -1,20 +1,39 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { Maybe } from '@dereekb/util';
+
+// TODO: Incomplete component. Requires styling.
 
 @Component({
   selector: 'dbx-step',
-  templateUrl: './step.component.html'
-  // TODO: styleUrls: ['./step.scss']
+  template: `
+    <div class="step-section">
+      <div class="step-section-header">
+        <span class="step">{{ step() }}.</span>
+        @if (done()) {
+          <mat-icon class="done-check">done</mat-icon>
+        }
+        <span class="text">{{ text() }}</span>
+        @if (hint()) {
+          <p class="hint">{{ hint() }}</p>
+        }
+      </div>
+      <div class="step-section-content">
+        <ng-content></ng-content>
+      </div>
+    </div>
+  `,
+  host: {
+    class: 'dbx-step',
+    '[class.done]': 'done()'
+  },
+  imports: [MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxStepComponent {
-  @Input()
-  done?: boolean;
-
-  @Input()
-  step?: number;
-
-  @Input()
-  text?: string;
-
-  @Input()
-  hint?: string;
+  readonly done = input<boolean>();
+  readonly step = input<number>();
+  readonly text = input<Maybe<string>>();
+  readonly hint = input<Maybe<string>>();
 }

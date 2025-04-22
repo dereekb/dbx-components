@@ -1,14 +1,21 @@
-import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
-import { ScreenMediaWidthType } from './../../../screen/screen';
+import { Observable, combineLatest, map, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
+import { ScreenMediaWidthType } from '../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, findNext, type Maybe } from '@dereekb/util';
-import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, TrackByFunction, inject } from '@angular/core';
-import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, tapDetectChanges, DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { Component, ChangeDetectionStrategy, inject, input } from '@angular/core';
+import { ClickableAnchorLinkSegueRef, DbxRouterService, AbstractTransitionDirective, DbxButtonDisplay } from '@dereekb/dbx-core';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { DbxAnchorComponent } from '../anchor';
+import { MatTabLink, MatTabNav, MatTabNavPanel } from '@angular/material/tabs';
+import { DbxIconButtonComponent } from '../../../button/icon/icon.button.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { NgClass } from '@angular/common';
 
 interface NavAnchorLink {
-  selected: boolean;
-  anchor: ClickableAnchorLinkSegueRef;
+  readonly selected: boolean;
+  readonly anchor: ClickableAnchorLinkSegueRef;
 }
 
 export type NavBarContentAlign = 'center' | 'left' | 'right';
@@ -21,48 +28,45 @@ export type NavbarButtonMode = 'menu' | 'rotate';
 @Component({
   selector: 'dbx-navbar',
   templateUrl: './navbar.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'dbx-navbar'
-  }
+  },
+  imports: [DbxAnchorComponent, MatTabNav, MatTabNavPanel, MatTabLink, DbxIconButtonComponent, MatIconModule, MatMenu, MatMenuItem, NgClass, MatMenuTrigger],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
+export class DbxNavbarComponent extends AbstractTransitionDirective {
   private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);
   private readonly _dbxRouterService = inject(DbxRouterService);
-  readonly cdRef = inject(ChangeDetectorRef);
 
   /**
    * Whether or not to show the dropwdown caret for a menu
    */
-  @Input()
-  showMenuCaret = false;
+  readonly showMenuCaret = input<boolean>(false);
 
-  @Input()
-  navAlign: HorizontalConnectionPos = 'center';
+  readonly navAlign = input<HorizontalConnectionPos>('center');
 
-  private _icon = new BehaviorSubject<Maybe<string>>(undefined);
-  private _defaultIcon = new BehaviorSubject<Maybe<string>>('menu');
-  private _defaultText = new BehaviorSubject<Maybe<string>>(undefined);
+  readonly icon = input<Maybe<string>>();
+  readonly defaultIcon = input<Maybe<string>>('menu');
+  readonly defaultText = input<Maybe<string>>();
+  readonly mode = input<Maybe<NavbarMode>>();
+  readonly buttonMode = input<NavbarButtonMode>('menu');
+  readonly breakpoint = input<ScreenMediaWidthType>('large');
+  readonly anchors = input<Maybe<ClickableAnchorLinkSegueRef[]>>([]);
 
-  private _inputMode = new BehaviorSubject<Maybe<NavbarMode>>(undefined);
-  private _buttonMode = new BehaviorSubject<NavbarButtonMode>('menu');
-  private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('large');
-  private _anchors = new BehaviorSubject<ClickableAnchorLinkSegueRef[]>([]);
+  readonly isBreakpointActive$ = this._dbxScreenMediaService.isBreakpointActive(toObservable(this.breakpoint));
 
-  readonly isBreakpointActive$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint);
-
-  readonly mode$ = combineLatest([this._inputMode, this.isBreakpointActive$]).pipe(
+  readonly mode$ = combineLatest([toObservable(this.mode), this.isBreakpointActive$]).pipe(
     map(([inputMode, breakpointActive]) => {
-      return breakpointActive ? inputMode ?? 'bar' : 'button';
+      return breakpointActive ? (inputMode ?? 'bar') : 'button';
     }),
     distinctUntilChanged(),
-    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
 
-  readonly anchors$: Observable<NavAnchorLink[]> = combineLatest([this._anchors, this.initAndUpdateOnTransitionSuccess$]).pipe(
+  readonly anchors$: Observable<NavAnchorLink[]> = combineLatest([toObservable(this.anchors), this.initAndUpdateOnTransitionSuccess$]).pipe(
     map(([anchors]) => {
-      const results = anchors.map((anchor) => {
+      const results = (anchors || []).map((anchor) => {
         const selected = this._dbxRouterService.isActive(anchor);
 
         return {
@@ -78,11 +82,8 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
         (nonBestFit) => ({ ...nonBestFit, selected: false })
       );
     }),
-    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
-
-  readonly buttonMode$ = this._buttonMode.pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly selectedAnchor$: Observable<Maybe<NavAnchorLink>> = this.anchors$.pipe(map((x) => x.find((y) => y.selected)));
   readonly nextRotateAnchor$: Observable<Maybe<NavAnchorLink>> = this.anchors$.pipe(map((x) => findNext(x, (y) => y.selected) || x[0]));
@@ -93,15 +94,15 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     shareReplay(1)
   );
 
-  readonly buttonNavAnchor$ = this.buttonMode$.pipe(
+  readonly buttonNavAnchor$ = toObservable(this.buttonMode).pipe(
     switchMap((x) => (x === 'menu' ? this.selectedAnchor$ : this.nextRotateAnchor$)),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  readonly buttonDisplay$: Observable<DbxButtonDisplayContent> = combineLatest([this._defaultIcon, this._icon, this._defaultText, this.buttonNavAnchor$, this.mode$]).pipe(
+  readonly buttonDisplay$: Observable<DbxButtonDisplay> = combineLatest([toObservable(this.defaultIcon), toObservable(this.icon), toObservable(this.defaultText), this.buttonNavAnchor$, this.mode$]).pipe(
     map(([defaultIcon, icon, defaultText, selectedAnchor, mode]) => {
-      let content: DbxButtonDisplayContent;
+      let content: DbxButtonDisplay;
 
       if (icon) {
         content = { icon, text: defaultText };
@@ -120,53 +121,11 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     shareReplay(1)
   );
 
-  readonly trackByFunction: TrackByFunction<NavAnchorLink> = (index: number, item: NavAnchorLink) => item.anchor;
+  readonly modeSignal = toSignal(this.mode$);
+  readonly anchorsSignal = toSignal(this.anchors$);
+  readonly buttonDisplaySignal = toSignal(this.buttonDisplay$);
+  readonly hasNoAnchorsSignal = toSignal(this.hasNoAnchors$);
+  readonly nextRotateAnchorSignal = toSignal(this.nextRotateAnchor$);
 
   // TODO: potentially make the caret depending on the current button display.
-
-  ngOnDestroy(): void {
-    this._icon.complete();
-    this._defaultIcon.complete();
-    this._defaultText.complete();
-    this._inputMode.complete();
-    this._buttonMode.complete();
-    this._breakpoint.complete();
-    this._anchors.complete();
-  }
-
-  // MARK: Accessors
-  @Input()
-  public set icon(icon: Maybe<string>) {
-    this._icon.next(icon);
-  }
-
-  @Input()
-  public set defaultIcon(defaultIcon: Maybe<string>) {
-    this._defaultIcon.next(defaultIcon);
-  }
-
-  @Input()
-  public set defaultText(defaultText: Maybe<string>) {
-    this._defaultText.next(defaultText);
-  }
-
-  @Input()
-  public set anchors(anchors: Maybe<ClickableAnchorLinkSegueRef[]>) {
-    this._anchors.next(anchors ?? []);
-  }
-
-  @Input()
-  public set buttonMode(mode: Maybe<NavbarButtonMode>) {
-    this._buttonMode.next(mode ?? 'menu');
-  }
-
-  @Input()
-  public set mode(mode: Maybe<NavbarMode>) {
-    this._inputMode.next(mode);
-  }
-
-  @Input()
-  public set breakpoint(breakpoint: ScreenMediaWidthType) {
-    this._breakpoint.next(breakpoint);
-  }
 }

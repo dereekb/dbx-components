@@ -4,20 +4,20 @@
     <!-- Examples -->
     <doc-feature-example header="dbx-filter-popover-button" hint='Component that can display optionally both a "custom" and "preset" filter view for configuring a single filter.'>
       <dbx-content-border>
-        <p>Filter Value: {{ filter$ | async | json }}</p>
+        <p>Filter Value: {{ filterSignal() | json }}</p>
       </dbx-content-border>
       <p>The filter popup will close by default when the filter updates/changes.</p>
       <doc-interaction-test-filter-popover-button [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
       <p>The button itself can be configured using the buttonDisplay property.</p>
-      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilter$ | async" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
+      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
       <dbx-button-spacer></dbx-button-spacer>
-      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilter$ | async" [dbxFilterMapSourceConnector]="buttonFilterKey" [disabled]="true"></doc-interaction-test-filter-popover-button>
+      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey" [disabled]="true"></doc-interaction-test-filter-popover-button>
       <p>Another example.</p>
-      <doc-interaction-test-date-filter-popover-button [buttonDisplay]="displayForDateFilter$ | async" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-date-filter-popover-button>
+      <doc-interaction-test-date-filter-popover-button [buttonDisplay]="displayForDateFilterSignal()" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-date-filter-popover-button>
     </doc-feature-example>
     <doc-feature-example header="dbx-preset-filter-menu" hint="Component that displays a menu button and allows quick selection of preset filters.">
       <dbx-content-border>
-        <p>Filter Value: {{ menuFilter$ | async | json }}</p>
+        <p>Filter Value: {{ menuFilterSignal() | json }}</p>
       </dbx-content-border>
       <p>dbx-preset-filter-menu components are often wrapped by a class that provides a FilterSourceDirective.</p>
       <ng-container [dbxFilterMapSourceConnector]="menuFilterKey">
@@ -26,7 +26,7 @@
     </doc-feature-example>
     <doc-feature-example header="dbx-partial-preset-filter-menu" hint="Component that displays a menu button and allows quick selection of partial preset filters. This partial filter is connected to the same filter as the one above.">
       <dbx-content-border>
-        <p>Filter Value: {{ menuFilter$ | async | json }}</p>
+        <p>Filter Value: {{ menuFilterSignal() | json }}</p>
       </dbx-content-border>
       <p>dbx-partial-preset-filter-menu components are often wrapped by a class that provides a FilterSourceDirective.</p>
       <ng-container [dbxFilterMapSourceConnector]="menuFilterKey">
@@ -35,7 +35,7 @@
     </doc-feature-example>
     <doc-feature-example header="dbx-preset-filter-list" hint="Component that displays a preset list. Also functions for partial preset lists.">
       <dbx-content-border>
-        <p>Filter Value: {{ listFilter$ | async | json }}</p>
+        <p>Filter Value: {{ listFilterSignal() | json }}</p>
       </dbx-content-border>
       <p>dbx-preset-filter-list components are often wrapped by a class that provides a FilterSourceDirective.</p>
       <ng-container [dbxFilterMapSourceConnector]="listFilterKey">

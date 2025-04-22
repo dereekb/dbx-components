@@ -11,7 +11,8 @@ import { DbxRouteModelIdDirectiveDelegate } from './model.router';
  * Used for retrieving the model's id from the current route using the configured parameter and passes it to its delegate.
  */
 @Directive({
-  selector: '[dbxRouteModelId]'
+  selector: '[dbxRouteModelId]',
+  standalone: true
 })
 export class DbxRouteModelIdDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly dbxRouterService = inject(DbxRouterService);

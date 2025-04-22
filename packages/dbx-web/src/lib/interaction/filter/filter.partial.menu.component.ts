@@ -1,32 +1,30 @@
-import { BehaviorSubject } from 'rxjs';
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { dbxPresetFilterMenuButtonIconObservable, dbxPresetFilterMenuButtonTextObservable, DbxPresetFilterMenuConfig } from './filter.menu';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
+import { MatMenuModule } from '@angular/material/menu';
+import { NgClass } from '@angular/common';
 
 /**
  * Displays a button and menu for filtering partial preset values.
  */
 @Component({
   selector: 'dbx-partial-preset-filter-menu',
-  templateUrl: './filter.preset.menu.component.html' // share the same template as the preset menu
+  templateUrl: './filter.partial.menu.component.html', // share the same template as the preset menu
+  imports: [NgClass, MatMenuModule, MatButtonModule, MatIconModule, DbxAnchorComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxPartialPresetFilterMenuComponent<F> extends AbstractDbxPartialPresetFilterMenuDirective<F> {
-  private _config = new BehaviorSubject<DbxPresetFilterMenuConfig>({});
+  readonly config = input<DbxPresetFilterMenuConfig>({});
+  readonly config$ = toObservable(this.config);
 
-  readonly buttonText$ = dbxPresetFilterMenuButtonTextObservable(this._config, this.firstSelectedPartialPreset$);
-  readonly buttonIcon$ = dbxPresetFilterMenuButtonIconObservable(this._config, this.firstSelectedPartialPreset$);
+  readonly buttonText$ = dbxPresetFilterMenuButtonTextObservable(this.config$, this.firstSelectedPartialPreset$);
+  readonly buttonIcon$ = dbxPresetFilterMenuButtonIconObservable(this.config$, this.firstSelectedPartialPreset$);
 
-  @Input()
-  get config(): DbxPresetFilterMenuConfig {
-    return this._config.value;
-  }
-
-  set config(config: DbxPresetFilterMenuConfig) {
-    this._config.next(config);
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._config.complete();
-  }
+  readonly buttonTextSignal = toSignal(this.buttonText$);
+  readonly buttonIconSignal = toSignal(this.buttonIcon$);
 }

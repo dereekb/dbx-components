@@ -31,7 +31,7 @@ import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY, OperatorFunction, throttleTime } from 'rxjs';
 import * as MapboxGl from 'mapbox-gl';
-import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
+import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxEventData, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { mapboxViewportBoundFunction, MapboxViewportBoundFunction } from './mapbox.util';
@@ -44,12 +44,12 @@ export type MapboxMapRotateState = 'init' | 'idle' | 'rotating';
 
 export interface StringMapboxListenerPair {
   type: string;
-  listener: (ev: MapboxGl.EventData) => void;
+  listener: (ev: MapboxEventData) => void;
 }
 
 export interface TypedMapboxListenerPair<T extends keyof MapboxGl.MapEventType> {
   type: T;
-  listener: (ev: MapboxGl.MapEventType[T] & MapboxGl.EventData) => void;
+  listener: (ev: MapboxGl.MapEventType[T] & MapboxEventData) => void;
 }
 
 export interface DbxMapboxMarginCalculationSizing {
@@ -103,9 +103,15 @@ export interface DbxMapboxStoreState {
    */
   readonly retainContent: boolean;
   /**
-   * Custom content configuration.
+   * Custom drawer content configuration.
+   *
+   * @deprecated use drawerContent instead.
    */
   readonly content?: Maybe<DbxInjectionComponentConfig<unknown>>;
+  /**
+   * Custom drawer content configuration.
+   */
+  readonly drawerContent?: Maybe<DbxInjectionComponentConfig<unknown>>;
   /**
    * Latest error
    */
@@ -177,8 +183,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
               const listenerPairs: StringMapboxListenerPair[] = [];
 
-              function addListener<T extends keyof MapboxGl.MapEventType>(type: T, listener: (ev: MapboxGl.MapEventType[T] & MapboxGl.EventData) => void) {
-                map.on(type, listener);
+              function addListener<T extends keyof MapboxGl.MapEvents>(type: T, listener: Parameters<typeof map.on<T>>[2]) {
+                map.on<T>(type, listener);
                 listenerPairs.push({ type, listener } as StringMapboxListenerPair);
               }
 
@@ -881,14 +887,21 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
           this._renderingTimer.pipe(
             map(() => {
               const bound = x.getBounds();
-              const boundSw = bound.getSouthWest();
-              const boundNe = bound.getNorthEast();
+              let result: LatLngBound | null = null;
 
-              const sw = isDefaultLatLngPoint(boundSw) ? swMostLatLngPoint() : { lat: boundSw.lat, lng: boundSw.lng };
-              const ne = isDefaultLatLngPoint(boundNe) ? neMostLatLngPoint() : { lat: boundNe.lat, lng: boundNe.lng };
+              if (bound != null) {
+                const boundSw = bound.getSouthWest();
+                const boundNe = bound.getNorthEast();
 
-              return this.latLngBound(sw, ne);
-            })
+                const sw = isDefaultLatLngPoint(boundSw) ? swMostLatLngPoint() : { lat: boundSw.lat, lng: boundSw.lng };
+                const ne = isDefaultLatLngPoint(boundNe) ? neMostLatLngPoint() : { lat: boundNe.lat, lng: boundNe.lng };
+
+                result = this.latLngBound(sw, ne);
+              }
+
+              return result;
+            }),
+            filterMaybe()
           )
         )
       )
@@ -1029,13 +1042,13 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     })
   );
 
-  readonly content$ = this.state$.pipe(
-    map((x) => x.content),
+  readonly drawerContent$ = this.state$.pipe(
+    map((x) => x.drawerContent),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  readonly hasContent$ = this.content$.pipe(map(Boolean));
+  readonly hasDrawerContent$ = this.drawerContent$.pipe(map(Boolean));
 
   readonly clickEvent$ = this.state$.pipe(
     map((x) => x.clickEvent),
@@ -1074,6 +1087,31 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   private readonly _setError = this.updater((state, error: Error) => ({ ...state, error }));
 
-  readonly clearContent = this.updater((state) => ({ ...state, content: undefined }));
-  readonly setContent = this.updater((state, content: Maybe<DbxInjectionComponentConfig<unknown>>) => ({ ...state, content }));
+  readonly clearDrawerContent = this.updater((state) => setDrawerContent(state, undefined));
+  readonly setDrawerContent = this.updater(setDrawerContent);
+
+  // MARK: Compat
+  /**
+   * @deprecated use drawerContent$ instead.
+   */
+  readonly content$ = this.drawerContent$;
+
+  /**
+   * @deprecated use hasDrawerContent$ instead.
+   */
+  readonly hasContent$ = this.hasDrawerContent$;
+
+  /**
+   * @deprecated use clearDrawerContent instead.
+   */
+  readonly clearContent = this.updater((state) => setDrawerContent(state, undefined));
+
+  /**
+   * @deprecated use setDrawerContent instead.
+   */
+  readonly setContent = this.updater(setDrawerContent);
+}
+
+function setDrawerContent(state: DbxMapboxStoreState, drawerContent: Maybe<DbxInjectionComponentConfig<unknown>>) {
+  return { ...state, drawerContent, content: drawerContent };
 }

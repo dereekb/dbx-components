@@ -1,6 +1,6 @@
 import { makeMetaFilterSearchableFieldValueDisplayFn, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
-import { randomArrayFactory, randomNumberFactory, pickOneRandomly } from '@dereekb/util';
+import { randomArrayFactory, randomNumberFactory, pickOneRandomly, Configurable } from '@dereekb/util';
 import { map, Observable, of } from 'rxjs';
 import { DocFormExampleAccentSearchableFieldDisplayComponent, DocFormExamplePrimarySearchableFieldDisplayComponent, DocFormExampleWarnSearchableFieldDisplayComponent } from './selection.example.view';
 
@@ -22,11 +22,11 @@ export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
 
 export const MAKE_RANDOM_SELECTION_VALUES = randomArrayFactory({ random: { min: 12, max: 25 }, make: () => MAKE_EXAMPLE_SELECTION_VALUE() });
 
-export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId, any> {
+export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(minimumCharacters: number = 3): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId, any> {
   const makeRandomDelay = randomNumberFactory(200); // use to show the loading bar.
 
   return (search: string = '') => {
-    if (search.length > 3) {
+    if (search.length >= minimumCharacters) {
       const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = MAKE_RANDOM_SELECTION_VALUES().map((x) => ({ meta: x, value: x.id }));
       return of(result).pipe(randomDelayWithRandomFunction(makeRandomDelay));
     } else {
@@ -59,7 +59,7 @@ export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS: Searchabl
   return EXAMPLE_DISPLAY_FOR_SELECTION_VALUE(values).pipe(
     map((displayValues) => {
       displayValues.forEach((x) => {
-        x.display = {
+        (x as Configurable<SearchableValueFieldDisplayValue<string, DocFormExampleSelectionValue>>).display = {
           componentClass: pickOneRandomly(possibleComponents)
         };
       });

@@ -1,15 +1,17 @@
 import { DbxPromptConfirmDialogComponent } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { first } from 'rxjs';
 
 @Component({
-  templateUrl: './prompt.component.html'
+  templateUrl: './prompt.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DocInteractionPromptComponent {
+export class DocInteractionPromptComponent implements AfterViewInit {
   readonly matDialog = inject(MatDialog);
 
-  result?: boolean;
+  private readonly _resultSignal = signal<boolean | undefined>(undefined);
+  readonly result = this._resultSignal;
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePrompt(), 100);
@@ -20,7 +22,7 @@ export class DocInteractionPromptComponent {
       .afterClosed()
       .pipe(first())
       .subscribe((x) => {
-        this.result = x;
+        this._resultSignal.set(x);
       });
   }
 }

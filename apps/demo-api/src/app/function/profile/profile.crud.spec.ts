@@ -1,9 +1,9 @@
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f) => {
-  describeCloudFunctionTest('profile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
+  describeCallableRequestTest('profile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     describe('Profile', () => {
       demoAuthorizedUserAdminContext({ f }, (u) => {
         demoProfileContext({ f, u }, (p) => {

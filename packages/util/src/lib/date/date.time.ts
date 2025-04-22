@@ -12,14 +12,27 @@ import { type Maybe } from '../value/maybe.type';
  */
 export type ReadableTimeString = string;
 
+/**
+ * Enumeration of AM/PM time indicators.
+ */
 export enum TimeAM {
   AM = 'AM',
   PM = 'PM'
 }
 
+/**
+ * Constant representing the current time/date.
+ * Used in logical date calculations to indicate "now".
+ */
 export const DATE_NOW_VALUE = 'now';
+/**
+ * Type representing the current date/time value.
+ */
 export type DateNow = typeof DATE_NOW_VALUE;
 
+/**
+ * String codes that represent logical dates, such as 'now'.
+ */
 export type LogicalDateStringCode = DateNow;
 
 /**
@@ -28,9 +41,12 @@ export type LogicalDateStringCode = DateNow;
 export type LogicalDate = Date | LogicalDateStringCode;
 
 /**
- * Returns a Date value from the input LogicalDate.
+ * Converts a LogicalDate into an actual Date object.
+ * If the LogicalDate is already a Date, it's returned as is.
+ * If it's a string code like 'now', it's converted to the appropriate Date value.
  *
- * @param logicalDate
+ * @param logicalDate - A LogicalDate value to convert (Date object or string code)
+ * @returns A Date object representing the logical date, or null/undefined if input was null/undefined
  */
 export function dateFromLogicalDate(logicalDate: LogicalDate): Date;
 export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date>;
@@ -52,6 +68,13 @@ export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date
   return result;
 }
 
+/**
+ * Determines if the input value is a recognized LogicalDateStringCode.
+ * Currently, only the 'now' value is recognized as a LogicalDateStringCode.
+ *
+ * @param logicalDate - The value to check
+ * @returns True if the value is a recognized LogicalDateStringCode
+ */
 export function isLogicalDateStringCode(logicalDate: Maybe<string | LogicalDate>): logicalDate is LogicalDateStringCode {
   let isLogicalDateStringCode = false;
 

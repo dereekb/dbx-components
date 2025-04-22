@@ -24,51 +24,51 @@ export interface DbxFixedDateRangeFieldProps extends FormlyFieldProps {
   /**
    * Date range input to build the date range.
    */
-  dateRangeInput: ObservableOrValueGetter<DbxFixedDateRangeDateRangeInput>;
+  readonly dateRangeInput: ObservableOrValueGetter<DbxFixedDateRangeDateRangeInput>;
 
   /**
    * Selection mode to use when picking dates on the calendar.
    */
-  selectionMode?: Maybe<ObservableOrValueGetter<DbxFixedDateRangeSelectionMode>>;
+  readonly selectionMode?: Maybe<ObservableOrValueGetter<DbxFixedDateRangeSelectionMode>>;
 
   /**
    * Value mode for the dates in the output DateRange.
    *
    * Defaults to DATE
    */
-  valueMode?: DbxDateTimeValueMode;
+  readonly valueMode?: DbxDateTimeValueMode;
 
   /**
    * Whether or not to pass the date value as a UTC date, or a date in the current timezone.
    */
-  fullDayInUTC?: boolean;
+  readonly fullDayInUTC?: boolean;
 
   /**
    * Custom picker configuration
    */
-  pickerConfig?: ObservableOrValueGetter<DbxFixedDateRangePickerConfiguration>;
+  readonly pickerConfig?: ObservableOrValueGetter<DbxFixedDateRangePickerConfiguration>;
 
   /**
    * (Optional) The input timezone to default to.
    *
    * Ignored if fullDayInUTC is true.
    */
-  timezone?: Maybe<ObservableOrValueGetter<Maybe<TimezoneString>>>;
+  readonly timezone?: Maybe<ObservableOrValueGetter<Maybe<TimezoneString>>>;
 
   /**
    * Whether or not to display the timezone. True by default.
    */
-  showTimezone?: boolean;
+  readonly showTimezone?: boolean;
 
   /**
    * Custom presets to show in the dropdown.
    */
-  presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
+  readonly presets?: ObservableOrValueGetter<DateTimePresetConfiguration[]>;
 
   /**
    * Whether or not to show the range input. Defaults to true.
    */
-  showRangeInput?: boolean;
+  readonly showRangeInput?: boolean;
 }
 
 function dbxFixedDateRangeInputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (input: Maybe<DateRangeWithDateOrStringValue>) => Maybe<DateRange> {
@@ -113,19 +113,19 @@ export interface FixedDateRangeScan {
   /**
    * Picked the start or end of the range on the last pick.
    */
-  lastPickType?: Maybe<FixedDateRangeScanType>;
+  readonly lastPickType?: Maybe<FixedDateRangeScanType>;
   /**
    * The latest date passed, if applicable.
    */
-  lastDateRange?: Maybe<Partial<DateRange>>;
+  readonly lastDateRange?: Maybe<Partial<DateRange>>;
   /**
    * The generated boundary range.
    */
-  boundary?: DateRange;
+  readonly boundary?: DateRange;
   /**
    * New Date Range
    */
-  range?: DateRange;
+  readonly range?: DateRange;
 }
 
 type SelectedDateEventType = 'calendar' | 'input';

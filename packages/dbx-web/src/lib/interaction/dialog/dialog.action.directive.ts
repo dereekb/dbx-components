@@ -1,7 +1,7 @@
 import { first, Observable } from 'rxjs';
-import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angular/core';
-import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
-import { IsModifiedFunction } from '@dereekb/rxjs';
+import { Directive, OnInit, OnDestroy, ElementRef, inject, input } from '@angular/core';
+import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
+import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { MatDialogRef } from '@angular/material/dialog';
 
@@ -12,22 +12,23 @@ export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, M
  */
 @Directive({
   exportAs: 'dbxActionDialog',
-  selector: '[dbxActionDialog]'
+  selector: '[dbxActionDialog]',
+  standalone: true
 })
-export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);
 
-  @Input('dbxActionDialog')
-  fn?: DbxActionDialogFunction<T>;
-
-  @Input()
-  set dbxActionDialogModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
-    this.isModifiedFunction = isModifiedFunction;
-  }
+  readonly dbxActionDialog = input.required<DbxActionDialogFunction<T>>();
+  readonly dbxActionDialogIsModified = input<Maybe<IsModifiedFunction>>();
+  readonly dbxActionDialogIsEqual = input<Maybe<IsEqualFunction>>();
 
   constructor() {
     super();
-    this.valueGetter = () => this._getDataFromDialog();
+    this.configureInputs({
+      isModifiedSignal: this.dbxActionDialogIsModified,
+      isEqualSignal: this.dbxActionDialogIsEqual
+    });
+    this.setValueGetterFunction(() => this._getDataFromDialog());
   }
 
   protected _getDataFromDialog(): Observable<Maybe<T>> {
@@ -35,10 +36,6 @@ export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValu
   }
 
   protected _makeDialogRef(): MatDialogRef<unknown, Maybe<T>> {
-    if (!this.fn) {
-      throw new Error('dbxActionDialog has no dialog function provided to it.');
-    }
-
-    return this.fn();
+    return this.dbxActionDialog()();
   }
 }

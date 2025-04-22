@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, input } from '@angular/core';
 
 /**
  * Component used to wrap content in a box with optionally elevation.
@@ -7,14 +7,12 @@ import { Directive, Input } from '@angular/core';
   selector: 'dbx-content-box, [dbxContentBox]',
   host: {
     class: 'd-block dbx-content-box',
-    '[class.dbx-content-elevate]': 'elevate',
-    '[class.dbx-content-box-wide]': 'wide'
-  }
+    '[class.dbx-content-elevate]': 'elevate()',
+    '[class.dbx-content-box-wide]': 'wide()'
+  },
+  standalone: true
 })
 export class DbxContentBoxDirective {
-  @Input()
-  elevate = true;
-
-  @Input()
-  wide = true;
+  readonly elevate = input<boolean>(true);
+  readonly wide = input<boolean>(true);
 }

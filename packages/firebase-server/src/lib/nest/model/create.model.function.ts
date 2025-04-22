@@ -1,6 +1,6 @@
 import { type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallCreateModelParams, type OnCallCreateModelResult, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
-import { badRequestError } from '../../function';
+import { badRequestError } from '../../function/error';
 import { type OnCallWithAuthorizedNestContext } from '../function/call';
 import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AssertModelCrudRequestFunction } from './crud.assert.function';

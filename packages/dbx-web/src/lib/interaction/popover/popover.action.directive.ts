@@ -1,8 +1,8 @@
 import { first, Observable, map } from 'rxjs';
-import { Directive, OnInit, OnDestroy, Input, ElementRef, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, ElementRef, inject, input } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
-import { IsModifiedFunction } from '@dereekb/rxjs';
+import { AbstractDbxActionValueGetterDirective } from '@dereekb/dbx-core';
+import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
 export interface DbxActionPopoverFunctionParams {
@@ -16,22 +16,23 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
  */
 @Directive({
   exportAs: 'dbxActionPopover',
-  selector: '[dbxActionPopover]'
+  selector: '[dbxActionPopover]',
+  standalone: true
 })
-export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueGetterDirective<T> implements OnInit, OnDestroy {
   readonly elementRef = inject(ElementRef);
 
-  @Input('dbxActionPopover')
-  fn?: DbxActionPopoverFunction<T>;
-
-  @Input()
-  set dbxActionPopoverModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
-    this.isModifiedFunction = isModifiedFunction;
-  }
+  readonly dbxActionPopover = input.required<DbxActionPopoverFunction<T>>();
+  readonly dbxActionPopoverIsModified = input<Maybe<IsModifiedFunction>>();
+  readonly dbxActionPopoverIsEqual = input<Maybe<IsEqualFunction>>();
 
   constructor() {
     super();
-    this.valueGetter = () => this._getDataFromPopover();
+    this.configureInputs({
+      isModifiedSignal: this.dbxActionPopoverIsModified,
+      isEqualSignal: this.dbxActionPopoverIsEqual
+    });
+    this.setValueGetterFunction(() => this._getDataFromPopover());
   }
 
   protected _getDataFromPopover(): Observable<Maybe<T>> {
@@ -43,12 +44,9 @@ export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionVal
 
   protected _makePopoverRef(): NgPopoverRef<unknown, Maybe<T>> {
     const origin = this.elementRef;
+    const fn = this.dbxActionPopover();
 
-    if (!this.fn) {
-      throw new Error('popoverAction has no function provided to it yet.');
-    }
-
-    return this.fn({
+    return fn({
       origin
     });
   }

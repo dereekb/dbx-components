@@ -13,12 +13,12 @@ import {
   endAt,
   endBefore,
   makeDocuments,
-  FirestoreQueryFactoryFunction,
-  FirestoreCollectionQueryFactoryFunction,
+  type FirestoreQueryFactoryFunction,
+  type FirestoreCollectionQueryFactoryFunction,
   startAtValue,
   endAtValue,
   whereDocumentId,
-  FirebaseAuthUserId,
+  type FirebaseAuthUserId,
   whereDateIsBetween,
   whereDateIsInRange,
   whereDateIsBeforeWithSort,
@@ -31,13 +31,12 @@ import {
   iterateFirestoreDocumentSnapshots,
   whereDateIsOnOrBeforeWithSort,
   whereDateIsAfterWithSort,
-  FirestoreDocumentSnapshotDataPair,
+  type FirestoreDocumentSnapshotDataPair,
   loadAllFirestoreDocumentSnapshotPairs,
   loadAllFirestoreDocumentSnapshot,
-  orderByDocumentId,
-  filterRepeatCheckpointSnapshots
+  orderByDocumentId
 } from '@dereekb/firebase';
-import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity, MockItemUserKey, MockItemUser } from '../mock';
+import { type MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, type MockItem, type MockItemSubItemDocument, type MockItemSubItem, type MockItemSubItemDeepDocument, type MockItemSubItemDeep, type MockItemUserDocument, mockItemIdentity, type MockItemUserKey } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 import { DateRangeType } from '@dereekb/date';
 
@@ -773,7 +772,9 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
       describe('filter()', () => {
         it('should apply the filter to the query', async () => {
-          const results = (await queryDocument().filter(where<MockItem>('tags', 'array-contains', EVEN_TAG)).getDocSnapshotDataPairs()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>[];
+          const results = (await queryDocument()
+            .filter(where<MockItem>('tags', 'array-contains', EVEN_TAG))
+            .getDocSnapshotDataPairs()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>[];
 
           expect(results).toBeDefined();
 
@@ -790,7 +791,10 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         });
 
         it('should add more filters to the existing query', async () => {
-          const results = (await queryDocument().filter(where<MockItem>('tags', 'array-contains', EVEN_TAG)).filter(where<MockItem>('number', '>=', 4)).getDocSnapshotDataPairs()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>[];
+          const results = (await queryDocument()
+            .filter(where<MockItem>('tags', 'array-contains', EVEN_TAG))
+            .filter(where<MockItem>('number', '>=', 4))
+            .getDocSnapshotDataPairs()) as FirestoreDocumentSnapshotDataPair<MockItemDocument>[];
 
           expect(results).toBeDefined();
           expect(results.length).toBe(1);

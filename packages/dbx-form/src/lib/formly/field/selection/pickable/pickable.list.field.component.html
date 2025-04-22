@@ -1,8 +1,8 @@
 <div class="dbx-pickable-item-field">
   <dbx-loading [context]="context">
-    <ng-container *ngIf="showFilterInput">
+    @if (showFilterInput) {
       <ng-container *ngTemplateOutlet="filterTemplate"></ng-container>
-    </ng-container>
+    }
     <!-- Content -->
     <div class="dbx-pickable-item-field-list">
       <div class="dbx-pickable-item-field-list-content">
@@ -21,6 +21,8 @@
     <mat-divider></mat-divider>
     <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
     <!-- No items found. -->
-    <p *ngIf="noItemsAvailable$ | async" class="dbx-label">No items match this filter.</p>
+    @if (noItemsAvailableSignal()) {
+      <p class="dbx-label">No items match this filter.</p>
+    }
   </div>
 </ng-template>

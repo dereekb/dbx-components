@@ -1,3 +1,4 @@
+export * from './filter.config';
 export * from './filter.module';
 export * from './filter.menu';
 export * from './filter.partial.list.component';

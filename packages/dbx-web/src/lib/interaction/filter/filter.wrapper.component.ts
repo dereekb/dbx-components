@@ -1,6 +1,10 @@
-import { Component, Input, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { AbstractDbxActionHandlerDirective, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
-import { of } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { DbxButtonModule } from '../../button/button.module';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
+import { WorkInstance } from '@dereekb/rxjs';
 
 /**
  * Action component used to simplify creating a filter form.
@@ -10,31 +14,27 @@ import { of } from 'rxjs';
 @Component({
   selector: 'dbx-filter-wrapper',
   templateUrl: './filter.wrapper.component.html',
-  providers: [provideActionStoreSource(null)]
+  providers: [provideActionStoreSource(null)],
+  standalone: true,
+  imports: [DbxButtonModule, MatButtonModule, MatIconModule, FlexLayoutModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHandlerDirective<F> {
   readonly filterSourceDirective = inject(FilterSourceDirective<F>);
 
-  @Input()
-  showButtons = true;
-
-  @Input()
-  applyRaised = true;
-
-  @Input()
-  applyIcon = 'filter_list';
-
-  @Input()
-  applyText = 'Filter';
+  readonly showButtons = input(true);
+  readonly applyRaised = input(true);
+  readonly applyIcon = input('filter_list');
+  readonly applyText = input('Filter');
 
   constructor() {
     super();
 
     // configure handler function
-    this._dbxActionHandlerInstance.handlerFunction = (filter: F) => {
+    this._dbxActionHandlerInstance.setHandlerFunction((filter: F, instance: WorkInstance<F, unknown>) => {
       this.filterSourceDirective.setFilter(filter);
-      return of(true);
-    };
+      instance.success(true);
+    });
   }
 
   applyFilter(): void {

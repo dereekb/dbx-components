@@ -15,8 +15,7 @@ export class DocInteractionTestFilterPartialPresetMenuComponent extends Abstract
 
   readonly partialPresets: ClickablePartialFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_TEST_PARTIAL_PRESETS;
 
-  override ngOnInit(): void {
-    super.ngOnInit();
-    this.initialFilterTakesPriority = true;
+  ngOnInit(): void {
+    this.setInitialFilterTakesPriority(true);
   }
 }

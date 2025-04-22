@@ -11,7 +11,7 @@ import { DbxAnalyticsSegmentApiService } from './segment.service';
   providedIn: 'root'
 })
 export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServiceListener {
-  private _segmentApi = inject(DbxAnalyticsSegmentApiService);
+  private readonly _segmentApi = inject(DbxAnalyticsSegmentApiService);
 
   constructor() {
     super();

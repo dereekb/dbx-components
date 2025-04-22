@@ -1,8 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import {
-  onCallWithNestApplicationFactory,
-  onCallWithNestContextFactory,
   taskQueueFunctionHandlerWithNestContextFactory,
   cloudEventHandlerWithNestContextFactory,
   blockingFunctionHandlerWithNestContextFactory,
@@ -14,17 +12,20 @@ import {
   OnCallDeleteModelFunction,
   OnCallCreateModelFunction,
   OnCallCreateModelMap,
-  onScheduleWithNestApplicationFactory,
-  onScheduleWithNestContextFactory,
   OnScheduleWithNestContext,
   OnCallDevelopmentFunction,
   OnCallDevelopmentFunctionMap,
   OnCallReadModelFunction,
-  OnCallReadModelMap
+  OnCallReadModelMap,
+  onCallHandlerWithNestContextFactory,
+  onCallHandlerWithNestApplicationFactory,
+  onScheduleHandlerWithNestApplicationFactory,
+  onScheduleHandlerWithNestContextFactory
 } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { SECONDS_IN_MINUTE } from '@dereekb/util';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get actionContext(): DemoFirebaseServerActionsContext {
@@ -65,14 +66,24 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 }
 
 export const mapDemoApiNestContext = (nest: INestApplicationContext) => new DemoApiNestContext(nest);
-export const onCallWithDemoNest = onCallWithNestApplicationFactory();
-export const onCallWithDemoNestContext = onCallWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
-export const onScheduleWithDemoNest = onScheduleWithNestApplicationFactory();
-export const onScheduleWithDemoNestContext = onScheduleWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
-export const onEventWithDemoNestContext = onEventWithNestContextFactory(mapDemoApiNestContext);
+export const onCallWithDemoNest = onCallHandlerWithNestApplicationFactory();
+export const onCallWithDemoNestContext = onCallHandlerWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
+
+export const onScheduleWithDemoNest = onScheduleHandlerWithNestApplicationFactory({
+  timeoutSeconds: 10 * SECONDS_IN_MINUTE, // 10 minute timeout default
+  maxInstances: 1 // only one instance allowed for scheduled functions
+});
+export const onScheduleWithDemoNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithDemoNest, mapDemoApiNestContext);
+export const onEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
+
 export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
+
+/**
+ * Required for gen 1 auth events
+ */
+export const onGen1EventWithDemoNestContext = onEventWithNestContextFactory(mapDemoApiNestContext);
 
 // MARK: CRUD Functions
 export type DemoCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<DemoApiNestContext, I, O>;

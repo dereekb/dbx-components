@@ -13,18 +13,16 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_SCHEDULER_ENABLED_TOKEN = new Injectio
 /**
  * Service used for hitting the scheduler in the development environment using the
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
   readonly dbxAuthService = inject(DbxAuthService);
   readonly firebaseDevelopmentFunctions = inject(FirebaseDevelopmentFunctions);
 
-  private _sub = new SubscriptionObject();
-  private _enabled = new BehaviorSubject<boolean>(inject<boolean>(DEFAULT_FIREBASE_DEVELOPMENT_SCHEDULER_ENABLED_TOKEN, { optional: true }) !== false);
+  private readonly _sub = new SubscriptionObject();
+  private readonly _enabled = new BehaviorSubject<boolean>(inject<boolean>(DEFAULT_FIREBASE_DEVELOPMENT_SCHEDULER_ENABLED_TOKEN, { optional: true }) !== false);
 
-  private _timerInterval = new BehaviorSubject<Milliseconds>(60 * 1000);
-  private _error = new BehaviorSubject<boolean>(false);
+  private readonly _timerInterval = new BehaviorSubject<Milliseconds>(60 * 1000);
+  private readonly _error = new BehaviorSubject<boolean>(false);
 
   readonly enabled$ = this._enabled.asObservable();
   readonly running$ = combineLatest([this._enabled, this.dbxAuthService.authUserState$.pipe(map((x) => x === 'user'))]).pipe(
@@ -32,6 +30,7 @@ export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   readonly timerInterval$ = this._timerInterval.asObservable();
   readonly error$ = this._error.pipe(distinctUntilChanged());
 

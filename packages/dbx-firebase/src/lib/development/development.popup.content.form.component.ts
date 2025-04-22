@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective, pickableItemChipField, filterPickableItemFieldValuesByLabel, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { AbstractConfigAsyncFormlyFormDirective, pickableItemChipField, filterPickableItemFieldValuesByLabel, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, dbxFormlyFormComponentProviders, DbxFormlyFormComponentImportsModule } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map, Observable, of } from 'rxjs';
@@ -20,11 +20,12 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
 };
 
 @Component({
-  template: `
-    <dbx-formly></dbx-formly>
-  `,
   selector: 'dbx-firebase-development-popup-content-form',
-  providers: [provideFormlyContext()]
+  template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,
+  imports: [DbxFormlyFormComponentImportsModule],
+  providers: dbxFormlyFormComponentProviders(),
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFirebaseDevelopmentPopupContentFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFirebaseDevelopmentPopupContentFormValue, DbxFirebaseDevelopmentPopupContentFormInput> {
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(

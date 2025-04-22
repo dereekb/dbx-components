@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import {
   DbxActionDirective,
@@ -11,7 +10,7 @@ import {
   DbxActionDisabledDirective,
   DbxActionEnforceModifiedDirective,
   DbxActionAutoTriggerDirective,
-  dbxActionValueStreamDirective,
+  DbxActionValueStreamDirective,
   DbxActionAutoModifyDirective,
   DbxActionValueDirective,
   DbxActionContextLoggerDirective,
@@ -36,7 +35,7 @@ const declarations = [
   DbxActionDisabledOnSuccessDirective,
   DbxActionEnforceModifiedDirective,
   DbxActionAutoTriggerDirective,
-  dbxActionValueStreamDirective,
+  DbxActionValueStreamDirective,
   DbxActionAutoModifyDirective,
   DbxActionValueDirective,
   DbxActionContextLoggerDirective,
@@ -46,9 +45,11 @@ const declarations = [
   DbxActionIsWorkingDirective
 ];
 
+/**
+ * Contains all base DbxAction components.
+ */
 @NgModule({
-  imports: [CommonModule],
-  declarations,
+  imports: declarations,
   exports: declarations
 })
 export class DbxCoreActionModule {}

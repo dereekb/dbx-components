@@ -49,7 +49,10 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
   readonly modifier: ModifierFunction<ModifyBeforeSetFistoreDataAccessorInput<T>>;
   override readonly set: FirestoreDocumentDataAccessorSetFunction<T>;
 
-  constructor(accessor: FirestoreDocumentDataAccessor<T, D>, readonly config: ModifyBeforeSetConfig<T>) {
+  constructor(
+    accessor: FirestoreDocumentDataAccessor<T, D>,
+    readonly config: ModifyBeforeSetConfig<T>
+  ) {
     super(accessor);
     const when = config.when;
     this.modifier = mergeModifiers(asArray(config.modifier));

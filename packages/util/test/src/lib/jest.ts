@@ -1,4 +1,4 @@
-import { PromiseOrValue } from '@dereekb/util';
+import { type PromiseOrValue } from '@dereekb/util';
 
 /**
  * A fixture instance that is generated new for each test run.

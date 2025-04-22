@@ -5,7 +5,11 @@ import { TimezoneString, dateTimezoneUtcNormal } from '@dereekb/date';
 /**
  * Converts the input date and timezone to a system date that represents that date/time.
  */
-@Pipe({ name: 'targetDateToSystemDate', pure: false })
+@Pipe({
+  name: 'targetDateToSystemDate',
+  standalone: true,
+  pure: false
+})
 export class TargetDateToSystemDatePipe implements PipeTransform {
   transform(input: Maybe<Date>, timezone: Maybe<TimezoneString>): Maybe<Date> {
     if (input && timezone) {

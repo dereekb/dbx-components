@@ -1,7 +1,7 @@
 import 'jest-preset-angular/setup-jest';
 
 /**
- * Must be imported here so the Reflect functionality is availble in the Jest instance.
+ * Must be imported here so the Reflect functionality is available in the Jest instance.
  *
  * Typically Angular already imports this functionality. NestJS also will import this functionality on its own.
  */
@@ -26,6 +26,7 @@ import { TextEncoder, TextDecoder } from 'util';
 
 // https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
 var window: any;
+
 beforeAll(() => {
   if (window) {
     // only use in jsdom environment

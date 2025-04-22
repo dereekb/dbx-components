@@ -13,7 +13,7 @@ import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
 import { addDays } from 'date-fns';
-import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from '../../auth';
+import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from '../../auth/auth.service.error';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   a: { roles: [AUTH_ADMIN_ROLE] }
@@ -421,7 +421,7 @@ describe('firebase server nest auth', () => {
 
             describe('throwErrors=true', () => {
               itShouldFail('to send and instead throw a throttle error', async () => {
-                let claims = await authService.userContext(initializedUser.uid).loadClaims();
+                const claims = await authService.userContext(initializedUser.uid).loadClaims();
 
                 const lastCommunicationDate = claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY];
 
@@ -533,7 +533,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
 
               const result = isAdminInRequest(request);
@@ -547,7 +548,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
 
               const result = isAdminOrTargetUserInRequestData(request);
@@ -576,7 +578,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
 
               const result = isAdminInRequest(request);
@@ -592,7 +595,8 @@ describe('firebase server nest auth', () => {
                 nest: context,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any
+                data: {} as any,
+                acceptsStreaming: false
               };
             });
 

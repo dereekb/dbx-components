@@ -1,11 +1,20 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { DbxCalendarStore } from './calendar.store';
 import { map, withLatestFrom } from 'rxjs';
-import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
+import { MatButtonModule } from '@angular/material/button';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { MatIconModule } from '@angular/material/icon';
+import { CalendarModule } from 'angular-calendar';
 
 @Component({
   selector: 'dbx-calendar-base',
+  standalone: true,
+  imports: [MatButtonModule, MatButtonToggleModule, DbxButtonSpacerDirective, MatIconModule, CalendarModule, FlexLayoutModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './calendar.base.component.html'
 })
 export class DbxCalendarBaseComponent<T> {
@@ -34,6 +43,16 @@ export class DbxCalendarBaseComponent<T> {
   );
 
   readonly displayType$ = this.calendarStore.displayType$;
+
+  readonly viewDateSignal = toSignal(this.viewDate$, { initialValue: new Date() });
+  readonly showTodayButtonSignal = toSignal(this.showTodayButton$);
+  readonly canJumpToTodaySignal = toSignal(this.canJumpToToday$);
+  readonly isLookingAtMinimumDateSignal = toSignal(this.isLookingAtMinimumDate$, { initialValue: false });
+  readonly isLookingAtMaximumDateSignal = toSignal(this.isLookingAtMaximumDate$, { initialValue: false });
+  readonly hasMultiplePagesSignal = toSignal(this.hasMultiplePages$, { initialValue: false });
+  readonly showPageButtonsSignal = toSignal(this.showPageButtons$);
+  readonly activeDayIsOpenSignal = toSignal(this.activeDayIsOpen$);
+  readonly displayTypeSignal = toSignal(this.displayType$);
 
   todayClicked(): void {
     this.calendarStore.tapDay(new Date());

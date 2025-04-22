@@ -1,4 +1,3 @@
-import type * as functions from 'firebase-functions';
 import type * as admin from 'firebase-admin';
 import { type FirebaseAuthContextInfo, type FirebaseAuthDetails, type FirebaseAuthUserId, type FirebaseAuthNewUserClaimsData, type FirebaseAuthSetupPassword, type FirebaseAuthResetUserPasswordClaimsData, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY } from '@dereekb/firebase';
 import { type Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, type AuthClaims, type AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, type ArrayOrValue, type AuthRole, forEachKeyValue, type ObjectMap, type AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, type AuthClaimsObject, type Maybe, AUTH_TOS_SIGNED_ROLE, type EmailAddress, type E164PhoneNumber, randomNumberFactory, type PasswordString, isThrottled } from '@dereekb/util';
@@ -8,6 +7,7 @@ import { hoursToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError } from './auth.service.error';
+import { type CallableContext } from 'firebase-functions/lib/common/providers/https';
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000, round: 'floor' }); // 6 digits
 
@@ -718,7 +718,7 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
    *
    * @param context
    */
-  abstract context(context: functions.https.CallableContext): C;
+  abstract context(context: CallableContext): C;
 
   /**
    * Creates a FirebaseServerAuthUserContext instance for the input uid.
@@ -806,7 +806,7 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
     return this._auth;
   }
 
-  context(context: functions.https.CallableContext): C {
+  context(context: CallableContext): C {
     assertIsContextWithAuthData(context);
     return this._context(context);
   }

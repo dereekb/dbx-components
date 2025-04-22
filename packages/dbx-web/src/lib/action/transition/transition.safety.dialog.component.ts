@@ -1,12 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { DbxPromptConfirmConfig, DbxPromptConfirmTypes, AbstractDialogDirective } from '../../interaction';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { AbstractDialogDirective } from '../../interaction/dialog/abstract.dialog.directive';
+import { DbxPromptConfirmConfig, DbxPromptConfirmComponent } from '../../interaction/prompt/prompt.confirm.component';
+import { DbxErrorComponent } from '../../error/error.component';
+import { DbxActionErrorDirective } from '../../error/error.action.directive';
+import { DbxButtonComponent } from '../../button/button.component';
+import { DbxButtonSpacerDirective } from '../../button/button.spacer.directive';
 
-export enum DbxActionTransitionSafetyDialogResult {
-  SUCCESS,
-  STAY,
-  DISCARD,
-  NONE
-}
+export type DbxActionTransitionSafetyDialogResult = 'success' | 'stay' | 'discard' | 'none';
 
 /**
  * Dialog that is shown/triggered as part of the DbxActionTransitionSafety
@@ -20,11 +20,13 @@ export enum DbxActionTransitionSafetyDialogResult {
         <dbx-button-spacer></dbx-button-spacer>
       </ng-container>
     </dbx-prompt-confirm>
-  `
+  `,
+  standalone: true,
+  imports: [DbxPromptConfirmComponent, DbxErrorComponent, DbxActionErrorDirective, DbxButtonComponent, DbxButtonSpacerDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
-  config: DbxPromptConfirmConfig = {
-    type: DbxPromptConfirmTypes.NORMAL,
+  readonly config: DbxPromptConfirmConfig = {
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',
     confirmText: 'Stay',
@@ -32,10 +34,10 @@ export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDi
   };
 
   confirm(): void {
-    this.dialogRef.close(DbxActionTransitionSafetyDialogResult.STAY);
+    this.dialogRef.close('stay');
   }
 
   cancel(): void {
-    this.dialogRef.close(DbxActionTransitionSafetyDialogResult.DISCARD);
+    this.dialogRef.close('discard');
   }
 }

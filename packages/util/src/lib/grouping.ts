@@ -258,7 +258,9 @@ export function separateValues<T>(values: T[], checkInclusion: DecisionFunction<
  */
 export function groupValues<T, R, K extends PrimativeKey & keyof R>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): KeyedGroupingResult<T, R>;
 export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T>;
-export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T> {
+export function groupValues<T, R, K extends PrimativeKey & keyof R>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): KeyedGroupingResult<T, R>;
+export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T>;
+export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T> {
   const map = makeValuesGroupMap<T, K>(values, groupKeyFn);
   return mapToObject(map as Map<PropertyKey, T[]>);
 }
@@ -270,19 +272,23 @@ export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[
  * @param groupKeyFn
  * @returns
  */
-export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]> {
+export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>;
+export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]>;
+export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(values: Maybe<T[]>, groupKeyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T[]> {
   const map = new Map<Maybe<K>, T[]>();
 
-  values.forEach((x) => {
-    const key = groupKeyFn(x);
-    const array = map.get(key);
+  if (values != null) {
+    values.forEach((x) => {
+      const key = groupKeyFn(x);
+      const array = map.get(key);
 
-    if (array != null) {
-      array.push(x);
-    } else {
-      map.set(key, [x]);
-    }
-  });
+      if (array != null) {
+        array.push(x);
+      } else {
+        map.set(key, [x]);
+      }
+    });
+  }
 
   return map;
 }

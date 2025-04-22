@@ -14,30 +14,50 @@
       justify-content: center;
     }
 
+    // icon only
     &.mat-mdc-button.mat-mdc-icon-button {
       // icon button fixes
       min-width: unset;
       --mdc-icon-button-icon-size: unset;
+      --mat-text-button-with-icon-horizontal-padding: 0px;
+      --mdc-icon-button-state-layer-size: 36px;
       border-radius: 50%; // sometimes the css order seems to be different, causing the button to lose its radius
+
+      .mat-mdc-progress-spinner {
+        // fix spinner size. Without this set the spinner will be off-center
+        // Angular Material pulls from this value for setting the spinner size when used in a button
+        --mdc-icon-button-icon-size: 36px;
+      }
+    }
+
+    // fab icon
+    &.mat-mdc-button.mat-mdc-icon-button.dbx-progress-spinner-fab {
+      height: 48px;
+      --mdc-icon-button-state-layer-size: 48px;
+
+      // fix fab icon size
+      .mat-mdc-progress-spinner {
+        --mdc-icon-button-icon-size: 48px;
+      }
     }
 
     &.fullWidth {
       width: 100%;
     }
 
-    .spinner {
+    .mat-mdc-progress-spinner {
       position: absolute;
-      // top: 25%;
       opacity: 0;
       transition: opacity 0.3s ease-in-out;
+
       &.working {
         opacity: 1;
       }
     }
 
-    // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
-    .dbx-spinner-custom.mat-progress-spinner.mat-accent circle,
-    .dbx-spinner-custom.mat-spinner.mat-accent circle {
+    // mat-spinners marked with dbx-progress-spinner-custom should allow the stroke to be inherited.
+    .dbx-progress-spinner-custom.mat-progress-spinner.mat-accent circle,
+    .dbx-progress-spinner-custom.mat-mdc-progress-spinner.mat-accent circle {
       stroke: unset !important;
     }
 
@@ -53,11 +73,18 @@
       padding-right: 5px;
       transition: opacity 0.3s ease-in-out;
 
+      font-size: 1.125rem;
+      height: 1.125rem;
+      width: 1.125rem;
+
+      margin-right: var(--mat-protected-button-icon-spacing, 8px);
+      // margin-left: var(--mat-protected-button-icon-offset, -4px);
+
       &.is-mat-icon {
-        font-size: 18px;
         position: relative;
-        top: 3px;
+        left: 3px;
       }
+
       &.working {
         opacity: 0;
       }

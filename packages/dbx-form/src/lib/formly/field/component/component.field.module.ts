@@ -1,18 +1,16 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormComponentFieldComponent } from './component.field.component';
 
+const importsAndExports = [DbxFormComponentFieldComponent];
+
 @NgModule({
   imports: [
-    CommonModule,
-    DbxInjectionComponentModule,
+    ...importsAndExports,
     FormlyModule.forChild({
       types: [{ name: 'component', component: DbxFormComponentFieldComponent }]
     })
   ],
-  declarations: [DbxFormComponentFieldComponent],
-  exports: [DbxFormComponentFieldComponent]
+  exports: importsAndExports
 })
 export class DbxFormFormlyComponentFieldModule {}

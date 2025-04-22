@@ -10,23 +10,15 @@ import { DbxButtonModule, DbxSectionLayoutModule, DbxBarLayoutModule } from '@de
 import { MatButtonModule } from '@angular/material/button';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
+const importsAndExports = [DbxFormRepeatArrayTypeComponent];
+
 @NgModule({
   imports: [
-    CommonModule,
-    MatFormFieldModule,
-    ReactiveFormsModule,
-    MatDividerModule,
-    MatButtonModule,
-    MatIconModule,
-    DragDropModule,
-    DbxSectionLayoutModule,
-    DbxBarLayoutModule,
-    DbxButtonModule,
+    ...importsAndExports,
     FormlyModule.forChild({
       types: [{ name: 'repeatarray', component: DbxFormRepeatArrayTypeComponent }]
     })
   ],
-  declarations: [DbxFormRepeatArrayTypeComponent],
-  exports: []
+  exports: importsAndExports
 })
 export class DbxFormFormlyArrayFieldModule {}

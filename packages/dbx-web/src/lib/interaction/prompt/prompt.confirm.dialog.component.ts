@@ -1,13 +1,13 @@
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, OnInit } from '@angular/core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
-import { DbxPromptConfirmConfig, DbxPromptConfirmTypes } from './prompt.confirm.component';
+import { DbxPromptConfirmComponent, DbxPromptConfirmConfig } from './prompt.confirm.component';
 import { type Maybe } from '@dereekb/util';
+import { DbxDialogContentDirective } from '../dialog/dialog.content.directive';
 
 export const DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG = {
-  title: 'Confirm?',
-  type: DbxPromptConfirmTypes.NORMAL
+  title: 'Confirm?'
 };
 
 export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
@@ -21,7 +21,10 @@ export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
         <dbx-injection [config]="injectionConfig"></dbx-injection>
       </dbx-prompt-confirm>
     </dbx-dialog-content>
-  `
+  `,
+  standalone: true,
+  imports: [DbxDialogContentDirective, DbxPromptConfirmComponent, DbxInjectionComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boolean, DbxPromptConfirmDialogConfig> implements OnInit {
   get config(): DbxPromptConfirmDialogConfig {

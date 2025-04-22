@@ -1,4 +1,4 @@
-import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -7,7 +7,7 @@ import { GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, guestbookIdentity, 
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
-  describeCloudFunctionTest('notification.scenario', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
+  describeCallableRequestTest('notification.scenario', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       describe('profile', () => {
         demoProfileContext({ f, u }, (p) => {
@@ -50,7 +50,7 @@ demoApiFunctionContextFactory((f) => {
                       key: g.documentKey
                     };
 
-                    await au.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications'));
+                    await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications'));
 
                     const notificationBox = await assertSnapshotData(guestbookNb.document);
 
@@ -68,7 +68,7 @@ demoApiFunctionContextFactory((f) => {
                     };
 
                     await expectFail(
-                      () => au.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications')),
+                      () => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'subscribeToNotifications')),
                       // should throw NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE
                       jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_INVALID_UID_FOR_CREATE_ERROR_CODE)
                     );

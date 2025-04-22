@@ -6,7 +6,8 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * Prints out the current state to the console. Useful for debugging.
  */
 @Directive({
-  selector: '[dbxActionLogger],[dbxActionContextLogger]'
+  selector: '[dbxActionLogger],[dbxActionContextLogger]',
+  standalone: true
 })
 export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });

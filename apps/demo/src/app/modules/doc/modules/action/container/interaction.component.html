@@ -46,14 +46,14 @@
     <h3>Snackbar</h3>
     <doc-feature-example header="dbxActionSnackbar" hint="Used to show a snackbar depending on the state of an action context.">
       <p>There are a number of different built-in premade types available, such as "save", "delete", etc.</p>
-      <dbx-action-example-tools dbxAction dbxActionSnackbar dbxActionSnackbarDefault="save" [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+      <dbx-action-example-tools dbxAction [dbxActionSnackbar] dbxActionSnackbarDefault="save" [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
         <dbx-button dbxActionButton text="Save"></dbx-button>
       </dbx-action-example-tools>
 
       <h4>Undo</h4>
       <p>The snackbar is has the capability to add an additional action to the state. For the pre-made available states, this is the undo function.</p>
       <p>Undo Value: {{ undoValue }}</p>
-      <dbx-action-example-tools dbxAction dbxActionSnackbar dbxActionSnackbarDefault="do" [dbxActionHandler]="handleAction" [dbxActionSnackbarUndo]="getUndoAction" [dbxActionValueStream]="value$">
+      <dbx-action-example-tools dbxAction [dbxActionSnackbar] dbxActionSnackbarDefault="do" [dbxActionHandler]="handleAction" [dbxActionSnackbarUndo]="getUndoAction" [dbxActionValueStream]="value$">
         <dbx-button dbxActionButton text="Do Action With Undo"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>

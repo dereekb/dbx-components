@@ -22,50 +22,113 @@ import { type ArrayOrValue, arrayToObject, type Building, forEachInIterable, isO
 
 /**
  * The camelCase model name/type.
+ *
+ * This represents the entity type in the domain model and is used for type identification.
+ * Model types should follow standard TypeScript naming conventions (typically PascalCase
+ * or camelCase) and represent the singular form of the entity (e.g., 'user', 'blogPost').
+ *
+ * @example 'user', 'blogPost', 'orderItem'
  */
 export type FirestoreModelType = ModelTypeString;
 
 /**
  * An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelType.
  *
- * This is the part of the path that says what the collection is.
+ * This is the part of the path that identifies what the collection is. Collection names are used in
+ * Firestore paths and should follow Firestore naming conventions (lowercase, no spaces).
  *
- * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections with the same name to be returned.
+ * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections
+ * with the same name to be returned regardless of their location in the document hierarchy.
+ *
+ * @example 'users', 'blog_posts', 'order_items'
  */
 export type FirestoreCollectionName = string;
 
+/**
+ * Separator used in Firestore paths to separate collection and document IDs.
+ * This matches Firestore's internal path separator convention.
+ */
 export const FIRESTORE_COLLECTION_NAME_SEPARATOR = '/';
 
 /**
  * Unique identifier for a nested collection type. Is the combination of all FirestoreCollectionNames of all parents.
  *
- * Example: parent/parentb/collectionname
+ * This type represents the full path of a collection in the document hierarchy, making it unique across
+ * the entire Firestore database. It's used for collection group queries and for distinguishing between
+ * collections with the same name but at different hierarchy levels.
+ *
+ * @example 'users', 'users/user_id/posts', 'organizations/org_id/members'
  */
 export type FirestoreCollectionType = ModelTypeString;
 
 /**
- * Reference to a FirestoreCollectionType
+ * Reference to a FirestoreCollectionType.
+ *
+ * This interface provides a way to reference a collection type without necessarily
+ * having a concrete collection instance. It's used in type hierarchies and for
+ * creating collection group queries.
  */
 export interface FirestoreCollectionTypeRef {
+  /**
+   * The unique collection type identifier that represents this collection's position
+   * in the document hierarchy.
+   */
   readonly collectionType: FirestoreCollectionType;
 }
 
+/**
+ * Identifies whether a model is at the root level or nested within another collection.
+ *
+ * - 'root': The model exists in a top-level collection
+ * - 'nested': The model exists in a subcollection of another document
+ */
 export type FirestoreModelIdentityType = 'root' | 'nested';
 
 /**
- * A firestore model's identity
+ * A firestore model's identity.
+ *
+ * This composite type combines information about a model's type, collection name,
+ * and position in the document hierarchy. It provides a complete picture of a model's
+ * identity within the Firestore database structure.
+ *
+ * The identity is used for creating collections, documents, and queries with the
+ * correct types and paths.
+ *
+ * @template M - The model type (e.g., 'user', 'post')
+ * @template C - The collection name (e.g., 'users', 'posts')
  */
 export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> &
   FirestoreCollectionNameRef<C> &
   FirestoreCollectionTypeRef & {
+    /**
+     * Indicates whether this model exists at the root level or is nested within another collection.
+     */
     readonly type: FirestoreModelIdentityType;
   };
 
+/**
+ * Utility type to extract the model type from a FirestoreModelIdentity.
+ *
+ * @template I - The FirestoreModelIdentity to extract from
+ */
 export type FirestoreModelIdentityModelType<I> = I extends FirestoreModelIdentity<infer M> ? M : never;
+
+/**
+ * Utility type to extract the collection name from a FirestoreModelIdentity.
+ *
+ * @template I - The FirestoreModelIdentity to extract from
+ */
 export type FirestoreModelIdentityCollectionName<I> = I extends FirestoreModelIdentity<infer M, infer C> ? C : never;
 
 /**
- * A root-level FirestoreModelIdentity
+ * A root-level FirestoreModelIdentity.
+ *
+ * This represents a model that exists in a top-level collection, not nested within
+ * any other documents. Root collections are directly accessible from the Firestore
+ * database root.
+ *
+ * @template M - The model type (e.g., 'user', 'post')
+ * @template C - The collection name (e.g., 'users', 'posts')
  */
 export type RootFirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelIdentity<M, C> & {
   readonly type: 'root';
@@ -73,17 +136,43 @@ export type RootFirestoreModelIdentity<M extends FirestoreModelType = FirestoreM
 
 /**
  * A nested FirestoreModelIdentity with a parent.
+ *
+ * This represents a model that exists in a subcollection of another document.
+ * The parent property provides access to the parent model's identity, enabling
+ * navigation up the document hierarchy.
+ *
+ * @template P - The parent model's identity type
+ * @template M - The model type (e.g., 'comment', 'attachment')
+ * @template C - The collection name (e.g., 'comments', 'attachments')
  */
 export type FirestoreModelIdentityWithParent<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelIdentity<M, C> & {
   readonly type: 'nested';
+  /**
+   * Reference to the parent model's identity.
+   */
   readonly parent: P;
 };
 
 /**
  * A default collection name derived from the model name.
+ *
+ * This utility type automatically converts a model type to a lowercase collection name,
+ * following the convention that collection names are typically lowercase plurals of
+ * the model name. It's used as a convenience when creating collections without
+ * explicitly specifying a collection name.
+ *
+ * @template M - The model type
+ * @example For model type 'User', this generates 'user'
  */
 export type FirestoreModelDefaultCollectionName<M extends FirestoreModelType> = `${Lowercase<M>}`;
 
+/**
+ * Utility type to extract the model types from a FirestoreModelIdentity.
+ * This is similar to FirestoreModelIdentityModelType but preserves the template parameter
+ * structure for more complex type operations.
+ *
+ * @template I - The FirestoreModelIdentity to extract from
+ */
 export type FirestoreModelTypes<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? M : never;
 
 /**
@@ -685,6 +774,13 @@ export type FirestoreDummyModelKey = typeof FIRESTORE_DUMMY_MODEL_KEY;
 
 /**
  * Returns the FirestoreDummyModelKey value.
+ *
+ * This function provides access to a special sentinel key that can be used
+ * as a placeholder when a valid model key is required but not available.
+ * It's useful in testing scenarios or when initializing structures that
+ * require a key before one is available.
+ *
+ * @returns The dummy model key constant
  */
 export function firestoreDummyKey(): FirestoreDummyModelKey {
   return FIRESTORE_DUMMY_MODEL_KEY;
@@ -738,7 +834,20 @@ export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = Fire
 }
 
 /**
- * Creates a new FirestoreCollection from the input config.
+ * Creates a new FirestoreCollection instance from the provided configuration.
+ *
+ * This factory function initializes a Firestore collection with all the necessary
+ * components for document access, querying, and data conversion. It sets up:
+ *
+ * 1. The collection reference with the proper converter
+ * 2. Document accessor for CRUD operations
+ * 3. Query factory for building typed queries
+ * 4. Iteration utilities for paginated access
+ *
+ * @template T - The data type of documents in the collection
+ * @template D - The FirestoreDocument type that wraps the data
+ * @param config - Configuration for the collection
+ * @returns A fully configured FirestoreCollection instance
  */
 export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(inputConfig: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {
   const config = inputConfig as FirestoreCollectionConfig<T, D> & QueryLikeReferenceRef<T>;

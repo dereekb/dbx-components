@@ -1,6 +1,6 @@
 import { DbxCoreButtonModule } from './button.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild } from '@angular/core';
+import { Component, viewChild, ViewChild } from '@angular/core';
 import { filter } from 'rxjs';
 import { DbxButtonDirective } from './button.directive';
 import { DbxLoadingButtonDirective } from './button.loading.directive';
@@ -21,16 +21,16 @@ describe('DbxLoadingButton', () => {
   beforeEach(async () => {
     fixture = TestBed.createComponent(TestDbxLoadingButtonDirectiveComponent);
     testComponent = fixture.componentInstance;
-    button = testComponent.button as DbxButtonDirective;
+    button = testComponent.buttonDirective();
     fixture.detectChanges();
   });
 
   it('should be created', () => {
-    expect(testComponent.loadingButtonDirective).toBeDefined();
+    expect(testComponent.loadingButtonDirective()).toBeDefined();
   });
 
   it('should be linked to the button', () => {
-    expect((testComponent.loadingButtonDirective as any)._subscriptionObject.hasSubscription).toBe(true);
+    expect((testComponent.loadingButtonDirective() as any)._subscriptionObject.hasSubscription).toBe(true);
   });
 
   it('should set the button to working when loading is true.', (done) => {
@@ -38,7 +38,7 @@ describe('DbxLoadingButton', () => {
 
     testComponent.context.stream$.pipe(filter((x) => Boolean(x.loading))).subscribe((x) => {
       expect(x.loading).toBe(true);
-      expect(button.working).toBe(true);
+      expect(button.workingSignal()).toBe(true);
       done();
     });
   });
@@ -54,9 +54,6 @@ describe('DbxLoadingButton', () => {
 class TestDbxLoadingButtonDirectiveComponent {
   context = new SimpleLoadingContext(false);
 
-  @ViewChild(DbxLoadingButtonDirective, { static: true })
-  loadingButtonDirective?: DbxLoadingButtonDirective;
-
-  @ViewChild(DbxButtonDirective, { static: true })
-  button?: DbxButtonDirective;
+  readonly loadingButtonDirective = viewChild.required<DbxLoadingButtonDirective>(DbxLoadingButtonDirective);
+  readonly buttonDirective = viewChild.required<DbxButtonDirective>(DbxButtonDirective);
 }

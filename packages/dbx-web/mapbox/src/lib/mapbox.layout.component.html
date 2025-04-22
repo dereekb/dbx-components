@@ -1,13 +1,13 @@
-<mat-drawer-container #containerElement class="dbx-mapbox-layout-container" [ngClass]="(drawerClasses$ | async) || ''" [hasBackdrop]="false">
-  <mat-drawer class="dbx-mapbox-layout-drawer" #drawer (openedChange)="onOpened($event)" [opened]="isOpenAndHasContent$ | async" [mode]="(mode$ | async) || 'side'" [position]="(position$ | async) || 'end'">
-    <div class="dbx-mapbox-layout-drawer-content" [ngClass]="(drawerClasses$ | async) || ''">
+<mat-drawer-container #containerElement class="dbx-mapbox-layout-container" [ngClass]="drawerClassesSignal()" [hasBackdrop]="false">
+  <mat-drawer class="dbx-mapbox-layout-drawer" #drawer (openedChange)="drawerOpened($event)" [opened]="isOpenAndHasContentSignal()" [mode]="mode()" [position]="positionSignal()">
+    <div class="dbx-mapbox-layout-drawer-content" [ngClass]="drawerClassesSignal()">
       <ng-content select="[drawer]"></ng-content>
       <dbx-mapbox-layout-drawer></dbx-mapbox-layout-drawer>
     </div>
   </mat-drawer>
-  <mat-drawer-content #content class="dbx-mapbox-layout-content" (resized)="onResized($event)">
-    <button mat-icon-button (click)="toggleDrawer()" class="dbx-mapbox-layout-drawer-button" [dbxColor]="drawerButtonColor$ | async">
-      <mat-icon>{{ buttonIcon$ | async }}</mat-icon>
+  <mat-drawer-content #content class="dbx-mapbox-layout-content" (resized)="viewResized($event)">
+    <button mat-icon-button (click)="toggleDrawer()" class="dbx-mapbox-layout-drawer-button" [dbxColor]="drawerButtonColor()">
+      <mat-icon>{{ buttonIconSignal() }}</mat-icon>
     </button>
     <ng-content></ng-content>
   </mat-drawer-content>

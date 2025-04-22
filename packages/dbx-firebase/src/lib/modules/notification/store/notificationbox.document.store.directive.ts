@@ -5,7 +5,8 @@ import { NotificationBox, NotificationBoxDocument } from '@dereekb/firebase';
 
 @Directive({
   selector: '[dbxFirebaseNotificationBoxDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationBoxDocumentStoreDirective, NotificationBoxDocumentStore)
+  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationBoxDocumentStoreDirective, NotificationBoxDocumentStore),
+  standalone: true
 })
 export class DbxFirebaseNotificationBoxDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<NotificationBox, NotificationBoxDocument, NotificationBoxDocumentStore> {
   constructor(store: NotificationBoxDocumentStore) {

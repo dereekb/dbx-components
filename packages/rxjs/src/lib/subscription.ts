@@ -1,13 +1,13 @@
-import { type Subscription } from 'rxjs';
+import { type Unsubscribable } from 'rxjs';
 import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe } from '@dereekb/util';
 
 /**
- * Destroyable object that wraps a subscription.
+ * Destroyable object that wraps an Unsubscribable.
  */
-export class SubscriptionObject implements Destroyable {
-  private _subscription?: Maybe<Subscription>;
+export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> implements Destroyable {
+  private _subscription?: Maybe<T>;
 
-  constructor(sub?: Maybe<Subscription>) {
+  constructor(sub?: Maybe<T>) {
     if (sub) {
       this.setSub(sub);
     }
@@ -17,13 +17,13 @@ export class SubscriptionObject implements Destroyable {
     return Boolean(this._subscription);
   }
 
-  public set subscription(sub: Maybe<Subscription>) {
+  public set subscription(sub: Maybe<T | void>) {
     this.setSub(sub);
   }
 
-  public setSub(sub: Maybe<Subscription>) {
+  public setSub(sub: Maybe<T | void>) {
     this.unsub();
-    this._subscription = sub;
+    this._subscription = sub as T | undefined;
   }
 
   public unsub() {
@@ -43,10 +43,10 @@ export class SubscriptionObject implements Destroyable {
  *
  * NOTE: In some cases it might be better to use RXJS's merge(...[]) and subscribe to a single item.
  */
-export class MultiSubscriptionObject implements Destroyable {
-  private _subscriptions?: Subscription[];
+export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> implements Destroyable {
+  private _subscriptions?: T[];
 
-  constructor(subs?: ArrayOrValue<Subscription>) {
+  constructor(subs?: ArrayOrValue<T>) {
     if (subs) {
       this.setSubs(subs);
     }
@@ -56,11 +56,11 @@ export class MultiSubscriptionObject implements Destroyable {
     return Boolean(this._subscriptions?.length);
   }
 
-  public set subscriptions(subs: ArrayOrValue<Subscription>) {
+  public set subscriptions(subs: ArrayOrValue<T>) {
     this.setSubs(subs);
   }
 
-  public setSubs(subs: ArrayOrValue<Subscription>) {
+  public setSubs(subs: ArrayOrValue<T>) {
     this.unsub();
     this._subscriptions = convertToArray(subs);
   }

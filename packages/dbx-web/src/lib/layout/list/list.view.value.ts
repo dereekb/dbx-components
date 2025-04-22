@@ -36,6 +36,9 @@ export type DbxValueAsListItem<T> = T & Omit<DbxValueListItem<DbxValueListItem<T
 
 export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxInjectionComponentConfig<V> {
   mapValuesToItemValues?(values: T[]): Observable<I[]>;
+  /**
+   * @see DbxListViewMetaIconComponent.metaConfig()
+   */
   metaConfig?: DbxInjectionComponentConfig<any>;
 }
 

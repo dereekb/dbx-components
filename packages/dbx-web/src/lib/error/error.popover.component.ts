@@ -1,14 +1,16 @@
-import { Component, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
 import { ReadableError } from '@dereekb/util';
 import { AbstractPopoverDirective } from '../interaction/popover/abstract.popover.directive';
 import { DbxPopoverKey } from '../interaction/popover/popover';
 import { DbxPopoverService } from '../interaction/popover/popover.service';
+import { DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective } from '../interaction';
+import { DbxErrorDetailsComponent } from './error.details.component';
 
 export const DEFAULT_ERROR_POPOVER_KEY = 'error';
 
 export interface DbxErrorPopoverConfig {
-  origin: ElementRef;
-  error: ReadableError;
+  readonly origin: ElementRef;
+  readonly error: ReadableError;
 }
 
 @Component({
@@ -19,16 +21,14 @@ export interface DbxErrorPopoverConfig {
         <dbx-error-details [error]="error"></dbx-error-details>
       </dbx-popover-scroll-content>
     </dbx-popover-content>
-  `
+  `,
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxPopoverScrollContentDirective, DbxErrorDetailsComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxErrorPopoverComponent extends AbstractPopoverDirective<void, ReadableError> {
-  get error() {
-    return this.popover.data as ReadableError;
-  }
-
-  get code() {
-    return this.error.code;
-  }
+  readonly error = this.popover.data as ReadableError;
+  readonly code = this.error.code;
 
   static openPopover(popoverService: DbxPopoverService, { origin, error }: DbxErrorPopoverConfig, popoverKey?: DbxPopoverKey) {
     return popoverService.open({

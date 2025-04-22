@@ -13,6 +13,10 @@ export class DocLayoutTwoColumnsComponent {
 
   readonly childAnchors: ClickableAnchorLinkTree[] = [
     {
+      title: 'Parent View',
+      ref: 'doc.layout.two'
+    },
+    {
       title: 'Child View',
       ref: 'doc.layout.two.child'
     }

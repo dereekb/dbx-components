@@ -4,6 +4,7 @@ import { map, shareReplay, startWith, switchMap, BehaviorSubject, of, distinctUn
 import { Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { filterMaybe } from '@dereekb/rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface AbstractFormExpandSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
   expandLabel?: string;
@@ -45,6 +46,9 @@ export class AbstractFormExpandSectionWrapperDirective<T extends object = object
       )
     )
   );
+
+  readonly showSignal = toSignal(this.show$, { initialValue: false });
+  readonly hasValueSignal = toSignal(this.hasValue$, { initialValue: false });
 
   get expandSection(): S {
     return this.props;

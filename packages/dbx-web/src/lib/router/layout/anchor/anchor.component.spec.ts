@@ -1,9 +1,9 @@
-import { DbxWebUIRouterModule } from './../../provider/uirouter/uirouter.router.module';
+import { provideDbxRouterWebUiRouterProviderConfig } from './../../provider/uirouter/uirouter.router.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { AnchorType, ClickableAnchor } from '@dereekb/dbx-core';
+import { ClickableAnchor } from '@dereekb/dbx-core';
 import { DbxRouterAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
@@ -13,9 +13,9 @@ import { delay, filter, first } from 'rxjs';
 describe('AnchorComponent', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [BrowserModule, NoopAnimationsModule, DbxRouterAnchorModule, DbxWebUIRouterModule.forRoot(), UIRouterModule.forRoot()],
+      imports: [BrowserModule, NoopAnimationsModule, DbxRouterAnchorModule, UIRouterModule.forRoot()],
       declarations: [TestViewComponent],
-      providers: [{ provide: APP_BASE_HREF, useValue: '/' }]
+      providers: [provideDbxRouterWebUiRouterProviderConfig(), { provide: APP_BASE_HREF, useValue: '/' }]
     }).compileComponents();
   });
 
@@ -76,7 +76,7 @@ describe('AnchorComponent', () => {
 
     it('should have the click type.', (done) => {
       testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe(AnchorType.CLICKABLE);
+        expect(type).toBe('clickable');
         done();
       });
     });
@@ -84,7 +84,7 @@ describe('AnchorComponent', () => {
     it('should display the click version.', (done) => {
       testComponent.anchorComponent?.type$
         .pipe(
-          filter((x) => x === AnchorType.CLICKABLE),
+          filter((x) => x === 'clickable'),
           delay(0)
         )
         .subscribe(() => {
@@ -98,7 +98,7 @@ describe('AnchorComponent', () => {
     it('should respond to clicks.', (done) => {
       testComponent.anchorComponent?.type$
         .pipe(
-          filter((x) => x === AnchorType.CLICKABLE),
+          filter((x) => x === 'clickable'),
           delay(0)
         )
         .subscribe(() => {
@@ -127,7 +127,7 @@ describe('AnchorComponent', () => {
 
     it('should have the sref type.', (done) => {
       testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe(AnchorType.SREF);
+        expect(type).toBe('sref');
         done();
       });
     });
@@ -135,7 +135,7 @@ describe('AnchorComponent', () => {
     it('should display the sref version.', (done) => {
       testComponent.anchorComponent?.type$
         .pipe(
-          filter((x) => x === AnchorType.SREF),
+          filter((x) => x === 'sref'),
           delay(0)
         )
         .subscribe(() => {
@@ -160,7 +160,7 @@ describe('AnchorComponent', () => {
 
     it('should have the href type.', (done) => {
       testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe(AnchorType.HREF);
+        expect(type).toBe('href');
         done();
       });
     });
@@ -168,7 +168,7 @@ describe('AnchorComponent', () => {
     it('should display the href version.', (done) => {
       testComponent.anchorComponent?.type$
         .pipe(
-          filter((x) => x === AnchorType.HREF),
+          filter((x) => x === 'href'),
           delay(0)
         )
         .subscribe(() => {

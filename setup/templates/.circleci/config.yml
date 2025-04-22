@@ -5,10 +5,12 @@ defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
   docker:
-    - image: cimg/node:18.19
+    - image: cimg/node:22.14
+    
 orbs:
-  nx: nrwl/nx@1.6.2
-  node: circleci/node@5.1.1
+  nx: nrwl/nx@1.7.0
+  node: circleci/node@7.1.0
+
 jobs:
   build:
     <<: *defaults
@@ -98,7 +100,7 @@ jobs:
   # Deploys rules and configured projects to Firebase.
   # COMPLETE CIRCLECI SETUP AND PROVIDE "FIREBASE_SECRETS_BASE64" ENVIRONMENT VARIABLE
   deploy-to-firebase:
-    <<: *defaults          
+    <<: *defaults
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
@@ -107,7 +109,7 @@ jobs:
           at: ~/code
       - run:
           name: decode firebase secrets
-          command: echo $FIREBASE_SECRETS_BASE64 | base64 -d > ~/code/firebase-secrets.json 
+          command: echo $FIREBASE_SECRETS_BASE64 | base64 -d > ~/code/firebase-secrets.json
       - run:
           name: deploy updated projects
           command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects

@@ -1,12 +1,12 @@
 import { GuestbookEntry, guestbookEntryIdentity, InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { onCallUpdateModelParams } from '@dereekb/firebase';
 import { demoCallModel } from '../model/crud.functions';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCloudFunctionTest('insertGuestbookEntry', { f, fn: demoCallModel }, (callGuestbookEntryCloudFn) => {
+  describeCallableRequestTest('insertGuestbookEntry', { f, fn: demoCallModel }, (callGuestbookEntryWrappedFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       demoGuestbookContext({ f, published: true }, (g) => {
         describe('guestbook is active', () => {
@@ -27,7 +27,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callCloudFunction(callGuestbookEntryCloudFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
+            await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);
@@ -85,7 +85,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   published: true
                 };
 
-                await u.callCloudFunction(callGuestbookEntryCloudFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
+                await u.callWrappedFunction(callGuestbookEntryWrappedFn, onCallUpdateModelParams(guestbookEntryIdentity, params));
 
                 exists = await userGuestbookEntry.accessor.exists();
                 expect(exists).toBe(true);

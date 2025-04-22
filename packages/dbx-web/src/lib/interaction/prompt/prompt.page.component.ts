@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { DbxContentContainerDirective } from '../../layout/content/content.container.directive';
 
 @Component({
   selector: 'dbx-prompt-page',
@@ -11,6 +12,9 @@ import { Component } from '@angular/core';
   `,
   host: {
     class: 'd-block dbx-prompt-page'
-  }
+  },
+  imports: [DbxContentContainerDirective],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPromptPageComponent {}

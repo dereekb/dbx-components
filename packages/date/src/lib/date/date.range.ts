@@ -625,7 +625,7 @@ export function isDateRangeInDateRangeFunction<T extends Partial<DateRange> = Da
 /**
  * Returns true if the input DateRange overlaps the configured DateRange in any way.
  */
-export type DateRangeOverlapsDateRangeFunction<T extends DateRange = DateRange> = ((dateRange: DateRange) => boolean) & DateRangeFunctionDateRangeRef<T>;
+export type DateRangeOverlapsDateRangeFunction<T extends DateRange = DateRange> = ((dateRange: DateRangeStart & Partial<DateRange>) => boolean) & DateRangeFunctionDateRangeRef<T>;
 
 export function dateRangeOverlapsDateRange(compareDateRange: DateRange, dateRange: DateRange): boolean {
   return dateRangeOverlapsDateRangeFunction(dateRange)(compareDateRange);
@@ -641,8 +641,10 @@ export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRan
   const startTime = dateRange.start.getTime();
   const endTime = dateRange.end.getTime();
 
-  const fn = ((input: DateRange) => {
-    return input.start.getTime() <= endTime && input.end.getTime() >= startTime;
+  const fn = ((input: DateRangeStart & Partial<DateRange>) => {
+    const start = input.start;
+    const end = (input as DateRange).end ?? input.start;
+    return start.getTime() <= endTime && end.getTime() >= startTime;
   }) as Building<DateRangeOverlapsDateRangeFunction<T>>;
 
   fn._dateRange = dateRange;

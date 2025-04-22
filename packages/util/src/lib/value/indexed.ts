@@ -349,11 +349,11 @@ export interface IndexRange {
   /**
    * Minimum index to consider. Inclusive.
    */
-  minIndex: IndexNumber;
+  readonly minIndex: IndexNumber;
   /**
    * Maximum index allowed. Typically exclusive.
    */
-  maxIndex: IndexNumber;
+  readonly maxIndex: IndexNumber;
 }
 
 /**
@@ -386,8 +386,8 @@ export function sortByIndexRangeAscendingCompareFunction<T>(readIndexRange: Read
  * IndexRange and value pair.
  */
 export interface IndexRangeReaderPair<T = unknown> {
-  range: IndexRange;
-  value: T;
+  readonly range: IndexRange;
+  readonly value: T;
 }
 
 /**
@@ -479,11 +479,11 @@ export interface IndexRangeFunctionConfig {
   /**
    * IndexRange to check.
    */
-  indexRange: IndexRange;
+  readonly indexRange: IndexRange;
   /**
    * Whether or not the max index is inclusive. False by default.
    */
-  inclusiveMaxIndex: boolean;
+  readonly inclusiveMaxIndex: boolean;
 }
 
 function indexRangeCheckFunctionConfigToIndexRange({ indexRange, inclusiveMaxIndex }: IndexRangeFunctionConfig): IndexRange {

@@ -1,4 +1,3 @@
-import { Maybe } from '@dereekb/util';
 import { BaseError } from 'make-error';
 
 /**

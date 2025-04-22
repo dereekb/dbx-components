@@ -1,37 +1,39 @@
-import { Component, Input, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, signal, computed, Signal } from '@angular/core';
 import { CalendarMonthViewDay } from 'angular-calendar';
-import { first } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionCellContent, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
+import { MatIconModule } from '@angular/material/icon';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { map, shareReplay, switchMap } from 'rxjs';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-cell',
   template: `
-    <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
-    <span>{{ text }}</span>
+    @if (iconSignal()) {
+      <mat-icon>{{ iconSignal() }}</mat-icon>
+    }
+    <span>{{ textSignal() }}</span>
   `,
   host: {
     class: 'dbx-schedule-selection-calendar-cell'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxScheduleSelectionCalendarCellComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
-  content: CalendarScheduleSelectionCellContent = {};
+  readonly day = input.required<CalendarMonthViewDay<CalendarScheduleSelectionMetadata>>();
+  readonly day$ = toObservable(this.day);
 
-  get icon() {
-    return this.content.icon;
-  }
+  readonly cellContent$ = this.dbxCalendarScheduleSelectionStore.cellContentFactory$.pipe(
+    switchMap((fn) => this.day$.pipe(map((x) => fn(x)))),
+    shareReplay(1)
+  );
 
-  get text() {
-    return this.content.text;
-  }
+  readonly contentSignal: Signal<CalendarScheduleSelectionCellContent> = toSignal(this.cellContent$, { initialValue: {} });
 
-  @Input()
-  set day(day: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>) {
-    this.dbxCalendarScheduleSelectionStore.cellContentFactory$.pipe(first()).subscribe((fn) => {
-      this.content = fn(day);
-    });
-  }
+  readonly iconSignal = computed(() => this.contentSignal().icon);
+  readonly textSignal = computed(() => this.contentSignal().text);
 }

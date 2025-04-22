@@ -23,9 +23,7 @@ type SegmentAnalyticsInvoked = SegmentAnalytics.AnalyticsJS & { invoked?: boolea
  *
  * This requires some setup in index.html.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedService<SegmentAnalytics.AnalyticsJS> {
   private readonly _config = inject(DbxAnalyticsSegmentApiServiceConfig);
 

@@ -1,24 +1,24 @@
-import { Maybe, bitwiseObjectDencoder, modelFieldConversions } from '@dereekb/util';
+import { type Maybe, bitwiseObjectDencoder, modelFieldConversions } from '@dereekb/util';
 import {
-  CollectionReference,
-  FirestoreCollection,
-  FirestoreContext,
+  type CollectionReference,
+  type FirestoreCollection,
+  type FirestoreContext,
   AbstractFirestoreDocument,
-  SingleItemFirestoreCollection,
-  FirestoreCollectionWithParent,
+  type SingleItemFirestoreCollection,
+  type FirestoreCollectionWithParent,
   AbstractFirestoreDocumentWithParent,
   firestoreBoolean,
-  ExpectedFirestoreModelData,
+  type ExpectedFirestoreModelData,
   optionalFirestoreString,
   firestoreDate,
   optionalFirestoreNumber,
   snapshotConverterFunctions,
-  FirestoreModelData,
-  CollectionGroup,
-  FirestoreCollectionGroup,
+  type FirestoreModelData,
+  type CollectionGroup,
+  type FirestoreCollectionGroup,
   firestoreModelIdentity,
-  UserRelated,
-  UserRelatedById,
+  type UserRelated,
+  type UserRelatedById,
   firestoreString,
   copyUserRelatedDataAccessorFactoryFunction,
   firestoreUID,
@@ -26,13 +26,13 @@ import {
   optionalFirestoreArray,
   optionalFirestoreDate,
   firestoreSubObject,
-  SystemStateStoredData,
-  SystemStateStoredDataConverterMap,
-  SystemStateStoredDataFieldConverterConfig,
+  type SystemStateStoredData,
+  type SystemStateStoredDataConverterMap,
+  type SystemStateStoredDataFieldConverterConfig,
   firestoreBitwiseObjectMap,
   firestoreNumber
 } from '@dereekb/firebase';
-import { GrantedReadRole } from '@dereekb/model';
+import { type GrantedReadRole } from '@dereekb/model';
 
 // MARK: Collection
 export type MockItemTypes = typeof mockItemIdentity | typeof mockItemPrivateIdentity | typeof mockItemUserIdentity | typeof mockItemSubItemIdentity | typeof mockItemSubItemDeepIdentity;

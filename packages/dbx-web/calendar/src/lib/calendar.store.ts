@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { clampDateToDateRange, DateRange, isDateInDateRange, isFullDateRange, isSameDateDay, isSameDateRange } from '@dereekb/date';
+import { clampDateToDateRange, DateRange, dateRangeOverlapsDateRangeFunction, isDateInDateRange, isDateInDateRangeFunction, isFullDateRange, isSameDateDay, isSameDateRange } from '@dereekb/date';
 import { invertDecision, Maybe, reduceBooleansWithAndFn } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { CalendarEvent } from 'angular-calendar';
 import { differenceInDays, addDays, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek, isBefore, isAfter } from 'date-fns';
-import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest } from 'rxjs';
+import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, share } from 'rxjs';
 
 export enum CalendarDisplayType {
   MONTH = 'month',
@@ -13,18 +13,22 @@ export enum CalendarDisplayType {
 }
 
 export interface CalendarViewDateRange {
-  type: CalendarDisplayType;
-  start: Date;
-  end: Date;
-  distance: number;
+  readonly type: CalendarDisplayType;
+  readonly start: Date;
+  readonly end: Date;
+  readonly distance: number;
   /**
    * Whether or not the min navigation date is currently visible. This implies that we're at the minimum date.
    */
-  isMinDateVisible: boolean;
+  readonly isMinDateVisible: boolean;
   /**
    * Whether or not the maximum navigation date is visible. This implies that we're at the maximum date.
    */
-  isMaxDateVisible: boolean;
+  readonly isMaxDateVisible: boolean;
+}
+
+export function isCalendarViewDateRangeEqual(a: CalendarViewDateRange, b: CalendarViewDateRange): boolean {
+  return a.type === b.type && isSameDay(a.start, b.start) && isSameDay(a.end, b.end) && a.distance === b.distance && a.isMinDateVisible === b.isMinDateVisible && a.isMaxDateVisible === b.isMaxDateVisible;
 }
 
 export interface CalendarState<T = any> {
@@ -60,6 +64,7 @@ export interface CalendarState<T = any> {
 
 export function visibleDateRangeForCalendarState(calendarState: CalendarState): CalendarViewDateRange {
   const { navigationRangeLimit, type, date } = calendarState;
+
   let start: Date;
   let end: Date;
   let distance: number;
@@ -88,7 +93,7 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
   // TODO: Consider changing min/max date visible logical utility to be fully within the current month or not,
   // not just visible, since it can change to a locked out calendar and doesn't feel as UI friendly.
 
-  return {
+  const result = {
     type,
     start,
     end,
@@ -96,6 +101,8 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
     isMinDateVisible,
     isMaxDateVisible
   };
+
+  return result;
 }
 
 const distinctUntilDateOrTypeOrEventsChanged = distinctUntilChanged<CalendarState>((a, b) => a?.date === b?.date && a?.type === b?.type && a?.events === b?.events);
@@ -184,14 +191,15 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   readonly date$ = this.state$.pipe(map((x) => x.date));
   readonly dateTappedTwice$ = this.state$.pipe(map((x) => x.dateTappedTwice));
 
-  readonly events$ = this.state$.pipe(map((x) => x.events));
-
-  // TODO: Filter to be events that will only be displayed based on the current calendar.
-  readonly visibleEvents$ = this.state$.pipe(
+  readonly events$ = this.state$.pipe(
     map((x) => x.events),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
+  /**
+   * Returns the events that match the tapped date range state.
+   */
   readonly eventsForDateState$ = this.state$.pipe(
     distinctUntilDateOrTypeOrEventsChanged,
     map((state) => ({
@@ -204,16 +212,12 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
 
   readonly eventsForDate$ = this.eventsForDateState$.pipe(map((state) => state.events));
 
-  readonly visibleDateRange$: Observable<CalendarViewDateRange> = this.state$.pipe(
-    // If the date or type changes, check again.
-    distinctUntilChanged((a, b) => a?.date === b?.date && a?.type === b?.type),
-    map(visibleDateRangeForCalendarState),
-    distinctUntilChanged((a, b) => {
-      if (a.type === b.type) {
-        return isSameDay(a.start, b.start);
-      } else {
-        return false; // Type changed, date range changed.
-      }
+  readonly visibleDateRange$: Observable<CalendarViewDateRange> = this.state$.pipe(map(visibleDateRangeForCalendarState), distinctUntilChanged(isCalendarViewDateRangeEqual), shareReplay(1));
+
+  readonly visibleEvents$ = combineLatest([this.events$, this.visibleDateRange$]).pipe(
+    map(([events, dateRange]) => {
+      const isEventInDateRange = dateRangeOverlapsDateRangeFunction(dateRange);
+      return events.filter((x) => isEventInDateRange(x));
     }),
     shareReplay(1)
   );

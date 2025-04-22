@@ -19,7 +19,7 @@ import { DbxTableDateModule, DbxTableModule } from '@dereekb/dbx-web/table';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
-import { DbxCalendarRootModule } from '@dereekb/dbx-web/calendar';
+import { DbxCalendarModule } from '@dereekb/dbx-web/calendar';
 import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
 import { DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
@@ -30,11 +30,12 @@ import { DocExtensionTableItemHeaderExampleComponent } from './component/table.i
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './component/example.calendar.schedule.selection.popover.button.component';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './component/example.calendar.schedule.selection.popover.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
+import { DemoRootSharedModule } from '@dereekb/demo-components';
 
 @NgModule({
   imports: [
     DocSharedModule,
-    DbxCalendarRootModule,
+    DbxCalendarModule,
     DbxFormCalendarModule,
     DocFormComponentsModule,
     DbxFormDateScheduleRangeFieldModule,
@@ -45,6 +46,7 @@ import { DocExtensionStructureComponent } from './container/structure.component'
     DbxDownloadTextModule,
     DbxTableModule,
     DbxTableDateModule,
+    DemoRootSharedModule,
     UIRouterModule.forChild({
       states: STATES
     })

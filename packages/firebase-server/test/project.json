@@ -27,16 +27,12 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/firebase-server/test", "{projectRoot}/.reports/jest/firebase-server-test.junit.xml"],
       "options": {
-        "jestConfig": "packages/firebase-server/test/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/firebase-server/test/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/firebase-server/test/**/*.ts", "packages/firebase-server/test/package.json", "packages/firebase-server/test/project.json"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     }
   }
 }

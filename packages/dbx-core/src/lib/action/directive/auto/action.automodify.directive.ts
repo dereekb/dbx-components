@@ -1,43 +1,35 @@
-import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { distinctUntilChanged, filter, combineLatest, BehaviorSubject } from 'rxjs';
+import { distinctUntilChanged, filter, switchMap, Observable, EMPTY } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { type Maybe } from '@dereekb/util';
+import { isNotFalse } from '@dereekb/util';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Directive({
-  selector: '[dbxActionAutoModify]'
+  selector: 'dbxActionAutoModify, [dbxActionAutoModify]',
+  standalone: true
 })
 export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
+  readonly autoModifyEnabled = input<boolean, string | boolean>(true, { alias: 'dbxActionAutoModify', transform: isNotFalse });
+  readonly markAsModified$: Observable<void> = toObservable(this.autoModifyEnabled).pipe(
+    distinctUntilChanged(),
+    switchMap((x) => {
+      let obs: Observable<any>;
 
-  private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
+      if (x) {
+        obs = this.source.isModified$.pipe(filter((x) => !x));
+      } else {
+        obs = EMPTY;
+      }
 
-  @Input('dbxActionAutoModify')
-  get autoModifyEnabled(): boolean {
-    return this._autoModifyEnabled.value;
-  }
-
-  set autoModifyEnabled(autoModifyEnabled: Maybe<boolean | ''>) {
-    this._autoModifyEnabled.next(autoModifyEnabled !== false);
-  }
+      return obs;
+    })
+  );
 
   ngOnInit(): void {
-    const obs = combineLatest([
-      this._autoModifyEnabled.pipe(distinctUntilChanged()), // Don't change unless specified otherwise.
-      this.source.isModified$.pipe(filter((x) => !x)) // Only when not modified send a value.
-    ]);
-
-    this.sub = obs.subscribe(([autoModifyEnabled, isModified]) => {
-      if (autoModifyEnabled && !isModified) {
-        this.source.setIsModified(true);
-      }
-    });
-  }
-
-  override ngOnDestroy(): void {
-    this.source.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
-      this._autoModifyEnabled.complete();
+    this.sub = this.markAsModified$.subscribe(() => {
+      this.source.setIsModified(true);
     });
   }
 }

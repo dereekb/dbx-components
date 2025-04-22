@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 import { delay } from 'rxjs';
 
@@ -8,7 +8,9 @@ import { delay } from 'rxjs';
 @Component({
   template: `
     <ng-container #fieldComponent></ng-container>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class AutoTouchFieldWrapperComponent extends FieldWrapper<FieldTypeConfig> implements OnInit {
   ngOnInit(): void {

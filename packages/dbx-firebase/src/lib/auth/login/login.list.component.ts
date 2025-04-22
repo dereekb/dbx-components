@@ -1,9 +1,10 @@
-import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
 import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginMode, FirebaseLoginMethodType, FirebaseLoginMethodCategory } from './login';
-import { Component, Input, OnDestroy, inject } from '@angular/core';
+import { Component, Type, computed, inject, input } from '@angular/core';
 import { containsStringAnyCase, Maybe, ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+
+export type DbxFirebaseLoginListItemInjectionComponentConfig = DbxInjectionComponentConfig & Pick<DbxFirebaseAuthLoginProvider, 'loginMethodType'>;
 
 /**
  * Pre-configured login component that displays all configured login types.
@@ -11,76 +12,59 @@ import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-firebase-login-list',
   template: `
-    <div class="dbx-firebase-login-item" *ngFor="let config of providerInjectionConfigs$ | async">
-      <dbx-injection [config]="config"></dbx-injection>
-    </div>
+    @for (config of providersInjectionConfigsSignal(); track config.loginMethodType) {
+      <div class="dbx-firebase-login-item">
+        <dbx-injection [config]="config"></dbx-injection>
+      </div>
+    }
   `,
   host: {
     class: 'dbx-firebase-login-list'
-  }
+  },
+  standalone: true,
+  imports: [DbxInjectionComponent]
 })
-export class DbxFirebaseLoginListComponent implements OnDestroy {
+export class DbxFirebaseLoginListComponent {
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
 
-  private _loginMode = new BehaviorSubject<DbxFirebaseLoginMode>('login');
-  private _inputProviderCategories = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>(undefined);
-  private _omitProviderTypes = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>(undefined);
-  private _inputProviderTypes = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>(undefined);
+  readonly loginMode = input<DbxFirebaseLoginMode>('login');
+  readonly providerTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
+  readonly omitProviderTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
+  readonly providerCategories = input<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>();
 
-  readonly providerTypes$: Observable<string[]> = combineLatest([this._inputProviderTypes, this._omitProviderTypes]).pipe(
-    map(([providerTypes, omitProviderTypes]) => {
-      const baseTypes = providerTypes ? asArray(providerTypes) : this.dbxFirebaseAuthLoginService.getEnabledTypes();
-      const types = omitProviderTypes ? excludeValuesFromArray(baseTypes, asArray(omitProviderTypes)) : baseTypes;
-      return types;
-    }),
-    shareReplay(1)
-  );
+  readonly providerTypesSignal = computed(() => {
+    const providerTypes = this.providerTypes();
+    const omitProviderTypes = this.omitProviderTypes();
 
-  readonly providers$ = combineLatest([this.providerTypes$, this._inputProviderCategories]).pipe(
-    map(([x, inputProviderCategories]) => {
-      const providerCategories = asArray(inputProviderCategories);
-      let providers = this.dbxFirebaseAuthLoginService.getLoginProviders(x);
+    const baseTypes = providerTypes ? asArray(providerTypes) : this.dbxFirebaseAuthLoginService.getEnabledTypes();
+    const types = omitProviderTypes ? excludeValuesFromArray(baseTypes, asArray(omitProviderTypes)) : baseTypes;
+    return types;
+  });
 
-      if (providerCategories.length) {
-        const categories = new Set(providerCategories);
-        providers = providers.filter((x) => containsStringAnyCase(categories, x.category ?? ''));
-      }
+  readonly providersSignal = computed(() => {
+    const providerCategories = asArray(this.providerCategories());
+    let providers = this.dbxFirebaseAuthLoginService.getLoginProviders(this.providerTypesSignal());
 
-      return providers;
-    })
-  );
+    if (providerCategories.length) {
+      const categories = new Set(providerCategories);
+      providers = providers.filter((x) => containsStringAnyCase(categories, x.category ?? ''));
+    }
 
-  readonly providerInjectionConfigs$: Observable<DbxInjectionComponentConfig[]> = combineLatest([this._loginMode, this.providers$]).pipe(
-    map(([mode, providers]: [DbxFirebaseLoginMode, DbxFirebaseAuthLoginProvider[]]) => {
-      const mapFn = mode === 'register' ? (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.registrationComponentClass ?? x.componentClass } as DbxInjectionComponentConfig) : (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass } as DbxInjectionComponentConfig);
-      return providers.map(mapFn);
-    })
-  );
+    return providers;
+  });
 
-  ngOnDestroy(): void {
-    this._loginMode.complete();
-    this._inputProviderCategories.complete();
-    this._omitProviderTypes.complete();
-    this._inputProviderTypes.complete();
-  }
+  readonly providersInjectionConfigsSignal = computed<DbxFirebaseLoginListItemInjectionComponentConfig[]>(() => {
+    let providers = this.providersSignal();
+    let mapFn: (x: DbxFirebaseAuthLoginProvider) => DbxFirebaseLoginListItemInjectionComponentConfig;
 
-  @Input()
-  set loginMode(loginMode: DbxFirebaseLoginMode) {
-    this._loginMode.next(loginMode);
-  }
+    if (this.loginMode() === 'register') {
+      providers = providers.filter((x) => x.registrationComponentClass !== false); // providers with "registrationComponentClass" set to false are not available for registration
+      mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType });
+    } else {
+      mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass as Type<unknown>, loginMethodType: x.loginMethodType });
+    }
 
-  @Input()
-  set providerTypes(providerTypes: Maybe<ArrayOrValue<FirebaseLoginMethodType>>) {
-    this._inputProviderTypes.next(providerTypes);
-  }
-
-  @Input()
-  set omitProviderTypes(providerTypes: Maybe<ArrayOrValue<FirebaseLoginMethodType>>) {
-    this._omitProviderTypes.next(providerTypes);
-  }
-
-  @Input()
-  set providerCategories(providerCategories: Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>) {
-    this._inputProviderCategories.next(providerCategories);
-  }
+    const configs = providers.map(mapFn);
+    return configs;
+  });
 }

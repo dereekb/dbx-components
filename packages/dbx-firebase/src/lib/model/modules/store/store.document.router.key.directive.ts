@@ -1,4 +1,4 @@
-import { Directive, Input, inject } from '@angular/core';
+import { Directive, Input, inject, OnInit } from '@angular/core';
 import { DbxRouteModelKeyDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
@@ -12,7 +12,7 @@ import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '
 @Directive({
   selector: '[dbxFirebaseDocumentStoreRouteKey]'
 })
-export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends DbxRouteModelKeyDirective {
+export class DbxFirebaseDocumentStoreRouteKeyDirective<T = unknown> extends DbxRouteModelKeyDirective implements OnInit {
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective<T>, { host: true });
 
   override ngOnInit(): void {

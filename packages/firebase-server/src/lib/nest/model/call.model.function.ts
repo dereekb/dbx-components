@@ -1,6 +1,6 @@
 import { serverError } from '@dereekb/util';
 import { type OnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
-import { badRequestError } from '../../function';
+import { badRequestError } from '../../function/error';
 import { type OnCallWithAuthorizedNestContext } from '../function/call';
 import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 

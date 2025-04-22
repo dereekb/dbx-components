@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -8,10 +8,10 @@ import { type Maybe } from '@dereekb/util';
   selector: 'dbx-content-pit, [dbxContentPit]',
   host: {
     class: 'd-block dbx-content-pit',
-    '[class.dbx-content-pit-scrollable]': 'scrollable'
-  }
+    '[class.dbx-content-pit-scrollable]': 'scrollable()'
+  },
+  standalone: true
 })
 export class DbxContentPitDirective {
-  @Input()
-  scrollable?: Maybe<boolean>;
+  readonly scrollable = input<Maybe<boolean>>();
 }

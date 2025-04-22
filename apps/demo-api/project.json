@@ -17,6 +17,8 @@
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
+        "excludeLibsInPackageJson": true,
+        "webpackConfig": "apps/demo-api/webpack.config.js",
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
         "tsConfig": "apps/demo-api/tsconfig.app.json",
@@ -67,11 +69,8 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/demo-api/**/*.ts"]
-      }
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -83,8 +82,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/demo-api", "{projectRoot}/.reports/jest/demo-api.junit.xml"],
       "options": {
-        "jestConfig": "apps/demo-api/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "apps/demo-api/jest.config.ts"
       }
     },
     "watch": {

@@ -1,5 +1,6 @@
-import { ElementRef, Component, ViewChild, Input } from '@angular/core';
-import { ResizedEvent } from 'angular-resize-event';
+import { NgStyle } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 
 /**
  * Wrapper of a block that is broken into two parts, with the bottom content's height
@@ -11,8 +12,8 @@ import { ResizedEvent } from 'angular-resize-event';
 @Component({
   selector: 'dbx-two-block',
   template: `
-    <div #two class="dbx-two-block-content">
-      <div #top class="dbx-two-block-top" (resized)="onResized($event)">
+    <div #two class="dbx-two-block-content" [ngStyle]="{ '--dbx-two-block-top-height': topHeightPixelsSignal() }">
+      <div #top class="dbx-two-block-top" (resized)="viewResized($event)">
         <ng-content select="[top]"></ng-content>
       </div>
       <div #bottom class="dbx-two-block-bottom">
@@ -22,30 +23,23 @@ import { ResizedEvent } from 'angular-resize-event';
   `,
   host: {
     class: 'dbx-two-block d-block',
-    '[class]': '{ "dbx-two-block-fixed-top": fixedTop }'
-  }
+    '[class]': '{ "dbx-two-block-fixed-top": fixedTop() }'
+  },
+  imports: [AngularResizeEventModule, NgStyle],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxTwoBlocksComponent {
+export class DbxTwoBlockComponent {
   /**
    * Whether or not the top bar should be fixed in place instead of scrolling with the bottom when content is too tall.
    */
-  @Input()
-  fixedTop = true;
+  readonly fixedTop = input<boolean>(true);
 
-  @ViewChild('two', { read: ElementRef, static: true })
-  twoElement!: ElementRef;
+  readonly topHeightSignal = signal<number>(0);
+  readonly topHeightPixelsSignal = computed(() => `${this.topHeightSignal()}px`);
 
-  /*
-  @ViewChild('top', { read: ElementRef, static: true })
-  topElement!: ElementRef;
-
-  @ViewChild('bottom', { read: ElementRef, static: true })
-  bottomElement!: ElementRef;
-  */
-
-  onResized(event: ResizedEvent): void {
+  viewResized(event: ResizedEvent): void {
     const height = event.newRect.height;
-    const element: HTMLElement = this.twoElement.nativeElement;
-    element.style.setProperty('--dbx-two-block-top-height', `${height}px`);
+    this.topHeightSignal.set(height);
   }
 }

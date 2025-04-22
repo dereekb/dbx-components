@@ -1,5 +1,5 @@
 import { cachedGetter } from '@dereekb/util';
-import { FirebaseStorageAccessorDriver, FirebaseStorageContext, FirebaseStorageDrivers } from '@dereekb/firebase';
+import { type FirebaseStorageAccessorDriver, type FirebaseStorageContext, type FirebaseStorageDrivers } from '@dereekb/firebase';
 
 let bucketTestNameKey = 0;
 

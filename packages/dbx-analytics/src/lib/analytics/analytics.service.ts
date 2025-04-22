@@ -60,10 +60,10 @@ export abstract class AbstractDbxAnalyticsServiceListener implements DbxAnalytic
 }
 
 export abstract class DbxAnalyticsServiceConfiguration {
-  listeners: DbxAnalyticsServiceListener[] = [];
-  isProduction?: boolean;
-  logEvents?: boolean;
-  userSource?: DbxAnalyticsUserSource;
+  readonly listeners: DbxAnalyticsServiceListener[] = [];
+  readonly isProduction?: boolean;
+  readonly logEvents?: boolean;
+  readonly userSource?: DbxAnalyticsUserSource;
 }
 
 export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyticsStreamEvent {
@@ -90,7 +90,7 @@ export function dbxAnalyticsStreamEventAnalyticsEventWrapper(event: DbxUserAnaly
  */
 @Injectable()
 export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxAnalyticsEventEmitterService, Destroyable {
-  private _config = inject(DbxAnalyticsServiceConfiguration);
+  private readonly _config = inject(DbxAnalyticsServiceConfiguration);
 
   // TODO: Make these configurable.
   static readonly USER_REGISTRATION_EVENT_NAME = 'User Registered';

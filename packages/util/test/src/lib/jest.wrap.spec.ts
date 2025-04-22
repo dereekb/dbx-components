@@ -1,5 +1,5 @@
-import { makeTestBuilder, TestJestTestContextFixture } from './jest.spec';
-import { JestTestWrappedContextFactoryBuilder, wrapJestTestContextFactory } from './jest.wrap';
+import { makeTestBuilder, type TestJestTestContextFixture } from './jest.spec';
+import { type JestTestWrappedContextFactoryBuilder, wrapJestTestContextFactory } from './jest.wrap';
 
 export class WrappedTestJestTestContextFixture {
   constructor(readonly fixture: TestJestTestContextFixture) {}

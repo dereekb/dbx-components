@@ -1,13 +1,13 @@
-import { ModelKeyTypeNamePair, ModelKeyTypePair } from '@dereekb/util';
+import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
 import { createAction, props } from '@ngrx/store';
 
 export interface DbxModelObjectViewedParams {
-  modelKeyTypeNamePair: ModelKeyTypeNamePair;
-  context?: string;
+  readonly modelKeyTypeNamePair: ModelKeyTypeNamePair;
+  readonly context?: Maybe<string>;
 }
 
 export interface DbxModelGoToObjectViewParams {
-  modelKeyTypePair: ModelKeyTypePair;
+  readonly modelKeyTypeNamePair: ModelKeyTypeNamePair;
 }
 
 export const emitObjectViewEvent = createAction('[App/Model/Type] Object Viewed', props<DbxModelObjectViewedParams>());

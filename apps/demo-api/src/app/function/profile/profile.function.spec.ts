@@ -2,7 +2,7 @@ import { demoCallModel } from '../model/crud.functions';
 import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
-import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { firestoreModelKey, onCallUpdateModelParams } from '@dereekb/firebase';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
@@ -17,10 +17,10 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 // Our test requires functions, so we use a DemoApiFunctionContextFixture.
 // Every test is done within its own context; the firestore/auth/etc. is empty between each test since under the hood our test app name changes.
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  // describeCloudFunctionTest wraps a jest describe along with the following:
+  // describeCallableRequestTest wraps a jest describe along with the following:
   // - Build our profileSetUsername function using our testing context instances's Nest App for each test, and the profileSetUsername factory.
-  // - wrap the function to make it a usable function and exposed as profileSetUsernameCloudFn
-  describeCloudFunctionTest('profileSetUsername', { f, fn: profileSetUsername }, (profileSetUsernameCloudFn) => {
+  // - wrap the function to make it a usable function and exposed as profileSetUsernameWrappedFn
+  describeCallableRequestTest('profileSetUsername', { f, fn: profileSetUsername }, (profileSetUsernameWrappedFn) => {
     // with our DemoApiFunctionContextFixture, we can easily create a new user for this test case.
     demoAuthorizedUserContext({ f }, (u) => {
       // jest it - test setting the username successfully.
@@ -32,7 +32,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         // Call the function using our user instance.
         // This automatically creates a look-alike token/context to pass to the function so we don't have to mock that directly.
-        await u.callCloudFunction(profileSetUsernameCloudFn, params);
+        await u.callWrappedFunction(profileSetUsernameWrappedFn, params);
 
         // Check our results.
         const profileDocument = u.instance.loadUserProfile();
@@ -44,7 +44,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       // second user
       demoAuthorizedUserContext({ f }, (u2) => {
         itShouldFail('if the username is already taken.', async () => {
-          const fn = f.fnWrapper.wrapV1CloudFunction(profileSetUsername(f.nestAppPromiseGetter));
+          const fn = f.fnWrapper.wrapCallableRequest(profileSetUsername(f.nestAppPromiseGetter));
 
           const params: SetProfileUsernameParams = {
             username: 'username'
@@ -61,7 +61,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   });
 
   // describe tests for updateProfile
-  describeCloudFunctionTest('updateProfile', { f, fn: demoCallModel }, (callProfileCloudFn) => {
+  describeCallableRequestTest('updateProfile', { f, fn: demoCallModel }, (callProfileWrappedFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it(`should update the target user's profile.`, async () => {
         const bio = 'test bio';
@@ -70,7 +70,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           key: firestoreModelKey(profileIdentity, u.uid)
         };
 
-        await u.callCloudFunction(callProfileCloudFn, onCallUpdateModelParams(profileIdentity, data));
+        await u.callWrappedFunction(callProfileWrappedFn, onCallUpdateModelParams(profileIdentity, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);
@@ -82,7 +82,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           bio
         };
 
-        await u.callCloudFunction(callProfileCloudFn, onCallUpdateModelParams(profileIdentity, data));
+        await u.callWrappedFunction(callProfileWrappedFn, onCallUpdateModelParams(profileIdentity, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);

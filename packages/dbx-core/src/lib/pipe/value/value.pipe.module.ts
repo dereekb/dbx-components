@@ -3,10 +3,18 @@ import { DollarAmountPipe } from './dollar.pipe';
 import { GetValueOncePipe, GetValuePipe } from './getvalue.pipe';
 import { CutTextPipe } from './cuttext.pipe';
 
-const declarations = [CutTextPipe, DollarAmountPipe, GetValuePipe, GetValueOncePipe];
+const importsAndExports = [CutTextPipe, DollarAmountPipe, GetValuePipe, GetValueOncePipe];
 
+/**
+ * @deprecated import the pipes directly as needed.
+ *
+ * @see CutTextPipe
+ * @see DollarAmountPipe
+ * @see GetValuePipe
+ * @see GetValueOncePipe
+ */
 @NgModule({
-  exports: declarations,
-  declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxValuePipeModule {}

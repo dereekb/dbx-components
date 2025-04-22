@@ -71,16 +71,15 @@ export interface DbxFirebaseAuthLoginProviderAssets {
  *
  * Default providers can be configured by the DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN injectable value.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DbxFirebaseAuthLoginService {
-  readonly termsComponentClass = inject<Type<unknown>>(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) ?? DbxFirebaseLoginTermsSimpleComponent;
+  readonly loginTermsComponentClass = inject<Type<unknown>>(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN, { optional: true }) ?? DbxFirebaseLoginTermsSimpleComponent;
+
+  private readonly _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
+  private readonly _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
 
   private _enableAll = false;
   private _passwordConfig: DbxFirebaseAuthLoginPasswordConfig;
-  private _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
-  private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
 
   constructor(@Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[], @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig) {

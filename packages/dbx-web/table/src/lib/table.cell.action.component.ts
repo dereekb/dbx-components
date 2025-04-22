@@ -1,13 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged } from 'rxjs';
 import { DbxTableStore } from './table.store';
+import { DbxInjectionComponent } from '@dereekb/dbx-core';
 
 @Component({
   selector: 'dbx-table-action-cell',
   template: `
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DbxInjectionComponent]
 })
 export class DbxTableActionCellComponent {
   readonly tableStore = inject(DbxTableStore);
@@ -16,4 +20,6 @@ export class DbxTableActionCellComponent {
     map((x) => x.summaryRowEnd),
     distinctUntilChanged()
   );
+
+  readonly configSignal = toSignal(this.config$);
 }

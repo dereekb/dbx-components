@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FieldType } from '@ngx-formly/material'; // extend FieldType from Material, not core!
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { E164PhoneNumber, E164PhoneNumberExtensionPair, Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
@@ -21,7 +21,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 @Component({
   templateUrl: 'phone.field.component.html'
 })
-export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<InternationalPhoneFormlyFieldProps>> {
+export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<InternationalPhoneFormlyFieldProps>> implements OnInit, OnDestroy {
   readonly inputSync = new SubscriptionObject();
   readonly outputSync = new SubscriptionObject();
   readonly extensionErrorSync = new SubscriptionObject();

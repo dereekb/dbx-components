@@ -9,18 +9,29 @@ export interface LoadingErrorPair {
    *
    * Not being specified is considered not being loaded.
    */
-  loading?: Maybe<boolean>;
+  readonly loading?: Maybe<boolean>;
   /**
    * A Readable server error.
    */
-  error?: Maybe<ReadableError>;
+  readonly error?: Maybe<ReadableError>;
+}
+
+/**
+ * Returns true if the input LoadingErrorPair has the same loading (truthy vs falsy) and error values as the other LoadingErrorPair.
+ *
+ * @param a LoadingErrorPair a
+ * @param b LoadingErrorPair b
+ * @returns Returns true if the input's metadata is considered equivalent.
+ */
+export function isLoadingStateMetadataEqual(a: Partial<LoadingErrorPair>, b: Partial<LoadingErrorPair>): boolean {
+  return a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
 }
 
 /**
  * A value/error pair used in loading situations.
  */
 export interface LoadingState<T = unknown> extends LoadingErrorPair {
-  value?: Maybe<T>;
+  readonly value?: Maybe<T>;
 }
 
 /**
@@ -37,21 +48,21 @@ export type LoadingStateWithValueType<L extends LoadingState, T> = L extends Loa
  * Loading state with a value key.
  */
 export type LoadingStateWithValue<T = unknown> = LoadingState<T> & {
-  value: Maybe<T>;
+  readonly value: Maybe<T>;
 };
 
 /**
  * Loading state with a value key and a non-maybe value.
  */
 export type LoadingStateWithDefinedValue<T = unknown> = LoadingState<T> & {
-  value: T;
+  readonly value: T;
 };
 
 /**
  * Loading state with an error
  */
 export type LoadingStateWithError<T = unknown> = LoadingState<T> & {
-  error: ReadableError;
+  readonly error: ReadableError;
 };
 
 /**
@@ -140,7 +151,6 @@ export function isLoadingStateFinishedLoading<L extends LoadingState>(state: May
     return false;
   }
 }
-
 /**
  * Returns a LoadingState that has no result and is not loading.
  */

@@ -1,5 +1,5 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Pixels, FactoryWithRequiredInput, LatLngInputRef, UniqueModel } from '@dereekb/util';
+import { Pixels, FactoryWithRequiredInput, LatLngInputRef, UniqueModel, CssClassesArray, Maybe, CssStyleObject } from '@dereekb/util';
 
 /**
  * DbxMapboxMarkerSize. Numbers are converted to pixels.
@@ -18,35 +18,35 @@ export interface DbxMapboxMarkerDisplayConfig {
   /**
    * Presentation style. Defaults to "normal"
    */
-  presentation?: DbxMapboxMarkerPresentation;
+  readonly presentation?: DbxMapboxMarkerPresentation;
   /**
    * Additional classes to add to the marker.
    */
-  markerClasses?: string;
+  readonly markerClasses?: Maybe<CssClassesArray>;
   /**
-   * icon
+   * Marker icon to display.
    */
-  icon?: string;
+  readonly icon?: Maybe<string>;
   /**
-   * label
+   * Marker label to display.
    */
-  label?: string;
+  readonly label?: Maybe<string>;
   /**
-   * Image URL
+   * Image URL or Factory that returns an image URL.
    */
-  image?: string | FactoryWithRequiredInput<string, Pixels>;
+  readonly image?: Maybe<string | FactoryWithRequiredInput<string, Pixels>>;
   /**
    * Size of the marker.
    */
-  size?: DbxMapboxMarkerSize;
+  readonly size?: Maybe<DbxMapboxMarkerSize>;
   /**
-   * Anchor
+   * ClickableAnchor for the marker.
    */
-  anchor?: ClickableAnchor;
+  readonly anchor?: Maybe<ClickableAnchor>;
   /**
    * Additional icon content styling. Style is not applied to the entire marker. Use markerClasses instead.
    */
-  style?: object;
+  readonly style?: Maybe<CssStyleObject>;
 }
 
 export type DbxMapboxMarker = UniqueModel & LatLngInputRef & DbxMapboxMarkerDisplayConfig;
@@ -67,7 +67,7 @@ export function dbxMapboxColoredDotStyle(background: string, color?: string) {
   return {
     background,
     padding: '2px',
-    color: color ?? background ? 'white' : undefined,
+    color: (color ?? background) ? 'white' : undefined,
     'border-radius': '50%'
   };
 }

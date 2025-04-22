@@ -5,6 +5,7 @@ import { type Observable, type OperatorFunction, switchMap, of, isObservable, ty
  * A value that is either the value or an observable that returns the value.
  */
 export type ObservableOrValue<T> = T | Observable<T>;
+export type MaybeObservableOrValue<T> = Maybe<ObservableOrValue<Maybe<T>>>;
 
 /**
  * Wraps the input value as an observable, if it is not an observable.
@@ -22,10 +23,19 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observ
 /**
  * Switch map for an ObservableGetter that pipes through the value.
  *
- * @returns
+ * @returns OperatorFunction<ObservableOrValue<T>, T>
  */
 export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
   return switchMap((x) => asObservable(x));
+}
+
+/**
+ * Switch map for an ObservableGetter that pipes through the Maybe value.
+ *
+ * @returns OperatorFunction<Maybe<ObservableOrValue<T>>, Maybe<T>>
+ */
+export function maybeValueFromObservableOrValue<T>(): OperatorFunction<MaybeObservableOrValue<T>, Maybe<T>> {
+  return switchMap((x) => (x != null ? asObservable(x) : of(undefined)));
 }
 
 /**

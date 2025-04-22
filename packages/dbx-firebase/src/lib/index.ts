@@ -10,3 +10,4 @@ export * from './pipe';
 export * from './router';
 export * from './storage';
 export * from './module';
+export * from './providers';
