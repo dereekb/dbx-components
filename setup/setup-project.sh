@@ -506,7 +506,7 @@ rm $API_APP_FOLDER/project.json.tmp
 
 # is generated automatically by nx
 rm $API_APP_FOLDER/webpack.config.js
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/webpack.config.template.js -o $API_APP_FOLDER/webpack.config.js
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/webpack.config.template.js -o $API_APP_FOLDER/webpack.config.js.tmp
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/webpack.config.js.tmp > $API_APP_FOLDER/webpack.config.js
 rm $API_APP_FOLDER/webpack.config.js.tmp
 

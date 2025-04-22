@@ -34,7 +34,6 @@ describe('Array Filter Functions', () => {
 
     it('should filter out values with null from getValue', () => {
       const input = [1, 6, null, 20, undefined];
-      // @ts-expect-error - Intentionally testing with mixed values
       const result = filterValuesByDistanceNoOrder(input, 5, (x) => (x === null || x === undefined ? null : x));
       expect(result).toEqual([1, 6, 20]);
     });
