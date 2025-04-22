@@ -152,7 +152,7 @@ describe('Array Index Functions', () => {
       const input = [null, 5, null, 8, null];
       const compare = (a: number, b: number) => (a || 0) - (b || 0);
 
-      // @ts-ignore - Testing with null values
+      // @ts-expect-error - Testing with null values
       const result = findBest(input, compare);
 
       expect(result).toEqual({

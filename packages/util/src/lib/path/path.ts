@@ -225,7 +225,7 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceW
       case 0:
         fixedPath = inputToEvaluate;
         break;
-      case 1:
+      case 1: {
         const lastSlashPosition = inputToEvaluate.lastIndexOf('/');
 
         if (lastSlashPosition === -1 || lastSlashPosition < last) {
@@ -236,12 +236,14 @@ export function replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceW
           fixedPath = replaceCharacterAtIndexWith(inputToEvaluate, last, replaceWith);
         }
         break;
-      default:
+      }
+      default: {
         const [head, tail] = splitStringAtIndex(inputToEvaluate, last, true);
         const headWithReplacedSeparators = head.replace(ALL_SLASH_PATH_FILE_TYPE_SEPARATORS_REGEX, replaceWith);
 
         fixedPath = headWithReplacedSeparators + tail;
         break;
+      }
     }
 
     return fixedPath;

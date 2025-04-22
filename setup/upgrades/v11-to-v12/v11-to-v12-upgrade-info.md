@@ -179,7 +179,6 @@ Pass --verbose to see the stacktrace.
 
 Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 
-
 #### Module Deprecations
 All `.forRoot()` methods have been deprecated in favor of provider functions.
 

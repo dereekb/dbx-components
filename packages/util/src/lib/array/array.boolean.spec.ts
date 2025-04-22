@@ -244,10 +244,10 @@ describe('Array Boolean Functions', () => {
       // This tests that it handles undefined values properly
       const array: BooleanKeyArray<BooleanStringKey> = ['valid'];
 
-      // @ts-ignore - Intentionally passing null to test handling
+      // @ts-expect-error - Intentionally passing null to test handling
       expect(() => BooleanStringKeyArrayUtility.insert(array, null)).not.toThrow();
 
-      // @ts-ignore - Intentionally passing undefined to test handling
+      // @ts-expect-error - Intentionally passing undefined to test handling
       expect(() => BooleanStringKeyArrayUtility.insert(array, undefined)).not.toThrow();
     });
   });

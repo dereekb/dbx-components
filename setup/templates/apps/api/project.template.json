@@ -1,4 +1,6 @@
 {
+  "name": "API_APP_NAME",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "API_APP_FOLDER/src",
   "projectType": "application",
   "targets": {
@@ -12,8 +14,10 @@
     },
     "build-base": {
       "executor": "@nx/webpack:webpack",
+      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
+        "webpackConfig": "API_APP_FOLDER/webpack.config.js",
         "outputPath": "API_APP_DIST_FOLDER",
         "main": "API_APP_FOLDER/src/main.ts",
         "tsConfig": "API_APP_FOLDER/tsconfig.app.json",

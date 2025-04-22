@@ -35,7 +35,7 @@
             "output": "assets/dbx-firebase"
           }
         ],
-        "allowedCommonJsDependencies": ["core-js", "lodash", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
+        "allowedCommonJsDependencies": ["core-js", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
         "stylePreprocessorOptions": {
           "includePaths": ["packages", ""]
         },

@@ -8,6 +8,25 @@
         "color": true
       }
     },
+    "lint-fix-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "description": "",
+        "command": "npx nx run-many --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix"
+      }
+    },
+    "start-release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./start-release.sh"
+      }
+    },
+    "prettier": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./start-release.sh"
+      }
+    },
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {

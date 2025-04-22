@@ -1,7 +1,9 @@
 {
+  "name": "ANGULAR_APP_NAME",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "ANGULAR_APP_FOLDER/src",
-  "prefix": "ANGULAR_APP_NAME",
+  "prefix": "app",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -12,13 +14,14 @@
       }
     },
     "build-base": {
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
+      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "ANGULAR_APP_DIST_FOLDER",
+        "browser": "ANGULAR_APP_FOLDER/src/main.ts",
         "index": "ANGULAR_APP_FOLDER/src/index.html",
-        "main": "ANGULAR_APP_FOLDER/src/main.ts",
-        "polyfills": ["zone.js"],
+        "polyfills": ["zone.js", "reflect-metadata"],
         "tsConfig": "ANGULAR_APP_FOLDER/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
@@ -26,7 +29,10 @@
           "ANGULAR_APP_FOLDER/src/assets",
           "ANGULAR_APP_FOLDER/src/lib"
         ],
-        "allowedCommonJsDependencies": ["core-js", "validator", "date-fns", "date-fns-tz"],
+        "allowedCommonJsDependencies": ["core-js", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["packages", ""]
+        },
         "styles": [
           "mapbox-gl/dist/mapbox-gl.css",
           "ANGULAR_APP_FOLDER/src/styles.scss"
@@ -53,9 +59,7 @@
           "outputHashing": "all"
         },
         "development": {
-          "buildOptimizer": false,
           "optimization": false,
-          "vendorChunk": true,
           "extractLicenses": false,
           "sourceMap": true,
           "namedChunks": true
