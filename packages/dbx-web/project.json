@@ -9,7 +9,6 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web", "{workspaceRoot}/dist/packages/dbx-web/_index.scss", "{workspaceRoot}/dist/packages/dbx-web/LICENSE", "{workspaceRoot}/dist/packages/dbx-web/**/*.scss"],
       "options": {
-        "tsConfig": "packages/dbx-web/tsconfig.lib.json",
         "commands": [
           {
             "description": "build dbx-web production",
