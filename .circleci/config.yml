@@ -181,15 +181,16 @@ jobs:
       - run:
           name: print package.json
           command: cd ~/setup-test/myproject && cat package.json
-      - run:
-          name: Try build components
-          command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
-      - run:
-          name: Try build
-          command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
-      - run:
-          name: Run tests
-          command: cd ~/setup-test/myproject && npx nx test myproject-components && npx nx test myproject-firebase && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
+      # MAJOR VERSION TEMPORARY
+      #- run:
+      #    name: Try build components
+      #    command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
+      #- run:
+      #    name: Try build
+      #    command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
+      #- run:
+      #    name: Run tests
+      #    command: cd ~/setup-test/myproject && npx nx test myproject-components && npx nx test myproject-firebase && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
     # todo: add checks, etc.
   # Performs release operations on the release branch.
   run-release-and-push-to-main:

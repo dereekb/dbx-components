@@ -253,11 +253,11 @@ then
     
   # remove the public folder. We will use the app instead.
   echo "Removing public folder. (We will use the app instead)"
-  rm -r public
+  rm -r public || true
 
   # remove the functions folder. We will use the api-app instead.
   echo "Removing functions folder. (We will use the api-app instead)"
-  rm -r functions
+  rm -r functions || true
 
 else
   # automatic configuration. This should typically only be used for CI/testing, as using the firebase CLI can pull existing content in after logging in.
@@ -504,7 +504,6 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/set
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/project.json.tmp > $API_APP_FOLDER/project.json
 rm $API_APP_FOLDER/project.json.tmp
 
-# is generated automatically by nx
 rm $API_APP_FOLDER/webpack.config.js
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/webpack.config.template.js -o $API_APP_FOLDER/webpack.config.js.tmp
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/webpack.config.js.tmp > $API_APP_FOLDER/webpack.config.js
@@ -555,7 +554,7 @@ download_app_ts_file "tsconfig.spec.json"
 rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 
-rm -r $ANGULAR_COMPONENTS_FOLDER/src/lib
+rm -r $ANGULAR_COMPONENTS_FOLDER/src/lib || true
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib
 download_app_ts_file "src/lib/index.ts"
 download_app_ts_file "src/lib/root.shared.module.ts"
