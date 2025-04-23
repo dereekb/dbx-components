@@ -1,9 +1,10 @@
 import { ScreenMediaWidthType } from '../../screen/screen';
 import { DbxScreenMediaService } from '../../screen/screen.service';
-import { Directive, ChangeDetectorRef, Input, OnInit, OnDestroy, inject } from '@angular/core';
-import { BehaviorSubject, map, shareReplay, distinctUntilChanged, delay } from 'rxjs';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { Directive, inject, input } from '@angular/core';
+import { map, distinctUntilChanged, shareReplay } from 'rxjs';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Used to declare a dbxFlexGroup.
@@ -11,57 +12,27 @@ import { type Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxFlexGroup]',
   host: {
-    '[class.dbx-flex-group]': 'content',
-    '[class.dbx-flex-group-break-to-column]': 'breakToColumn',
-    '[class.dbx-flex-group-small]': 'small',
-    '[class.dbx-flex-group-relative]': 'relative'
-  }
+    '[class.dbx-flex-group]': 'content()',
+    '[class.dbx-flex-group-break-to-column]': 'breakToColumn()',
+    '[class.dbx-flex-group-relative]': 'relative()',
+    '[class.dbx-flex-group-small]': 'smallSignal()'
+  },
+  standalone: true
 })
-export class DbxFlexGroupDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxFlexGroupDirective extends AbstractSubscriptionDirective {
   private readonly _dbxScreenMediaService = inject(DbxScreenMediaService);
-  readonly cdRef = inject(ChangeDetectorRef);
 
-  @Input()
-  breakToColumn = false;
+  readonly content = input<boolean>(true);
+  readonly breakToColumn = input<boolean>(false);
+  readonly relative = input<boolean>(false);
 
-  @Input()
-  content = true;
+  readonly breakpoint = input<ScreenMediaWidthType, Maybe<ScreenMediaWidthType>>('tablet', { transform: (x) => x ?? 'tablet' });
 
-  @Input()
-  relative = false;
-
-  private _small = false;
-
-  private readonly _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('tablet');
-
-  readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint).pipe(
+  readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(toObservable(this.breakpoint)).pipe(
     map((x) => !x),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  get small(): boolean {
-    return this._small;
-  }
-
-  constructor() {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.sub = this.isSmallScreen$.pipe(delay(0)).subscribe((small) => {
-      this._small = small;
-      safeDetectChanges(this.cdRef);
-    });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._breakpoint.complete();
-  }
-
-  @Input()
-  set breakpoint(breakpoint: Maybe<ScreenMediaWidthType>) {
-    this._breakpoint.next(breakpoint ?? 'tablet');
-  }
+  readonly smallSignal = toSignal(this.isSmallScreen$, { initialValue: false });
 }

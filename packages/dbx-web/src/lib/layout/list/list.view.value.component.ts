@@ -1,107 +1,19 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, TrackByFunction, inject } from '@angular/core';
-import { shareReplay, map, Observable, BehaviorSubject, switchMap } from 'rxjs';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, Signal, TrackByFunction, computed, inject, input } from '@angular/core';
+import { shareReplay, map, Observable, switchMap, of } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
-import { AnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
-import { Maybe, SpaceSeparatedCssClasses, spaceSeparatedCssClasses } from '@dereekb/util';
-import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './list.view.value.group';
+import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { DbxValueListItemGroup, DbxValueListViewGroupDelegate, defaultDbxValueListViewGroupDelegate } from './group/list.view.value.group';
 import { asObservable } from '@dereekb/rxjs';
+import { MatListModule, MatNavList } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { DbxAnchorComponent } from '../../router/layout/anchor/anchor.component';
 
 export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
-  emitAllClicks?: boolean;
-}
-
-/**
- * Renders a list view using input configuration. Requires a parent DbxListView.
- */
-@Component({
-  selector: 'dbx-list-view',
-  template: `
-    <dbx-list-view-content [items]="items$ | async" [emitAllClicks]="emitAllClicks$ | async"></dbx-list-view-content>
-  `
-})
-export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
-  readonly emitAllClicks$ = this.config$.pipe(
-    map((x) => x.emitAllClicks),
-    shareReplay(1)
-  );
-}
-
-/**
- * Content view for a DbxValueListView. It can be used directly in cases where the items are already configured, or want to be configured in a non-standard fashion.
- */
-@Component({
-  selector: 'dbx-list-view-content',
-  template: `
-    <mat-nav-list [disabled]="disabled$ | async">
-      <ng-container *ngFor="let group of groups$ | async; trackBy: trackGroupByFunction">
-        <dbx-list-view-content-group [group]="group"></dbx-list-view-content-group>
-      </ng-container>
-    </mat-nav-list>
-  `,
-  host: {
-    class: 'dbx-list-view'
-  },
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
-  readonly dbxListView = inject(DbxListView<T>);
-
-  readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I> = inject<Maybe<DbxValueListViewGroupDelegate<any, T, I>>>(DbxValueListViewGroupDelegate, { optional: true }) ?? defaultDbxValueListViewGroupDelegate();
-
-  private _items = new BehaviorSubject<Maybe<DbxValueListItemConfig<T, I>[]>>(undefined);
-
-  readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = this._items.pipe(
-    switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
-    shareReplay(1)
-  );
-
-  @Input()
-  emitAllClicks?: Maybe<boolean>;
-
-  readonly disabled$ = this.dbxListView.disabled$;
-
-  readonly trackByFunction: TrackByFunction<DbxValueListItemConfig<T, I>>;
-  readonly trackGroupByFunction: TrackByFunction<DbxValueListItemGroup<any, T, I>> = (_, v) => {
-    return v.id; // track by the id
-  };
-
-  constructor() {
-    const trackBy = this.dbxListView.trackBy;
-    this.trackByFunction = trackBy ? (index: number, item: DbxValueListItemConfig<T, I>) => trackBy(index, item.itemValue) : () => undefined;
-  }
-
-  ngOnDestroy(): void {
-    this._items.complete();
-  }
-
-  @Input()
-  get items(): Maybe<DbxValueListItemConfig<T, I>[]> {
-    return this._items.value;
-  }
-
-  set items(items: Maybe<DbxValueListItemConfig<T, I>[]>) {
-    this._items.next(items);
-  }
-
-  onClickItem(item: I) {
-    // do not emit clicks for disabled items.
-    if (!item.disabled) {
-      if (this.emitAllClicks || !item.anchor || anchorTypeForAnchor(item.anchor) === AnchorType.PLAIN) {
-        // only emit clicks for items with no anchor, or plain anchors.
-        this.onClickValue(item.itemValue);
-      }
-    }
-  }
-
-  onClickValue(value: T) {
-    this.dbxListView.clickValue?.next(value);
-  }
-
-  rippleDisabledOnItem(item: I): boolean {
-    return item.rippleDisabled || (!this.emitAllClicks && !item.anchor);
-  }
+  readonly emitAllClicks?: boolean;
 }
 
 /**
@@ -111,65 +23,51 @@ export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> =
   selector: 'dbx-list-view-content-group',
   template: `
     <div class="dbx-list-view-group-content">
-      <div class="dbx-list-view-group-header" *ngIf="headerConfig">
-        <dbx-injection [config]="headerConfig"></dbx-injection>
-      </div>
-      <dbx-anchor *ngFor="let item of items; trackBy: trackByFunction" [anchor]="item.anchor" [disabled]="item.disabled">
-        <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
-          <mat-icon matListItemIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
-          <dbx-injection [config]="item.config"></dbx-injection>
-          <span *ngIf="item.metaConfig" matListItemMeta>
-            <dbx-injection [config]="item.metaConfig"></dbx-injection>
-          </span>
-        </a>
-      </dbx-anchor>
-      <div class="dbx-list-view-group-footer" *ngIf="footerConfig">
-        <dbx-injection [config]="footerConfig"></dbx-injection>
-      </div>
+      @if (headerConfigSignal()) {
+        <div class="dbx-list-view-group-header">
+          <dbx-injection [config]="headerConfigSignal()"></dbx-injection>
+        </div>
+      }
+      @for (item of itemsSignal(); track trackByFunctionSignal()($index, item)) {
+        <dbx-anchor [anchor]="item.anchor" [disabled]="item.disabled">
+          <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
+            @if (item.icon) {
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            }
+            <dbx-injection [config]="item.config"></dbx-injection>
+            @if (item.metaConfig) {
+              <span matListItemMeta>
+                <dbx-injection [config]="item.metaConfig"></dbx-injection>
+              </span>
+            }
+          </a>
+        </dbx-anchor>
+      }
+      @if (footerConfigSignal()) {
+        <div class="dbx-list-view-group-footer">
+          <dbx-injection [config]="footerConfigSignal()"></dbx-injection>
+        </div>
+      }
     </div>
   `,
   host: {
     class: 'dbx-list-view-group',
-    '[class]': 'cssClasses'
+    '[class]': 'cssClassSignal()'
   },
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [DbxInjectionComponent, DbxAnchorComponent, MatListModule, MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   readonly dbxValueListViewContentComponent = inject(DbxValueListViewContentComponent<T>);
-  readonly cdRef = inject(ChangeDetectorRef);
+  readonly group = input<Maybe<DbxValueListItemGroup<G, T, I>>>();
 
-  private _group: Maybe<DbxValueListItemGroup<G, T, I>>;
-  private _cssClasses: Maybe<SpaceSeparatedCssClasses>;
+  readonly trackByFunctionSignal = toSignal(this.dbxValueListViewContentComponent.trackBy$, { initialValue: DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION });
 
-  get cssClasses() {
-    return this._cssClasses;
-  }
-
-  get items(): Maybe<DbxValueListItemConfig<T, I>[]> {
-    return this._group?.items;
-  }
-
-  get headerConfig() {
-    return this._group?.headerConfig;
-  }
-
-  get footerConfig() {
-    return this._group?.footerConfig;
-  }
-
-  readonly disabled$: Observable<boolean> = this.dbxValueListViewContentComponent.disabled$;
-  readonly trackByFunction: TrackByFunction<DbxValueListItemConfig<T, I>> = this.dbxValueListViewContentComponent.trackByFunction;
-
-  @Input()
-  get group() {
-    return this._group;
-  }
-
-  set group(group: Maybe<DbxValueListItemGroup<G, T, I>>) {
-    this._group = group;
-    this._cssClasses = spaceSeparatedCssClasses(group?.cssClasses);
-    this.cdRef.markForCheck();
-  }
+  readonly itemsSignal = computed(() => this.group()?.items ?? []);
+  readonly headerConfigSignal = computed(() => this.group()?.headerConfig);
+  readonly footerConfigSignal = computed(() => this.group()?.footerConfig);
+  readonly cssClassSignal = computed(() => spaceSeparatedCssClasses(this.group()?.cssClasses));
 
   onClickItem(item: I) {
     this.dbxValueListViewContentComponent.onClickItem(item);
@@ -182,4 +80,80 @@ export class DbxValueListViewContentGroupComponent<G, T, I extends DbxValueListI
   rippleDisabledOnItem(item: I): boolean {
     return this.dbxValueListViewContentComponent.rippleDisabledOnItem(item);
   }
+}
+
+// MARK: DbxValueListViewContentComponent
+export const DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index: number) => index;
+
+/**
+ * Content view for a DbxValueListView. It can be used directly in cases where the items are already configured, or want to be configured in a non-standard fashion.
+ */
+@Component({
+  selector: 'dbx-list-view-content',
+  template: `
+    <mat-nav-list [disabled]="disabledSignal()">
+      @for (group of groupsSignal(); track group.id) {
+        <dbx-list-view-content-group [group]="group"></dbx-list-view-content-group>
+      }
+    </mat-nav-list>
+  `,
+  host: {
+    class: 'dbx-list-view'
+  },
+  standalone: true,
+  imports: [MatNavList, DbxValueListViewContentGroupComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DbxValueListViewContentComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
+  readonly dbxListView = inject(DbxListView<T>);
+  private readonly _dbxListGroupDelegate: DbxValueListViewGroupDelegate<any, T, I> = inject<Maybe<DbxValueListViewGroupDelegate<any, T, I>>>(DbxValueListViewGroupDelegate, { optional: true }) ?? defaultDbxValueListViewGroupDelegate();
+
+  private readonly _trackBy$ = this.dbxListView.trackBy$ ?? of(undefined);
+  readonly trackBy$ = this._trackBy$.pipe(map((trackBy) => (trackBy ? (index: number, item: DbxValueListItemConfig<T, I>) => trackBy(index, item.itemValue) : DEFAULT_VALUE_LIST_VIEW_CONTENT_COMPONENT_TRACK_BY_FUNCTION)));
+
+  readonly items = input<Maybe<DbxValueListItemConfig<T, I>[]>>();
+  readonly emitAllClicks = input<Maybe<boolean>>();
+
+  readonly groups$: Observable<DbxValueListItemGroup<any, T, I>[]> = toObservable(this.items).pipe(
+    switchMap((items) => asObservable(this._dbxListGroupDelegate.groupValues(items ?? []))),
+    shareReplay(1)
+  );
+
+  readonly groupsSignal = toSignal(this.groups$);
+  readonly disabledSignal = toSignal(this.dbxListView.disabled$);
+
+  onClickItem(item: I) {
+    // do not emit clicks for disabled items.
+    if (!item.disabled) {
+      if (this.emitAllClicks() || !item.anchor || anchorTypeForAnchor(item.anchor) === 'plain') {
+        // only emit clicks for items with no anchor, or plain anchors.
+        this.onClickValue(item.itemValue);
+      }
+    }
+  }
+
+  onClickValue(value: T) {
+    this.dbxListView.clickValue?.emit(value);
+  }
+
+  rippleDisabledOnItem(item: I): boolean {
+    return item.rippleDisabled || (!this.emitAllClicks() && !item.anchor);
+  }
+}
+
+// MARK: DbxValueListViewComponent
+/**
+ * Renders a list view using input configuration. Requires a parent DbxListView.
+ */
+@Component({
+  selector: 'dbx-list-view',
+  template: `
+    <dbx-list-view-content [items]="itemsSignal()" [emitAllClicks]="emitAllClicksSignal()"></dbx-list-view-content>
+  `,
+  standalone: true,
+  imports: [DbxValueListViewContentComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
+  readonly emitAllClicksSignal: Signal<Maybe<boolean>> = computed(() => this.config()?.emitAllClicks);
 }

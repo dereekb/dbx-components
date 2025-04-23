@@ -1,14 +1,26 @@
 import { NgModule } from '@angular/core';
 import { DbxButtonComponent } from './button.component';
-import { DbxButtonSpacerDirective } from './button.spacer.component';
-import { CommonModule } from '@angular/common';
+import { DbxButtonSpacerDirective } from './button.spacer.directive';
 import { DbxCoreButtonModule } from '@dereekb/dbx-core';
-import { DbxProgressButtonsModule } from './progress/button.progress.module';
-import { DbxIconButtonModule } from './icon/icon.button.module';
+import { DbxIconButtonComponent } from './icon';
+import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
 
+const importsAndExports = [
+  DbxCoreButtonModule,
+  DbxIconButtonComponent,
+  // buttons
+  DbxButtonComponent,
+  DbxButtonSpacerDirective,
+  // progress
+  DbxProgressSpinnerButtonComponent,
+  DbxProgressBarButtonComponent
+];
+
+/**
+ * Provides all base @dereekb/dbx-core and @dereekb/dbx-web button components.
+ */
 @NgModule({
-  imports: [CommonModule, DbxProgressButtonsModule],
-  declarations: [DbxButtonComponent, DbxButtonSpacerDirective],
-  exports: [DbxCoreButtonModule, DbxProgressButtonsModule, DbxIconButtonModule, DbxButtonComponent, DbxButtonSpacerDirective]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxButtonModule {}

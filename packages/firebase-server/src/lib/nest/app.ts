@@ -13,8 +13,8 @@ import { DefaultFirebaseServerEnvService } from './env';
 import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 export interface NestServer {
-  server: express.Express;
-  nest: NestAppPromiseGetter;
+  readonly server: express.Express;
+  readonly nest: NestAppPromiseGetter;
 }
 
 export type NestAppPromiseGetter = Getter<Promise<INestApplicationContext>>;
@@ -56,7 +56,9 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly configureEnvService?: boolean;
   /**
-   * Whether or not to configure webhook usage. This will configure the webhook routes.
+   * Whether or not to configure webhook usage.
+   *
+   * This will configure the webhook routes.
    */
   readonly configureWebhooks?: boolean;
   /**
@@ -68,7 +70,7 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly forceStorageBucket?: boolean;
   /**
-   * Whether or not to verify with app check. Is true by default.
+   * Whether or not to verify API calls with app check. Is true by default.
    */
   readonly appCheckEnabled?: boolean;
   /**
@@ -88,7 +90,7 @@ export interface NestServerInstanceConfig<T> {
 }
 
 export interface NestServerEnvironmentConfig {
-  environment: ServerEnvironmentConfig;
+  readonly environment: ServerEnvironmentConfig;
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {

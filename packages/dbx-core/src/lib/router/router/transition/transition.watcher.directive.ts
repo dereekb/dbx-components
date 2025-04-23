@@ -7,7 +7,7 @@ import { AbstractTransitionDirective } from './transition.directive';
  */
 @Directive()
 export abstract class AbstractTransitionWatcherDirective extends AbstractTransitionDirective implements OnInit, OnDestroy {
-  private _transitionSub = new SubscriptionObject();
+  private readonly _transitionSub = new SubscriptionObject();
 
   protected readonly ngZone = inject(NgZone);
 

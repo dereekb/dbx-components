@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { MatIconButton } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Component used to show a close button at the top of a dialog, floating in a corner.
@@ -6,25 +8,23 @@ import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core
 @Component({
   selector: 'dbx-dialog-content-close',
   template: `
-    <button class="dbx-dialog-content-close-button" mat-icon-button (click)="closeClicked()"><mat-icon>close</mat-icon></button>
+    <button class="dbx-dialog-content-close-button" mat-icon-button (click)="closeClicked()">
+      <mat-icon>close</mat-icon>
+    </button>
   `,
   host: {
     class: 'dbx-dialog-content-close',
-    '[class.dbx-dialog-content-close-padding]': 'padded'
-  }
+    '[class.dbx-dialog-content-close-padding]': 'padded()'
+  },
+  standalone: true,
+  imports: [MatIconModule, MatIconButton],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxDialogContentCloseComponent implements OnDestroy {
-  @Input()
-  padded = true;
-
-  @Output()
-  readonly close = new EventEmitter<void>();
+export class DbxDialogContentCloseComponent {
+  readonly padded = input<boolean>(true);
+  readonly close = output<void>();
 
   closeClicked() {
     this.close.emit(undefined);
-  }
-
-  ngOnDestroy(): void {
-    this.close.complete();
   }
 }

@@ -1,18 +1,24 @@
 <div class="dbx-checklist-item-wrapper" [formGroup]="formGroup">
-  <div *ngIf="label" class="dbx-checklist-item-label">{{ label }}</div>
+  @if (label) {
+    <div class="dbx-checklist-item-label">{{ label }}</div>
+  }
   <div class="dbx-checklist-item">
     <div class="dbx-checklist-item-check">
       <mat-checkbox [formControlName]="formControlName"></mat-checkbox>
     </div>
     <div class="dbx-checklist-item-content-wrapper">
-      <dbx-anchor [block]="true" [anchor]="anchor$ | async">
-        <div class="dbx-checklist-item-content" matRipple [matRippleDisabled]="(rippleDisabled$ | async) ?? false">
+      <dbx-anchor [block]="true" [anchor]="anchorSignal()">
+        <div class="dbx-checklist-item-content" matRipple [matRippleDisabled]="rippleDisabledSignal()">
           <dbx-checklist-item-content-component></dbx-checklist-item-content-component>
           <span class="spacer"></span>
-          <mat-icon *ngIf="(rippleDisabled$ | async) !== true">navigate_next</mat-icon>
+          @if (!rippleDisabledSignal()) {
+            <mat-icon>navigate_next</mat-icon>
+          }
         </div>
       </dbx-anchor>
     </div>
   </div>
-  <div *ngIf="description" class="dbx-hint">{{ description }}</div>
+  @if (description) {
+    <div class="dbx-hint">{{ description }}</div>
+  }
 </div>

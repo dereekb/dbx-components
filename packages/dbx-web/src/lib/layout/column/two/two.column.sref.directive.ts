@@ -1,4 +1,4 @@
-import { Directive, Input, inject } from '@angular/core';
+import { Directive, effect, inject, input } from '@angular/core';
 import { asSegueRef, SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { TwoColumnsContextStore } from './two.column.store';
@@ -7,14 +7,20 @@ import { TwoColumnsContextStore } from './two.column.store';
  * Used with a DbxTwoColumnComponent to set the backRef of the TwoColumnsContextStore.
  */
 @Directive({
-  selector: '[dbxTwoColumnSref]'
+  selector: '[dbxTwoColumnSref]',
+  standalone: true
 })
 export class DbxTwoColumnSrefDirective {
   private readonly _twoColumnsContextStore = inject(TwoColumnsContextStore);
 
-  @Input('dbxTwoColumnSref')
-  public set ref(ref: Maybe<SegueRefOrSegueRefRouterLink | ''>) {
-    const segueRef = ref ? asSegueRef(ref) : undefined;
-    this._twoColumnsContextStore.setBackRef(segueRef);
-  }
+  readonly dbxTwoColumnSref = input.required<Maybe<SegueRefOrSegueRefRouterLink>>();
+
+  protected readonly _dbxTwoColumnSrefEffect = effect(
+    () => {
+      const sref = this.dbxTwoColumnSref();
+      const segueRef = sref ? asSegueRef(sref) : undefined;
+      this._twoColumnsContextStore.setBackRef(segueRef);
+    },
+    { allowSignalWrites: true }
+  );
 }

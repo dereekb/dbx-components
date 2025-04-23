@@ -1,8 +1,9 @@
-import { Component, Input, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
 import { type Maybe } from '@dereekb/util';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Used to "linkify" the input text.
@@ -10,16 +11,17 @@ import { type Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-linkify',
   template: `
-    <span [innerHTML]="linkifiedBody$ | async"></span>
+    <span [innerHTML]="linkifiedBodySignal()"></span>
   `,
   host: {
     class: 'dbx-i dbx-linkify'
-  }
+  },
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxLinkifyComponent implements OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
-
-  private _text = new BehaviorSubject<Maybe<string>>(undefined);
+  private readonly _text = new BehaviorSubject<Maybe<string>>(undefined);
 
   readonly linkifiedText$ = this._text.pipe(
     distinctUntilChanged(),
@@ -42,6 +44,8 @@ export class DbxLinkifyComponent implements OnDestroy {
     }),
     shareReplay(1)
   );
+
+  readonly linkifiedBodySignal = toSignal(this.linkifiedBody$);
 
   ngOnDestroy(): void {
     this._text.complete();

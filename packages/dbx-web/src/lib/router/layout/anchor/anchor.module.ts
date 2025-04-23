@@ -1,16 +1,21 @@
-import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { NgModule } from '@angular/core';
 import { DbxAnchorComponent } from './anchor.component';
-import { CommonModule } from '@angular/common';
 import { DbxAnchorIconComponent } from './anchor.icon.component';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { DbxAnchorLinkComponent } from './anchor.link.component';
+import { DbxLinkComponent } from './anchor.link.component';
 import { DbxAnchorContentComponent } from './anchor.content.component';
 
+/**
+ * All standalone components related to anchors and links.
+ */
+export const DBX_ROUTER_ANCHOR_COMPONENTS = [DbxAnchorComponent, DbxAnchorIconComponent, DbxLinkComponent, DbxAnchorContentComponent];
+
+/**
+ * Module that provides anchor and link components.
+ *
+ * All components are now standalone. This module is provided for backward compatibility.
+ */
 @NgModule({
-  imports: [CommonModule, MatIconModule, MatButtonModule, DbxInjectionComponentModule],
-  declarations: [DbxAnchorComponent, DbxAnchorIconComponent, DbxAnchorLinkComponent, DbxAnchorContentComponent],
-  exports: [DbxAnchorComponent, DbxAnchorIconComponent, DbxAnchorLinkComponent, DbxAnchorContentComponent]
+  imports: DBX_ROUTER_ANCHOR_COMPONENTS,
+  exports: DBX_ROUTER_ANCHOR_COMPONENTS
 })
 export class DbxRouterAnchorModule {}

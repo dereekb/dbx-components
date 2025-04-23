@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { DbxAuthService } from '../../service';
+import { DbxAuthService } from '../../service/auth.service';
 import { onDbxAppAuth } from '../';
 import { map, tap } from 'rxjs';
 import * as fromDbxAppAuth from '../reducer';

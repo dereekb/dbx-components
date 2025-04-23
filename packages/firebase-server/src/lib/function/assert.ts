@@ -1,9 +1,9 @@
 import { type DocumentDataWithIdAndKey, type FirestoreDocument, type FirestoreDocumentData, setIdAndKeyFromKeyIdRefOnDocumentData } from '@dereekb/firebase';
-import type * as functions from 'firebase-functions';
 import { isContextWithAuthData } from './context';
 import { modelNotAvailableError, unauthenticatedContextHasNoUidError } from './error';
+import { type CallableContext } from 'firebase-functions/lib/common/providers/https';
 
-export function assertContextHasAuth(context: functions.https.CallableContext): void {
+export function assertContextHasAuth(context: CallableContext): void {
   if (!isContextWithAuthData(context)) {
     throw unauthenticatedContextHasNoUidError();
   }

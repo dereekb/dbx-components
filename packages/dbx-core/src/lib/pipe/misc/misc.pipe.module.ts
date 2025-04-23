@@ -1,8 +1,13 @@
 import { NgModule } from '@angular/core';
 import { PrettyJsonPipe } from './prettyjson.pipe';
 
+/**
+ * @deprecated import the standalone pipes directly
+ *
+ * @see PrettyJsonPipe
+ */
 @NgModule({
-  exports: [PrettyJsonPipe],
-  declarations: [PrettyJsonPipe]
+  imports: [PrettyJsonPipe],
+  exports: [PrettyJsonPipe]
 })
 export class DbxMiscPipeModule {}

@@ -1,5 +1,5 @@
 export * from './state';
-export * from './model.module';
+export * from './model.providers';
 export * from './model.state.service';
 export * from './model.tracker.service';
 export * from './model.tracker';

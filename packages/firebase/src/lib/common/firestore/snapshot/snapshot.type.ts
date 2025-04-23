@@ -2,7 +2,10 @@ import { type ApplyMapFunctionWithOptions, type ArrayOrValue, type MaybeMap, typ
 import { type FirestoreDataConverter, type DocumentSnapshot, type SetOptions, type SnapshotOptions } from '../types';
 
 /**
- * The default "empty" value in the Firestore.
+ * The default empty value used in Firestore documents.
+ *
+ * When a field needs to be cleared or represented as empty, this value is used.
+ * Using null is consistent with Firestore's approach to empty/unset values.
  */
 export const FIRESTORE_EMPTY_VALUE = null;
 
@@ -49,36 +52,119 @@ export type ExpectedFirestoreModelData<T extends object, R extends object = obje
  */
 export type FirestoreModelData<T extends object, R extends object = object> = Partial<ExpectedFirestoreModelData<T, MaybeMap<R>>>;
 
+/**
+ * Configuration for snapshot converter using field-by-field conversion specifications.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterConfigWithFields<T extends object, O extends object = FirestoreModelData<T>> = ModelFieldConversionsConfigRef<T, O>;
+
+/**
+ * Configuration for snapshot converter using predefined conversion functions.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterConfigWithConversions<T extends object, O extends object = FirestoreModelData<T>> = ModelFieldConversionsRef<T, O>;
 
+/**
+ * A modifier function that can transform model data during conversion.
+ *
+ * Used to apply additional transformations beyond the basic field conversions,
+ * such as computing derived fields or performing validation.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterModifier<T extends object, O extends object = FirestoreModelData<T>> = PartialModelModifier<T, O>;
 
+/**
+ * Configuration options for creating a snapshot converter.
+ *
+ * Can be provided either as field-level conversion specifications or as conversion functions.
+ * Optionally includes modifiers that can transform the data during conversion.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterConfig<T extends object, O extends object = FirestoreModelData<T>> = (SnapshotConverterConfigWithFields<T, O> | SnapshotConverterConfigWithConversions<T, O>) & {
+  /**
+   * Optional modifiers that transform the data during conversion.
+   * Can be a single modifier function or an array of modifier functions.
+   */
   readonly modifiers?: ArrayOrValue<SnapshotConverterModifier<T, O>>;
 };
 
+/**
+ * A collection of functions for converting between Firestore document data and application model objects.
+ *
+ * Implements the Firebase FirestoreDataConverter interface and provides additional utility functions
+ * for working with conversions in different contexts.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export interface SnapshotConverterFunctions<T extends object, O extends object = FirestoreModelData<T>> extends FirestoreDataConverter<T, O> {
+  /**
+   * Converts a Firestore DocumentSnapshot to an application model object.
+   */
   readonly from: SnapshotConverterFromFunction<T, O>;
+
+  /**
+   * Converts an application model object to Firestore document data.
+   */
   readonly to: SnapshotConverterToFunction<T, O>;
+
+  /**
+   * The underlying map functions used for conversions.
+   */
   readonly mapFunctions: ModelMapFunctions<T, O>;
 }
 
+/**
+ * Function signature for converting a Firestore DocumentSnapshot to an application model object.
+ *
+ * This is the standard Firebase Firestore converter function signature used in FirestoreDataConverter.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterFromFirestoreFunction<T extends object, O extends object = FirestoreModelData<T>> = (snapshot: DocumentSnapshot<O>, options?: SnapshotOptions) => T;
+
+/**
+ * Extended function signature for converting a Firestore DocumentSnapshot to an application model object.
+ *
+ * Includes additional parameters for target and options to support more flexible conversion scenarios.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterFromFunction<T extends object, O extends object = FirestoreModelData<T>> = ApplyMapFunctionWithOptions<DocumentSnapshot<O>, T, SnapshotOptions>;
+
+/**
+ * Function signature for converting an application model object to Firestore document data.
+ *
+ * Includes parameters for the input model, optional target object, and Firestore SetOptions.
+ *
+ * @template T - The application model type
+ * @template O - The Firestore document data type (defaults to FirestoreModelData<T>)
+ */
 export type SnapshotConverterToFunction<T extends object, O extends object = FirestoreModelData<T>> = ApplyMapFunctionWithOptions<T, O, SetOptions>;
 
 // MARK: Other Types
 /**
- * A boolean that is only stored if it's value is true.
+ * A boolean that is only stored in Firestore if its value is true.
  *
- * Used with Firebase types to better indicate to the developer that this value is not stored to Firebase when true.
+ * Used with Firebase types to better indicate to the developer that this value is not stored
+ * to Firebase when false. This helps with understanding the storage behavior of boolean fields.
  */
 export type SavedToFirestoreIfTrue = boolean;
 
 /**
- * A boolean that is only stored if it's value is false.
+ * A boolean that is only stored in Firestore if its value is false.
  *
- * Used with Firebase types to better indicate to the developer that this value is not stored to Firebase when false.
+ * Used with Firebase types to better indicate to the developer that this value is not stored
+ * to Firebase when true. This helps with understanding the storage behavior of boolean fields.
  */
 export type SavedToFirestoreIfFalse = boolean;

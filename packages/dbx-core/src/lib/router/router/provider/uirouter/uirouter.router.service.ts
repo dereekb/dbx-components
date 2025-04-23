@@ -1,6 +1,7 @@
 import { KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
 import { Subject, BehaviorSubject, Observable, firstValueFrom, map } from 'rxjs';
-import { DbxRouterService, DbxRouterTransitionService } from '../../service';
+import { DbxRouterService } from '../../service/router.service';
+import { DbxRouterTransitionService } from '../../service/router.transition.service';
 import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
 import { Injectable, OnDestroy, inject } from '@angular/core';
@@ -17,6 +18,7 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   readonly uiRouterGlobals = inject(UIRouterGlobals);
 
   private readonly _params = new BehaviorSubject<SegueRefRawSegueParams>(this.uiRouterGlobals.params);
+
   readonly params$ = this._params.asObservable();
 
   private readonly _transitions = new Subject<DbxRouterTransitionEvent>();

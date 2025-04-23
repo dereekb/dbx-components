@@ -1,63 +1,61 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, viewChild, input, effect, computed, ChangeDetectionStrategy } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
+import { FormGroup, FormControl, AbstractControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { type Maybe } from '@dereekb/util';
 import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, map, shareReplay, combineLatest, EMPTY } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
-import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS, MatFormFieldModule } from '@angular/material/form-field';
 import { ErrorStateMatcher } from '@angular/material/core';
-import { DateFilterFn, MatDateRangePicker } from '@angular/material/datepicker';
+import { DateFilterFn, MatDateRangePicker, MatDatepickerModule } from '@angular/material/datepicker';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { TimezoneAbbreviationPipe } from '@dereekb/dbx-core';
 
 interface RangeValue {
-  start?: Maybe<Date>;
-  end?: Maybe<Date>;
+  readonly start?: Maybe<Date>;
+  readonly end?: Maybe<Date>;
 }
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',
-  templateUrl: './calendar.schedule.selection.range.component.html'
+  templateUrl: './calendar.schedule.selection.range.component.html',
+  imports: [MatFormFieldModule, FormsModule, ReactiveFormsModule, DbxButtonSpacerDirective, MatDatepickerModule, TimezoneAbbreviationPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, OnDestroy {
   readonly dbxCalendarStore = inject(DbxCalendarStore);
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
   readonly matFormFieldDefaultOptions = inject<MatFormFieldDefaultOptions>(MAT_FORM_FIELD_DEFAULT_OPTIONS, { optional: true });
 
-  private _required = new BehaviorSubject<boolean>(false);
+  readonly picker = viewChild.required<MatDateRangePicker<Date>>('picker');
 
-  readonly required$ = this._required.asObservable();
+  readonly required = input<boolean>(false);
+  readonly openPickerOnTextClick = input<boolean>(true);
+
+  readonly label = input<Maybe<string>>('Enter a date range');
+  readonly hint = input<Maybe<string>>();
+
+  readonly disabled = input<Maybe<boolean>>();
+  readonly showCustomize = input<boolean>(false);
+
   readonly timezone$ = this.dbxCalendarScheduleSelectionStore.effectiveOutputTimezone$;
 
-  @Input()
-  openPickerOnTextClick: boolean = true;
-
-  @ViewChild('picker')
-  picker!: MatDateRangePicker<Date>;
-
-  @Input()
-  label?: Maybe<string> = 'Enter a date range';
-
-  @Input()
-  hint?: Maybe<string>;
-
-  @Input()
-  set disabled(disabled: Maybe<boolean>) {
+  protected readonly _disabledEffect = effect(() => {
+    const disabled = this.disabled();
     if (disabled) {
       this.range.disable();
     } else {
       this.range.enable();
     }
-  }
+  });
 
-  @Input()
-  showCustomize = false;
+  private readonly _pickerOpened = new BehaviorSubject<boolean>(false);
 
-  private _pickerOpened = new BehaviorSubject<boolean>(false);
-
-  private _requiredSub = new SubscriptionObject();
-  private _syncSub = new SubscriptionObject();
-  private _valueSub = new SubscriptionObject();
+  private readonly _syncSub = new SubscriptionObject();
+  private readonly _valueSub = new SubscriptionObject();
 
   readonly range = new FormGroup({
     start: new FormControl<Maybe<Date>>(null),
@@ -76,9 +74,10 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
 
   readonly minDate$ = this.dbxCalendarScheduleSelectionStore.minDate$;
   readonly maxDate$ = this.dbxCalendarScheduleSelectionStore.maxDate$;
+
   readonly timezoneReleventDate$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
     map((currentDateRange) => {
-      return currentDateRange ? currentDateRange.start ?? currentDateRange.end : undefined ?? new Date();
+      return (currentDateRange ? (currentDateRange.start ?? currentDateRange.end) : undefined) ?? new Date();
     }),
     shareReplay(1)
   );
@@ -114,19 +113,43 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
     shareReplay(1)
   );
 
-  readonly pickerOpened$ = this._pickerOpened.asObservable();
-
-  readonly defaultDatePickerFilter: DateFilterFn<Date> = () => true;
   readonly datePickerFilter$: Observable<DateFilterFn<Date>> = combineLatest([this.dbxCalendarScheduleSelectionStore.isEnabledFilterDayFunction$, this.dbxCalendarScheduleSelectionStore.isInAllowedDaysOfWeekFunction$]).pipe(
     map(([isEnabled, isAllowedDayOfWeek]) => {
       const fn = (date: Date | null) => {
         const result = date ? isAllowedDayOfWeek(date) && isEnabled(date) : true;
         return result;
       };
+
       return fn;
     }),
     shareReplay(1)
   );
+
+  readonly timezoneSignal = toSignal(this.timezone$);
+  readonly timezoneReleventDateSignal = toSignal(this.timezoneReleventDate$, { initialValue: new Date() });
+  readonly isCustomizedSignal = toSignal(this.isCustomized$, { initialValue: false });
+
+  readonly showCustomLabelSignal = computed(() => this.showCustomize() && this.isCustomizedSignal());
+  readonly currentErrorMessageSignal = toSignal(this.currentErrorMessage$);
+  readonly datePickerFilterSignal = toSignal(this.datePickerFilter$, { initialValue: (() => true) as DateFilterFn<Date> });
+
+  protected readonly _requiredUpdateValidatorsEffect = effect(() => {
+    const validators = this.required()
+      ? [
+          (control: AbstractControl) => {
+            const range = control.value;
+
+            if (!range || !range.start || !range.end) {
+              return { required: true };
+            }
+
+            return null;
+          }
+        ]
+      : [];
+
+    this.range.setValidators(validators);
+  });
 
   ngOnInit(): void {
     this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.currentInputRange$.subscribe((x) => {
@@ -159,47 +182,19 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit, O
           this.dbxCalendarScheduleSelectionStore.setInputRange({ inputStart: x.start, inputEnd: x.end });
         }
       });
-
-    // add a required validator when needed
-    this._requiredSub.subscription = this._required.subscribe((x) => {
-      const validators = x
-        ? [
-            (control: AbstractControl) => {
-              const range = control.value;
-
-              if (!range || !range.start || !range.end) {
-                return { required: true };
-              }
-
-              return null;
-            }
-          ]
-        : [];
-
-      this.range.setValidators(validators);
-    });
   }
 
   ngOnDestroy(): void {
-    this._required.complete();
-    this._pickerOpened.complete();
-    this._requiredSub.destroy();
     this._syncSub.destroy();
     this._valueSub.destroy();
   }
 
-  @Input()
-  get required() {
-    return this._required.value;
-  }
-
-  set required(required: boolean) {
-    this._required.next(required);
-  }
-
   clickedDateRangeInput() {
-    if (this.openPickerOnTextClick) {
-      this.picker.open();
+    if (this.openPickerOnTextClick()) {
+      const picker = this.picker();
+      if (picker) {
+        picker.open();
+      }
     }
   }
 

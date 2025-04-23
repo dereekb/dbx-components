@@ -26,16 +26,11 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-web/table"],
       "options": {
-        "tsConfig": "packages/dbx-web/table/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-web/table/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-web/table/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-web/table/**/*.ts", "packages/dbx-web/table/**/*.html", "packages/dbx-web/table/package.json", "packages/dbx-web/table/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "tags": []

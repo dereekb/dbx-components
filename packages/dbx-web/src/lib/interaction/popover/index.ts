@@ -11,6 +11,6 @@ export * from './popover.coordinator.service';
 export * from './popover.header.component';
 export * from './popover.module';
 export * from './popover.position.strategy';
-export * from './popover.scroll.content.component';
+export * from './popover.scroll.content.directive';
 export * from './popover.service';
 export * from './popover';

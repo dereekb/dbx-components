@@ -10,25 +10,32 @@
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 
-      <h4>dbxActionFormModified</h4>
+      <h4>dbxActionFormIsModified</h4>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
-        <p>Using the dbxActionFormModified input, we can pass a function that returns an observable to have more control over whether or not the inital value was modified or not.</p>
-        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormModified]="isFormModified"></doc-action-form-example-form>
+        <p>Using the dbxActionFormIsModified input, we can pass a function that returns an observable to have more control over whether or not the initial value was modified or not.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormIsModified]="isFormModified"></doc-action-form-example-form>
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 
-      <h4>dbxActionFormValidator</h4>
+      <h4>dbxActionFormIsEqual</h4>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
-        <p>Using the dbxActionFormValidator input, we can pass a function that validates the input before passing it to the action. If the value is not valid then the input is rejected.</p>
+        <p>Using the dbxActionFormIsEqual input, we can pass a function that returns an observable to have more control over whether or not the initial value is still the same or not.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormIsEqual]="isFormEqual"></doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>dbxActionFormIsValid</h4>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
+        <p>Using the dbxActionFormIsValid input, we can pass a function that validates the input before passing it to the action. If the value is not valid then the input is rejected.</p>
         <p class="dbx-hint">This example validates the form's date only if the date is a Friday.</p>
-        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormValidator]="validateForm"></doc-action-form-example-form>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$" [dbxActionFormIsValid]="validateForm"></doc-action-form-example-form>
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 
-      <h4>formDisabledOnWorking</h4>
+      <h4>dbxActionFormDisabledOnWorking</h4>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
-        <p>By default dbxActionForm will automatically lock the form while it is working. This behavior can be disabled using the formDisabledOnWorking input.</p>
-        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$"></doc-action-form-example-form>
+        <p>By default dbxActionForm will automatically lock the form while it is working. This behavior can be disabled using the dbxActionFormDisabledOnWorking input.</p>
+        <doc-action-form-example-form dbxActionForm [dbxActionFormDisabledOnWorking]="false" [dbxFormSource]="defaultValue$"></doc-action-form-example-form>
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 

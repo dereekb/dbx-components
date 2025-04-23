@@ -1,18 +1,18 @@
 import { Observable } from 'rxjs';
 import { ListLoadingState, ListLoadingStateContext } from '@dereekb/rxjs';
-import { EventEmitter, forwardRef, Provider, TrackByFunction, Type } from '@angular/core';
+import { forwardRef, OutputEmitterRef, Provider, TrackByFunction, Type } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 export type DbxListSelectionMode = 'select' | 'view';
 
 export interface ListSelectionStateItem<T> {
-  disabled?: boolean;
-  selected?: boolean;
-  itemValue: T;
+  readonly disabled?: boolean;
+  readonly selected?: boolean;
+  readonly itemValue: T;
 }
 
 export interface ListSelectionState<T> {
-  items: ListSelectionStateItem<T>[];
+  readonly items: ListSelectionStateItem<T>[];
 }
 
 /**
@@ -34,19 +34,19 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
   /**
    * Track by configuration.
    */
-  abstract trackBy?: TrackByFunction<T>;
+  abstract readonly trackBy$?: Observable<Maybe<TrackByFunction<T>>>;
   /**
    * (Optional) clicked event emitter.
    *
    * If available, the DbxList will subscribe to it automatically.
    */
-  abstract clickValue?: EventEmitter<T>;
+  abstract clickValue?: OutputEmitterRef<T>;
   /**
    * (Optional) selection changed event emitter.
    *
    * If available, the DbxList will subscribe to it automatically.
    */
-  abstract selectionChange?: EventEmitter<ListSelectionState<T>>;
+  abstract selectionChange?: OutputEmitterRef<ListSelectionState<T>>;
   /**
    * Sets the models input loading state context for the view to render from.
    */

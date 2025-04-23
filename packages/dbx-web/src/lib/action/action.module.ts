@@ -1,18 +1,15 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { DbxButtonModule } from '../button/button.module';
-// import { DbxErrorModule } from '../error/error.module';
 import { DbxActionKeyTriggerDirective } from './key.trigger.directive';
-import { DbxCoreActionModule } from '@dereekb/dbx-core';
+import { DbxActionButtonDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionConfirmDirective } from './action.confirm.directive';
-import { DbxPromptModule } from '../interaction/prompt/prompt.module';
 
+const importsAndExports = [DbxCoreActionModule, DbxActionButtonDirective, DbxActionKeyTriggerDirective, DbxActionConfirmDirective];
+
+/**
+ * Provides all base dbxAction-related components from both @dereekb/core and @dereekb/web.
+ */
 @NgModule({
-  imports: [CommonModule, DbxCoreActionModule, DbxButtonModule, MatSnackBarModule, MatDialogModule, MatButtonModule, DbxPromptModule],
-  declarations: [DbxActionKeyTriggerDirective, DbxActionConfirmDirective],
-  exports: [DbxCoreActionModule, DbxActionKeyTriggerDirective, DbxActionConfirmDirective]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxActionModule {}

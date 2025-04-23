@@ -7,7 +7,8 @@ import { DbxPromptConfirm } from './prompt.confirm';
  * Directive that binds together a confirm dialog with the button.
  */
 @Directive({
-  selector: '[dbxPromptConfirmButton]'
+  selector: '[dbxPromptConfirmButton]',
+  standalone: true
 })
 export class DbxPromptConfirmButtonDirective implements OnInit, DbxButtonInterceptor {
   readonly button = inject(DbxButton, { host: true });

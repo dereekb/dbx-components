@@ -9,7 +9,6 @@ import { FormlyModule } from '@ngx-formly/core';
 import { DbxDateTimeFieldComponent } from './datetime.field.component';
 import { DbxDatePipeModule, DbxValuePipeModule } from '@dereekb/dbx-core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -28,7 +27,6 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
     DbxButtonModule,
     MatButtonModule,
     MatDatepickerModule,
-    MatNativeDateModule,
     MatMenuModule,
     ReactiveFormsModule,
     DbxDatePipeModule,

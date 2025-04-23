@@ -1,6 +1,5 @@
-import { Input, OnDestroy, Directive, OnInit, inject } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
+import { Directive, effect, inject, input } from '@angular/core';
+import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
 
 /**
@@ -8,23 +7,17 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.s
  */
 @Directive({
   selector: '[dbxTwoColumnContext]',
-  providers: provideTwoColumnsContext()
+  providers: provideTwoColumnsContext(),
+  standalone: true
 })
-export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
-  readonly twoColumnsContextStore = inject(TwoColumnsContextStore);
+export class DbxTwoColumnContextDirective {
+  readonly twoColumnsContextStore = inject(TwoColumnsContextStore, { self: true });
+  readonly showRight = input<Maybe<boolean>, Maybe<boolean | ''>>(undefined, { transform: isDefinedAndNotFalse });
 
-  private _showRight = new BehaviorSubject<Maybe<boolean>>(undefined);
-
-  ngOnInit(): void {
-    this.twoColumnsContextStore.setShowRight(this._showRight);
-  }
-
-  ngOnDestroy(): void {
-    this._showRight.complete();
-  }
-
-  @Input()
-  set showRight(showRight: Maybe<boolean | ''>) {
-    this._showRight.next(Boolean(showRight));
-  }
+  protected readonly _showRightEffect = effect(
+    () => {
+      this.twoColumnsContextStore.setShowRightOverride(this.showRight());
+    },
+    { allowSignalWrites: true }
+  );
 }

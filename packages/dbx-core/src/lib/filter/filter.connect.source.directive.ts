@@ -5,7 +5,8 @@ import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
  * Connects the host FilterSource to a FilterSourceConnector.
  */
 @Directive({
-  selector: '[dbxFilterConnectSource]'
+  selector: '[dbxFilterConnectSource]',
+  standalone: true
 })
 export class DbxFilterConnectSourceDirective<F = unknown> implements OnInit {
   readonly filterSource = inject(FilterSource<F>, { host: true });

@@ -6,7 +6,6 @@ import { DbxValueListItem } from './list.view.value';
 // MARK: ValueListView
 export abstract class DbxValueListItemModifier<T = unknown, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
   abstract readonly modifiers$: Observable<ModifierMap<I>>;
-
   abstract addModifiers(modifiers: ArrayOrValue<Modifier<I>>): void;
   abstract removeModifiers(modifiers: ArrayOrValue<Modifier<I>>): void;
 }

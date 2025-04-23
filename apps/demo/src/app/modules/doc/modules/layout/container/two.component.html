@@ -68,7 +68,7 @@
       <h4>Without Headings</h4>
       <p>The example above uses dbx-two-column-head and dbx-two-column-right respectively for the headers. This example uses right and left content directly.</p>
       <button mat-raised-button (click)="showRight = !showRight">Toggle Right Side ({{ showRight }})</button>
-      <dbx-two-column dbxTwoColumnContext [showRight]="showRight" style="height: 200px">
+      <dbx-two-column dbxTwoColumnContext [showRight]="showRight" hasRightContent style="height: 200px">
         <div left style="height: 100%; background: red">
           <span>Left</span>
         </div>
@@ -80,9 +80,14 @@
     <doc-feature-example header="dbxTwoColumnSref and dbxTwoColumnSrefShowRight" hint="Directive used with dbxTwoColumn to configure the backRef value. Is often combined with dbxTwoColumnSrefShowRight, which handles the showRight value.">
       <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="twoRef" dbxTwoColumnSrefShowRight style="height: 200px">
         <dbx-two-block left style="height: 100%; background: red">
+          <dbx-two-column-head top>
+            <span>Click Entry</span>
+          </dbx-two-column-head>
           <dbx-anchor-list [anchors]="childAnchors"></dbx-anchor-list>
         </dbx-two-block>
-        <ui-view right></ui-view>
+        <ng-container right>
+          <ui-view></ui-view>
+        </ng-container>
       </dbx-two-column>
     </doc-feature-example>
   </doc-feature-layout>

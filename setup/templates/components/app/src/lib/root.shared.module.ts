@@ -69,7 +69,6 @@ const ANGULAR_MATERIAL_MODULES = [
   MatExpansionModule,
   MatGridListModule,
   MatIconModule,
-  MatNativeDateModule,
   MatRippleModule,
   MatSidenavModule,
   MatSortModule,

@@ -1,11 +1,14 @@
-import { filterMaybe, LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState, WorkUsingContext } from '@dereekb/rxjs';
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { filterMaybe, LoadingState, isLoadingStateWithDefinedValue, isLoadingStateLoading, LoadingStateWithDefinedValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, WorkUsingContext, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, viewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, Observable, combineLatest, of } from 'rxjs';
 import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeArrayValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
 import { FieldType, FormlyFieldProps } from '@ngx-formly/material/form-field';
 import { FieldTypeConfig } from '@ngx-formly/core';
 import { SourceSelectValueMetaLoader, SourceSelectMetaValueReader, SourceSelectOpenFunction, SourceSelectLoadSourcesFunction, SourceSelectLoadSource, SourceSelectLoadSourceLoadingState, SourceSelectDisplayValue, SourceSelectValue, SourceSelectDisplayFunction, SourceSelectDisplayValueGroup, SourceSelectValueGroup, SourceSelectOptions, SourceSelectOpenSourceResult } from './sourceselect';
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
+import { DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxLoadingComponent } from '@dereekb/dbx-web';
 
 export interface SourceSelectFieldProps<T extends PrimativeKey = PrimativeKey, M = unknown> extends FormlyFieldProps {
   /**
@@ -51,7 +54,11 @@ interface SelectFieldOpenSourceMap<T extends PrimativeKey = PrimativeKey, M = un
  * Component that displays a select view (multi or not)
  */
 @Component({
-  templateUrl: 'sourceselect.field.component.html'
+  selector: 'dbx-form-sourceselectfield',
+  templateUrl: 'sourceselect.field.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MatSelect, MatOption, FormsModule, ReactiveFormsModule, DbxButtonComponent, MatOptgroup, DbxButtonSpacerDirective, DbxActionModule, DbxLoadingComponent],
+  standalone: true
 })
 export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = PrimativeKey, M = unknown> extends FieldType<FieldTypeConfig<SourceSelectFieldProps<T, M>>> implements OnInit, OnDestroy {
   private readonly _cacheMetaSub = new SubscriptionObject();
@@ -63,8 +70,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
   private readonly _fromOpenSource = new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() });
   private readonly _loadSources = new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined);
 
-  @ViewChild('button', { read: ElementRef, static: false })
-  buttonElement!: ElementRef;
+  readonly buttonElement = viewChild<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });
 
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
@@ -245,7 +251,11 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     shareReplay(1)
   );
 
-  readonly allOptionGroups$: Observable<SourceSelectDisplayValueGroup<T, M>[]> = this.allOptionGroupsState$.pipe(valueFromLoadingState(), shareReplay(1));
+  readonly allOptionGroups$: Observable<SourceSelectDisplayValueGroup<T, M>[]> = this.allOptionGroupsState$.pipe(
+    valueFromFinishedLoadingState(),
+    map((x) => x ?? []),
+    shareReplay(1)
+  );
 
   readonly options$: Observable<SourceSelectOptions<T, M>> = this.allOptionGroups$.pipe(
     map((x) => {
@@ -263,6 +273,9 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   readonly nonGroupedValues$ = this.options$.pipe(map((x) => x.nonGroupedValues));
   readonly groupedOptions$ = this.options$.pipe(map((x) => x.groupedValues));
+
+  readonly nonGroupedValuesSignal = toSignal(this.nonGroupedValues$);
+  readonly groupedOptionsSignal = toSignal(this.groupedOptions$);
 
   get sourceSelectField(): SourceSelectFieldProps<T, M> {
     return this.props;
@@ -438,9 +451,9 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
 
   readonly handleSelectOptions: WorkUsingContext<unknown> = (_, context) => {
     const { openSource } = this;
+    const origin = this.buttonElement();
 
-    if (openSource) {
-      const origin = this.buttonElement.nativeElement;
+    if (openSource && origin) {
       const sourceObs = openSource({ origin });
       context.startWorkingWithObservable(
         sourceObs.pipe(

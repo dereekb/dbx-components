@@ -16,20 +16,8 @@
             "command": "npx nx run dbx-firebase:build-base:production"
           },
           {
-            "description": "copy all style files from src to map to respective directory",
-            "command": "echo 'copying dbx-firebase scss files' && cd dist/packages/dbx-firebase/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
-          },
-          {
-            "description": "copy assets folder up from src to assets",
-            "command": "echo 'copying dbx-firebase asset files' && cd dist/packages/dbx-firebase && mkdir -p src/assets && cp -r src/assets assets"
-          },
-          {
-            "description": "delete unnecessary src directory",
-            "command": "echo 'cleaning up dbx-firebase scss files' && rm -r dist/packages/dbx-firebase/src"
-          },
-          {
-            "description": "copy license",
-            "command": "echo 'copying dbx-firebase license' && cp LICENSE dist/packages/dbx-firebase"
+            "description": "finish dbx-firebase build script",
+            "command": "sh packages/dbx-firebase/complete-dbx-firebase-build.sh"
           }
         ],
         "parallel": false,
@@ -57,9 +45,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-firebase", "{projectRoot}/.reports/jest/dbx-firebase.junit.xml"],
       "options": {
-        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-firebase/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-firebase/jest.config.ts"
       }
     },
     "watch": {
@@ -76,10 +62,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-firebase/src/**/*.ts", "packages/dbx-firebase/src/**/*.html", "packages/dbx-firebase/package.json", "packages/dbx-firebase/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "publish-npmjs": {
       "executor": "nx:run-commands",

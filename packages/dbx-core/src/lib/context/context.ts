@@ -11,21 +11,24 @@
  */
 export type DbxAppContextState = string;
 
+/**
+ * The init state of an app after the default context has been initialized.
+ */
 export const DBX_INIT_APP_CONTEXT_STATE = 'init';
 /**
- *
+ * The public state of an app, typically when a user opens up the site to a public page.
  */
 export const DBX_PUBLIC_APP_CONTEXT_STATE = 'public';
 /**
- *
+ * The auth state of an app, typically when a user has not finished logging in.
  */
 export const DBX_AUTH_APP_CONTEXT_STATE = 'auth';
 /**
- *
+ * The onboarding state of an app, typically when a user has completed auth but not finished setting up their account.
  */
 export const DBX_ONBOARD_APP_CONTEXT_STATE = 'onboard';
 /**
- *
+ * The app state of an app, typically when a user has completed auth and onboarding.
  */
 export const DBX_APP_APP_CONTEXT_STATE = 'app';
 

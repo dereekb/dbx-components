@@ -1,8 +1,10 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
-import { Input, Component, TemplateRef, ViewChild, OnDestroy, HostListener, inject } from '@angular/core';
-import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
+import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { map, distinctUntilChanged, shareReplay, BehaviorSubject } from 'rxjs';
+import { NgTemplateOutlet, NgClass } from '@angular/common';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { shareReplay } from 'rxjs';
 import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
 
 /**
@@ -10,54 +12,57 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
  */
 @Component({
   selector: 'dbx-anchor, [dbx-anchor]',
-  templateUrl: './anchor.component.html',
+  template: `
+    @switch (typeSignal()) {
+      @case ('plain') {
+        <ng-container *ngTemplateOutlet="content"></ng-container>
+      }
+      @case ('clickable') {
+        <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="selectedClassSignal()" (click)="clickAnchor()">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+      @case ('sref') {
+        <dbx-injection [config]="srefAnchorConfig">
+          <!-- Injected in child. -->
+        </dbx-injection>
+      }
+      @case ('href') {
+        <a class="dbx-anchor-a dbx-anchor-href" [href]="urlSignal()" [attr.target]="targetSignal()">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+      @case ('disabled') {
+        <a class="dbx-anchor-a dbx-anchor-disabled">
+          <ng-container *ngTemplateOutlet="content"></ng-container>
+        </a>
+      }
+    }
+    <!-- Template content -->
+    <ng-template #content>
+      <ng-content></ng-content>
+    </ng-template>
+  `,
+  standalone: true,
+  imports: [NgTemplateOutlet, NgClass, DbxInjectionComponent],
   host: {
     class: 'd-inline dbx-anchor',
-    'dbx-anchor-block': 'block'
-  }
+    'dbx-anchor-block': 'block()'
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements OnDestroy {
-  private readonly dbNgxRouterWebProviderConfig = inject(DbxRouterWebProviderConfig);
+export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
+  private readonly _dbNgxRouterWebProviderConfig = inject(DbxRouterWebProviderConfig);
 
-  private _templateRef = new BehaviorSubject<Maybe<TemplateRef<unknown>>>(undefined);
-  readonly templateRef$ = this._templateRef.pipe(skipFirstMaybe(), shareReplay(1));
+  readonly block = input<Maybe<boolean>>();
 
-  @Input()
-  public block?: boolean;
+  readonly templateRef = viewChild<string, Maybe<TemplateRef<unknown>>>('content', { read: TemplateRef });
+  readonly templateRef$ = toObservable(this.templateRef).pipe(skipFirstMaybe(), shareReplay(1));
 
-  @ViewChild('content', { read: TemplateRef })
-  get templateRef(): Maybe<TemplateRef<unknown>> {
-    return this._templateRef.value;
-  }
-
-  set templateRef(templateRef: Maybe<TemplateRef<unknown>>) {
-    this._templateRef.next(templateRef);
-  }
-
-  readonly url$ = this.anchor$.pipe(
-    map((x) => x?.url),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
-  readonly target$ = this.anchor$.pipe(
-    map((x) => x?.target),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
-  readonly selectedClass$ = this.selected$.pipe(
-    map((selected) => (selected ? 'dbx-anchor-selected' : '')),
-    shareReplay(1)
-  );
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._templateRef.complete();
-  }
+  readonly selectedClassSignal = computed(() => (this.selectedSignal() ? 'dbx-anchor-selected' : ''));
 
   get srefAnchorConfig(): DbxInjectionComponentConfig {
-    return this.dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
+    return this._dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
   }
 
   clickAnchor(event?: Maybe<MouseEvent>): void {

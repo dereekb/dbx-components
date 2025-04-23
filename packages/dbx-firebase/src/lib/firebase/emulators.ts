@@ -2,59 +2,61 @@ export interface DbxFirebaseEmulatorConfig {
   /**
    * Port to target.
    */
-  port: number;
+  readonly port: number;
   /**
    * Defaults to localhost if not provided.
    */
-  host?: string;
+  readonly host?: string;
 }
 
 export interface DbxFirebaseEmulatorsConfig {
   /**
    * Whether or not to enable the emulators.
+   *
+   * Defaults to false.
    */
-  useEmulators?: boolean;
+  readonly useEmulators?: boolean;
   /**
    * Default host to target. Defaults to localhost if not provided.
    */
-  host?: string;
+  readonly host?: string;
   /**
    * emulator UI configuration
    */
-  ui?: DbxFirebaseEmulatorConfig;
+  readonly ui?: DbxFirebaseEmulatorConfig;
   /**
    * Auth emulator configuration
    */
-  auth?: DbxFirebaseEmulatorConfig;
+  readonly auth?: DbxFirebaseEmulatorConfig;
   /**
    * Firestore emulator configuration
    */
-  firestore?: DbxFirebaseEmulatorConfig;
+  readonly firestore?: DbxFirebaseEmulatorConfig;
   /**
    * Firestore emulator configuration
    */
-  storage?: DbxFirebaseEmulatorConfig;
+  readonly storage?: DbxFirebaseEmulatorConfig;
   /**
    * Functions emulator configuration
    */
-  functions?: DbxFirebaseEmulatorConfig;
+  readonly functions?: DbxFirebaseEmulatorConfig;
   /**
    * Database emulator configuration
    */
-  database?: DbxFirebaseEmulatorConfig;
+  readonly database?: DbxFirebaseEmulatorConfig;
 }
 
 export abstract class DbxFirebaseParsedEmulatorsConfig implements DbxFirebaseEmulatorsConfig {
-  abstract useEmulators: boolean;
-  host?: string;
+  abstract readonly useEmulators: boolean;
+  readonly host?: string;
   /**
    * Fix used by some components to allow changing 0.0.0.0 to localhost. Defaults to true.
    */
-  allow0000ToLocalhost?: boolean;
-  ui?: Required<DbxFirebaseEmulatorConfig>;
-  auth?: Required<DbxFirebaseEmulatorConfig>;
-  firestore?: Required<DbxFirebaseEmulatorConfig>;
-  storage?: Required<DbxFirebaseEmulatorConfig>;
-  functions?: Required<DbxFirebaseEmulatorConfig>;
-  database?: Required<DbxFirebaseEmulatorConfig>;
+  readonly allow0000ToLocalhost?: boolean;
+  readonly ui?: Required<DbxFirebaseEmulatorConfig>;
+  readonly auth?: Required<DbxFirebaseEmulatorConfig>;
+  readonly firestore?: Required<DbxFirebaseEmulatorConfig>;
+  readonly storage?: Required<DbxFirebaseEmulatorConfig>;
+  readonly functions?: Required<DbxFirebaseEmulatorConfig>;
+  readonly database?: Required<DbxFirebaseEmulatorConfig>;
 }

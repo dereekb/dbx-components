@@ -1,9 +1,11 @@
 import { NgModule } from '@angular/core';
 import { DbxListItemAnchorModifierDirective } from './router.list.directive';
 
+/**
+ * @deprecated import DbxValueListItemModifierDirective directly instead.
+ */
 @NgModule({
-  imports: [],
-  declarations: [DbxListItemAnchorModifierDirective],
+  imports: [DbxListItemAnchorModifierDirective],
   exports: [DbxListItemAnchorModifierDirective]
 })
 export class DbxRouterListModule {}

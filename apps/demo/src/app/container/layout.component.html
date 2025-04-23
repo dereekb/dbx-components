@@ -15,13 +15,17 @@
       <button mat-button>Demo</button>
     </dbx-anchor>
     <span class="spacer"></span>
-    <dbx-anchor [anchor]="emulator" *ngIf="showEmulatorButton">
-      <button mat-flat-button color="accent">Emulator Enabled</button>
-    </dbx-anchor>
+    @if (showEmulatorButton) {
+      <dbx-anchor [anchor]="emulator">
+        <button mat-flat-button color="accent">Emulator Enabled</button>
+      </dbx-anchor>
+    }
     <span class="spacer"></span>
-    <dbx-anchor [anchor]="toggleDarkTheme" *ngIf="showToggleDarkThemeButton$ | async">
-      <button mat-button>Toggle Dark Theme</button>
-    </dbx-anchor>
+    @if (showToggleDarkThemeButtonSignal()) {
+      <dbx-anchor [anchor]="toggleDarkTheme">
+        <button mat-button>Toggle Dark Theme</button>
+      </dbx-anchor>
+    }
     <dbx-anchor [anchor]="github">
       <button mat-button>
         <mat-icon class="dbx-icon-spacer">code</mat-icon>

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
@@ -21,7 +21,7 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
 @Component({
   selector: 'dbx-section-page',
   template: `
-    <div class="dbx-section-header" [h]="h ?? 2" [header]="header" [onlyHeader]="onlyHeader" [icon]="icon" [hint]="hint" [hintInline]="true">
+    <div class="dbx-section-header" [h]="headerConfigSignal().h ?? 2" [header]="headerConfigSignal().header" [onlyHeader]="headerConfigSignal().onlyHeader" [icon]="headerConfigSignal().icon" [hint]="headerConfigSignal().hint" [hintInline]="headerConfigSignal().hintInline">
       <ng-content select="[sectionHeader]"></ng-content>
     </div>
     <div class="dbx-section-page-content">
@@ -30,13 +30,21 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
   `,
   host: {
     class: 'd-block dbx-content-page dbx-section-page',
-    '[class]': '"dbx-section-page-scroll-" + scroll'
-  }
+    '[class]': 'classConfig()'
+  },
+  standalone: true,
+  imports: [DbxSectionHeaderComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxSectionPageComponent extends DbxSectionHeaderComponent {
-  @Input()
-  scroll: DbxSectionPageScrollLockedMode = 'all';
+  readonly scroll = input<DbxSectionPageScrollLockedMode>('all');
 
-  @Input()
-  override hintInline = true;
+  readonly classConfig = computed(() => {
+    return `dbx-section-page-scroll-${this.scroll()}`;
+  });
+
+  constructor() {
+    super();
+    this.hintInlineDefault.set(true);
+  }
 }

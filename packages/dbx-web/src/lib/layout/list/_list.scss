@@ -40,8 +40,15 @@ $list-item-padded-min-height: 42px;
   }
 
   .dbx-list-view {
+    // --mat-list-list-item-leading-icon-start-space: 16px;
+    --mat-list-list-item-leading-icon-end-space: 8px;
+
     .mat-mdc-list-base .dbx-list-view-item.mat-mdc-list-item {
       height: 100%; // inherit height from embedded items
+
+      .mdc-list-item__content {
+        user-select: none;
+      }
 
       .mdc-list-item__content > .mat-mdc-list-item-unscoped-content.mdc-list-item__primary-text {
         white-space: normal;
@@ -58,6 +65,12 @@ $list-item-padded-min-height: 42px;
         .mat-mdc-list-item-content {
           min-height: 56px;
         }
+      }
+
+      // Fixes:
+      &.mdc-list-item--disabled .mdc-list-item__start.mat-icon {
+        color: var(--mdc-list-list-item-disabled-leading-icon-color, var(--mat-app-on-surface));
+        opacity: var(--mdc-list-list-item-disabled-leading-icon-opacity);
       }
     }
 
@@ -145,11 +158,11 @@ $list-item-padded-min-height: 42px;
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
+  $color-config: theming.m2-get-color-config($theme-config);
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
-  $cdk-background-color: theming.get-color-from-palette($background, 'background');
-  $cdk-text-color: theming.get-color-from-palette($foreground, 'text');
+  $cdk-background-color: theming.m2-get-color-from-palette($background, 'background');
+  $cdk-text-color: theming.m2-get-color-from-palette($foreground, 'text');
 
   .dbx-list-view-group-header {
     color: var(--mdc-list-list-item-label-text-color);
@@ -171,9 +184,9 @@ $list-item-padded-min-height: 42px;
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-list') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);

@@ -1,9 +1,10 @@
-import { Directive, OnInit, OnDestroy, Input, ViewContainerRef, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, ViewContainerRef, inject, input, effect } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HookResult, Transition, TransitionService } from '@uirouter/core';
-import { Observable, of, race, delay, first, map, mergeMap, tap, firstValueFrom } from 'rxjs';
+import { Observable, of, race, delay, first, map, mergeMap, tap, BehaviorSubject, combineLatest, firstValueFrom } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
 import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
+import { Maybe } from '@dereekb/util';
 
 /**
  * How to handle transitions.
@@ -15,8 +16,6 @@ import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafet
  */
 export type DbxActionTransitionSafetyType = 'none' | 'dialog' | 'auto';
 
-type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | undefined];
-
 /**
  * Context used for preventing a transition from occuring if the action is not complete or is in a modified state.
  *
@@ -25,26 +24,27 @@ type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | un
  * NOTE: This dialog only works for uirouter.
  */
 @Directive({
-  selector: '[dbxActionTransitionSafety]'
+  selector: '[dbxActionTransitionSafety]',
+  standalone: true
 })
 export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
+  protected readonly _safetyType = new BehaviorSubject<Maybe<DbxActionTransitionSafetyType>>(undefined);
+
+  readonly dbxActionTransitionSafety = input<DbxActionTransitionSafetyType>();
+
   protected readonly transitionService = inject(TransitionService);
   protected readonly viewContainerRef = inject(ViewContainerRef);
   protected readonly dialog = inject(MatDialog);
 
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>);
+  readonly safetyType$ = this._safetyType.pipe(map((x) => x ?? 'dialog'));
 
-  @Input('dbxActionTransitionSafety')
-  inputSafetyType?: DbxActionTransitionSafetyType;
+  protected readonly _dbxActionTransitionSafetyUpdateEffect = effect(() => this._safetyType.next(this.dbxActionTransitionSafety()));
 
-  private _dialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
+  private _currentDialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
   private stopWatchingTransition?: () => void;
 
-  get safetyType(): DbxActionTransitionSafetyType {
-    return this.inputSafetyType ?? 'dialog';
-  }
-
-  private get _destroyed(): boolean {
+  private checkIsDestroyed(): boolean {
     return !this.stopWatchingTransition;
   }
 
@@ -64,10 +64,12 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   protected _handleOnBeforeTransition(transition: Transition): HookResult {
+    type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | undefined];
+
     return firstValueFrom(
-      this.source.isModified$.pipe(
+      combineLatest([this.source.isModified$, this.safetyType$]).pipe(
         first(),
-        mergeMap((isModified) => {
+        mergeMap(([isModified, safetyType]) => {
           if (isModified) {
             return race([
               // Watch for success to occur. At that point, close everything.
@@ -75,7 +77,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
                 first(),
                 map(() => [true, undefined] as DbxActionTransitionSafetyRaceResult)
               ),
-              this._handleIsModifiedState(transition).pipe(
+              this._handleIsModifiedState(transition, safetyType).pipe(
                 first(),
                 map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult)
               )
@@ -98,8 +100,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
     ).then((x) => x); // Resolve/Flatten potential promise result.
   }
 
-  protected _handleIsModifiedState(transition: Transition): Observable<HookResult> {
-    const safetyType = this.safetyType;
+  protected _handleIsModifiedState(transition: Transition, safetyType: DbxActionTransitionSafetyType): Observable<HookResult> {
     let obs: Observable<HookResult>;
 
     // console.log('Safety type: ', safetyType);
@@ -145,26 +146,26 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   private _showDialog(transition: Transition): Observable<HookResult> {
-    if (this._destroyed) {
+    if (this.checkIsDestroyed()) {
       return of(true);
     }
 
-    if (!this._dialogRef) {
-      this._dialogRef = this.dialog.open(DbxActionUIRouterTransitionSafetyDialogComponent, {
+    if (!this._currentDialogRef) {
+      this._currentDialogRef = this.dialog.open(DbxActionUIRouterTransitionSafetyDialogComponent, {
         viewContainerRef: this.viewContainerRef
       });
     }
 
-    return this._dialogRef.afterClosed().pipe(
+    return this._currentDialogRef.afterClosed().pipe(
       first(),
-      map((result: DbxActionTransitionSafetyDialogResult | undefined = DbxActionTransitionSafetyDialogResult.STAY) => {
+      map((result: DbxActionTransitionSafetyDialogResult | undefined = 'stay') => {
         // Default to Stay if the user clicks outside.
         switch (result) {
-          case DbxActionTransitionSafetyDialogResult.DISCARD:
-          case DbxActionTransitionSafetyDialogResult.SUCCESS:
-          case DbxActionTransitionSafetyDialogResult.NONE:
+          case 'discard':
+          case 'success':
+          case 'none':
             return true;
-          case DbxActionTransitionSafetyDialogResult.STAY:
+          case 'stay':
             return false;
         }
       })
@@ -172,10 +173,10 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   private _closeDialog(): void {
-    if (this._dialogRef) {
-      this._dialogRef.close(DbxActionTransitionSafetyDialogResult.NONE);
+    if (this._currentDialogRef) {
+      this._currentDialogRef.close('none');
     }
 
-    this._dialogRef = undefined;
+    this._currentDialogRef = undefined;
   }
 }

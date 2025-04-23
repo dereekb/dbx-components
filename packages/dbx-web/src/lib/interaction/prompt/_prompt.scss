@@ -17,7 +17,7 @@ $dbx-popup-controls-height: 33px;
     padding: 40px;
     max-width: $box-max-width;
 
-    &.elevated {
+    &.elevate {
       @include theming.elevation(2);
     }
   }
@@ -31,9 +31,9 @@ $dbx-popup-controls-height: 33px;
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);

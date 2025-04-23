@@ -1,5 +1,8 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDivider } from '@angular/material/divider';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Component used to format a header for a popover.
@@ -10,28 +13,30 @@ import { DbxPopoverContentComponent } from './popover.content.component';
     <div class="dbx-popover-header">
       <div class="dbx-popover-header-content">
         <h3>
-          <mat-icon *ngIf="icon" class="dbx-icon-spacer">{{ icon }}</mat-icon>
-          {{ header }}
+          @if (icon()) {
+            <mat-icon class="dbx-icon-spacer">{{ icon() }}</mat-icon>
+          }
+          {{ header() }}
         </h3>
         <span class="spacer"></span>
         <ng-content></ng-content>
       </div>
     </div>
     <mat-divider></mat-divider>
-  `
+  `,
+  imports: [MatIconModule, MatDivider],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxPopoverHeaderComponent implements OnInit {
   readonly appPopoverContentComponent = inject(DbxPopoverContentComponent, { optional: true });
 
-  @Input()
-  header?: string;
-
-  @Input()
-  icon?: string;
+  readonly header = input<Maybe<string>>();
+  readonly icon = input<Maybe<string>>();
 
   ngOnInit() {
     if (this.appPopoverContentComponent) {
-      this.appPopoverContentComponent.hasHeader = true;
+      this.appPopoverContentComponent.hasHeader.next(true);
     }
   }
 }

@@ -1,10 +1,16 @@
 import { switchMap, distinctUntilChanged, shareReplay, map, type Observable, BehaviorSubject, of, combineLatest, EMPTY, skip, defaultIfEmpty } from 'rxjs';
 import { type FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
-import { asObservable, type ObservableOrValue } from '../rxjs/getter';
-import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
+import { asObservable, type MaybeObservableOrValue } from '../rxjs/getter';
+import { switchMapFilterMaybe, filterMaybe } from '../rxjs/value';
 import { type Destroyable, type Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '../subscription';
+
+export interface FilterSourceInstanceConfig<F> {
+  readonly initWithFilter?: Maybe<Observable<F>>;
+  readonly defaultFilter?: MaybeObservableOrValue<F>;
+  readonly filter?: Maybe<F>;
+}
 
 /**
  * A basic FilterSource implementation.
@@ -14,13 +20,17 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   private readonly _initialFilterTakesPriority = new BehaviorSubject<boolean>(false);
 
   private readonly _filter = new BehaviorSubject<Maybe<F>>(undefined);
+
+  /**
+   * The initial filter can only pass through observables that always emit a value.
+   */
   private readonly _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);
   private readonly _defaultFilter = new BehaviorSubject<Maybe<Observable<Maybe<F>>>>(undefined);
 
-  readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(switchMapMaybeObs());
+  readonly defaultFilter$: Observable<Maybe<F>> = this._defaultFilter.pipe(switchMapFilterMaybe());
   readonly initialFilter$: Observable<Maybe<F>> = combineLatest([this._initialFilter, this._defaultFilter]).pipe(
     map(([a, b]) => a ?? b),
-    switchMapMaybeObs(),
+    switchMapFilterMaybe(),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -35,12 +45,28 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     shareReplay(1)
   );
 
+  constructor(config?: FilterSourceInstanceConfig<F>) {
+    const { initWithFilter, defaultFilter, filter } = config ?? {};
+
+    if (initWithFilter != null) {
+      this.initWithFilter(initWithFilter);
+    }
+
+    if (defaultFilter != null) {
+      this.setDefaultFilter(defaultFilter);
+    }
+
+    if (filter != null) {
+      this.setFilter(filter);
+    }
+  }
+
   initWithFilter(filterObs: Observable<F>): void {
     this._initialFilter.next(filterObs);
     this.initFilterTakesPriority();
   }
 
-  setDefaultFilter(filter: Maybe<ObservableOrValue<Maybe<F>>>): void {
+  setDefaultFilter(filter: MaybeObservableOrValue<F>): void {
     this._defaultFilter.next(asObservable(filter));
   }
 
@@ -56,11 +82,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   }
 
   // MARK: Accessors
-  get initialFilterTakesPriority() {
-    return this._initialFilterTakesPriority.value;
-  }
-
-  set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
+  setInitialFilterTakesPriority(initialFilterTakesPriority: boolean) {
     this._initialFilterTakesPriority.next(initialFilterTakesPriority);
     this.initFilterTakesPriority();
   }
@@ -99,5 +121,13 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     this._filter.complete();
     this._initialFilter.complete();
     this._defaultFilter.complete();
+  }
+
+  // MARK: Compat
+  /**
+   * @deprecated use setInitialFilterTakesPriority instead.
+   */
+  set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
+    this.setInitialFilterTakesPriority(initialFilterTakesPriority);
   }
 }

@@ -447,13 +447,14 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       description: 'Search for models using a string and the default display presentation.',
       allowStringValues: false,
       searchOnEmptyText: true,
-      search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+      search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(0),
       displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE
     }),
     searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'customDisplay',
       label: 'Search And Pick A Model (Custom Display)',
       description: 'Search for models using a string and custom display presentation set on the field.',
+      placeholder: 'Type to search (3 characters minimum)',
       allowStringValues: false,
       searchOnEmptyText: true,
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
@@ -466,6 +467,7 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       key: 'customDisplayItems',
       label: 'Search And Pick A Model (Custom Display)',
       description: 'Search for models using a string and custom display presentation set per item.',
+      placeholder: 'Type to search (3 characters minimum)',
       allowStringValues: false,
       searchOnEmptyText: true,
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),

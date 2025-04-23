@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { computed, Directive, input } from '@angular/core';
 import { DbxThemeColor } from '../style/style';
 
 /**
@@ -8,10 +8,11 @@ import { DbxThemeColor } from '../style/style';
   selector: 'dbx-content-border,[dbxContentBorder]',
   host: {
     class: 'd-block dbx-content-border',
-    '[class]': `"dbx-content-border-" + color`
-  }
+    '[class]': `classConfig()`
+  },
+  standalone: true
 })
 export class DbxContentBorderDirective {
-  @Input()
-  color: DbxThemeColor = 'background';
+  readonly color = input<DbxThemeColor>('background');
+  readonly classConfig = computed(() => `dbx-content-border-${this.color()}`);
 }

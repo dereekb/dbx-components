@@ -58,11 +58,11 @@ export interface CalendarScheduleSelectionInputDateRange {
   /**
    * Input Start Date
    */
-  inputStart: Date;
+  readonly inputStart: Date;
   /**
    * Input End Date
    */
-  inputEnd: Date;
+  readonly inputEnd: Date;
 }
 
 export type PartialCalendarScheduleSelectionInputDateRange = Partial<MaybeMap<CalendarScheduleSelectionInputDateRange>>;

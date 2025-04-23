@@ -1,33 +1,17 @@
-import { Injector, ModuleWithProviders, NgModule, Provider } from '@angular/core';
-import { DbxAuthService } from '@dereekb/dbx-core';
-import { DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate } from './service/firebase.auth.service';
+import { ModuleWithProviders, NgModule } from '@angular/core';
+import { provideDbxFirebaseAuth, ProvideDbxFirebaseAuthConfig } from './firebase.auth.providers';
 
-export interface DbxFirebaseAuthModuleConfig {
-  delegateFactory?: (injector: Injector) => DbxFirebaseAuthServiceDelegate;
-}
+export type DbxFirebaseAuthModuleConfig = ProvideDbxFirebaseAuthConfig;
 
+/**
+ * @deprecated use provideDbxFirebaseAuth() instead
+ */
 @NgModule({})
 export class DbxFirebaseAuthModule {
   static forRoot(config: DbxFirebaseAuthModuleConfig): ModuleWithProviders<DbxFirebaseAuthModule> {
-    const providers: Provider[] = [
-      DbxFirebaseAuthService,
-      {
-        provide: DbxAuthService,
-        useExisting: DbxFirebaseAuthService
-      }
-    ];
-
-    if (config.delegateFactory) {
-      providers.push({
-        provide: DbxFirebaseAuthServiceDelegate,
-        useFactory: config.delegateFactory,
-        deps: [Injector]
-      });
-    }
-
     return {
       ngModule: DbxFirebaseAuthModule,
-      providers
+      providers: [provideDbxFirebaseAuth(config)]
     };
   }
 }

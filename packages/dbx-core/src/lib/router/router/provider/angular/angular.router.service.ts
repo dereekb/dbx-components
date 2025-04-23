@@ -1,6 +1,7 @@
 import { map, Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { asObservable, filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
-import { DbxRouterService, DbxRouterTransitionService } from '../../service';
+import { DbxRouterService } from '../../service/router.service';
+import { DbxRouterTransitionService } from '../../service/router.transition.service';
 import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';

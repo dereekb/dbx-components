@@ -10,10 +10,12 @@ import { type Maybe } from '@dereekb/util';
  */
 @Directive({
   selector: '[dbxFormlyFields]',
-  providers: provideFormlyContext()
+  providers: provideFormlyContext(),
+  standalone: true
 })
 export class DbxFormlyFieldsContextDirective<T = unknown> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
-  private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
+  private readonly _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
+
   readonly fields$ = this._fields.asObservable();
 
   @Input('dbxFormlyFields')

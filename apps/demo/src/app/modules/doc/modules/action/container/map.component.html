@@ -5,7 +5,7 @@
       <div dbxActionContextMap>
         <!-- Actions -->
         <p>The first action in the example is the save action.</p>
-        <dbx-action-example-tools #saveAction="action" dbxAction dbxActionMapSource="save" [dbxActionHandler]="handleSaveDraft" [dbxActionDisabled]="!(saveAction.isModified$ | async)" dbxActionSnackbar snackbarDefault="save" dbxActionMapWorkingDisable>
+        <dbx-action-example-tools #saveAction="action" dbxAction dbxActionMapSource="save" [dbxActionHandler]="handleSaveDraft" [dbxActionDisabled]="!(saveAction.isModified$ | async)" [dbxActionSnackbar] snackbarDefault="save" dbxActionMapWorkingDisable>
           <doc-action-form-example-form dbxActionForm [dbxFormSource]="value$"></doc-action-form-example-form>
           <dbx-button dbxActionFromMap="save" icon="save" text="Save Changes" dbxActionButton></dbx-button>
         </dbx-action-example-tools>
@@ -15,7 +15,7 @@
           <b>dbxActionMapWorkingDisable</b>
           directive.
         </p>
-        <dbx-action-example-tools dbxAction dbxActionMapSource="send" [dbxActionHandler]="handleSendDraft" dbxActionValue dbxActionSnackbar snackbarDefault="send" [dbxActionDisabled]="saveAction.isModified$ | async" dbxActionMapWorkingDisable></dbx-action-example-tools>
+        <dbx-action-example-tools dbxAction dbxActionMapSource="send" [dbxActionHandler]="handleSendDraft" dbxActionValue [dbxActionSnackbar] snackbarDefault="send" [dbxActionDisabled]="saveAction.isModified$ | async" dbxActionMapWorkingDisable></dbx-action-example-tools>
 
         <p>
           This button is linked to the send action via the

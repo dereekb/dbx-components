@@ -1,4 +1,4 @@
-import { Directive, Input, OnInit, inject } from '@angular/core';
+import { Directive, OnInit, inject, input } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
@@ -10,30 +10,16 @@ import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs'
  * Action directive that displays a snackbar when the action context hits a certain state.
  */
 @Directive({
-  selector: '[dbxActionSnackbar]'
+  selector: '[dbxActionSnackbar]',
+  standalone: true
 })
 export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
   readonly dbxActionSnackbarService = inject(DbxActionSnackbarService);
 
-  private _snackbarFunction?: Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>;
-
-  @Input('dbxActionSnackbar')
-  get snackbarFunction(): Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> {
-    return this._snackbarFunction;
-  }
-
-  set snackbarFunction(snackbarFunction: Maybe<'' | DbxActionSnackbarDisplayConfigGeneratorFunction>) {
-    if (snackbarFunction) {
-      this._snackbarFunction = snackbarFunction;
-    }
-  }
-
-  @Input()
-  dbxActionSnackbarDefault?: Maybe<DbxActionSnackbarType>;
-
-  @Input()
-  dbxActionSnackbarUndo?: DbxActionSnackbarGeneratorUndoInput<T, O>;
+  readonly dbxActionSnackbarDefault = input<Maybe<DbxActionSnackbarType>>();
+  readonly dbxActionSnackbarUndo = input<Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>>();
+  readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>>();
 
   ngOnInit(): void {
     this.sub = this.source
@@ -52,10 +38,11 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
   protected buildConfigurationForEvent(event: DbxActionSnackbarEvent<O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
     const input: DbxActionSnackbarGeneratorInput<T, O> = {
       event,
-      undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo : undefined // only show undo on success.
+      undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo() : undefined // only show undo on success.
     };
 
-    return this.snackbarFunction ? this.snackbarFunction(input) : this.dbxActionSnackbarService.generateDisplayConfig(this.dbxActionSnackbarDefault, input);
+    const snackbarFunction = this.dbxActionSnackbar();
+    return snackbarFunction ? snackbarFunction(input) : this.dbxActionSnackbarService.generateDisplayConfig(this.dbxActionSnackbarDefault(), input);
   }
 
   protected showSnackbarForConfiguration(config: DbxActionSnackbarDisplayConfig<T, O>, event: DbxActionSnackbarEvent<O>) {

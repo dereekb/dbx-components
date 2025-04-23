@@ -6,4 +6,5 @@ export * from './formly.context';
 export * from './formly.context.directive';
 export * from './formly.directive';
 export * from './formly.form.component';
+export * from './formly.component.template';
 export * from './formly.module';

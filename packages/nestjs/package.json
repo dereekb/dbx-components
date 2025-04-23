@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "11.1.8",
+  "version": "12.0.0",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -26,9 +26,9 @@
   "types": "./src/index.d.ts",
   "peerDependencies": {
     "@nestjs/common": "^10.0.0",
-    "express": "4.18.2",
+    "express": "4.21.2",
     "raw-body": "2.5.2",
-    "body-parser": "1.20.2",
+    "body-parser": "1.20.3",
     "@nestjs/config": "^3.0.0",
     "@dereekb/util": "*"
   },

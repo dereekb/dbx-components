@@ -8,7 +8,7 @@ import { type Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractFilterSourceConnectorDirective<F> implements FilterSourceConnector<F>, FilterSource<F>, OnDestroy {
-  private _source = new BehaviorSubject<Maybe<FilterSource<F>>>(undefined);
+  private readonly _source = new BehaviorSubject<Maybe<FilterSource<F>>>(undefined);
 
   readonly filter$: Observable<F> = this._source.pipe(
     switchMap((x) => x?.filter$ ?? of(undefined)),

@@ -1,0 +1,104 @@
+Angular 16 → 18 Conversion Rules (LLM‑Optimized)
+==================================================
+
+Use this deterministic checklist when modernizing any Angular component/directive.
+
+───────────────────────────────────────────────────────────────────────────────
+A. Component / Directive Metadata
+───────────────────────────────────────────────────────────────────────────────
+1. `standalone: true`
+2. `imports: [ … ]` for everything used in the template (exclude `NgIf`, `NgSwitch`, `NgSwitchCase`).
+3. `changeDetection: ChangeDetectionStrategy.OnPush`
+4. Ignore compile‑time import errors; developer will resolve later.
+
+───────────────────────────────────────────────────────────────────────────────
+B. Signals vs. RxJS
+───────────────────────────────────────────────────────────────────────────────
+General
+• Expose remaining Observables to templates via `toSignal(obs$)`.
+• Convert a `BehaviorSubject` to `signal` **only** when:
+  – Consumed in template with `| async`, **and**
+  – Value originates from an `@Input`.
+
+Naming
+| Scope  | Declaration                                                       | Example                       |
+|--------|-------------------------------------------------------------------|-------------------------------|
+| Private| `private readonly _fooSignal = signal<T>(init)`                   | `_fooSignal`                  |
+| Public | `readonly fooSignal = this._fooSignal.asReadonly()`               | `fooSignal`                   |
+| Derived| `readonly barSignal = computed(…)` / `toSignal(obs$)`              | `barSignal`                   |
+| Input  | `readonly foo = input<Maybe<T>>()`  (no “Signal” suffix)           | `foo`                         |
+
+Rules
+1. Do **not** wrap a single signal in a no‑op `computed()`.
+2. All public signals (including `toSignal`) must end with `Signal`.
+3. Template: replace `{{ obs$ | async }}` with `{{ fooSignal() }}`.
+
+───────────────────────────────────────────────────────────────────────────────
+C. Inputs, Outputs, ViewChild
+───────────────────────────────────────────────────────────────────────────────
+| v16 Syntax                                            | v18 Replacement |
+|-------------------------------------------------------|-----------------|
+| `@Input() foo?: T;`                                   | `readonly foo = input<Maybe<T>>();` |
+| Setter input:
+```ts
+@Input() set foo(x) { svc.setFoo(x); }
+```
+  →
+```ts
+readonly foo = input<Maybe<T>>();
+protected readonly _fooEffect = effect(() => svc.setFoo(this.foo()));
+```
+| `@Output() foo = new EventEmitter<T>();`              | `readonly foo = output<T>();` |
+| `@ViewChild(…) bar!: X;`                              | `readonly bar = viewChild<X>(…);` |
+
+Notes: No EventEmitter cleanup; remove related `ngOnDestroy` logic.
+
+───────────────────────────────────────────────────────────────────────────────
+D. Template Control Flow
+───────────────────────────────────────────────────────────────────────────────
+```html
+*ngIf="cond"                →   @if (cond) { … }
+*ngSwitch="val"             →   @switch (val) { @case (…) { … } }
+*ngSwitchCase="x"           →   @case (x) { … }
+```
+
+───────────────────────────────────────────────────────────────────────────────
+E. Lifecycle Cleanup
+───────────────────────────────────────────────────────────────────────────────
+• If `ngOnDestroy` becomes empty, delete it and drop `implements OnDestroy`.
+
+───────────────────────────────────────────────────────────────────────────────
+F. Coding Conventions
+───────────────────────────────────────────────────────────────────────────────
+• Fields should be `readonly` where feasible.
+• Prefer explicit setters (`setValue(x)`) over property setters unless using `input()`.
+• Single `return` per function (except guard clauses).
+• For optional returns: `let result: Maybe<T> = undefined;` then set/return.
+• `SubscriptionObject` instances should be `readonly`.
+• NgModule refactor:
+```ts
+const importsAndExports = [ … ];
+@NgModule({ imports: importsAndExports, exports: importsAndExports })
+export class FooModule {}
+```
+
+───────────────────────────────────────────────────────────────────────────────
+G. Anti‑Patterns to Avoid
+───────────────────────────────────────────────────────────────────────────────
+1. Redundant state signal
+```ts
+// ❌
+private readonly _colSignal = signal<Maybe<X>>(undefined);
+readonly col = input<Maybe<X>>();
+effect(() => this._colSignal.set(this.col()));
+```
+   → Use `this.col()` directly.
+
+2. Pointless computed wrapper
+```ts
+// ❌
+readonly col = input<Maybe<X>>();
+readonly colSignal = computed(() => this.col());
+```
+
+Stop reading here. Use this sheet as the single source of truth for upgrades.

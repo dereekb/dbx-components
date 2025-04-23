@@ -6,7 +6,7 @@ import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } fro
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, takeFront } from '@dereekb/util';
-import { pascalCase } from 'change-case';
+import { pascalCase } from 'change-case-all';
 
 @Component({
   templateUrl: './list.component.html'
@@ -22,7 +22,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   selectionState?: ListSelectionState<DocValue>;
 
   private _values = new BehaviorSubject<DocValue[]>([]);
-  private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
+  private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>('view');
 
   readonly selectionMode$ = this._selectionMode.asObservable();
 
@@ -84,8 +84,8 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly statePermanentlyLoading$: Observable<ListLoadingState<any>> = of(beginLoading() as ListLoadingState<any>);
   readonly stateWithNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of(
     successResult<DocValue[]>([
-      { name: 'A', icon: 'a' },
-      { name: 'B', icon: 'b' }
+      { name: 'A', icon: 'warning' },
+      { name: 'B', icon: 'person' }
     ])
   );
 
@@ -93,8 +93,8 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly statePermanentlyLoadingAfterEmptyResult$: Observable<ListLoadingState<any>> = this.statePermanentlyLoading$.pipe(startWith(successResult([])));
   readonly statePermanentlyLoadingAfterNonEmptyResult$: Observable<ListLoadingState<DocValue>> = of({
     ...successResult<DocValue[]>([
-      { name: 'A', icon: 'a' },
-      { name: 'B', icon: 'b' }
+      { name: 'A', icon: 'warning' },
+      { name: 'B', icon: 'person' }
     ]),
     ...beginLoading()
   } as ListLoadingState<any>);

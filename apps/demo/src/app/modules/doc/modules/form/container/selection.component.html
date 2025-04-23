@@ -1,43 +1,10 @@
 <dbx-content-container>
   <doc-feature-layout header="Selection Fields" hint="">
     <!-- Examples -->
-    <h3>Select</h3>
-    <p>The typical select fields.</p>
-    <doc-feature-example header="valueSelectionField()" hint="A field that lets you select static options.">
-      <doc-form-example-form [dbxFormlyFields]="valueSelectionFields"></doc-form-example-form>
-    </doc-feature-example>
-    <h3>Source Select</h3>
-    <p>Selection field that provides a button for finding/retrieving additional values through an arbitrary source. The selectable value must always be a key. Several delegate functions handle retrieving values from pre-configured sources, and metadata via the existing values.</p>
-    <doc-feature-example header="sourceSelectField()" hint="A select that displays items from various sources, and a single button to retrieve more values.">
-      <doc-form-example-form [dbxFormlyFields]="sourceSelectFields" [dbxFormSource]="sourceSelectFieldsValue"></doc-form-example-form>
-    </doc-feature-example>
-    <h3>Dbx List</h3>
-    <doc-feature-example header="dbxListField()" hint="Allows you to use a dbxList to select items.">
-      <doc-form-example-form [dbxFormlyFields]="dbxListFields" [dbxFormSource]="initialListSelectionValues$"></doc-form-example-form>
-    </doc-feature-example>
     <h3>Pickable</h3>
     <p>Pickable fields are use to display a list of preset/static values that the user can choose from.</p>
-    <doc-feature-example header="pickableItemChipField()" hint="A field that lets you choose items from a set of chips.">
-      <doc-form-example-form [dbxFormlyFields]="pickableItemChipFields" [dbxFormSource]="initialItemChipFieldsValues$"></doc-form-example-form>
-    </doc-feature-example>
     <doc-feature-example header="pickableItemListField()" hint="A field that lets you choose values from a set of items.">
       <doc-form-example-form [dbxFormlyFields]="pickableItemListFields"></doc-form-example-form>
-    </doc-feature-example>
-    <h3>Searchable</h3>
-    <p>Seaarchable fields are more complex fields that support searching for items that the user can pick.</p>
-    <doc-feature-example header="searchableChipField()" hint="A field that provides a way to search items and select multiple values as chips.">
-      <doc-form-example-form [dbxFormlyFields]="searchableChipFields"></doc-form-example-form>
-    </doc-feature-example>
-    <doc-feature-example header="searchableTextField()" hint="A field that lets you search for a single item and pick it using a search field. It can also accept the user's text input as the value.">
-      <p>The intention of this field is to make searching and picking a single item easy, and leaves a lot of power to the developer.</p>
-      <p>This field is highly customizable, allowing for customization on a per-pick basis.</p>
-      <doc-form-example-form [dbxFormlyFields]="searchableTextFields"></doc-form-example-form>
-      <h4>Anchors</h4>
-      <p>It can also be configured to display content within a dbx-anchor value, allowing for navigation as a result of searching.</p>
-      <p *ngIf="valueClicked" class="dbx-ok">Value Clicked: {{ valueClicked }}</p>
-      <doc-form-example-form [dbxFormlyFields]="searchableTextFieldsWithAnchors" [dbxFormSource]="anchorFieldValue"></doc-form-example-form>
-      <!-- TODO: Make this test more obvious when in use, like changing display text or similar. -->
-      <!-- <button mat-button (click)="refreshDisplayValues()">Refresh Display Values</button> -->
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

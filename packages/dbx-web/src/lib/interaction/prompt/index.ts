@@ -1,4 +1,4 @@
-export * from './prompt.box.component';
+export * from './prompt.box.directive';
 export * from './prompt.button.confirm.directive';
 export * from './prompt.component';
 export * from './prompt.confirm';

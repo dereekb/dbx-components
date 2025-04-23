@@ -1,12 +1,19 @@
-import { DbxStyleService } from '@dereekb/dbx-web';
+import { DbxAnchorComponent, DbxBodyDirective, DbxButtonSpacerDirective, DbxStyleBodyDirective, DbxStyleDirective, DbxStyleService } from '@dereekb/dbx-web';
 import { ClickableAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
 import { Component, inject } from '@angular/core';
 import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { UIView } from '@uirouter/angular';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   templateUrl: './layout.component.html',
-  styleUrls: ['./layout.component.scss']
+  styleUrls: ['./layout.component.scss'],
+  imports: [UIView, DbxStyleBodyDirective, DbxBodyDirective, DbxStyleDirective, MatToolbar, DbxAnchorComponent, MatButtonModule, DbxButtonSpacerDirective, MatIconModule],
+  standalone: true
 })
 export class AppLayoutComponent {
   readonly dbxStyleService = inject(DbxStyleService);
@@ -18,7 +25,7 @@ export class AppLayoutComponent {
     routes: ['demo']
   }).pipe(distinctUntilChanged(), shareReplay(1));
 
-  readonly showToggleDarkThemeButton$ = this.isDemoRouteActive$.pipe(map((x) => !x));
+  readonly showToggleDarkThemeButtonSignal = toSignal(this.isDemoRouteActive$.pipe(map((x) => !x)));
 
   readonly landing: ClickableAnchor = {
     ref: 'landing'

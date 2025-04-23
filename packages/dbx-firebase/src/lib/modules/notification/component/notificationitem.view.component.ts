@@ -1,46 +1,36 @@
-import { Component, Input, OnDestroy } from '@angular/core';
-import { DbxWidgetViewComponentConfig } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component, input, computed } from '@angular/core';
+import { DbxWidgetViewComponentConfig, DbxWidgetViewComponent } from '@dereekb/dbx-web';
 import { NotificationItem, NotificationItemMetadata } from '@dereekb/firebase';
-import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
 import { DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE, dbxWidgetTypeForNotificationTemplateType } from '../service';
 
 @Component({
   selector: 'dbx-firebase-notificationitem-view',
   template: `
-    <dbx-widget-view [config]="config$ | async"></dbx-widget-view>
-  `
+    <dbx-widget-view [config]="configSignal()"></dbx-widget-view>
+  `,
+  standalone: true,
+  imports: [DbxWidgetViewComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxFirebaseNotificationItemViewComponent<D extends NotificationItemMetadata = {}> implements OnDestroy {
-  private readonly _item = new BehaviorSubject<Maybe<NotificationItem<D>>>(undefined);
+export class DbxFirebaseNotificationItemViewComponent<D extends NotificationItemMetadata = {}> {
+  readonly item = input<Maybe<NotificationItem<D>>>();
 
-  readonly config$: Observable<DbxWidgetViewComponentConfig> = this._item.pipe(
-    filterMaybe(),
-    map((data) => {
+  readonly configSignal = computed(() => {
+    const data = this.item();
+
+    let config: Maybe<DbxWidgetViewComponentConfig> = undefined;
+
+    if (data) {
       const type = dbxWidgetTypeForNotificationTemplateType(data.t);
 
-      const widgetConfig: DbxWidgetViewComponentConfig = {
+      config = {
         type,
         data,
         defaultType: DEFAULT_FIREBASE_NOTIFICATION_ITEM_WIDGET_TYPE
       };
+    }
 
-      return widgetConfig;
-    }),
-    shareReplay(1)
-  );
-
-  ngOnDestroy(): void {
-    this._item.complete();
-  }
-
-  @Input()
-  get item(): Maybe<NotificationItem<D>> {
-    return this._item.getValue();
-  }
-
-  set item(value: Maybe<NotificationItem<D>>) {
-    this._item.next(value);
-  }
+    return config;
+  });
 }

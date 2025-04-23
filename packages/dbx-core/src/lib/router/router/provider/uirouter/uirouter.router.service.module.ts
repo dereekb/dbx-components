@@ -3,6 +3,9 @@ import { DbxRouterTransitionService } from '../../service/router.transition.serv
 import { DbxRouterService } from '../../service/router.service';
 import { DbxUIRouterService } from './uirouter.router.service';
 
+/**
+ * @deprecated use provideDbxUIRouterService() instead.
+ */
 @NgModule({})
 export class DbxCoreUIRouterSegueModule {
   static forRoot(): ModuleWithProviders<DbxCoreUIRouterSegueModule> {

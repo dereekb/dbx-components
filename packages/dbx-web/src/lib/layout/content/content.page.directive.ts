@@ -7,6 +7,7 @@ import { Directive } from '@angular/core';
   selector: 'dbx-content-page,[dbxContentPage]',
   host: {
     class: 'd-block dbx-content-page'
-  }
+  },
+  standalone: true
 })
 export class DbxContentPageDirective {}

@@ -2,11 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["segment-analytics", "jest"],
+    "types": ["segment-analytics", "jest", "node"],
     "target": "ES2022",
     "useDefineForClassFields": true
   },
   "files": ["src/main.ts"],
-  "include": ["src/**/*.d.ts"],
   "exclude": ["**/*.spec.ts", "jest.config.ts"]
 }

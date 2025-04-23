@@ -6,20 +6,40 @@ import { endAtValue, type FirestoreQueryConstraint, orderByDocumentId, startAtVa
 
 // MARK: Parents
 /**
- * Use with a CollectionGroup query to return all child documents that are under a given parent.
+ * Creates constraints to query all child documents under a specific parent document reference.
  *
- * @param parentRef U
- * @returns
+ * This function is designed to be used with a CollectionGroup query to filter results to only
+ * include documents that are descendants of the specified parent. It's useful for hierarchical data
+ * structures where you need to retrieve all documents of a certain type that belong to a specific parent.
+ *
+ * @template P - The parent document data type
+ * @param parentRef - The parent document reference
+ * @returns Array of query constraints to filter by parent document
+ *
+ * @example
+ * // Get all 'comments' documents under a specific 'post'
+ * const postRef = doc(firestore, 'posts', postId);
+ * const query = collectionGroup(firestore, 'comments')
+ *   .where(...allChildDocumentsUnderParent(postRef));
  */
 export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>): FirestoreQueryConstraint[] {
   return allChildDocumentsUnderParentPath(parentRef.path);
 }
 
 /**
- * Use with a CollectionGroup query to return all child documents that have a given path.
+ * Creates constraints to query all child documents under a specific parent path.
  *
- * @param parentPath
- * @returns
+ * Similar to allChildDocumentsUnderParent but takes a string path instead of a document reference.
+ * This is useful when you have the path to a parent document but don't need to create a reference.
+ * Uses a range query on document IDs to efficiently filter for descendants.
+ *
+ * @param parentPath - The full path to the parent document (e.g., 'users/123')
+ * @returns Array of query constraints to filter by parent path
+ *
+ * @example
+ * // Get all 'comments' under a specific post without creating a reference
+ * const query = collectionGroup(firestore, 'comments')
+ *   .where(...allChildDocumentsUnderParentPath('posts/abc123'));
  */
 export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQueryConstraint[] {
   // https://medium.com/firebase-developers/how-to-query-collections-in-firestore-under-a-certain-path-6a0d686cebd2
@@ -28,16 +48,25 @@ export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQ
 }
 
 /**
- * Use with a CollectionGroup query to return all child documents that are under a given path based on values in a field.
+ * Creates constraints to query documents that have a field value starting with a specific prefix.
  *
- * For example, if each value has a field that references another object with a parent, you can filter on that parent's value range, or parents of that value in order to return
- * all jobs for that range.
+ * Unlike allChildDocumentsUnderParent, this function filters on a field value rather than
+ * the document path. This is useful when you're storing hierarchical references in a field
+ * rather than relying on the document path itself.
  *
- * Example:
- * - objects with path "rc/aaa/rcs/bbb" and "rc/aaa/rcs/ccc" will be returned when querying for "rc/aaa".
+ * For example, if documents have a 'parentPath' field that contains a string path, you can
+ * filter to find all documents where that field starts with a specific value.
  *
- * @param parentValue
- * @returns
+ * @template T - The document data type
+ * @param orderByFieldPath - The field path to filter on
+ * @param parentValue - The string value prefix to match
+ * @param sortDirection - Optional direction to sort results (default: 'asc')
+ * @returns Array of query constraints to filter by field value prefix
+ *
+ * @example
+ * // Find all documents where the 'parentPath' field starts with 'organizations/org123/'
+ * const query = collectionGroup(firestore, 'tasks')
+ *   .where(...allChildDocumentsUnderRelativePath('parentPath', 'organizations/org123/'));
  */
 export function allChildDocumentsUnderRelativePath<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function allChildDocumentsUnderRelativePath(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -46,22 +75,44 @@ export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath:
 }
 
 /**
- * Searches a specified field for string values that start with a model key's collection type.
+ * Creates constraints to find documents where a field contains a reference to a specific model type.
  *
- * @param orderByFieldPath
- * @param parentValue
- * @param sortDirection
+ * This utility searches for string values that start with a specific model collection type prefix.
+ * It's useful when you're storing references to other models as strings in the format
+ * 'collectionType/id'.
+ *
+ * @template T - The document data type
+ * @param orderByFieldPath - The field containing model references
+ * @param value - The root model identity containing the collection type to search for
+ * @param sortDirection - Optional direction to sort results (default: 'asc')
+ * @returns Array of query constraints to filter by model type
+ *
+ * @example
+ * // Find all documents where the 'reference' field contains a reference to a 'users' model
+ * const query = collection(firestore, 'documents')
+ *   .where(...whereStringHasRootIdentityModelKey('reference', { collectionType: 'users' }));
  */
 export function whereStringHasRootIdentityModelKey<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: RootFirestoreModelIdentity, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
   return whereStringValueHasPrefix(orderByFieldPath as FieldPathOrStringPath, `${value.collectionType}/`, sortDirection);
 }
 
 /**
- * Searches a specified field for string values that have a specific prefix.
+ * Creates constraints to find documents where a string field starts with a specific prefix.
  *
- * @param orderByFieldPath
- * @param parentValue
- * @param sortDirection
+ * This utility creates a range query that efficiently finds all documents where a string
+ * field starts with the specified prefix. This is more efficient than using a LIKE query
+ * since it can utilize Firestore's indexes.
+ *
+ * @template T - The document data type
+ * @param orderByFieldPath - The string field to search
+ * @param parentValue - The prefix to match at the start of the field
+ * @param sortDirection - Optional direction to sort results (default: 'asc')
+ * @returns Array of query constraints to filter by string prefix
+ *
+ * @example
+ * // Find all documents where the 'email' field starts with 'admin@'
+ * const query = collection(firestore, 'users')
+ *   .where(...whereStringValueHasPrefix('email', 'admin@'));
  */
 export function whereStringValueHasPrefix<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereStringValueHasPrefix(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -71,13 +122,23 @@ export function whereStringValueHasPrefix<T = object>(orderByFieldPath: FieldPat
 
 // MARK: Dates
 /**
- * Searches dates that follow between the dates derived from the input. Excludes the end date.
+ * Creates constraints to filter documents by a date field within a specific date range.
  *
- * Sorts in ascending order by default.
+ * This function creates constraints to find documents where a date field falls within
+ * a specified range. It automatically orders the results by the date field and applies
+ * appropriate filters for the start and end dates.
  *
- * @param field
- * @param range
- * @param sortDirection
+ * @template T - The document data type
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param dateRange - The date range to filter by (start and/or end date)
+ * @param sortDirection - Optional direction to sort results (default: 'asc')
+ * @returns Array of query constraints to filter by date range
+ *
+ * @example
+ * // Find documents created in the last 7 days
+ * const lastWeek = { startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) };
+ * const query = collection(firestore, 'documents')
+ *   .where(...filterWithDateRange('createdAt', lastWeek));
  */
 export function filterWithDateRange<T>(field: StringKeyPropertyKeys<T>, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function filterWithDateRange(field: FieldPathOrStringPath, dateRange: Partial<DateRange>, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -96,13 +157,22 @@ export function filterWithDateRange<T = object>(fieldPath: FieldPathOrStringPath
 }
 
 /**
- * Searches dates that follow between the dates derived from the input. Excludes the end date.
+ * Creates constraints to filter documents by a date field within a range specified by flexible input.
  *
- * Sorts in ascending order by default.
+ * This function accepts various forms of date range inputs (start/end dates, relative ranges,
+ * predefined periods) and converts them to appropriate query constraints. It's more flexible
+ * than filterWithDateRange because it accepts different input formats.
  *
- * @param field
- * @param range
- * @param sortDirection
+ * @template T - The document data type
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param rangeInput - Flexible specification of a date range
+ * @param sortDirection - Optional direction to sort results (default: 'asc')
+ * @returns Array of query constraints to filter by date range
+ *
+ * @example
+ * // Find documents from January 2023
+ * const query = collection(firestore, 'documents')
+ *   .where(...whereDateIsInRange('createdAt', { month: 0, year: 2023 }));
  */
 export function whereDateIsInRange<T>(field: StringKeyPropertyKeys<T>, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsInRange(field: FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
@@ -128,11 +198,25 @@ export function whereDateIsBetween<T = object>(fieldPath: FieldPathOrStringPathO
 }
 
 /**
- * Searches dates that are on or after the input date. If no date is input, uses now.
+ * Creates a constraint to filter documents where a date field is greater than or equal to a specified date.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * This function creates a simple comparison constraint that finds documents where a date field
+ * is on or after a specific date. If no date is provided, it defaults to the current date and time.
+ *
+ * @template T - The document data type
+ * @param field - The date field to filter on (stored as ISO string in Firestore)
+ * @param date - The minimum date to include (default: current date/time)
+ * @returns A query constraint to filter for dates on or after the specified date
+ *
+ * @example
+ * // Find documents created today or in the future
+ * const query = collection(firestore, 'documents')
+ *   .where(whereDateIsOnOrAfter('createdAt'));
+ *
+ * // Find documents created on or after a specific date
+ * const startOfYear = new Date(2023, 0, 1);
+ * const query = collection(firestore, 'documents')
+ *   .where(whereDateIsOnOrAfter('createdAt', startOfYear));
  */
 export function whereDateIsOnOrAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
 export function whereDateIsOnOrAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
@@ -141,13 +225,22 @@ export function whereDateIsOnOrAfter<T = object>(fieldPath: FieldPathOrStringPat
 }
 
 /**
- * Searches dates that are on or after the input date. If no date is input, uses now.
+ * Creates constraints to filter documents by dates on or after a specified date, with sorting.
  *
- * Sorts in ascending order by default.
+ * This function combines a date comparison constraint with a sort order, returning an array of
+ * constraints that can be applied to a query. It finds documents where a date field is on or
+ * after a specific date, and sorts the results by that same date field.
  *
- * @param field
- * @param date
- * @param sortDirection
+ * @template T - The document data type
+ * @param field - The date field to filter and sort on (stored as ISO string in Firestore)
+ * @param date - The minimum date to include (default: current date/time)
+ * @param sortDirection - Direction to sort results (default: 'asc')
+ * @returns Array of query constraints for filtering and sorting
+ *
+ * @example
+ * // Find documents created today or in the future, sorted newest first
+ * const query = collection(firestore, 'documents')
+ *   .where(...whereDateIsOnOrAfterWithSort('createdAt', new Date(), 'desc'));
  */
 export function whereDateIsOnOrAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function whereDateIsOnOrAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];

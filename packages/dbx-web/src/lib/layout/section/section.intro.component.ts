@@ -1,5 +1,6 @@
-import { OnDestroy, Component, Input, EventEmitter, Output } from '@angular/core';
-import { DbxSectionComponent } from './section.component';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
+import { MatButtonModule } from '@angular/material/button';
 
 /**
  * Component used to format content that displays an intro until a button is pressed.
@@ -7,37 +8,37 @@ import { DbxSectionComponent } from './section.component';
 @Component({
   selector: 'dbx-intro-action-section',
   template: `
-    <div class="dbx-intro-action-section" [ngSwitch]="showIntro">
-      <div *ngSwitchCase="true" class="dbx-intro-action-section-intro">
-        <p>{{ hint }}</p>
-        <div>
-          <ng-content select="[info]"></ng-content>
-        </div>
-        <div>
-          <button mat-raised-button color="accent" (click)="actionClicked()">{{ action }}</button>
-        </div>
-      </div>
-      <ng-container *ngSwitchCase="false">
-        <ng-content></ng-content>
-      </ng-container>
+    <div class="dbx-intro-action-section">
+      @switch (showIntro()) {
+        @case (true) {
+          <div class="dbx-intro-action-section-intro">
+            <p>{{ hint() }}</p>
+            <div>
+              <ng-content select="[info]"></ng-content>
+            </div>
+            <div>
+              <button mat-raised-button color="accent" (click)="actionClicked()">{{ action() }}</button>
+            </div>
+          </div>
+        }
+        @case (false) {
+          <ng-content></ng-content>
+        }
+      }
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [MatButtonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxIntroActionSectionComponent extends DbxSectionComponent implements OnDestroy {
-  @Output()
-  readonly showAction = new EventEmitter<void>();
+export class DbxIntroActionSectionComponent {
+  readonly hint = input<Maybe<string>>();
+  readonly showIntro = input<Maybe<boolean>>(true);
+  readonly action = input<Maybe<string>>();
 
-  @Input()
-  showIntro?: boolean;
-
-  @Input()
-  action?: string;
-
-  ngOnDestroy() {
-    this.showAction.complete();
-  }
+  readonly showAction = output<void>();
 
   actionClicked() {
-    this.showAction.next();
+    this.showAction.emit();
   }
 }

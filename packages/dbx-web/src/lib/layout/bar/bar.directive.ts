@@ -1,4 +1,4 @@
-import { Input, Directive } from '@angular/core';
+import { computed, Directive, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { DbxBarColor } from './bar';
 
@@ -9,10 +9,15 @@ import { DbxBarColor } from './bar';
   selector: 'dbx-bar,[dbxBar]',
   host: {
     class: 'dbx-bar',
-    '[class]': 'color ? ("dbx-" + color + "-bg") : "dbx-bg"'
-  }
+    '[class]': 'cssClassSignal()'
+  },
+  standalone: true
 })
 export class DbxBarDirective {
-  @Input()
-  color?: Maybe<DbxBarColor>;
+  readonly color = input<Maybe<DbxBarColor>>();
+
+  readonly cssClassSignal = computed(() => {
+    const color = this.color();
+    return color ? `dbx-${color}-bg` : 'dbx-bg';
+  });
 }

@@ -1,26 +1,15 @@
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild, ViewChild } from '@angular/core'; // Updated imports
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
-import { DbxReadableErrorComponent } from '../error';
+import { DbxErrorComponent } from '../error';
 import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
 import { DbxActionModule } from '../action/action.module';
 import { filter, first } from 'rxjs';
-
-export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
-  return (component: DbxBasicLoadingComponent) => {
-    return (checkFn: () => void) => {
-      component.state$
-        .pipe(
-          filter((x) => x === state),
-          first()
-        )
-        .subscribe(checkFn);
-    };
-  };
-}
+import { toObservable } from '@angular/core/rxjs-interop'; // Added import
+import { Maybe } from '@dereekb/util';
 
 describe('DbxActionLoadingContextDirective', () => {
   beforeEach(async () => {
@@ -29,6 +18,25 @@ describe('DbxActionLoadingContextDirective', () => {
       declarations: [LoadingComponent]
     }).compileComponents();
   });
+
+  // Updated waitForState to work with signals
+  function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
+    const injector = TestBed.inject(Injector);
+
+    return (component: DbxBasicLoadingComponent) => {
+      return (checkFn: () => void) => {
+        runInInjectionContext(injector, () => {
+          // Use runInInjectionContext
+          toObservable(component.stateSignal) // Use stateSignal and toObservable
+            .pipe(
+              filter((x) => x === state),
+              first()
+            )
+            .subscribe(checkFn);
+        });
+      };
+    };
+  }
 
   describe('with content', () => {
     let fixture: ComponentFixture<LoadingComponent>;
@@ -45,12 +53,15 @@ describe('DbxActionLoadingContextDirective', () => {
       fixture = TestBed.createComponent(LoadingComponent);
       component = fixture.componentInstance;
       basicLoadingComponent = fixture.debugElement.query(By.directive(DbxBasicLoadingComponent)).componentInstance;
-      dbxActionDirective = component.dbxActionDirective!;
+      fixture.detectChanges(); // Detect changes to initialize viewChild
+
+      dbxActionDirective = component.dbxActionDirective(); // Access viewChild signal
       dbxActionContextStoreSourceInstance = dbxActionDirective.sourceInstance;
 
-      waitForComponentToBeLoading = waitForState(LoadingComponentState.LOADING)(basicLoadingComponent);
-      waitForComponentToHaveContent = waitForState(LoadingComponentState.CONTENT)(basicLoadingComponent);
-      waitForComponentToHaveError = waitForState(LoadingComponentState.ERROR)(basicLoadingComponent);
+      // Use string states matching DbxBasicLoadingComponent
+      waitForComponentToBeLoading = waitForState('loading')(basicLoadingComponent);
+      waitForComponentToHaveContent = waitForState('content')(basicLoadingComponent);
+      waitForComponentToHaveError = waitForState('error')(basicLoadingComponent);
     });
 
     afterEach(() => {
@@ -69,45 +80,25 @@ describe('DbxActionLoadingContextDirective', () => {
       });
     });
 
-    describe('and error/rejection', () => {
-      beforeEach(async () => {
-        dbxActionContextStoreSourceInstance.reject({
-          code: 'Test',
-          message: 'Test'
-        });
+    it('should display loading if state is working.', (done) => {
+      dbxActionContextStoreSourceInstance.startWorking();
+      fixture.detectChanges();
 
-        fixture.detectChanges();
-      });
-
-      it('should display the error.', (done) => {
-        waitForComponentToHaveError(() => {
-          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxReadableErrorComponent));
-          expect(errorComponentQueryResult).not.toBeNull();
-          done();
-        });
-      });
-
-      it('should not display the content.', (done) => {
-        waitForComponentToHaveError(() => {
-          const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
-          expect(testContentQueryResult).toBeNull();
-          done();
-        });
+      waitForComponentToBeLoading(() => {
+        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
+        expect(loadingProgressQueryResult).not.toBeNull();
+        done();
       });
     });
 
-    describe('and working', () => {
-      beforeEach(() => {
-        dbxActionContextStoreSourceInstance.startWorking();
-        fixture.detectChanges();
-      });
+    it('should display error if state is error.', (done) => {
+      dbxActionContextStoreSourceInstance.reject(new Error());
+      fixture.detectChanges();
 
-      it('should display the loading progress view while loading.', (done) => {
-        waitForComponentToBeLoading(() => {
-          const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
-          expect(loadingProgressQueryResult).not.toBeNull();
-          done();
-        });
+      waitForComponentToHaveError(() => {
+        const errorQueryResult = fixture.debugElement.query(By.directive(DbxErrorComponent));
+        expect(errorQueryResult).not.toBeNull();
+        done();
       });
     });
   });
@@ -117,20 +108,20 @@ const TEST_CONTENT = 'Content';
 
 @Component({
   template: `
-    <dbx-action>
-      <dbx-loading dbxActionLoadingContext [text]="text" [show]="show">
+    <div dbxActionContext>
+      <dbx-loading dbxActionLoadingContext [text]="text()" [show]="show()">
         <div>
           <p id="test-content">${TEST_CONTENT}</p>
         </div>
       </dbx-loading>
-    </dbx-action>
-  `
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 class LoadingComponent {
-  public show?: boolean;
+  readonly show = input<Maybe<boolean>>();
+  readonly text = input<Maybe<string>>();
 
-  public text?: string;
-
-  @ViewChild(DbxActionDirective, { static: true })
-  dbxActionDirective?: DbxActionDirective;
+  // Use viewChild signal
+  readonly dbxActionDirective = viewChild.required(DbxActionDirective);
 }

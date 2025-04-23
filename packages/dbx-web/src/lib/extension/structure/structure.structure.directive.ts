@@ -6,10 +6,15 @@ import { ChangeDetectorRef, Directive, ElementRef, Injector, inject } from '@ang
  * Generally used for child views to reference a well-placed parent view.
  */
 @Directive({
-  selector: '[dbxStructure]'
+  selector: '[dbxStructure]',
+  standalone: true
 })
 export class DbxStructureDirective {
-  readonly cdRef = inject(ChangeDetectorRef);
   readonly injector = inject(Injector);
   readonly element = inject(ElementRef);
+
+  /**
+   * @deprecated do not use cdRef here anymore. Rely on signals instead. Will be removed in the future.
+   */
+  readonly cdRef = inject(ChangeDetectorRef);
 }

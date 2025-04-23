@@ -1,13 +1,21 @@
 <div class="dbx-searchable-field">
   <!-- View -->
   <mat-chip-grid [required]="required" [disabled]="readonly" #chipList>
-    <mat-chip-row *ngFor="let displayValue of displayValues$ | async" [removable]="true" (removed)="removeWithDisplayValue(displayValue)">
-      <mat-icon matChipAvatar *ngIf="displayValue.icon">{{ displayValue.icon }}</mat-icon>
-      <span class="dbx-chip-label">{{ displayValue.label }}</span>
-      <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">{{ displayValue.sublabel }}</span>
-      <mat-icon matChipRemove *ngIf="!readonly">cancel</mat-icon>
-    </mat-chip-row>
-    <input #textInput [name]="name" [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto" autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()" />
+    @for (displayValue of displayValuesSignal(); track displayValue.value) {
+      <mat-chip-row [removable]="true" (removed)="removeWithDisplayValue(displayValue)">
+        @if (displayValue.icon) {
+          <mat-icon matChipAvatar>{{ displayValue.icon }}</mat-icon>
+        }
+        <span class="dbx-chip-label">{{ displayValue.label }}</span>
+        @if (displayValue.sublabel) {
+          <span class="dbx-chip-sublabel">{{ displayValue.sublabel }}</span>
+        }
+        @if (!readonly) {
+          <mat-icon matChipRemove>cancel</mat-icon>
+        }
+      </mat-chip-row>
+    }
+    <input #textInput [name]="name" [placeholder]="searchInputPlaceholder" [formControl]="inputCtrl" [matAutocomplete]="auto" autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()" />
   </mat-chip-grid>
   <div class="searchable-field-form-loading">
     <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
@@ -16,7 +24,9 @@
 
 <!-- Autocomplete -->
 <mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selected($event)">
-  <mat-option *ngFor="let displayValue of searchResults$ | async" [value]="displayValue">
-    <dbx-searchable-field-autocomplete-item [displayValue]="displayValue"></dbx-searchable-field-autocomplete-item>
-  </mat-option>
+  @for (displayValue of searchResultsSignal(); track displayValue.value) {
+    <mat-option [value]="displayValue">
+      <dbx-searchable-field-autocomplete-item [displayValue]="displayValue"></dbx-searchable-field-autocomplete-item>
+    </mat-option>
+  }
 </mat-autocomplete>

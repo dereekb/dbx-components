@@ -1,49 +1,50 @@
-import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { Maybe } from '@dereekb/util';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 export interface DbxErrorViewButtonEvent {
   readonly origin: ElementRef;
 }
 
 /**
- * The basic error view.
+ * The basic error view. Shows an info button and an error message.
  */
 @Component({
   selector: 'dbx-error-view',
-  templateUrl: './error.view.component.html',
+  template: `
+    <button class="dbx-error-button" [disabled]="buttonDisabled()" #buttonPopoverOrigin mat-icon-button (click)="clickError()">
+      <mat-icon>{{ icon() }}</mat-icon>
+    </button>
+    @if (message()) {
+      <span class="dbx-error-message">{{ message() }}</span>
+    }
+  `,
   host: {
     class: 'dbx-error dbx-warn dbx-b'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MatIconModule, MatButtonModule],
+  standalone: true
 })
-export class DbxErrorViewComponent implements OnDestroy {
-  @Input()
-  icon = 'error';
+export class DbxErrorViewComponent {
+  readonly icon = input<string>('error');
 
-  @Input()
-  message?: Maybe<string>;
+  readonly message = input<Maybe<string>>();
 
   /**
    * Whether or not the error button is disabled.
    */
-  @Input()
-  buttonDisabled?: Maybe<boolean>;
+  readonly buttonDisabled = input<Maybe<boolean>>();
 
-  @Output()
-  readonly buttonClick = new EventEmitter<DbxErrorViewButtonEvent>();
+  readonly buttonClick = output<DbxErrorViewButtonEvent>();
 
-  @ViewChild('buttonPopoverOrigin', { read: ElementRef })
-  buttonOrigin!: ElementRef;
-
-  constructor() {}
-
-  ngOnDestroy(): void {
-    this.buttonClick.complete();
-  }
+  readonly buttonOrigin = viewChild.required<ElementRef, ElementRef>('buttonPopoverOrigin', { read: ElementRef });
 
   clickError() {
-    if (!this.buttonDisabled) {
+    if (!this.buttonDisabled()) {
       this.buttonClick.emit({
-        origin: this.buttonOrigin
+        origin: this.buttonOrigin()
       });
     }
   }

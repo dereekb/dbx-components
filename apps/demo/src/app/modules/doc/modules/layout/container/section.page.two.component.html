@@ -4,7 +4,7 @@
       <dbx-two-column-head top>
         <dbx-form-search-form class="dbx-section-page-header-search-bar" (search)="search($event)"></dbx-form-search-form>
       </dbx-two-column-head>
-      <doc-complex-item-list [state$]="state$" (loadMore)="loadMore()">
+      <doc-complex-item-list [state]="state$" (loadMore)="loadMore()">
         <dbx-list-empty-content empty>
           <p>
             No items that match.

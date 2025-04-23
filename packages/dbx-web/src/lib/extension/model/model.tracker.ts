@@ -1,7 +1,7 @@
 import { UnixDateTimeNumber, Maybe, ModelKey, ModelKeyTypeNamePair } from '@dereekb/util';
 
 /**
- * Context in which a model was viewed.
+ * String context in which a model was viewed.
  */
 export type ModelViewContext = string;
 
@@ -9,27 +9,27 @@ export interface DbxModelViewTrackerEvent {
   /**
    * Event time
    */
-  d?: UnixDateTimeNumber;
+  readonly d?: UnixDateTimeNumber;
   /**
    * Context
    */
-  c?: ModelViewContext;
+  readonly c?: Maybe<ModelViewContext>;
   /**
    * Model info
    */
-  m: ModelKeyTypeNamePair;
-  folder?: Maybe<string>;
+  readonly m: ModelKeyTypeNamePair;
+  readonly folder?: Maybe<string>;
 }
 
 export interface DbxModelViewTrackerEventSet {
   /**
    * The latest date/time number.
    */
-  l: UnixDateTimeNumber;
+  readonly l: UnixDateTimeNumber;
   /**
    * List of events.
    */
-  e: DbxModelViewTrackerEvent[];
+  readonly e: DbxModelViewTrackerEvent[];
 }
 
 export function allDbxModelViewTrackerEventSetModelKeys(eventSet: DbxModelViewTrackerEventSet): ModelKey[] {

@@ -15,8 +15,7 @@ export class DocInteractionTestFilterPresetMenuComponent extends AbstractFilterS
 
   readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_TEST_PRESETS;
 
-  override ngOnInit(): void {
-    super.ngOnInit();
-    this.initialFilterTakesPriority = true;
+  ngOnInit(): void {
+    this.setInitialFilterTakesPriority(true);
   }
 }

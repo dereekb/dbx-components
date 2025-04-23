@@ -6,11 +6,11 @@ export interface CalendarScheduleSelectionValue {
   /**
    * Schedule range.
    */
-  dateScheduleRange: DateCellScheduleDateRange;
+  readonly dateScheduleRange: DateCellScheduleDateRange;
   /**
    * Min and max dates in the selection.
    */
-  minMaxRange: DateRange;
+  readonly minMaxRange: DateRange;
 }
 
 export enum CalendarScheduleSelectionDayState {
@@ -21,20 +21,20 @@ export enum CalendarScheduleSelectionDayState {
 }
 
 export interface CalendarScheduleSelectionMetadata {
-  state: CalendarScheduleSelectionDayState;
-  i: DateCellIndex;
+  readonly state: CalendarScheduleSelectionDayState;
+  readonly i: DateCellIndex;
 }
 
 export interface CalendarScheduleSelectionCellContent {
-  icon?: string;
-  text?: string;
+  readonly icon?: string;
+  readonly text?: string;
 }
 
 export type CalendarScheduleSelectionCellContentFactory<M extends CalendarScheduleSelectionMetadata = CalendarScheduleSelectionMetadata> = FactoryWithRequiredInput<CalendarScheduleSelectionCellContent, CalendarMonthViewDay<M>>;
 
 export const defaultCalendarScheduleSelectionCellContentFactory: CalendarScheduleSelectionCellContentFactory = (day: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>) => {
-  let icon;
-  let text;
+  let icon: string | undefined;
+  let text: string | undefined;
 
   switch (day.meta?.state) {
     case CalendarScheduleSelectionDayState.SELECTED:
@@ -51,8 +51,10 @@ export const defaultCalendarScheduleSelectionCellContentFactory: CalendarSchedul
       break;
   }
 
-  return {
+  const result: CalendarScheduleSelectionCellContent = {
     icon,
     text
   };
+
+  return result;
 };

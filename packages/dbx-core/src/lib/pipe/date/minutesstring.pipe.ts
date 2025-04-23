@@ -1,7 +1,11 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
-@Pipe({ name: 'minutesString', pure: false })
+@Pipe({
+  name: 'minutesString',
+  standalone: true,
+  pure: false
+})
 export class MinutesStringPipe implements PipeTransform {
   transform(input: Maybe<number | string>): Maybe<string> {
     const minutes = Number(input);

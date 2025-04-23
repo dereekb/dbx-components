@@ -4,17 +4,19 @@ import { NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
 export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T> {
-  injector?: Injector;
+  readonly injector?: Injector;
 }
 
 /**
  * Used for displaying a popup.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxPopupService {
-  private _overlay = inject(Overlay);
-  private _injector = inject(Injector);
-  private _overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
+  private readonly _overlay = inject(Overlay);
+  private readonly _injector = inject(Injector);
+  private readonly _overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
 
   open<O, I, T>(config: DbxPopupConfig<O, I, T>): NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O> {
     const service = config.injector ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;

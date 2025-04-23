@@ -16,7 +16,7 @@ let testSetup = `${rootPath}/jest.setup.${appTestType}.ts`;
 let testEnvironment = 'node';
 let appTestTypeSetupFiles = [testSetup];
 let snapshotSerializers = [];
-let globalSetup;
+let globalSetup = nxPreset.globalSetup;
 let transform;
 
 switch (appTestType) {
@@ -24,7 +24,7 @@ switch (appTestType) {
     // angular needs jsdom and serializers
     // globalSetup = 'jest-preset-angular/global-setup';
     snapshotSerializers = jestPresetAngularSerializers;
-    testEnvironment = 'jsdom';
+    testEnvironment = `${rootPath}/jest.environment.jsdom.ts`; // 'jsdom';
     transform = {
       '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.(html|svg)$' }]
     };
@@ -59,8 +59,6 @@ module.exports = {
   resolver: `${rootPath}/jest.resolver.js`, // '@nx/jest/plugins/resolver',
 
   transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-
-  tsConfig: undefined, // clear tsConfig if set
 
   transform,
 

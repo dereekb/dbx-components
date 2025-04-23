@@ -1,23 +1,31 @@
 <mat-form-field class="dbx-schedule-selection-calendar-date-range-field">
-  <mat-label *ngIf="label">{{ label }}</mat-label>
+  @if (label()) {
+    <mat-label>{{ label() }}</mat-label>
+  }
   <div class="dbx-schedule-selection-calendar-date-range-field-content">
     <!-- Primary Content -->
     <div class="dbx-flex-bar">
-      <div *ngIf="showCustomize && (isCustomized$ | async)" class="date-range-field-customized">
-        <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
-      </div>
+      @if (showCustomLabelSignal()) {
+        <div class="date-range-field-customized">
+          <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
+        </div>
+      }
       <dbx-button-spacer></dbx-button-spacer>
       <mat-datepicker-toggle class="mat-datepicker-button-highlight" matIconSuffix [for]="picker"></mat-datepicker-toggle>
       <dbx-button-spacer></dbx-button-spacer>
-      <mat-date-range-input (click)="clickedDateRangeInput()" [required]="required$ | async" [dateFilter]="(datePickerFilter$ | async) ?? defaultDatePickerFilter" [formGroup]="range" [rangePicker]="picker">
+      <mat-date-range-input (click)="clickedDateRangeInput()" [required]="required()" [dateFilter]="datePickerFilterSignal()" [formGroup]="range" [rangePicker]="picker">
         <input [errorStateMatcher]="errorStateMatcher" matStartDate formControlName="start" placeholder="Start date" />
         <input [errorStateMatcher]="errorStateMatcher" matEndDate formControlName="end" placeholder="End date" />
       </mat-date-range-input>
-      <span *ngIf="timezone$ | async" class="dbx-schedule-selection-timezone dbx-faint dbx-nowrap dbx-icon-spacer">{{ timezone$ | async | timezoneAbbreviation: (timezoneReleventDate$ | async) }}</span>
-      <div *ngIf="showCustomize">
-        <dbx-button-spacer></dbx-button-spacer>
-        <ng-content select="[customizeButton]"></ng-content>
-      </div>
+      @if (timezoneSignal()) {
+        <span class="dbx-schedule-selection-timezone dbx-faint dbx-nowrap dbx-icon-spacer">{{ timezoneSignal() | timezoneAbbreviation: timezoneReleventDateSignal() }}</span>
+      }
+      @if (showCustomize()) {
+        <div>
+          <dbx-button-spacer></dbx-button-spacer>
+          <ng-content select="[customizeButton]"></ng-content>
+        </div>
+      }
       <mat-date-range-picker #picker (opened)="pickerOpened()" (closed)="pickerClosed()"></mat-date-range-picker>
     </div>
     <!-- Custom Content -->
@@ -25,6 +33,8 @@
       <ng-content></ng-content>
     </div>
   </div>
-  <mat-error *ngIf="currentErrorMessage$ | async">{{ currentErrorMessage$ | async }}</mat-error>
-  <mat-hint>{{ hint }}</mat-hint>
+  @if (currentErrorMessageSignal()) {
+    <mat-error>{{ currentErrorMessageSignal() }}</mat-error>
+  }
+  <mat-hint>{{ hint() }}</mat-hint>
 </mat-form-field>

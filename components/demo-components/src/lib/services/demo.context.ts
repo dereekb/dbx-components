@@ -9,9 +9,7 @@ import { DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollec
 /**
  * Used to access the demoFirebaseModelServices() on the client side.
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DemoFirebaseContextService implements DbxFirebaseModelContextService {
   readonly demoFirestoreCollections = inject(DemoFirestoreCollections);
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

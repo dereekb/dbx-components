@@ -1,5 +1,5 @@
 import { InjectionToken, Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from '@angular/core';
-import { FactoryWithRequiredInput, filterMaybeArrayValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
+import { Configurable, FactoryWithRequiredInput, filterMaybeArrayValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
 
 export const DBX_INJECTION_COMPONENT_DATA = new InjectionToken('DbxInjectionComponentConfigData');
 
@@ -7,27 +7,27 @@ export interface DbxInjectionComponentConfig<T = unknown> {
   /**
    * Type of Component to initialize.
    */
-  componentClass: Type<T>;
+  readonly componentClass: Type<T>;
   /**
    * (Optional) providers to provide to the existing injector.
    */
-  providers?: StaticProvider[];
+  readonly providers?: StaticProvider[];
   /**
    * (Optional) Custom parent injector to use when creating the component.
    */
-  injector?: Injector;
+  readonly injector?: Injector;
   /**
    * (Optional) Module ref to use when creating the component.
    */
-  ngModuleRef?: NgModuleRef<unknown>;
+  readonly ngModuleRef?: NgModuleRef<unknown>;
   /**
    * (Optional) Custom initialization code when an instance is created.
    */
-  init?: (instance: T) => void;
+  readonly init?: (instance: T) => void;
   /**
    * unknown optional data to inject into the component.
    */
-  data?: unknown;
+  readonly data?: unknown;
 }
 
 /**
@@ -41,11 +41,11 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
   /**
    * Template ref to display.
    */
-  templateRef?: Maybe<TemplateRef<T>>;
+  readonly templateRef?: Maybe<TemplateRef<T>>;
   /**
    * View ref to inject.
    */
-  viewRef?: Maybe<ViewRef>;
+  readonly viewRef?: Maybe<ViewRef>;
 }
 
 /**
@@ -56,7 +56,7 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
  */
 export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
   const providers = mergeArrays(filterMaybeArrayValues(configs).map((x) => x.providers));
-  const result = mergeObjects(configs);
+  const result = mergeObjects(configs) as Configurable<DbxInjectionComponentConfig<T>>;
   result.providers = providers;
   return result;
 }

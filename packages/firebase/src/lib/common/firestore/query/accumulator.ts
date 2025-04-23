@@ -4,20 +4,57 @@ import { documentDataFunction } from '../accessor';
 import { type DocumentDataWithIdAndKey, type QueryDocumentSnapshotArray } from '../types';
 import { type FirestoreItemPageIterationInstance } from './iterator';
 
+/**
+ * An accumulator that collects and processes Firestore query snapshots, with custom mapping to type O.
+ *
+ * This type provides the ability to collect multiple pages of Firestore query results and
+ * process them into a different format as specified by type parameter O.
+ *
+ * @template O - The output type after mapping the query snapshots
+ * @template T - The document data type in the snapshots
+ */
 export type MappedFirebaseQuerySnapshotAccumulator<O, T> = ItemAccumulatorInstance<O, QueryDocumentSnapshotArray<T>, PageItemIteration<QueryDocumentSnapshotArray<T>>>;
+/**
+ * An accumulator that collects Firestore query snapshots without custom mapping.
+ *
+ * This is a specialized version of MappedFirebaseQuerySnapshotAccumulator where the output type
+ * is simply the array of query document snapshots without transformation.
+ *
+ * @template T - The document data type in the snapshots
+ */
 export type FirebaseQuerySnapshotAccumulator<T> = MappedFirebaseQuerySnapshotAccumulator<QueryDocumentSnapshotArray<T>, T>;
 
 /**
- * Mapped accumulator for QueryDocumentSnapshotArray values that returns the DocumentDataWithId values for the items returned in the query.
+ * An accumulator that collects Firestore query snapshots and maps them to document data objects.
+ *
+ * This specialized accumulator automatically extracts document data (including ID and key)
+ * from the query snapshots, making it easier to work with document content rather than
+ * raw snapshots.
+ *
+ * @template T - The document data type in the snapshots and resulting data objects
  */
 export type FirebaseQueryItemAccumulator<T> = MappedFirebaseQuerySnapshotAccumulator<DocumentDataWithIdAndKey<T>[], T>;
 
+/**
+ * Function type for determining when to stop accumulating based on result count.
+ *
+ * Used with the FirebaseQueryItemAccumulator to control when to stop fetching additional
+ * pages based on the number of results collected so far.
+ *
+ * @template T - The document data type in the accumulated results
+ */
 export type FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction<T> = ItemAccumulatorNextPageUntilResultsCountFunction<DocumentDataWithIdAndKey<T>[]>;
 
 /**
- * Wrapper for itemAccumulator that has typings for a FirestoreItemPageIterationInstance. Can optionally map the snapshots to another type.
+ * Creates an accumulator for collecting and processing Firestore query snapshots.
  *
- * @param iteration
+ * This function wraps the generic itemAccumulator with Firestore-specific typings,
+ * making it easier to work with paginated Firestore query results. It can optionally
+ * transform the snapshots through a mapping function.
+ *
+ * @template T - The document data type in the snapshots
+ * @param iteration - The page iteration instance that fetches pages of results
+ * @returns An accumulator for the query snapshots
  */
 export function firebaseQuerySnapshotAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQuerySnapshotAccumulator<T>;
 export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>, mapSnapshots?: ItemAccumulatorMapFunction<O, QueryDocumentSnapshotArray<T>>): MappedFirebaseQuerySnapshotAccumulator<O, T>;
@@ -26,11 +63,47 @@ export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemP
 }
 
 /**
- * Convenience function for creating a FirebaseQueryItemAccumulator
+ * Creates an accumulator that collects Firestore query snapshots and maps them to document data objects.
  *
- * @param iteration
+ * This convenience function automatically extracts document data from query snapshots,
+ * including document ID and key. It can optionally apply a custom mapping function to each
+ * document data object for further transformation.
+ *
+ * @template T - The document data type in the snapshots
+ * @param iteration - The page iteration instance that fetches pages of results
+ * @returns An accumulator that produces arrays of document data objects
+ *
+ * @example
+ * // Create a basic document data accumulator
+ * const accumulator = firebaseQueryItemAccumulator(queryIteration);
+ *
+ * // Accumulate all documents up to a limit
+ * const results = await accumulator.accumulateAllResults({
+ *   limit: 100
+ * });
+ *
+ * // Process the collected document data
+ * console.log(`Collected ${results.length} documents`);
  */
 export function firebaseQueryItemAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQueryItemAccumulator<T>;
+/**
+ * Creates an accumulator that collects Firestore query snapshots and transforms them using a custom mapping function.
+ *
+ * @template U - The type of each mapped item in the result arrays
+ * @template T - The document data type in the snapshots
+ * @param iteration - The page iteration instance that fetches pages of results
+ * @param mapItem - Function to transform each document data object
+ * @returns An accumulator that produces arrays of mapped items
+ *
+ * @example
+ * // Create an accumulator that extracts just the names from documents
+ * const nameAccumulator = firebaseQueryItemAccumulator(queryIteration,
+ *   doc => doc.data.name
+ * );
+ *
+ * // Collect all names
+ * const names = await nameAccumulator.accumulateAllResults();
+ */
 export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem: MapFunction<DocumentDataWithIdAndKey<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T>;
 export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithIdAndKey<T>, U>): FirebaseQueryItemAccumulator<T> | MappedFirebaseQuerySnapshotAccumulator<U[], T>;
 export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithIdAndKey<T>, U>): FirebaseQueryItemAccumulator<T> | MappedFirebaseQuerySnapshotAccumulator<U[], T> {

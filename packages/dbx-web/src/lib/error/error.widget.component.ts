@@ -1,7 +1,6 @@
-import { Observable, BehaviorSubject, map } from 'rxjs';
-import { Component, Input, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { Maybe, ReadableError, ReadableErrorWithCode } from '@dereekb/util';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxErrorWidgetService } from './error.widget.service';
 
 /**
@@ -10,57 +9,51 @@ import { DbxErrorWidgetService } from './error.widget.service';
 @Component({
   selector: 'dbx-error-widget-view',
   template: `
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-injection [config]="errorWithCodeSignal()"></dbx-injection>
   `,
   host: {
     class: 'dbx-error-widget-view'
-  }
+  },
+  imports: [DbxInjectionComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxErrorWidgetViewComponent implements OnDestroy {
+export class DbxErrorWidgetViewComponent {
   readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
 
-  private _errorWithCode = new BehaviorSubject<Maybe<ReadableErrorWithCode>>(undefined);
+  readonly error = input<Maybe<ReadableError>>();
 
-  readonly config$: Observable<Maybe<DbxInjectionComponentConfig>> = this._errorWithCode.pipe(
-    map((error: Maybe<ReadableErrorWithCode>) => {
-      let config: Maybe<DbxInjectionComponentConfig>;
+  readonly errorWithCodeSignal = computed<Maybe<DbxInjectionComponentConfig>>(() => {
+    const currentError = this.error();
+    const error: Maybe<ReadableErrorWithCode> = currentError && currentError.code ? (currentError as ReadableErrorWithCode) : undefined;
 
-      if (error != null) {
-        const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code);
+    let config: Maybe<DbxInjectionComponentConfig>;
 
-        if (entry != null) {
-          const defaultEntry = this.dbxErrorWidgetService.getDefaultErrorWidgetEntry();
-          const componentClass = entry.widgetComponentClass ?? defaultEntry?.widgetComponentClass;
+    if (error != null) {
+      const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code);
 
-          if (componentClass != null) {
-            config = {
-              componentClass,
-              data: error
-            };
-          }
-        } else {
-          const unknownEntry = this.dbxErrorWidgetService.getUnknownErrorWidgetEntry();
+      if (entry != null) {
+        const defaultEntry = this.dbxErrorWidgetService.getDefaultErrorWidgetEntry();
+        const componentClass = entry.widgetComponentClass ?? defaultEntry?.widgetComponentClass;
 
-          if (unknownEntry?.widgetComponentClass != null) {
-            config = {
-              componentClass: unknownEntry?.widgetComponentClass,
-              data: error
-            };
-          }
+        if (componentClass != null) {
+          config = {
+            componentClass,
+            data: error
+          };
+        }
+      } else {
+        const unknownEntry = this.dbxErrorWidgetService.getUnknownErrorWidgetEntry();
+
+        if (unknownEntry?.widgetComponentClass != null) {
+          config = {
+            componentClass: unknownEntry?.widgetComponentClass,
+            data: error
+          };
         }
       }
+    }
 
-      return config;
-    })
-  );
-
-  ngOnDestroy(): void {
-    this._errorWithCode.complete();
-  }
-
-  @Input()
-  set error(error: Maybe<ReadableError>) {
-    const config = error && error.code ? (error as ReadableErrorWithCode) : undefined;
-    this._errorWithCode.next(config);
-  }
+    return config;
+  });
 }

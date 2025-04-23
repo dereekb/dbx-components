@@ -2,16 +2,32 @@ import { type ArrayOrValue, asArray } from './../array/array';
 import { type Maybe } from '../value/maybe.type';
 import { joinStringsWithSpaces } from './string';
 import { iterableToArray } from '../iterable';
+import { type PrimativeValue } from '../type';
 
 /**
- * Represents a single CSS class
+ * Represents a single CSS Class
  */
 export type CssClass = string;
+
+/**
+ * Represents a single CSS Style
+ */
+export type CssStyle = string;
 
 /**
  * Represents one or more CssClasses that are space separated.
  */
 export type SpaceSeparatedCssClasses = string;
+
+/**
+ * Key-value object of CSS style values.
+ */
+export type CssStyleObject = Record<string, Maybe<PrimativeValue>>;
+
+/**
+ * Represents one or more CssStyles that are space separated.
+ */
+export type SpaceSeparatedCssStyles = string;
 
 /**
  * One or more arrays of one or more CSS classes/arrays of classes.

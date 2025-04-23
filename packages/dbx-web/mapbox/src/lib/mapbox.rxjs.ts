@@ -7,26 +7,26 @@ import { MapboxViewportBoundFunction } from './mapbox.util';
 export type FilterMapboxBoundReadItemValueFunction<T> = (value: T) => MapboxViewportBoundFunctionItemValue;
 
 export interface FilterMapboxBoundConfig<T> {
-  boundFunctionObs: ObservableOrValue<MapboxViewportBoundFunction>;
-  boundDecisionObs: ObservableOrValue<LatLngBoundCheckFunction>;
+  readonly boundFunctionObs: ObservableOrValue<MapboxViewportBoundFunction>;
+  readonly boundDecisionObs: ObservableOrValue<LatLngBoundCheckFunction>;
   /**
    * Reads the value from the input item.
    */
-  readValue: FilterMapboxBoundReadItemValueFunction<T>;
+  readonly readValue: FilterMapboxBoundReadItemValueFunction<T>;
   /**
    * Minimum precision to retain. Defaults to LAT_LONG_10M_PRECISION
    */
-  precision?: LatLngPrecision;
+  readonly precision?: LatLngPrecision;
   /**
    * Amount of zoom rounding to use. By default rounds to 0.5 steps using "floor" in order to "round up" since zoom values are inversely proportional to bounds area.
    */
-  zoomRounding?: RoundNumberToStepFunctionInput;
+  readonly zoomRounding?: RoundNumberToStepFunctionInput;
   /**
    * Default zoom level for item values that do not have an explicit zoom, or a zoom of 0.
    *
    * Defaults to 17, which can produce a viewport/bounds about the size of a park.
    */
-  defaultZoom?: MapboxZoomLevel;
+  readonly defaultZoom?: MapboxZoomLevel;
 }
 
 export interface MapboxViewportBoundFunctionItemValue {

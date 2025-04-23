@@ -5,7 +5,19 @@ import { DbxPopupInteractionModule } from './popup/popup.module';
 import { DbxPopoverInteractionModule } from './popover/popover.module';
 import { DbxFilterInteractionModule } from './filter/filter.module';
 
+const importsAndExports = [DbxPromptModule, DbxDialogInteractionModule, DbxFilterInteractionModule, DbxPopoverInteractionModule, DbxPopupInteractionModule];
+
+/**
+ * @deprecated import individual modules instead.
+ *
+ * @see DbxDialogInteractionModule
+ * @see DbxFilterInteractionModule
+ * @see DbxPromptModule
+ * @see DbxPopoverInteractionModule
+ * @see DbxPopupInteractionModule
+ */
 @NgModule({
-  exports: [DbxDialogInteractionModule, DbxFilterInteractionModule, DbxPromptModule, DbxPopoverInteractionModule, DbxPopupInteractionModule]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxInteractionModule {}

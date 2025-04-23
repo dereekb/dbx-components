@@ -1,10 +1,11 @@
-import { Component, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverDirective, AnchorForValueFunction, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, AnchorForValueFunction, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxPopoverInteractionModule, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { NotificationItem } from '@dereekb/firebase';
 import { Observable } from 'rxjs';
 import { LoadingState } from '@dereekb/rxjs';
+import { DbxFirebaseNotificationItemListComponent } from '../component';
 
 export interface DbxFirebaseNotificationItemStorePopoverParams {
   /**
@@ -40,7 +41,10 @@ export interface DbxFirebaseNotificationItemStorePopoverParams {
 export const DEFAULT_DBX_FIREBASE_NOTIFICATION_ITEM_STORE_POPOVER_KEY = 'notification-item-store-notifications';
 
 @Component({
-  templateUrl: './notification.item.store.popover.component.html'
+  templateUrl: './notification.item.store.popover.component.html',
+  imports: [DbxPopoverInteractionModule, DbxFirebaseNotificationItemListComponent, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFirebaseNotificationItemStorePopoverComponent extends AbstractPopoverDirective<unknown, DbxFirebaseNotificationItemStorePopoverParams> {
   static openPopover(popupService: DbxPopoverService, { origin, header, icon, emptyText, makeNotificationItemAnchor, notificationItemsLoadingState$ }: DbxFirebaseNotificationItemStorePopoverParams, popoverKey?: DbxPopoverKey): NgPopoverRef {
@@ -58,27 +62,10 @@ export class DbxFirebaseNotificationItemStorePopoverComponent extends AbstractPo
     });
   }
 
-  get params(): DbxFirebaseNotificationItemStorePopoverParams {
-    return this.popover.data as DbxFirebaseNotificationItemStorePopoverParams;
-  }
-
-  get icon() {
-    return this.params.icon ?? 'notifications';
-  }
-
-  get header() {
-    return this.params.header ?? 'Notifications';
-  }
-
-  get emptyText() {
-    return this.params.header ?? 'There are no notifications.';
-  }
-
-  get notificationItemsLoadingState$() {
-    return this.params.notificationItemsLoadingState$;
-  }
-
-  get makeNotificationItemAnchor() {
-    return this.params.makeNotificationItemAnchor;
-  }
+  readonly params = this.popover.data as DbxFirebaseNotificationItemStorePopoverParams;
+  readonly icon = this.params.icon ?? 'notifications';
+  readonly header = this.params.header ?? 'Notifications';
+  readonly emptyText = this.params.header ?? 'There are no notifications.';
+  readonly makeNotificationItemAnchor = this.params.makeNotificationItemAnchor;
+  readonly notificationItemsLoadingState$ = this.params.notificationItemsLoadingState$;
 }

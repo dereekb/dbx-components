@@ -7,11 +7,14 @@ import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { decode as decodeJwt } from 'jsonwebtoken';
-import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
+import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
 import { EventContext } from 'firebase-functions/lib/v1/cloud-functions';
 import { AuthData } from 'firebase-functions/lib/common/providers/https';
+import { WrappedBlockingFunction, WrappedBlockingFunctionWithHandler, WrappedCallableRequest, WrappedCallableRequestOutput, WrappedCallableRequestParams, WrappedCloudFunction, WrappedCloudFunctionV1 } from './firebase.function';
+import { ScheduledEvent } from 'firebase-functions/scheduler';
 
-export type CallCloudFunction<I = any> = WrappedScheduledFunction | WrappedFunction<I>;
+// gen 1
+export type CallCloudFunction = WrappedCloudFunctionV1<any> | WrappedBlockingFunctionWithHandler<any, any> | WrappedBlockingFunction | WrappedV2Function<any> | WrappedCloudFunctionV1<any>;
 export type CallCloudFunctionParams<F> = F extends WrappedFunction<infer I> ? I : unknown | undefined | void;
 
 /**
@@ -24,7 +27,20 @@ export interface AuthorizedUserTestContext {
   loadUserEmailAndPhone(): Promise<{ email: EmailAddress; phone?: E164PhoneNumber }>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
+  callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
+  /**
+   * Used for calling any non-callable gen 2 function (e.g. scheduled functions, cloud functions, blocking functions) or any gen 1 function.
+   * @param fn
+   * @param params
+   * @param skipJsonConversion
+   */
+  callCloudFunction<F extends WrappedFunction<ScheduledEvent>>(fn: F): Promise<void>;
+  callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
+  callCloudFunction<F extends WrappedBlockingFunctionWithHandler<E, O>, E extends object, O>(fn: F, params: E): Promise<O>;
+  callCloudFunction<F extends WrappedBlockingFunction>(fn: F): Promise<void>;
+  callCloudFunction<F extends WrappedV2Function<any>>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
+  callCloudFunction<F extends WrappedCloudFunctionV1<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
+  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
 }
 
 export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>> extends AbstractChildJestTestContextFixture<I, PF> implements AuthorizedUserTestContext {
@@ -53,7 +69,16 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
     return this.instance.makeContextOptions();
   }
 
+  callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>> {
+    return this.instance.callWrappedFunction(fn, params as any, skipJsonConversion);
+  }
+
+  callCloudFunction<F extends WrappedCloudFunction<I, O>, I extends object, O = unknown>(fn: F, params: I, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
+  callCloudFunction<F extends WrappedBlockingFunctionWithHandler<E, O>, E extends object, O>(fn: F, params: E): Promise<O>;
+  callCloudFunction<F extends WrappedBlockingFunction>(fn: F): Promise<void>;
+  callCloudFunction<F extends WrappedV2Function<any>>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
+  callCloudFunction<F extends WrappedCloudFunctionV1<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
   callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
     return this.instance.callCloudFunction(fn, params as CallCloudFunctionParams<F>, skipJsonConversion);
@@ -68,7 +93,10 @@ function convertParamsToParsedJsonObjectAndBack<T = unknown>(object: T): T {
 }
 
 export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements AuthorizedUserTestContext {
-  constructor(readonly uid: FirebaseAuthUserId, readonly testContext: PI) {}
+  constructor(
+    readonly uid: FirebaseAuthUserId,
+    readonly testContext: PI
+  ) {}
 
   loadUserRecord(): Promise<UserRecord> {
     return this.testContext.auth.getUser(this.uid);
@@ -94,14 +122,51 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
     return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testContext.auth, record));
   }
 
-  callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
-  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
+  /**
+   * Calls a wrapped function with the input params and the context from makeContextOptions().
+   *
+   * @param fn
+   * @param params
+   * @param skipJsonConversion
+   */
+  callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>> {
     // Parse to JSON then back to simulate sending JSON to the server, and the server parsing it as a POJO.
     const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
     return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, options));
   }
 
+  /**
+   * Calls a wrapped gen 2 scheduled/blocking/event function with the input params and context options from makeContextOptions().
+   *
+   * @param fn
+   * @param params
+   */
+  callCloudFunction<F extends WrappedBlockingFunctionWithHandler<E, O>, E extends object, O>(fn: F, params: E): Promise<O>;
+  callCloudFunction<F extends WrappedBlockingFunction>(fn: F): Promise<void>;
+  callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
+  callCloudFunction<F extends WrappedV2Function<any>>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
+  callCloudFunction<F extends WrappedCloudFunctionV1<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
+  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
+    if (params != null && (params as ScheduledEvent).scheduleTime) {
+      // Workaround for https://github.com/firebase/firebase-functions-test/issues/210
+      const scheduleTime = params.scheduleTime;
+      delete params.scheduleTime;
+      params.timestamp = scheduleTime;
+    }
+
+    return this.callWrappedFunction(fn, params as any, skipJsonConversion);
+  }
+
+  /**
+   * @deprecated gen 1
+   *
+   * @param fn
+   * @param params
+   * @param contextOptions
+   * @param skipJsonConversion
+   * @returns
+   */
   callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext, skipJsonConversion = false): Promise<O> {
     const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
     return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, contextOptions ? { ...contextOptions, ...options } : options));
@@ -196,7 +261,7 @@ export const AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY = randomPhoneNumberFact
 export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>>(
   config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>
 ): (params: C, buildTests: (u: F) => void) => void {
-  const { uid: uidGetter, makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I, makeFixture = (f: PF) => new AuthorizedUserTestContextFixture<PI, PF, I>(f), makeUserDetails = () => ({} as AuthorizedUserTestContextDetailsTemplate), initUser } = config;
+  const { uid: uidGetter, makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I, makeFixture = (f: PF) => new AuthorizedUserTestContextFixture<PI, PF, I>(f), makeUserDetails = () => ({}) as AuthorizedUserTestContextDetailsTemplate, initUser } = config;
   const makeUid = uidGetter ? asGetter(uidGetter) : testUidFactory;
 
   return (params: C, buildTests: (u: F) => void) => {

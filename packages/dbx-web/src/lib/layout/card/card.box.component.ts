@@ -1,4 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { DbxSectionLayoutModule } from '../section';
 
 /**
  * Component that formats a card-box of content.
@@ -10,8 +12,12 @@ import { Component, Input } from '@angular/core';
       <div class="dbx-section-header">
         <div class="dbx-section-header-content">
           <h4 class="dbx-section-header-content-title">
-            <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
-            <span *ngIf="header" class="title-text">{{ header }}</span>
+            @if (icon()) {
+              <mat-icon>{{ icon() }}</mat-icon>
+            }
+            @if (header()) {
+              <span class="title-text">{{ header() }}</span>
+            }
           </h4>
           <span class="spacer"></span>
           <ng-content select="[sectionHeader]"></ng-content>
@@ -21,12 +27,12 @@ import { Component, Input } from '@angular/core';
         <ng-content></ng-content>
       </div>
     </div>
-  `
+  `,
+  imports: [MatIconModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxCardBoxComponent {
-  @Input()
-  header?: string;
-
-  @Input()
-  icon?: string;
+  readonly header = input<string>();
+  readonly icon = input<string>();
 }

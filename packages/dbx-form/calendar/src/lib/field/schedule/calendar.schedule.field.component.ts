@@ -1,6 +1,6 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore } from '@dereekb/dbx-web';
-import { Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ArrayOrValue, type Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
@@ -11,10 +11,13 @@ import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } fro
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { DbxScheduleSelectionCalendarDatePopupContentConfig } from '../../calendar.schedule.selection.dialog.component';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from '../../calendar.schedule.selection.dialog.button.component';
+import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../calendar.schedule.selection.range.component';
 
 export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'>, Partial<Pick<CalendarScheduleSelectionState, 'cellContentFactory'>> {
-  appearance?: MatFormFieldAppearance;
+  readonly appearance?: MatFormFieldAppearance;
   /**
    * Whether or not to allow inputting custom text into the picker.
    *
@@ -22,74 +25,77 @@ export interface DbxFormCalendarDateCellScheduleRangeFieldProps extends Pick<For
    *
    * Is false by default.
    */
-  allowTextInput?: boolean;
+  readonly allowTextInput?: boolean;
   /**
    * Whether or not to hide the customize button. Defaults to false.
    */
-  hideCustomize?: boolean;
+  readonly hideCustomize?: boolean;
   /**
    * Whether or not to allow customizing before picking a date range to customize.
    *
    * Defaults to false.
    */
-  allowCustomizeWithoutDateRange?: boolean;
+  readonly allowCustomizeWithoutDateRange?: boolean;
   /**
    * (Optional) Timezone to use for the output start date.
    *
    * If a filter is provided, this timezone overrides the filter's timezone output.
    */
-  outputTimezone?: ObservableOrValue<Maybe<TimezoneString>>;
+  readonly outputTimezone?: ObservableOrValue<Maybe<TimezoneString>>;
   /**
    * (Optional) Default schedule days to allow.
    */
-  defaultScheduleDays?: ObservableOrValue<Maybe<Iterable<DateCellScheduleDayCode>>>;
+  readonly defaultScheduleDays?: ObservableOrValue<Maybe<Iterable<DateCellScheduleDayCode>>>;
   /**
    * Optional min/max date range to filter on. Works in conjuction with the filter.
    */
-  minMaxDateRange?: ObservableOrValue<Maybe<Partial<DateRange>>>;
+  readonly minMaxDateRange?: ObservableOrValue<Maybe<Partial<DateRange>>>;
   /**
    * (Optional) Observable with a filter value to apply to the date range.
    */
-  filter?: ObservableOrValue<Maybe<DateCellScheduleDateFilterConfig>>;
+  readonly filter?: ObservableOrValue<Maybe<DateCellScheduleDateFilterConfig>>;
   /**
    * (Optional) Observable with days and values to exclude from the date range.
    */
-  exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>>>;
+  readonly exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>>>;
   /**
    * Custom dialog content config for the popup
    */
-  dialogContentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
+  readonly dialogContentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
   /**
    * Custom details config for the date range
    */
-  customDetailsConfig?: Maybe<DbxInjectionComponentConfig>;
+  readonly customDetailsConfig?: Maybe<DbxInjectionComponentConfig>;
 }
 
 @Component({
   template: `
     <div class="dbx-schedule-selection-field">
       <dbx-schedule-selection-calendar-date-range [openPickerOnTextClick]="openPickerOnTextClick" [showCustomize]="showCustomize" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
-        <dbx-schedule-selection-calendar-date-dialog-button customizeButton [disabled]="disableCustomize$ | async" [contentConfig]="dialogContentConfig"></dbx-schedule-selection-calendar-date-dialog-button>
+        <dbx-schedule-selection-calendar-date-dialog-button customizeButton [disabled]="disabledSignal()" [contentConfig]="dialogContentConfig"></dbx-schedule-selection-calendar-date-dialog-button>
         <dbx-injection [config]="customDetailsConfig"></dbx-injection>
       </dbx-schedule-selection-calendar-date-range>
     </div>
   `,
-  providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
+  providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()],
+  imports: [DbxInjectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateCellScheduleRangeFieldProps = DbxFormCalendarDateCellScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   readonly compact = inject(CompactContextStore, { optional: true });
+
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
-  readonly ngZone = inject(NgZone);
 
-  private _syncSub = new SubscriptionObject();
-  private _valueSub = new SubscriptionObject();
-  private _timezoneSub = new SubscriptionObject();
-  private _minMaxDateRangeSub = new SubscriptionObject();
-  private _defaultWeekSub = new SubscriptionObject();
-  private _filterSub = new SubscriptionObject();
-  private _exclusionsSub = new SubscriptionObject();
+  private readonly _syncSub = new SubscriptionObject();
+  private readonly _valueSub = new SubscriptionObject();
+  private readonly _timezoneSub = new SubscriptionObject();
+  private readonly _minMaxDateRangeSub = new SubscriptionObject();
+  private readonly _defaultWeekSub = new SubscriptionObject();
+  private readonly _filterSub = new SubscriptionObject();
+  private readonly _exclusionsSub = new SubscriptionObject();
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(
@@ -102,6 +108,8 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  readonly disabledSignal = toSignal(this.disableCustomize$);
 
   get formGroupName(): string {
     return this.field.key as string;

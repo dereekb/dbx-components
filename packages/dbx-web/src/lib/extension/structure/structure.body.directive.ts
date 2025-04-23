@@ -11,6 +11,7 @@ import { DbxStructureDirective } from './structure.structure.directive';
       provide: DbxStructureDirective,
       useExisting: DbxBodyDirective
     }
-  ]
+  ],
+  standalone: true
 })
 export class DbxBodyDirective extends DbxStructureDirective {}

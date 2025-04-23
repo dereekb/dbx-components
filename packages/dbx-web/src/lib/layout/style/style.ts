@@ -1,5 +1,59 @@
-import { CssClass, type Maybe } from '@dereekb/util';
+import { CharacterPrefixSuffixCleanString, CssClass, DASH_CHARACTER_PREFIX_INSTANCE, DashPrefixString, type Maybe } from '@dereekb/util';
 
+// MARK: App Styling
+/**
+ * An kebab-case style name that uniquely identifies a styling for an app.
+ *
+ * Examples: 'doc-app'
+ */
+export type DbxStyleName = string;
+
+/**
+ * A suffix that can be added to a style class to differentiate a separate mode.
+ *
+ * Dark mode is an example, with the suffix 'dark' or '-dark'. The suffix does not have to
+ */
+export type DbxStyleClassSuffix = DbxStyleClassCleanSuffix | DbxStyleClassDashSuffix;
+
+/**
+ * A DbxStyleClassSuffix that does not start with a dash.
+ *
+ * Dark mode is an example, with the suffix 'dark'.
+ */
+export type DbxStyleClassCleanSuffix = CharacterPrefixSuffixCleanString;
+
+/**
+ * A DbxStyleClassSuffix that starts with a dash.
+ *
+ * Dark mode is an example, with the suffix '-dark'.
+ */
+export type DbxStyleClassDashSuffix = DashPrefixString;
+
+export const dbxStyleClassCleanSuffix = DASH_CHARACTER_PREFIX_INSTANCE.cleanString;
+
+/**
+ * A style class that is a combination of a style name and a suffix.
+ *
+ * Examples:
+ * - 'doc-app': the default style of an app
+ * - 'doc-app-dark': the dark mode style of an app
+ */
+export type DbxStyleClass = string | `${DbxStyleName}${DbxStyleClassSuffix}`;
+
+export const DBX_DARK_STYLE_CLASS_SUFFIX: DbxStyleClassSuffix = '-dark';
+
+export interface DbxStyleConfig {
+  /**
+   * Root style class name.
+   */
+  readonly style: DbxStyleClass;
+  /**
+   * Set of all allowed DbxStyleClassSuffixes for the DbxStyleClass in the config, if applicable.
+   */
+  readonly suffixes?: Set<DbxStyleClassSuffix>;
+}
+
+// MARK: Theme
 export type DbxThemeColorMain = 'primary' | 'accent' | 'warn';
 export type DbxThemeColorExtra = 'notice' | 'ok' | 'success' | 'grey';
 export type DbxThemeColorExtraSecondary = 'background' | 'disabled';

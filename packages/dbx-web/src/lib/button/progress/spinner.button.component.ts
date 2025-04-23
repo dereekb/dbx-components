@@ -1,63 +1,101 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
-import { AbstractProgressButtonDirective } from './base.progress.button.directive';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, viewChild } from '@angular/core';
+import { AbstractProgressButtonDirective } from './abstract.progress.button.directive';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { spaceSeparatedCssClasses } from '@dereekb/util';
+import { Maybe, spaceSeparatedCssClasses } from '@dereekb/util';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { NgClass, NgStyle } from '@angular/common';
 
 @Component({
-  selector: 'dbx-spinner-button',
+  selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
-  @ViewChild('button', { static: true, read: ElementRef })
-  readonly buttonRef!: ElementRef<HTMLElement>;
+export class DbxProgressSpinnerButtonComponent extends AbstractProgressButtonDirective {
+  readonly buttonRef = viewChild.required<string, ElementRef<HTMLElement>>('button', { read: ElementRef<HTMLElement> });
 
-  readonly buttonCss$ = this.baseCssClasses$.pipe(
-    map((x) => {
-      const options = x[0];
-      const classes = [...x[1]];
+  readonly buttonCssArraySignal = computed(() => {
+    const config = this.configSignal();
+    const classes = [...this.baseCssClassSignal()];
 
-      if (options.iconOnly) {
-        classes.push('mat-mdc-icon-button');
-      }
+    if (config?.iconOnly) {
+      classes.push('mat-mdc-icon-button');
+    }
 
-      if (options.fab) {
-        classes.push('mat-fab');
-      }
+    if (config?.fab) {
+      classes.push('dbx-progress-spinner-fab');
+    }
 
-      return spaceSeparatedCssClasses(classes);
-    }),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+    return classes;
+  });
 
-  get showText() {
-    return !(this.options.fab || this.options.iconOnly);
-  }
+  readonly buttonCss$ = toObservable(this.buttonCssArraySignal).pipe(map(spaceSeparatedCssClasses), distinctUntilChanged(), shareReplay(1));
 
-  calcSpinnerSize() {
-    const options = this.options;
-    const elem = this.buttonRef?.nativeElement;
+  readonly spinnerSizeSignal = computed(() => {
+    const config = this.configSignal();
+    const buttonRef = this.buttonRef();
+
+    const elem = buttonRef.nativeElement;
     const height = elem.clientHeight;
 
-    let size;
+    let size: Maybe<number>;
 
-    if (options) {
-      if (options.fab || options.iconOnly) {
-        size = height;
+    if (config != null) {
+      if (config.iconOnly) {
+        if (config.fab) {
+          size = 48;
+        } else {
+          size = height;
+        }
       } else {
-        size = options.spinnerSize;
+        size = config.spinnerSize;
       }
     }
 
     if (!size) {
-      const minimumSpinnerSize = 18;
-      const spinnerRatio = options.spinnerRatio ?? 0.33;
+      const minimumSpinnerSize = 24;
+      const spinnerRatio = config?.spinnerRatio ?? 0.33;
       const targetSpinnerSize = height * Math.min(1, spinnerRatio);
       size = Math.min(height, Math.max(minimumSpinnerSize, targetSpinnerSize));
     }
 
     return size;
-  }
+  });
+
+  readonly buttonCssSignal = toSignal(this.buttonCss$);
+
+  readonly showTextSignal = computed(() => {
+    const config = this.configSignal();
+    return !(config?.fab || config?.iconOnly);
+  });
+
+  readonly showTextButtonIconSignal = computed(() => {
+    const config = this.configSignal();
+    const showText = this.showTextSignal();
+    return showText && config?.buttonIcon; // shows the button icon with showing the text.
+  });
+
+  readonly showIconSignal = computed(() => {
+    const config = this.configSignal();
+    return (
+      config &&
+      config.buttonIcon && // button icon must be defined
+      !this.showTextSignal()
+    ); // show icon if either fab or iconOnly is true
+  });
+
+  readonly customSpinnerStyleSignal = computed(() => {
+    const customSpinnerColor = this.configSignal()?.customSpinnerColor;
+    return customSpinnerColor ? { stroke: customSpinnerColor } : undefined;
+  });
+
+  readonly customSpinnerStyleClassSignal = computed(() => {
+    const hasCustomStyle = Boolean(this.customSpinnerStyleSignal());
+    return hasCustomStyle ? { 'dbx-progress-spinner-custom': true } : undefined;
+  });
 }

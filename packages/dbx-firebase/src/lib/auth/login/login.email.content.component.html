@@ -1,24 +1,26 @@
 <div class="dbx-firebase-login-email-content">
-  <ng-container [ngSwitch]="emailMode$ | async">
-    <ng-container *ngSwitchCase="'login'">
+  @switch (emailModeSignal()) {
+    @case ('login') {
       <ng-container *ngTemplateOutlet="loginView"></ng-container>
-    </ng-container>
-    <ng-container *ngSwitchCase="'recover'">
+    }
+    @case ('recover') {
       <ng-container *ngTemplateOutlet="resetPassword"></ng-container>
-    </ng-container>
-    <ng-container *ngSwitchCase="'recoversent'">
+    }
+    @case ('recoversent') {
       <ng-container *ngTemplateOutlet="resetPasswordSent"></ng-container>
-    </ng-container>
-  </ng-container>
+    }
+  }
 </div>
 
 <!-- Login View -->
 <ng-template #loginView>
   <ng-container dbxAction [dbxActionHandler]="handleLoginAction">
-    <dbx-firebase-email-form [config]="formConfig" dbxActionForm [dbxFormSource]="emailFormValue"></dbx-firebase-email-form>
-    <div class="dbx-firebase-login-email-forgot-prompt" *ngIf="isLoginMode">
-      <dbx-link [anchor]="forgotAnchor">Forgot Password?</dbx-link>
-    </div>
+    <dbx-firebase-email-form [config]="formConfig" dbxActionForm [dbxFormSource]="emailFormValueSignal()"></dbx-firebase-email-form>
+    @if (isLoginMode) {
+      <div class="dbx-firebase-login-email-forgot-prompt">
+        <dbx-link [anchor]="forgotAnchor">Forgot Password?</dbx-link>
+      </div>
+    }
     <div class="dbx-flex">
       <dbx-button class="dbx-button-wide" [text]="buttonText" [raised]="true" color="primary" dbxActionButton></dbx-button>
       <dbx-button-spacer></dbx-button-spacer>
@@ -32,7 +34,7 @@
 <!-- Reset Password View -->
 <ng-template #resetPassword>
   <div class="dbx-firebase-login-email-content-recovery" dbxAction [dbxActionHandler]="handleRecoveryAction" [dbxActionSuccessHandler]="handleRecoverySuccess">
-    <dbx-firebase-email-recovery-form dbxActionForm [dbxFormSource]="recoveryFormValue"></dbx-firebase-email-recovery-form>
+    <dbx-firebase-email-recovery-form dbxActionForm [dbxFormSource]="recoveryFormValueSignal()"></dbx-firebase-email-recovery-form>
     <p class="dbx-hint">An email will be sent to the above address to help you reset your password.</p>
     <div class="dbx-flex">
       <dbx-button class="dbx-button-wide" text="Send Recovery Email" [raised]="true" color="primary" dbxActionButton></dbx-button>

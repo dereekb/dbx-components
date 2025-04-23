@@ -1,25 +1,34 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { map, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map, distinctUntilChanged } from 'rxjs';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 
 @Component({
   selector: 'dbx-table-item-action',
   template: `
-    <dbx-injection [config]="config$ | async"></dbx-injection>
+    <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DbxInjectionComponent],
+  standalone: true
 })
 export class DbxTableItemActionComponent<T> extends AbstractDbxTableElementDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    switchMap((viewDelegate) => {
+    map((viewDelegate) => {
       const itemAction = viewDelegate.itemAction;
+      let obs: MaybeObservableOrValue<DbxInjectionComponentConfig> = undefined;
 
       if (itemAction) {
-        return this.element$.pipe(map((x) => itemAction(x)));
-      } else {
-        return of(undefined);
+        obs = this.element$.pipe(map((x) => itemAction(x)));
       }
+
+      return obs;
     }),
+    maybeValueFromObservableOrValue(),
     distinctUntilChanged()
   );
+
+  readonly configSignal = toSignal(this.config$);
 }

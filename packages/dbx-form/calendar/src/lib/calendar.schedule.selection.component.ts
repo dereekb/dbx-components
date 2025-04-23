@@ -1,15 +1,20 @@
-import { Component, EventEmitter, Output, OnDestroy, Input, OnInit, inject } from '@angular/core';
-import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
-import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
-import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy, input, output, computed, signal } from '@angular/core';
+import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay, CalendarModule, CalendarMonthViewComponent } from 'angular-calendar';
+import { map, shareReplay, Subject, first, throttleTime, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
+import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents, DbxCalendarBaseComponent } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, Maybe, reduceBooleansWithAnd } from '@dereekb/util';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
-import { DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, switchMapDbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { ObservableOrValue, ObservableOrValueGetter, SubscriptionObject, asObservable, asObservableFromGetter } from '@dereekb/rxjs';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';
 import { DateRangeType, dateRange, isSameDate } from '@dereekb/date';
 import { endOfWeek } from 'date-fns';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
+import { NgClass, NgIf, AsyncPipe } from '@angular/common';
+import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
+import { DbxScheduleSelectionCalendarSelectionToggleButtonComponent } from './calendar.schedule.selection.toggle.button.component';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
 export interface DbxScheduleSelectionCalendarComponentConfig {
   /**
@@ -91,29 +96,35 @@ export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputMo
 @Component({
   selector: 'dbx-schedule-selection-calendar',
   templateUrl: './calendar.schedule.selection.component.html',
-  providers: [DbxCalendarStore]
+  imports: [NgClass, CalendarModule, DbxCalendarBaseComponent, DbxInjectionComponent, DbxButtonSpacerDirective, DbxScheduleSelectionCalendarCellComponent, DbxScheduleSelectionCalendarSelectionToggleButtonComponent],
+  providers: [DbxCalendarStore],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestroy {
   readonly calendarStore = inject(DbxCalendarStore<T>);
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);
 
-  private _inputReadonly = new BehaviorSubject<Maybe<boolean>>(undefined);
-  private _config = new BehaviorSubject<DbxScheduleSelectionCalendarComponentConfig>({});
-  private _centerRangeSub = new SubscriptionObject();
+  readonly clickEvent = output<DbxCalendarEvent<T>>();
 
-  readonly config$ = this._config.pipe(distinctUntilChanged(), shareReplay(1));
+  readonly config = input<Maybe<DbxScheduleSelectionCalendarComponentConfig>>();
+  readonly readonly = input<Maybe<boolean>>(false);
+
+  private readonly _centerRangeSub = new SubscriptionObject();
+
+  readonly config$: Observable<Maybe<DbxScheduleSelectionCalendarComponentConfig>> = toObservable(this.config).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly readonly$: Observable<boolean> = this.config$.pipe(
-    switchMap((x) => (x.readonly != null ? asObservableFromGetter(x.readonly) : of(undefined))),
-    combineLatestWith(this._inputReadonly),
+    switchMap((x) => (x?.readonly != null ? asObservableFromGetter(x.readonly) : of(undefined))),
+    combineLatestWith(toObservable(this.readonly)),
     map(([configReadonly, inputReadonly]) => {
-      return (configReadonly ?? false) || (inputReadonly ?? false);
+      return configReadonly || inputReadonly || false;
     }),
     shareReplay(1)
   );
 
   readonly showButtonsOnReadonly$: Observable<boolean> = this.config$.pipe(
-    map((x) => x.showButtonsOnReadonly ?? false),
+    map((x) => x?.showButtonsOnReadonly ?? false),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -131,7 +142,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   );
 
   readonly showClearSelectionButton$ = this.config$.pipe(
-    map((config) => config.showClearSelectionButton ?? true),
+    map((config) => config?.showClearSelectionButton ?? true),
     combineLatestWith(this.showButtons$),
     map((x) => reduceBooleansWithAnd(x)),
     distinctUntilChanged(),
@@ -139,15 +150,12 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   );
 
   readonly datePopoverButtonInjectionConfig$: Observable<Maybe<DbxInjectionComponentConfig<any>>> = this.config$.pipe(
-    map((x) => x.buttonInjectionConfig),
+    map((x) => x?.buttonInjectionConfig),
     switchMapDbxInjectionComponentConfig(DbxScheduleSelectionCalendarDatePopoverButtonComponent),
     combineLatestWith(this.showButtons$),
     map(([config, showButton]) => (showButton ? config : undefined)),
     shareReplay(1)
   );
-
-  @Output()
-  readonly clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
   // refresh any time the selected day function updates
   readonly state$ = this.dbxCalendarScheduleSelectionStore.state$;
@@ -156,10 +164,10 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
     switchMap((x) => {
       let factory: Observable<DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory>;
 
-      if (x.beforeMonthViewRenderFunctionFactory) {
+      if (x?.beforeMonthViewRenderFunctionFactory) {
         factory = asObservable(x.beforeMonthViewRenderFunctionFactory);
       } else {
-        factory = asObservable(x.customizeDay).pipe(map((x) => dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(x)));
+        factory = asObservable(x?.customizeDay).pipe(map((x) => dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(x)));
       }
 
       return factory.pipe(map((x) => x(this.state$)));
@@ -174,6 +182,14 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
 
   readonly events$ = this.calendarStore.visibleEvents$.pipe(map(prepareAndSortCalendarEvents), shareReplay(1));
   readonly viewDate$ = this.calendarStore.date$;
+
+  readonly beforeMonthViewRenderSignal = toSignal(this.beforeMonthViewRender$);
+  readonly readonlySignal = toSignal(this.readonly$, { initialValue: false });
+  readonly showClearSelectionButtonSignal = toSignal(this.showClearSelectionButton$);
+  readonly datePopoverButtonInjectionConfigSignal = toSignal(this.datePopoverButtonInjectionConfig$);
+
+  readonly eventsSignal = toSignal(this.events$, { initialValue: [] });
+  readonly viewDateSignal = toSignal(this.viewDate$, { initialValue: new Date() });
 
   ngOnInit(): void {
     this.dbxCalendarScheduleSelectionStore.setViewReadonlyState(this.readonly$); // sync the readonly state
@@ -221,32 +237,13 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   }
 
   ngOnDestroy(): void {
-    this.clickEvent.complete();
-    this._inputReadonly.complete();
-    this._config.complete();
     this._centerRangeSub.destroy();
   }
 
-  @Input()
-  get config() {
-    return this._config.value;
-  }
-
-  set config(config: Maybe<DbxScheduleSelectionCalendarComponentConfig>) {
-    this._config.next(config ?? {});
-  }
-
-  @Input()
-  set readonly(readonly: Maybe<boolean>) {
-    this._inputReadonly.next(readonly);
-  }
-
   dayClicked({ date }: { date: Date }): void {
-    this.readonly$.pipe(first()).subscribe((readonly) => {
-      if (!readonly) {
-        this.dbxCalendarScheduleSelectionStore.toggleSelectedDates(date);
-      }
-    });
+    if (!this.readonlySignal()) {
+      this.dbxCalendarScheduleSelectionStore.toggleSelectedDates(date);
+    }
   }
 
   eventClicked(action: string, event: CalendarEvent<T>): void {
@@ -254,8 +251,6 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestr
   }
 
   beforeMonthViewRender(renderEvent: CalendarMonthViewBeforeRenderEvent): void {
-    this.beforeMonthViewRender$.pipe(first()).subscribe((x) => {
-      x(renderEvent);
-    });
+    this.beforeMonthViewRenderSignal()?.(renderEvent);
   }
 }

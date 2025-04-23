@@ -15,7 +15,7 @@ export class DbxFirebaseCollectionListDirective<T> extends AbstractSubscriptionD
 
   constructor() {
     super();
-    this.dbxListViewWrapper.state$ = this.dbxFirebaseCollectionStoreDirective.pageLoadingState$;
+    this.dbxListViewWrapper.setState(this.dbxFirebaseCollectionStoreDirective.pageLoadingState$);
   }
 
   ngOnInit(): void {

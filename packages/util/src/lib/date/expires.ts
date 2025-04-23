@@ -15,12 +15,12 @@ export interface Expires {
 
 // MARK: Expiration Details
 /**
- * expirationDetails() input.
+ * Input configuration for the expirationDetails() function.
  *
  * The priority that the expiration calculation uses takes the following order:
- * 1. expires
- * 2. expiresAt
- * 3. date + expiresIn
+ * 1. expires - An existing Expires object
+ * 2. expiresAt - A specific date when something expires
+ * 3. expiresFromDate + expiresIn - A base date plus a duration
  */
 export interface ExpirationDetailsInput<T extends Expires = Expires> extends Expires {
   /**
@@ -76,10 +76,12 @@ export interface ExpirationDetails<T extends Expires = Expires> {
 }
 
 /**
- * Returns expiration details for the input.
+ * Returns expiration details for the input configuration.
+ * Creates an object that can determine when something expires based on various inputs.
  *
- * @param input
- * @returns
+ * @template T - The type of Expires object
+ * @param input - Configuration for calculating expiration
+ * @returns An ExpirationDetails object that can determine expiration state
  */
 export function expirationDetails<T extends Expires = Expires>(input: ExpirationDetailsInput<T>): ExpirationDetails<T> {
   const { expiresAt, expires, now: inputNow, expiresFromDate, defaultExpiresFromDateToNow, expiresIn } = input;
@@ -135,9 +137,10 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
 // MARK: Utility
 /**
  * Convenience function for calculating and returning the expiration date given the input.
+ * This is a shorthand for expirationDetails(input).getExpirationDate().
  *
- * @param input Input used to calculate the expiration date.
- * @returns The expiration date, if applicable.
+ * @param input - Input configuration used to calculate the expiration date
+ * @returns The calculated expiration date, or null if no expiration is defined
  */
 export function calculateExpirationDate(input: ExpirationDetailsInput<any>): Maybe<Date> {
   return expirationDetails(input).getExpirationDate();
@@ -166,25 +169,27 @@ export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateO
 
 /**
  * Convenience function for quickly calculating throttling given a throttle time and last run time.
- * 
+ *
  * Returns true if the throttle time has not passed since the last run time, compared to now.
- 
- * @param throttleTime Time after "now" that expiration will occur.
- * @param lastRunAt Time the last run occurred. If the run has never occured then this function will return false.
- * @param now Optional override for the current time. Defaults to the current time.
- * @returns True if the throttle time has not passed since the last run time, compared to now.
+ * This is useful for rate limiting operations (e.g., "only allow this action once every X milliseconds").
+ *
+ * @param throttleTime - Minimum time in milliseconds that must pass between operations
+ * @param lastRunAt - Timestamp when the operation was last performed
+ * @param now - Optional override for the current time (defaults to the current time)
+ * @returns True if the operation should be throttled (not enough time has passed), false otherwise
  */
 export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeNumber>, now?: Maybe<Date>) {
   return !expirationDetails({ defaultExpiresFromDateToNow: false, expiresFromDate: lastRunAt ?? null, expiresIn: throttleTime }).hasExpired(now, true);
 }
 
 /**
- * Returns true if any of the input ExpirationDetails have not expired.
+ * Returns true if at least one of the input ExpirationDetails has not expired.
+ * Useful for checking if any items in a collection are still valid.
  *
  * If the list is empty, returns false.
  *
- * @param details List of ExpirationDetails to check.
- * @returns True if any of the input ExpirationDetails have not expired.
+ * @param details - Collection of ExpirationDetails to check
+ * @returns True if at least one item has not expired, false otherwise
  */
 export function checkAtleastOneNotExpired(details: ExpirationDetails<any>[]): boolean {
   const firstExpired = details.findIndex((detail) => !detail.hasExpired());
@@ -193,12 +198,13 @@ export function checkAtleastOneNotExpired(details: ExpirationDetails<any>[]): bo
 
 /**
  * Returns true if any of the input ExpirationDetails have expired.
+ * Useful for checking if any items in a collection need to be refreshed or removed.
  *
- * If the list is empty, returns the value of the second argument.
+ * If the list is empty, returns the value specified by defaultIfEmpty.
  *
- * @param details List of ExpirationDetails to check.
- * @param defaultIfEmpty Default value to return if the list is empty. True by default.
- * @returns True if any of the input ExpirationDetails have expired.
+ * @param details - Collection of ExpirationDetails to check
+ * @param defaultIfEmpty - Default value to return if the list is empty (defaults to true)
+ * @returns True if any item has expired, or the defaultIfEmpty value for an empty list
  */
 export function checkAnyHaveExpired(details: ExpirationDetails<any>[], defaultIfEmpty: boolean = true): boolean {
   if (details.length === 0) {

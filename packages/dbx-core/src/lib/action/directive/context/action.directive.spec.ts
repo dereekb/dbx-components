@@ -1,21 +1,13 @@
+import { ChangeDetectionStrategy, Component, ViewChild, input, signal, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild, Input } from '@angular/core';
-import { first, tap, of } from 'rxjs';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { first, of, tap } from 'rxjs';
+import { WorkUsingObservable } from '@dereekb/rxjs';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
-import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { WorkUsingObservable } from '@dereekb/rxjs';
 
 describe('DbxActionDirective', () => {
-  beforeEach(async () => {
-    TestBed.configureTestingModule({
-      imports: [DbxCoreActionModule, NoopAnimationsModule],
-      declarations: [TestActionContextDirectiveComponent]
-    }).compileComponents();
-  });
-
   let testComponent: TestActionContextDirectiveComponent;
 
   let directive: DbxActionDirective<number, number>;
@@ -24,14 +16,18 @@ describe('DbxActionDirective', () => {
   let fixture: ComponentFixture<TestActionContextDirectiveComponent>;
 
   beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TestActionContextDirectiveComponent]
+    });
+
     fixture = TestBed.createComponent(TestActionContextDirectiveComponent);
     testComponent = fixture.componentInstance;
-
-    directive = testComponent.directive!;
-    handlerDirective = testComponent.handlerDirective!;
-    handlerDirective.handlerFunction = () => of(0);
+    testComponent.handlerFunctionSignal.set(() => of(0));
 
     fixture.detectChanges();
+
+    directive = testComponent.directive() as DbxActionDirective<number, number>;
+    handlerDirective = testComponent.handlerDirective() as DbxActionHandlerDirective<number, number>;
   });
 
   describe('dbxActionContext', () => {
@@ -80,7 +76,17 @@ describe('DbxActionDirective', () => {
         const READY_VALUE = 0;
         const SUCCESS_VALUE = 123;
 
-        handlerDirective.handlerFunction = () => of(SUCCESS_VALUE).pipe(tap(() => (triggered = true)));
+        testComponent.handlerFunctionSignal.set(() =>
+          of(SUCCESS_VALUE).pipe(
+            tap(() => {
+              triggered = true;
+            })
+          )
+        );
+
+        fixture.detectChanges();
+
+        expect(handlerDirective.handlerFunction()).toBeDefined();
 
         directive.sourceInstance.trigger();
         directive.sourceInstance.readyValue(READY_VALUE);
@@ -101,16 +107,15 @@ describe('DbxActionDirective', () => {
 
 @Component({
   template: `
-    <div #action="action" dbxActionContext [dbxActionHandler]="handlerFunction"></div>
-  `
+    <div #action="action" dbxActionContext [dbxActionHandler]="handlerFunctionSignal()"></div>
+  `,
+  imports: [DbxCoreActionModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 class TestActionContextDirectiveComponent {
-  @ViewChild(DbxActionDirective, { static: true })
-  directive?: DbxActionDirective<number, number>;
+  readonly directive = viewChild.required<DbxActionDirective<number, number>>(DbxActionDirective);
+  readonly handlerDirective = viewChild.required<DbxActionHandlerDirective<number, number>>(DbxActionHandlerDirective);
 
-  @ViewChild(DbxActionHandlerDirective, { static: true })
-  handlerDirective?: DbxActionHandlerDirective<number, number>;
-
-  @Input()
-  handlerFunction?: WorkUsingObservable<number, number>;
+  readonly handlerFunctionSignal = signal<WorkUsingObservable<number, number> | undefined>(undefined);
 }

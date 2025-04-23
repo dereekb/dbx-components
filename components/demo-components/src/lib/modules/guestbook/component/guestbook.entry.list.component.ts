@@ -24,12 +24,15 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
   providers: provideDbxListView(DemoGuestbookEntryListViewComponent)
 })
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
-  override trackBy = trackByModelKeyRef();
-
   readonly config: DbxSelectionValueListViewConfig<GuestbookEntryWithSelection> = {
     componentClass: DemoGuestbookEntryListViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
   };
+
+  constructor() {
+    super();
+    this.setTrackBy(trackByModelKeyRef());
+  }
 }
 
 @Component({

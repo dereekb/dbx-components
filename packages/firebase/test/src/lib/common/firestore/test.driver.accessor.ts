@@ -1,9 +1,9 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData, AbstractFirestoreDocument } from '@dereekb/firebase';
-import { MockItemCollectionFixture, MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from '../mock';
-import { Getter } from '@dereekb/util';
+import { type Transaction, type DocumentReference, type WriteBatch, type FirestoreDocumentAccessor, makeDocuments, type FirestoreDocumentDataAccessor, type FirestoreContext, type FirestoreDocument, type RunTransaction, type FirebaseAuthUserId, type DocumentSnapshot, type FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData, type AbstractFirestoreDocument } from '@dereekb/firebase';
+import { type MockItemCollectionFixture, type MockItemDocument, type MockItem, type MockItemPrivateDocument, type MockItemPrivateFirestoreCollection, type MockItemPrivate, type MockItemSubItem, type MockItemSubItemDocument, type MockItemSubItemFirestoreCollection, type MockItemSubItemFirestoreCollectionGroup, type MockItemUserFirestoreCollection, type MockItemUserDocument, type MockItemUser, mockItemConverter } from '../mock';
+import { type Getter } from '@dereekb/util';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -110,7 +110,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
               await f.parent.firestoreContext.runTransaction(async (transaction) => {
                 const itemDocumentInTransaction = await f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForId(itemDocument.id);
-                let data = await itemDocumentInTransaction.snapshotData();
+                const data = await itemDocumentInTransaction.snapshotData();
 
                 expect(data?.number).toBe(undefined);
 

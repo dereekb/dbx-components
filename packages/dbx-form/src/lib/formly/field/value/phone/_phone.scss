@@ -27,11 +27,11 @@
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
+  $color-config: theming.m2-get-color-config($theme-config);
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
-  $text-color: theming.get-color-from-palette($foreground, 'text');
-  $border-color: theming.get-color-from-palette($foreground, 'divider');
+  $text-color: theming.m2-get-color-from-palette($foreground, 'text');
+  $border-color: theming.m2-get-color-from-palette($foreground, 'divider');
 
   .dbx-form-phone-field {
     .country-selector.mat-mdc-button,
@@ -52,9 +52,9 @@
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-phone') {
-    $color: theming.get-color-config($theme-config);
-    $density: theming.get-density-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
 
     @if $color !=null {
       @include color($theme-config);

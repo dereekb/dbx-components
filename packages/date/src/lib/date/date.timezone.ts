@@ -1,6 +1,6 @@
 import { addMilliseconds, startOfDay, endOfDay, millisecondsToHours, millisecondsToMinutes, differenceInHours, addHours } from 'date-fns';
 import { parseISO8601DayStringToUTCDate, type MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, type Maybe, type Milliseconds, type TimezoneString, UTC_TIMEZONE_STRING, type ISO8601DayString, type YearNumber, type MapSameFunction, type Building, MS_IN_HOUR, type Hours, type Minutes, MS_IN_MINUTE, MS_IN_DAY, cachedGetter, type Getter, type LogicalDate } from '@dereekb/util';
-import { utcToZonedTime, format as formatDate } from 'date-fns-tz';
+import { toZonedTime, format as formatDate } from 'date-fns-tz';
 import { guessCurrentTimezone, isSameDate, isStartOfDayInUTC, requireCurrentTimezone, roundDateDownTo } from './date';
 import { type DateRange, type TransformDateRangeDatesFunction, transformDateRangeDatesFunction } from './date.range';
 import { dateFromLogicalDate } from './date.logical';
@@ -152,7 +152,7 @@ export function calculateTimezoneOffset(timezone: TimezoneString, date: Date): M
   const secondsAndMs = inputTimeUnrounded % MS_IN_MINUTE; // determine the number of seconds and milliseconds (prepare to round to nearest minute)
   const inputTime = inputTimeUnrounded - secondsAndMs; // remove seconds and ms as it will throw off the final tzOffset
 
-  const zoneDate = utcToZonedTime(inputTime, timezone);
+  const zoneDate = toZonedTime(inputTime, timezone);
   const zoneDateStr = formatDate(zoneDate, 'yyyy-MM-dd HH:mm'); // ignore seconds, etc.
   const zoneDateTime = new Date(zoneDateStr + 'Z').getTime();
 

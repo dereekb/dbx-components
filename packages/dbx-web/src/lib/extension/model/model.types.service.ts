@@ -1,5 +1,5 @@
 import { Injectable, Injector, inject } from '@angular/core';
-import { capitalCase } from 'change-case';
+import { capitalCase } from 'change-case-all';
 import { map, shareReplay, Observable, BehaviorSubject } from 'rxjs';
 import { ArrayOrValue, Building, ModelTypeString, useIterableOrValue } from '@dereekb/util';
 import { DbxModelTypeConfiguration, DbxModelTypeConfigurationMap } from './model.types';
@@ -9,7 +9,7 @@ export interface DbxModelTypeInfo extends Omit<DbxModelTypeConfiguration, 'srefF
    * Whether or not a response is expected for segues
    * to a view for objects of this type.
    */
-  canSegueToView: boolean;
+  readonly canSegueToView: boolean;
 }
 
 export interface DbxModelTypesMap<I extends DbxModelTypeInfo> {

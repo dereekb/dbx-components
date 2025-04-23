@@ -3,32 +3,68 @@ import { type FirestoreModelId, type FirestoreModelIdRef, type FirestoreModelKey
 import { type QueryDocumentSnapshot, type DocumentDataWithIdAndKey, type DocumentReference, type DocumentSnapshot, type QuerySnapshot, type Transaction } from '../types';
 import { type FirestoreDocumentData, type FirestoreDocument, type FirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessor, type LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
+/**
+ * Creates an array of new FirestoreDocument instances without creating them in Firestore.
+ *
+ * @template T - The document data type
+ * @template D - The FirestoreDocument implementation type
+ * @param documentAccessor - The document accessor to use for creating document instances
+ * @param count - The number of document instances to create
+ * @returns An array of new document instances
+ */
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
   return makeWithFactory(() => documentAccessor.newDocument(), count);
 }
 
+/**
+ * Parameters for creating and initializing multiple Firestore documents.
+ *
+ * @template T - The document data type
+ * @template D - The FirestoreDocument implementation type
+ */
 export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  /**
+   * The number of documents to create.
+   */
   readonly count: number;
 
   /**
    * Optional override to create a new document using the input accessor.
+   * If not provided, the accessor's default newDocument method will be used.
+   *
+   * @param documentAccessor - The document accessor to use for creating document instances
+   * @returns A new document instance
    */
   readonly newDocument?: (documentAccessor: FirestoreDocumentAccessor<T, D>) => D;
 
   /**
-   * Initializes the input document with the returned data.
+   * Initializes the document with data and/or performs tasks with the document.
    *
-   * This function may also optionally perform tasks with the passed document and return null/undefined.
+   * If this function returns a value (not null/undefined), that data will be used
+   * to create the document in Firestore. If it returns null/undefined, no document
+   * will be created in Firestore but the document instance will still be returned.
+   *
+   * @param i - The index of the document being created (0 to count-1)
+   * @param document - The document instance to initialize
+   * @returns Document data to create in Firestore, or null/undefined to skip creation
    */
   readonly init: (i: number, document: D) => Maybe<T> | Promise<Maybe<T>>;
 }
 
 /**
- * Makes a number of new documents.
+ * Creates multiple documents in Firestore and returns the document instances.
  *
- * @param documentAccessor
- * @param make
- * @returns
+ * For each document, this function:
+ * 1. Creates a new document instance using the specified or default factory
+ * 2. Calls the init function with the document instance
+ * 3. If init returns data, creates the document in Firestore
+ * 4. Returns all document instances, whether they were created in Firestore or not
+ *
+ * @template T - The document data type
+ * @template D - The FirestoreDocument implementation type
+ * @param documentAccessor - The document accessor to use for creating document instances
+ * @param make - Parameters for document creation and initialization
+ * @returns A promise that resolves to an array of document instances
  */
 export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]> {
   const newDocumentFn = make.newDocument ?? (() => documentAccessor.newDocument());
@@ -47,46 +83,131 @@ export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccesso
   });
 }
 
+/**
+ * Retrieves DocumentSnapshots for an array of documents in parallel.
+ *
+ * This is useful for fetching the current state of multiple documents at once.
+ *
+ * @template D - The FirestoreDocument implementation type
+ * @param documents - Array of document instances to get snapshots for
+ * @returns Promise that resolves to an array of DocumentSnapshots in the same order as the input documents
+ */
 export function getDocumentSnapshots<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentSnapshot<FirestoreDocumentData<D>>[]> {
   return runAsyncTasksForValues(documents, (x) => x.accessor.get());
 }
 
+/**
+ * A pair containing both a FirestoreDocument instance and its current DocumentSnapshot.
+ *
+ * This allows keeping track of both the document reference and its data.
+ *
+ * @template D - The FirestoreDocument implementation type
+ */
 export type FirestoreDocumentSnapshotPair<D extends FirestoreDocument<any>> = {
+  /** The original document instance */
   readonly document: D;
+  /** The current snapshot of the document from Firestore */
   readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
 };
 
+/**
+ * Creates a document-snapshot pair from a document instance.
+ *
+ * Fetches the current snapshot of the document and returns both the original
+ * document instance and the snapshot together.
+ *
+ * @template D - The FirestoreDocument implementation type
+ * @param document - The document instance to get a snapshot for
+ * @returns Promise that resolves to a document-snapshot pair
+ */
 export function getDocumentSnapshotPair<D extends FirestoreDocument<any>>(document: D): Promise<FirestoreDocumentSnapshotPair<D>> {
   return document.accessor.get().then((snapshot) => ({ document, snapshot }));
 }
 
+/**
+ * Creates document-snapshot pairs for an array of documents in parallel.
+ *
+ * Fetches the current snapshot of each document and returns pairs containing both
+ * the original document instances and their snapshots.
+ *
+ * @template D - The FirestoreDocument implementation type
+ * @param documents - Array of document instances to get snapshots for
+ * @returns Promise that resolves to an array of document-snapshot pairs in the same order as the input documents
+ */
 export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotPair<D>[]> {
   return runAsyncTasksForValues(documents, getDocumentSnapshotPair);
 }
 
+/**
+ * A tuple containing a document instance, its snapshot, and the extracted data.
+ *
+ * Provides a comprehensive view of a document with its reference, snapshot state,
+ * and formatted data (including ID and key fields).
+ *
+ * @template D - The FirestoreDocument implementation type
+ */
 export interface FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> {
+  /** The original document instance */
   readonly document: D;
+  /** The current snapshot of the document from Firestore */
   readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
+  /** The document data with ID and key fields added, or undefined if the document doesn't exist */
   readonly data: Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>;
 }
 
+/**
+ * A variant of FirestoreDocumentSnapshotDataPair that guarantees data exists.
+ *
+ * This interface is used when you need to ensure that only documents with existing
+ * data are included in the results.
+ *
+ * @template D - The FirestoreDocument implementation type
+ */
 export interface FirestoreDocumentSnapshotDataPairWithData<D extends FirestoreDocument<any>> extends Omit<FirestoreDocumentSnapshotDataPair<D>, 'data'> {
+  /** The document data with ID and key fields added (guaranteed to exist) */
   readonly data: DocumentDataWithIdAndKey<FirestoreDocumentData<D>>;
 }
 
+/**
+ * Creates a document-snapshot-data triplet from a document instance.
+ *
+ * Fetches the current snapshot of the document, extracts its data with ID and key fields,
+ * and returns all three together in a single object.
+ *
+ * @template D - The FirestoreDocument implementation type
+ * @param document - The document instance to get data for
+ * @returns Promise that resolves to a document-snapshot-data triplet
+ */
 export function getDocumentSnapshotDataPair<D extends FirestoreDocument<any>>(document: D): Promise<FirestoreDocumentSnapshotDataPair<D>> {
   return document.accessor.get().then((snapshot) => ({ document, snapshot, data: documentDataWithIdAndKey(snapshot) }));
 }
 
+/**
+ * Creates document-snapshot-data triplets for an array of documents in parallel.
+ *
+ * Fetches the current snapshot of each document, extracts its data with ID and key fields,
+ * and returns triplets containing all three components for each document.
+ *
+ * @template D - The FirestoreDocument implementation type
+ * @param documents - Array of document instances to get data for
+ * @returns Promise that resolves to an array of document-snapshot-data triplets in the same order as the input documents
+ */
 export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]> {
   return runAsyncTasksForValues(documents, getDocumentSnapshotDataPair);
 }
 
 /**
- * Convenience function for calling getDocumentSnapshotDataPairs() then returning only the pairs that have data.
+ * Creates document-snapshot-data triplets for an array of documents and filters out those without data.
+ *
+ * This is a convenience function that fetches data for all documents and then returns
+ * only the triplets for documents that actually exist in Firestore.
+ *
+ * @template D - The FirestoreDocument implementation type
+ * @param documents - Array of document instances to get data for
+ * @returns Promise that resolves to an array of document-snapshot-data triplets for existing documents only
  */
 export function getDocumentSnapshotDataPairsWithData<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
-  return getDocumentSnapshotDataPairs(documents).then((pairs) => pairs.filter((pair) => pair.data != null) as FirestoreDocumentSnapshotDataPairWithData<D>[]);
+  return getDocumentSnapshotDataPairs(documents).then((x) => x.filter((y) => !!y.data) as FirestoreDocumentSnapshotDataPairWithData<D>[]);
 }
 
 export type FirestoreDocumentSnapshotDataTuple<D extends FirestoreDocument<any>> = [D, Maybe<FirestoreDocumentData<D>>];

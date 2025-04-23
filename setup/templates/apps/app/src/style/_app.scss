@@ -1,5 +1,4 @@
-@use 'node_modules/@angular/material/core/theming/palette';
-@use '@angular/material'as mat;
+@use '@angular/material' as mat;
 @use '@dereekb/dbx-web' as dbx;
 @use '@dereekb/dbx-form' as dbx-form;
 @use './variables';
@@ -10,8 +9,8 @@ $opmore-navy: #1C3454;
 $opmore-pink: #ec4565;
 $opmore-white: #fff;
 
-$dark-primary-text: palette.$dark-primary-text;
-$light-primary-text: palette.$light-primary-text;
+$dark-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 50);
+$light-primary-text: mat.m2-get-contrast-color-from-palette(mat.$m2-red-palette, 600);
 
 $opmore-blue: (
   50: #e5e9ed,
@@ -72,10 +71,10 @@ $opmore-pink: (
 );
 
 // Define an alternate dark theme.
-$app-primary: mat.define-palette($opmore-blue);
-$app-accent: mat.define-palette($opmore-pink);
-$app-warn: mat.define-palette(mat.$red-palette);
-$app-mat-theme: mat.define-light-theme((color: (primary: $app-primary, accent: $app-accent, warn: $app-warn), density: 0, typography: $app-typography-config));
+$app-primary: mat.m2-define-palette($opmore-blue);
+$app-accent: mat.m2-define-palette($opmore-pink);
+$app-warn: mat.m2-define-palette(mat.$red-palette);
+$app-mat-theme: mat.m2-define-light-theme((color: (primary: $app-primary, accent: $app-accent, warn: $app-warn), density: 0, typography: $app-typography-config));
 $app-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $app-theme: dbx.define-dbx-theme-config($app-mat-theme, $app-dbx-theme-with-banner-config);
 $app-form-theme: dbx-form.define-dbx-form-theme-config($app-theme);
@@ -88,11 +87,11 @@ This mixin creates the app-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $app-form-theme);
 }
 
-$dark-app-primary: mat.define-palette(mat.$purple-palette);
-$dark-app-accent: mat.define-palette(mat.$green-palette);
-$dark-app-warn: mat.define-palette(mat.$red-palette);
+$dark-app-primary: mat.m2-define-palette(mat.$purple-palette);
+$dark-app-accent: mat.m2-define-palette(mat.$green-palette);
+$dark-app-warn: mat.m2-define-palette(mat.$red-palette);
 
-$dark-app-mat-theme: mat.define-dark-theme((color: (primary: $dark-app-primary, accent: $dark-app-accent, warn: $dark-app-warn), density: null, typography: null));
+$dark-app-mat-theme: mat.m2-define-dark-theme((color: (primary: $dark-app-primary, accent: $dark-app-accent, warn: $dark-app-warn), density: null, typography: null));
 // NOTE: setting density and typography to null is important since it uses the same typography and density as the light theme. If not using the light theme, set the density/topography here.
 
 $dark-app-theme: dbx.define-dbx-theme-config($dark-app-mat-theme, $app-dbx-theme-with-banner-config);

@@ -1,9 +1,10 @@
-import { map, tap, shareReplay, switchMap, BehaviorSubject } from 'rxjs';
+import { map, tap, shareReplay, switchMap } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Performs the action on success.
@@ -14,13 +15,14 @@ export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
  * Directive that executes a function on ActionContextStore Success.
  */
 @Directive({
-  selector: '[dbxActionSuccessHandler]'
+  selector: '[dbxActionSuccessHandler]',
+  standalone: true
 })
 export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private readonly _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
-  readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));
+  readonly dbxActionSuccessHandler = input<Maybe<DbxActionSuccessHandlerFunction<O>>>();
+  readonly successFunction$ = toObservable(this.dbxActionSuccessHandler).pipe(filterMaybe(), shareReplay(1));
 
   ngOnInit(): void {
     this.sub = this.successFunction$
@@ -35,19 +37,5 @@ export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscription
         )
       )
       .subscribe();
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._successFunction.complete();
-  }
-
-  @Input('dbxActionSuccessHandler')
-  get successFunction(): Maybe<DbxActionSuccessHandlerFunction<O>> {
-    return this._successFunction.value;
-  }
-
-  set successFunction(successFunction: Maybe<DbxActionSuccessHandlerFunction<O>>) {
-    this._successFunction.next(successFunction);
   }
 }

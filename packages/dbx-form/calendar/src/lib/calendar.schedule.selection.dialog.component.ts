@@ -1,7 +1,8 @@
-import { Component, InjectionToken, Injector } from '@angular/core';
+import { ChangeDetectionStrategy, Component, InjectionToken, Injector } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentFooterConfig, sanitizeDbxDialogContentConfig } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentDirective, DbxDialogContentFooterConfig, DbxDialogInteractionModule, sanitizeDbxDialogContentConfig } from '@dereekb/dbx-web';
 import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
+import { DbxScheduleSelectionCalendarComponent } from './calendar.schedule.selection.component';
 
 /**
  * Token used to configure the default DbxScheduleSelectionCalendarDatePopupConfig for DbxScheduleSelectionCalendarDateDialogComponent.
@@ -9,13 +10,13 @@ import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 export const DEFAULT_DBX_SCHEDULE_SELECTION_CALENDAR_DATE_POPUP_CONTENT_CONFIG_TOKEN = new InjectionToken('DbxScheduleSelectionCalendarDatePopupContentConfig');
 
 export interface DbxScheduleSelectionCalendarDatePopupContentConfig {
-  closeConfig?: DbxDialogContentFooterConfig;
-  dialogConfig?: DbxDialogContentConfig;
+  readonly closeConfig?: DbxDialogContentFooterConfig;
+  readonly dialogConfig?: DbxDialogContentConfig;
 }
 
 export interface DbxScheduleSelectionCalendarDatePopupConfig {
-  injector: Injector;
-  contentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
+  readonly injector: Injector;
+  readonly contentConfig?: Maybe<DbxScheduleSelectionCalendarDatePopupContentConfig>;
 }
 
 @Component({
@@ -25,7 +26,10 @@ export interface DbxScheduleSelectionCalendarDatePopupConfig {
       <dbx-schedule-selection-calendar></dbx-schedule-selection-calendar>
       <dbx-dialog-content-footer [config]="closeConfig" (close)="close()"></dbx-dialog-content-footer>
     </dbx-dialog-content>
-  `
+  `,
+  standalone: true,
+  imports: [DbxDialogInteractionModule, DbxScheduleSelectionCalendarComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxScheduleSelectionCalendarDateDialogComponent extends AbstractDialogDirective<void, DbxScheduleSelectionCalendarDatePopupConfig> {
   get contentConfig() {

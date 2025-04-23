@@ -1,17 +1,16 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, inject, signal } from '@angular/core';
 import { Maybe, ErrorInput, toReadableError, ReadableError, isDefaultReadableError, Configurable } from '@dereekb/util';
-import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { DbxErrorPopoverComponent } from './error.popover.component';
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { AbstractSubscriptionDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxErrorViewButtonEvent } from './error.view.component';
+import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { DbxErrorViewButtonEvent, DbxErrorViewComponent } from './error.view.component';
 import { DbxErrorWidgetService } from './error.widget.service';
+import { DbxPopoverService } from '../interaction/popover/popover.service';
 import { NgPopoverRef } from 'ng-overlay-container';
 
-type DbxReadableErrorComponentViewType = 'none' | 'default' | 'custom';
+type DbxErrorComponentViewType = 'none' | 'default' | 'custom';
 
-interface DbxReadableErrorComponentState {
-  readonly viewType: DbxReadableErrorComponentViewType;
+interface DbxErrorComponentState {
+  readonly viewType: DbxErrorComponentViewType;
   readonly isDefaultError?: Maybe<boolean>;
   readonly message?: Maybe<string>;
   readonly rawError?: Maybe<ErrorInput>;
@@ -25,125 +24,82 @@ interface DbxReadableErrorComponentState {
 @Component({
   selector: 'dbx-error',
   template: `
-    <ng-container [ngSwitch]="viewType">
-      <ng-container *ngSwitchCase="'default'">
-        <dbx-error-view icon="error" [message]="message" [buttonDisabled]="isDefaultError" (buttonClick)="openErrorPopover($event)"></dbx-error-view>
-      </ng-container>
-      <ng-container *ngSwitchCase="'custom'">
-        <dbx-injection [config]="customView"></dbx-injection>
-      </ng-container>
-    </ng-container>
+    @switch (viewTypeSignal()) {
+      @case ('default') {
+        <dbx-error-view icon="error" [message]="messageSignal()" [buttonDisabled]="isDefaultErrorSignal()" (buttonClick)="openErrorPopover($event)"></dbx-error-view>
+      }
+      @case ('custom') {
+        <dbx-injection [config]="customViewSignal()"></dbx-injection>
+      }
+    }
   `,
+  standalone: true,
+  imports: [DbxErrorViewComponent, DbxInjectionComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
-  readonly popoverService = inject(DbxPopoverService);
-  readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
-  readonly cdRef = inject(ChangeDetectorRef);
+export class DbxErrorComponent {
+  private readonly popoverService = inject(DbxPopoverService);
+  private readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);
 
-  @Output()
-  readonly popoverOpen = new EventEmitter<NgPopoverRef>();
+  readonly popoverOpened = output<NgPopoverRef>();
 
-  private _state: DbxReadableErrorComponentState = {
-    viewType: 'none'
-  };
+  readonly error = input<Maybe<ErrorInput>>();
+  readonly iconOnly = input<Maybe<boolean>>(false);
 
-  private readonly _iconOnly = new BehaviorSubject<Maybe<boolean>>(undefined);
-  private readonly _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
+  private readonly _errorOverrideSignal = signal<Maybe<ErrorInput>>(undefined);
+  readonly errorSignal = computed(() => this._errorOverrideSignal() ?? this.error());
 
-  readonly state$ = combineLatest([this._inputError, this._iconOnly.pipe(distinctUntilChanged())]).pipe(
-    map(([rawError, iconOnly]) => {
-      let state: DbxReadableErrorComponentState;
+  readonly state = computed<DbxErrorComponentState>(() => {
+    const rawError = this.errorSignal();
+    const iconOnly = this.iconOnly();
 
-      if (rawError != null) {
-        const error = toReadableError(rawError);
-        const isDefaultError = iconOnly ? false : isDefaultReadableError(error);
+    if (rawError != null) {
+      const error = toReadableError(rawError);
+      const isDefaultError = iconOnly ? false : isDefaultReadableError(error);
 
-        state = {
-          viewType: 'default',
-          rawError,
-          error,
-          message: (error as ReadableError)?.message || 'An error occured.',
-          isDefaultError
-        };
+      let state: DbxErrorComponentState = {
+        viewType: 'default',
+        rawError,
+        error,
+        message: (error as ReadableError)?.message || 'An error occurred.',
+        isDefaultError
+      };
 
-        if (iconOnly) {
-          delete (state as Configurable<DbxReadableErrorComponentState>).message; // remove the message when in icon-only mode
-        } else if (error) {
-          let customView: Maybe<DbxInjectionComponentConfig>;
-          const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code);
-          const componentClass = entry?.errorComponentClass;
+      if (iconOnly) {
+        delete (state as Configurable<DbxErrorComponentState>).message;
+      } else {
+        const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code);
+        const componentClass = entry?.errorComponentClass;
 
-          if (componentClass != null) {
-            customView = {
+        if (componentClass != null) {
+          state = {
+            ...state,
+            viewType: 'custom',
+            customView: {
               componentClass,
               data: error
-            };
-          }
-
-          // apply custom view
-          if (customView) {
-            state = {
-              ...state,
-              viewType: 'custom',
-              customView
-            };
-          }
+            }
+          };
         }
-      } else {
-        state = {
-          viewType: 'none'
-        };
       }
 
       return state;
-    }),
-    shareReplay(1)
-  );
+    } else {
+      return { viewType: 'none' };
+    }
+  });
 
-  ngOnInit(): void {
-    this.sub = this.state$.subscribe((state) => {
-      this._state = state;
-      this.cdRef.markForCheck();
-    });
+  readonly viewTypeSignal = computed(() => this.state().viewType);
+  readonly isDefaultErrorSignal = computed(() => this.state().isDefaultError);
+  readonly messageSignal = computed(() => this.state().message);
+  readonly customViewSignal = computed(() => this.state().customView);
+
+  setError(error: Maybe<ErrorInput>) {
+    this._errorOverrideSignal.set(error);
   }
 
-  protected get viewType() {
-    return this._state.viewType;
-  }
-
-  protected get isDefaultError() {
-    return this._state.isDefaultError;
-  }
-
-  protected get message(): Maybe<string> {
-    return this._state.message;
-  }
-
-  protected get customView(): Maybe<DbxInjectionComponentConfig> {
-    return this._state.customView;
-  }
-
-  @Input()
-  get error() {
-    return this._state.rawError;
-  }
-
-  set error(error: Maybe<ErrorInput>) {
-    this._inputError.next(error);
-  }
-
-  @Input()
-  get iconOnly() {
-    return this._iconOnly.value;
-  }
-
-  set iconOnly(iconOnly: Maybe<boolean>) {
-    this._iconOnly.next(iconOnly);
-  }
-
-  protected openErrorPopover(event: DbxErrorViewButtonEvent) {
-    const error = this._state.error;
+  openErrorPopover(event: DbxErrorViewButtonEvent) {
+    const error = this.state().error;
 
     if (error != null) {
       const popoverRef = DbxErrorPopoverComponent.openPopover(this.popoverService, {
@@ -151,7 +107,7 @@ export class DbxReadableErrorComponent extends AbstractSubscriptionDirective {
         error
       });
 
-      this.popoverOpen.next(popoverRef);
+      this.popoverOpened.emit(popoverRef);
     }
   }
 }

@@ -1,5 +1,5 @@
-import { Component, ViewChild, inject } from '@angular/core';
-import { DbxPopupKey, AbstractPopupDirective, DbxPopupService } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
+import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseDevelopmentPopupContentComponent } from './development.popup.content.component';
 
@@ -11,13 +11,15 @@ export const DEFAULT_FIREBASE_DEVELOPMENT_POPUP_KEY = 'devpopup';
       <dbx-popup-controls [header]="header" controls></dbx-popup-controls>
       <dbx-firebase-development-popup-content (shouldClose)="closePopup()"></dbx-firebase-development-popup-content>
     </dbx-popup-content>
-  `
+  `,
+  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DbxFirebaseDevelopmentPopupContentComponent],
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseDevelopmentPopupComponent extends AbstractPopupDirective {
   private readonly popupService = inject(DbxPopupService);
 
-  @ViewChild(DbxFirebaseDevelopmentPopupContentComponent, { static: true })
-  content!: DbxFirebaseDevelopmentPopupContentComponent;
+  readonly content = viewChild.required(DbxFirebaseDevelopmentPopupContentComponent);
 
   readonly header = 'Development Tools';
 

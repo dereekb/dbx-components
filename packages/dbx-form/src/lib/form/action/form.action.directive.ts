@@ -1,14 +1,15 @@
-import { Directive, OnInit, OnDestroy, Input, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
-import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
-import { DbxActionContextStoreSourceInstance, DbxActionValueOnTriggerResult } from '@dereekb/dbx-core';
-import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, distinctUntilChanged, shareReplay } from 'rxjs';
+import { DbxActionContextStoreSourceInstance, DbxActionValueGetterResult } from '@dereekb/dbx-core';
+import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction, ObservableOrValue, asObservable, IsEqualFunction, makeIsModifiedFunctionObservable } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
-import { MapFunction } from '@dereekb/util';
+import { IsModified, IsValid, MapFunction, Maybe } from '@dereekb/util';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 
-export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrValue<DbxActionValueOnTriggerResult<O>>>;
+export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrValue<DbxActionValueGetterResult<O>>>;
 
 /**
  * Used with an action to bind a form to an action as it's value source.
@@ -18,7 +19,8 @@ export type DbxActionFormMapValueFunction<T, O> = MapFunction<T, ObservableOrVal
  * If the source is not considered modified, the trigger will be ignored.
  */
 @Directive({
-  selector: '[dbxActionForm]'
+  selector: '[dbxActionForm]',
+  standalone: true
 })
 export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDestroy {
   readonly form = inject(DbxMutableForm<T>, { host: true });
@@ -27,29 +29,51 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
   readonly lockSet = new LockSet();
 
   /**
+   * Whether or not to disable the form while the action is working.
+   *
+   * Defaults to true.
+   */
+  readonly dbxActionFormDisabledOnWorking = input<Maybe<boolean>>(true);
+
+  /**
    * Optional validator that checks whether or not the value is
    * ready to send before the context store is marked enabled.
    */
-  @Input()
-  dbxActionFormValidator?: IsValidFunction<T>;
+  readonly dbxActionFormIsValid = input<Maybe<IsValidFunction<T>>>();
+
+  /**
+   * Optional function that checks whether or not the value is still the same/equal.
+   */
+  readonly dbxActionFormIsEqual = input<Maybe<IsEqualFunction<T>>>();
 
   /**
    * Optional function that checks whether or not the value has been modified.
+   *
+   * If dbxActionFormIsEqual is provided, this will be ignored.
    */
-  @Input()
-  dbxActionFormModified?: IsModifiedFunction<T>;
+  readonly dbxActionFormIsModified = input<Maybe<IsModifiedFunction<T>>>();
 
   /**
    * Optional function that maps the form's value to the source's value.
    */
-  @Input()
-  dbxActionFormMapValue?: DbxActionFormMapValueFunction<T, O>;
+  readonly dbxActionFormMapValue = input<Maybe<DbxActionFormMapValueFunction<T, O>>>();
 
-  private _formDisabledWhileWorking = new BehaviorSubject<boolean>(true);
+  readonly dbxActionFormDisabledOnWorking$ = toObservable(this.dbxActionFormDisabledOnWorking);
 
-  private _triggeredSub = new SubscriptionObject();
-  private _isCompleteSub = new SubscriptionObject();
-  private _isWorkingSub = new SubscriptionObject();
+  readonly isValidFunction$ = toObservable(this.dbxActionFormIsValid).pipe(
+    map((x) => x ?? (() => of(true))),
+    shareReplay(1)
+  );
+  readonly isModifiedFunction$: Observable<IsModifiedFunction<T>> = makeIsModifiedFunctionObservable({
+    isModified: toObservable(this.dbxActionFormIsModified),
+    isEqual: toObservable(this.dbxActionFormIsEqual)
+  }).pipe(shareReplay(1));
+
+  readonly mapValueFunction$: Observable<Maybe<DbxActionFormMapValueFunction<T, O>>> = toObservable(this.dbxActionFormMapValue);
+
+  private readonly _triggeredSub = new SubscriptionObject();
+  private readonly _isCompleteSub = new SubscriptionObject();
+  private readonly _isWorkingSub = new SubscriptionObject();
 
   constructor() {
     if (this.form.lockSet) {
@@ -57,15 +81,6 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
     }
 
     this.lockSet.addChildLockSet(this.source.lockSet, 'source');
-  }
-
-  @Input()
-  get formDisabledOnWorking() {
-    return this._formDisabledWhileWorking.value;
-  }
-
-  set formDisabledOnWorking(formDisabledOnWorking: boolean) {
-    this._formDisabledWhileWorking.next(Boolean(formDisabledOnWorking ?? true));
   }
 
   ngOnInit(): void {
@@ -79,7 +94,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
               const { isComplete } = stream;
               const doNothing = {}; // nothing, form not complete
 
-              let obs: Observable<DbxActionValueOnTriggerResult<O>>;
+              let obs: Observable<DbxActionValueGetterResult<O>>;
 
               if (isComplete) {
                 obs = this.form.getValue().pipe(
@@ -107,7 +122,7 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
           )
         )
       )
-      .subscribe((result: DbxActionValueOnTriggerResult<O>) => {
+      .subscribe((result: DbxActionValueGetterResult<O>) => {
         if (result.reject) {
           this.source.reject(result.reject);
         } else if (result.value != null) {
@@ -132,27 +147,18 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
               // 3 changes and 2 seconds are arbitrary values derived from guesses about any slow/late changes that may come from external directives for setup.
               const isProbablyTouched = !event.untouched || ((event.changesCount ?? 0) > 3 && isPast(addSeconds(event.lastResetAt ?? new Date(), 2)));
 
-              let validatorObs: Observable<boolean>;
+              // create overrides
+              const returnFalseFunction = () => of(false);
 
-              const initialIsValidCheck = event.isComplete;
-              if (initialIsValidCheck) {
-                validatorObs = this.dbxActionFormValidator ? this.dbxActionFormValidator(value) : of(true);
-              } else {
-                validatorObs = of(false);
-              }
-
-              let modifiedObs: Observable<boolean>;
+              const runIsValidCheck = event.isComplete;
+              const isValidFunction: Maybe<IsValidFunction<T>> = runIsValidCheck ? undefined : returnFalseFunction;
 
               const isConsideredModified = event.pristine === false && isProbablyTouched;
-              if (isConsideredModified) {
-                modifiedObs = this.dbxActionFormModified ? this.dbxActionFormModified(value) : of(true);
-              } else {
-                modifiedObs = of(false);
-              }
+              const isModifiedFunction: Maybe<IsModifiedFunction<T>> = isConsideredModified ? undefined : returnFalseFunction;
 
-              return combineLatest([validatorObs, modifiedObs]).pipe(
-                first(),
-                map(([valid, modified]: [boolean, boolean]) => ({ valid, modified, value, event }))
+              return this.checkIsValidAndIsModified(value, { isValidFunction, isModifiedFunction }).pipe(
+                map(([valid, modified]: [boolean, boolean]) => ({ valid, modified, value, event })),
+                first()
               );
             })
           );
@@ -169,9 +175,9 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
       });
 
     // Watch the working state and disable form while working
-    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, this._formDisabledWhileWorking])
+    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, this.dbxActionFormDisabledOnWorking$])
       .pipe(
-        map(([isWorking, lockOnWorking]: [boolean, boolean]) => lockOnWorking && isWorking),
+        map(([isWorking, disableFormWhileWorking]: [boolean, Maybe<boolean>]) => disableFormWhileWorking !== false && isWorking),
         distinctUntilChanged()
       )
       .subscribe((disable) => {
@@ -185,26 +191,40 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit, OnDest
       this._triggeredSub.destroy();
       this._isCompleteSub.destroy();
       this._isWorkingSub.destroy();
-      this._formDisabledWhileWorking.complete();
       this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, false);
     });
   }
 
-  protected preCheckReadyValue(value: T): Observable<boolean> {
-    const validatorObs: Observable<boolean> = this.dbxActionFormValidator ? this.dbxActionFormValidator(value) : of(true);
-    const modifiedObs: Observable<boolean> = this.dbxActionFormModified ? this.dbxActionFormModified(value) : of(true);
+  checkIsValidAndIsModified(value: T, overrides?: CheckValidAndModifiedOverrides<T>): Observable<[IsValid, IsModified]> {
+    const { isModifiedFunction: overrideIsModifiedFunction, isValidFunction: overrideIsValidFunction } = overrides ?? {};
+    const isValidFunctionObs = overrideIsValidFunction != null ? of(overrideIsValidFunction) : this.isValidFunction$;
+    const isModifiedFunctionObs = overrideIsModifiedFunction != null ? of(overrideIsModifiedFunction) : this.isModifiedFunction$;
 
-    return combineLatest([validatorObs, modifiedObs]).pipe(
-      first(),
-      map(([valid, modified]: [boolean, boolean]) => valid && modified)
+    return combineLatest([isValidFunctionObs, isModifiedFunctionObs]).pipe(
+      switchMap(([isValid, isModified]) => {
+        return combineLatest([isValid(value), isModified(value)]).pipe(map(([valid, modified]) => [valid, modified] as [boolean, boolean]));
+      })
     );
   }
 
-  protected readyValue(value: T): Observable<DbxActionValueOnTriggerResult<O>> {
-    if (this.dbxActionFormMapValue) {
-      return asObservable(this.dbxActionFormMapValue(value));
-    } else {
-      return of({ value: value as unknown as O });
-    }
+  protected preCheckReadyValue(value: T): Observable<[IsValid, IsModified]> {
+    return this.checkIsValidAndIsModified(value);
   }
+
+  protected readyValue(value: T): Observable<DbxActionValueGetterResult<O>> {
+    return this.mapValueFunction$.pipe(
+      switchMap((mapFunction) => {
+        if (mapFunction) {
+          return asObservable(mapFunction(value));
+        } else {
+          return of({ value: value as unknown as O });
+        }
+      })
+    );
+  }
+}
+
+interface CheckValidAndModifiedOverrides<T> {
+  isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
+  isValidFunction?: Maybe<IsValidFunction<T>>;
 }

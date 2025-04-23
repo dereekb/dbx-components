@@ -39,7 +39,5 @@ export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListView
   `
 })
 export class DemoGuestbookListViewItemComponent extends AbstractDbxValueListViewItemComponent<Guestbook> {
-  get name() {
-    return this.itemValue.name;
-  }
+  readonly name = this.itemValue.name;
 }

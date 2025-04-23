@@ -3,8 +3,8 @@ import { GlobalPositionStrategy } from '@angular/cdk/overlay';
 export type PopupPosition = 'center' | 'bottom_left' | 'bottom_right';
 
 export interface PopupPositionOffset {
-  x?: string;
-  y?: string;
+  readonly x?: string;
+  readonly y?: string;
 }
 
 export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {

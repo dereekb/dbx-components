@@ -13,7 +13,8 @@ import { DbxRouteModelKeyDirectiveDelegate } from './model.router';
  * If the key does not exist in the params, then the p
  */
 @Directive({
-  selector: '[dbxRouteModelKey]'
+  selector: '[dbxRouteModelKey]',
+  standalone: true
 })
 export class DbxRouteModelKeyDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly dbxRouterService = inject(DbxRouterService);

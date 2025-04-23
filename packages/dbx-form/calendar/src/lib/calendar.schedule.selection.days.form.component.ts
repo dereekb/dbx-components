@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { AbstractSyncFormlyFormDirective, provideFormlyContext } from '@dereekb/dbx-form';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { AbstractSyncFormlyFormDirective, dbxFormlyFormComponentProviders, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, DbxFormlyFormComponentImportsModule } from '@dereekb/dbx-form';
 import { EnabledDays } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { dbxScheduleSelectionCalendarDateDaysFormFields } from './calendar.schedule.selection.form';
@@ -7,11 +7,12 @@ import { dbxScheduleSelectionCalendarDateDaysFormFields } from './calendar.sched
 export type DbxScheduleSelectionCalendarDateDaysFormValue = EnabledDays;
 
 @Component({
-  template: `
-    <dbx-formly></dbx-formly>
-  `,
   selector: 'dbx-schedule-selection-calendar-date-days-form',
-  providers: [provideFormlyContext()]
+  template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,
+  providers: dbxFormlyFormComponentProviders(),
+  imports: [DbxFormlyFormComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxScheduleSelectionCalendarDateDaysFormComponent extends AbstractSyncFormlyFormDirective<DbxScheduleSelectionCalendarDateDaysFormValue> {
   readonly fields: FormlyFieldConfig[] = dbxScheduleSelectionCalendarDateDaysFormFields();

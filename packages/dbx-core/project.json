@@ -43,16 +43,11 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/packages/dbx-core", "{projectRoot}/.reports/jest/dbx-core.junit.xml"],
       "options": {
-        "tsConfig": "packages/dbx-core/tsconfig.lib.json",
-        "jestConfig": "packages/dbx-core/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/dbx-core/jest.config.ts"
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["packages/dbx-core/src/**/*.ts", "packages/dbx-core/src/**/*.html", "packages/dbx-core/package.json", "packages/dbx-core/project.json"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "publish-npmjs": {
       "executor": "nx:run-commands",

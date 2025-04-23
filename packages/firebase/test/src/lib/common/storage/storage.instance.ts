@@ -1,6 +1,6 @@
-import { AbstractJestTestContextFixture, JestTestContextFactory } from '@dereekb/util/test';
-import { FirebaseStorage } from '@dereekb/firebase';
-import { TestFirebaseStorageContext } from './storage';
+import { AbstractJestTestContextFixture, type JestTestContextFactory } from '@dereekb/util/test';
+import { type FirebaseStorage } from '@dereekb/firebase';
+import { type TestFirebaseStorageContext } from './storage';
 
 export interface TestFirebaseStorage {
   readonly storageContext: TestFirebaseStorageContext;

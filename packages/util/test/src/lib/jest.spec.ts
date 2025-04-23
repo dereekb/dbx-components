@@ -1,4 +1,4 @@
-import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextBuilderFunction } from './jest';
+import { AbstractJestTestContextFixture, jestTestContextBuilder, type JestTestContextBuilderFunction } from './jest';
 
 export interface TestConfig {
   a: string;

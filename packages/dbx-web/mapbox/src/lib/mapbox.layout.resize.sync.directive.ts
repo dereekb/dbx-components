@@ -8,15 +8,17 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
  * Directive that synchronizes a map's virtual size with the size of the element.
  */
 @Directive({
-  selector: '[dbxMapboxLayoutVirtualResizeSync]'
+  selector: '[dbxMapboxLayoutVirtualResizeSync]',
+  standalone: true
 })
 export class DbxMapboxLayoutVirtualResizeSyncComponent extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxMapboxLayoutComponent = inject(DbxMapboxLayoutComponent, { host: true });
 
-  readonly resizedVector$ = this.dbxMapboxLayoutComponent.resized$.pipe(
+  readonly resizedVector$ = this.dbxMapboxLayoutComponent.viewResized$.pipe(
     map(() => {
-      const element = this.dbxMapboxLayoutComponent.containerElement.nativeElement as HTMLElement;
+      const element = this.dbxMapboxLayoutComponent.drawerContainerElement()?.nativeElement as HTMLElement;
       const { clientWidth, clientHeight } = element;
+
       return {
         x: clientWidth,
         y: clientHeight
@@ -27,6 +29,6 @@ export class DbxMapboxLayoutVirtualResizeSyncComponent extends AbstractSubscript
   );
 
   ngOnInit(): void {
-    this.sub = this.dbxMapboxLayoutComponent.dbxMapboxMapStore.setMinimumVirtualViewportSize(this.resizedVector$) ?? undefined;
+    this.sub = this.dbxMapboxLayoutComponent.dbxMapboxMapStore.setMinimumVirtualViewportSize(this.resizedVector$);
   }
 }

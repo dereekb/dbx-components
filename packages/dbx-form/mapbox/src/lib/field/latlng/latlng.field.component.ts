@@ -1,15 +1,22 @@
-import { AbstractControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, Injector, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
 import { asObservableFromGetter, filterMaybe, ObservableFactoryWithRequiredInput, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction, isSameLatLngPoint } from '@dereekb/util';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
-import { DbxMapboxInjectionStore, DbxMapboxMapStore, DbxMapboxMarkerDisplayConfig, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxInjectionStore, DbxMapboxMapStore, DbxMapboxMarkerDisplayConfig, DbxMapboxModule, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldMarkerComponent } from './latlng.field.marker.component';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NgClass } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 
 export const DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxFormMapboxLatLngFieldComponent';
 
@@ -25,36 +32,36 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
    *
    * Cases where this would be set false is if another map is being used.
    */
-  showMap?: boolean;
+  readonly showMap?: boolean;
   /**
    * Whether or not to display the center button. Is set to false if selectLocationOnMapDrag is true.
    */
-  showCenterButton?: boolean;
+  readonly showCenterButton?: boolean;
   /**
    * Whether or not to set the center of the map on the location when set. Defaults to true.
    */
-  setCenterOnLocationSet?: boolean;
+  readonly setCenterOnLocationSet?: boolean;
   /**
    * Whether or not to enable dragging the map to select the location. Defaults to true.
    *
    * Only applicable when showMap is false.
    */
-  selectLocationOnMapDrag?: boolean;
+  readonly selectLocationOnMapDrag?: boolean;
   /**
    * Whether or not to enable clicking the map to select the location. Defaults to false.
    *
    * Only applicable when showMap is false.
    */
-  selectLocationOnMapClick?: boolean;
+  readonly selectLocationOnMapClick?: boolean;
   /**
    * (Optional) Zoom to start the map at. Ignored if the showMap is false.
    */
-  zoom?: MapboxZoomLevel;
+  readonly zoom?: MapboxZoomLevel;
   /**
    * Time until recentering on the marker. If the time is 0 then the recentering is disabled.
    */
-  recenterTime?: Milliseconds;
-  latLngConfig?: LatLngPointFunctionConfig;
+  readonly recenterTime?: Milliseconds;
+  readonly latLngConfig?: LatLngPointFunctionConfig;
   /**
    * Unique injection key.
    *
@@ -62,11 +69,11 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
    *
    * If false is passed, the marker will not be configured in the injection store.
    */
-  mapInjectionKey?: Maybe<string | false>;
+  readonly mapInjectionKey?: Maybe<string | false>;
   /**
    * Marker configuration or factory. If false is passed, the marker will not be displayed.
    */
-  markerConfig?: false | ObservableFactoryWithRequiredInput<DbxMapboxMarkerDisplayConfig | false, DbxFormMapboxLatLngFieldComponent>;
+  readonly markerConfig?: false | ObservableFactoryWithRequiredInput<DbxMapboxMarkerDisplayConfig | false, DbxFormMapboxLatLngFieldComponent>;
 }
 
 /*
@@ -78,26 +85,35 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
 
 @Component({
   template: `
-    <div class="dbx-mapbox-input-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
-      <div *ngIf="showMap" class="dbx-mapbox-input-field-map">
-        <mgl-map dbxMapboxMap>
-          <mgl-marker [lngLat]="(latLng$ | async) || [0, 0]" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onMarkerDragEnd($event)"></mgl-marker>
-        </mgl-map>
-      </div>
+    <div class="dbx-mapbox-input-field" [ngClass]="compactClassSignal()" [formGroup]="formGroup">
+      @if (showMap) {
+        <div class="dbx-mapbox-input-field-map">
+          <mgl-map dbxMapboxMap>
+            <mgl-marker [lngLat]="latLngSignal()" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onMarkerDragEnd($event)"></mgl-marker>
+          </mgl-map>
+        </div>
+      }
       <div class="dbx-mapbox-input-field-input">
-        <button *ngIf="showCenterButton" mat-icon-button (click)="flyToMarker()">
-          <mat-icon>my_location</mat-icon>
-        </button>
+        @if (showCenterButton) {
+          <button mat-icon-button (click)="flyToMarker()">
+            <mat-icon>my_location</mat-icon>
+          </button>
+        }
         <mat-form-field class="dbx-mapbox-input-field-input-field">
           <mat-label>Coordinates</mat-label>
           <input type="text" matInput [placeholder]="placeholder" [formControl]="formControl" />
-          <mat-hint class="dbx-hint dbx-warn" *ngIf="useCurrentLocationDisabled$ | async">Could not access your current location.</mat-hint>
+          @if (useCurrentLocationDisabledSignal()) {
+            <mat-hint class="dbx-hint dbx-warn">Could not access your current location.</mat-hint>
+          }
         </mat-form-field>
       </div>
     </div>
   `,
   providers: [provideMapboxStoreIfParentIsUnavailable()],
-  styleUrls: ['../mapbox.field.component.scss']
+  styleUrls: ['../mapbox.field.component.scss'],
+  imports: [NgClass, ReactiveFormsModule, MatIconModule, DbxMapboxModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private readonly _geolocationService = inject(GeolocationService);
@@ -105,28 +121,27 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   readonly compact = inject(CompactContextStore, { optional: true });
   readonly dbxMapboxInjectionStore = inject(DbxMapboxInjectionStore, { optional: true });
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);
-  readonly ngZone = inject(NgZone);
   readonly injector = inject(Injector);
+
+  private readonly _sub = new SubscriptionObject();
+  private readonly _geoSub = new SubscriptionObject();
+  private readonly _centerSub = new SubscriptionObject();
+  private readonly _flyToCenterSub = new SubscriptionObject();
+  private readonly _clickSub = new SubscriptionObject();
+  private readonly _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
+  private readonly _markerConfig = new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_MARKER_CONFIG));
 
   private _latLngStringFunction!: LatLngStringFunction;
   private _latLngPointFunction!: LatLngPointFunction;
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-mapbox-input-field-compact'
-  });
+  }).pipe(filterMaybe());
 
-  private _useCurrentLocationDisabled = new BehaviorSubject<boolean>(false);
+  private readonly _useCurrentLocationDisabled = new BehaviorSubject<boolean>(false);
   readonly useCurrentLocationDisabled$ = this._useCurrentLocationDisabled.asObservable();
 
-  private _sub = new SubscriptionObject();
-  private _geoSub = new SubscriptionObject();
-  private _centerSub = new SubscriptionObject();
-  private _flyToCenterSub = new SubscriptionObject();
-  private _clickSub = new SubscriptionObject();
-  private _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
-  private _markerConfig = new BehaviorSubject<Observable<DbxMapboxMarkerDisplayConfig | false>>(of(DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_MARKER_CONFIG));
-
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   readonly value$ = this.formControl$.pipe(
@@ -156,6 +171,10 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     switchMap((x) => x),
     shareReplay(1)
   );
+
+  readonly useCurrentLocationDisabledSignal = toSignal(this._useCurrentLocationDisabled, { initialValue: false });
+  readonly compactClassSignal = toSignal(this.compactClass$, { initialValue: '' });
+  readonly latLngSignal = toSignal(this.latLng$, { initialValue: defaultLatLngPoint() });
 
   get zoom(): MapboxZoomLevel {
     return Math.min(this.field.props.zoom || 12, 18);
@@ -245,9 +264,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
         this._sub.subscription = this.dbxMapboxMapStore.center$.subscribe((center) => {
           this.dbxMapboxMapStore.centerGivenMargin$.pipe(first()).subscribe(() => {
             if (!this.isReadonlyOrDisabled) {
-              this.ngZone.run(() => {
-                this.setValue(center);
-              });
+              this.setValue(center);
             }
           });
         });
@@ -299,7 +316,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     this.dbxMapboxMapStore.easeTo(
       this.nonZeroLatLng$.pipe(
         first(),
-        map((x) => ({ center: x } as MapboxEaseTo))
+        map((x) => ({ center: x }) as MapboxEaseTo)
       )
     );
   }

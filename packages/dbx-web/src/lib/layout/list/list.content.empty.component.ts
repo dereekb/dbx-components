@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 /**
  * Component that is centered for use within an empty list.
@@ -9,6 +9,8 @@ import { Component } from '@angular/core';
     <div class="dbx-list-empty-content">
       <ng-content></ng-content>
     </div>
-  `
+  `,
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxListEmptyContentComponent {}

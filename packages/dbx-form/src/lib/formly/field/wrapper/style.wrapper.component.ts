@@ -1,4 +1,6 @@
-import { OnInit, OnDestroy, Component } from '@angular/core';
+import { NgClass, NgStyle } from '@angular/common';
+import { OnInit, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { asObservable, ObservableOrValue, switchMapMaybeDefault } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
@@ -13,17 +15,23 @@ export interface DbxFormStyleWrapperConfig {
 
 @Component({
   template: `
-    <div class="dbx-form-style-wrapper" [ngClass]="(class$ | async) ?? ''" [ngStyle]="(style$ | async) ?? {}">
+    <div class="dbx-form-style-wrapper" [ngClass]="classSignal()" [ngStyle]="styleSignal()">
       <ng-container #fieldComponent></ng-container>
     </div>
-  `
+  `,
+  imports: [NgClass, NgStyle],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFormStyleWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormStyleWrapperConfig>> implements OnInit, OnDestroy {
-  private _style = new BehaviorSubject<Maybe<Observable<DbxFormStyleObject>>>(undefined);
-  private _class = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
+  private readonly _style = new BehaviorSubject<Maybe<Observable<DbxFormStyleObject>>>(undefined);
+  private readonly _class = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
 
   readonly style$ = this._style.pipe(switchMapMaybeDefault({}), shareReplay(1));
   readonly class$ = this._class.pipe(switchMapMaybeDefault(''), shareReplay(1));
+
+  readonly styleSignal = toSignal(this.style$);
+  readonly classSignal = toSignal(this.class$);
 
   get styleGetter(): Maybe<ObservableOrValue<DbxFormStyleObject>> {
     return this.props.styleGetter;

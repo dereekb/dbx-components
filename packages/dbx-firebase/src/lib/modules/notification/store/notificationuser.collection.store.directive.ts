@@ -5,7 +5,8 @@ import { NotificationUser, NotificationUserDocument } from '@dereekb/firebase';
 
 @Directive({
   selector: '[dbxFirebaseNotificationUserCollection]',
-  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseNotificationUserCollectionStoreDirective, NotificationUserCollectionStore)
+  providers: provideDbxFirebaseCollectionStoreDirective(DbxFirebaseNotificationUserCollectionStoreDirective, NotificationUserCollectionStore),
+  standalone: true
 })
 export class DbxFirebaseNotificationUserCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<NotificationUser, NotificationUserDocument, NotificationUserCollectionStore> {
   constructor(store: NotificationUserCollectionStore) {

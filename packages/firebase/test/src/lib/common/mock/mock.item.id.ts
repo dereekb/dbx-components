@@ -1,3 +1,3 @@
-import { FirestoreModelKey } from '@dereekb/firebase';
+import { type FirestoreModelKey } from '@dereekb/firebase';
 
 export type MockItemUserKey = FirestoreModelKey;

@@ -8,31 +8,35 @@ export interface TwoColumnsState {
   /**
    * Whether or not to reverse the sizing.
    */
-  reverseSizing: boolean;
+  readonly reverseSizing: boolean;
   /**
    * Whether or not the right side should be shown.
    */
-  showRight: boolean;
+  readonly showRight: boolean;
+  /**
+   * Overrides showRight if not null.
+   */
+  readonly showRightOverride?: Maybe<boolean>;
   /**
    * Whether or not there is any registered right content currently.
    */
-  hasRight: boolean;
+  readonly hasRight: boolean;
   /**
    * Whether or not to allow the left to fill up the screen when no right is shown.
    */
-  fullLeft: boolean;
+  readonly fullLeft: boolean;
   /**
    * Optional ref to use with TwoColumns that use an sref for the back button.
    */
-  backRef?: Maybe<SegueRef>;
+  readonly backRef?: Maybe<SegueRef>;
   /**
    * Size of the view's total width in pixels.
    */
-  totalWidth?: Maybe<number>;
+  readonly totalWidth?: Maybe<number>;
   /**
    * Minimum right side size allowed before hiding the left content.
    */
-  minRightWidth: number;
+  readonly minRightWidth: number;
 }
 
 export const DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH = 320;
@@ -71,19 +75,19 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   readonly reverseSizing$ = this.state$.pipe(map((x) => x.reverseSizing));
 
   /**
-   * Pipes the current state of showRight.
+   * Pipes the current state of hasRight.
    */
-  readonly hasRight$ = this.state$.pipe(map((x) => x.showRight));
+  readonly hasRight$ = this.state$.pipe(map((x) => x.hasRight));
 
   /**
-   * Pipes the current state of showRight.
+   * Pipes the current state of showRight and showRightOverride.
    */
-  readonly currentShowRight$ = this.state$.pipe(map((x) => x.showRight));
+  readonly currentShowRight$ = this.state$.pipe(map((x) => x.showRightOverride ?? x.showRight));
 
   /**
    * Pipes the current state of showRight and hasRight
    */
-  readonly showRight$ = this.state$.pipe(map((x) => x.hasRight && x.showRight));
+  readonly showRight$ = this.state$.pipe(map((x) => x.hasRight && (x.showRightOverride ?? x.showRight)));
 
   /**
    * Convenience function for the showRight compliment.
@@ -98,7 +102,7 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Whether or not to show the full left.
    */
-  readonly showFullLeft$ = this.state$.pipe(map((x) => !(x.hasRight && x.showRight) && x.fullLeft));
+  readonly showFullLeft$ = this.state$.pipe(map((x) => !(x.hasRight && (x.showRightOverride ?? x.showRight)) && x.fullLeft));
 
   /**
    * Pipes the current backRef value.
@@ -133,6 +137,11 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
    * Changes the state to show right or not.
    */
   readonly setShowRight = this.updater((state, showRight: Maybe<boolean>) => (isMaybeNot(showRight) ? state : { ...state, showRight }));
+
+  /**
+   * Changes the override state to show right or not.
+   */
+  readonly setShowRightOverride = this.updater((state, showRightOverride: Maybe<boolean>) => ({ ...state, showRightOverride }));
 
   /**
    * Sets the full left. If undefined is passed, no change occurs.

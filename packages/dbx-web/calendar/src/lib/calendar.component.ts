@@ -1,20 +1,26 @@
-import { Component, EventEmitter, Output, OnDestroy, inject } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy, inject, output, ChangeDetectionStrategy, computed } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { CalendarEvent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';
 import { distinctUntilChanged, map, shareReplay, withLatestFrom } from 'rxjs';
-import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { DbxCalendarEvent, prepareAndSortCalendarEvents } from './calendar';
+import { DbxCalendarBaseComponent } from './calendar.base.component';
+import { NgClass } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { CalendarModule, CalendarDayModule, CalendarWeekModule } from 'angular-calendar';
 
 @Component({
   selector: 'dbx-calendar',
-  templateUrl: './calendar.component.html'
+  templateUrl: './calendar.component.html',
+  imports: [DbxCalendarBaseComponent, CalendarModule, CalendarDayModule, CalendarWeekModule, MatButtonToggleModule, NgClass],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxCalendarComponent<T> implements OnDestroy {
+export class DbxCalendarComponent<T> {
   readonly calendarStore = inject(DbxCalendarStore<T>);
 
-  @Output()
-  readonly clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
+  readonly clickEvent = output<DbxCalendarEvent<T>>();
 
   readonly viewDate$ = this.calendarStore.date$;
 
@@ -35,9 +41,11 @@ export class DbxCalendarComponent<T> implements OnDestroy {
 
   readonly displayType$ = this.calendarStore.displayType$;
 
-  ngOnDestroy(): void {
-    this.clickEvent.complete();
-  }
+  readonly viewDateSignal = toSignal(this.viewDate$, { initialValue: new Date() });
+  readonly eventsSignal = toSignal(this.events$, { initialValue: [] });
+  readonly activeDayIsOpenSignal = toSignal(this.activeDayIsOpen$, { initialValue: true });
+  readonly displayTypeSignal = toSignal(this.displayType$);
+  readonly displayTypeClassSignal = computed(() => `dbx-calendar-content-${this.displayTypeSignal()}`);
 
   todayClicked(): void {
     this.dayClicked({ date: new Date() });

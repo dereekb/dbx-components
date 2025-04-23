@@ -304,7 +304,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
     this.dbxMapboxMapStore.fitPositions(
       positions.pipe(
-        map((positions) => ({ positions, options: { minZoom: 8, padding: 20 } } as MapboxFitPositions)),
+        map((positions) => ({ positions, options: { minZoom: 8, padding: 20 } }) as MapboxFitPositions),
         first()
       )
     );

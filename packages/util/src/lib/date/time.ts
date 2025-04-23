@@ -126,129 +126,127 @@ export interface Timer extends Destroyable {
   setDuration(duration: Milliseconds): void;
 }
 
+/**
+ * Error thrown when the timer is destroyed before it was completed.
+ */
 export class TimerCancelledError extends BaseError {
   constructor() {
     super(`The timer was destroyed before it was completed.`);
   }
 }
 
-export class TimerInstance implements Timer {
-  private _createdAt = new Date();
-  private _startedAt = new Date();
-  private _pausedAt?: Date;
+/**
+ * Creates a new Timer from the input duration.
+ *
+ * @param duration - The duration of the timer.
+ * @param startImmediately - Whether the timer should start immediately. Defaults to true.
+ * @returns The new Timer.
+ */
+export function makeTimer(duration: Milliseconds, startImmediately = true): Timer {
+  const createdAt = new Date();
+  let startedAt = new Date();
+  let pausedAt: Maybe<Date> = undefined;
 
-  private _state: TimerState = 'paused';
-  private _duration: Milliseconds;
-  private _promiseRef = promiseReference<void>();
+  let state: TimerState = 'paused';
+  let currentDuration: Milliseconds = duration;
+  const promiseRef = promiseReference<void>();
 
-  constructor(duration: Milliseconds, startImmediately = true) {
-    this._duration = duration;
-
-    if (startImmediately) {
-      this.start();
-      this._startedAt = this._createdAt;
-    }
-  }
-
-  get state(): TimerState {
-    return this._state;
-  }
-
-  get createdAt(): Date {
-    return this._createdAt;
-  }
-
-  get pausedAt(): Maybe<Date> {
-    return this._pausedAt;
-  }
-
-  get startedAt(): Date {
-    return this._startedAt;
-  }
-
-  get promise(): Promise<void> {
-    return this._promiseRef.promise;
-  }
-
-  get duration(): Milliseconds {
-    return this._duration;
-  }
-
-  get durationRemaining(): Maybe<Milliseconds> {
-    let remaining: Maybe<Milliseconds>;
-
-    switch (this._state) {
+  const getDurationRemaining = (): Maybe<Milliseconds> => {
+    switch (state) {
       case 'complete':
-        remaining = 0;
-        break;
+        return 0;
       case 'running':
-        remaining = Math.max(0, this._duration - (new Date().getTime() - this._startedAt.getTime()));
-        break;
+        return Math.max(0, currentDuration - (new Date().getTime() - startedAt.getTime()));
       case 'paused':
-        remaining = null;
-        break;
+        return null;
     }
+  };
 
-    return remaining;
-  }
-
-  start(): void {
-    if (this._state === 'paused') {
-      this._state = 'running';
-      this._startedAt = new Date();
-      this._enqueueCheck();
+  const checkComplete = () => {
+    if (state !== 'complete' && getDurationRemaining() === 0) {
+      state = 'complete';
+      promiseRef.resolve();
     }
-  }
+  };
 
-  stop(): void {
-    if (this._state === 'running') {
-      this._state = 'paused';
-      this._pausedAt = new Date();
-    }
-  }
-
-  reset(): void {
-    if (this._state !== 'complete') {
-      this._state = 'running';
-      this._startedAt = new Date();
-      this._enqueueCheck();
-    }
-  }
-
-  setDuration(duration: Milliseconds): void {
-    this._duration = duration;
-  }
-
-  destroy(): void {
-    this._checkComplete();
-    if (this._state === 'running') {
-      const error = new TimerCancelledError();
-      this._promiseRef.reject(error);
-      this._state = 'complete'; // mark as complete
-    }
-  }
-
-  private _checkComplete() {
-    if (this._state !== 'complete' && this.durationRemaining === 0) {
-      this._state = 'complete';
-      this._promiseRef.resolve();
-    }
-  }
-
-  private _enqueueCheck() {
-    const durationRemaining = this.durationRemaining;
-
-    if (durationRemaining != null && this._state !== 'complete') {
+  const enqueueCheck = () => {
+    const remaining = getDurationRemaining();
+    if (remaining != null && state !== 'complete') {
       setTimeout(() => {
-        this._checkComplete();
-        this._enqueueCheck();
-      }, durationRemaining);
+        checkComplete();
+        enqueueCheck();
+      }, remaining);
     }
-  }
-}
+  };
 
-export function timer(duration: Milliseconds, startNow = true): Timer {
-  return new TimerInstance(duration, startNow);
+  const start = () => {
+    if (state === 'paused') {
+      state = 'running';
+      startedAt = new Date();
+      enqueueCheck();
+    }
+  };
+
+  const stop = () => {
+    if (state === 'running') {
+      state = 'paused';
+      pausedAt = new Date();
+    }
+  };
+
+  const reset = () => {
+    if (state !== 'complete') {
+      state = 'running';
+      startedAt = new Date();
+      enqueueCheck();
+    }
+  };
+
+  const setDuration = (newDuration: Milliseconds) => {
+    currentDuration = newDuration;
+  };
+
+  const destroy = () => {
+    checkComplete();
+    if (state === 'running') {
+      promiseRef.reject(new TimerCancelledError());
+      state = 'complete';
+    }
+  };
+
+  if (startImmediately) {
+    start();
+    startedAt = createdAt;
+  }
+
+  return {
+    get promise() {
+      return promiseRef.promise;
+    },
+    get state() {
+      return state;
+    },
+    get createdAt() {
+      return createdAt;
+    },
+    get pausedAt() {
+      return pausedAt;
+    },
+    get startedAt() {
+      return startedAt;
+    },
+    get duration() {
+      return currentDuration;
+    },
+    get durationRemaining() {
+      return getDurationRemaining();
+    },
+    start,
+    stop,
+    reset,
+    setDuration,
+    destroy
+  };
 }
 
 /**
@@ -279,3 +277,9 @@ export function approximateTimerEndDate(timer: Timer): Maybe<Date> {
     return null;
   }
 }
+
+// MARK: Compat
+/**
+ * @deprecated use makeTimer instead of timer.
+ */
+export const timer = makeTimer;

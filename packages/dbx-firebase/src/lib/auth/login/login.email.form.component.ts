@@ -1,41 +1,33 @@
-import { Component, Input, OnDestroy } from '@angular/core';
-import { TextPasswordFieldConfig, provideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { TextPasswordFieldConfig, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue, AbstractConfigAsyncFormlyFormDirective, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, DbxFormlyFormComponentImportsModule, dbxFormlyFormComponentProviders } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { DbxFirebaseLoginMode } from './login';
 
 export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue;
 
 export interface DbxFirebaseEmailFormConfig {
-  loginMode: DbxFirebaseLoginMode;
-  passwordConfig?: TextPasswordFieldConfig;
+  readonly loginMode: DbxFirebaseLoginMode;
+  readonly passwordConfig?: TextPasswordFieldConfig;
 }
 
 @Component({
-  template: `
-    <dbx-formly></dbx-formly>
-  `,
   selector: 'dbx-firebase-email-form',
-  providers: [provideFormlyContext()]
+  template: DBX_FORMLY_FORM_COMPONENT_TEMPLATE,
+  imports: [DbxFormlyFormComponentImportsModule],
+  providers: dbxFormlyFormComponentProviders(),
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxFirebaseEmailFormComponent extends AbstractAsyncFormlyFormDirective<DbxFirebaseEmailFormValue> implements OnDestroy {
-  private _config = new BehaviorSubject<DbxFirebaseEmailFormConfig>({ loginMode: 'login' });
+export class DbxFirebaseEmailFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> implements OnDestroy {
+  readonly fields$: Observable<Maybe<FormlyFieldConfig[]>> = this.currentConfig$.pipe(
+    map((config) => {
+      const loginMode = config?.loginMode ?? 'login';
+      const passwordConfig = config?.passwordConfig;
 
-  readonly fields$: Observable<Maybe<FormlyFieldConfig[]>> = this._config.pipe(
-    map(({ loginMode = 'login', passwordConfig }) => {
       const fields: FormlyFieldConfig[] = usernamePasswordLoginFields({ username: 'email', password: passwordConfig, verifyPassword: loginMode === 'register' });
       return fields;
     })
   );
-
-  @Input()
-  set config(config: DbxFirebaseEmailFormConfig) {
-    this._config.next(config);
-  }
-
-  override ngOnDestroy() {
-    super.ngOnDestroy();
-    this._config.complete();
-  }
 }

@@ -10,7 +10,8 @@ export const APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY = 'dbx_action_enforce_mod
  * Directive that toggles disabling an action if the action is not marked modified.
  */
 @Directive({
-  selector: '[dbxActionEnforceModified]'
+  selector: '[dbxActionEnforceModified]',
+  standalone: true
 })
 export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance, { host: true });

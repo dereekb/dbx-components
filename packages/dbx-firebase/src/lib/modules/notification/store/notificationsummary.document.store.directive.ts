@@ -5,7 +5,8 @@ import { NotificationSummary, NotificationSummaryDocument } from '@dereekb/fireb
 
 @Directive({
   selector: '[dbxFirebaseNotificationSummaryDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationSummaryDocumentStoreDirective, NotificationSummaryDocumentStore)
+  providers: provideDbxFirebaseDocumentStoreDirective(DbxFirebaseNotificationSummaryDocumentStoreDirective, NotificationSummaryDocumentStore),
+  standalone: true
 })
 export class DbxFirebaseNotificationSummaryDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<NotificationSummary, NotificationSummaryDocument, NotificationSummaryDocumentStore> {
   constructor(store: NotificationSummaryDocumentStore) {

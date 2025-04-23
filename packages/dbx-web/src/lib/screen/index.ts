@@ -1,3 +1,3 @@
 export * from './screen';
 export * from './screen.service';
-export * from './screen.module';
+export * from './screen.providers';

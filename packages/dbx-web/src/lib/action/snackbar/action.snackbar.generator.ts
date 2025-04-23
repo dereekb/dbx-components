@@ -3,31 +3,31 @@ import { Milliseconds, Maybe, GetterOrValue, getValueFromGetter, Getter } from '
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from './action.snackbar';
 
 export interface DbxActionSnackbarGeneratorInput<T = unknown, O = unknown> {
-  event: DbxActionSnackbarEvent<O>;
-  undo?: Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>;
+  readonly event: DbxActionSnackbarEvent<O>;
+  readonly undo?: Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>;
 }
 
 export type DbxActionSnackbarGeneratorUndoInput<T = unknown, O = unknown> = Getter<DbxActionContextSourceReference<T, O>> | DbxActionSnackbarGeneratorUndoInputConfig<T, O>;
 
 export interface DbxActionSnackbarGeneratorUndoInputConfig<T = unknown, O = unknown> {
-  duration?: Milliseconds;
-  getUndoAction: Getter<DbxActionContextSourceReference<T, O>>;
+  readonly duration?: Milliseconds;
+  readonly getUndoAction: Getter<DbxActionContextSourceReference<T, O>>;
 }
 
 export type DbxActionSnackbarDisplayConfigGeneratorFunction = <T = unknown, O = unknown>(input: DbxActionSnackbarGeneratorInput<T, O>) => Maybe<DbxActionSnackbarDisplayConfig<T, O>>;
 
 export interface DbxMakeActionSnackbarGeneratorConfiguration {
-  idle?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  loading?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  success?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  error?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  readonly idle?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  readonly loading?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  readonly success?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  readonly error?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
 }
 
 export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<DbxActionSnackbarDisplayConfig, 'action'> {
   /**
    * Sets the undo action text. If undefined, will default to 'undo'
    */
-  undoButtonText?: string;
+  readonly undoButtonText?: string;
 }
 
 /**

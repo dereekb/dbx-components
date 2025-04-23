@@ -6,6 +6,7 @@ import { AbstractFilterSourceDirective, provideFilterSourceDirective } from './f
  */
 @Directive({
   selector: '[dbxFilterSource]',
-  providers: provideFilterSourceDirective(DbxFilterSourceDirective)
+  providers: provideFilterSourceDirective(DbxFilterSourceDirective),
+  standalone: true
 })
 export class DbxFilterSourceDirective<F> extends AbstractFilterSourceDirective<F> {}

@@ -11,7 +11,8 @@ export class DbxCalendarScheduleSelectionStoreProviderBlock {
 
 @Directive({
   selector: '[dbxCalendarScheduleSelectionStoreParentBlocker]',
-  providers: [DbxCalendarScheduleSelectionStoreProviderBlock]
+  providers: [DbxCalendarScheduleSelectionStoreProviderBlock],
+  standalone: true
 })
 export class DbxCalendarScheduleSelectionStoreInjectionBlockDirective {}
 

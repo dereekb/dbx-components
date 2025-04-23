@@ -1,25 +1,12 @@
 {
-  "npmScope": "dereekb",
-  "affected": {
-    "defaultBase": "develop"
-  },
   "cli": {
-    "packageManager": "npm",
-    "defaultCollection": "@nx/angular"
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e", "build-base", "run-tests"],
-        "accessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU="
-      }
-    }
+    "packageManager": "npm"
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "cache": true
     },
     "run-all-tests": {
       "dependsOn": ["build"],
@@ -27,14 +14,8 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"]
-    },
-    "test-skip-build": {
-      "dependsOn": [],
-      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"]
-    },
-    "publish": {
-      "dependsOn": ["build"]
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"],
+      "cache": true
     },
     "publish-npmjs": {
       "dependsOn": ["build"]
@@ -45,14 +26,29 @@
     "ci-deploy": {
       "dependsOn": ["build"]
     },
-    "lint": {
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
-    },
     "e2e": {
-      "inputs": ["default", "^production"]
+      "inputs": ["default", "^production"],
+      "cache": true
     },
-    "run-tests": {
-      "inputs": ["default", "^production"]
+    "build-base": {
+      "cache": true
+    },
+    "@nx/jest:jest": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "options": {
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "@nx/eslint:lint": {
+      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
+      "cache": true
     }
   },
   "generators": {
@@ -84,6 +80,9 @@
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [],
-    "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/jest.config.[jt]s", "!{projectRoot}/src/test-setup.[jt]s"]
-  }
+    "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/jest.config.[jt]s", "!{projectRoot}/src/test-setup.[jt]s", "!{projectRoot}/test-setup.[jt]s"]
+  },
+  "nxCloudAccessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU=",
+  "useInferencePlugins": false,
+  "defaultBase": "develop"
 }

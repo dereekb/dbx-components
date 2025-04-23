@@ -1,7 +1,7 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
-import { describeCloudFunctionTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
   DocumentDataWithIdAndKey,
@@ -40,7 +40,7 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { UNSET_INDEX_NUMBER } from '@dereekb/util';
 
 demoApiFunctionContextFactory((f) => {
-  describeCloudFunctionTest('notification.crud', { f, fns: { demoCallModel } }, ({ demoCallModelCloudFn }) => {
+  describeCallableRequestTest('notification.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     // TODO: Before each, replace the notification sender config, or reference a specific test type that can "test send" things.
 
     afterEach(() => {
@@ -123,7 +123,7 @@ demoApiFunctionContextFactory((f) => {
                       }
                     };
 
-                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                     const notificationUser = await assertSnapshotData(nu.document);
 
@@ -158,7 +158,7 @@ demoApiFunctionContextFactory((f) => {
                       }
                     };
 
-                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                     const notificationUser = await assertSnapshotData(nu.document);
 
@@ -181,7 +181,7 @@ demoApiFunctionContextFactory((f) => {
                       bc: [{ nb: 'test', configs: [{ type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, se: true, st: false }] }]
                     };
 
-                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                     const notificationUser = await assertSnapshotData(nu.document);
 
@@ -261,7 +261,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -287,7 +287,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -312,7 +312,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -331,7 +331,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -353,7 +353,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -375,7 +375,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -411,7 +411,7 @@ demoApiFunctionContextFactory((f) => {
                                   }
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -443,7 +443,7 @@ demoApiFunctionContextFactory((f) => {
                                     }
                                   };
 
-                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                 });
 
                                 it('should sync the global config to only the relevant NotificationBoxes', async () => {
@@ -455,7 +455,7 @@ demoApiFunctionContextFactory((f) => {
                                     key: nu.documentKey
                                   };
 
-                                  const result = (await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
+                                  const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
                                   expect(result.notificationBoxesUpdated).toBe(1);
 
                                   notificationBox = await assertSnapshotData(nb_g.document);
@@ -490,7 +490,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
                                 expect(notificationUser.ns).toBe(true);
@@ -522,7 +522,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
                                 expect(notificationUser.ns).toBe(true);
@@ -546,7 +546,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
                                 expect(notificationUser.ns).toBe(true);
@@ -572,7 +572,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
                                 expect(notificationUser.ns).toBeFalsy();
@@ -603,7 +603,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                 notificationUser = await assertSnapshotData(nu.document);
 
@@ -635,7 +635,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient'));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient'));
 
                                 notificationBox = await assertSnapshotData(nb_p.document);
                                 expect(notificationBox.r).toHaveLength(1);
@@ -658,7 +658,7 @@ demoApiFunctionContextFactory((f) => {
                                     }
                                   };
 
-                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                 });
 
                                 itShouldFail('to update the user', async () => {
@@ -677,7 +677,7 @@ demoApiFunctionContextFactory((f) => {
                                     ]
                                   };
 
-                                  await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
+                                  await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
                                 });
                               });
 
@@ -693,7 +693,7 @@ demoApiFunctionContextFactory((f) => {
                                     ]
                                   };
 
-                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                 });
 
                                 itShouldFail('to update the user', async () => {
@@ -712,7 +712,7 @@ demoApiFunctionContextFactory((f) => {
                                     ]
                                   };
 
-                                  await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
+                                  await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE));
                                 });
                               });
                             });
@@ -749,7 +749,7 @@ demoApiFunctionContextFactory((f) => {
                                   ]
                                 };
 
-                                await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                               });
 
                               it('should resync the user when resync is called by an admin', async () => {
@@ -760,7 +760,7 @@ demoApiFunctionContextFactory((f) => {
                                   key: nu.documentKey
                                 };
 
-                                const result = (await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
+                                const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params, 'resync'))) as ResyncNotificationUserResult;
                                 expect(result.notificationBoxesUpdated).toBe(1);
 
                                 // notification user should now be marked synced
@@ -829,7 +829,7 @@ demoApiFunctionContextFactory((f) => {
                                     ]
                                   };
 
-                                  await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                  await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                 });
 
                                 it('should remove the user from the NotificationBox on the next resync', async () => {
@@ -870,7 +870,7 @@ demoApiFunctionContextFactory((f) => {
                                       ]
                                     };
 
-                                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
 
                                     const notificationUser = await assertSnapshotData(nu.document);
                                     expect(notificationUser.bc).toHaveLength(0);
@@ -891,7 +891,7 @@ demoApiFunctionContextFactory((f) => {
                                       insert: true
                                     };
 
-                                    await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient'));
+                                    await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient'));
 
                                     notificationBox = await assertSnapshotData(nb_p.document);
                                     expect(notificationBox.r).toHaveLength(1);
@@ -914,7 +914,7 @@ demoApiFunctionContextFactory((f) => {
                                         ]
                                       };
 
-                                      await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                      await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                     });
 
                                     itShouldFail('to allow the user to be added to the NotificationBox', async () => {
@@ -927,7 +927,7 @@ demoApiFunctionContextFactory((f) => {
                                         insert: true
                                       };
 
-                                      await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
                                     });
                                   });
 
@@ -943,7 +943,7 @@ demoApiFunctionContextFactory((f) => {
                                         ]
                                       };
 
-                                      await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                      await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                     });
 
                                     itShouldFail('to allow the user to be added to the NotificationBox', async () => {
@@ -956,7 +956,7 @@ demoApiFunctionContextFactory((f) => {
                                         insert: true
                                       };
 
-                                      await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
                                     });
                                   });
 
@@ -969,7 +969,7 @@ demoApiFunctionContextFactory((f) => {
                                         }
                                       };
 
-                                      await u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationUserIdentity, params));
+                                      await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationUserIdentity, params));
                                     });
 
                                     itShouldFail('to allow the user to be added to the NotificationBox', async () => {
@@ -982,7 +982,7 @@ demoApiFunctionContextFactory((f) => {
                                         insert: true
                                       };
 
-                                      await expectFail(() => u.callCloudFunction(demoCallModelCloudFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
+                                      await expectFail(() => u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(notificationBoxIdentity, params, 'recipient')), jestExpectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE));
                                     });
                                   });
                                 });

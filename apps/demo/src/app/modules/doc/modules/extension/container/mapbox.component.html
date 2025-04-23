@@ -8,7 +8,7 @@
           <doc-feature-example header="dbx-mapbox-layout" hint="This component provides a Google-maps like layout using a mat-sidenav.">
             <dbx-content-container style="height: 300px">
               <!-- Map View-->
-              <dbx-mapbox-layout (openedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [opened]="open$ | async" [drawerButtonColor]="color$ | async">
+              <dbx-mapbox-layout (drawerOpenedChange)="onOpenedChange($event)" dbxMapboxLayoutVirtualResizeSync [side]="side$ | async" [openDrawer]="open$ | async" [drawerButtonColor]="color$ | async">
                 <!-- Drawer -->
                 <mgl-map dbxMapboxMap>
                   <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
@@ -128,7 +128,7 @@
             <p>Viewport Calc: {{ viewportBoundFunctionCalc$ | async | json }}</p>
             <dbx-content-container style="height: 500px">
               <!-- Map View-->
-              <dbx-mapbox-layout [side]="side$ | async" [hasContent]="true" [opened]="true">
+              <dbx-mapbox-layout [side]="side$ | async" [forceHasDrawerContent]="true" [openDrawer]="true">
                 <!-- Drawer -->
                 <div drawer style="overflow-y: scroll; height: 100%; max-width: 400px">
                   <doc-feature-example header="Mapbox Forms with Directive">
