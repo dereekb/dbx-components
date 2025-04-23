@@ -372,3 +372,9 @@ There are some caveats though:
 #### Gen 2 Cloud Functions
 Gen 2 functions have additional configuration available that you'll want to configure. Cloud run is more expensive than the gen 1 implementation so it is important to change the configuration to keep costs in check. All @dereekb/firebase-server onCall/schedule/etc. configuration allows for setting default configuration created by the `onCallWithNestContextFactory`/`onScheduleWithNestContextFactory`/`onEventWithNestContextFactory` functions.
 
+### Migrating es-lint .eslintrc.json files to eslint.config.mjs files
+You can follow the migration guide here:
+
+https://eslint.org/docs/latest/use/configure/migration-guide
+
+You'll need to 

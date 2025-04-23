@@ -1,3 +1,4 @@
+export default [...baseLibraryConfig];
 const { composePlugins, withNx } = require('@nx/webpack');
 
 // Nx plugins for webpack.

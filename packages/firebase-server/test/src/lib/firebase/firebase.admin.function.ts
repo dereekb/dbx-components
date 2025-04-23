@@ -101,7 +101,10 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestCon
 export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
   private _fnWrapper = cachedGetter(() => firebaseAdminCloudFunctionWrapper(this.instance));
 
-  constructor(readonly instance: FeaturesList, app: admin.app.App) {
+  constructor(
+    readonly instance: FeaturesList,
+    app: admin.app.App
+  ) {
     super(app);
   }
 
@@ -155,7 +158,9 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
       try {
         await instance.app.delete(); // will be called in cleanup
         firebaseFunctionsTestInstance!.cleanup();
-      } catch (e) {}
+      } catch (e) {
+        // do nothing
+      }
 
       firebaseFunctionsTestInstance = undefined;
     }

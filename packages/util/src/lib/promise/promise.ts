@@ -296,12 +296,12 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
   const maxPromisesToRunAtOneTime = Math.max(1, maxParallelTasks ?? 1);
 
   return (taskInputFactory: PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I>) => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const taskKeyFactory = nonConcurrentTaskKeyFactory ?? defaultNonConcurrentTaskKeyFactory;
 
       let incompleteTasks: Readonly<[I, K[], IndexNumber]>[] = [];
 
-      type NextIncompleteTask = typeof incompleteTasks[0] | undefined;
+      type NextIncompleteTask = (typeof incompleteTasks)[0] | undefined;
 
       let baseI = 0;
       let isOutOfTasks = false;
@@ -341,7 +341,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 
           if (nextItemInQueue) {
             fulfillRequestMoreTasks(nextItemInQueue[0], nextItemInQueue[1]);
-          } else {
           }
         }
       }
@@ -374,7 +373,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
        */
       const currentParellelTaskKeys = new Set<K>();
       const visitedTaskIndexes = new Set<IndexNumber>();
-      const waitingConcurrentTasks = multiValueMapBuilder<typeof incompleteTasks[0], K>();
+      const waitingConcurrentTasks = multiValueMapBuilder<(typeof incompleteTasks)[0], K>();
 
       async function getNextTask(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
         let nextTask: NextIncompleteTask = undefined;
@@ -419,7 +418,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
         return nextTask;
       }
 
-      function onTaskCompleted(task: typeof incompleteTasks[0], parallelIndex: IndexNumber): void {
+      function onTaskCompleted(task: (typeof incompleteTasks)[0], parallelIndex: IndexNumber): void {
         const keys = task[1];
         const indexesPushed = new Set<IndexNumber>();
 
@@ -428,6 +427,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
           currentParellelTaskKeys.delete(key);
           const waitingForKey = waitingConcurrentTasks.get(key);
 
+          // eslint-disable-next-line no-constant-condition
           while (true) {
             const nextWaitingTask = waitingForKey.shift(); // take from the front to retain unique task order
 

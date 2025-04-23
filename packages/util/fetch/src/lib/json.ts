@@ -21,14 +21,14 @@ export function fetchJsonBodyString(body: FetchJsonBody | undefined): string | u
 }
 
 export interface FetchJsonInput extends Omit<RequestInit, 'body'> {
-  method: FetchMethod;
-  body?: FetchJsonBody | undefined;
+  readonly method: FetchMethod;
+  readonly body?: FetchJsonBody | undefined;
   /**
    * Optional intercept function to intercept/transform the response.
    *
    * Does not override any other configured interceptor and occurs after those configured interceptors.
    */
-  interceptResponse?: FetchJsonInterceptJsonResponseFunction;
+  readonly interceptResponse?: FetchJsonInterceptJsonResponseFunction;
 }
 
 export type FetchJsonInputMapFunction = MapSameFunction<FetchJsonInput>;
@@ -50,7 +50,7 @@ export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunct
   throw new JsonResponseParseError(response);
 };
 
-export const returnNullHandleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => null;
+export const returnNullHandleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = (_: Response) => null;
 
 export interface FetchJsonFunctionConfig extends FetchJsonRequestInitFunctionConfig {
   /**

@@ -1245,6 +1245,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       const sendNotificationInstance = await sendNotification(sendNotificationParams);
 
       // iterate through all JobApplication items that need to be synced
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const sendQueuedNotificationsResults = await sendQueuedNotifications();
 
@@ -1326,6 +1327,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
       let notificationWeeksUpdated: number = 0;
 
       // iterate through all JobApplication items that need to be synced
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const cleanupSentNotificationsResults = await cleanupSentNotifications();
 
