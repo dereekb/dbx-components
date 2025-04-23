@@ -1,5 +1,6 @@
 import { onCallModel, type OnCallModelMap, onCallReadModel, onCallCreateModel, onCallDeleteModel, onCallUpdateModel,inAuthContext } from '@dereekb/firebase-server';
 import { APP_CODE_PREFIXOnCallCreateModelMap, APP_CODE_PREFIXOnCallReadModelMap, APP_CODE_PREFIXOnCallUpdateModelMap, APP_CODE_PREFIXOnCallDeleteModelMap, onCallWithAPP_CODE_PREFIXNestContext } from '../function';
+import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
 
 // MARK: Create
 export const APP_CODE_PREFIX_LOWERCreateModelMap: APP_CODE_PREFIXOnCallCreateModelMap = {};
@@ -8,7 +9,12 @@ export const APP_CODE_PREFIX_LOWERCreateModelMap: APP_CODE_PREFIXOnCallCreateMod
 export const APP_CODE_PREFIX_LOWERReadModelMap: APP_CODE_PREFIXOnCallReadModelMap = {};
 
 // MARK: Update
-export const APP_CODE_PREFIX_LOWERUpdateModelMap: APP_CODE_PREFIXOnCallUpdateModelMap = {};
+export const APP_CODE_PREFIX_LOWERUpdateModelMap: APP_CODE_PREFIXOnCallUpdateModelMap = {
+  profile: onCallSpecifierHandler({
+    _: updateProfile,
+    onboard: updateProfleOnboarding,
+  })
+};
 
 // MARK: Delete
 export const APP_CODE_PREFIX_LOWERDeleteModelMap: APP_CODE_PREFIXOnCallDeleteModelMap = {};

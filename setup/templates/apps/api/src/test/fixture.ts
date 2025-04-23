@@ -119,3 +119,24 @@ export const APP_CODE_PREFIX_LOWERAuthorizedUserContextFactory = (params: APP_CO
 
 export const APP_CODE_PREFIX_LOWERAuthorizedUserContext = APP_CODE_PREFIX_LOWERAuthorizedUserContextFactory({});
 export const APP_CODE_PREFIX_LOWERAuthorizedUserAdminContext = APP_CODE_PREFIX_LOWERAuthorizedUserContextFactory({ userLevel: 'admin' });
+
+// MARK: With Profile
+export interface APP_CODE_PREFIXApiProfileTestContextParams {
+  u: APP_CODE_PREFIXApiAuthorizedUserTestContextFixture;
+}
+
+export class APP_CODE_PREFIXApiProfileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Profile, ProfileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>, APP_CODE_PREFIXApiFunctionContextFixture<F>, APP_CODE_PREFIXApiProfileTestContextInstance<F>> {}
+
+export class APP_CODE_PREFIXApiProfileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Profile, ProfileDocument, APP_CODE_PREFIXApiFunctionContextFixtureInstance<F>> {}
+
+export const APP_CODE_PREFIX_LOWERProfileContextFactory = () =>
+  modelTestContextFactory<Profile, ProfileDocument, APP_CODE_PREFIXApiProfileTestContextParams, APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, ProfileFirestoreCollection>({
+    makeFixture: (f) => new APP_CODE_PREFIXApiProfileTestContextFixture(f),
+    getCollection: (fi) => fi.APP_CODE_PREFIX_LOWERFirestoreCollections.profileCollection,
+    makeRef: async (collection: FirestoreCollection<Profile, ProfileDocument>, params, p) => {
+      return collection.documentAccessor().documentRefForId(params.u.uid);
+    },
+    makeInstance: (delegate, ref, testInstance) => new APP_CODE_PREFIXApiProfileTestContextInstance(delegate, ref, testInstance)
+  });
+
+export const APP_CODE_PREFIX_LOWERProfileContext = APP_CODE_PREFIX_LOWERProfileContextFactory();

@@ -24,7 +24,7 @@ CI_GIT_USER_NAME=ci                         # git username to use in CI deployme
 # - Make sure you have upgraded to the Blaze plan
 FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapierapp
 INPUT_PROJECT_NAME=${2:-"$FIREBASE_PROJECT_ID"}               # example: gethapier
-INPUT_CODE_PREFIX=${3:-app}                                   # example: gethapier  #single-word prefix used in code
+INPUT_CODE_PREFIX=${3:-app}                                   # example: getHapier  #single-word prefix used in code that should be 
 FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
@@ -35,7 +35,7 @@ MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 
 # - Other Configuration
-DEFAULT_SOURCE_BRANCH="main"
+DEFAULT_SOURCE_BRANCH="develop" # "main"
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -540,46 +540,53 @@ download_ts_file () {
 }
 
 ### Setup app components
-download_app_ts_file () {
+download_app_components_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_COMPONENTS_FOLDER
   local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-download_app_ts_file ".eslintrc"
-download_app_ts_file "jest.config.ts"
-download_app_ts_file "tsconfig.spec.json"
+rm $ANGULAR_COMPONENTS_FOLDER/eslint.config.mjs
+download_app_components_file "eslint.config.mjs"
+download_app_components_file "jest.config.ts"
+download_app_components_file "tsconfig.spec.json"
 
 rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 
 rm -r $ANGULAR_COMPONENTS_FOLDER/src/lib || true
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib
-download_app_ts_file "src/lib/index.ts"
-download_app_ts_file "src/lib/root.shared.module.ts"
-download_app_ts_file "src/lib/app.shared.module.ts"
+download_app_components_file "src/lib/index.ts"
 
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/modules
-download_app_ts_file "src/lib/modules/index.ts"
+download_app_components_file "src/lib/modules/index.ts"
+
+mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/modules/profile
+download_app_components_file "src/lib/modules/profile/index.ts"
+download_app_components_file "src/lib/modules/profile/store/profile.document.store"
+download_app_components_file "src/lib/modules/profile/store/profile.document.store.directive"
+download_app_components_file "src/lib/modules/profile/store/profile.collection.store"
+download_app_components_file "src/lib/modules/profile/store/profile.collection.store.directive"
 
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
-download_app_ts_file "src/lib/services/index.ts"
+download_app_components_file "src/lib/services/index.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup app components"
 
 ### Setup api components
-download_firebase_ts_file () {
+download_firebase_components_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$FIREBASE_COMPONENTS_FOLDER
   local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/firebase
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-download_firebase_ts_file ".eslintrc"
-download_firebase_ts_file "jest.config.ts"
-download_firebase_ts_file "tsconfig.spec.json"
+rm $FIREBASE_COMPONENTS_FOLDER/eslint.config.mjs
+download_firebase_components_file "eslint.config.mjs"
+download_firebase_components_file "jest.config.ts"
+download_firebase_components_file "tsconfig.spec.json"
 
 ## Lib Folder
 rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
@@ -588,34 +595,46 @@ mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib
 rm $FIREBASE_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $FIREBASE_COMPONENTS_FOLDER/src/index.ts
 
-download_firebase_ts_file "src/lib/index.ts"
-download_firebase_ts_file "src/lib/functions.ts"
+download_firebase_components_file "src/lib/index.ts"
+download_firebase_components_file "src/lib/functions.ts"
 
 # Auth Folder
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/auth
-download_firebase_ts_file "src/lib/auth/claims.ts"
-download_firebase_ts_file "src/lib/auth/index.ts"
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/auth
+download_firebase_components_file "src/lib/auth/claims.ts"
+download_firebase_components_file "src/lib/auth/index.ts"
 
 # Development Folder
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/development
-download_firebase_ts_file "src/lib/development/development.api.ts"
-download_firebase_ts_file "src/lib/development/index.ts"
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/development
+download_firebase_components_file "src/lib/development/development.api.ts"
+download_firebase_components_file "src/lib/development/index.ts"
 
-# Model/Example Folder
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/model
-download_firebase_ts_file "src/lib/model/index.ts"
-download_firebase_ts_file "src/lib/model/service.ts"
+# Model/Example/Profile Folder
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model
+download_firebase_components_file "src/lib/model/index.ts"
+download_firebase_components_file "src/lib/model/service.ts"
 
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/model/example
-download_firebase_ts_file "src/lib/model/example/example.action.ts"
-download_firebase_ts_file "src/lib/model/example/example.api.ts"
-download_firebase_ts_file "src/lib/model/example/example.query.ts"
-download_firebase_ts_file "src/lib/model/example/example.ts"
-download_firebase_ts_file "src/lib/model/example/index.ts"
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/example
+download_firebase_components_file "src/lib/model/example/example.action.ts"
+download_firebase_components_file "src/lib/model/example/example.api.ts"
+download_firebase_components_file "src/lib/model/example/example.query.ts"
+download_firebase_components_file "src/lib/model/example/example.ts"
+download_firebase_components_file "src/lib/model/example/index.ts"
 
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/model/system
-download_firebase_ts_file "src/lib/model/system/system.ts"
-download_firebase_ts_file "src/lib/model/system/index.ts"
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/notification
+download_firebase_components_file "src/lib/model/notification/notification.ts"
+download_firebase_components_file "src/lib/model/notification/index.ts"
+
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/profile
+download_firebase_components_file "src/lib/model/profile/profile.action.ts"
+download_firebase_components_file "src/lib/model/profile/profile.api.ts"
+download_firebase_components_file "src/lib/model/profile/profile.query.ts"
+download_firebase_components_file "src/lib/model/profile/profile.id.ts"
+download_firebase_components_file "src/lib/model/profile/profile.ts"
+download_firebase_components_file "src/lib/model/profile/index.ts"
+
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib/model/system
+download_firebase_components_file "src/lib/model/system/system.ts"
+download_firebase_components_file "src/lib/model/system/index.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api components"
@@ -755,10 +774,34 @@ download_api_ts_file "src/app/common/model/example/example.error.ts"
 download_api_ts_file "src/app/common/model/example/example.module.ts"
 download_api_ts_file "src/app/common/model/example/index.ts"
 
+mkdir $API_APP_FOLDER/src/app/common/model/profile
+download_api_ts_file "src/app/common/model/profile/profile.action.server.ts"
+download_api_ts_file "src/app/common/model/profile/profile.error.ts"
+download_api_ts_file "src/app/common/model/profile/profile.module.ts"
+download_api_ts_file "src/app/common/model/profile/index.ts"
+
+mkdir $API_APP_FOLDER/src/app/common/model/notification
+download_api_ts_file "src/app/common/model/notification/notification.action.context.ts"
+download_api_ts_file "src/app/common/model/notification/notification.factory.ts"
+download_api_ts_file "src/app/common/model/notification/notification.init.ts"
+download_api_ts_file "src/app/common/model/notification/notification.mailgun.ts"
+download_api_ts_file "src/app/common/model/notification/notification.module.ts"
+download_api_ts_file "src/app/common/model/notification/notification.send.mailgun.service.ts"
+download_api_ts_file "src/app/common/model/notification/notification.send.service.ts"
+download_api_ts_file "src/app/common/model/notification/index.ts"
+
 ## Function Folder
 mkdir $API_APP_FOLDER/src/app/function
 download_api_ts_file "src/app/function/index.ts"
 download_api_ts_file "src/app/function/function.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/notification
+download_api_ts_file "src/app/function/notification/index.ts"
+download_api_ts_file "src/app/function/notification/notification.crud.spec.ts"
+download_api_ts_file "src/app/function/notification/notification.scenario.spec.ts"
+download_api_ts_file "src/app/function/notification/notification.schedule.ts"
+download_api_ts_file "src/app/function/notification/notificationbox.update.ts"
+download_api_ts_file "src/app/function/notification/notificationuser.update.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/model
 download_api_ts_file "src/app/function/model/index.ts"
@@ -777,6 +820,11 @@ download_api_ts_file "src/app/function/example/example.schedule.ts"
 download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
 download_api_ts_file "src/app/function/example/example.set.username.spec.ts"
+
+# environment folder
+mkdir -p $API_APP_FOLDER/src/environments
+download_api_ts_file "src/environments/environment.ts"
+download_api_ts_file "src/environments/environment.prod.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api"

@@ -1,3 +1,4 @@
+import { environment } from './environments/environment';
 import "reflect-metadata";
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
@@ -8,9 +9,9 @@ import { onCallWithAPP_CODE_PREFIXNestContext } from './app/function/function';
 
 const app = admin.initializeApp();
 
-const { server, nest } = initNestServer(app);
+const { server, nest } = initNestServer(app, { environment });
 
-export const api = onRequest(server);
+export const api = onRequest({}, server);
 
 // App Functions
 export const {

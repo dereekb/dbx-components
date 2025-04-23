@@ -1,7 +1,10 @@
-import baseAngularAppConfig from '../../eslint.config.angular.app.mjs';
+import baseAngularLibraryConfig from '../../eslint.config.angular.mjs';
 
+/**
+ * This configuration is for the app and checks for the demo, doc, and app prefixes in the angular selectors
+ */
 export default [
-  ...baseAngularAppConfig,
+  ...baseAngularLibraryConfig,
   {
     files: ['**/*.ts'],
     rules: {
