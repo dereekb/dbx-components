@@ -14,7 +14,8 @@
         "packageJson": "packages/firebase-server/zoho/package.json",
         "main": "packages/firebase-server/zoho/src/index.ts",
         "assets": []
-      }
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",
