@@ -1,6 +1,6 @@
 import { APP_CODE_PREFIXApiAuthModule } from './auth.module';
 import { APP_CODE_PREFIXApiFirestoreModule } from './firestore.module';
-import { APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, APP_CODE_PREFIXFirestoreCollections } from 'APP_CODE_PREFIX_LOWER-firebase';
+import { APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, APP_CODE_PREFIXFirestoreCollections } from 'FIREBASE_COMPONENTS_NAME';
 import { firebaseServerActionsContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 import { APP_CODE_PREFIXFirebaseServerActionsContext } from './action.context';

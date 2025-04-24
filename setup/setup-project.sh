@@ -652,8 +652,7 @@ download_angular_ts_file "tsconfig.spec.json"
 
 download_angular_ts_file "src/styles.scss"
 download_angular_ts_file "src/main.ts"
-download_angular_ts_file "src/root.module.ts"
-download_angular_ts_file "src/root.firebase.module.ts"
+download_angular_ts_file "src/root.app.config.ts"
 
 # proxy.conf.dev.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.dev.json -o $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp

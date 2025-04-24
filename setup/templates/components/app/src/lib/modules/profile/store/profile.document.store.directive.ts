@@ -1,6 +1,6 @@
 import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '@dereekb/dbx-firebase';
-import { Profile, ProfileDocument } from 'APP_CODE_PREFIX_LOWER-firebase';
+import { Profile, ProfileDocument } from 'FIREBASE_COMPONENTS_NAME';
 import { ProfileDocumentStore } from './profile.document.store';
 
 @Directive({
