@@ -7,7 +7,7 @@ import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFire
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
-import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
+import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from '@dereekb/demo-components';
 import { defaultValidationMessages, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideEffects } from '@ngrx/effects';

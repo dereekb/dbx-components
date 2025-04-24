@@ -1,6 +1,5 @@
 import { type NotificationTemplateType, type CreateNotificationTemplate, createNotificationTemplate, type FirebaseAuthUserId, ReadFirestoreModelKeyInput, NotificationTemplateTypeInfo, notificationTemplateTypeInfoRecord, readFirestoreModelKey, firestoreModelKeyParentKey, firestoreModelId, NotificationSummaryIdForUidFunction, notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity } from '@dereekb/firebase';
 import { ProfileDocument, profileIdentity } from '../profile';
-import { Guestbook, GuestbookEntry, GuestbookEntryKey, GuestbookKey, guestbookEntryIdentity, guestbookIdentity } from '../guestbook';
 import { Maybe } from '@dereekb/util';
 
 // MARK: Test Notification
@@ -53,73 +52,7 @@ export function exampleNotificationTemplate(input: ExampleNotificationInput): Cr
   });
 }
 
-// MARK: Guestbook Notifications
-export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_C';
-
-export const GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
-  type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
-  name: 'Guestbook Entry Created',
-  description: 'A new guestbook entry has been created.',
-  notificationModelIdentity: guestbookIdentity
-};
-
-export interface GuestbookEntryCreatedNotificationData {}
-
-export interface GuestbookEntryCreatedNotificationInput {
-  readonly guestbookKey: ReadFirestoreModelKeyInput<Guestbook>;
-}
-
-export function guestbookEntryCreatedNotificationTemplate(input: GuestbookEntryCreatedNotificationInput): CreateNotificationTemplate {
-  const { guestbookKey } = input;
-
-  return createNotificationTemplate({
-    type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
-    notificationModel: guestbookKey,
-    targetModel: guestbookKey
-  });
-}
-
-// MARK: Guestbook Entry Notifications
-export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'GBE_L';
-
-export const GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
-  type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
-  name: 'Guestbook Entry Liked',
-  description: 'A guestbook entry has been liked.',
-  notificationModelIdentity: guestbookIdentity, // occurs in guestbooks
-  targetModelIdentity: guestbookEntryIdentity // targets guestbook entries
-};
-
-export interface GuestbookEntryLikedNotificationData {}
-
-export interface GuestbookEntryLikedNotificationInput {
-  readonly guestbookEntryKey: ReadFirestoreModelKeyInput<GuestbookEntry>;
-}
-
-export function guestbookEntryLikedNotificationTemplate(input: GuestbookEntryLikedNotificationInput): CreateNotificationTemplate {
-  const { guestbookEntryKey } = input;
-  const guestbookEntryModelKey = readFirestoreModelKey(guestbookEntryKey) as GuestbookEntryKey;
-  const guestbookKey = firestoreModelKeyParentKey(guestbookEntryModelKey, 1) as GuestbookKey;
-  const creatorUid = firestoreModelId(guestbookEntryModelKey);
-
-  return createNotificationTemplate({
-    type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
-    notificationModel: guestbookKey,
-    targetModel: guestbookEntryModelKey,
-    r: [
-      {
-        uid: creatorUid,
-        // opt-in to send to notification summary by default
-        sn: true,
-        // by default, don't send to email/text
-        se: false,
-        st: false
-      }
-    ]
-  });
-}
-
 // MARK: All Notifications
-export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE_INFO, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE_INFO]);
+export const DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD = notificationTemplateTypeInfoRecord([TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO]);
 
 export const DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID: NotificationSummaryIdForUidFunction = notificationSummaryIdForUidFunctionForRootFirestoreModelIdentity(profileIdentity);

@@ -1,6 +1,6 @@
 import { AUTH_ADMIN_ROLE, authRoleClaimsService, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 
-export const APP_CODE_PREFIX_UPPER_AUTH_CLAIMS_ONBOARDED_TOKEN = 'o';
+export const APP_CODE_PREFIX_UPPER_API_AUTH_CLAIMS_ONBOARDED_TOKEN = 'o';
 
 export type APP_CODE_PREFIXApiAuthClaims = {
   /**

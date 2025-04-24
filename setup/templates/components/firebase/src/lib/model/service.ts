@@ -50,7 +50,7 @@ import {
   NotificationSummaryRoles,
   NotificationTypes
 } from '@dereekb/firebase';
-import { fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
+import { noAccessRoleMap, fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 import { Example, ExampleDocument, ExampleRoles, ExampleTypes, exampleFirestoreCollection, ExampleFirestoreCollection, ExampleFirestoreCollections } from './example';
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
@@ -74,7 +74,17 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements ExampleFire
 export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: FirestoreContext): APP_CODE_PREFIXFirestoreCollections {
   return {
     systemStateCollection: systemStateFirestoreCollection(firestoreContext, APP_CODE_PREFIX_LOWERSystemStateStoredDataConverterMap),
-    exampleCollection: exampleFirestoreCollection(firestoreContext)
+    exampleCollection: exampleFirestoreCollection(firestoreContext),
+    profileCollection: profileFirestoreCollection(firestoreContext),
+    profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
+    profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext),
+    notificationUserCollection: notificationUserFirestoreCollection(firestoreContext),
+    notificationSummaryCollection: notificationSummaryFirestoreCollection(firestoreContext),
+    notificationBoxCollection: notificationBoxFirestoreCollection(firestoreContext),
+    notificationCollectionFactory: notificationFirestoreCollectionFactory(firestoreContext),
+    notificationCollectionGroup: notificationFirestoreCollectionGroup(firestoreContext),
+    notificationWeekCollectionFactory: notificationWeekFirestoreCollectionFactory(firestoreContext),
+    notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext)
   };
 }
 
@@ -177,6 +187,6 @@ export const APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory
 };
 
-export const APP_CODE_PREFIX_LOWERFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES);
+export const APP_CODE_PREFIXFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES);
 
-export type APP_CODE_PREFIXFirebaseContext = APP_CODE_PREFIXFirebaseBaseContext & { service: typeof APP_CODE_PREFIX_LOWERFirebaseModelServices };
+export type APP_CODE_PREFIXFirebaseContext = APP_CODE_PREFIXFirebaseBaseContext & { service: typeof APP_CODE_PREFIXFirebaseModelServices };

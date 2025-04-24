@@ -24,7 +24,7 @@ CI_GIT_USER_NAME=ci                         # git username to use in CI deployme
 # - Make sure you have upgraded to the Blaze plan
 FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapierapp
 INPUT_PROJECT_NAME=${2:-"$FIREBASE_PROJECT_ID"}               # example: gethapier
-INPUT_CODE_PREFIX=${3:-app}                                   # example: getHapier  #single-word prefix used in code that should be 
+INPUT_CODE_PREFIX=${3:-app}                                   # example: getHapier  #single-word prefix used in code that should be camelCase
 FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
@@ -563,11 +563,12 @@ mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/modules
 download_app_components_file "src/lib/modules/index.ts"
 
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/modules/profile
+mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/modules/profile/store
 download_app_components_file "src/lib/modules/profile/index.ts"
-download_app_components_file "src/lib/modules/profile/store/profile.document.store"
-download_app_components_file "src/lib/modules/profile/store/profile.document.store.directive"
-download_app_components_file "src/lib/modules/profile/store/profile.collection.store"
-download_app_components_file "src/lib/modules/profile/store/profile.collection.store.directive"
+download_app_components_file "src/lib/modules/profile/store/profile.document.store.ts"
+download_app_components_file "src/lib/modules/profile/store/profile.document.store.directive.ts"
+download_app_components_file "src/lib/modules/profile/store/profile.collection.store.ts"
+download_app_components_file "src/lib/modules/profile/store/profile.collection.store.directive.ts"
 
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
 download_app_components_file "src/lib/services/index.ts"

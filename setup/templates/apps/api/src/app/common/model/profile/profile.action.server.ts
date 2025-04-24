@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
+import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 
@@ -55,7 +55,6 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
         // create the private profile data
         const profilePrivateData = profilePrivateDataCollectionFactory(profile);
         await profilePrivateData.loadDocument().accessor.set({
-          usernameSetAt: new Date(),
           createdAt: new Date()
         });
       }

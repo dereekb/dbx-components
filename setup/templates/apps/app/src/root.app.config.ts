@@ -6,7 +6,7 @@ import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthR
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
-import { APP_CODE_PREFIXFirebaseContextService, APP_CODE_PREFIX_LOWERSetupDevelopmentWidget } from 'components/APP_CODE_PREFIX_LOWER-components/src/lib';
+import { APP_CODE_PREFIXFirebaseContextService } from 'APP_COMPONENTS_NAME';
 import { defaultValidationMessages, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
@@ -183,8 +183,7 @@ export const appConfig: ApplicationConfig = {
         dbxFirebaseModelTypesServiceConfigFactory
       },
       development: {
-        enabled: !environment.production,
-        developmentWidgetEntries: [APP_CODE_PREFIX_LOWERSetupDevelopmentWidget()]
+        enabled: !environment.production
       },
       notifications: {
         appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)

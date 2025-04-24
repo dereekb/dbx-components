@@ -3,7 +3,7 @@
 @use '@dereekb/dbx-form' as dbx-form;
 @use './variables';
 
-$app-typography-config: mat.define-typography-config();
+$app-typography-config: mat.m2-define-typography-config();
 
 $opmore-navy: #1C3454;
 $opmore-pink: #ec4565;

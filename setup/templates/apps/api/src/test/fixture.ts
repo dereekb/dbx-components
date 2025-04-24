@@ -29,7 +29,7 @@ export class APP_CODE_PREFIXApiContextFixture<F extends FirebaseAdminTestContext
 
 export class APP_CODE_PREFIXApiContextFixtureInstance<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextInstance<F> implements APP_CODE_PREFIXApiContext {
 
-  get APP_CODE_PREFIX_LOWERFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
+  get APP_CODE_PREFIXFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
     return this.get(APP_CODE_PREFIXFirestoreCollections);
   }
 
@@ -56,7 +56,7 @@ export class APP_CODE_PREFIXApiFunctionContextFixtureInstance<
   F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance
   > extends FirebaseAdminFunctionNestTestContextInstance<F> implements APP_CODE_PREFIXApiContext {
 
-  get APP_CODE_PREFIX_LOWERFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
+  get APP_CODE_PREFIXFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
     return this.get(APP_CODE_PREFIXFirestoreCollections);
   }
 
@@ -132,7 +132,7 @@ export class APP_CODE_PREFIXApiProfileTestContextInstance<F extends FirebaseAdmi
 export const APP_CODE_PREFIX_LOWERProfileContextFactory = () =>
   modelTestContextFactory<Profile, ProfileDocument, APP_CODE_PREFIXApiProfileTestContextParams, APP_CODE_PREFIXApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiProfileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, APP_CODE_PREFIXApiProfileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, ProfileFirestoreCollection>({
     makeFixture: (f) => new APP_CODE_PREFIXApiProfileTestContextFixture(f),
-    getCollection: (fi) => fi.APP_CODE_PREFIX_LOWERFirestoreCollections.profileCollection,
+    getCollection: (fi) => fi.APP_CODE_PREFIXFirestoreCollections.profileCollection,
     makeRef: async (collection: FirestoreCollection<Profile, ProfileDocument>, params, p) => {
       return collection.documentAccessor().documentRefForId(params.u.uid);
     },
