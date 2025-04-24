@@ -36,12 +36,12 @@
     },
     "@nx/angular:package": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "inputs": ["production", "^production"]
     },
     "@nx/js:tsc": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build-base"],
       "inputs": ["production", "^production"]
     },
     "build": {
