@@ -1,4 +1,4 @@
-import { Component, input, inject, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
 import { DbxSidenavComponent } from './sidenav.component';

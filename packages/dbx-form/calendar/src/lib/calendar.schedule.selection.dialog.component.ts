@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, InjectionToken, Injector } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentDirective, DbxDialogContentFooterConfig, DbxDialogInteractionModule, sanitizeDbxDialogContentConfig } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxDialogContentConfig, DbxDialogContentFooterConfig, DbxDialogInteractionModule, sanitizeDbxDialogContentConfig } from '@dereekb/dbx-web';
 import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 import { DbxScheduleSelectionCalendarComponent } from './calendar.schedule.selection.component';
 

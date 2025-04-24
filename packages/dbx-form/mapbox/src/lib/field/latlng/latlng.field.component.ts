@@ -1,6 +1,6 @@
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, Injector, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile, of, distinctUntilChanged } from 'rxjs';
@@ -16,7 +16,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 
 export const DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxFormMapboxLatLngFieldComponent';
 

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, viewChild, ViewChild } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from './form.action.directive';
 import { FORM_TEST_PROVIDERS } from '../../../test/test.formly';

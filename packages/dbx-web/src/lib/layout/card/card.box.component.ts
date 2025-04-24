@@ -1,6 +1,5 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxSectionLayoutModule } from '../section';
 
 /**
  * Component that formats a card-box of content.

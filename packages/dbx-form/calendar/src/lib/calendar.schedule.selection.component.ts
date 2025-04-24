@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy, input, output, computed, signal } from '@angular/core';
-import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay, CalendarModule, CalendarMonthViewComponent } from 'angular-calendar';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay, CalendarModule } from 'angular-calendar';
 import { map, shareReplay, Subject, first, throttleTime, distinctUntilChanged, Observable, combineLatest, switchMap, of, combineLatestWith } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents, DbxCalendarBaseComponent } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, Maybe, reduceBooleansWithAnd } from '@dereekb/util';
@@ -11,7 +11,7 @@ import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calend
 import { DateRangeType, dateRange, isSameDate } from '@dereekb/date';
 import { endOfWeek } from 'date-fns';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { NgClass, NgIf, AsyncPipe } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
 import { DbxScheduleSelectionCalendarSelectionToggleButtonComponent } from './calendar.schedule.selection.toggle.button.component';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';

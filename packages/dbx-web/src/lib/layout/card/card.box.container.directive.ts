@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, Directive } from '@angular/core';
+import { Directive } from '@angular/core';
 
 /**
  * Component that wraps a card box and adds content padding.

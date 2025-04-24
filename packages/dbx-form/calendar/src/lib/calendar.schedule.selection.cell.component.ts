@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, input, signal, computed, Signal } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input, computed, Signal } from '@angular/core';
 import { CalendarMonthViewDay } from 'angular-calendar';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionCellContent, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';

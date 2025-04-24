@@ -2,7 +2,7 @@ import { Injectable, OnDestroy, Provider } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LockSet, filterMaybe, tapLog } from '@dereekb/rxjs';
+import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Destroyable, type Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {

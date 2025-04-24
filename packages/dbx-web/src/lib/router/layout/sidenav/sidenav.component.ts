@@ -7,7 +7,7 @@ import { SideNavDisplayMode } from './sidenav';
 import { NgClass } from '@angular/common';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
 
 export interface DbxSidenavSidebarState {

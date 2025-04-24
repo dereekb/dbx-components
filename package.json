@@ -126,6 +126,7 @@
     "@typescript-eslint/parser": "8.31.0",
     "@typescript-eslint/utils": "^8.31.0",
     "@ungap/structured-clone": "^1.2.0",
+    "angular-eslint": "^19.3.0",
     "autoprefixer": "^10.4.0",
     "cypress": "^9.5.1",
     "env-cmd": "10.1.0",

@@ -7,7 +7,6 @@ import { DbxColumnLayoutModule } from './column/column.layout.module';
 import { DbxCardBoxLayoutModule } from './card/card.box.layout.module';
 import { DbxBlockLayoutModule } from './block/block.layout.module';
 import { DbxCompactLayoutModule } from './compact/compact.layout.module';
-import { DbxStepLayoutModule } from './step/step.layout.module';
 import { DbxBarLayoutModule } from './bar/bar.layout.module';
 import { DbxTextModule } from './text/text.module';
 import { DbxStyleLayoutModule } from './style/style.layout.module';

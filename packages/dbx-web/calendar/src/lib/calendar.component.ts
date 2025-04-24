@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnDestroy, inject, output, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, output, ChangeDetectionStrategy, computed } from '@angular/core';
 import { isSameMonth } from 'date-fns';
 import { CalendarEvent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';

@@ -1,5 +1,5 @@
 import { DbxScheduleSelectionCalendarDatePopoverComponent } from './calendar.schedule.selection.popover.component';
-import { ChangeDetectionStrategy, Component, ElementRef, Injector, inject, viewChild, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, inject, viewChild } from '@angular/core';
 import { DbxPopoverService, DbxButtonComponent } from '@dereekb/dbx-web';
 import { map, shareReplay } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
