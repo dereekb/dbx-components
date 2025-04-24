@@ -22,8 +22,7 @@
     "@uirouter/angular": "15.0.0",
     "angular-resize-event-package": "3.5.0",
     "change-case-all": "^2.1.0",
-    "class-validator": "^0.14.0",
-    "@angular/forms": "^18.0.0"
+    "class-validator": "^0.14.0"
   },
   "dependencies": {},
   "exports": {

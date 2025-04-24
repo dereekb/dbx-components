@@ -366,7 +366,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   }
 
   nextPage(request: ItemIteratorNextRequest = {}): Promise<number> {
-    return new Promise<number>(async (resolve, reject) => {
+    return new Promise<number>((resolve, reject) => {
       this._nextFinished$
         .pipe(
           exhaustMap(() => this.latestPageResultState$),

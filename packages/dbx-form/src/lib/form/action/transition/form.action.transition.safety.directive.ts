@@ -1,4 +1,4 @@
-import { Directive, effect, inject, input, OnDestroy } from '@angular/core';
+import { Directive, effect, inject, input } from '@angular/core';
 import { HookResult, Transition } from '@uirouter/core';
 import { DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
 import { DbxActionFormDirective } from '../form.action.directive';
@@ -12,7 +12,7 @@ import { DbxActionFormDirective } from '../form.action.directive';
   selector: '[dbxActionFormSafety]',
   standalone: true
 })
-export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective implements OnDestroy<T, O> {
+export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
   readonly dbxActionForm = inject(DbxActionFormDirective<T>, { host: true });
   readonly dbxActionFormSafety = input<DbxActionTransitionSafetyType>('auto');
 
@@ -21,10 +21,5 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
   protected override _handleOnBeforeTransition(transition: Transition): HookResult {
     this.dbxActionForm.form.forceFormUpdate();
     return super._handleOnBeforeTransition(transition);
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._dbxActionFormSafetyUpdateEffect.destroy();
   }
 }
