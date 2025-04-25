@@ -187,6 +187,6 @@ export const APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory
 };
 
-export const APP_CODE_PREFIXFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES);
+export const APP_CODE_PREFIX_LOWERFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES);
 
-export type APP_CODE_PREFIXFirebaseContext = APP_CODE_PREFIXFirebaseBaseContext & { service: typeof APP_CODE_PREFIXFirebaseModelServices };
+export type APP_CODE_PREFIXFirebaseContext = APP_CODE_PREFIXFirebaseBaseContext & { service: typeof APP_CODE_PREFIX_LOWERFirebaseModelServices };

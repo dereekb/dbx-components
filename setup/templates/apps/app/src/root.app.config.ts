@@ -6,7 +6,7 @@ import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthR
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
-import { APP_CODE_PREFIXFirebaseContextService } from 'APP_COMPONENTS_NAME';
+import { APP_CODE_PREFIXFirebaseContextService } from 'ANGULAR_COMPONENTS_NAME';
 import { defaultValidationMessages, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';

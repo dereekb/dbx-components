@@ -1,11 +1,11 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIXFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
+import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
 import { onCallHandlerWithNestApplicationFactory, onCallHandlerWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleHandlerWithNestApplicationFactory, onScheduleHandlerWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, ProfileServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
 import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
 
-export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIXFirebaseModelServices> {
+export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIX_LOWERFirebaseModelServices> {
 
   get actionContext(): APP_CODE_PREFIXFirebaseServerActionsContext {
     return this.nest.get(APP_CODE_PREFIXFirebaseServerActionsContext);
@@ -15,7 +15,7 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
     return this.nest.get(APP_CODE_PREFIXApiAuthService);
   }
 
-  get APP_CODE_PREFIXFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
+  get APP_CODE_PREFIX_LOWERFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
     return this.nest.get(APP_CODE_PREFIXFirestoreCollections);
   }
 
@@ -36,11 +36,11 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
   }
 
   get firebaseModelsService() {
-    return APP_CODE_PREFIXFirebaseModelServices;
+    return APP_CODE_PREFIX_LOWERFirebaseModelServices;
   }
 
   get app(): APP_CODE_PREFIXFirestoreCollections {
-    return this.APP_CODE_PREFIXFirestoreCollections;
+    return this.APP_CODE_PREFIX_LOWERFirestoreCollections;
   }
 
 }

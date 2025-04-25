@@ -47,7 +47,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.0"}    # update every major version
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.1"}    # update every major version
 NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
 ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^18.0.0"}
 TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.5.0 <5.6.0"}
@@ -572,6 +572,7 @@ download_app_components_file "src/lib/modules/profile/store/profile.collection.s
 
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
 download_app_components_file "src/lib/services/index.ts"
+download_app_components_file "src/lib/services/firebase.context.service.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup app components"
