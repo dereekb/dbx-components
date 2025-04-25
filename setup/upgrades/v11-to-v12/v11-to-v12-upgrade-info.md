@@ -369,6 +369,9 @@ There are some caveats though:
 - At the time of writing, some auth events, namely onCreate() for an auth user, does not have a gen 2 equivalent. Continue to use the gen 1 implementation. See more: https://firebase.google.com/docs/functions/auth-events
 - The `callWrappedFunction()` result type is no longer `any`, and now returns `unknown`, so casting to the expected type will be required.
 
+#### Firebase Functions Node 22
+Update the `node` version in the `engines` section of the `package.json` to `22`, and update the functions runtime to `nodejs22`.
+
 #### Gen 2 Cloud Functions
 Gen 2 functions have additional configuration available that you'll want to configure. Cloud run is more expensive than the gen 1 implementation so it is important to change the configuration to keep costs in check. All @dereekb/firebase-server onCall/schedule/etc. configuration allows for setting default configuration created by the `onCallWithNestContextFactory`/`onScheduleWithNestContextFactory`/`onEventWithNestContextFactory` functions.
 

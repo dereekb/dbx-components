@@ -64,9 +64,9 @@ export class TestAPP_CODE_PREFIXApiAppModule {}
 export function initAPP_CODE_PREFIXApiTestEnvironment() {
   initFirebaseAdminTestEnvironment({
     emulators: {
-      auth: '0.0.0.0:9903',
-      firestore: '0.0.0.0:9904',
-      storage: '0.0.0.0:9906'
+      auth: '0.0.0.0:FIREBASE_EMULATOR_AUTH_PORT',
+      firestore: '0.0.0.0:FIREBASE_EMULATOR_FIRESTORE_PORT',
+      storage: '0.0.0.0:FIREBASE_EMULATOR_STORAGE_PORT'
     }
   });
   setupFirebaseAdminFunctionTestSingleton();

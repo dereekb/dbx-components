@@ -35,7 +35,7 @@ MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 
 # - Other Configuration
-DEFAULT_SOURCE_BRANCH="develop" # "main"
+DEFAULT_SOURCE_BRANCH="main"
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -99,6 +99,7 @@ FIREBASE_EMULATOR_AUTH_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 3)
 FIREBASE_EMULATOR_FIRESTORE_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 4)
 FIREBASE_EMULATOR_PUBSUB_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 5)
 FIREBASE_EMULATOR_STORAGE_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 6)
+FIREBASE_EMULATOR_FIRESTORE_WEBSOCKET_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 8)
 FIREBASE_LOCALHOST=0.0.0.0
 FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STORAGE_PORT"
 
@@ -289,7 +290,7 @@ npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FO
 npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
 
 # Emulators
-npx --yes json -I -f firebase.json -e "this.emulators={ singleProjectMode: false, ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
+npx --yes json -I -f firebase.json -e "this.emulators={ singleProjectMode: false, ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT, websocketPort: $FIREBASE_EMULATOR_FIRESTORE_WEBSOCKET_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
