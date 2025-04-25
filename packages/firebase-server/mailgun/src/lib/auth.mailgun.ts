@@ -13,8 +13,11 @@ export interface NewUserMailgunContentRequest extends Omit<MailgunTemplateEmailR
 /**
  * Abstract FirebaseServerNewUserService implementation that sends an email to a template on Mailgun.
  */
-export abstract class AbstractMailgunContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D extends unknown = unknown> extends AbstractFirebaseServerNewUserService<U, C, D> {
-  constructor(authService: FirebaseServerAuthService<U, C>, readonly mailgunService: MailgunService) {
+export abstract class AbstractMailgunContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> extends AbstractFirebaseServerNewUserService<U, C, D> {
+  constructor(
+    authService: FirebaseServerAuthService<U, C>,
+    readonly mailgunService: MailgunService
+  ) {
     super(authService);
   }
 

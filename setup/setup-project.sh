@@ -28,7 +28,7 @@ INPUT_CODE_PREFIX=${3:-app}                                   # example: getHapi
 FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
-# Example: ./setup-project.sh gethapier test test 9300
+# Example: ./setup-project.sh gethapier gethapier getHapier 9300
 
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
@@ -429,7 +429,7 @@ git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install --force rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install --force mailgun.js@^12.0.0 rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
 
 # install mapbox dependencies
 npm install --force mapbox-gl ngx-mapbox-gl@git+https://git@github.com/dereekb/ngx-mapbox-gl#e55fbfa2f334348f0ff6b4705776c958c67ffbb5 @ng-web-apis/geolocation @ng-web-apis/common
@@ -440,8 +440,7 @@ then
 install_local_peer_deps() {
   local FILE_PATH=$1
   echo "Installing dependencies from: $FILE_PATH"
-  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;';
-  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;' | xargs npm install "$PKG";
+  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;' | xargs npm install --force "$PKG";
 }
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
