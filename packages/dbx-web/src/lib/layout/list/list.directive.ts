@@ -1,12 +1,11 @@
 import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
-import { OnDestroy, Directive, Component, ChangeDetectionStrategy, input, output, computed, Signal, Type, NgModule } from '@angular/core';
+import { OnDestroy, Directive, input, output, computed, Signal, NgModule } from '@angular/core';
 import { DbxListComponent, DbxListConfig } from './list.component';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Configurable, type Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { NgModel } from '@angular/forms';
 
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `

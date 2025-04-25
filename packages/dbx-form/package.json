@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-form",
-  "version": "12.0.0",
+  "version": "12.0.1",
   "peerDependencies": {
     "@angular/common": "^18.0.0",
     "@angular/core": "^18.0.0",
@@ -21,7 +21,9 @@
     "@dereekb/model": "*",
     "@angular/platform-browser": "^18.0.0",
     "@angular/material-date-fns-adapter": "^18.0.0",
-    "@angular/cdk": "^18.0.0"
+    "@angular/cdk": "^18.0.0",
+    "change-case-all": "^2.1.0",
+    "ngx-editor": "^18.0.0"
   },
   "dependencies": {},
   "exports": {

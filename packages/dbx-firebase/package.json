@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-firebase",
-  "version": "12.0.0",
+  "version": "12.0.1",
   "peerDependencies": {
     "@angular/core": "^18.0.0",
     "@dereekb/dbx-analytics": "*",
@@ -8,8 +8,8 @@
     "@dereekb/util": "*",
     "rxjs": "^7.5.0",
     "@angular/common": "^18.0.0",
-    "firebase": "^10.5.0",
-    "@angular/fire": "^18.0.0",
+    "firebase": "^11.0.0",
+    "@angular/fire": "git+https://git@github.com/dereekb/angularfire#32c69f7009db3a9b85148705c00e923d5a858807",
     "@dereekb/date": "*",
     "@dereekb/firebase": "*",
     "@dereekb/dbx-core": "*",
@@ -18,7 +18,8 @@
     "@dereekb/dbx-form": "*",
     "@ngx-formly/core": "^6.0.0",
     "ng-overlay-container": "^18.0.0",
-    "@dereekb/model": "*"
+    "@dereekb/model": "*",
+    "@ngrx/component-store": "^18.0.0"
   },
   "dependencies": {},
   "exports": {

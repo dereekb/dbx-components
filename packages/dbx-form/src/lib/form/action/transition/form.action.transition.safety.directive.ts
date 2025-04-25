@@ -22,9 +22,4 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
     this.dbxActionForm.form.forceFormUpdate();
     return super._handleOnBeforeTransition(transition);
   }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._dbxActionFormSafetyUpdateEffect.destroy();
-  }
 }

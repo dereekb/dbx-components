@@ -14,7 +14,8 @@
         "packageJson": "packages/firebase-server/model/package.json",
         "main": "packages/firebase-server/model/src/index.ts",
         "assets": []
-      }
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

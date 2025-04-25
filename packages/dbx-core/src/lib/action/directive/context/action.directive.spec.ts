@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ViewChild, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { first, of, tap } from 'rxjs';
 import { WorkUsingObservable } from '@dereekb/rxjs';

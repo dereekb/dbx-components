@@ -1,6 +1,6 @@
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild, ViewChild } from '@angular/core'; // Updated imports
+import { ChangeDetectionStrategy, Component, Injector, input, runInInjectionContext, viewChild } from '@angular/core'; // Updated imports
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';

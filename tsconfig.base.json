@@ -9,7 +9,7 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "es2022",
-    "module": "esnext",
+    "module": "ES2022",
     "lib": ["es2022", "dom"],
     "useDefineForClassFields": true,
     "skipLibCheck": true,

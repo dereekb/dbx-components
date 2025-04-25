@@ -1,4 +1,4 @@
-import { EnvironmentProviders, importProvidersFrom, makeEnvironmentProviders } from '@angular/core';
+import { EnvironmentProviders, importProvidersFrom } from '@angular/core';
 import { CalendarModule, DateAdapter } from 'angular-calendar';
 import { adapterFactory as dateAdapterFactory } from 'angular-calendar/date-adapters/date-fns';
 

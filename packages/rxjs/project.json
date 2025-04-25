@@ -10,7 +10,8 @@
       "options": {
         "command": "npx nx run rxjs:build-base",
         "color": true
-      }
+      },
+      "dependsOn": ["^build"]
     },
     "build-base": {
       "executor": "@nx/rollup:rollup",

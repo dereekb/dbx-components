@@ -52,6 +52,7 @@ describe('isObjectWithConstructor()', () => {
   });
 
   it('should return false if the object is an object with a value called constructor that is a function', () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     expect(isObjectWithConstructor({ constructor: () => {} })).toBe(false);
   });
 
@@ -90,6 +91,7 @@ describe('isClassLikeType()', () => {
   });
 
   it('should return false if the object is an object with a value called constructor that is a function', () => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     expect(isClassLikeType({ constructor: () => {} })).toBe(false);
   });
 

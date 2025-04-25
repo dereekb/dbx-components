@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "12.0.0",
+  "version": "12.0.1",
   "peerDependencies": {
     "@angular/common": "^18.0.0",
     "@angular/core": "^18.0.0",
@@ -20,7 +20,9 @@
     "ngx-infinite-scroll": "^18.0.0",
     "@angular/platform-browser": "^18.0.0",
     "@uirouter/angular": "15.0.0",
-    "angular-resize-event-package": "3.5.0"
+    "angular-resize-event-package": "3.5.0",
+    "change-case-all": "^2.1.0",
+    "class-validator": "^0.14.0"
   },
   "dependencies": {},
   "exports": {

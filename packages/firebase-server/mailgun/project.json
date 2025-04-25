@@ -14,7 +14,8 @@
         "packageJson": "packages/firebase-server/mailgun/package.json",
         "main": "packages/firebase-server/mailgun/src/index.ts",
         "assets": []
-      }
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

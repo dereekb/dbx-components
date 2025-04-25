@@ -1,23 +1,24 @@
 {
   "name": "@dereekb/demo-components",
-  "version": "12.0.0",
+  "version": "12.0.1",
   "peerDependencies": {
     "@angular/common": "^18.0.0",
     "@angular/core": "^18.0.0",
-    "@dereekb/dbx-firebase": "11.1.8",
-    "@dereekb/rxjs": "11.1.8",
-    "@dereekb/util": "11.1.8",
-    "@dereekb/dbx-form": "11.1.8",
-    "@dereekb/demo-firebase": "11.1.8",
-    "@dereekb/dbx-web": "11.1.8",
+    "@dereekb/dbx-firebase": "12.0.0",
+    "@dereekb/rxjs": "12.0.0",
+    "@dereekb/util": "12.0.0",
+    "@dereekb/dbx-form": "12.0.0",
+    "@dereekb/demo-firebase": "12.0.0",
+    "@dereekb/dbx-web": "12.0.0",
     "rxjs": "^7.4.0",
-    "@dereekb/dbx-core": "11.1.8",
+    "@dereekb/dbx-core": "12.0.0",
     "@uirouter/angular": "15.0.0",
     "@angular/cdk": "^18.0.0",
     "@angular/material": "^18.0.0",
     "@ngbracket/ngx-layout": "^18.0.0",
-    "@dereekb/dbx-analytics": "11.1.8",
-    "@dereekb/firebase": "11.1.8"
+    "@dereekb/dbx-analytics": "12.0.0",
+    "@dereekb/firebase": "12.0.0",
+    "@ngx-formly/core": "^6.0.0"
   },
   "dependencies": {}
 }

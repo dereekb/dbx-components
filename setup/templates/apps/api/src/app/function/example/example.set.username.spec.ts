@@ -1,6 +1,6 @@
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 import { APP_CODE_PREFIX_LOWERApiFunctionContextFactory, APP_CODE_PREFIX_LOWERAuthorizedUserContext } from './../../../test/fixture';
-import { exampleSetUsernameKey } from 'APP_CODE_PREFIX_LOWER-firebase';
+import { exampleSetUsernameKey } from 'FIREBASE_COMPONENTS_NAME';
 import { exampleSetUsername } from './example.set.username';
 
 it('should run a test', () => {

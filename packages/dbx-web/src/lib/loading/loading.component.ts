@@ -2,7 +2,7 @@ import { Observable, shareReplay } from 'rxjs';
 import { Component, ChangeDetectionStrategy, input, computed, signal, Signal } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
-import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream, tapLog } from '@dereekb/rxjs';
+import { LoadingContext, LoadingContextEvent, MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
 import { ErrorInput, type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';

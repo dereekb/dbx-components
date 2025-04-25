@@ -1,6 +1,5 @@
-import { safeCompareEquality } from '@dereekb/util';
 import { iterablesAreSetEquivalent } from '../set/set';
-import { compareEqualityWithValueFromItemsFunctionFactory } from './comparator';
+import { compareEqualityWithValueFromItemsFunctionFactory, safeCompareEquality } from './comparator';
 
 describe('safeCompareEquality()', () => {
   it('should compare the values if they are both non-null', () => {

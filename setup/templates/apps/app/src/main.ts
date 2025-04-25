@@ -1,21 +1,15 @@
-/**
- * Add reflect-metadata for Reflections api.
- */
-import 'reflect-metadata';
-
 import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { watchWindowAndUpdateVh100StyleProperty } from '@dereekb/browser';
 
-import { RootModule } from './root.module';
 import { environment } from './environments/environment';
+import { UIView } from '@uirouter/angular';
+import { appConfig } from './root.app.config';
+import { bootstrapApplication } from '@angular/platform-browser';
 
 if (environment.production) {
   enableProdMode();
 }
 
 watchWindowAndUpdateVh100StyleProperty();
-  
-platformBrowserDynamic()
-  .bootstrapModule(RootModule)
-  .catch((err) => console.error(err));
+
+bootstrapApplication(UIView, appConfig).catch((err) => console.error(err));

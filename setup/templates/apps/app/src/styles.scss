@@ -4,10 +4,18 @@
 @use '@dereekb/dbx-firebase' as dbx-firebase;
 @use './style/style';
 
-@include mat.core();
-@include dbx.core();
-@include dbx-form.core();
-@include dbx-firebase.core();
+$app-typography-config: mat.m2-define-typography-config(
+  $font-family: 'Fira Sans'
+);
+
+// define all densities here since each theme uses the same density
+@include mat.all-component-densities(0);
+
+// define the topographies here since the themes use the same and we don't want to re-declare the config
+@include mat.all-component-typographies($app-typography-config);
+@include dbx.all-component-typographies($app-typography-config);
+@include dbx-form.all-component-typographies($app-typography-config);
+@include dbx-firebase.all-component-typographies($app-typography-config);
 
 @include style.dark-app-theme('.app-theme-dark');
 @include style.app-theme('.app-theme');
@@ -26,4 +34,19 @@ a {
 
 body {
   margin: 0;
+}
+
+mgl-map {
+  height: 100%;
+  width: 100%;
+}
+
+// Emulator Warning
+.firebase-emulator-warning {
+  font-size: 0.5em;
+  height: 8px;
+  border: none !important;
+  overflow: hidden;
+  background: red !important;
+  color: white !important;
 }

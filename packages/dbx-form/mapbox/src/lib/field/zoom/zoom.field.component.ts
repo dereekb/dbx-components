@@ -1,6 +1,6 @@
 import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { ChangeDetectionStrategy, Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, shareReplay, startWith, switchMap, Observable } from 'rxjs';

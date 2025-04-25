@@ -611,6 +611,7 @@ export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): Fires
 
   let current = input;
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     array.push(current.collectionName);
 

@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { clampDateToDateRange, DateRange, dateRangeOverlapsDateRangeFunction, isDateInDateRange, isDateInDateRangeFunction, isFullDateRange, isSameDateDay, isSameDateRange } from '@dereekb/date';
+import { clampDateToDateRange, DateRange, dateRangeOverlapsDateRangeFunction, isDateInDateRange, isFullDateRange, isSameDateDay, isSameDateRange } from '@dereekb/date';
 import { invertDecision, Maybe, reduceBooleansWithAndFn } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { CalendarEvent } from 'angular-calendar';
 import { differenceInDays, addDays, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek, isBefore, isAfter } from 'date-fns';
-import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, share } from 'rxjs';
+import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest } from 'rxjs';
 
 export enum CalendarDisplayType {
   MONTH = 'month',

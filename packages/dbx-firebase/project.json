@@ -9,7 +9,6 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-firebase", "{workspaceRoot}/dist/packages/dbx-firebase/_index.scss", "{workspaceRoot}/dist/packages/dbx-firebase/LICENSE", "{workspaceRoot}/dist/packages/dbx-firebase/**/*.scss", "{workspaceRoot}/dist/packages/dbx-firebase/assets"],
       "options": {
-        "tsConfig": "packages/dbx-firebase/tsconfig.lib.json",
         "commands": [
           {
             "description": "build dbx-firebase production",

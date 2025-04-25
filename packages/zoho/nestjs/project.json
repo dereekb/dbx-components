@@ -6,7 +6,7 @@
   "targets": {
     "build-base": {
       "executor": "@nx/js:tsc",
-      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
+      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/test/**/*.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/zoho/nestjs",
@@ -14,7 +14,8 @@
         "packageJson": "packages/zoho/nestjs/package.json",
         "main": "packages/zoho/nestjs/src/index.ts",
         "assets": ["packages/zoho/nestjs/*.md"]
-      }
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

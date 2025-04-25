@@ -7,9 +7,9 @@ import { fetchTimeout } from './timeout';
  * Interface used for creating fetch related resource factories.
  */
 export interface FetchService {
-  makeFetch: (config?: ConfigureFetchInput) => ConfiguredFetchWithTimeout;
-  makeRequest: FetchRequestFactory;
-  fetchRequestFactory: typeof fetchRequestFactory;
+  readonly makeFetch: (config?: ConfigureFetchInput) => ConfiguredFetchWithTimeout;
+  readonly makeRequest: FetchRequestFactory;
+  readonly fetchRequestFactory: typeof fetchRequestFactory;
 }
 
 /**
@@ -44,29 +44,29 @@ export type MapFetchResponseFunction = MapFunction<Promise<Response>, Promise<Re
 export type FetchHandler = (request: Request, makeFetch: typeof fetch) => Promise<Response>;
 
 export interface ConfigureFetchInput extends FetchRequestFactoryInput {
-  makeFetch?: typeof fetch;
+  readonly makeFetch?: typeof fetch;
   /**
    * Whether or not to add timeout handling using timeoutFetch().
    *
    * Default: false
    */
-  useTimeout?: boolean;
+  readonly useTimeout?: boolean;
   /**
    * Whether or not to map the fetch response using requireOkResponse().
    *
    * Default: false
    */
-  requireOkResponse?: boolean;
+  readonly requireOkResponse?: boolean;
   /**
    * (Optional) Custom fetch handler.
    */
-  fetchHandler?: FetchHandler;
+  readonly fetchHandler?: FetchHandler;
   /**
    * (Optional) MapFetchResponseFunction
    *
    * If requireOkResponse is true, this mapping occurs afterwards.
    */
-  mapResponse?: MapFetchResponseFunction;
+  readonly mapResponse?: MapFetchResponseFunction;
 }
 
 /**
@@ -116,37 +116,37 @@ export interface FetchRequestFactoryInput {
   /**
    * Request factory to use. If not defined, will default to window/global.
    */
-  makeRequest?: FetchRequestFactory;
+  readonly makeRequest?: FetchRequestFactory;
   /**
    * Appends this URL to every fetch request.
    */
-  baseUrl?: WebsiteUrl;
+  readonly baseUrl?: WebsiteUrl;
   /**
    * Whether or not to append the base url to RequestInfo that is already configured, instead of only URL or strings.
    */
-  useBaseUrlForConfiguredFetchRequests?: boolean;
+  readonly useBaseUrlForConfiguredFetchRequests?: boolean;
   /**
    * Whether or not to force always using the base url even when a WebsiteUrlWithPrefix value is provided.
    *
    * Defaults to useBaseUrlForConfiguredFetchRequests's value.
    */
-  forceBaseUrlForWebsiteUrlWithPrefix?: boolean;
+  readonly forceBaseUrlForWebsiteUrlWithPrefix?: boolean;
   /**
    * Base request info to add to each value.
    */
-  baseRequest?: GetterOrValue<PromiseOrValue<RequestInit>>;
+  readonly baseRequest?: GetterOrValue<PromiseOrValue<RequestInit>>;
   /**
    * Default timeout to add to requestInit values.
    *
    * NOTE: This timeout is not used by this fetchRequest directly, but is added to the baseRequest.
    */
-  timeout?: number;
+  readonly timeout?: number;
   /**
    * Maps the input RequestInit value to another.
    *
    * If baseRequest is provided, the values will already be appended before reaching this factory.
    */
-  requestInitFactory?: FetchRequestInitFactory;
+  readonly requestInitFactory?: FetchRequestInitFactory;
 }
 
 export type FetchRequestInitFactory = (currRequest: PromiseOrValue<Request>, init?: PromiseOrValue<RequestInit>) => PromiseOrValue<RequestInitWithTimeout | undefined>;
@@ -281,7 +281,7 @@ export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: 
 export function mergeRequestHeaders(inputHeadersArray: Maybe<HeadersInit>[]): [string, string][] {
   const headersMap = multiValueMapBuilder<string, string>();
 
-  filterMaybeArrayValues(inputHeadersArray).forEach((headers, i) => {
+  filterMaybeArrayValues(inputHeadersArray).forEach((headers) => {
     const tuples: [string, string][] = headersToHeadersTuple(headers);
     const visitedKeysSet = new Set();
 

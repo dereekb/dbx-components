@@ -1,4 +1,10 @@
 {
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "sharedGlobals": [],
+    "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/eslint.config.mjs", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/jest.config.[jt]s", "!{projectRoot}/src/test-setup.[jt]s", "!{projectRoot}/test-setup.[jt]s", "!{projectRoot}/cypress/**/*", "!{projectRoot}/**/*.cy.[jt]s?(x)", "!{projectRoot}/cypress.config.[jt]s"]
+  },
   "cli": {
     "packageManager": "npm"
   },
@@ -71,16 +77,10 @@
     "appsDir": "apps",
     "libsDir": "packages"
   },
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "pluginsConfig": {
     "@nx/js": {
       "analyzeSourceFiles": true
     }
-  },
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [],
-    "production": ["default", "!{projectRoot}/.eslintrc.json", "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "!{projectRoot}/tsconfig.spec.json", "!{projectRoot}/jest.config.[jt]s", "!{projectRoot}/src/test-setup.[jt]s", "!{projectRoot}/test-setup.[jt]s"]
   },
   "nxCloudAccessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU=",
   "useInferencePlugins": false,

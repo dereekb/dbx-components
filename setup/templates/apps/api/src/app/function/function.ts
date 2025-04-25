@@ -1,10 +1,11 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
-import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap,OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleWithNestApplicationFactory, onScheduleWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
+import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIXFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
+import { onCallHandlerWithNestApplicationFactory, onCallHandlerWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallReadModelFunction, OnCallReadModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleHandlerWithNestApplicationFactory, onScheduleHandlerWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
-import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
+import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, ProfileServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
+import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
 
-export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIX_LOWERFirebaseModelServices> {
+export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIXFirebaseModelServices> {
 
   get actionContext(): APP_CODE_PREFIXFirebaseServerActionsContext {
     return this.nest.get(APP_CODE_PREFIXFirebaseServerActionsContext);
@@ -14,7 +15,7 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
     return this.nest.get(APP_CODE_PREFIXApiAuthService);
   }
 
-  get APP_CODE_PREFIX_LOWERFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
+  get APP_CODE_PREFIXFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
     return this.nest.get(APP_CODE_PREFIXFirestoreCollections);
   }
 
@@ -22,25 +23,42 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
     return this.nest.get(ExampleServerActions);
   }
 
+  get notificationInitActions(): NotificationInitServerActions {
+    return this.nest.get(NotificationInitServerActions);
+  }
+
+  get notificationActions(): NotificationServerActions {
+    return this.nest.get(NotificationServerActions);
+  }
+
+  get profileActions(): ProfileServerActions {
+    return this.nest.get(ProfileServerActions);
+  }
+
   get firebaseModelsService() {
-    return APP_CODE_PREFIX_LOWERFirebaseModelServices;
+    return APP_CODE_PREFIXFirebaseModelServices;
   }
 
   get app(): APP_CODE_PREFIXFirestoreCollections {
-    return this.APP_CODE_PREFIX_LOWERFirestoreCollections;
+    return this.APP_CODE_PREFIXFirestoreCollections;
   }
 
 }
 
 export const mapAPP_CODE_PREFIXApiNestContext = (nest: INestApplicationContext) => new APP_CODE_PREFIXApiNestContext(nest);
-export const onCallWithAPP_CODE_PREFIXNest = onCallWithNestApplicationFactory();
-export const onCallWithAPP_CODE_PREFIXNestContext = onCallWithNestContextFactory(onCallWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
-export const onScheduleWithAPP_CODE_PREFIXNest = onScheduleWithNestApplicationFactory();
-export const onScheduleWithAPP_CODE_PREFIXNestContext = onScheduleWithNestContextFactory(onScheduleWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
+export const onCallWithAPP_CODE_PREFIXNest = onCallHandlerWithNestApplicationFactory();
+export const onCallWithAPP_CODE_PREFIXNestContext = onCallHandlerWithNestContextFactory(onCallWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
+export const onScheduleWithAPP_CODE_PREFIXNest = onScheduleHandlerWithNestApplicationFactory();
+export const onScheduleWithAPP_CODE_PREFIXNestContext = onScheduleHandlerWithNestContextFactory(onScheduleWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
 export const onEventWithAPP_CODE_PREFIXNestContext = onEventWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const cloudEventWithAPP_CODE_PREFIXNestContext = cloudEventHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const blockingEventWithAPP_CODE_PREFIXNestContext = blockingFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const taskqueueEventWithAPP_CODE_PREFIXNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
+
+/**
+ * Required for gen 1 auth events
+ */
+export const onGen1EventWithAPP_CODE_PREFIXNestContext = onEventWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 
 // MARK: CRUD Functions
 export type APP_CODE_PREFIXCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;

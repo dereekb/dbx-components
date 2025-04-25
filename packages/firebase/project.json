@@ -94,6 +94,6 @@
       }
     }
   },
-  "implicitDependencies": ["!util-test", "!firebase-test"],
+  "implicitDependencies": ["!firebase-test"],
   "tags": []
 }
