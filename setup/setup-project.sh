@@ -56,9 +56,10 @@ FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"^14.2.0"}
 echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
-APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
-APP_CODE_PREFIX_LOWER="$(tr '[:upper:]' '[:lower:]' <<< ${INPUT_CODE_PREFIX})"
-APP_CODE_PREFIX_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX})"
+APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
+APP_CODE_PREFIX_CAMEL=${INPUT_CODE_PREFIX}; # appTest
+APP_CODE_PREFIX_LOWER="$(tr '[:upper:]' '[:lower:]' <<< ${INPUT_CODE_PREFIX})"  # apptest
+APP_CODE_PREFIX_CAPS="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX})"  # APPTEST
 
 # shared angular library 
 ANGULAR_COMPONENTS_NAME=$PROJECT_NAME-components
@@ -208,8 +209,8 @@ git commit --no-verify -m "checkpoint: added nest app"
 echo "Installing angular@$ANGULAR_VERSION...";
 rm -r node_modules
 rm package-lock.json
-npm install -D --force typescript@$TYPESCRIPT_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
-npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npm install -D --force typescript@$TYPESCRIPT_VERSION @nx/angular@$NX_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
+npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."
@@ -401,6 +402,7 @@ npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@14.
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.environment.jsdom.ts -o jest.environment.jsdom.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.resolver.js -o jest.resolver.js
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.angular.ts -o jest.setup.angular.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.firebase.ts -o jest.setup.firebase.ts
@@ -443,8 +445,7 @@ install_local_peer_deps() {
 }
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
-echo "Installing specific angular version"
-npm install --force -D @nx/angular@$NX_VERSION jest-preset-angular@14.1.1 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
+echo "Installing angular dependencies"
 npm install --force @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.1.1 @uirouter/angular@^15.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#32c69f7009db3a9b85148705c00e923d5a858807 @ngbracket/ngx-layout@^18.0.0 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
@@ -535,7 +536,7 @@ download_ts_file () {
   local FILE_PATH=$3
   local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:APP_CODE_PREFIX_CAPS:$APP_CODE_PREFIX_CAPS:g" -e "s:APP_CODE_PREFIX_CAMEL:$APP_CODE_PREFIX_CAMEL:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 
@@ -796,14 +797,6 @@ mkdir $API_APP_FOLDER/src/app/function
 download_api_ts_file "src/app/function/index.ts"
 download_api_ts_file "src/app/function/function.ts"
 
-mkdir $API_APP_FOLDER/src/app/function/notification
-download_api_ts_file "src/app/function/notification/index.ts"
-download_api_ts_file "src/app/function/notification/notification.crud.spec.ts"
-download_api_ts_file "src/app/function/notification/notification.scenario.spec.ts"
-download_api_ts_file "src/app/function/notification/notification.schedule.ts"
-download_api_ts_file "src/app/function/notification/notificationbox.update.ts"
-download_api_ts_file "src/app/function/notification/notificationuser.update.ts"
-
 mkdir $API_APP_FOLDER/src/app/function/model
 download_api_ts_file "src/app/function/model/index.ts"
 download_api_ts_file "src/app/function/model/crud.functions.ts"
@@ -821,6 +814,20 @@ download_api_ts_file "src/app/function/example/example.schedule.ts"
 download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
 download_api_ts_file "src/app/function/example/example.set.username.spec.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/profile
+download_api_ts_file "src/app/function/profile/index.ts"
+download_api_ts_file "src/app/function/profile/profile.crud.spec.ts"
+download_api_ts_file "src/app/function/profile/profile.util.ts"
+download_api_ts_file "src/app/function/profile/profile.update.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/notification
+download_api_ts_file "src/app/function/notification/index.ts"
+download_api_ts_file "src/app/function/notification/notification.crud.spec.ts"
+download_api_ts_file "src/app/function/notification/notification.scenario.spec.ts"
+download_api_ts_file "src/app/function/notification/notification.schedule.ts"
+download_api_ts_file "src/app/function/notification/notificationbox.update.ts"
+download_api_ts_file "src/app/function/notification/notificationuser.update.ts"
 
 # environment folder
 mkdir -p $API_APP_FOLDER/src/environments

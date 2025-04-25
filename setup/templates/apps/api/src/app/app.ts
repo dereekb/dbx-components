@@ -1,10 +1,10 @@
-import { APP_CODE_PREFIX_LOWERCallModel } from './function/model/crud.functions';
+import { APP_CODE_PREFIX_CAMELCallModel } from './function/model/crud.functions';
 import { exampleSetUsernameKey } from 'FIREBASE_COMPONENTS_NAME';
 import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
 import { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { APP_CODE_PREFIXApiAppModule } from './app.module';
 import { exampleSetUsername } from './function';
-import { APP_CODE_PREFIX_LOWERExampleUsageOfSchedule } from './function/model/schedule.functions';
+import { APP_CODE_PREFIX_CAMELExampleUsageOfSchedule } from './function/model/schedule.functions';
 
 export const {
   initNestServer
@@ -16,7 +16,7 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
     // ---
     // Auth
     // Model
-    [CALL_MODEL_APP_FUNCTION_KEY]: APP_CODE_PREFIX_LOWERCallModel(nest),
+    [CALL_MODEL_APP_FUNCTION_KEY]: APP_CODE_PREFIX_CAMELCallModel(nest),
     // API Calls
     // Example
     [exampleSetUsernameKey]: exampleSetUsername(nest)
@@ -26,6 +26,6 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
 export function allScheduledAppFunctions(nest: NestAppPromiseGetter) {
   return {
     // Scheduled Functions
-    exampleSchedule: APP_CODE_PREFIX_LOWERExampleUsageOfSchedule(nest)
+    exampleSchedule: APP_CODE_PREFIX_CAMELExampleUsageOfSchedule(nest)
   };
 }

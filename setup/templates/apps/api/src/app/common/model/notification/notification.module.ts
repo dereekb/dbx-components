@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
 import { APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices } from './notification.action.context';
 import { APP_CODE_PREFIXFirebaseServerActionsContext } from '../../firebase/action.context';
-import { APP_CODE_PREFIX_LOWERNotificationTemplateServiceConfigsArrayFactory } from './notification.factory';
+import { APP_CODE_PREFIXNotificationTemplateServiceConfigsArrayFactory } from './notification.factory';
 import { APP_CODE_PREFIXApiActionModule } from '../../firebase/action.module';
-import { APP_CODE_PREFIX_LOWERNotificationSendServiceFactory } from './notification.send.service';
-import { APP_CODE_PREFIX_LOWERNotificationInitServerActionsContextConfig } from './notification.init';
+import { APP_CODE_PREFIXNotificationSendServiceFactory } from './notification.send.service';
+import { APP_CODE_PREFIXNotificationInitServerActionsContextConfig } from './notification.init';
 
-export const APP_CODE_PREFIX_LOWERFirebaseServerActionsContextWithNotificationServicesFactory = (context: APP_CODE_PREFIXFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService) => ({ ...context, notificationTemplateService });
+export const APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServicesFactory = (context: APP_CODE_PREFIXFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService) => ({ ...context, notificationTemplateService });
 
 /**
  * Dependencies for the NotificationModule
@@ -17,7 +17,7 @@ export const APP_CODE_PREFIX_LOWERFirebaseServerActionsContextWithNotificationSe
   providers: [
     {
       provide: NotificationSendService,
-      useFactory: APP_CODE_PREFIX_LOWERNotificationSendServiceFactory,
+      useFactory: APP_CODE_PREFIXNotificationSendServiceFactory,
       inject: [APP_CODE_PREFIXFirebaseServerActionsContext]
     },
     {
@@ -26,12 +26,12 @@ export const APP_CODE_PREFIX_LOWERFirebaseServerActionsContextWithNotificationSe
     },
     {
       provide: NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN,
-      useFactory: APP_CODE_PREFIX_LOWERNotificationInitServerActionsContextConfig,
+      useFactory: APP_CODE_PREFIXNotificationInitServerActionsContextConfig,
       inject: [APP_CODE_PREFIXFirebaseServerActionsContext]
     },
     {
       provide: NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN,
-      useFactory: APP_CODE_PREFIX_LOWERNotificationTemplateServiceConfigsArrayFactory,
+      useFactory: APP_CODE_PREFIXNotificationTemplateServiceConfigsArrayFactory,
       inject: [APP_CODE_PREFIXFirebaseServerActionsContext]
     }
   ],
@@ -48,7 +48,7 @@ export class NotificationDependencyModule {}
     providers: [
       {
         provide: APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices,
-        useFactory: APP_CODE_PREFIX_LOWERFirebaseServerActionsContextWithNotificationServicesFactory,
+        useFactory: APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServicesFactory,
         inject: [APP_CODE_PREFIXFirebaseServerActionsContext, NotificationTemplateService]
       }
     ],

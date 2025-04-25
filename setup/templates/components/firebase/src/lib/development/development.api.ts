@@ -30,7 +30,7 @@ export const APP_CODE_PREFIXDevelopmentFunctionsConfig: DevelopmentFirebaseFunct
 /**
  * Used to generate our ProfileFunctionMap for a Functions instance.
  */
-export const APP_CODE_PREFIX_LOWERDevelopmentFunctionMap = developmentFirebaseFunctionMapFactory<APP_CODE_PREFIXDevelopmentFunctionTypeMap>(APP_CODE_PREFIXDevelopmentFunctionsConfig);
+export const APP_CODE_PREFIXDevelopmentFunctionMap = developmentFirebaseFunctionMapFactory<APP_CODE_PREFIXDevelopmentFunctionTypeMap>(APP_CODE_PREFIXDevelopmentFunctionsConfig);
 
 /**
  * Declared as an abstract class so we can inject it into our Angular app using this token.

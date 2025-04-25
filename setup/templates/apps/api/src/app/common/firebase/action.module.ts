@@ -1,6 +1,6 @@
 import { APP_CODE_PREFIXApiAuthModule } from './auth.module';
 import { APP_CODE_PREFIXApiFirestoreModule } from './firestore.module';
-import { APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, APP_CODE_PREFIXFirestoreCollections } from 'FIREBASE_COMPONENTS_NAME';
+import { APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, APP_CODE_PREFIXFirestoreCollections } from 'FIREBASE_COMPONENTS_NAME';
 import { firebaseServerActionsContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 import { APP_CODE_PREFIXFirebaseServerActionsContext } from './action.context';
@@ -10,14 +10,14 @@ import { MailgunService, MailgunServiceModule } from '@dereekb/nestjs/mailgun';
 import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { isTestNodeEnv } from '@dereekb/nestjs';
 
-const APP_CODE_PREFIX_LOWERFirebaseServerActionsContextFactory = (collections: APP_CODE_PREFIXFirestoreCollections, authService: APP_CODE_PREFIXApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService): APP_CODE_PREFIXFirebaseServerActionsContext => {
+const APP_CODE_PREFIXFirebaseServerActionsContextFactory = (collections: APP_CODE_PREFIXFirestoreCollections, authService: APP_CODE_PREFIXApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService): APP_CODE_PREFIXFirebaseServerActionsContext => {
   return {
     ...collections,
     ...firebaseServerActionsContext(isTestNodeEnv()),
     storageService,
     authService,
     mailgunService,
-    appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
+    appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
   };
 };
 
@@ -26,7 +26,7 @@ const APP_CODE_PREFIX_LOWERFirebaseServerActionsContextFactory = (collections: A
   providers: [
     {
       provide: APP_CODE_PREFIXFirebaseServerActionsContext,
-      useFactory: APP_CODE_PREFIX_LOWERFirebaseServerActionsContextFactory,
+      useFactory: APP_CODE_PREFIXFirebaseServerActionsContextFactory,
       inject: [APP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIXApiAuthService, FirebaseServerStorageService, MailgunService]
     }
   ],

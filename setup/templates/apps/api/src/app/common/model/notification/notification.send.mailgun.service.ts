@@ -2,16 +2,16 @@ import { MailgunNotificationEmailSendService, MailgunNotificationEmailSendServic
 import { MailgunRecipient, MailgunService, MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { APP_CODE_PREFIXMailgunBasicTemplateData } from './notification.mailgun';
 
-export const APP_CODE_PREFIX_UPPER_NOTIFICATION_ACTION_TEMPLATE_KEY = 'notificationtemplate';
+export const APP_CODE_PREFIX_CAPS_NOTIFICATION_ACTION_TEMPLATE_KEY = 'notificationtemplate';
 
 export const DEFAULT_NOTIFICATION_ACTION_BUTTON_TEXT = `Go To App`;
 
-export const APP_CODE_PREFIX_UPPER_NOTIFICATION_REPLY_TO_RECIPIENT: MailgunRecipient = {
+export const APP_CODE_PREFIX_CAPS_NOTIFICATION_REPLY_TO_RECIPIENT: MailgunRecipient = {
   name: 'Example Support',
   email: `support@components.dereekb.com`
 };
 
-export const APP_CODE_PREFIX_UPPER_NOTIFICATION_SENDER_RECIPIENT: MailgunRecipient = {
+export const APP_CODE_PREFIX_CAPS_NOTIFICATION_SENDER_RECIPIENT: MailgunRecipient = {
   name: 'Example Notification Sender',
   email: `notifications@components.dereekb.com`
 };
@@ -22,12 +22,12 @@ export const APP_CODE_PREFIX_UPPER_NOTIFICATION_SENDER_RECIPIENT: MailgunRecipie
  * @param mailgunService
  * @returns
  */
-export function APP_CODE_PREFIX_LOWERNotificationMailgunSendService(mailgunService: MailgunService): MailgunNotificationEmailSendService {
+export function APP_CODE_PREFIXNotificationMailgunSendService(mailgunService: MailgunService): MailgunNotificationEmailSendService {
   const DEFAULT_ACTION_URL = `${mailgunService.mailgunApi.clientUrl}/home`;
 
   const mailgunSendService: MailgunNotificationEmailSendService = mailgunNotificationEmailSendService({
     mailgunService,
-    defaultSendTemplateName: APP_CODE_PREFIX_UPPER_NOTIFICATION_ACTION_TEMPLATE_KEY,
+    defaultSendTemplateName: APP_CODE_PREFIX_CAPS_NOTIFICATION_ACTION_TEMPLATE_KEY,
     messageBuilders: {
       notificationTemplate: (input: MailgunNotificationEmailSendServiceTemplateBuilderInput): MailgunTemplateEmailRequest => {
         const { messages } = input;
@@ -58,9 +58,9 @@ export function APP_CODE_PREFIX_LOWERNotificationMailgunSendService(mailgunServi
 
         const request: MailgunTemplateEmailRequest = {
           to,
-          replyTo: APP_CODE_PREFIX_UPPER_NOTIFICATION_REPLY_TO_RECIPIENT,
-          from: APP_CODE_PREFIX_UPPER_NOTIFICATION_SENDER_RECIPIENT,
-          template: APP_CODE_PREFIX_UPPER_NOTIFICATION_ACTION_TEMPLATE_KEY,
+          replyTo: APP_CODE_PREFIX_CAPS_NOTIFICATION_REPLY_TO_RECIPIENT,
+          from: APP_CODE_PREFIX_CAPS_NOTIFICATION_SENDER_RECIPIENT,
+          template: APP_CODE_PREFIX_CAPS_NOTIFICATION_ACTION_TEMPLATE_KEY,
           subject: `%recipient.subject%`
         };
 

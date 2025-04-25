@@ -174,23 +174,22 @@ jobs:
           command: mkdir ~/setup-test
       - run:
           name: run setup-project.sh script
-          command: cd setup && ./setup-project.sh myprojectapp myproject myproject 9200 ~/setup-test
+          command: cd setup && ./setup-project.sh myprojectapp myproject myProject 9200 ~/setup-test
       - run:
           name: replace test project's @dereekb in node_modules with generated packages (we don't want symlinks)
           command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
       - run:
           name: print package.json
           command: cd ~/setup-test/myproject && cat package.json
-      # MAJOR VERSION TEMPORARY
-      #- run:
-      #    name: Try build components
-      #    command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
-      #- run:
-      #    name: Try build
-      #    command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
-      #- run:
-      #    name: Run tests
-      #    command: cd ~/setup-test/myproject && npx nx test myproject-components && npx nx test myproject-firebase && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
+      - run:
+          name: Try build components
+          command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
+      - run:
+          name: Try build
+          command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
+      - run:
+          name: Run tests
+          command: cd ~/setup-test/myproject && npx nx test myproject-components && npx nx test myproject-firebase && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
     # todo: add checks, etc.
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
