@@ -3,9 +3,9 @@ import { DemoApiAuthService } from './auth.service';
 import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { FirebaseServerActionsContext, FirebaseServerAuthServiceRef, FirebaseServerStorageService, FirebaseServerStorageServiceRef } from '@dereekb/firebase-server';
 import { TransformAndValidateFunctionResultFactory, TransformAndValidateObjectFactory } from '@dereekb/model';
-import { MailgunService } from '@dereekb/nestjs/mailgun';
+import { MailgunService, MailgunServiceRef } from '@dereekb/nestjs/mailgun';
 
-export abstract class DemoFirebaseServerActionsContext extends DemoFirestoreCollections implements DemoFirestoreCollections, FirebaseServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef<DemoApiAuthService>, FirebaseServerStorageServiceRef {
+export abstract class DemoFirebaseServerActionsContext extends DemoFirestoreCollections implements FirebaseServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef<DemoApiAuthService>, FirebaseServerStorageServiceRef, MailgunServiceRef {
   abstract readonly appNotificationTemplateTypeInfoRecordService: AppNotificationTemplateTypeInfoRecordService;
   abstract readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
   abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<any>;

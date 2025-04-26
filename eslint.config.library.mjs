@@ -9,21 +9,7 @@ export default [
       '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }]
     },
     parserOptions: {
-      project: ['./packages/util/tsconfig.lib.json', './packages/util/tsconfig.spec.json']
-    }
-  },
-  {
-    files: ['**/*.json'],
-    rules: {
-      '@nx/dependency-checks': [
-        'error',
-        {
-          ignoredFiles: ['{projectRoot}/eslint.config.{js,cjs,mjs}']
-        }
-      ]
-    },
-    languageOptions: {
-      parser: await import('jsonc-eslint-parser')
+      project: ['{projectRoot}/tsconfig.lib.json', '{projectRoot}/tsconfig.spec.json']
     }
   },
   {

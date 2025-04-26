@@ -1,15 +1,15 @@
-import { onCallModel, type OnCallModelMap, onCallReadModel, onCallCreateModel, onCallDeleteModel, onCallUpdateModel,inAuthContext } from '@dereekb/firebase-server';
+import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
 import { APP_CODE_PREFIXOnCallCreateModelMap, APP_CODE_PREFIXOnCallReadModelMap, APP_CODE_PREFIXOnCallUpdateModelMap, APP_CODE_PREFIXOnCallDeleteModelMap, onCallWithAPP_CODE_PREFIXNestContext } from '../function';
-import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
+import { updateProfile, updateProfleOnboarding } from '../profile/profile.update';
 
 // MARK: Create
-export const APP_CODE_PREFIX_LOWERCreateModelMap: APP_CODE_PREFIXOnCallCreateModelMap = {};
+export const APP_CODE_PREFIX_CAMELCreateModelMap: APP_CODE_PREFIXOnCallCreateModelMap = {};
 
 // MARK: Read
-export const APP_CODE_PREFIX_LOWERReadModelMap: APP_CODE_PREFIXOnCallReadModelMap = {};
+export const APP_CODE_PREFIX_CAMELReadModelMap: APP_CODE_PREFIXOnCallReadModelMap = {};
 
 // MARK: Update
-export const APP_CODE_PREFIX_LOWERUpdateModelMap: APP_CODE_PREFIXOnCallUpdateModelMap = {
+export const APP_CODE_PREFIX_CAMELUpdateModelMap: APP_CODE_PREFIXOnCallUpdateModelMap = {
   profile: onCallSpecifierHandler({
     _: updateProfile,
     onboard: updateProfleOnboarding,
@@ -17,14 +17,14 @@ export const APP_CODE_PREFIX_LOWERUpdateModelMap: APP_CODE_PREFIXOnCallUpdateMod
 };
 
 // MARK: Delete
-export const APP_CODE_PREFIX_LOWERDeleteModelMap: APP_CODE_PREFIXOnCallDeleteModelMap = {};
+export const APP_CODE_PREFIX_CAMELDeleteModelMap: APP_CODE_PREFIXOnCallDeleteModelMap = {};
 
 // MARK: Call
-export const APP_CODE_PREFIX_LOWERCallModelMap: OnCallModelMap = {
-  create: onCallCreateModel(APP_CODE_PREFIX_LOWERCreateModelMap),
-  read: onCallReadModel(APP_CODE_PREFIX_LOWERReadModelMap),
-  update: onCallUpdateModel(APP_CODE_PREFIX_LOWERUpdateModelMap),
-  delete: onCallDeleteModel(APP_CODE_PREFIX_LOWERDeleteModelMap)
+export const APP_CODE_PREFIX_CAMELCallModelMap: OnCallModelMap = {
+  create: onCallCreateModel(APP_CODE_PREFIX_CAMELCreateModelMap),
+  read: onCallReadModel(APP_CODE_PREFIX_CAMELReadModelMap),
+  update: onCallUpdateModel(APP_CODE_PREFIX_CAMELUpdateModelMap),
+  delete: onCallDeleteModel(APP_CODE_PREFIX_CAMELDeleteModelMap)
 };
 
-export const APP_CODE_PREFIX_LOWERCallModel = onCallWithAPP_CODE_PREFIXNestContext(inAuthContext(onCallModel(APP_CODE_PREFIX_LOWERCallModelMap)));
+export const APP_CODE_PREFIX_CAMELCallModel = onCallWithAPP_CODE_PREFIXNestContext(inAuthContext(onCallModel(APP_CODE_PREFIX_CAMELCallModelMap)));

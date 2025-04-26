@@ -1,73 +1,73 @@
 import { isTestNodeEnv } from '@dereekb/nestjs';
 import { ArrayOrValue, asArray, EmailAddress, EmailAddressDomain, forEachKeyValue, KeyValueTypleValueFilter, NameEmailPair, overrideInObject, objectIsEmpty, EmailParticipantString, addToSet, forEachInIterable, type Maybe } from '@dereekb/util';
-import APIResponse from 'mailgun.js/interfaces/ApiResponse';
-import { MailgunMessageData, MessagesSendResult } from 'mailgun.js/interfaces/Messages';
+import { APIResponse } from 'mailgun.js/Types/Common/ApiResponse';
+import { CustomFile, CustomFileData, MailgunMessageData, MessagesSendResult } from 'mailgun.js/Types/Messages/Messages';
 
 export type MailgunSenderDomainString = EmailAddressDomain;
 export type MailgunTemplateKey = string;
 
 export interface MailgunRecipient extends NameEmailPair {
-  userVariables?: Record<string, any>;
+  readonly userVariables?: Record<string, any>;
 }
 
 export interface MailgunEmailRequest {
   /**
    * Customzie who the email is from.
    */
-  from?: MailgunRecipient;
+  readonly from?: MailgunRecipient;
   /**
    * Customize who to reply to.
    */
-  replyTo?: MailgunRecipient;
+  readonly replyTo?: MailgunRecipient;
   /**
    * Recipients of the email.
    */
-  to: ArrayOrValue<MailgunRecipient>;
+  readonly to: ArrayOrValue<MailgunRecipient>;
   /**
    * Email subject
    */
-  subject: string;
+  readonly subject: string;
 }
 
 export interface MailgunFileAttachment {
   /**
    * File name
    */
-  filename: string;
+  readonly filename: string;
   /**
    * File data as a buffer or string.
    */
-  data: Buffer | string;
+  readonly data: CustomFileData;
 }
 
 export interface MailgunTemplateEmailParameters {
   /**
    * Mailgun template name.
    */
-  template: MailgunTemplateKey;
+  readonly template: MailgunTemplateKey;
   /**
    * Template variables. Each value is converted to a JSON string before being sent to Mailgun server.
    */
-  templateVariables?: Record<string, any>;
+  readonly templateVariables?: Record<string, any>;
   /**
    * Whether or not this is considered a test email.
    */
-  testEmail?: boolean;
+  readonly testEmail?: boolean;
   /**
    * Overrides the global configuration for sending test emails to force sending. Useful when debugging specific tests.
    */
-  sendTestEmails?: true | undefined;
+  readonly sendTestEmails?: true | undefined;
 }
 
 export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, MailgunTemplateEmailParameters {
   /**
    * Attachment(s) to send with the email.
    */
-  attachments?: ArrayOrValue<MailgunFileAttachment>;
+  readonly attachments?: ArrayOrValue<MailgunFileAttachment>;
   /**
    * Apply custom parameters directly.
    */
-  messageData?: Partial<MailgunMessageData>;
+  readonly messageData?: Partial<MailgunMessageData>;
 }
 
 export type MailgunEmailMessageSendResult = MessagesSendResult;
@@ -194,7 +194,7 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
       throw new Error(`Cannot specify attachments in both messageData and in the request's attachments field.`);
     }
 
-    data.attachment = inputAttachments;
+    data.attachment = inputAttachments as ArrayOrValue<CustomFile>;
   }
 
   return data;

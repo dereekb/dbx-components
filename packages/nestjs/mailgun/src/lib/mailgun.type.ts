@@ -1,6 +1,6 @@
 import Mailgun from 'mailgun.js';
-import Options from 'mailgun.js/interfaces/Options';
+import { MailgunClientOptions } from 'mailgun.js/Types/MailgunClient/MailgunClientOptions';
 
-export type MailgunOptions = Options;
+export type MailgunOptions = MailgunClientOptions;
 export type MailgunClient = ReturnType<Mailgun['client']>;
 export type MailgunMessagesClient = ReturnType<Mailgun['client']>['messages'];

@@ -28,14 +28,14 @@ INPUT_CODE_PREFIX=${3:-app}                                   # example: getHapi
 FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
-# Example: ./setup-project.sh gethapier test test 9300
+# Example: ./setup-project.sh gethapier gethapier getHapier 9300
 
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 
 # - Other Configuration
-DEFAULT_SOURCE_BRANCH="develop" # "main"
+DEFAULT_SOURCE_BRANCH="main"
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -47,7 +47,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.0"}    # update every major version
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.1"}    # update every major version
 NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
 ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^18.0.0"}
 TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.5.0 <5.6.0"}
@@ -56,9 +56,10 @@ FIREBASE_TOOLS_VERSION=${FIREBASE_TOOLS_SETUP_VERSION:-"^14.2.0"}
 echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION - from source branch $SOURCE_BRANCH"
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
-APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
-APP_CODE_PREFIX_LOWER="$(tr '[:upper:]' '[:lower:]' <<< ${INPUT_CODE_PREFIX})"
-APP_CODE_PREFIX_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX})"
+APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"  # AppTest
+APP_CODE_PREFIX_CAMEL=${INPUT_CODE_PREFIX}; # appTest
+APP_CODE_PREFIX_LOWER="$(tr '[:upper:]' '[:lower:]' <<< ${INPUT_CODE_PREFIX})"  # apptest
+APP_CODE_PREFIX_CAPS="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX})"  # APPTEST
 
 # shared angular library 
 ANGULAR_COMPONENTS_NAME=$PROJECT_NAME-components
@@ -98,6 +99,7 @@ FIREBASE_EMULATOR_AUTH_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 3)
 FIREBASE_EMULATOR_FIRESTORE_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 4)
 FIREBASE_EMULATOR_PUBSUB_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 5)
 FIREBASE_EMULATOR_STORAGE_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 6)
+FIREBASE_EMULATOR_FIRESTORE_WEBSOCKET_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 8)
 FIREBASE_LOCALHOST=0.0.0.0
 FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STORAGE_PORT"
 
@@ -208,8 +210,8 @@ git commit --no-verify -m "checkpoint: added nest app"
 echo "Installing angular@$ANGULAR_VERSION...";
 rm -r node_modules
 rm package-lock.json
-npm install -D --force typescript@$TYPESCRIPT_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
-npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npm install -D --force typescript@$TYPESCRIPT_VERSION @nx/angular@$NX_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION @angular-devkit/core@$ANGULAR_VERSION @angular-eslint/eslint-plugin@$ANGULAR_VERSION @angular-eslint/eslint-plugin-template@$ANGULAR_VERSION @angular-eslint/template-parser@$ANGULAR_VERSION @angular-devkit/schematics@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION
+npm install --force zone.js@0.14.10 @angular/core@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/animations@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION @angular/material-date-fns-adapter@$ANGULAR_VERSION
 npm install -D --force typescript@$TYPESCRIPT_VERSION # install again incase it changed due to the above or other dependency...
 
 echo "Creating angular components package..."
@@ -288,7 +290,7 @@ npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FO
 npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
 
 # Emulators
-npx --yes json -I -f firebase.json -e "this.emulators={ singleProjectMode: false, ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
+npx --yes json -I -f firebase.json -e "this.emulators={ singleProjectMode: false, ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT, websocketPort: $FIREBASE_EMULATOR_FIRESTORE_WEBSOCKET_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
@@ -401,6 +403,7 @@ npm install -D jest@29.7.0 jest-environment-jsdom@29.7.0 jest-preset-angular@14.
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.environment.jsdom.ts -o jest.environment.jsdom.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.resolver.js -o jest.resolver.js
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.angular.ts -o jest.setup.angular.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.firebase.ts -o jest.setup.firebase.ts
@@ -427,7 +430,7 @@ git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
 echo "Installing @dereekb dependencies"
-npm install --force rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+npm install --force mailgun.js@^12.0.0 rxjs@^7.5.0 firebase@^11.0.0 firebase-admin@^13.0.0 firebase-functions@^6.0.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/zoho@$DBX_COMPONENTS_VERSION_ZOHO @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
 
 # install mapbox dependencies
 npm install --force mapbox-gl ngx-mapbox-gl@git+https://git@github.com/dereekb/ngx-mapbox-gl#e55fbfa2f334348f0ff6b4705776c958c67ffbb5 @ng-web-apis/geolocation @ng-web-apis/common
@@ -438,13 +441,11 @@ then
 install_local_peer_deps() {
   local FILE_PATH=$1
   echo "Installing dependencies from: $FILE_PATH"
-  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;';
-  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;' | xargs npm install "$PKG";
+  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;' | xargs npm install --force "$PKG";
 }
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
-echo "Installing specific angular version"
-npm install --force -D @nx/angular@$NX_VERSION jest-preset-angular@14.1.1 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
+echo "Installing angular dependencies"
 npm install --force @placemarkio/geo-viewport@^1.0.2 @uirouter/rx@^1.0.0 @uirouter/core@^6.1.1 @uirouter/angular@^15.0.0 @angular/fire@git+https://git@github.com/dereekb/angularfire#32c69f7009db3a9b85148705c00e923d5a858807 @ngbracket/ngx-layout@^18.0.0 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @ngbracket/ngx-layout dependencies are installed here, as install_local ignores any @angular prefix
 
@@ -535,7 +536,7 @@ download_ts_file () {
   local FILE_PATH=$3
   local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:APP_CODE_PREFIX_CAPS:$APP_CODE_PREFIX_CAPS:g" -e "s:APP_CODE_PREFIX_CAMEL:$APP_CODE_PREFIX_CAMEL:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 
@@ -572,6 +573,7 @@ download_app_components_file "src/lib/modules/profile/store/profile.collection.s
 
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
 download_app_components_file "src/lib/services/index.ts"
+download_app_components_file "src/lib/services/firebase.context.service.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup app components"
@@ -795,14 +797,6 @@ mkdir $API_APP_FOLDER/src/app/function
 download_api_ts_file "src/app/function/index.ts"
 download_api_ts_file "src/app/function/function.ts"
 
-mkdir $API_APP_FOLDER/src/app/function/notification
-download_api_ts_file "src/app/function/notification/index.ts"
-download_api_ts_file "src/app/function/notification/notification.crud.spec.ts"
-download_api_ts_file "src/app/function/notification/notification.scenario.spec.ts"
-download_api_ts_file "src/app/function/notification/notification.schedule.ts"
-download_api_ts_file "src/app/function/notification/notificationbox.update.ts"
-download_api_ts_file "src/app/function/notification/notificationuser.update.ts"
-
 mkdir $API_APP_FOLDER/src/app/function/model
 download_api_ts_file "src/app/function/model/index.ts"
 download_api_ts_file "src/app/function/model/crud.functions.ts"
@@ -820,6 +814,20 @@ download_api_ts_file "src/app/function/example/example.schedule.ts"
 download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
 download_api_ts_file "src/app/function/example/example.set.username.spec.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/profile
+download_api_ts_file "src/app/function/profile/index.ts"
+download_api_ts_file "src/app/function/profile/profile.crud.spec.ts"
+download_api_ts_file "src/app/function/profile/profile.util.ts"
+download_api_ts_file "src/app/function/profile/profile.update.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/notification
+download_api_ts_file "src/app/function/notification/index.ts"
+download_api_ts_file "src/app/function/notification/notification.crud.spec.ts"
+download_api_ts_file "src/app/function/notification/notification.scenario.spec.ts"
+download_api_ts_file "src/app/function/notification/notification.schedule.ts"
+download_api_ts_file "src/app/function/notification/notificationbox.update.ts"
+download_api_ts_file "src/app/function/notification/notificationuser.update.ts"
 
 # environment folder
 mkdir -p $API_APP_FOLDER/src/environments

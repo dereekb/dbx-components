@@ -15,7 +15,7 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
     return this.nest.get(APP_CODE_PREFIXApiAuthService);
   }
 
-  get APP_CODE_PREFIXFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
+  get APP_CODE_PREFIX_CAMELFirestoreCollections(): APP_CODE_PREFIXFirestoreCollections {
     return this.nest.get(APP_CODE_PREFIXFirestoreCollections);
   }
 
@@ -40,7 +40,7 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
   }
 
   get app(): APP_CODE_PREFIXFirestoreCollections {
-    return this.APP_CODE_PREFIXFirestoreCollections;
+    return this.APP_CODE_PREFIX_CAMELFirestoreCollections;
   }
 
 }

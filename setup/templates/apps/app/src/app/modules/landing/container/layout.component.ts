@@ -1,12 +1,12 @@
 import { MatButtonModule } from '@angular/material/button';
 import { ClickableAnchorLink } from '@dereekb/dbx-core';
-import { DbxStyleLayoutModule, DbxSpacerDirective, DbxAnchorComponent, DbxContentLayoutModule } from '@dereekb/dbx-web';
+import { DbxStyleLayoutModule, DbxSpacerDirective, DbxButtonSpacerDirective, DbxAnchorComponent, DbxContentLayoutModule } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
 import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './layout.component.html',
-  imports: [DbxStyleLayoutModule, DbxSpacerDirective, DbxAnchorComponent, MatButtonModule, DbxContentLayoutModule, DbxAppContextStateDirective],
+  imports: [DbxStyleLayoutModule, DbxSpacerDirective, DbxButtonSpacerDirective, DbxAnchorComponent, MatButtonModule, DbxContentLayoutModule, DbxAppContextStateDirective],
   standalone: true
 })
 export class LandingLayoutComponent {

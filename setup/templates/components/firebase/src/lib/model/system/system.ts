@@ -14,6 +14,6 @@ export const exampleSystemDataConverter: SystemStateStoredDataFieldConverterConf
   }
 });
 
-export const APP_CODE_PREFIX_LOWERSystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = {
+export const APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = {
   [EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE]: exampleSystemDataConverter
 };

@@ -12,14 +12,14 @@ import { APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelService
 @Injectable()
 export class APP_CODE_PREFIXFirebaseContextService implements DbxFirebaseModelContextService {
 
-  readonly APP_CODE_PREFIXFirestoreCollections = inject(APP_CODE_PREFIXFirestoreCollections);
+  readonly APP_CODE_PREFIX_CAMELFirestoreCollections = inject(APP_CODE_PREFIXFirestoreCollections);
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
 
   readonly baseContext$: Observable<APP_CODE_PREFIXFirebaseBaseContext> = this.dbxFirebaseAuthService.currentAuthContextInfo$.pipe(
     map((auth) => {
       const result: APP_CODE_PREFIXFirebaseBaseContext = {
         auth,
-        app: this.APP_CODE_PREFIXFirestoreCollections
+        app: this.APP_CODE_PREFIX_CAMELFirestoreCollections
       };
 
       return result;

@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
+import { profileWithUsername, AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, UpdateProfileParams } from 'FIREBASE_COMPONENTS_NAME';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 

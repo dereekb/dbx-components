@@ -54,9 +54,10 @@ import { noAccessRoleMap, fullAccessRoleMap, grantedRoleKeysMapFromArray, Grante
 import { PromiseOrValue } from '@dereekb/util';
 import { Example, ExampleDocument, ExampleRoles, ExampleTypes, exampleFirestoreCollection, ExampleFirestoreCollection, ExampleFirestoreCollections } from './example';
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
-import { APP_CODE_PREFIX_LOWERSystemStateStoredDataConverterMap } from './system';
+import { APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap } from './system';
 
-export abstract class APP_CODE_PREFIXFirestoreCollections implements ExampleFirestoreCollections, SystemStateFirestoreCollections {
+export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreContextReference, ExampleFirestoreCollections, SystemStateFirestoreCollections {
+  abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly exampleCollection: ExampleFirestoreCollection;
   abstract readonly profileCollection: ProfileFirestoreCollection;
@@ -73,7 +74,8 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements ExampleFire
 
 export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: FirestoreContext): APP_CODE_PREFIXFirestoreCollections {
   return {
-    systemStateCollection: systemStateFirestoreCollection(firestoreContext, APP_CODE_PREFIX_LOWERSystemStateStoredDataConverterMap),
+    firestoreContext,
+    systemStateCollection: systemStateFirestoreCollection(firestoreContext, APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap),
     exampleCollection: exampleFirestoreCollection(firestoreContext),
     profileCollection: profileFirestoreCollection(firestoreContext),
     profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
@@ -175,7 +177,7 @@ export type APP_CODE_PREFIXFirebaseContextAppContext = APP_CODE_PREFIXFirestoreC
 
 export type APP_CODE_PREFIXFirebaseBaseContext = FirebaseAppModelContext<APP_CODE_PREFIXFirebaseContextAppContext>;
 
-export const APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES = {
+export const APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES = {
   systemState: systemStateFirebaseModelServiceFactory,
   example: exampleFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
@@ -187,6 +189,6 @@ export const APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationWeek: notificationWeekFirebaseModelServiceFactory
 };
 
-export const APP_CODE_PREFIXFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_UPPER_FIREBASE_MODEL_SERVICE_FACTORIES);
+export const APP_CODE_PREFIXFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES);
 
 export type APP_CODE_PREFIXFirebaseContext = APP_CODE_PREFIXFirebaseBaseContext & { service: typeof APP_CODE_PREFIXFirebaseModelServices };

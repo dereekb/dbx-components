@@ -6,7 +6,7 @@ import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthR
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
-import { APP_CODE_PREFIXFirebaseContextService } from 'APP_COMPONENTS_NAME';
+import { APP_CODE_PREFIXFirebaseContextService } from 'ANGULAR_COMPONENTS_NAME';
 import { defaultValidationMessages, provideDbxFormConfiguration } from '@dereekb/dbx-form';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
@@ -15,7 +15,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
 import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
-import { APP_CODE_PREFIX_UPPER_AUTH_CLAIMS_SERVICE, APP_CODE_PREFIX_UPPER_API_AUTH_CLAIMS_ONBOARDED_TOKEN, APP_CODE_PREFIX_UPPER_FIREBASE_FUNCTIONS_CONFIG, APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'FIREBASE_COMPONENTS_NAME';
+import { APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE, APP_CODE_PREFIX_CAPS_API_AUTH_CLAIMS_ONBOARDED_TOKEN, APP_CODE_PREFIX_CAPS_FIREBASE_FUNCTIONS_CONFIG, APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'FIREBASE_COMPONENTS_NAME';
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -70,12 +70,12 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
 }
 
 // MARK: DbxFirebase
-export function APP_CODE_PREFIX_LOWERAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
+export function APP_CODE_PREFIXAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
   return defaultDbxFirebaseAuthServiceDelegateWithClaimsService({
-    claimsService: APP_CODE_PREFIX_UPPER_AUTH_CLAIMS_SERVICE,
+    claimsService: APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE,
     addAuthUserStateToRoles: true,
     stateForLoggedInUserToken: (token) => {
-      const y = token.claims[APP_CODE_PREFIX_UPPER_API_AUTH_CLAIMS_ONBOARDED_TOKEN];
+      const y = token.claims[APP_CODE_PREFIX_CAPS_API_AUTH_CLAIMS_ONBOARDED_TOKEN];
       return y ? 'user' : 'new';
     }
   });
@@ -163,12 +163,12 @@ export const appConfig: ApplicationConfig = {
       emulator: environment.firebase.emulators,
       storage: {},
       auth: {
-        delegateFactory: APP_CODE_PREFIX_LOWERAuthDelegateFactory
+        delegateFactory: APP_CODE_PREFIXAuthDelegateFactory
       },
       functions: {
         functionsGetterToken: APP_CODE_PREFIXFirebaseFunctionsGetter,
         functionsGetterFactory: makeAPP_CODE_PREFIXFirebaseFunctions,
-        functionsConfigMap: APP_CODE_PREFIX_UPPER_FIREBASE_FUNCTIONS_CONFIG
+        functionsConfigMap: APP_CODE_PREFIX_CAPS_FIREBASE_FUNCTIONS_CONFIG
       },
       firestores: {
         appCollectionClass: APP_CODE_PREFIXFirestoreCollections,
@@ -186,7 +186,7 @@ export const appConfig: ApplicationConfig = {
         enabled: !environment.production
       },
       notifications: {
-        appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(APP_CODE_PREFIX_UPPER_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
+        appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
       },
       provideAnalyticsUserEventsListener: true
     }),

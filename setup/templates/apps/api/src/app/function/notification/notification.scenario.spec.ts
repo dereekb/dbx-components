@@ -1,15 +1,15 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { APP_CODE_PREFIXApiFunctionContextFactory, APP_CODE_PREFIXAuthorizedUserContext, APP_CODE_PREFIXNotificationBoxContext, APP_CODE_PREFIXProfileContext } from '../../../test/fixture';
-import { APP_CODE_PREFIXCallModel } from '../model/crud.functions';
+import { APP_CODE_PREFIX_CAMELApiFunctionContextFactory, APP_CODE_PREFIX_CAMELAuthorizedUserContext, APP_CODE_PREFIX_CAMELNotificationBoxContext, APP_CODE_PREFIX_CAMELProfileContext } from '../../../test/fixture';
+import { APP_CODE_PREFIX_CAMELCallModel } from '../model/crud.functions';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 
-APP_CODE_PREFIXApiFunctionContextFactory((f) => {
-  describeCallableRequestTest('notification.scenario', { f, fns: { APP_CODE_PREFIXCallModel } }, ({ APP_CODE_PREFIXCallModelWrappedFn }) => {
-    APP_CODE_PREFIXAuthorizedUserContext({ f }, (u) => {
+APP_CODE_PREFIX_CAMELApiFunctionContextFactory((f) => {
+  describeCallableRequestTest('notification.scenario', { f, fns: { APP_CODE_PREFIX_CAMELCallModel } }, ({ APP_CODE_PREFIX_CAMELCallModelWrappedFn }) => {
+    APP_CODE_PREFIX_CAMELAuthorizedUserContext({ f }, (u) => {
 
       describe('profile', () => {
-        APP_CODE_PREFIXProfileContext({ f, u }, (p) => {
-          APP_CODE_PREFIXNotificationBoxContext({ f, for: p, createIfNeeded: true }, (profileNb) => {
+        APP_CODE_PREFIX_CAMELProfileContext({ f, u }, (p) => {
+          APP_CODE_PREFIX_CAMELNotificationBoxContext({ f, for: p, createIfNeeded: true }, (profileNb) => {
             it('should initialize the notification box for the profile.', async () => {
               await profileNb.initializeNotificationBox();
 

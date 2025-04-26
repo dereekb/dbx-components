@@ -19,7 +19,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
     domain = configService.get<string>('MAILGUN_SANDBOX_DOMAIN');
 
     if (!key || !domain) {
-      throw new Error('USE_MAILGUN_SANDBOX is set to "true", but no sandbox variables (MAILGUN_SANDBOX_API_KEY, MAILGUN_SANDBOX_DOMAIN) are provided.');
+      throw new Error('USE_MAILGUN_SANDBOX is set to "true" (or current environment is a testing environment), but no environment variables for the sandbox (MAILGUN_SANDBOX_API_KEY, MAILGUN_SANDBOX_DOMAIN) are provided.');
     } else if (!serverEnvironmentService.isTestingEnv) {
       console.log('Using Mailgun Sandbox Domain: ', domain);
     }

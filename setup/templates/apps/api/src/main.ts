@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
-import { APP_CODE_PREFIX_LOWERDevelopmentFunctionMap } from './app/function/model/development.functions';
+import { APP_CODE_PREFIXDevelopmentFunctionMap } from './app/function/model/development.functions';
 import { firebaseServerDevFunctions } from '@dereekb/firebase-server';
 import { onCallWithAPP_CODE_PREFIXNestContext } from './app/function/function';
 
@@ -27,7 +27,7 @@ export const { exampleSchedule } = allScheduledFunctions;
 export const { dev } = firebaseServerDevFunctions({
   enabled: true,
   nest,
-  developerFunctionsMap: APP_CODE_PREFIX_LOWERDevelopmentFunctionMap,
+  developerFunctionsMap: APP_CODE_PREFIXDevelopmentFunctionMap,
   onCallFactory: onCallWithAPP_CODE_PREFIXNestContext,
   allScheduledFunctions
 });
