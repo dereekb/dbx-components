@@ -1,6 +1,27 @@
 {
   "projects": {
-    "default": "FIREBASE_PROJECT_ID",
-    "prod": "FIREBASE_PROJECT_ID"
-  }
+    "default": "FIREBASE_PROJECT_ID_STAGING",
+    "prod": "FIREBASE_PROJECT_ID",
+    "staging": "FIREBASE_PROJECT_ID_STAGING"
+  },
+  "targets": {
+    "FIREBASE_PROJECT_ID": {
+      "hosting": {
+        "prod": [
+          "FIREBASE_PROJECT_ID"
+        ]
+      }
+    },
+    "FIREBASE_PROJECT_ID_STAGING": {
+      "hosting": {
+        "staging": [
+          "FIREBASE_PROJECT_ID_STAGING"
+        ],
+        "prod": [
+          "FIREBASE_PROJECT_ID"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
