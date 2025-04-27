@@ -2,7 +2,7 @@ import { DemoAppHomeComponent } from './container/home.component';
 import { DemoAppLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
-import { DemoAppSharedModule } from '@dereekb/demo-components';
+import { DemoAppSharedModule } from 'demo-components';
 import { DEMO_APP_STATES } from './demo.app.router';
 import { DemoAppHistoryComponent } from './container/history.component';
 import { DemoAppSettingsComponent } from './container/settings.component';

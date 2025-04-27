@@ -33,7 +33,7 @@ import {
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from '@dereekb/demo-firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from 'demo-firebase';
 import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';

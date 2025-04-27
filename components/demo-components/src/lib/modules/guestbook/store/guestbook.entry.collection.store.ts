@@ -1,6 +1,6 @@
 import { Optional, Injectable } from '@angular/core';
 import { AbstractDbxFirebaseCollectionWithParentStore } from '@dereekb/dbx-firebase';
-import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, publishedGuestbookEntry } from '@dereekb/demo-firebase';
+import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, publishedGuestbookEntry } from 'demo-firebase';
 import { GuestbookDocumentStore } from './guestbook.document.store';
 
 @Injectable()

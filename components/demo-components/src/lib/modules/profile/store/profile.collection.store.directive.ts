@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';
-import { Profile, ProfileDocument } from '@dereekb/demo-firebase';
+import { Profile, ProfileDocument } from 'demo-firebase';
 import { ProfileCollectionStore } from './profile.collection.store';
 
 @Directive({

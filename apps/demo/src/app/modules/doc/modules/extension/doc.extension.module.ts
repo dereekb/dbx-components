@@ -30,7 +30,7 @@ import { DocExtensionTableItemHeaderExampleComponent } from './component/table.i
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './component/example.calendar.schedule.selection.popover.button.component';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './component/example.calendar.schedule.selection.popover.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
-import { DemoRootSharedModule } from '@dereekb/demo-components';
+import { DemoRootSharedModule } from 'demo-components';
 
 @NgModule({
   imports: [

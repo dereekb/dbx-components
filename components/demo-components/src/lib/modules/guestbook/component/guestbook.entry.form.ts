@@ -1,5 +1,5 @@
 import { textAreaField, textField, toggleField } from '@dereekb/dbx-form';
-import { GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH, GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH } from '@dereekb/demo-firebase';
+import { GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH, GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH } from 'demo-firebase';
 
 export function guestbookEntryFields() {
   return [guestbookEntryMessageField(), guestbookEntrySignedField(), guestbookEntryPublishedField()];

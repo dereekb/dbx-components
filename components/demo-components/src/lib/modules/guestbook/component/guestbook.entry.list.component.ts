@@ -1,4 +1,4 @@
-import { GuestbookEntry } from '@dereekb/demo-firebase';
+import { GuestbookEntry } from 'demo-firebase';
 import { Component } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef } from '@dereekb/dbx-web';
 import { of } from 'rxjs';

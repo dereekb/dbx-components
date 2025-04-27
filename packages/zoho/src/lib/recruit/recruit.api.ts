@@ -487,19 +487,3 @@ export interface ZohoRecruitMultiRecordResultEntry<I, O> {
    */
   readonly result: O;
 }
-
-// MARK: COMPAT
-/**
- * @deprecated use ZohoRecruitChangeObjectResponseEntry instead.
- */
-export type ZohoRecruitUpdateRecordResponseEntry = ZohoRecruitChangeObjectResponseEntry;
-
-/**
- * @deprecated use ZohoRecruitChangeObjectResponseSuccessEntry instead.
- */
-export type ZohoRecruitUpdateRecordResponseSuccessEntry = ZohoRecruitChangeObjectResponseSuccessEntry;
-
-/**
- * @deprecated use ZohoRecruitChangeObjectResponseErrorEntry instead.
- */
-export type ZohoRecruitUpdateRecordResponseErrorEntry = ZohoRecruitChangeObjectResponseErrorEntry;

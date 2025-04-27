@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { DbxFirebaseCollectionWithParentStoreDirective, provideDbxFirebaseCollectionWithParentStoreDirective } from '@dereekb/dbx-firebase';
-import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument } from '@dereekb/demo-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument } from 'demo-firebase';
 import { GuestbookEntryCollectionStore } from './guestbook.entry.collection.store';
 
 @Directive({

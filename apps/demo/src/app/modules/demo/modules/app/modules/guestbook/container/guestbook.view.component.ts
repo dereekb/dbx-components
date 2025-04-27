@@ -2,7 +2,7 @@ import { Component, OnDestroy, ViewChild, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { map } from 'rxjs';
-import { GuestbookDocumentStore, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
+import { GuestbookDocumentStore, GuestbookEntryDocumentStore } from 'demo-components';
 import { DemoGuestbookEntryPopupComponent } from './guestbook.entry.popup.component';
 
 @Component({

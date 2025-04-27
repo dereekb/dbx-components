@@ -181,7 +181,6 @@
     --mdc-text-button-label-text-color: theming.$dbx-disabled-color;
   }
 
-  .dbx-background,  // COMPAT: Remove dbx-background later
   .dbx-bg {
     background: theming.$dbx-bg-color-contrast;
     color: theming.$dbx-bg-color;

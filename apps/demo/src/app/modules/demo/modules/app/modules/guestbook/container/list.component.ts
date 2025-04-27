@@ -1,5 +1,5 @@
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
-import { GuestbookWithId } from '@dereekb/demo-firebase';
+import { GuestbookWithId } from 'demo-firebase';
 import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 

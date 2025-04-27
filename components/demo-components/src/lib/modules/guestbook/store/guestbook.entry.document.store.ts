@@ -2,7 +2,7 @@ import { first, Observable, shareReplay, from, switchMap } from 'rxjs';
 import { Optional, Injectable, inject } from '@angular/core';
 import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { AbstractDbxFirebaseDocumentWithParentStore } from '@dereekb/dbx-firebase';
-import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookFunctions, InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
+import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookFunctions, InsertGuestbookEntryParams } from 'demo-firebase';
 import { GuestbookDocumentStore } from './guestbook.document.store';
 
 @Injectable()

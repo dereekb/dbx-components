@@ -6,7 +6,7 @@ import { DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-cor
 import { DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
-import { ProfileDocumentStore } from '@dereekb/demo-components';
+import { ProfileDocumentStore } from 'demo-components';
 
 @Component({
   templateUrl: './list.component.html'

@@ -1,4 +1,4 @@
-import { DemoDevelopmentExampleResult, DemoDevelopmentExampleParams } from '@dereekb/demo-firebase';
+import { DemoDevelopmentExampleResult, DemoDevelopmentExampleParams } from 'demo-firebase';
 import { DemoDevelopmentFunction } from '../function';
 
 export const exampleDevelopmentFunction: DemoDevelopmentFunction<DemoDevelopmentExampleParams, DemoDevelopmentExampleResult> = (request) => {

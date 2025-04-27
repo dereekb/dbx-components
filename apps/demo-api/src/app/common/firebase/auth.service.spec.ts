@@ -1,4 +1,4 @@
-import { DemoApiAuthClaims } from '@dereekb/demo-firebase';
+import { DemoApiAuthClaims } from 'demo-firebase';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext } from './../../../test/fixture';
 import { DemoApiFirebaseServerAuthUserContext } from './auth.service';
 

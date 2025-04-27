@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
 import { WorkUsingContext, switchMapWhileTrue, IsEqualFunction } from '@dereekb/rxjs';
-import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
+import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from 'demo-components';
 import { map } from 'rxjs';
 
 export interface DemoGuestbookEntryPopupComponentConfig {

@@ -1,4 +1,4 @@
-import { GuestbookEntry, guestbookEntryIdentity, InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
+import { GuestbookEntry, guestbookEntryIdentity, InsertGuestbookEntryParams } from 'demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';

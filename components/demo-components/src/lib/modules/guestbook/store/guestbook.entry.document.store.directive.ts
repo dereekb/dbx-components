@@ -1,6 +1,6 @@
 import { Directive, inject } from '@angular/core';
 import { DbxFirebaseDocumentStoreDirective, provideDbxFirebaseDocumentStoreDirective } from '@dereekb/dbx-firebase';
-import { GuestbookEntry, GuestbookEntryDocument } from '@dereekb/demo-firebase';
+import { GuestbookEntry, GuestbookEntryDocument } from 'demo-firebase';
 import { map } from 'rxjs';
 import { GuestbookEntryDocumentStore } from './guestbook.entry.document.store';
 

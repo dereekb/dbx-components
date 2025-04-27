@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from 'demo-firebase';
 import { containsStringAnyCase, type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';

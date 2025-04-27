@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/dbx-form';
-import { GuestbookEntry } from '@dereekb/demo-firebase';
+import { GuestbookEntry } from 'demo-firebase';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { guestbookEntryFields } from './guestbook.entry.form';
 

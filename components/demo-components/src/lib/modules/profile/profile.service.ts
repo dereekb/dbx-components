@@ -1,4 +1,4 @@
-import { ProfileDocument, DemoFirestoreCollections, profileWithUsername } from '@dereekb/demo-firebase';
+import { ProfileDocument, DemoFirestoreCollections, profileWithUsername } from 'demo-firebase';
 import { map, Observable, of, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
