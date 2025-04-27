@@ -13,6 +13,7 @@ import { DbxLoadingProgressComponent } from '@dereekb/dbx-web';
 })
 export class DemoProfileViewComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);
+
   readonly auth = inject(DbxFirebaseAuthService);
   readonly storage = inject(DbxFirebaseStorageService);
 

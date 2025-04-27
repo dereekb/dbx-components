@@ -6,7 +6,7 @@ You'll need to setup a new Firebase project first (or rather one needs to exist 
 
 For example, if you wanted to name your project `gethapier` but firebase only had `gethapierapp` and you setup your firebase project with that, then you use the setup script with the following:
 
-`./setup-project.sh gethapierapp gethapier getHapier 9300`
+`./setup-project.sh gethapierapp gethapier getHapier 9300 ~/Desktop gethapier-staging`
 
 It is also recommended that you create a staging project too while you're setting up the production project.
 
@@ -16,6 +16,9 @@ You'll need to setup a Firestore database for your project. You can do this by g
 You should type in your project's id as the App nickname for consistency. Also check the box for "Also setup Firebase Hosting for this app."
 
 It is helpful to also copy/paste the setup details that are provided in the "Add Firebase SDK" step/section, as you'll copy/paste these details into the `base.ts` environment file.
+
+### Billing Setup
+Upgrade your billing account to the Blaze plan.
 
 ## After Setup
 Read the `getting-started-checklist.md` file afterwards for the next steps.

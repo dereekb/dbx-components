@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // MARK: Utilities
     function userClaimsIsSysAdmin() {
-      return request.auth.token.a == 1;
+      return request.auth.token.keys().hasAll(["a"]) && request.auth.token.a == 1;
     }
 
     function resourceIsPublished() {
@@ -32,6 +32,7 @@ service cloud.firestore {
       allow get: if isProfileOwner() || userClaimsIsSysAdmin();
 
       // listing only allowed by admins not allowed
+      // this affects query too!
       allow list: if userClaimsIsSysAdmin();
 
       function isProfileOwner() {

@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { AsObservablePipe } from './asobservable.pipe';
 
-const declarations = [AsObservablePipe];
+const importsAndExports = [AsObservablePipe];
 
 /**
  * @deprecated use AsObservablePipe directly.
  */
 @NgModule({
-  imports: declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxAsyncPipeModule {}

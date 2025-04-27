@@ -7,7 +7,8 @@ import { DbxFirebaseCollectionStoreDirective } from './store.collection.directiv
  * Directive that connects a host DbxListView to a DbxFirebaseCollectionStoreDirective to pass data for rendering items from a collection and query parameters.
  */
 @Directive({
-  selector: '[dbxFirebaseCollectionList]'
+  selector: '[dbxFirebaseCollectionList]',
+  standalone: true
 })
 export class DbxFirebaseCollectionListDirective<T> extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxFirebaseCollectionStoreDirective = inject(DbxFirebaseCollectionStoreDirective<T>);

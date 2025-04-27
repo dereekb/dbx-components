@@ -5,6 +5,7 @@
         <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
         <dbx-button dbxActionButton text="Change Username"></dbx-button>
         <dbx-error dbxActionError></dbx-error>
+        <div *dbxActionHasSuccess="3000" class="dbx-success" dbxActionSuccess>Success</div>
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">

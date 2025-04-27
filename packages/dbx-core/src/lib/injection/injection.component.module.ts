@@ -3,7 +3,7 @@ import { DbxInjectionArrayComponent } from './injection.array.component';
 import { DbxInjectionComponent } from './injection.component';
 import { DbxInjectionContextDirective } from './injection.context.directive';
 
-const declarations = [DbxInjectionComponent, DbxInjectionArrayComponent, DbxInjectionContextDirective];
+const importsAndExports = [DbxInjectionComponent, DbxInjectionArrayComponent, DbxInjectionContextDirective];
 
 /**
  * @deprecated import the individual components instead.
@@ -13,7 +13,7 @@ const declarations = [DbxInjectionComponent, DbxInjectionArrayComponent, DbxInje
  * - DbxInjectionContextDirective
  */
 @NgModule({
-  imports: declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxInjectionComponentModule {}

@@ -1,9 +1,9 @@
-import { OnDestroy, Directive, Input, inject } from '@angular/core';
+import { OnDestroy, Directive, Input, inject, input } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
 import { shareReplay, BehaviorSubject, combineLatest, Observable, map } from 'rxjs';
 import { DbxFirebaseCollectionChangeDirective } from './store.collection.change.directive';
 import { IterationQueryDocChangeWatcherChangeType } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQueryDocChangeWatcherChangeType;
 
@@ -13,13 +13,14 @@ export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQuery
  * Can specify which changes to appear on.
  */
 @Directive({
-  selector: '[dbxFirebaseCollectionHasChange]'
+  selector: '[dbxFirebaseCollectionHasChange]',
+  standalone: true
 })
-export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective implements OnDestroy {
-  private _mode = new BehaviorSubject<DbxFirebaseCollectionHasChangeDirectiveMode>('addedAndRemoved');
-
+export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective {
   readonly directive = inject(DbxFirebaseCollectionChangeDirective);
-  readonly show$: Observable<boolean> = combineLatest([this._mode, this.directive.event$]).pipe(
+  readonly mode = input<DbxFirebaseCollectionHasChangeDirectiveMode, DbxFirebaseCollectionHasChangeDirectiveMode | ''>('addedAndRemoved', { alias: 'dbxFirebaseCollectionHasChange', transform: (x) => x || 'addedAndRemoved' });
+
+  readonly show$: Observable<boolean> = combineLatest([toObservable(this.mode), this.directive.event$]).pipe(
     map(([mode, event]) => {
       let show = false;
 
@@ -41,18 +42,4 @@ export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective
     }),
     shareReplay(1)
   );
-
-  @Input('dbxFirebaseCollectionHasChange')
-  get mode(): DbxFirebaseCollectionHasChangeDirectiveMode {
-    return this._mode.value;
-  }
-
-  set mode(mode: Maybe<DbxFirebaseCollectionHasChangeDirectiveMode | ''>) {
-    this._mode.next(mode || 'addedAndRemoved');
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._mode.complete();
-  }
 }

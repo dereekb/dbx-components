@@ -6,7 +6,7 @@ defaults: &defaults
   resource_class: large
   docker:
     - image: cimg/node:22.14
-    
+
 orbs:
   nx: nrwl/nx@1.7.0
   node: circleci/node@7.1.0
@@ -68,6 +68,10 @@ jobs:
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
     <<: *defaults
+    environment:
+      # SETUP REQUIRED - Set the git username and email to the desired values
+      GIT_USER_EMAIL: CI_GIT_USER_EMAIL
+      GIT_USER_NAME: CI_GIT_USER_NAME
     steps:
       - checkout
       - attach_workspace:
@@ -79,7 +83,7 @@ jobs:
             - "SET_THIS_VALUE_TO_BE_VALID"
       - run:
           name: setup git
-          command: git config user.email "CI_GIT_USER_EMAIL" && git config user.name "CI_GIT_USER_NAME"
+          command: git config user.email "$GIT_USER_EMAIL" && git config user.name "$GIT_USER_NAME"
       - run:
           name: build release
           command: npx nx run --parallel=1 workspace:version
@@ -111,8 +115,11 @@ jobs:
           name: decode firebase secrets
           command: echo $FIREBASE_SECRETS_BASE64 | base64 -d > ~/code/firebase-secrets.json
       - run:
-          name: deploy updated projects
-          command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
+          name: deploy backend to firebase cloud
+          command: npx nx deploy ANGULAR_APP_NAME
+      - run:
+          name: deploy frontend to firebase hosting
+          command: npx nx deploy API_APP_NAME
       - run:
           name: deploy updated rules
           command: npx nx run workspace:ci-deploy-firebase-rules
@@ -128,7 +135,7 @@ jobs:
       - run:
           name: configure npmrc / npm login
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-      - run: npx nx affected --target=publish-npmjs --all
+      - run: npx nx run-many --target=publish-npmjs
 # --- WORKFLOWS ---
 workflows:
   version: 2

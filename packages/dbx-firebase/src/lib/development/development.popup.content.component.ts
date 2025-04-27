@@ -13,12 +13,13 @@ import { DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY } from './development.
 import { DbxFirebaseEmulatorService } from '../firebase/firebase.emulator.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'dbx-firebase-development-popup-content',
   templateUrl: './development.popup.content.component.html',
   styleUrls: ['./development.popup.component.scss'],
-  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective],
+  imports: [DbxAnchorComponent, DbxTwoColumnFullLeftDirective, DbxWidgetViewComponent, DbxTwoColumnComponent, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxWidgetViewComponent, DbxFirebaseDevelopmentPopupContentFormComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionHandlerDirective, DbxActionFormDirective, DbxFormSourceDirective, DbxActionAutoTriggerDirective, MatButtonModule],
   providers: [TwoColumnsContextStore],
   standalone: true
 })

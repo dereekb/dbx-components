@@ -12,13 +12,6 @@ Those systems are:
 ## GitHub
 You will need to create a github repo for your project. The instructions below assume github.
 
-## CircleCI
-Log into CircleCI and 
-
-https://circleci.com/docs/2.0/add-ssh-key/#adding-ssh-keys-to-a-job
-
-The first step is to create an SSH key for CircleCI to use to write back to your project. If you don't plan on letting CircleCI write to your project (using gitflow-like release to main), then you can skip this step.
-
 ### Creating an SSH Key
 Use ssh-keygen to generate a new SSH key for your project. Generate one that does not have a a pass-phrase, as CircleCI cannot decrypt it otherwise. You should name your key after the name of your project and with `ci` as a prefix (dbxcomponentsci) to differentiate it.
 
@@ -43,11 +36,22 @@ Example URL: https://github.com/dereekb/dbx-components/settings/keys
 
 Do not forget to also enable write access by checking the box before adding your key.
 
+## CircleCI
+Log into CircleCI and 
+
+https://circleci.com/docs/2.0/add-ssh-key/#adding-ssh-keys-to-a-job
+
+The first step is to create an SSH key for CircleCI to use to write back to your project. If you don't plan on letting CircleCI write to your project (using gitflow-like release to main), then you can skip this step.
+
 ### Add To CircleCI
 Go to your project settings on CircleCI and to the SSH keys tab. Go to the Additional SSH Keys tab and add the private key. Make sure the hostname is set to github.com.
 
-### Updating .circleci/config.yml SSH Key Fingerprints
+### Updating .circleci/config.yml 
+#### SSH Key Fingerprints
 Replace the SSH fingerprints with the fingerprints that now show up for your uploaded key on CircleCI. Replace the `SET_THIS_VALUE_TO_BE_VALID` value. You should also update the user.email and user.name values on line 80 to match your desired values.
+
+#### Update Release Git User Details
+Update the `GIT_USER_NAME` and `GIT_USER_EMAIL` values in the `.circleci/config.yml` file to match the desired values.
 
 ### CircleCI Environment Variables
 #### NX_CLOUD_AUTH_TOKEN

@@ -325,6 +325,9 @@ chmod +x reset-emulator-data.sh
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset.sh -o reset.sh
 chmod +x reset.sh
 
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/down.sh -o down.sh
+chmod +x down.sh
+
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/start-merge-in-main.sh -o start-merge-in-main.sh
 chmod +x start-merge-in-main.sh
 

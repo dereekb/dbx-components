@@ -301,7 +301,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
       if (isClientFirebaseError(e)) {
         switch (e.code) {
           case FIRESTORE_PERMISSION_DENIED_ERROR_CODE:
-            result = false;
+            result = false; // does not exist if permission is denied
             break;
         }
       }
