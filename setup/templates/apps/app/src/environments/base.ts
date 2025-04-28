@@ -12,19 +12,19 @@ export interface APP_CODE_PREFIXEnvironment {
    * 
    * This should be true for both the staging system and production one, and false for a localhost environment.
    */
-  production: boolean;
+  readonly production: boolean;
   /**
    * True if this is a staging app/environment.
    */
-  staging: boolean;
+  readonly staging: boolean;
   /**
    * True if this is a testing environment (localhost).
    */
-  testing: boolean;
+  readonly testing: boolean;
   /**
    * Analytics configurations.
    */
-  analytics: {
+  readonly analytics: {
     segment: string;
     hotjar?: string;
     hotjarVersion?: number;
@@ -32,11 +32,11 @@ export interface APP_CODE_PREFIXEnvironment {
   /**
    * Firebase configurations.
    */
-  firebase: DbxFirebaseOptions;
+  readonly firebase: DbxFirebaseOptions;
   /**
    * Mapbox configurations.
    */
-  mapbox: DbxMapboxOptions;
+  readonly mapbox: DbxMapboxOptions;
 }
 
 export const base: APP_CODE_PREFIXEnvironment = {

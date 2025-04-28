@@ -5,3 +5,5 @@ export * from './datetime.field.service';
 export * from './datetime.field.component';
 export * from './datetime.preset';
 export * from './datetime';
+export * from './datetime.field.component';
+export * from './fixeddaterange.field.component';
