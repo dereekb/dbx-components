@@ -10,6 +10,7 @@ export const PHONE_LABEL_MAX_LENGTH = 100;
 export const LABEL_STRING_MAX_LENGTH = 100;
 export const SEARCH_STRING_MAX_LENGTH = 100;
 
+// MARK: Name Field
 export function nameField(config: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes } = config;
 
@@ -25,8 +26,9 @@ export function nameField(config: Partial<TextFieldConfig> = {}): FormlyFieldCon
   });
 }
 
+// MARK: Email Field
 export interface EmailFieldConfig extends Partial<LabeledFieldConfig>, DescriptionFieldConfig {
-  rows?: number;
+  readonly rows?: number;
 }
 
 export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
@@ -49,6 +51,7 @@ export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
   return emailFieldConfig;
 }
 
+// MARK: City Field
 export type CityFieldConfig = Partial<TextFieldConfig>;
 
 export function cityField(config: CityFieldConfig = {}): FormlyFieldConfig {
@@ -64,8 +67,9 @@ export function cityField(config: CityFieldConfig = {}): FormlyFieldConfig {
   });
 }
 
+// MARK: State Field
 export interface StateFieldConfig extends Partial<TextFieldConfig> {
-  asCode?: boolean;
+  readonly asCode?: boolean;
 }
 
 export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
@@ -86,6 +90,7 @@ export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
   });
 }
 
+// MARK: Country Field
 export type CountryFieldConfig = Partial<TextFieldConfig>;
 
 export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig {
@@ -101,6 +106,7 @@ export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig
   });
 }
 
+// MARK: Zip Code Field
 export type ZipCodeFieldConfig = Partial<TextFieldConfig>;
 
 export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig {
@@ -117,6 +123,7 @@ export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig
   });
 }
 
+// MARK: LatLng Text Field
 export const DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
 export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coordinates`;
 

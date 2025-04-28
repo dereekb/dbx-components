@@ -3,12 +3,12 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { MaterialFormFieldConfig, textField } from '../field';
 
 export interface DbxFormSearchFormFieldsValue {
-  search: string;
+  readonly search: string;
 }
 
 export interface DbxFormSearchFormFieldsConfig extends MaterialFormFieldConfig {
-  label?: string;
-  placeholder?: string;
+  readonly label?: string;
+  readonly placeholder?: string;
 }
 
 export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsConfig>): FormlyFieldConfig[] {

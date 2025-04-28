@@ -1,15 +1,15 @@
 import { NgModule } from '@angular/core';
-import { DbxFormValueChangesDirective } from './form.changes.directive';
+import { DbxFormValueChangeDirective } from './form.change.directive';
 import { DbxFormSourceDirective } from './form.input.directive';
 import { DbxFormLoadingSourceDirective } from './form.loading.directive';
 
-const importsAndExports = [DbxFormSourceDirective, DbxFormValueChangesDirective, DbxFormLoadingSourceDirective];
+const importsAndExports = [DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormLoadingSourceDirective];
 
 /**
  * @deprecated import the directives directly instead.
  *
  * @see DbxFormSourceDirective
- * @see DbxFormValueChangesDirective
+ * @see DbxFormValueChangeDirective
  * @see DbxFormLoadingSourceDirective
  */
 @NgModule({

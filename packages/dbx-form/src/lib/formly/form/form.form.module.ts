@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { DbxFormSearchFormComponent } from './search.form.component';
-import { DbxFormlyModule } from '../formly.module';
-import { DbxFormModule } from '../../form/form.module';
-import { DbxFormFormlyFieldModule } from '../field';
 
+const importsAndExports = [DbxFormSearchFormComponent];
+
+/**
+ * @deprecated import DbxFormSearchFormComponent directly instead.
+ */
 @NgModule({
-  imports: [CommonModule, DbxFormModule, DbxFormlyModule, DbxFormFormlyFieldModule],
-  declarations: [DbxFormSearchFormComponent],
-  exports: [DbxFormSearchFormComponent]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxFormFormlyFormModule {}

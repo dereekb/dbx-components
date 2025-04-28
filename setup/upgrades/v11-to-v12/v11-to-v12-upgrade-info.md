@@ -253,7 +253,9 @@ bootstrapApplication(UIView, appConfig)
 - dbxButton now has a new icon-only sizing presentation for icon-only buttons that is smaller than a fab. Previously the presentation would be equivalent to what now requires [fab]="true" configuration.
 - Renamed `switchMapMaybeObs` to `switchMapFilterMaybe`.
 - Removed `DbxCalendarRootModule` and replaced with `provideDbxCalendar()`.
-- 
+- Renamed `DbxFormSpacerComponent` to `DbxFormSpacerDirective`.
+- Renamed `DbxFormValueChangesDirective` to `DbxFormValueChangeDirective`.
+
 #### Deprecated Components Removal
 - Removed deprecated `DbxTextCompatModule`, and `dbx-notice`, `dbx-hint`, `dbx-note`, `dbx-success`, `dbx-warn`, `dbx-ok`. `dbx-label` `dbx-form-description` selectors. Use as a CSS class now.
 - Removed deprecated `DbxRouteModelIdFromAuthUserIdDirective` with selector `dbxFirebaseDocumentAuthId`. Use `dbxRouteModelIdFromAuthUserId` instead.

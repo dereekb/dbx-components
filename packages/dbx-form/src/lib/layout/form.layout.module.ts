@@ -1,10 +1,13 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { DbxFormSpacerComponent } from './form.spacer.component';
+import { DbxFormSpacerDirective } from './form.spacer.directive';
 
+const importsAndExports = [DbxFormSpacerDirective];
+
+/**
+ * @deprecated import DbxFormSpacerDirective directly instead.
+ */
 @NgModule({
-  imports: [CommonModule],
-  declarations: [DbxFormSpacerComponent],
-  exports: [DbxFormSpacerComponent]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxFormLayoutModule {}

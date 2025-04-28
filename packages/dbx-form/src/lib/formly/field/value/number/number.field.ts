@@ -4,17 +4,18 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
 import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser, MaterialFormFieldConfig } from '../../field';
 
+// MARK: Number Field
 export interface NumberFieldNumberConfig {
-  min?: number;
-  max?: number;
-  step?: number;
-  enforceStep?: boolean;
+  readonly min?: number;
+  readonly max?: number;
+  readonly step?: number;
+  readonly enforceStep?: boolean;
 }
 
 export type NumberFieldInputType = 'number';
 
 export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, NumberFieldNumberConfig, AttributesFieldConfig, Partial<TransformNumberFunctionConfigRef>, MaterialFormFieldConfig {
-  inputType?: NumberFieldInputType;
+  readonly inputType?: NumberFieldInputType;
 }
 
 export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformNumberFunctionConfigRef>) {
@@ -60,19 +61,20 @@ export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
   });
 }
 
+// MARK: Number Slider
 export interface NumberSliderFieldConfig extends NumberFieldConfig {
   /**
    * Max value. Required for the slider.
    */
-  max: number;
+  readonly max: number;
   /**
    * Whether or not to show the thumb label while sliding. Defaults to true.
    */
-  thumbLabel?: boolean;
+  readonly thumbLabel?: boolean;
   /**
    * Whether or not to invert the selection line.
    */
-  invertSelectionColoring?: boolean;
+  readonly invertSelectionColoring?: boolean;
   /**
    * Tick interval. If not provided defaults to the step value, if provided. If false, the ticks are disabled.
    *
@@ -80,11 +82,11 @@ export interface NumberSliderFieldConfig extends NumberFieldConfig {
    *
    * For example, a tick interval of 5 show a tick every 5 steps. If steps are 10, it will show a tick at every number divisible by 50 (5 * 10).
    */
-  tickInterval?: false | number;
+  readonly tickInterval?: false | number;
   /**
    * Custom display with function for the thumbLabel.
    */
-  displayWith?: (value: number) => string;
+  readonly displayWith?: (value: number) => string;
 }
 
 export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldConfig {
@@ -102,8 +104,7 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
     }
   }
 
-  const tickInterval: number | undefined = inputTickInterval === false ? undefined : inputTickInterval ?? tickIntervalFromSteps ?? undefined;
-
+  const tickInterval: number | undefined = inputTickInterval === false ? undefined : (inputTickInterval ?? tickIntervalFromSteps ?? undefined);
   return formlyField({
     key,
     type: 'slider',
@@ -126,6 +127,7 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
   });
 }
 
+// MARK: Dollar Amount Field
 export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
 
 export function dollarAmountField(config: DollarAmountFieldConfig) {
