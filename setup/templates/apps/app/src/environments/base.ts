@@ -49,13 +49,16 @@ export const base: APP_CODE_PREFIXEnvironment = {
   firebase: {
     enabledLoginMethods: ['email', 'google', 'github'],
     // You can find this info at: https://console.firebase.google.com/u/0/project/FIREBASE_STAGING_PROJECT_ID/settings/general/
-    apiKey: "", // TODO: Put your firebase staging API key here
-    authDomain: '', // TODO: Put your firebase staging Auth domain here
-    databaseURL: '',  // TODO: Put your firebase staging database url here
-    projectId: '', // TODO: Put your firebase staging project id here
-    storageBucket: '', // TODO: Put your firebase staging storage bucket here
-    messagingSenderId: '', // TODO: Put your firebase staging messaging sender id here
-    appId: 'FIREBASE_STAGING_PROJECT_ID',  // TODO: Put your firebase staging app id here
+    // Copy paste to override the below
+    // ==
+    apiKey: "", // TODO: Put your firebase API key here
+    authDomain: '', // TODO: Put your firebase Auth domain here
+    projectId: 'FIREBASE_STAGING_PROJECT_ID', // TODO: Put your firebase project id here
+    storageBucket: '', // TODO: Put your firebase storage bucket here
+    messagingSenderId: '', // TODO: Put your firebase messaging sender id here
+    appId: '',  // TODO: Put your firebase app id here
+    // ==
+    // The measurement id is only available if you're using google analytics
     measurementId: '', // TODO: Put your firebase staging measurement id here,
     emulators: {
       ...firebaseInfo.emulators,
