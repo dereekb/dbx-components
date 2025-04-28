@@ -101,3 +101,16 @@ export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayo
     })
   };
 }
+
+// TODO: Add addon wrapper/extension from this demo:
+// https://formly.dev/docs/examples/other/material-prefix-suffix
+
+/*
+export interface NumberFieldAddon {
+  readonly text?: Maybe<string>;
+  readonly icon?: Maybe<string>;
+}
+  
+readonly addonLeft?: Maybe<NumberFieldAddon>;
+readonly addonRight?: Maybe<NumberFieldAddon>;
+*/

@@ -1,17 +1,24 @@
 import { type Maybe, type DecisionFunction, type Milliseconds, type TimezoneString, type DateMonth, type DayOfMonth, type YearNumber, isMonthDaySlashDate, MS_IN_MINUTE } from '@dereekb/util';
 import { guessCurrentTimezone, DateTimezoneUtcNormalInstance, dateTimezoneUtcNormal, DateRangeInput, DateRange, isSameDateDayRange, DateRangeWithDateOrStringValue, DateTimeMinuteConfig, dateRange, isDateInDateRange, clampDateRangeToDateRange, isSameDateRange, isSameDateDay, limitDateTimeInstance, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, Subject, of, combineLatestWith, filter, combineLatest, scan, first, timer } from 'rxjs';
-import { Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild, forwardRef, inject } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, ElementRef, Injectable, OnDestroy, OnInit, ViewChild, forwardRef, inject, signal, viewChild } from '@angular/core';
+import { AbstractControl, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
-import { MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar } from '@angular/material/datepicker';
+import { MatDateRangeSelectionStrategy, MAT_DATE_RANGE_SELECTION_STRATEGY, DateRange as DatePickerDateRange, MatCalendar, MatDatepickerInput, MatDatepickerModule, MatDateRangeInput, MatStartDate, MatEndDate } from '@angular/material/datepicker';
 import { asObservableFromGetter, filterMaybe, ObservableOrValueGetter, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 import { DbxDateTimeValueMode, dbxDateRangeIsSameDateRangeFieldValue, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory } from './date.value';
 import { DateTimePresetConfiguration } from './datetime';
 import { DbxDateTimeFieldMenuPresetsService } from './datetime.field.service';
 import { DateAdapter } from '@angular/material/core';
 import { isBefore } from 'date-fns';
+import { MatError, MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { DbxValuePipeModule, DbxDatePipeModule } from '@dereekb/dbx-core';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NgClass } from '@angular/common';
 
 export type DbxFixedDateRangeDateRangeInput = Omit<DateRangeInput, 'date'>;
 
@@ -131,8 +138,8 @@ export interface FixedDateRangeScan {
 type SelectedDateEventType = 'calendar' | 'input';
 
 interface SelectedDateEvent {
-  type: SelectedDateEventType;
-  range?: Maybe<Partial<DateRange>>;
+  readonly type: SelectedDateEventType;
+  readonly range?: Maybe<Partial<DateRange>>;
 }
 
 @Component({
@@ -142,59 +149,44 @@ interface SelectedDateEvent {
       provide: MAT_DATE_RANGE_SELECTION_STRATEGY,
       useClass: forwardRef(() => DbxFixedDateRangeFieldSelectionStrategy)
     }
-  ]
+  ],
+  imports: [MatDatepickerModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatInputModule, MatError, NgClass],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<DbxFixedDateRangeFieldProps>> implements OnInit, OnDestroy {
   private readonly dbxDateTimeFieldMenuPresetsService = inject(DbxDateTimeFieldMenuPresetsService);
 
-  private _sub = new SubscriptionObject();
+  readonly calendar = viewChild.required<MatCalendar<Date>>(MatCalendar);
+  readonly startDateInputElement = viewChild<string, ElementRef>('startDateInput', { read: ElementRef });
+  readonly endDateInputElement = viewChild<string, ElementRef>('endDateInput', { read: ElementRef });
 
-  private _inputRangeFormSub = new SubscriptionObject();
-  private _inputRangeFormValueSub = new SubscriptionObject();
+  readonly currentDateRangeInputSignal = signal<Maybe<DbxFixedDateRangeDateRangeInput>>(undefined);
+  readonly currentSelectionModeSignal = signal<DbxFixedDateRangeSelectionMode>('single');
 
-  private _dateRangeInputSub = new SubscriptionObject();
-  private _currentSelectionModeSub = new SubscriptionObject();
-  private _latestBoundarySub = new SubscriptionObject();
-  private _disableEndSub = new SubscriptionObject();
-  private _activeDateSub = new SubscriptionObject();
+  private readonly _sub = new SubscriptionObject();
 
-  private _currentDateRangeInput: Maybe<DbxFixedDateRangeDateRangeInput> = {};
-  private _currentSelectionMode: DbxFixedDateRangeSelectionMode = 'single';
-  private _latestBoundary: Maybe<DateRange> = null;
+  private readonly _inputRangeFormSub = new SubscriptionObject();
+  private readonly _inputRangeFormValueSub = new SubscriptionObject();
 
-  private _config = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangePickerConfiguration>>>(undefined);
-  private _selectionMode = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeSelectionMode>>>(undefined);
-  private _dateRangeInput = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeDateRangeInput>>>(undefined);
+  private readonly _dateRangeInputSub = new SubscriptionObject();
+  private readonly _currentSelectionModeSub = new SubscriptionObject();
+  private readonly _latestBoundarySub = new SubscriptionObject();
+  private readonly _disableEndSub = new SubscriptionObject();
+  private readonly _activeDateSub = new SubscriptionObject();
 
-  private _timezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
-  private _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
+  private readonly _config = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangePickerConfiguration>>>(undefined);
+  private readonly _selectionMode = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeSelectionMode>>>(undefined);
+  private readonly _dateRangeInput = new BehaviorSubject<Maybe<Observable<DbxFixedDateRangeDateRangeInput>>>(undefined);
 
-  private _selectionEvent = new Subject<SelectedDateEvent>();
+  private readonly _timezone = new BehaviorSubject<Maybe<Observable<Maybe<TimezoneString>>>>(undefined);
+  private readonly _presets = new BehaviorSubject<Observable<DateTimePresetConfiguration[]>>(of([]));
+
+  private readonly _selectionEvent = new Subject<SelectedDateEvent>();
   readonly selectedDateRange$: Observable<Maybe<Partial<DateRange>>> = this._selectionEvent.pipe(map((x) => x.range));
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<DateRange>>>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl<Maybe<DateRange>>>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
-
-  @ViewChild(MatCalendar)
-  calendar!: MatCalendar<Date>;
-
-  @ViewChild('startDateInput', { read: ElementRef })
-  startDateInputElement!: ElementRef;
-
-  @ViewChild('endDateInput', { read: ElementRef })
-  endDateInputElement!: ElementRef;
-
-  get currentDateRangeInput() {
-    return this._currentDateRangeInput;
-  }
-
-  get currentSelectionMode() {
-    return this._currentSelectionMode;
-  }
-
-  get latestBoundary() {
-    return this._latestBoundary;
-  }
 
   readonly config$: Observable<DbxFixedDateRangePickerConfiguration> = this._config.pipe(
     filterMaybe(),
@@ -516,6 +508,13 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
   readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
 
+  readonly minDateSignal = toSignal(this.min$, { initialValue: null });
+  readonly maxDateSignal = toSignal(this.max$, { initialValue: null });
+  readonly endDisabledSignal = toSignal(this.endDisabled$);
+  readonly latestBoundarySignal = toSignal(this.latestBoundary$);
+  readonly calendarSelectionSignal = toSignal(this.calendarSelection$, { initialValue: null });
+  readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: this.defaultPickerFilter });
+
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
@@ -560,8 +559,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
       this._selectionMode.next(asObservableFromGetter(this.selectionMode));
     }
 
-    this._currentSelectionModeSub.subscription = this.selectionMode$.subscribe((x) => (this._currentSelectionMode = x));
-    this._dateRangeInputSub.subscription = this.dateRangeInput$.subscribe((x) => (this._currentDateRangeInput = x));
+    this._currentSelectionModeSub.subscription = this.selectionMode$.subscribe((x) => this.currentSelectionModeSignal.set(x));
+    this._dateRangeInputSub.subscription = this.dateRangeInput$.subscribe((x) => this.currentDateRangeInputSignal.set(x));
 
     this._inputRangeFormSub.subscription = this.valueInSystemTimezone$.subscribe((x: Maybe<DateRange>) => {
       setInputFormValue(x);
@@ -575,11 +574,11 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
             return this.inputRangeForm.valueChanges.pipe(
               debounceTime(500),
               filter(() => {
-                const startString = this.startDateInputElement.nativeElement?.value;
+                const startString = this.startDateInputElement()?.nativeElement?.value;
                 let valid = isMonthDaySlashDate(startString);
 
-                if (valid && this._currentSelectionMode !== 'single') {
-                  const endString = this.endDateInputElement.nativeElement?.value;
+                if (valid && this.currentSelectionModeSignal() !== 'single') {
+                  const endString = this.endDateInputElement()?.nativeElement?.value;
                   valid = isMonthDaySlashDate(endString);
                 }
 
@@ -591,15 +590,19 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
           distinctUntilChanged(isSameDateRange)
         )
         .subscribe((x: Maybe<Partial<DateRange>>) => {
-          if (this._currentSelectionMode === 'single') {
+          const currentSelectionMode = this.currentSelectionModeSignal();
+
+          if (currentSelectionMode === 'single') {
             this.setDateRange(x?.start ? { start: x.start } : null, 'input');
           } else {
             let rangeToSet: Maybe<Partial<DateRange>> = x;
 
-            if (this._currentSelectionMode === 'arbitrary_quick' && this._latestBoundary && x?.start && x?.end) {
-              if (!isDateInDateRange(x.start, this._latestBoundary)) {
+            const latestBoundary = this.latestBoundarySignal();
+
+            if (currentSelectionMode === 'arbitrary_quick' && latestBoundary && x?.start && x?.end) {
+              if (!isDateInDateRange(x.start, latestBoundary)) {
                 // if the end date it outside of the current range (i.e. a range was typed in only to the start date) then set the end to the boundary end
-                const boundary = dateRange({ ...this._currentDateRangeInput, date: x.start } as DateRangeInput);
+                const boundary = dateRange({ ...this.currentDateRangeInputSignal(), date: x.start } as DateRangeInput);
                 rangeToSet = { start: x.start, end: boundary.end };
               }
             }
@@ -609,7 +612,6 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
         });
     }
 
-    this._latestBoundarySub.subscription = this.latestBoundary$.subscribe((x) => (this._latestBoundary = x));
     this._dateRangeInput.next(asObservableFromGetter(this.fixedDateRangeField.dateRangeInput));
 
     this._disableEndSub.subscription = this.endDisabled$.subscribe((disabled) => {
@@ -660,7 +662,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     }
 
     this._activeDateSub.subscription = this.calendarFocusDate$.subscribe((x) => {
-      this.calendar.activeDate = x;
+      this.calendar().activeDate = x;
     });
   }
 
@@ -692,7 +694,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
   }
 
   _createDateRange(date: Maybe<Date>): Maybe<DateRange> {
-    return date ? dateRange({ ...this._currentDateRangeInput, date } as DateRangeInput) : undefined;
+    return date ? dateRange({ ...this.currentDateRangeInputSignal(), date } as DateRangeInput) : undefined;
   }
 }
 
@@ -707,9 +709,11 @@ export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeS
   }
 
   createPreview(activeDate: D | null, currentRange: DatePickerDateRange<D>, event: Event): DatePickerDateRange<D> {
-    const { currentSelectionMode } = this.dbxFixedDateRangeFieldComponent;
+    const { currentSelectionModeSignal, latestBoundarySignal } = this.dbxFixedDateRangeFieldComponent;
+    const currentSelectionMode = currentSelectionModeSignal();
+
     if (activeDate != null && currentSelectionMode !== 'single') {
-      const latestBoundary = this.dbxFixedDateRangeFieldComponent.latestBoundary;
+      const latestBoundary = latestBoundarySignal();
       const date = this.dateFromAdapterDate(activeDate);
 
       if (latestBoundary && (currentSelectionMode === 'normal' || isDateInDateRange(date, latestBoundary))) {

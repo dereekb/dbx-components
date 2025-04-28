@@ -17,23 +17,11 @@ import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
 import { DbxButtonModule } from '@dereekb/dbx-web';
 import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.component';
 
+const importsAndExports = [DbxDateTimeFieldComponent, DbxFixedDateRangeFieldComponent, DbxFormFormlyWrapperModule];
+
 @NgModule({
   imports: [
-    CommonModule,
-    FormsModule,
-    MatInputModule,
-    MatDividerModule,
-    MatFormFieldModule,
-    DbxButtonModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatMenuModule,
-    ReactiveFormsModule,
-    DbxDatePipeModule,
-    DbxValuePipeModule,
-    MatChipsModule,
-    MatIconModule,
-    FlexLayoutModule,
+    ...importsAndExports,
     FormlyModule.forChild({
       types: [
         //
@@ -42,7 +30,6 @@ import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.componen
       ]
     })
   ],
-  declarations: [DbxDateTimeFieldComponent, DbxFixedDateRangeFieldComponent],
-  exports: [DbxFormFormlyWrapperModule]
+  exports: importsAndExports
 })
 export class DbxFormFormlyDateFieldModule {}

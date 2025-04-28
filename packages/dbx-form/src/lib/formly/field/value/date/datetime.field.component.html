@@ -1,83 +1,101 @@
 <div class="dbx-datetime-field" fxLayout="row wrap" fxLayout.xs="column wrap" fxLayoutGap="6px grid" fxLayoutAlign="space-evenly stretch">
   <!-- Date -->
-  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="dateOnly ? '100' : '50'" *ngIf="showDateInput$ | async">
-    <ng-container *ngTemplateOutlet="dateInputTemplate"></ng-container>
-  </div>
-  <!-- Time -->
-  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="(showDateInput$ | async) ? '50' : '100'">
-    <ng-container *ngIf="showTimeInput$ | async">
-      <ng-container *ngTemplateOutlet="timeMenuAndInputTemplate"></ng-container>
-    </ng-container>
-    <div *ngIf="showAddTime$ | async" class="add-time-button-wrapper">
-      <button mat-button class="mat-datepicker-button-highlight dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
-        <mat-icon>timer</mat-icon>
-        Add Time
-      </button>
+  @if (showDateInputSignal()) {
+    <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="dateOnly ? '100' : '50'">
+      <ng-container [ngTemplateOutlet]="dateInputTemplate"></ng-container>
     </div>
+  }
+  <!-- Time -->
+  <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="showDateInputSignal() ? '50' : '100'">
+    @if (showTimeInputSignal()) {
+      <ng-container [ngTemplateOutlet]="timeMenuAndInputTemplate"></ng-container>
+    }
+    @if (showAddTimeSignal()) {
+      <div class="add-time-button-wrapper">
+        <button mat-button class="mat-datepicker-button-highlight dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
+          <mat-icon>timer</mat-icon>
+          Add Time
+        </button>
+      </div>
+    }
   </div>
   <!-- Date Hint -->
-  <ng-container [ngSwitch]="hasError$ | async">
-    <ng-container *ngSwitchCase="false">
-      <div *ngIf="!hideDateHint" class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
-        <div class="dbx-hint">
-          <ng-container [ngSwitch]="hasEmptyDisplayValue$ | async">
-            <ng-container *ngSwitchCase="true">
-              <span class="dbx-small">No date/time set</span>
-            </ng-container>
-            <ng-container *ngSwitchCase="false">
-              <ng-container [ngSwitch]="fullDay$ | async">
-                <small *ngSwitchCase="true">
-                  <b class="dbx-ok">{{ allDayLabel }}</b>
-                  {{ displayValue$ | async | date: 'fullDate' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | dateDistance }})
-                </small>
-                <small *ngSwitchCase="false">
-                  <ng-container *ngIf="displayValue$ | async">
-                    <b class="dbx-ok">{{ atTimeLabel }}</b>
-                    {{ displayValue$ | async | date: 'medium' }} {{ timezoneAbbreviation$ | async }} ({{ displayValue$ | async | timeDistance }})
-                  </ng-container>
-                </small>
-              </ng-container>
-            </ng-container>
-          </ng-container>
+  @switch (hasErrorSignal()) {
+    @case (false) {
+      @if (!hideDateHint) {
+        <div class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
+          <div class="dbx-hint">
+            @switch (hasEmptyDisplayValueSignal()) {
+              @case (true) {
+                <span class="dbx-small">No date/time set</span>
+              }
+              @case (false) {
+                @switch (fullDaySignal()) {
+                  @case (true) {
+                    <small>
+                      <b class="dbx-ok">{{ allDayLabel }}</b>
+                      {{ displayValueSignal() | date: 'fullDate' }} {{ timezoneAbbreviationSignal() }} ({{ displayValueSignal() | dateDistance }})
+                    </small>
+                  }
+                  @case (false) {
+                    <small>
+                      @if (displayValueSignal()) {
+                        <b class="dbx-ok">{{ atTimeLabel }}</b>
+                        {{ displayValueSignal() | date: 'medium' }} {{ timezoneAbbreviationSignal() }} ({{ displayValueSignal() | timeDistance }})
+                      }
+                    </small>
+                  }
+                }
+              }
+            }
+          </div>
         </div>
-      </div>
-    </ng-container>
-    <ng-container *ngSwitchCase="true">
-      <mat-error *ngIf="currentErrorMessage$ | async">{{ currentErrorMessage$ | async }}</mat-error>
-    </ng-container>
-  </ng-container>
+      }
+    }
+    @case (true) {
+      @if (currentErrorMessageSignal()) {
+        <mat-error>{{ currentErrorMessageSignal() }}</mat-error>
+      }
+    }
+  }
 </div>
 
 <!-- Date Input Template -->
 <ng-template #dateInputTemplate>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
-    <input #dateInput matInput [disabled]="disabled" [required]="isDateRequired" [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
+    <input #dateInput matInput [disabled]="disabled" [required]="isDateRequired" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="datePicked($event)" [value]="dateValueSignal()" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
-    <button matPrefix class="dbx-datetime-row-button" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
-      <mat-icon>calendar_today</mat-icon>
-    </button>
-    <button matSuffix *ngIf="showClearButton$ | async" class="dbx-datetime-clear-button" mat-icon-button aria-label="clears the date and time menu" [disabled]="disabled" (click)="clearValue()">
-      <mat-icon>clear</mat-icon>
-    </button>
-    <span matTextSuffix *ngIf="!(showTimeInput$ | async)">
-      <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
-    </span>
+    @if (!hideDatePicker) {
+      <button matPrefix class="dbx-datetime-row-button" mat-icon-button (click)="picker.open()" [disabled]="disabled">
+        <mat-icon>calendar_today</mat-icon>
+      </button>
+    }
+    @if (showClearButtonSignal()) {
+      <button matSuffix class="dbx-datetime-clear-button" mat-icon-button aria-label="clears the date and time menu" [disabled]="disabled" (click)="clearValue()">
+        <mat-icon>clear</mat-icon>
+      </button>
+    }
+    @if (!showTimeInputSignal()) {
+      <span matTextSuffix>
+        <ng-container [ngTemplateOutlet]="timezoneSuffixTemplate"></ng-container>
+      </span>
+    }
   </mat-form-field>
 </ng-template>
 
 <!-- Time Menu/Input Template -->
 <ng-template #timeMenuAndInputTemplate>
   <mat-menu #timemenu="matMenu">
-    <ng-container *ngIf="timeMode === 'optional'">
+    @if (timeMode === 'optional') {
       <button mat-menu-item (click)="removeTime()">
         <span>Remove Time</span>
       </button>
       <mat-divider></mat-divider>
-    </ng-container>
-    <ng-container *ngFor="let preset of presets$ | async">
+    }
+    @for (preset of presetsSignal(); track preset) {
       <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
-    </ng-container>
+    }
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ timeLabel }}</mat-label>
@@ -86,13 +104,17 @@
       <mat-icon>timer</mat-icon>
     </button>
     <span matTextSuffix>
-      <ng-container *ngTemplateOutlet="timezoneSuffixTemplate"></ng-container>
+      <ng-container [ngTemplateOutlet]="timezoneSuffixTemplate"></ng-container>
     </span>
-    <mat-error *ngIf="timeInputCtrl.hasError('pattern')">The input time is not recognizable.</mat-error>
+    @if (timeInputCtrl.hasError('pattern')) {
+      <mat-error>The input time is not recognizable.</mat-error>
+    }
   </mat-form-field>
 </ng-template>
 
 <!-- Timezone Suffix -->
 <ng-template #timezoneSuffixTemplate>
-  <span *ngIf="showTimezone" class="dbx-datetime-timezone dbx-faint">{{ timezoneAbbreviation$ | async }}</span>
+  @if (showTimezone) {
+    <span class="dbx-datetime-timezone dbx-faint">{{ timezoneAbbreviationSignal() }}</span>
+  }
 </ng-template>

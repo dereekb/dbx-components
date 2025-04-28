@@ -131,5 +131,5 @@ export function numberSliderField(config: NumberSliderFieldConfig): FormlyFieldC
 export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
 
 export function dollarAmountField(config: DollarAmountFieldConfig) {
-  return numberField({ ...config, transform: { ...config.transform, precision: config.transform?.precision ?? DOLLAR_AMOUNT_PRECISION } });
+  return numberField({ ...config, transform: { ...config.transform, precision: config.transform?.precision ?? DOLLAR_AMOUNT_PRECISION } }); // TODO: Add wrapper addon, addonLeft: { text: '$' }
 }
