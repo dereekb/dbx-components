@@ -1,7 +1,8 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
-import { containsStringAnyCase, type Maybe } from '@dereekb/util';
+import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTestNotificationParams, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from 'demo-firebase';
+import { type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
+import { usernameAlreadyTakenError } from './profile.error';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
@@ -83,16 +84,12 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
 
       // perform the change in a transaction
       await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-        const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
+        // check that there are any conflicts with other profiles
+        const conflictingDoc = await queryProfile(profileWithUsername(username)).getFirstDoc(transaction);
 
-        if (!docs.empty) {
-          const usernames = docs.docs.map((x) => {
-            const { username: docUsername } = x.data();
-            return docUsername;
-          });
-
-          if (containsStringAnyCase(usernames, username)) {
-            throw new Error('This username is already taken.');
+        if (conflictingDoc) {
+          if (conflictingDoc.id !== documentRef.id) {
+            throw usernameAlreadyTakenError(username);
           }
         }
 

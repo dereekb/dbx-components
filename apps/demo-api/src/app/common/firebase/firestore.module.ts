@@ -1,4 +1,4 @@
-import { DemoFirestoreCollections, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { DemoFirestoreCollections, makeDemoFirestoreCollections } from 'demo-firebase';
 import { appFirestoreModuleMetadata } from '@dereekb/firebase-server';
 import { Module } from '@nestjs/common';
 

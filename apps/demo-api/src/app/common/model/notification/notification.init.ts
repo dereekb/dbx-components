@@ -1,7 +1,7 @@
 import { MAKE_TEMPLATE_FOR_NOTIFICATION_RELATED_MODEL_INITIALIZATION_FUNCTION_DELETE_RESPONSE, MakeTemplateForNotificationRelatedModelInitializationFunctionInput, MakeTemplateForNotificationRelatedModelInitializationFunctionResult, NotificationInitServerActionsContextConfig } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { NotificationBoxRecipient, firestoreModelKey, newNotificationBoxRecipientForUid } from '@dereekb/firebase';
-import { guestbookIdentity, profileIdentity } from '@dereekb/demo-firebase';
+import { guestbookIdentity, profileIdentity } from 'demo-firebase';
 
 export function demoNotificationInitServerActionsContextConfig(context: DemoFirebaseServerActionsContext): NotificationInitServerActionsContextConfig {
   const { profileCollection, guestbookCollection } = context;

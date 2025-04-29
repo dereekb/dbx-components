@@ -1,6 +1,6 @@
 import { AppNotificationTemplateTypeInfoRecordService, AppNotificationTemplateTypeInfoRecordServiceRef } from '@dereekb/firebase';
 import { DemoApiAuthService } from './auth.service';
-import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { DemoFirestoreCollections } from 'demo-firebase';
 import { FirebaseServerActionsContext, FirebaseServerAuthServiceRef, FirebaseServerStorageService, FirebaseServerStorageServiceRef } from '@dereekb/firebase-server';
 import { TransformAndValidateFunctionResultFactory, TransformAndValidateObjectFactory } from '@dereekb/model';
 import { MailgunService, MailgunServiceRef } from '@dereekb/nestjs/mailgun';

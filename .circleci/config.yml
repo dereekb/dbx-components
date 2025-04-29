@@ -264,7 +264,7 @@ jobs:
       - run:
           name: Run lint fix to update any npm dependencies in the projects before building
           command: ./lint-fix-all.sh || true # ignore error
-      # - run: npx nx affected --target=publish-npmjs --all
+      # - run: npx nx run-many --target=publish-npmjs --all
       # npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
       # since these dependencies rely on eachother, they should be published in dependency order
       - run: npx nx run util:publish-npmjs && npx nx run rxjs:publish-npmjs

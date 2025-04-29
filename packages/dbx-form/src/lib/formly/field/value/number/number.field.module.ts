@@ -1,11 +1,11 @@
 import { FormlyMaterialModule } from '@ngx-formly/material';
 import { FormlyMatSliderModule } from '@ngx-formly/material/slider';
 import { NgModule } from '@angular/core';
-import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
+
+const importsAndExports = [FormlyMaterialModule, FormlyMatSliderModule];
 
 @NgModule({
-  imports: [FormlyMaterialModule, FormlyMatSliderModule],
-  declarations: [],
-  exports: [DbxFormFormlyWrapperModule]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxFormFormlyNumberFieldModule {}

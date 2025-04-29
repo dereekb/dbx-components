@@ -167,3 +167,30 @@ export function dateToMinuteOfDay(date: Date): MinuteOfDay {
 export function asMinuteOfDay(minutes: Minutes): MinuteOfDay {
   return Math.max(0, minutes % MINUTES_IN_DAY);
 }
+
+/**
+ * Returns a string that represents the input hours and minutes.
+ *
+ * Examples:
+ * - {} -> ''
+ * - { hour: 1, minute: 30 } -> "1 hour and 30 minutes"
+ * - { hour: 1 } -> "1 hour"
+ * - { minute: 30 } -> "30 minutes"
+ *
+ * @param input
+ * @returns
+ */
+export function hoursAndMinutesToString(input: HoursAndMinutes): string {
+  const { hour, minute } = input;
+  let result = '';
+
+  if (hour && minute) {
+    result = `${hour} hours and ${minute} minutes`;
+  } else if (hour) {
+    result = `${hour} hours`;
+  } else if (minute) {
+    result = `${minute} minutes`;
+  }
+
+  return result;
+}

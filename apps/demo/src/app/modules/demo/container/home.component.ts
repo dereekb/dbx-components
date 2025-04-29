@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { DemoSystemStateAccessor } from '@dereekb/demo-components';
+import { DemoSystemStateAccessor } from 'demo-components';
 import { DbxAppEnviromentService } from '@dereekb/dbx-core';
 
 @Component({

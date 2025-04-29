@@ -1,7 +1,7 @@
 import { NotificationSendService, firestoreNotificationSummarySendService, ignoreSendNotificationTextSendService } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from './notification.send.mailgun.service';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID } from '@dereekb/demo-firebase';
+import { DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID } from 'demo-firebase';
 
 export function demoNotificationSendServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationSendService {
   const { mailgunService } = demoFirebaseServerActionsContext;

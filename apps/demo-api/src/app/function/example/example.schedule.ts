@@ -1,4 +1,4 @@
-import { loadExampleSystemState } from '@dereekb/demo-firebase';
+import { loadExampleSystemState } from 'demo-firebase';
 import { DemoScheduleFunction } from '../function';
 
 export const exampleUsageOfSchedule: DemoScheduleFunction = async (request) => {

@@ -1,4 +1,4 @@
-import { DemoRootSharedModule } from '@dereekb/demo-components';
+import { DemoRootSharedModule } from 'demo-components';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DemoOnboardLayoutComponent } from './container/layout.component';

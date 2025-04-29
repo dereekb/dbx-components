@@ -22,20 +22,21 @@ CI_GIT_USER_NAME=ci                         # git username to use in CI deployme
 # - Created a project on firebase. This step is required.
 # - Create a Firestore Database
 # - Make sure you have upgraded to the Blaze plan
-FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapierapp
-INPUT_PROJECT_NAME=${2:-"$FIREBASE_PROJECT_ID"}               # example: gethapier
-INPUT_CODE_PREFIX=${3:-app}                                   # example: getHapier  #single-word prefix used in code that should be camelCase
-FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
-PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
+FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}    # example: gethapierapp
+INPUT_PROJECT_NAME=${2:-"$FIREBASE_PROJECT_ID"}                 # example: gethapier
+INPUT_CODE_PREFIX=${3:-app}                                     # example: getHapier  #single-word prefix used in code that should be camelCase
+FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                         # example: 9100
+PARENT_DIRECTORY=${5:-'../../'}                                 # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
+FIREBASE_STAGING_PROJECT_ID=${6:-"$FIREBASE_PROJECT_ID-staging"} # example: gethapier-staging
 
-# Example: ./setup-project.sh gethapier gethapier getHapier 9300
+# Example: ./setup-project.sh gethapierapp gethapier getHapier 9300
 
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 
 # - Other Configuration
-DEFAULT_SOURCE_BRANCH="main"
+DEFAULT_SOURCE_BRANCH="develop"  # main
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -265,11 +266,11 @@ else
   # automatic configuration. This should typically only be used for CI/testing, as using the firebase CLI can pull existing content in after logging in.
   echo "Initializing firebase automatically using project name..."
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firebase.json -o firebase.json.tmp
-  sed -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" firebase.json.tmp > firebase.json
+  sed -e "s:FIREBASE_PROJECT_ID_STAGING:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" firebase.json.tmp > firebase.json
   rm firebase.json.tmp
 
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/.firebaserc -o .firebaserc.tmp
-  sed -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" .firebaserc.tmp > .firebaserc
+  sed -e "s:FIREBASE_PROJECT_ID_STAGING:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" .firebaserc.tmp > .firebaserc
   rm .firebaserc.tmp
 
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firestore.indexes.json -o firestore.indexes.json
@@ -303,7 +304,7 @@ sed "s/demo-api/$API_APP_NAME/g" Dockerfile.tmp > Dockerfile
 rm Dockerfile.tmp
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/docker-compose.yml -o docker-compose.yml.tmp
-sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api-network/$DOCKER_CONTAINER_NETWORK_NAME/g" -e "s/demo-api/$API_APP_NAME/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9908/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
+sed -e "s/dereekb-components/$FIREBASE_STAGING_PROJECT_ID/g" -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api-network/$DOCKER_CONTAINER_NETWORK_NAME/g" -e "s/demo-api/$API_APP_NAME/g" -e "s/9900-9908/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
 rm docker-compose.yml.tmp
 
 # download .gitignore
@@ -315,11 +316,17 @@ sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_
 rm exec-with-emulator.sh.tmp
 chmod +x exec-with-emulator.sh
 
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/update-dbx-components.sh -o update-dbx-components.sh
+chmod +x update-dbx-components.sh
+
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset-emulator-data.sh -o reset-emulator-data.sh
 chmod +x reset-emulator-data.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset.sh -o reset.sh
 chmod +x reset.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/down.sh -o down.sh
+chmod +x down.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/start-merge-in-main.sh -o start-merge-in-main.sh
 chmod +x start-merge-in-main.sh
@@ -342,6 +349,7 @@ chmod +x start-release.sh
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/test-all.sh -o test-all.sh.tmp
 sed -e "s/demo-api/$API_APP_NAME/g" test-all.sh.tmp > test-all.sh
 chmod +x test-all.sh
+rm test-all.sh.tmp
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/run-server.sh -o run-server.sh.tmp
 sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_NAME/g" run-server.sh.tmp > run-server.sh
@@ -390,7 +398,8 @@ mkdir -p ./.github/workflows
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o .github/workflows/commitlint.yml
 
 # add prettier configs
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettieringnore -o .prettieringnore
+rm .prettierignore
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettierignore -o .prettierignore
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettierrc -o .prettierrc
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/pre-commit -o .husky/pre-commit
 
@@ -536,7 +545,7 @@ download_ts_file () {
   local FILE_PATH=$3
   local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX_CAPS:$APP_CODE_PREFIX_CAPS:g" -e "s:APP_CODE_PREFIX_CAMEL:$APP_CODE_PREFIX_CAMEL:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:FIREBASE_STAGING_PROJECT_ID:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:APP_CODE_PREFIX_CAPS:$APP_CODE_PREFIX_CAPS:g" -e "s:APP_CODE_PREFIX_CAMEL:$APP_CODE_PREFIX_CAMEL:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 
@@ -688,6 +697,7 @@ rm -rf $ANGULAR_APP_FOLDER/src/environments ||:
 mkdir $ANGULAR_APP_FOLDER/src/environments
 download_angular_ts_file "src/environments/base.ts"
 download_angular_ts_file "src/environments/environment.prod.ts"
+download_angular_ts_file "src/environments/environment.staging.ts"
 download_angular_ts_file "src/environments/environment.ts"
 
 rm -rf $ANGULAR_APP_FOLDER/src/app ||:
@@ -865,3 +875,6 @@ fi
 # https://stackoverflow.com/questions/1657017/how-to-squash-all-git-commits-into-one
 echo "Squashing all commits into a single orphan"
 git reset $(git commit-tree HEAD^{tree} -m "started dbx-components project")
+
+# Copy setup checklist readme to the root of the project
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/getting-started-checklist.md -o getting-started-checklist.md

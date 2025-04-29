@@ -7,31 +7,59 @@ import { DbxMapboxOptions } from '@dereekb/dbx-web/mapbox';
 import firebaseInfo from '../../../../firebase.json';
 
 export interface APP_CODE_PREFIXEnvironment {
-  production: boolean;
-  testing: boolean;
-  analytics: {
+  /**
+   * True if this environment should be treated as production.
+   * 
+   * This should be true for both the staging system and production one, and false for a localhost environment.
+   */
+  readonly production: boolean;
+  /**
+   * True if this is a staging app/environment.
+   */
+  readonly staging: boolean;
+  /**
+   * True if this is a testing environment (localhost).
+   */
+  readonly testing: boolean;
+  /**
+   * Analytics configurations.
+   */
+  readonly analytics: {
     segment: string;
+    hotjar?: string;
+    hotjarVersion?: number;
   },
-  firebase: DbxFirebaseOptions;
-  mapbox: DbxMapboxOptions;
+  /**
+   * Firebase configurations.
+   */
+  readonly firebase: DbxFirebaseOptions;
+  /**
+   * Mapbox configurations.
+   */
+  readonly mapbox: DbxMapboxOptions;
 }
 
 export const base: APP_CODE_PREFIXEnvironment = {
   production: false,
+  staging: false,
   testing: false,
   analytics: {
     segment: '0GAAlnvz7dqWk5N6t3Cw89Ep6N1G1MQM'
   },
   firebase: {
     enabledLoginMethods: ['email', 'google', 'github'],
+    // You can find this info at: https://console.firebase.google.com/u/0/project/FIREBASE_STAGING_PROJECT_ID/settings/general/
+    // Copy paste to override the below
+    // ==
     apiKey: "", // TODO: Put your firebase API key here
     authDomain: '', // TODO: Put your firebase Auth domain here
-    databaseURL: '',  // TODO: Put your firebase database url here
-    projectId: '', // TODO: Put your firebase project id here
+    projectId: 'FIREBASE_STAGING_PROJECT_ID', // TODO: Put your firebase project id here
     storageBucket: '', // TODO: Put your firebase storage bucket here
     messagingSenderId: '', // TODO: Put your firebase messaging sender id here
     appId: '',  // TODO: Put your firebase app id here
-    measurementId: '', // TODO: Put your firebase measurement id here,
+    // ==
+    // The measurement id is only available if you're using google analytics
+    measurementId: '', // TODO: Put your firebase staging measurement id here,
     emulators: {
       ...firebaseInfo.emulators,
       useEmulators: true,
@@ -39,15 +67,9 @@ export const base: APP_CODE_PREFIXEnvironment = {
     }
   },
   mapbox: {
-    token: '' // TODO: put your mapbox token here, or delete it
+    token: '', // TODO: put your testing mapbox token here that should be configured for localhost
+    defaultCenter: [38.12078919594712, -98.18612358507816],
+    defaultZoom: 4,
+    defaultStyle: 'mapbox://styles/mapbox/streets-v12'
   }
 };
-
-/*
- * For easier debugging in development mode, you can import the following file
- * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.
- *
- * This import should be commented out in production mode because it will have a negative impact
- * on performance if an error is thrown.
- */
-// import 'zone.js/plugins/zone-error';  // Included with Angular CLI.

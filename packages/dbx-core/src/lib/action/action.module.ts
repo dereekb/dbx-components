@@ -22,7 +22,7 @@ import {
   DbxActionHandlerValueDirective
 } from './directive';
 
-const declarations = [
+const importsAndExports = [
   DbxActionDirective,
   DbxActionContextMapDirective,
   DbxActionFromMapDirective,
@@ -49,7 +49,7 @@ const declarations = [
  * Contains all base DbxAction components.
  */
 @NgModule({
-  imports: declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxCoreActionModule {}

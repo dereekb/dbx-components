@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '@dereekb/dbx-firebase';
-import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions } from '@dereekb/demo-firebase';
+import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions } from 'demo-firebase';
 
 @Injectable()
 export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profile, ProfileDocument> {

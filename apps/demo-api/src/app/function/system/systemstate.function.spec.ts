@@ -1,4 +1,4 @@
-import { ExampleReadParams, ExampleReadResponse } from '@dereekb/demo-firebase';
+import { ExampleReadParams, ExampleReadResponse } from 'demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { onCallReadModelParams, systemStateIdentity } from '@dereekb/firebase';

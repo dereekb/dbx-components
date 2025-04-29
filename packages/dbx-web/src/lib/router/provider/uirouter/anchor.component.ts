@@ -1,8 +1,7 @@
 import { Component, computed } from '@angular/core';
 import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
-import { Obj, StateOrName, TransitionOptions, UISref } from '@uirouter/angular';
+import { Obj, StateOrName, TransitionOptions, UISref, UISrefActive } from '@uirouter/angular';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
-import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
@@ -10,7 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
  */
 @Component({
   templateUrl: './anchor.component.html',
-  imports: [UISref, DbxInjectionComponent, AsyncPipe],
+  imports: [UISref, UISrefActive, DbxInjectionComponent],
   standalone: true
 })
 export class DbxUIRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {

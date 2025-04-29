@@ -3,6 +3,7 @@ import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DemoProfileService } from '../profile.service';
 import { profileUsernameFields } from './profile.form';
+import { of } from 'rxjs';
 
 export interface DemoProfileUsernameFormValue {
   username: string;
@@ -20,7 +21,8 @@ export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDire
 
   readonly fields: FormlyFieldConfig[] = profileUsernameFields({
     checkUsernameIsAvailable: (username) => {
-      return this.profileService.isUsernameAvailable(username);
+      // not allowed to check this way, no permissions for users to list available usernames
+      return of(true); // this.profileService.isUsernameAvailable(username);
     }
   });
 }

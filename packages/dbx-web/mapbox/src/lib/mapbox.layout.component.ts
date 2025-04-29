@@ -1,5 +1,5 @@
 import { tap, switchMap, first, startWith, throttleTime, map, distinctUntilChanged, combineLatest, Subject, Observable, delay } from 'rxjs';
-import { Component, ElementRef, OnDestroy, OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, Signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, inject, signal, computed, input, output, viewChild, ChangeDetectionStrategy, Signal, effect } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { type Maybe } from '@dereekb/util';
@@ -54,18 +54,14 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
   readonly drawerButtonColor = input<DbxThemeColor, Maybe<DbxThemeColor>>('background', { transform: (x) => x ?? 'background' });
 
   readonly openDrawer = input<Maybe<boolean>>(undefined); // input open/close drawer config
-  readonly toggleDrawerSignal = signal<Maybe<boolean>>(undefined); // Signal to toggle the drawer
+  readonly isDrawerOpenSignal = signal<Maybe<boolean>>(undefined); // Signal to toggle the drawer
 
-  readonly isDrawerOpenSignal = computed(() => {
-    const toggleDrawer = this.toggleDrawerSignal();
-    let drawerOpened = toggleDrawer;
-
-    if (toggleDrawer == null) {
-      drawerOpened = this.openDrawer();
-    }
-
-    return drawerOpened;
-  });
+  protected readonly _openDrawerEffect = effect(
+    () => {
+      this.isDrawerOpenSignal.set(this.openDrawer());
+    },
+    { allowSignalWrites: true }
+  );
 
   readonly storeHasDrawerContent = toSignal(this.dbxMapboxMapStore.hasDrawerContent$);
   readonly drawerHasContentSignal = computed(() => this.forceHasDrawerContent() ?? this.storeHasDrawerContent());
@@ -204,24 +200,24 @@ export class DbxMapboxLayoutComponent implements OnInit, OnDestroy {
     this._toggleSyncSub.destroy();
   }
 
-  toggleDrawer(open?: Maybe<boolean>) {
-    if (open == null) {
-      open = !this.isDrawerOpenSignal();
-    }
-
-    this.toggleDrawerSignal.set(open);
-  }
-
   viewResized(event: ResizedEvent): void {
     this._viewResized.next(event);
   }
 
   drawerOpened(opened: boolean) {
-    const currentToggleState = this.toggleDrawerSignal();
+    const currentToggleState = this.isDrawerOpenSignal();
 
     if (currentToggleState !== opened) {
       this.toggleDrawer(opened); // sync with drawer toggling
       this.drawerOpenedChange.emit(opened);
     }
+  }
+
+  toggleDrawer(open?: Maybe<boolean>) {
+    if (open == null) {
+      open = !this.isDrawerOpenSignal();
+    }
+
+    this.isDrawerOpenSignal.set(open);
   }
 }

@@ -1,25 +1,35 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { FieldType } from '@ngx-formly/material'; // extend FieldType from Material, not core!
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { isPhoneExtension } from '../../../../validator/phone';
 import { E164PhoneNumber, E164PhoneNumberExtensionPair, Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { combineLatest, distinctUntilChanged, map, startWith } from 'rxjs';
-import { isPhoneExtension } from '../../../../validator/phone';
+import { CommonModule } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { FlexLayoutModule } from '@ngbracket/ngx-layout';
+import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
+import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
 
 export interface InternationalPhoneFormlyFieldProps extends FormlyFieldProps {
-  preferredCountries?: Maybe<string[]>;
-  onlyCountries?: Maybe<string[]>;
+  readonly preferredCountries?: Maybe<string[]>;
+  readonly onlyCountries?: Maybe<string[]>;
   /**
    * Whether or not to allow adding an extension. False by default.
    */
-  allowExtension?: boolean;
+  readonly allowExtension?: boolean;
 }
 
 export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 @Component({
-  templateUrl: 'phone.field.component.html'
+  templateUrl: 'phone.field.component.html',
+  imports: [CommonModule, MatInputModule, MatFormFieldModule, FormsModule, ReactiveFormsModule, MatIconModule, FlexLayoutModule, FormlyMatFormFieldModule, NgxMatIntlTelInputComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<InternationalPhoneFormlyFieldProps>> implements OnInit, OnDestroy {
   readonly inputSync = new SubscriptionObject();
@@ -110,5 +120,7 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
     super.ngOnDestroy();
     this.inputSync.destroy();
     this.outputSync.destroy();
+    this.extensionErrorSync.destroy();
+    this.phoneErrorSync.destroy();
   }
 }

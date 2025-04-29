@@ -4,7 +4,7 @@ import { Category, provideUIRouter, StatesModule, UIRouter } from '@uirouter/ang
 import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
-import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from '@dereekb/demo-firebase';
+import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'components/demo-components/src/lib';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';

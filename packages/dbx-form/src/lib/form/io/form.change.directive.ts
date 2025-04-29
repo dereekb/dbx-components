@@ -13,7 +13,7 @@ import { DbxForm } from '../form';
   selector: '[dbxFormValueChange]',
   standalone: true
 })
-export class DbxFormValueChangesDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxFormValueChangeDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   readonly form = inject(DbxForm<T>, { host: true });
   readonly dbxFormValueChange = output<Maybe<T>>();
 

@@ -18,7 +18,7 @@ export type DbxFirebaseModelHistoryPopoverButtonConfig = DbxFirebaseModelHistory
 export class DbxFirebaseModelHistoryPopoverButtonComponent extends AbstractPopoverRefDirective<unknown, unknown> {
   private readonly _dbxPopoverService = inject(DbxPopoverService);
 
-  readonly buttonElement = viewChild.required<ElementRef>('button');
+  readonly buttonElement = viewChild.required<string, ElementRef>('button', { read: ElementRef });
   readonly config = input<DbxFirebaseModelHistoryPopoverConfigWithoutOrigin>();
 
   protected override _makePopoverRef(origin?: Maybe<ElementRef>): NgPopoverRef<unknown, unknown> {

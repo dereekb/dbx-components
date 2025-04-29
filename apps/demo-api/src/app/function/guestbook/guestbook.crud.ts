@@ -1,4 +1,4 @@
-import { CreateGuestbookParams } from '@dereekb/demo-firebase';
+import { CreateGuestbookParams } from 'demo-firebase';
 import { onCallCreateModelResultWithDocs } from '@dereekb/firebase';
 import { DemoCreateModelFunction } from '../function';
 

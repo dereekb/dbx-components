@@ -1,4 +1,4 @@
-import { FinishOnboardingProfileParams, ProfileCreateTestNotificationParams, ProfileDocument, SetProfileUsernameParams, UpdateProfileParams, profileIdentity } from '@dereekb/demo-firebase';
+import { FinishOnboardingProfileParams, ProfileCreateTestNotificationParams, ProfileDocument, SetProfileUsernameParams, UpdateProfileParams, profileIdentity } from 'demo-firebase';
 import { DemoUpdateModelFunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';

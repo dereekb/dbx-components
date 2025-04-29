@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverDirective, AnchorForValueFunction, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxPopoverInteractionModule, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
+import { AbstractPopoverDirective, AnchorForValueFunction, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxPopoverInteractionModule, DbxPopoverKey, DbxPopoverService } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 import { NotificationItem } from '@dereekb/firebase';
 import { Observable } from 'rxjs';
@@ -42,7 +42,7 @@ export const DEFAULT_DBX_FIREBASE_NOTIFICATION_ITEM_STORE_POPOVER_KEY = 'notific
 
 @Component({
   templateUrl: './notification.item.store.popover.component.html',
-  imports: [DbxPopoverInteractionModule, DbxFirebaseNotificationItemListComponent, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective],
+  imports: [DbxPopoverInteractionModule, DbxListModifierModule, DbxFirebaseNotificationItemListComponent, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

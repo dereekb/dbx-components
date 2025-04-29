@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "12.0.2",
+  "version": "12.0.3",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -69,7 +69,7 @@
     "ng-overlay-container": "^18.0.0",
     "ngx-editor": "^18.0.0",
     "ngx-infinite-scroll": "^18.0.0",
-    "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#e55fbfa2f334348f0ff6b4705776c958c67ffbb5",
+    "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#2df784c783083d7c1eb6f5118ee871ca725eda62",
     "ngx-mat-intl-tel-input": "^5.0.0",
     "reflect-metadata": ">= 0.1.12 < 0.3.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",

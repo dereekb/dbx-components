@@ -1,4 +1,4 @@
-import { InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
+import { InsertGuestbookEntryParams } from 'demo-firebase';
 import { DemoUpdateModelFunction } from '../function';
 import { guestbookEntryForUser } from './guestbook.util';
 

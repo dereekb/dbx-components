@@ -21,6 +21,8 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
+      "demo-components": ["components/demo-components/src/index.ts"],
+      "demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/browser": ["packages/browser/src/index.ts"],
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
@@ -33,8 +35,6 @@
       "@dereekb/dbx-web/calendar": ["packages/dbx-web/calendar/src/index.ts"],
       "@dereekb/dbx-web/mapbox": ["packages/dbx-web/mapbox/src/index.ts"],
       "@dereekb/dbx-web/table": ["packages/dbx-web/table/src/index.ts"],
-      "@dereekb/demo-components": ["components/demo-components/src/index.ts"],
-      "@dereekb/demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
       "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/firebase-server": ["packages/firebase-server/src/index.ts"],

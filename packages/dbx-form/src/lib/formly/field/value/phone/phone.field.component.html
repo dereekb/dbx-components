@@ -1,7 +1,9 @@
 <div class="dbx-form-phone-field" [formGroup]="inputFormGroup">
   <ngx-mat-intl-tel-input class="dbx-form-phone-field-phone-content" [required]="required" [preferredCountries]="preferredCountries" [enablePlaceholder]="false" name="phone" [formControl]="phoneCtrl"></ngx-mat-intl-tel-input>
-  <div *ngIf="allowExtension" class="dbx-form-phone-field-extension-content">
-    <span class="dbx-hint dbx-button-spacer">Ext.</span>
-    <input class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" #extensionInput [formControl]="extensionCtrl" />
-  </div>
+  @if (allowExtension) {
+    <div class="dbx-form-phone-field-extension-content">
+      <span class="dbx-hint dbx-button-spacer">Ext.</span>
+      <input class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" #extensionInput [formControl]="extensionCtrl" />
+    </div>
+  }
 </div>

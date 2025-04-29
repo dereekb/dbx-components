@@ -2,7 +2,7 @@ import { OnInit, Component, inject } from '@angular/core';
 import { DbxActionSuccessHandlerFunction, DbxRouterService } from '@dereekb/dbx-core';
 import { WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
-import { ProfileDocumentStore } from '@dereekb/demo-components';
+import { ProfileDocumentStore } from 'demo-components';
 
 @Component({
   template: `

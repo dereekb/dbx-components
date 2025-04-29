@@ -6,6 +6,6 @@ export const environment: APP_CODE_PREFIXEnvironment = {
   testing: true,
   firebase: {
     ...base.firebase,
-    enabledLoginMethods: true
+    enabledLoginMethods: true // enables all login methods by default
   }
 };

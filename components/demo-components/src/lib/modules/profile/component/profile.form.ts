@@ -1,5 +1,5 @@
 import { FieldValueIsAvailableValidatorFunction, textAreaField, textIsAvailableField } from '@dereekb/dbx-form';
-import { PROFILE_BIO_MAX_LENGTH, PROFILE_USERNAME_MAX_LENGTH } from '@dereekb/demo-firebase';
+import { PROFILE_BIO_MAX_LENGTH, PROFILE_USERNAME_MAX_LENGTH } from 'demo-firebase';
 
 export function profileFields() {
   return [profileBioField()];

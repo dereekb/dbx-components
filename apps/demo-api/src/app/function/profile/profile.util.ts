@@ -1,4 +1,4 @@
-import { ProfileDocument } from '@dereekb/demo-firebase';
+import { ProfileDocument } from 'demo-firebase';
 import { FirebaseAuthUserId, InferredTargetModelParams, TargetModelParams } from '@dereekb/firebase';
 import { NestContextCallableRequestWithAuth } from '@dereekb/firebase-server';
 import { DemoApiNestContext } from '../function';

@@ -1,4 +1,4 @@
-import { GuestbookEntryDocument } from '@dereekb/demo-firebase';
+import { GuestbookEntryDocument } from 'demo-firebase';
 import { FirebaseAuthUserId } from '@dereekb/firebase';
 import { ModelKey } from '@dereekb/util';
 import { DemoApiNestContext } from '../function';

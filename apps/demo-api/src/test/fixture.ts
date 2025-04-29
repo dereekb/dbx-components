@@ -1,4 +1,4 @@
-import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument, GuestbookEntryFirestoreCollection, Profile, ProfileFirestoreCollection, InsertGuestbookEntryParams } from '@dereekb/demo-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument, GuestbookEntryFirestoreCollection, Profile, ProfileFirestoreCollection, InsertGuestbookEntryParams } from 'demo-firebase';
 import {
   authorizedUserContextFactory,
   AuthorizedUserTestContextFixture,

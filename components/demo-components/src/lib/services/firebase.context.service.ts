@@ -4,7 +4,7 @@ import { DbxFirebaseAuthService, DbxFirebaseInContextFirebaseModelServiceInstanc
 import { inject, Injectable } from '@angular/core';
 import { ModelKey } from '@dereekb/util';
 import { ObservableOrValue } from '@dereekb/rxjs';
-import { DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollections, GuestbookDocument, GuestbookRoles } from '@dereekb/demo-firebase';
+import { DemoFirebaseBaseContext, demoFirebaseModelServices, DemoFirestoreCollections, GuestbookDocument, GuestbookRoles } from 'demo-firebase';
 
 /**
  * Used to access the demoFirebaseModelServices() on the client side.

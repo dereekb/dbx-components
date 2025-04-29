@@ -7,7 +7,7 @@ import { AbstractSubscriptionDirective } from '../subscription';
  */
 @Directive()
 export abstract class AbstractIfDirective extends AbstractSubscriptionDirective implements OnInit {
-  private readonly _templateRef = inject(TemplateRef<unknown>);
+  private readonly _templateRef = inject(TemplateRef);
   private readonly _viewContainer = inject(ViewContainerRef);
 
   /**

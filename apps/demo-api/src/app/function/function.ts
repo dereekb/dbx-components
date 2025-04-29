@@ -1,5 +1,5 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from 'demo-firebase';
 import {
   taskQueueFunctionHandlerWithNestContextFactory,
   cloudEventHandlerWithNestContextFactory,

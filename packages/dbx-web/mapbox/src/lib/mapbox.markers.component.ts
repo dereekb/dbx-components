@@ -33,6 +33,6 @@ export class DbxMapboxMarkersComponent<T> {
   });
 
   trackMarkerById(index: number, marker: DbxMapboxMarker) {
-    return marker.id;
+    return marker.id ?? `__MID__${index}_`;
   }
 }

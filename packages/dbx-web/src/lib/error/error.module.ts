@@ -10,7 +10,7 @@ import { DbxErrorViewComponent } from './error.view.component';
 import { DbxErrorSnackbarComponent } from './error.snackbar.component';
 import { DbxActionSnackbarErrorDirective } from './error.snackbar.action.directive';
 
-const declarations = [
+const importsAndExports = [
   //
   DbxErrorComponent,
   DbxLoadingErrorDirective,
@@ -28,7 +28,7 @@ const declarations = [
  * @deprecated all components are now standalone
  */
 @NgModule({
-  imports: declarations,
-  exports: declarations
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxReadableErrorModule {}

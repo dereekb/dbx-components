@@ -1,6 +1,6 @@
 import { OnDestroy, Component, inject } from '@angular/core';
 import { loadingStateContext } from '@dereekb/rxjs';
-import { GuestbookDocumentStore } from '@dereekb/demo-components';
+import { GuestbookDocumentStore } from 'demo-components';
 
 @Component({
   templateUrl: './list.right.component.html'

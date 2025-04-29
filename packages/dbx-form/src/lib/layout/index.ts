@@ -1,2 +1,2 @@
 export * from './form.layout.module';
-export * from './form.spacer.component';
+export * from './form.spacer.directive';

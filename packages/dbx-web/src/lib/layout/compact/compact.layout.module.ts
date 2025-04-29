@@ -1,13 +1,13 @@
-import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxCompactDirective } from './compact.directive';
 
+const importsAndExports = [DbxCompactDirective];
+
 /**
- * Module for block components.
+ * @deprecated import DbxCompactDirective directly instead.
  */
 @NgModule({
-  imports: [CommonModule],
-  declarations: [DbxCompactDirective],
-  exports: [DbxCompactDirective]
+  imports: importsAndExports,
+  exports: importsAndExports
 })
 export class DbxCompactLayoutModule {}

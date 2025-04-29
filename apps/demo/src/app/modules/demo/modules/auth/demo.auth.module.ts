@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
-import { DemoRootSharedModule } from '@dereekb/demo-components';
+import { DemoRootSharedModule } from 'demo-components';
 import { DemoAuthAuthorizeComponent } from './container/authorize.component';
 import { DemoAuthLayoutComponent } from './container/layout.component';
 import { DemoAuthLoggedOutComponent } from './container/loggedout.component';

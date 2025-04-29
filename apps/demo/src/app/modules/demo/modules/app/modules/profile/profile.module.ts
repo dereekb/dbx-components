@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './profile.router';
-import { DemoAppSharedModule } from '@dereekb/demo-components';
+import { DemoAppSharedModule } from 'demo-components';
 
 @NgModule({
   imports: [

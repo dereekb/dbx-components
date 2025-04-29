@@ -1,4 +1,4 @@
-import { ProfileDocument, DemoFirestoreCollections, profileWithUsername } from '@dereekb/demo-firebase';
+import { ProfileDocument, DemoFirestoreCollections, profileWithUsername } from 'demo-firebase';
 import { map, Observable, of, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
@@ -12,6 +12,7 @@ export class DemoProfileService {
   constructor() {
     // TODO: Also pull in the current auth and return true for isUsernameAvailable if the current user owns that username.
   }
+
   isUsernameAvailable(username: string): Observable<boolean> {
     return this.profileWithUsername(username).pipe(map((x) => !x));
   }

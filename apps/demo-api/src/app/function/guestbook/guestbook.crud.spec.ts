@@ -1,5 +1,5 @@
 import { demoCallModel } from './../model/crud.functions';
-import { CreateGuestbookParams, guestbookIdentity } from '@dereekb/demo-firebase';
+import { CreateGuestbookParams, guestbookIdentity } from 'demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { OnCallCreateModelResult, onCallCreateModelParams } from '@dereekb/firebase';

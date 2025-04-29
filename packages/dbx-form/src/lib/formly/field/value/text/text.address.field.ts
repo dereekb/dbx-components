@@ -7,35 +7,36 @@ import { repeatArrayField } from '../array/array.field';
 import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 
+// MARK: Address Config
 export interface AddressFormlyFieldsConfig {
-  line1Field?: CityFieldConfig;
-  line2Field?: CityFieldConfig;
-  cityField?: CityFieldConfig;
-  stateField?: StateFieldConfig;
-  zipCodeField?: ZipCodeFieldConfig;
-  countryField?: CountryFieldConfig;
+  readonly line1Field?: CityFieldConfig;
+  readonly line2Field?: CityFieldConfig;
+  readonly cityField?: CityFieldConfig;
+  readonly stateField?: StateFieldConfig;
+  readonly zipCodeField?: ZipCodeFieldConfig;
+  readonly countryField?: CountryFieldConfig;
   /**
    * Whether or not to make required fields required.
    *
    * True by default.
    */
-  requiredFields?: boolean;
+  readonly requiredFields?: boolean;
   /**
    * Whether or not to include the second address line.
    *
    * True by default.
    */
-  includeLine2?: boolean;
+  readonly includeLine2?: boolean;
   /**
    * Whether or not to include the country.
    *
    * True by default.
    */
-  includeCountry?: boolean;
+  readonly includeCountry?: boolean;
 }
 
 export interface AddressLineFieldConfig extends Partial<TextFieldConfig> {
-  line?: 0 | 1 | 2;
+  readonly line?: 0 | 1 | 2;
 }
 
 export function addressLineField(config: AddressLineFieldConfig = {}): FormlyFieldConfig {
@@ -86,6 +87,7 @@ export function addressFormlyFields(config: AddressFormlyFieldsConfig = {}): For
   return [...lines, flexLayoutWrapper(singleLineFields, { size: 1, relative: true })];
 }
 
+// MARK: Address
 export interface AddressFieldConfig extends FieldConfig, DbxFormSectionConfig, AddressFormlyFieldsConfig {}
 
 export function addressField(config: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
@@ -106,8 +108,9 @@ export function addressField(config: Partial<AddressFieldConfig> = {}): FormlyFi
   );
 }
 
+// MARK: Address List
 export interface AddressListFieldConfig extends FieldConfig, AddressFormlyFieldsConfig {
-  maxAddresses?: number;
+  readonly maxAddresses?: number;
 }
 
 export function addressListField(config: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
