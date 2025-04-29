@@ -593,6 +593,9 @@ download_app_components_file "src/lib/services/firebase.context.service.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup app components"
 
+# wait for potential download throttling
+sleep 2
+
 ### Setup api components
 download_firebase_components_file () {
   local FILE_PATH=$1
@@ -656,6 +659,9 @@ download_firebase_components_file "src/lib/model/system/index.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api components"
+
+# wait for potential download throttling
+sleep 2
 
 ### Setup Angular App
 download_angular_ts_file () {
@@ -741,6 +747,9 @@ download_angular_ts_file "src/app/modules/landing/container/layout.component.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup app"
 
+# wait for potential download throttling
+sleep 2
+
 ### Setup NestJS API
 download_api_ts_file () {
   local FILE_PATH=$1
@@ -803,10 +812,13 @@ download_api_ts_file "src/app/common/model/notification/notification.action.cont
 download_api_ts_file "src/app/common/model/notification/notification.factory.ts"
 download_api_ts_file "src/app/common/model/notification/notification.init.ts"
 download_api_ts_file "src/app/common/model/notification/notification.mailgun.ts"
-download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/notification.send.mailgun.service.ts"
 download_api_ts_file "src/app/common/model/notification/notification.send.service.ts"
+download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/index.ts"
+
+# wait for potential download throttling
+sleep 1
 
 ## Function Folder
 mkdir $API_APP_FOLDER/src/app/function
