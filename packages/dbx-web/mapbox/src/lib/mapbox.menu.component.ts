@@ -49,8 +49,10 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
   private readonly _menuCloseSub = new SubscriptionObject();
   private readonly _preventRightClick = new DestroyFunctionObject();
 
+  readonly active$ = toObservable(this.active);
+
   ngOnInit(): void {
-    this.sub = toObservable(this.active)
+    this.sub = this.active$
       .pipe(
         switchMap((active) => {
           if (active) {

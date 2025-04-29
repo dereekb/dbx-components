@@ -16,6 +16,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MapComponent, MarkerComponent } from 'ngx-mapbox-gl';
+import { M } from '@angular/cdk/keycodes';
 
 export const DEFAULT_DBX_FORM_MAPBOX_LAT_LNG_FIELD_INJECTION_KEY = 'DbxFormMapboxLatLngFieldComponent';
 
@@ -110,7 +112,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
   `,
   providers: [provideMapboxStoreIfParentIsUnavailable()],
   styleUrls: ['../mapbox.field.component.scss'],
-  imports: [NgClass, ReactiveFormsModule, MatIconModule, DbxMapboxModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [NgClass, MapComponent, MarkerComponent, ReactiveFormsModule, MatIconModule, DbxMapboxModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

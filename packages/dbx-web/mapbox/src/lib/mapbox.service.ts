@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { LatLngPointInput, Milliseconds } from '@dereekb/util';
-import { MapboxOptions } from 'mapbox-gl';
+import { latLngPoint, LatLngPointInput, Milliseconds } from '@dereekb/util';
+import { MapboxOptions, MapOptions } from 'mapbox-gl';
 import { KnownMapboxStyle, MapboxZoomLevel } from './mapbox';
 
 export class DbxMapboxConfig {
@@ -33,5 +33,13 @@ export class DbxMapboxService {
 
   get mapboxMapStoreTimerRefreshPeriod(): number {
     return this._config.defaultStoreRefreshPeriod ?? DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD;
+  }
+
+  initializationOptions(): Partial<MapOptions> {
+    return {
+      style: this.defaultStyle,
+      zoom: this.defaultZoom,
+      center: latLngPoint(this.defaultCenter)
+    };
   }
 }

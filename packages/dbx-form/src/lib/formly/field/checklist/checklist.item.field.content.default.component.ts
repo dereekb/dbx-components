@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from './checklist.item';
-import { NgIf } from '@angular/common';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Default
@@ -22,7 +21,7 @@ import { type Maybe } from '@dereekb/util';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf]
+  imports: []
 })
 export class DbxDefaultChecklistItemFieldDisplayComponent<T = unknown> implements ChecklistItemFieldDisplayComponent<T> {
   readonly _displayContentSignal = signal<Maybe<ChecklistItemDisplayContent<T>>>(undefined);

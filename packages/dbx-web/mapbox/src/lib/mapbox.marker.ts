@@ -1,5 +1,5 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Pixels, FactoryWithRequiredInput, LatLngInputRef, UniqueModel, CssClassesArray, Maybe, CssStyleObject } from '@dereekb/util';
+import { Pixels, FactoryWithRequiredInput, LatLngInputRef, UniqueModel, CssClassesArray, Maybe, CssStyleObject, UniqueModelWithId } from '@dereekb/util';
 
 /**
  * DbxMapboxMarkerSize. Numbers are converted to pixels.

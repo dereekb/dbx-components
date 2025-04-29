@@ -9,7 +9,6 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { addDays, format as formatDate } from 'date-fns';
 import { distinctUntilChanged, filter, startWith, throttleTime } from 'rxjs';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { AsyncPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 
 @Injectable()
@@ -75,7 +74,7 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [MatDateRangeInput, ReactiveFormsModule, MatButtonModule, MatDateRangePicker, AsyncPipe]
+  imports: [MatDateRangeInput, ReactiveFormsModule, MatButtonModule, MatDateRangePicker]
 })
 export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnInit, OnDestroy {
   readonly tableStore = inject(DbxTableStore<DateRangeDayDistanceInput>);

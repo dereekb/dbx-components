@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, input 
 import { CssClassesArray, getValueFromGetter, latLngPointFunction, spaceSeparatedCssClasses, type Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
-import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
+import { MarkerComponent } from 'ngx-mapbox-gl';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { NgClass, NgStyle } from '@angular/common';
@@ -10,25 +10,23 @@ import { NgClass, NgStyle } from '@angular/common';
 @Component({
   selector: 'dbx-mapbox-marker',
   template: `
-    @if (marker()) {
-      <mgl-marker [lngLat]="latLngSignal()">
-        <dbx-anchor [anchor]="marker()?.anchor">
-          <div class="dbx-mapbox-marker" [ngClass]="presentationCssClassSignal()">
-            <div class="dbx-mapbox-marker-icon-content" [ngStyle]="styleSignal()">
-              @if (marker()?.icon) {
-                <mat-icon>{{ marker()?.icon }}</mat-icon>
-              }
-            </div>
-            @if (marker()?.label) {
-              <div class="dbx-mapbox-marker-label dbx-outlined-text">{{ marker()?.label }}</div>
+    <mgl-marker [lngLat]="latLngSignal()">
+      <dbx-anchor [anchor]="marker()?.anchor">
+        <div class="dbx-mapbox-marker" [ngClass]="presentationCssClassSignal()">
+          <div class="dbx-mapbox-marker-icon-content" [ngStyle]="styleSignal()">
+            @if (marker()?.icon) {
+              <mat-icon>{{ marker()?.icon }}</mat-icon>
             }
           </div>
-        </dbx-anchor>
-      </mgl-marker>
-    }
+          @if (marker()?.label) {
+            <div class="dbx-mapbox-marker-label dbx-outlined-text">{{ marker()?.label }}</div>
+          }
+        </div>
+      </dbx-anchor>
+    </mgl-marker>
   `,
   styleUrls: ['./mapbox.marker.component.scss'],
-  imports: [NgxMapboxGLModule, DbxAnchorComponent, MatIconModule, NgStyle, NgClass],
+  imports: [MarkerComponent, DbxAnchorComponent, MatIconModule, NgStyle, NgClass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -132,5 +130,6 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this._dbxMapboxChangeService?.emitMarkerDestroyed();
+    console.log('destroyed?');
   }
 }

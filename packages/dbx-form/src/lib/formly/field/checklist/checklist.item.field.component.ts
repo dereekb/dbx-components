@@ -11,7 +11,6 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
-import { NgIf, AsyncPipe } from '@angular/common';
 import { DbxAnchorComponent } from '@dereekb/dbx-web';
 
 @Component({
@@ -51,7 +50,7 @@ export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProp
   templateUrl: 'checklist.item.field.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [ReactiveFormsModule, MatCheckboxModule, DbxAnchorComponent, MatRippleModule, MatIconModule, NgIf, AsyncPipe, DbxChecklistItemContentComponent]
+  imports: [ReactiveFormsModule, MatCheckboxModule, DbxAnchorComponent, MatRippleModule, MatIconModule, DbxChecklistItemContentComponent]
 })
 export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<FieldTypeConfig<DbxChecklistItemFieldProps<T>>> implements OnInit {
   private readonly _displayContentObs = signal<Maybe<Observable<ChecklistItemDisplayContent<T>>>>(undefined);

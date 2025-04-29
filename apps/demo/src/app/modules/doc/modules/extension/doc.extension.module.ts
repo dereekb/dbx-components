@@ -16,7 +16,6 @@ import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { DbxTableDateModule, DbxTableModule } from '@dereekb/dbx-web/table';
-import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
 import { DbxCalendarModule } from '@dereekb/dbx-web/calendar';
@@ -41,7 +40,6 @@ import { DemoRootSharedModule } from 'demo-components';
     DbxFormDateScheduleRangeFieldModule,
     DbxWidgetModule,
     DbxMapboxModule,
-    NgxMapboxGLModule,
     DbxFormMapboxModule,
     DbxDownloadTextModule,
     DbxTableModule,
