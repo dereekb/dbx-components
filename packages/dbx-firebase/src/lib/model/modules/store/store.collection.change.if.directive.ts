@@ -1,6 +1,6 @@
-import { OnDestroy, Directive, Input, inject, input } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { AbstractIfDirective } from '@dereekb/dbx-core';
-import { shareReplay, BehaviorSubject, combineLatest, Observable, map } from 'rxjs';
+import { shareReplay, combineLatest, Observable, map } from 'rxjs';
 import { DbxFirebaseCollectionChangeDirective } from './store.collection.change.directive';
 import { IterationQueryDocChangeWatcherChangeType } from '@dereekb/firebase';
 import { toObservable } from '@angular/core/rxjs-interop';

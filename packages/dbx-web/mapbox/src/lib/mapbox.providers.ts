@@ -1,4 +1,4 @@
-import { EnvironmentProviders, importProvidersFrom, makeEnvironmentProviders, Provider } from '@angular/core';
+import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
 import { DbxMapboxConfig, DbxMapboxService } from './mapbox.service';
 import { provideMapboxGL } from 'ngx-mapbox-gl';
 

@@ -1,6 +1,5 @@
-import { Directive, Input, OnDestroy, OnInit, effect, inject, input } from '@angular/core';
+import { Directive, OnDestroy, OnInit, effect, inject, input } from '@angular/core';
 import { FirestoreDocument } from '@dereekb/firebase';
-import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../../loader/collection.change.watcher';

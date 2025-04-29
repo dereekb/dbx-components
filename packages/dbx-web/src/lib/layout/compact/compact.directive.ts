@@ -1,7 +1,6 @@
-import { Directive, Input, effect, inject, input } from '@angular/core';
+import { Directive, effect, inject, input } from '@angular/core';
 import { CompactMode } from './compact';
 import { CompactContextStore } from './compact.store';
-import { Maybe } from '@dereekb/util';
 
 /**
  * CompactContextStore provider.

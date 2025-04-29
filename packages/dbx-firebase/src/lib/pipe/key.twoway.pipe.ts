@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { FirestoreModelKey, flatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { FirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 
 @Pipe({ name: 'twoWayFlatFirestoreModelKey', standalone: true })
