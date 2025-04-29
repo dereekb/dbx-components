@@ -8,7 +8,16 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/demo-api"],
       "options": {
-        "command": "npx nx run demo-api:build-base",
+        "commands": [
+          {
+            "description": "make api package.json",
+            "command": "npx nx run demo-api:build-package-json"
+          },
+          {
+            "description": "build api",
+            "command": "npx nx run demo-api:build-base"
+          }
+        ],
         "color": true
       }
     },
@@ -95,6 +104,12 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./make-env.js prod > dist/apps/demo-api/.env && cp .env.prod dist/apps/demo-api/.env.prod"
+      }
+    },
+    "build-package-json": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./make-api-package.js > apps/demo-api/package.json"
       }
     },
     "ci-deploy": {

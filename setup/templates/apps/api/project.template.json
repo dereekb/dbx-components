@@ -8,7 +8,16 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/API_APP_DIST_FOLDER"],
       "options": {
-        "command": "npx nx run API_APP_NAME:build-base",
+        "commands": [
+          {
+            "description": "make api package.json",
+            "command": "npx nx run API_APP_NAME:build-package-json"
+          },
+          {
+            "description": "build api",
+            "command": "npx nx run API_APP_NAME:build-base"
+          }
+        ],
         "color": true
       }
     },
@@ -99,6 +108,12 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./make-env.js prod > API_APP_DIST_FOLDER/.env && cp .env.prod API_APP_DIST_FOLDER/.env.prod"
+      }
+    },
+    "build-package-json": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./make-api-package.js > API_APP_FOLDER/package.json"
       }
     },
     "ci-deploy": {

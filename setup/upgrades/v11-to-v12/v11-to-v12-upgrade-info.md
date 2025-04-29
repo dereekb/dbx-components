@@ -389,3 +389,14 @@ You can follow the migration guide here:
 https://eslint.org/docs/latest/use/configure/migration-guide
 
 You'll need to 
+
+### Deploying to Firebase Gen 2
+If you're deploying for the first time, you may need to deploy using your primary account (that should have more permissions than your service account) so that your primary/elevated permissions account can setup the cloud run functions for future deployments.
+
+You will need to delete/remove your previous gen 1 functions, or change their name, before deploying to Gen 2.
+
+See https://firebase.google.com/docs/functions/2nd-gen-upgrade#migrate_traffic_to_the_new_2nd_gen_functions for more information.
+
+You will have to remove all functions and scheduled functions. Anything that says versions v1 in the Firebase console in the functions tab.
+
+It is recommended you deploy to your staging system first with all changes before deploying to production.
