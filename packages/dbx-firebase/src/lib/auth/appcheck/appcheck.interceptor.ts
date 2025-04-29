@@ -12,7 +12,7 @@ interface EnabledAppCheckRoute {
 }
 
 /**
- * HTTP Interceptor that sets the X-Firebase-AppCheck for any requests to the routes configured in DbxFirebaseOptions.
+ * HTTP Interceptor that sets the X-Firebase-AppCheck for any requests to the routes configured in DbxFirebaseEnvironmentOptions.
  */
 @Injectable()
 export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {

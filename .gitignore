@@ -4,6 +4,7 @@
 /dist
 /tmp
 /out-tsc
+/.tmp
 
 # env
 # do not publish secrets
@@ -67,5 +68,10 @@ service_account.json
 # CI/Jest
 /.reports
 /.tmp
+
+# Nx
 .nx
-.tmp
+.VSCodeCounter
+
+# Apps Package.json
+/apps/demo-api/package.json

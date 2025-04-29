@@ -4,7 +4,7 @@ import { FirebaseOptions } from 'firebase/app';
 import { DbxFirebaseAppCheckConfig } from './appcheck';
 import { DbxFirebaseEmulatorsConfig } from './emulators';
 
-export const DBX_FIREBASE_APP_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
+export const DBX_FIREBASE_APP_OPTIONS_TOKEN = new InjectionToken<DbxFirebaseAppOptions>('DbxFirebaseOptions');
 
 /**
  * Extends FirebaseOptions with additional properties for configuring the underlying client-side Firebase services.

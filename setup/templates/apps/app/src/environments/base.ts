@@ -2,8 +2,8 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
-import { DbxFirebaseOptions } from "@dereekb/dbx-firebase";
-import { DbxMapboxOptions } from '@dereekb/dbx-web/mapbox';
+import { DbxFirebaseEnvironmentOptions } from "@dereekb/dbx-firebase";
+import { DbxMapboxEnvironmentOptions } from '@dereekb/dbx-web/mapbox';
 import firebaseInfo from '../../../../firebase.json';
 
 export interface APP_CODE_PREFIXEnvironment {
@@ -25,18 +25,18 @@ export interface APP_CODE_PREFIXEnvironment {
    * Analytics configurations.
    */
   readonly analytics: {
-    segment: string;
-    hotjar?: string;
-    hotjarVersion?: number;
+    readonly segment: string;
+    readonly hotjar?: string;
+    readonly hotjarVersion?: number;
   },
   /**
    * Firebase configurations.
    */
-  readonly firebase: DbxFirebaseOptions;
+  readonly firebase: DbxFirebaseEnvironmentOptions;
   /**
    * Mapbox configurations.
    */
-  readonly mapbox: DbxMapboxOptions;
+  readonly mapbox: DbxMapboxEnvironmentOptions;
 }
 
 export const base: APP_CODE_PREFIXEnvironment = {

@@ -36,7 +36,7 @@ MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 
 # - Other Configuration
-DEFAULT_SOURCE_BRANCH="develop"  # main
+DEFAULT_SOURCE_BRANCH="develop"
 
 if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
 then
@@ -308,7 +308,9 @@ sed -e "s/dereekb-components/$FIREBASE_STAGING_PROJECT_ID/g" -e "s/demo-api-serv
 rm docker-compose.yml.tmp
 
 # download .gitignore
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gitignore -o .gitignore
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gitignore -o .gitignore.tmp
+sed -e "s/demo-api/$API_APP_NAME/g" .gitignore.tmp > .gitignore
+rm .gitignore.tmp
 
 # download additional utility scripts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/exec-with-emulator.sh -o exec-with-emulator.sh.tmp
@@ -493,6 +495,10 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/set
 sed -e "s/CI_GIT_USER_EMAIL/$CI_GIT_USER_EMAIL/g" -e "s/CI_GIT_USER_NAME/$CI_GIT_USER_NAME/g" -e "s/ANGULAR_APP_NAME/$ANGULAR_APP_NAME/g"  -e "s/API_APP_NAME/$API_APP_NAME/g" -e "s/E2E_APP_NAME/$E2E_APP_NAME/g" .circleci/config.yml.tmp > .circleci/config.yml
 rm .circleci/config.yml.tmp
 
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/make-api-package.js -o make-api-package.js.tmp
+sed -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" make-api-package.js.tmp > make-api-package.js
+rm make-api-package.js.tmp
+
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/make-env.js -o make-env.js
 echo "PUBLIC_PROD_VARIABLES_HERE" > ".env.prod"
 
@@ -587,6 +593,9 @@ download_app_components_file "src/lib/services/firebase.context.service.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup app components"
 
+# wait for potential download throttling
+sleep 2
+
 ### Setup api components
 download_firebase_components_file () {
   local FILE_PATH=$1
@@ -650,6 +659,9 @@ download_firebase_components_file "src/lib/model/system/index.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api components"
+
+# wait for potential download throttling
+sleep 2
 
 ### Setup Angular App
 download_angular_ts_file () {
@@ -735,6 +747,9 @@ download_angular_ts_file "src/app/modules/landing/container/layout.component.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup app"
 
+# wait for potential download throttling
+sleep 2
+
 ### Setup NestJS API
 download_api_ts_file () {
   local FILE_PATH=$1
@@ -797,10 +812,13 @@ download_api_ts_file "src/app/common/model/notification/notification.action.cont
 download_api_ts_file "src/app/common/model/notification/notification.factory.ts"
 download_api_ts_file "src/app/common/model/notification/notification.init.ts"
 download_api_ts_file "src/app/common/model/notification/notification.mailgun.ts"
-download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/notification.send.mailgun.service.ts"
 download_api_ts_file "src/app/common/model/notification/notification.send.service.ts"
+download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/index.ts"
+
+# wait for potential download throttling
+sleep 1
 
 ## Function Folder
 mkdir $API_APP_FOLDER/src/app/function
