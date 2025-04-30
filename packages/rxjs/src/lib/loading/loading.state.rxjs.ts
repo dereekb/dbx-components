@@ -1,4 +1,4 @@
-import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeArrayValues, type EqualityComparatorFunction, safeCompareEquality } from '@dereekb/util';
+import { type DecisionFunction, type Maybe, type ReadableError, filterMaybeArrayValues, type EqualityComparatorFunction, safeCompareEquality, GetterOrValue, getValueFromGetter, MaybeSoStrict } from '@dereekb/util';
 import { type MonoTypeOperatorFunction, type OperatorFunction, startWith, type Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, type ObservableInputTuple, firstValueFrom, scan } from 'rxjs';
 import { timeoutStartWith } from '../rxjs/timeout';
 import {
@@ -22,6 +22,7 @@ import {
   isPageLoadingStateMetadataEqual,
   type LoadingStateWithError
 } from './loading.state';
+import { filterMaybe, filterMaybeStrict } from '../rxjs/value';
 
 // TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
@@ -124,11 +125,22 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
 }
 
 /**
- * Returns the value once the LoadingState has finished loading with success.
+ * Returns the current value from the LoadingState.
  */
-export function valueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
+export function currentValueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
-    return obs.pipe(map((x) => x.value as LoadingStateValue<L>));
+    return obs.pipe(map((x) => x.value as Maybe<LoadingStateValue<L>>));
+  };
+}
+
+/**
+ * Returns the current non-null value from the LoadingState.
+ * 
+ * Equivalent to currentValueFromLoadingState() and filterMaybe().
+ */
+export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, MaybeSoStrict<LoadingStateValue<L>>> {
+  return (obs: Observable<L>) => {
+    return obs.pipe(map((x) => x.value as LoadingStateValue<L>), filterMaybeStrict());
   };
 }
 
@@ -146,12 +158,17 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
 
 /**
  * Returns the value once the LoadingState has finished loading, even if an error occured or there is no value.
+ * 
+ * Can optionally specify a default value to use instead.
  */
-export function valueFromFinishedLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
+export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue: GetterOrValue<LoadingStateValue<L>>): OperatorFunction<L, LoadingStateValue<L>>;
+export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue?: Maybe<GetterOrValue<LoadingStateValue<L>>>): OperatorFunction<L, Maybe<LoadingStateValue<L>>>;
+export function valueFromFinishedLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, LoadingStateValue<L>>;
+export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue?: Maybe<GetterOrValue<LoadingStateValue<L>>>): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
       filter(isLoadingStateFinishedLoading),
-      map((x) => x.value as Maybe<LoadingStateValue<L>>)
+      map((x) => (x.value as Maybe<LoadingStateValue<L>> ?? getValueFromGetter(defaultValue)))
     );
   };
 }

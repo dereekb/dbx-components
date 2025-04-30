@@ -17,6 +17,7 @@
       "options": {
         "project": "ANGULAR_COMPONENTS_FOLDER/ng-package.json"
       },
+      "dependsOn": [],
       "configurations": {
         "production": {
           "tsConfig": "ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.prod.json"
@@ -29,6 +30,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
+      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/coverage/ANGULAR_COMPONENTS_FOLDER", "{projectRoot}/.reports/jest/ANGULAR_COMPONENTS_NAME.junit.xml"],
       "options": {
         "jestConfig": "ANGULAR_COMPONENTS_FOLDER/jest.config.ts",
@@ -37,6 +39,7 @@
     },
     "lint": {
       "executor": "@nx/eslint:eslint",
+      "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["ANGULAR_COMPONENTS_FOLDER/**/*.ts", "ANGULAR_COMPONENTS_FOLDER/**/*.html", "ANGULAR_COMPONENTS_FOLDER/package.json", "ANGULAR_COMPONENTS_FOLDER/project.json"]
       }

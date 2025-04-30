@@ -24,7 +24,7 @@ This will setup the migration.json. It will also modify package.json, but it is 
 #### Run the migrations
 - run ```npx nx migrate --run-migrations```. You can ignore the errors on the terminal that look like the following:
  
-```Skipping migration for project demo. Unable to determine 'tsconfig.json' file in workspace config.```
+```Skipping migration for project demo. Unable to determine 'tsconfig.json' file in workspace config```
 
 The dbx-components library is unaffected by these migrations in particular. However, you can resolve the issue with the following steps describe in this issue:
 
@@ -64,6 +64,12 @@ You'll need to update the following:
 - `Dockerfile`: Update FROM to use `node:22.14-bookworm`
 - `package.json`: Update the `engines` to use `22`. Also update `@types/node` to `22.13.0`
 - `circleci/config.yml`: Update the `cimg/node` version to `22.14`
+- `circleci/config.yml`: Update the orbs versions:
+
+```
+  nx: nrwl/nx@1.7.0
+  node: circleci/node@7.1.0
+```
 
 ### TypeScript
 After the update Typescript was throwing errors related to the NodeJS types not being available while building Demo. Updated `tsconfig.json` for the project to include the following under `compilerOptions`: `"types": ["node"]`, or add `node` to the existing types. This is probably not necessary for projects importing dbx-components.
@@ -179,6 +185,14 @@ Pass --verbose to see the stacktrace.
 
 Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 
+You'll have to create a `webpack.config.js` file in your app-api directory, then update the `build-base` target in `project.json` to use it under the options.
+
+```
+"options": {
+  "webpackConfig": "apps/demo-api/webpack.config.js",
+}
+```
+
 #### Module Deprecations
 All `.forRoot()` methods have been deprecated in favor of provider functions.
 
@@ -211,6 +225,8 @@ bootstrapApplication(UIView, appConfig)
   .catch((err) => console.error(err));
 ...
 ```
+
+Be sure to also move `reflect-metadata` to `project.json` as one of the polyfills.
 
 #### Breaking Changes
 - `LoadingStateContextInstance` usage has been replaced with `loadingStateContext()`.
@@ -247,9 +263,10 @@ bootstrapApplication(UIView, appConfig)
 - Renamed `DbxProgressButtonOptions` to `DbxProgressButtonConfig`.
 - Updated `dbx-progress-spinner-button` and `dbx-progress-bar-button` to use `[config]` instead of `[options]`.
 - Renamed `DbxButtonDisplayContent` to `DbxButtonDisplay` to be inline with the `buttonDisplay` input.
-- Updated inputs for `dbx-mapbox-layout`. Renamed `[opened]` to `[openDrawer]`, `[hasContent]` to `[forceHasDrawerContent]`, `(opened)` to `(drawerOpenedChange)`
+- Updated inputs for `dbx-mapbox-layout`. Renamed `[opened]` to `[openDrawer]`, `[hasContent]` to `[forceHasDrawerContent]`, `(openedChange)` to `(drawerOpenedChange)`
 - Renamed `displayContentObs` in `DbxChecklistItemFieldProps` (and related config) to `displayContent`.
-- `valueFromLoadingState()` now always returns the value from the loading state, where as prior it was equivalent to `valueFromFinishedLoadingState()`, which only returned the value if the loading state was finished loading.
+- `valueFromLoadingState()` now returns an observable that emits `MaybeSoStrict` which always returns the value from the loading state as long as it is not null, where as prior it was equivalent to `valueFromFinishedLoadingState()`, which only returned the value if the loading state was finished loading.
+- Added `currentValueFromLoadingState()`, which returns the current value from the loading state even if the loading state is still loading.
 - dbxButton now has a new icon-only sizing presentation for icon-only buttons that is smaller than a fab. Previously the presentation would be equivalent to what now requires [fab]="true" configuration.
 - Renamed `switchMapMaybeObs` to `switchMapFilterMaybe`.
 - Removed `DbxCalendarRootModule` and replaced with `provideDbxCalendar()`.

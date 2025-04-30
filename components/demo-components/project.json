@@ -15,7 +15,7 @@
     },
     "build-base": {
       "executor": "@nx/angular:package",
-      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
+      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
         "project": "components/demo-components/ng-package.json"

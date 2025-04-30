@@ -90,7 +90,11 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:eslint"
+      "executor": "@nx/eslint:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["ANGULAR_APP_FOLDER/**/*.ts", "ANGULAR_APP_FOLDER/**/*.html", "ANGULAR_APP_FOLDER/**/*.scss"]
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",

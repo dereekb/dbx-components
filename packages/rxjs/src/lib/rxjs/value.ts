@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, type MonoTypeOperatorFunction, type Observable, of, type OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues } from '@dereekb/util';
+import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues, MaybeSoStrict } from '@dereekb/util';
 import { asObservable, asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter, type MaybeObservableOrValue } from './getter';
 import { type ObservableDecisionFunction } from './decision';
 
@@ -90,6 +90,11 @@ export function checkIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value:
 export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
   return filter(isMaybeSo);
 }
+
+/**
+ * Equivalent to filterMaybe, but returns a strict MaybeSoStrict<T> value instead of the template type.
+ */
+export const filterMaybeStrict = filterMaybe as <T>() => OperatorFunction<Maybe<T>, MaybeSoStrict<T>>;
 
 /**
  * Observable filter that filters maybe value from the input array of maybe values

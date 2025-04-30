@@ -16,6 +16,11 @@ export type MaybeSo<T = unknown> = T extends MaybeNot ? never : T;
 export type Maybe<T> = T | MaybeNot;
 
 /**
+ * A value that is not null/undefined.
+ */
+export type MaybeSoStrict<T> = T extends Maybe<infer A> ? (A extends Maybe<infer B> ? B extends Maybe<infer C> ? C extends Maybe<infer D> ? D extends Maybe<infer E> ? E : D : C : B : A) : T;
+
+/**
  * Turns all key values in an object into a Maybe value.
  */
 export type MaybeMap<T extends object> = NonNever<{
