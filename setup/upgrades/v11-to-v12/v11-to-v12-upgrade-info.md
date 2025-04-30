@@ -26,6 +26,12 @@ This will setup the migration.json. It will also modify package.json, but it is 
  
 ```Skipping migration for project demo. Unable to determine 'tsconfig.json' file in workspace config```
 
+You might however want to use some of the angular migration tools, such as:
+
+```npx nx g @angular/core:standalone```
+
+This update will update all Angular files to use the new standalone configurations, but it does require the below fix to run.
+
 The dbx-components library is unaffected by these migrations in particular. However, you can resolve the issue with the following steps describe in this issue:
 
 https://github.com/nrwl/nx/issues/20172#issuecomment-1825783434
@@ -35,9 +41,9 @@ The command-line steps we used are as follow:
 - run ```nx g @nx/plugin:plugin tools/my-plugin```. Just use the "my-plugin" name as-is, this is only temporary:
 - run ```nx generate @nx/plugin:generator tools/my-plugin/src/generators/my-generator```
 - copy the files from the issue/comment above
-- run ```nx generate tools/my-plugin/src/generators/my-generator``` and answer "false" to the question
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` or ```npx nx generate my-generator``` (the option depends on the generator value in `generators.json`) and answer "false" to the question
 - run ```npx nx migrate --run-migrations```. This may take a while depending on the size of the project.
-- run ```nx generate tools/my-plugin/src/generators/my-generator``` and answer "true" to the question to undo the generator's changes
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` or ```npx nx generate my-generator``` (the option depends on the generator value in `generators.json`) and answer "true" to the question to undo the generator's changes
 - 
 (After doing this step it is a good idea to commit the changes on git before continuing)
 
@@ -417,3 +423,18 @@ See https://firebase.google.com/docs/functions/2nd-gen-upgrade#migrate_traffic_t
 You will have to remove all functions and scheduled functions. Anything that says versions v1 in the Firebase console in the functions tab.
 
 It is recommended you deploy to your staging system first with all changes before deploying to production.
+
+
+## Angular Migrations
+### Standalone Migrations
+See the "Migrate to Nx 17 > Run The Migrations" section above for initial setup steps.
+
+```npx nx g @angular/core:standalone```
+
+This update will update all Angular files to use the new standalone configurations, but it does require the below fix to run.
+
+Do the steps from the "Migrate to Nx 17 > Run The Migrations" section to prepare your project for the standalone migrations.
+
+You will also need to change `project.json` for the components library by updating the `build-base` target's name to `build` (that is what the tool expects to be linked with `@nx/angular:package`), and update the `build` target to use the `build-temp` target temporarilly. See https://github.com/angular/angular/issues/50483#issuecomment-2419583997 for more information.
+
+After that, you should be able to run the standalone migration as so: `npx nx g @angular/core:standalone --path=/components/demo-components`

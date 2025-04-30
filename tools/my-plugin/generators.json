@@ -1,6 +1,6 @@
 {
   "generators": {
-    "tools/my-plugin/src/generators/my-generator": {
+    "my-generator": {
       "factory": "./src/generators/generator",
       "schema": "./src/generators/schema.json",
       "description": "tools/my-plugin/src/generators/my-generator generator"
