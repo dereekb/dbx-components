@@ -45,5 +45,6 @@
       }
     }
   },
+  "implicitDependencies": ["FIREBASE_COMPONENTS_NAME"],
   "tags": []
 }

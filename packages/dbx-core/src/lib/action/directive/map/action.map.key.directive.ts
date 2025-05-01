@@ -1,10 +1,11 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, Input, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, OnDestroy, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { ActionContextStoreSourceMap, ActionKey } from './action.map';
 import { SecondaryActionContextStoreSource } from '../../action.store.source';
 import { provideSecondaryActionStoreSource } from '../../action.store.source.provide';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Directive that provides a ActionContextStoreSource using the input key and DbxActionContextMapDirective.
@@ -14,25 +15,14 @@ import { provideSecondaryActionStoreSource } from '../../action.store.source.pro
   providers: provideSecondaryActionStoreSource(DbxActionFromMapDirective),
   standalone: true
 })
-export class DbxActionFromMapDirective implements SecondaryActionContextStoreSource, OnDestroy {
+export class DbxActionFromMapDirective implements SecondaryActionContextStoreSource {
   private readonly _actionContextStoreSourceMap = inject(ActionContextStoreSourceMap);
-  private readonly _key = new BehaviorSubject<Maybe<ActionKey>>(undefined);
 
-  readonly store$ = this._key.pipe(
+  readonly key = input<Maybe<ActionKey>>(undefined, { alias: 'dbxActionFromMap' });
+  readonly key$ = toObservable(this.key);
+
+  readonly store$ = this.key$.pipe(
     filterMaybe(),
     switchMap((x) => this._actionContextStoreSourceMap.sourceForKey(x).store$)
   );
-
-  ngOnDestroy(): void {
-    this._key.complete();
-  }
-
-  @Input('dbxActionFromMap')
-  get key(): Maybe<ActionKey> {
-    return this._key.value;
-  }
-
-  set key(key: Maybe<ActionKey>) {
-    this._key.next(key);
-  }
 }

@@ -1,4 +1,4 @@
-import { OnDestroy, Input, Directive, inject } from '@angular/core';
+import { OnDestroy, Input, Directive, inject, input } from '@angular/core';
 import { emitDelayObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
@@ -15,13 +15,14 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   standalone: true
 })
 export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
-  @Input('dbxActionHasSuccess')
-  hideAfter?: Maybe<number> | '';
+  private readonly _store = inject(DbxActionContextStoreSourceInstance);
 
-  readonly show$ = inject(DbxActionContextStoreSourceInstance).isSuccess$.pipe(
+  readonly hideAfter = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionHasSuccess', transform: (value) => (value === '' ? undefined : value) });
+
+  readonly show$ = this._store.isSuccess$.pipe(
     exhaustMap((success) => {
       if (success) {
-        return emitDelayObs(true, false, this.hideAfter || undefined);
+        return emitDelayObs(true, false, this.hideAfter());
       } else {
         return of(false);
       }

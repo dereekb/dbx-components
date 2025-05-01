@@ -13,7 +13,6 @@
     "build-base": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [],
       "options": {
         "outputPath": "FIREBASE_COMPONENTS_DIST_FOLDER",
         "main": "FIREBASE_COMPONENTS_FOLDER/src/index.ts",

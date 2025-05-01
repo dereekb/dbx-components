@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, OnInit, inject } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit, effect, inject, input } from '@angular/core';
 import { DbxAppContextService } from './context.service';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxAppContextState } from './context';
@@ -13,28 +13,19 @@ import { type Maybe } from '@dereekb/util';
   selector: '[dbxAppContextState]',
   standalone: true
 })
-export class DbxAppContextStateDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxAppContextStateDirective {
   readonly dbxAppContextStateService = inject(DbxAppContextService);
 
-  private readonly _state = new BehaviorSubject<Maybe<DbxAppContextState>>(undefined);
+  readonly state = input<Maybe<DbxAppContextState>>(undefined, { alias: 'dbxAppContextState' });
 
-  constructor() {
-    super();
-  }
+  protected readonly _stateEffect = effect(
+    () => {
+      const state = this.state();
 
-  ngOnInit(): void {
-    this.sub = this._state.pipe(filterMaybe()).subscribe((state) => {
-      this.dbxAppContextStateService.setState(state);
-    });
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._state.complete();
-  }
-
-  @Input('dbxAppContextState')
-  set state(state: Maybe<DbxAppContextState>) {
-    this._state.next(state);
-  }
+      if (state != null) {
+        this.dbxAppContextStateService.setState(state);
+      }
+    },
+    { allowSignalWrites: true }
+  );
 }

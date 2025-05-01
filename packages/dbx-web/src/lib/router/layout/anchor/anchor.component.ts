@@ -1,4 +1,4 @@
-import { skipFirstMaybe } from '@dereekb/rxjs';
+import { skipAllInitialMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 import { Component, TemplateRef, HostListener, inject, viewChild, input, ChangeDetectionStrategy, computed } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig, DbxInjectionComponent } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
@@ -57,25 +57,23 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
   readonly block = input<Maybe<boolean>>();
 
   readonly templateRef = viewChild<string, Maybe<TemplateRef<unknown>>>('content', { read: TemplateRef });
-  readonly templateRef$ = toObservable(this.templateRef).pipe(skipFirstMaybe(), shareReplay(1));
+  readonly templateRef$ = toObservable(this.templateRef).pipe(skipAllInitialMaybe(), shareReplay(1));
 
   readonly selectedClassSignal = computed(() => (this.selectedSignal() ? 'dbx-anchor-selected' : ''));
 
-  get srefAnchorConfig(): DbxInjectionComponentConfig {
-    return this._dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
-  }
+  readonly srefAnchorConfig: DbxInjectionComponentConfig = this._dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
 
   clickAnchor(event?: Maybe<MouseEvent>): void {
-    this.anchor?.onClick?.(event);
+    this.anchor()?.onClick?.(event);
   }
 
   @HostListener('mouseenter')
   onMouseEnter(event?: Maybe<MouseEvent>) {
-    this.anchor?.onMouse?.('enter', event);
+    this.anchor()?.onMouse?.('enter', event);
   }
 
   @HostListener('mouseleave')
   onMouseLeave(event?: Maybe<MouseEvent>) {
-    this.anchor?.onMouse?.('leave', event);
+    this.anchor()?.onMouse?.('leave', event);
   }
 }

@@ -1,4 +1,4 @@
-import { Input, Directive, inject } from '@angular/core';
+import { Input, Directive, inject, input } from '@angular/core';
 import { emitDelayObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
@@ -15,13 +15,14 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   standalone: true
 })
 export class DbxActionPreSuccessDirective extends AbstractIfDirective {
-  @Input('dbxActionPreSuccess')
-  hideFor?: Maybe<number> | '';
+  private readonly _store = inject(DbxActionContextStoreSourceInstance);
 
-  readonly show$ = inject(DbxActionContextStoreSourceInstance).isSuccess$.pipe(
+  readonly hideFor = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionPreSuccess', transform: (value) => (value === '' ? undefined : value) });
+
+  readonly show$ = this._store.isSuccess$.pipe(
     exhaustMap((success) => {
       if (success) {
-        return emitDelayObs(false, true, this.hideFor || undefined);
+        return emitDelayObs(false, true, this.hideFor());
       } else {
         return of(true);
       }

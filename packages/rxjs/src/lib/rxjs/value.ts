@@ -328,7 +328,7 @@ export function emitAfterDelay<T>(value: T, delayTime: number): MonoTypeOperator
 /**
  * @deprecated use switchMapFilterMaybe instead.
  */
-const switchMapMaybeObs = switchMapFilterMaybe;
+export const switchMapMaybeObs = switchMapFilterMaybe;
 
 /**
  * Skips all initial maybe values, and then returns all values after the first non-null/undefined value is returned.

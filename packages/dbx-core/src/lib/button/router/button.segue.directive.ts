@@ -1,49 +1,32 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { Directive, OnInit, OnDestroy, Input, inject } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../subscription/subscription.directive';
 import { shareReplay, distinctUntilChanged, switchMap, tap, BehaviorSubject } from 'rxjs';
 import { DbxButton } from '../button';
 import { DbxRouterService } from '../../router/router/service/router.service';
 import { SegueRef } from '../../router/segue';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 // MARK: Button Directives
 @Directive({
   selector: '[dbxButtonSegue]',
   standalone: true
 })
-export class DbxButtonSegueDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxButtonSegueDirective extends AbstractSubscriptionDirective {
   readonly dbxButton = inject(DbxButton);
   readonly dbxRouterService = inject(DbxRouterService);
 
-  private readonly _segueRef = new BehaviorSubject<Maybe<SegueRef>>(undefined);
-  readonly segueRef$ = this._segueRef.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
+  readonly segueRef = input<Maybe<SegueRef>>(undefined, { alias: 'dbxButtonSegue' });
 
-  @Input('dbxButtonSegue')
-  get segueRef(): Maybe<SegueRef> {
-    return this._segueRef.value;
-  }
+  constructor() {
+    super();
+    this.sub = this.dbxButton.clicked$.subscribe(() => {
+      const segueRef = this.segueRef();
 
-  set segueRef(segueRef: Maybe<SegueRef>) {
-    this._segueRef.next(segueRef);
-  }
-
-  ngOnInit(): void {
-    this.sub = this.segueRef$
-      .pipe(
-        switchMap((segueRef) =>
-          this.dbxButton.clicked$.pipe(
-            tap(() => {
-              this.dbxRouterService.go(segueRef);
-            })
-          )
-        )
-      )
-      .subscribe();
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._segueRef.complete();
+      if (segueRef) {
+        this.dbxRouterService.go(segueRef);
+      }
+    });
   }
 }
