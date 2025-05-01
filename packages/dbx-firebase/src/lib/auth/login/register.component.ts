@@ -1,5 +1,5 @@
 import { FirebaseLoginMethodCategory, FirebaseLoginMethodType } from './login';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { ArrayOrValue, type Maybe } from '@dereekb/util';
 import { DbxFirebaseLoginComponent } from './login.component';
 
@@ -9,18 +9,13 @@ import { DbxFirebaseLoginComponent } from './login.component';
 @Component({
   selector: 'dbx-firebase-register',
   template: `
-    <dbx-firebase-login loginMode="register" [providerTypes]="providerTypes" [omitProviderTypes]="omitProviderTypes" [providerCategories]="providerCategories"></dbx-firebase-login>
+    <dbx-firebase-login loginMode="register" [providerTypes]="providerTypes()" [omitProviderTypes]="omitProviderTypes()" [providerCategories]="providerCategories()"></dbx-firebase-login>
   `,
   imports: [DbxFirebaseLoginComponent],
   standalone: true
 })
 export class DbxFirebaseRegisterComponent {
-  @Input()
-  providerTypes: Maybe<ArrayOrValue<FirebaseLoginMethodType>>;
-
-  @Input()
-  omitProviderTypes: Maybe<ArrayOrValue<FirebaseLoginMethodType>>;
-
-  @Input()
-  providerCategories: Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>;
+  readonly providerTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
+  readonly omitProviderTypes = input<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>();
+  readonly providerCategories = input<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>();
 }

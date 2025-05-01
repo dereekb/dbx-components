@@ -1,4 +1,4 @@
-import { Component, Directive, Input, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Directive, Input, OnInit, inject, signal, computed, ChangeDetectionStrategy, model } from '@angular/core';
 import { WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { FirebaseLoginMethodType } from './login';
@@ -47,26 +47,23 @@ export interface DbxFirebaseLoginButtonConfig {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxFirebaseLoginButtonComponent {
-  private readonly _config = signal<Maybe<DbxFirebaseLoginButtonConfig>>(null);
+  readonly config = model<Maybe<DbxFirebaseLoginButtonConfig>>(null);
 
-  readonly iconUrlSignal = computed(() => this._config()?.iconUrl);
-  readonly iconSignal = computed(() => this._config()?.icon);
-  readonly textSignal = computed(() => this._config()?.text ?? '');
-  readonly buttonColorSignal = computed(() => this._config()?.buttonColor ?? 'transparent');
-  readonly buttonTextColorSignal = computed(() => this._config()?.buttonTextColor);
+  readonly iconUrlSignal = computed(() => this.config()?.iconUrl);
+  readonly iconSignal = computed(() => this.config()?.icon);
+  readonly textSignal = computed(() => this.config()?.text ?? '');
+  readonly buttonColorSignal = computed(() => this.config()?.buttonColor ?? 'transparent');
+  readonly buttonTextColorSignal = computed(() => this.config()?.buttonTextColor);
 
-  @Input()
-  set config(config: Maybe<DbxFirebaseLoginButtonConfig>) {
-    this._config.set(config);
-  }
-
-  get config(): Maybe<DbxFirebaseLoginButtonConfig> {
-    return this._config();
+  setConfig(config: Maybe<DbxFirebaseLoginButtonConfig>) {
+    this.config.set(config);
   }
 
   readonly handleAction: WorkUsingContext = (_, context) => {
-    if (this.config != null) {
-      const loginPromise = this.config?.handleLogin();
+    const config = this.config();
+
+    if (config != null) {
+      const loginPromise = config.handleLogin();
       context.startWorkingWithPromise(loginPromise);
     } else {
       context.reject();
@@ -103,14 +100,16 @@ export const DBX_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_COMPONENT_CONFIGURATION: P
 
 @Directive()
 export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implements OnInit {
+  abstract readonly loginProvider: FirebaseLoginMethodType;
+
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   readonly dbxFirebaseAuthLoginService = inject(DbxFirebaseAuthLoginService);
   readonly dbxFirebaseLoginContext = inject(DbxFirebaseLoginContext);
 
+  // TODO: Consider updating these signals, etc.
+
   private readonly _config = signal<DbxFirebaseLoginButtonConfig | null>(null);
   readonly configSignal = computed(() => this._config());
-
-  abstract readonly loginProvider: FirebaseLoginMethodType;
 
   ngOnInit(): void {
     const assets = this.assetConfig;

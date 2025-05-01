@@ -14,11 +14,12 @@ import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 import { DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
+import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 
 @Component({
   templateUrl: './section.page.two.component.html',
   standalone: true,
-  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent]
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent]
 })
 export class DocLayoutSectionPageTwoComponent implements OnDestroy, OnInit {
   readonly cdRef = inject(ChangeDetectorRef);

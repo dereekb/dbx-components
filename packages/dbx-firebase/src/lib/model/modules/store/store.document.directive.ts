@@ -1,18 +1,32 @@
-import { Directive, forwardRef, Input, OnDestroy, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId, TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { ModelKey, type Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store.document';
-import { BehaviorSubject, first, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
-import { filterMaybe, useFirst } from '@dereekb/rxjs';
+import { BehaviorSubject, Observable, shareReplay, Subscription, switchMap } from 'rxjs';
+import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, provideDbxRouteModelIdDirectiveDelegate, provideDbxRouteModelKeyDirectiveDelegate } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreTwoWayKeyProvider } from './store.document.twoway.key.source';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.
  */
 @Directive()
 export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> implements DbxFirebaseDocumentStoreTwoWayKeyProvider, DbxRouteModelIdDirectiveDelegate, DbxRouteModelKeyDirectiveDelegate, OnDestroy {
+  readonly documentId = model<Maybe<FirestoreModelId>>(undefined);
+  readonly key = model<Maybe<FirestoreModelKey>>(undefined);
+  readonly flatKey = model<Maybe<TwoWayFlatFirestoreModelKey>>(undefined);
+  readonly ref = model<Maybe<DocumentReference<T>>>(undefined);
+  readonly streamMode = model<FirestoreAccessorStreamMode>(FirestoreAccessorStreamMode.STREAM);
+
+  private readonly _documentId$ = toObservable(this.documentId).pipe(skipInitialMaybe());
+  private readonly _key$ = toObservable(this.key).pipe(skipInitialMaybe());
+  private readonly _flatKey$ = toObservable(this.flatKey).pipe(skipInitialMaybe());
+  private readonly _ref$ = toObservable(this.ref).pipe(skipInitialMaybe());
+  private readonly _streamMode$ = toObservable(this.streamMode).pipe(skipInitialMaybe());
+
   private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
+  private readonly _storeSub = new SubscriptionObject();
 
   readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
 
@@ -34,14 +48,47 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   constructor(store: S) {
     this.replaceStore(store);
+
+    // sync inputs to store any time the store changes
+    this._storeSub.subscription = this._store.subscribe((x) => {
+      if (x) {
+        x.setId(this._documentId$);
+        x.setKey(this._key$);
+        x.setFlatKey(this._flatKey$);
+        x.setRef(this._ref$);
+        x.setStreamMode(this._streamMode$);
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this._store.complete();
+    this._storeSub.destroy();
   }
 
   get store() {
     return this._store.value as S;
+  }
+
+  // MARK: Setters
+  setDocumentId(documentId: Maybe<FirestoreModelId>) {
+    this.documentId.set(documentId);
+  }
+
+  setKey(key: Maybe<FirestoreModelKey>) {
+    this.key.set(key);
+  }
+
+  setFlatKey(flatKey: Maybe<TwoWayFlatFirestoreModelKey>) {
+    this.flatKey.set(flatKey);
+  }
+
+  setRef(ref: Maybe<DocumentReference<T>>) {
+    this.ref.set(ref);
+  }
+
+  setStreamMode(streamMode: FirestoreAccessorStreamMode) {
+    this.streamMode.set(streamMode);
   }
 
   /**
@@ -53,39 +100,13 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   // MARK: DbxRouteModelIdDirectiveDelegate
   useRouteModelIdParamsObservable(idFromParams: Observable<Maybe<ModelKey>>): Subscription {
-    return this.store$.pipe(first()).subscribe((x) => x.setId(idFromParams));
+    return idFromParams.subscribe((x) => this.setDocumentId(x));
   }
 
   // MARK: DbxRouteModelKeyDirectiveDelegate
   useRouteModelKeyParamsObservable(keyFromParams: Observable<Maybe<TwoWayFlatFirestoreModelKey>>): Subscription {
     // we assume that the input model key is a TwoWayFlatFirestoreModelKey, since the TwoWayFlatFirestoreModelKey is safe to encode in the url
-    return this.store$.pipe(first()).subscribe((x) => x.setFlatKey(keyFromParams));
-  }
-
-  // MARK: Inputs
-  @Input()
-  set documentId(documentId: Maybe<FirestoreModelId>) {
-    useFirst(this.store$, (x) => x.setId(documentId));
-  }
-
-  @Input()
-  set key(key: Maybe<FirestoreModelKey>) {
-    useFirst(this.store$, (x) => x.setKey(key));
-  }
-
-  @Input()
-  set flatKey(flatKey: Maybe<TwoWayFlatFirestoreModelKey>) {
-    useFirst(this.store$, (x) => x.setFlatKey(flatKey));
-  }
-
-  @Input()
-  set ref(ref: Maybe<DocumentReference<T>>) {
-    useFirst(this.store$, (x) => x.setRef(ref));
-  }
-
-  @Input()
-  set streamMode(streamMode: FirestoreAccessorStreamMode) {
-    useFirst(this.store$, (x) => x.setStreamMode(streamMode));
+    return keyFromParams.subscribe((x) => this.setFlatKey(x));
   }
 }
 

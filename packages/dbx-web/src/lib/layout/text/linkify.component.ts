@@ -1,9 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, inject } from '@angular/core';
-import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
 import { type Maybe } from '@dereekb/util';
-import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Used to "linkify" the input text.
@@ -16,47 +14,21 @@ import { toSignal } from '@angular/core/rxjs-interop';
   host: {
     class: 'dbx-i dbx-linkify'
   },
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
-export class DbxLinkifyComponent implements OnDestroy {
+export class DbxLinkifyComponent {
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly _text = new BehaviorSubject<Maybe<string>>(undefined);
 
-  readonly linkifiedText$ = this._text.pipe(
-    distinctUntilChanged(),
-    map((x) =>
-      x
-        ? linkifyStr(x, {
-            defaultProtocol: 'https',
-            target: {
-              url: '_blank'
-            }
-          })
-        : undefined
-    ),
-    shareReplay(1)
-  );
+  readonly text = input<Maybe<string>>();
 
-  readonly linkifiedBody$ = this.linkifiedText$.pipe(
-    map((x) => {
-      return x ? this.sanitizer.bypassSecurityTrustHtml(x) : undefined;
-    }),
-    shareReplay(1)
-  );
+  readonly linkifiedTextSignal = computed(() => {
+    const text = this.text();
+    return text ? linkifyStr(text, { defaultProtocol: 'https', target: { url: '_blank' } }) : undefined;
+  });
 
-  readonly linkifiedBodySignal = toSignal(this.linkifiedBody$);
-
-  ngOnDestroy(): void {
-    this._text.complete();
-  }
-
-  @Input()
-  get text(): Maybe<string> {
-    return this._text.value;
-  }
-
-  set text(text: Maybe<string>) {
-    this._text.next(text);
-  }
+  readonly linkifiedBodySignal = computed(() => {
+    const linkifiedText = this.linkifiedTextSignal();
+    return linkifiedText ? this.sanitizer.bypassSecurityTrustHtml(linkifiedText) : undefined;
+  });
 }

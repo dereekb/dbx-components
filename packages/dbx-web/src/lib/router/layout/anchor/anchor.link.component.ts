@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, Input } from '@angular/core';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxAnchorComponent } from './anchor.component';
@@ -11,33 +11,37 @@ import { DbxAnchorComponent } from './anchor.component';
   standalone: true,
   imports: [DbxAnchorComponent],
   template: `
-    <dbx-anchor [anchor]="anchor">
+    <dbx-anchor [anchor]="anchorSignal()">
       <ng-content></ng-content>
     </dbx-anchor>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'd-inline dbx-link'
   }
 })
 export class DbxLinkComponent {
-  @Input()
-  anchor?: Maybe<ClickableAnchor>;
+  readonly ref = input<Maybe<string>>();
+  readonly href = input<Maybe<string>>();
+  readonly anchor = input<Maybe<ClickableAnchor>>();
 
-  @Input()
-  set ref(ref: Maybe<string>) {
-    if (ref) {
-      this.anchor = {
-        ref
-      };
-    }
-  }
+  readonly anchorSignal = computed(() => {
+    const ref = this.ref();
+    const href = this.href();
+    let anchor = this.anchor();
 
-  @Input()
-  set href(href: Maybe<string>) {
-    if (href) {
-      this.anchor = {
-        url: href
-      };
+    if (!anchor) {
+      if (ref) {
+        anchor = {
+          ref
+        };
+      } else if (href) {
+        anchor = {
+          url: href
+        };
+      }
     }
-  }
+
+    return anchor;
+  });
 }

@@ -56,6 +56,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
 })
 export class DocActionDirectivesComponent implements OnDestroy {
   successValue: any;
+  actionHandlerValue = 5;
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
   readonly value$ = this._value.asObservable();
