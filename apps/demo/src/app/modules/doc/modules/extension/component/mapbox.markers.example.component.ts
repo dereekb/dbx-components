@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { dbxMapboxColoredDotStyle, DbxMapboxMarkerFactory } from '@dereekb/dbx-web/mapbox';
 import { type Maybe, LatLngTuple } from '@dereekb/util';
-import { DbxMapboxMarkersComponent } from '@dereekb/dbx-web';
+import { DbxMapboxMarkersComponent } from '@dereekb/dbx-web/mapbox';
 
 export const EXAMPLE_RANDOM_MAPBOX_MARKER_STYLE = dbxMapboxColoredDotStyle('white', 'black');
 

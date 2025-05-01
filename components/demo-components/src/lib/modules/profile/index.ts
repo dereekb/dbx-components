@@ -1,4 +1,3 @@
-export * from './profile.module';
 export * from './profile.service';
 export * from './component/profile.form';
 export * from './component/profile.form.component';

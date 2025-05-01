@@ -1,12 +1,24 @@
 import { ListLoadingStateContext, MaybeObservableOrValue, asObservable, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
-import { Directive, input, OnDestroy, output, TrackByFunction } from '@angular/core';
+import { Directive, input, NgModule, OnDestroy, output, TrackByFunction } from '@angular/core';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { DbxValueListViewComponent } from './list.view.value.component';
 
+export const DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE = '<dbx-list-view [config]="config"></dbx-list-view>';
+
+@NgModule({
+  exports: [DbxValueListViewComponent],
+  imports: [DbxValueListViewComponent]
+})
+export class DbxValueListViewComponentImportsModule {}
+
+// MARK: Value List View
 /**
  * Abstract DbxListView implementation.
+ *
+ * You might consider extending AbstractDbxSelectionListViewDirective instead, as it includes selection support.
  */
 @Directive()
 export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>, OnDestroy {

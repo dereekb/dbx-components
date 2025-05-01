@@ -1,6 +1,20 @@
 import { LOREM } from '../../shared/lorem';
-import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxValueListViewItemComponent,
+  AbstractDbxSelectionListViewDirective,
+  DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
+  DbxSelectionValueListViewConfig,
+  provideDbxListView,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxSpacerDirective,
+  DbxChipDirective
+} from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
 
@@ -9,7 +23,10 @@ import { DocValue, DocValueWithSelection } from './item.list';
  */
 @Component({
   selector: 'doc-complex-item-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapperDirective<DocValue> {
   constructor() {
@@ -22,8 +39,10 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
 
 @Component({
   selector: 'doc-complex-item-list-selection',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListView(DocSelectionItemListViewComponent)
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxSelectionValueListViewComponentImportsModule],
+  providers: provideDbxListView(DocSelectionItemListViewComponent),
+  standalone: true
 })
 export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
   readonly config: DbxSelectionValueListViewConfig<DocValueWithSelection> = {
@@ -47,7 +66,9 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
         <dbx-chip [small]="true" dbxColor="warn">Active</dbx-chip>
       </div>
     </div>
-  `
+  `,
+  imports: [DbxSpacerDirective, DbxChipDirective],
+  standalone: true
 })
 export class DocSelectionItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
   readonly lorem = LOREM;

@@ -1,6 +1,6 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
 import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListTitleGroupTitleDelegate } from '@dereekb/dbx-web';
-import { CustomDocValue } from './../component/item.list.custom.component';
+import { CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
@@ -22,6 +22,9 @@ import { DbxListItemDisableRippleModifierDirective } from '@dereekb/dbx-web';
 import { DbxListTitleGroupDirective } from '@dereekb/dbx-web';
 import { DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { AsyncPipe, JsonPipe } from '@angular/common';
+import { DocItemListComponent } from '../component/item.list.component';
+import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
+import { DocItemListGridComponent } from '../component/item.list.grid.component';
 
 @Component({
   templateUrl: './list.component.html',
@@ -33,10 +36,10 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
     DocFeatureExampleComponent,
     MatButton,
     DbxButtonSpacerDirective,
-    DocLayoutComponentsModule,
-    DocLayoutComponentsModule,
-    DocLayoutComponentsModule,
-    DocLayoutComponentsModule,
+    DocItemListComponent,
+    DocItemListGridComponent,
+    DocSelectionItemListComponent,
+    DocCustomItemListComponent,
     DbxValueListGridSizeDirective,
     DbxValueListItemModifierDirective,
     DbxListItemAnchorModifierDirective,

@@ -2,7 +2,7 @@ import { DocExtensionTableItemCellExampleComponent } from './../component/table.
 import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
+import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
 import { beginLoadingPage, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
 import { range } from '@dereekb/util';
 import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
@@ -12,8 +12,6 @@ import { ExampleTableData } from '../component/table.item';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxTableViewComponent } from '@dereekb/dbx-web';
-import { DbxTableDirective } from '@dereekb/dbx-web';
 import { NgIf, AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 

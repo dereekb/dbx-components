@@ -25,7 +25,18 @@ const importsAndExports = [
 ];
 
 /**
- * @deprecated all components are now standalone
+ * @deprecated all components are now standalone. Consider importing those instead.
+ *
+ * @see DbxErrorComponent
+ * @see DbxLoadingErrorDirective
+ * @see DbxActionErrorDirective
+ * @see DbxActionSnackbarErrorDirective
+ * @see DbxErrorViewComponent
+ * @see DbxErrorSnackbarComponent
+ * @see DbxErrorPopoverComponent
+ * @see DbxErrorDetailsComponent
+ * @see DbxErrorWidgetViewComponent
+ * @see DbxErrorDefaultErrorWidgetComponent
  */
 @NgModule({
   imports: importsAndExports,

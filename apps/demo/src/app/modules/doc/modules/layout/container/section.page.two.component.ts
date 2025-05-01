@@ -18,7 +18,7 @@ import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 @Component({
   templateUrl: './section.page.two.component.html',
   standalone: true,
-  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DocLayoutComponentsModule, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent]
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent]
 })
 export class DocLayoutSectionPageTwoComponent implements OnDestroy, OnInit {
   readonly cdRef = inject(ChangeDetectorRef);

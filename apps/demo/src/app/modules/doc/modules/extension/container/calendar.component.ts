@@ -1,5 +1,5 @@
 import { OnInit, Component, inject } from '@angular/core';
-import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
+import { DbxCalendarComponent, DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
@@ -13,7 +13,6 @@ import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxCalendarComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 import { DbxTwoColumnComponent } from '@dereekb/dbx-web';
 import { DbxTwoColumnContextDirective } from '@dereekb/dbx-web';

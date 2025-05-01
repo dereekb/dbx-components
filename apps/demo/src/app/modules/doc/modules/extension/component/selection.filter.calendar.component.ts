@@ -5,7 +5,7 @@ import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStr
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
-import { DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form';
+import { DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
 import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DbxButtonComponent } from '@dereekb/dbx-web';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -7,7 +7,7 @@ import { type Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-label-block',
   template: `
-    <span class="d-block dbx-label dbx-label-padded">{{ header }}</span>
+    <span class="d-block dbx-label dbx-label-padded">{{ header() }}</span>
     <ng-content></ng-content>
   `,
   host: {
@@ -17,6 +17,5 @@ import { type Maybe } from '@dereekb/util';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxLabelBlockComponent {
-  @Input()
-  header?: Maybe<string>;
+  readonly header = input<Maybe<string>>();
 }

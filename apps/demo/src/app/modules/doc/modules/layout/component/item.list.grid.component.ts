@@ -1,6 +1,6 @@
 import { LOREM } from '../../shared/lorem';
-import { Component } from '@angular/core';
-import { AbstractDbxListGridViewDirective, DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE, AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListGridViewConfig } from '@dereekb/dbx-web';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { AbstractDbxListGridViewDirective, DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE, AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE, DbxListGridViewDirectiveImportsModule } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
 
@@ -9,7 +9,10 @@ import { DocValue, DocValueWithSelection } from './item.list';
  */
 @Component({
   selector: 'doc-item-list-grid',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  imports: [DbxListWrapperComponentImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<DocValue> {
   constructor() {
@@ -22,8 +25,11 @@ export class DocItemListGridComponent extends AbstractDbxListWrapperDirective<Do
 
 @Component({
   selector: 'doc-item-list-grid-view',
-  template: DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListView(DocItemListGridViewComponent)
+  template: DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE,
+  providers: provideDbxListView(DocItemListGridViewComponent),
+  imports: [DbxListGridViewDirectiveImportsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class DocItemListGridViewComponent extends AbstractDbxListGridViewDirective<DocValue> {
   readonly config: DbxValueListGridViewConfig<DocValueWithSelection> = {

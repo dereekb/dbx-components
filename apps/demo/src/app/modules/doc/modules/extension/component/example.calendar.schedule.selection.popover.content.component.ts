@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { DbxScheduleSelectionCalendarDateDaysComponent } from '@dereekb/dbx-form';
+import { DbxScheduleSelectionCalendarDateDaysComponent } from '@dereekb/dbx-form/calendar';
 
 @Component({
   selector: 'doc-example-schedule-selection-calendar-date-popover-content',

@@ -281,7 +281,7 @@ Be sure to also move `reflect-metadata` to `project.json` as one of the polyfill
 
 #### Deprecated Components Removal
 - Removed deprecated `DbxTextCompatModule`, and `dbx-notice`, `dbx-hint`, `dbx-note`, `dbx-success`, `dbx-warn`, `dbx-ok`. `dbx-label` `dbx-form-description` selectors. Use as a CSS class now.
-- Removed deprecated `DbxRouteModelIdFromAuthUserIdDirective` with selector `dbxFirebaseDocumentAuthId`. Use `dbxRouteModelIdFromAuthUserId` instead.
+- Removed deprecated `DbxRouteModelIdFromAuthUserIdDirective` with selector `dbxRouteModelIdFromAuthUserId`. Use `dbxRouteModelIdFromAuthUserId` instead.
 - Removed deprecated `DbxFirebaseDocumentStoreRouteIdDirective` with selector `dbxFirebaseDocumentStoreRouteId`. Use `dbxRouteModelId` instead.
 - Removed deprecated `DbxFirebaseDocumentStoreRouteKeyDirective` with selector `dbxFirebaseDocumentStoreRouteKey`. Use `dbxRouteModelKey` instead.
 
@@ -474,3 +474,7 @@ Which is what we want.
 We do the same for the remaining dbx-components imports, `dbx-core`, `dbx-form`, `dbx-firebase`, `dbx-analytics`, etc.
 
 The linting step will clean up all the imports into a single import statement.
+
+There may also be some left over modules that aren't removed and have leftover declarations, so just search for `declarations: ` in VSCode to find the leftover modules.
+
+It did seem like the components that extended `AbstractDbxSelectionListWrapperDirective` did not get updated properly, so we did have to manually fix these.

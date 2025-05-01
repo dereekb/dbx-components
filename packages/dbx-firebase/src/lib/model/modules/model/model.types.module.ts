@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { DbxFirebaseModelTypeInstanceListComponent, DbxFirebaseModelTypeInstanceListViewComponent, DbxFirebaseModelTypeInstanceListViewItemComponent } from './model.types.list.component';
-import { DbxfirebaseModelViewedEventDirective } from './model.types.view.directive';
+import { DbxFirebaseModelViewedEventDirective } from './model.types.view.directive';
 
-const importsAndExports = [DbxfirebaseModelViewedEventDirective, DbxFirebaseModelTypeInstanceListComponent, DbxFirebaseModelTypeInstanceListViewComponent, DbxFirebaseModelTypeInstanceListViewItemComponent];
+const importsAndExports = [DbxFirebaseModelViewedEventDirective, DbxFirebaseModelTypeInstanceListComponent, DbxFirebaseModelTypeInstanceListViewComponent, DbxFirebaseModelTypeInstanceListViewItemComponent];
 
 /**
  * @deprecated import independent components instead
  *
- * @see DbxfirebaseModelViewedEventDirective
+ * @see DbxFirebaseModelViewedEventDirective
  * @see DbxFirebaseModelTypeInstanceListComponent
  * @see DbxFirebaseModelTypeInstanceListViewComponent
  * @see DbxFirebaseModelTypeInstanceListViewItemComponent

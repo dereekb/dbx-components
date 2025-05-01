@@ -3,7 +3,26 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, MapboxFitPositions, DbxMapboxInjectionStore, DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import {
+  KnownMapboxStyle,
+  DbxMapboxLayoutSide,
+  DbxMapboxMarker,
+  DbxMapboxMarkerFactory,
+  dbxMapboxColoredDotStyle,
+  filterByMapboxViewportBound,
+  DbxMapboxChangeService,
+  MapboxFitPositions,
+  DbxMapboxInjectionStore,
+  DbxMapboxModule,
+  DbxMapboxInjectionComponent,
+  DbxMapboxLayoutComponent,
+  DbxMapboxLayoutVirtualResizeSyncComponent,
+  DbxMapboxMapDirective,
+  DbxMapboxMapStoreInjectionBlockDirective,
+  DbxMapboxMarkerComponent,
+  DbxMapboxMarkersComponent,
+  DbxMapboxMenuComponent
+} from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor, DBX_THEME_COLORS } from '@dereekb/dbx-web';
@@ -14,14 +33,8 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxMapboxLayoutComponent } from '@dereekb/dbx-web';
-import { DbxMapboxLayoutVirtualResizeSyncComponent } from '@dereekb/dbx-web';
 import { MapComponent } from 'ngx-mapbox-gl';
-import { DbxMapboxMapDirective } from '@dereekb/dbx-web';
 import { NgFor, NgIf, AsyncPipe, JsonPipe } from '@angular/common';
-import { DbxMapboxMarkerComponent } from '@dereekb/dbx-web';
-import { DbxMapboxMarkersComponent } from '@dereekb/dbx-web';
-import { DbxMapboxMenuComponent } from '@dereekb/dbx-web';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
 import { DbxBarDirective } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
@@ -31,8 +44,6 @@ import { DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
 import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 import { DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { DbxMapboxInjectionComponent } from '@dereekb/dbx-web';
-import { DbxMapboxMapStoreInjectionBlockDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './mapbox.component.html',
