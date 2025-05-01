@@ -6,12 +6,6 @@
   "prefix": "dereekb",
   "tags": [],
   "targets": {
-    "build": {
-      "options": {
-        "tsConfig": "packages/dbx-web/mapbox/tsconfig.json",
-        "x-g-by-btf": true
-      }
-    },
     "build-base": {
       "executor": "@nx/angular:package",
       "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "!{projectRoot}/**/*.spec.ts"],

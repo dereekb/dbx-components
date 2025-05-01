@@ -5,11 +5,11 @@ import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStr
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
-import { DbxScheduleSelectionCalendarComponent } from '../../../../../../../../../packages/dbx-form/calendar/src/lib/calendar.schedule.selection.component';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
-import { DbxButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.component';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
-import { DbxContentPitDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.pit.directive';
+import { DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
+import { DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DbxContentPitDirective } from '@dereekb/dbx-web';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 
 const daysRangeInFilter = 14;
@@ -21,8 +21,8 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
 };
 
 @Component({
-    selector: 'doc-extension-calendar-schedule-with-filter-example',
-    template: `
+  selector: 'doc-extension-calendar-schedule-with-filter-example',
+  template: `
     <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
     <dbx-content-border>
       <div>
@@ -49,9 +49,9 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
       </dbx-content-pit>
     </dbx-content-border>
   `,
-    providers: [DbxCalendarScheduleSelectionStore],
-    standalone: true,
-    imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, AsyncPipe, JsonPipe]
+  providers: [DbxCalendarScheduleSelectionStore],
+  standalone: true,
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, AsyncPipe, JsonPipe]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

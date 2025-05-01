@@ -21,9 +21,7 @@
             "command": "echo 'copying dbx-analytics license' && cp LICENSE dist/packages/dbx-analytics"
           }
         ],
-        "color": true,
-        "tsConfig": "packages/dbx-analytics/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

@@ -5,12 +5,6 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "build": {
-      "options": {
-        "tsConfig": "packages/firebase-server/zoho/tsconfig.json",
-        "x-g-by-btf": true
-      }
-    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],

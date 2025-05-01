@@ -1,18 +1,18 @@
 import { Component, inject } from '@angular/core';
 import { DemoSystemStateAccessor } from 'demo-components';
 import { DbxAppEnviromentService } from '@dereekb/dbx-core';
-import { DbxContentPageDirective } from '../../../../../../../packages/dbx-web/src/lib/layout/content/content.page.directive';
-import { DbxAppContextStateDirective } from '../../../../../../../packages/dbx-core/src/lib/context/context.directive';
-import { DbxContentContainerDirective } from '../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
-import { DbxContentBoxDirective } from '../../../../../../../packages/dbx-web/src/lib/layout/content/content.box.directive';
-import { DbxLinkComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/anchor/anchor.link.component';
-import { DbxAnchorComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/anchor/anchor.component';
+import { DbxContentPageDirective } from '@dereekb/dbx-web';
+import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentBoxDirective } from '@dereekb/dbx-web';
+import { DbxLinkComponent } from '@dereekb/dbx-web';
+import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 
 @Component({
-    templateUrl: './home.component.html',
-    standalone: true,
-    imports: [DbxContentPageDirective, DbxAppContextStateDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent, MatButton]
+  templateUrl: './home.component.html',
+  standalone: true,
+  imports: [DbxContentPageDirective, DbxAppContextStateDirective, DbxContentContainerDirective, DbxContentBoxDirective, DbxLinkComponent, DbxAnchorComponent, MatButton]
 })
 export class DemoHomeComponent {
   readonly _demoSystemStateAccessor: DemoSystemStateAccessor = inject(DemoSystemStateAccessor);

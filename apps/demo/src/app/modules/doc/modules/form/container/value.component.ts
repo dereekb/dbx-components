@@ -1,43 +1,21 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import {
-  addressField,
-  addressListField,
-  cityField,
-  countryField,
-  emailField,
-  phoneField,
-  nameField,
-  phoneAndLabelSectionField,
-  wrappedPhoneAndLabelField,
-  repeatArrayField,
-  stateField,
-  textAreaField,
-  textField,
-  zipCodeField,
-  phoneListField,
-  toggleField,
-  checkboxField,
-  numberField,
-  latLngTextField,
-  dollarAmountField,
-  numberSliderField
-} from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, toggleField, checkboxField, numberField, latLngTextField, dollarAmountField, numberSliderField } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { of } from 'rxjs';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
-import { DbxFormSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.input.directive';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
-    templateUrl: './value.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective]
+  templateUrl: './value.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective]
 })
 export class DocFormValueComponent {
   readonly dateValues$ = of({

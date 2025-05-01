@@ -9,36 +9,69 @@ import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.c
 import { DbxThemeColor, DBX_THEME_COLORS } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxMapboxLayoutComponent } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.layout.component';
-import { DbxMapboxLayoutVirtualResizeSyncComponent } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.layout.resize.sync.directive';
+import { DbxMapboxLayoutComponent } from '@dereekb/dbx-web';
+import { DbxMapboxLayoutVirtualResizeSyncComponent } from '@dereekb/dbx-web';
 import { MapComponent } from 'ngx-mapbox-gl';
-import { DbxMapboxMapDirective } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.store.map.directive';
+import { DbxMapboxMapDirective } from '@dereekb/dbx-web';
 import { NgFor, NgIf, AsyncPipe, JsonPipe } from '@angular/common';
-import { DbxMapboxMarkerComponent } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.marker.component';
-import { DbxMapboxMarkersComponent } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.markers.component';
-import { DbxMapboxMenuComponent } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.menu.component';
+import { DbxMapboxMarkerComponent } from '@dereekb/dbx-web';
+import { DbxMapboxMarkersComponent } from '@dereekb/dbx-web';
+import { DbxMapboxMenuComponent } from '@dereekb/dbx-web';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
-import { DbxBarDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/bar/bar.directive';
+import { DbxBarDirective } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
-import { DbxLabelBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/label.block.component';
+import { DbxLabelBlockComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxDetailBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/detail.block.component';
+import { DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
-import { DbxFormSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.input.directive';
-import { DbxMapboxInjectionComponent } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.injection.component';
-import { DbxMapboxMapStoreInjectionBlockDirective } from '../../../../../../../../../packages/dbx-web/mapbox/src/lib/mapbox.store.provide';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxMapboxInjectionComponent } from '@dereekb/dbx-web';
+import { DbxMapboxMapStoreInjectionBlockDirective } from '@dereekb/dbx-web';
 
 @Component({
-    templateUrl: './mapbox.component.html',
-    providers: [DbxMapboxMapStore, DbxMapboxModule, DbxMapboxInjectionStore, DbxMapboxChangeService],
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, MatTabGroup, MatTab, MatTabContent, DocFeatureExampleComponent, DbxMapboxLayoutComponent, DbxMapboxLayoutVirtualResizeSyncComponent, MapComponent, DbxMapboxMapDirective, NgFor, DbxMapboxMarkerComponent, DbxMapboxMarkersComponent, NgIf, DocExtensionMapboxMarkersExampleComponent, DbxMapboxMenuComponent, MatMenuTrigger, DbxBarDirective, FlexModule, DbxLabelBlockComponent, MatButton, DbxDetailBlockComponent, MatMenu, MatMenuItem, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxMapboxInjectionComponent, DbxMapboxMapStoreInjectionBlockDirective, AsyncPipe, JsonPipe]
+  templateUrl: './mapbox.component.html',
+  providers: [DbxMapboxMapStore, DbxMapboxModule, DbxMapboxInjectionStore, DbxMapboxChangeService],
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureDerivedComponent,
+    MatTabGroup,
+    MatTab,
+    MatTabContent,
+    DocFeatureExampleComponent,
+    DbxMapboxLayoutComponent,
+    DbxMapboxLayoutVirtualResizeSyncComponent,
+    MapComponent,
+    DbxMapboxMapDirective,
+    NgFor,
+    DbxMapboxMarkerComponent,
+    DbxMapboxMarkersComponent,
+    NgIf,
+    DocExtensionMapboxMarkersExampleComponent,
+    DbxMapboxMenuComponent,
+    MatMenuTrigger,
+    DbxBarDirective,
+    FlexModule,
+    DbxLabelBlockComponent,
+    MatButton,
+    DbxDetailBlockComponent,
+    MatMenu,
+    MatMenuItem,
+    DocFormExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxMapboxInjectionComponent,
+    DbxMapboxMapStoreInjectionBlockDirective,
+    AsyncPipe,
+    JsonPipe
+  ]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly dbxMapboxMapStore = inject(DbxMapboxMapStore);

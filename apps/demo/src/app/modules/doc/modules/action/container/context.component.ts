@@ -1,21 +1,21 @@
 import { DbxActionDirective } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
-import { DbxActionDirective as DbxActionDirective_1 } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/context/action.directive';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
 import { NgIf, NgTemplateOutlet, AsyncPipe, JsonPipe } from '@angular/common';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
-import { DbxLoadingComponent } from '../../../../../../../../../packages/dbx-web/src/lib/loading/loading.component';
-import { DbxActionLoadingContextDirective } from '../../../../../../../../../packages/dbx-web/src/lib/loading/loading.action.directive';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
+import { DbxLoadingComponent } from '@dereekb/dbx-web';
+import { DbxActionLoadingContextDirective } from '@dereekb/dbx-web';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
 
 @Component({
-    templateUrl: './context.component.html',
-    standalone: true,
-    imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgIf, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe]
+  templateUrl: './context.component.html',
+  standalone: true,
+  imports: [DbxActionDirective_1, DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, NgIf, NgTemplateOutlet, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective, DocActionExampleToolsComponent, AsyncPipe, JsonPipe]
 })
 export class DocActionContextComponent {
   beginWorking(action: DbxActionDirective) {

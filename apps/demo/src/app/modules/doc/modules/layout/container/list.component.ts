@@ -7,20 +7,20 @@ import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angula
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, takeFront } from '@dereekb/util';
 import { pascalCase } from 'change-case-all';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
-import { DbxContentDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
-import { DbxValueListGridSizeDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/grid/list.grid.view.component';
-import { DbxValueListItemModifierDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/modifier/list.view.value.modifier.directive';
-import { DbxListItemAnchorModifierDirective } from '../../../../../../../../../packages/dbx-web/src/lib/router/layout/list/router.list.directive';
-import { DbxListItemIsSelectedModifierDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/modifier/list.view.value.modifier.selection.directive';
-import { DbxListItemDisableRippleModifierDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/modifier/list.view.value.modifier.ripple.directive';
-import { DbxListTitleGroupDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/group/list.view.value.group.title.directive';
-import { DbxListEmptyContentComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/list.content.empty.component';
+import { DbxValueListGridSizeDirective } from '@dereekb/dbx-web';
+import { DbxValueListItemModifierDirective } from '@dereekb/dbx-web';
+import { DbxListItemAnchorModifierDirective } from '@dereekb/dbx-web';
+import { DbxListItemIsSelectedModifierDirective } from '@dereekb/dbx-web';
+import { DbxListItemDisableRippleModifierDirective } from '@dereekb/dbx-web';
+import { DbxListTitleGroupDirective } from '@dereekb/dbx-web';
+import { DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 
 @Component({

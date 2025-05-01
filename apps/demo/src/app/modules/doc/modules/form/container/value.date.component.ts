@@ -5,19 +5,19 @@ import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOf
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, Observable, delay, interval, map, of } from 'rxjs';
 import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
-import { DbxFormSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.input.directive';
-import { DbxFormValueChangeDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.change.directive';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
-    templateUrl: './value.date.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, AsyncPipe]
+  templateUrl: './value.date.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, AsyncPipe]
 })
 export class DocFormDateValueComponent implements OnDestroy {
   readonly dateValues$ = of({

@@ -3,10 +3,10 @@ import { Type, InjectionToken, Inject, Component } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext } from '@dereekb/dbx-form';
-import { DbxFormlyComponent } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.form.component';
-import { DbxContentBoxDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.box.directive';
-import { DbxSectionComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/section/section.component';
-import { DbxLinkComponent } from '../../../../../../../../../packages/dbx-web/src/lib/router/layout/anchor/anchor.link.component';
+import { DbxFormlyComponent } from '@dereekb/dbx-form';
+import { DbxContentBoxDirective } from '@dereekb/dbx-web';
+import { DbxSectionComponent } from '@dereekb/dbx-web';
+import { DbxLinkComponent } from '@dereekb/dbx-web';
 
 export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN');
 
@@ -17,13 +17,13 @@ export interface DocFormExampleComponentFormConfig {
 }
 
 @Component({
-    template: `
+  template: `
     <dbx-formly></dbx-formly>
   `,
-    selector: 'dbx-form-example-component-form',
-    providers: [provideFormlyContext()],
-    standalone: true,
-    imports: [DbxFormlyComponent]
+  selector: 'dbx-form-example-component-form',
+  providers: [provideFormlyContext()],
+  standalone: true,
+  imports: [DbxFormlyComponent]
 })
 export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleComponentFormValue, DocFormExampleComponentFormConfig> {
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(
@@ -44,7 +44,7 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
 }
 
 @Component({
-    template: `
+  template: `
     <div class="dbx-p3">
       <dbx-content-box class="dbx-primary-bg">
         <dbx-section header="A" [hint]="lorem">
@@ -53,8 +53,8 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
       </dbx-content-box>
     </div>
   `,
-    standalone: true,
-    imports: [DbxContentBoxDirective, DbxSectionComponent]
+  standalone: true,
+  imports: [DbxContentBoxDirective, DbxSectionComponent]
 })
 export class DocFormExampleComponentFormTestViewAComponent {
   lorem = LOREM;
@@ -63,7 +63,7 @@ export class DocFormExampleComponentFormTestViewAComponent {
 }
 
 @Component({
-    template: `
+  template: `
     <div>
       <p>
         <dbx-link>Privacy Policy</dbx-link>
@@ -73,7 +73,7 @@ export class DocFormExampleComponentFormTestViewAComponent {
       </p>
     </div>
   `,
-    standalone: true,
-    imports: [DbxLinkComponent]
+  standalone: true,
+  imports: [DbxLinkComponent]
 })
 export class DocFormExampleComponentFormTestViewBComponent {}

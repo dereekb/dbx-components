@@ -11,9 +11,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/browser"],
       "options": {
         "command": "npx nx run browser:build-base",
-        "color": true,
-        "tsConfig": "packages/browser/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

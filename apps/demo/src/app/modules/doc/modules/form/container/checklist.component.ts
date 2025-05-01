@@ -3,17 +3,17 @@ import { Component } from '@angular/core';
 import { DocFormExampleChecklistValues, DocFormExampleChecklistFieldsConfig } from '../component/checklist.example';
 import { successResult } from '@dereekb/rxjs';
 import { DocFormExampleChecklistFormValue, DocFormExampleChecklistFormComponent } from '../component/checklist.example.form.component';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFormLoadingSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.loading.directive';
-import { DbxFormValueChangeDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.change.directive';
+import { DbxFormLoadingSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { JsonPipe } from '@angular/common';
 
 @Component({
-    templateUrl: './checklist.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe]
+  templateUrl: './checklist.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe]
 })
 export class DocFormChecklistComponent {
   value?: DocFormExampleChecklistFormValue;

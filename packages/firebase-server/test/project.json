@@ -4,12 +4,6 @@
   "sourceRoot": "packages/firebase-server/test/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "options": {
-        "tsConfig": "packages/firebase-server/test/tsconfig.json",
-        "x-g-by-btf": true
-      }
-    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],

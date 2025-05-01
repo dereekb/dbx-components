@@ -11,9 +11,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/rxjs"],
       "options": {
         "command": "npx nx run rxjs:build-base",
-        "color": true,
-        "tsConfig": "packages/rxjs/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       },
       "dependsOn": ["^build"]
     },

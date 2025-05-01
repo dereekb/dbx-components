@@ -2,24 +2,24 @@ import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TextChip } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
 import { UnitedStatesAddressWithContact, unitedStatesAddressString } from '@dereekb/util';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxContentPitDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.pit.directive';
-import { DbxLinkifyComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/linkify.component';
-import { DbxTextChipsComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/text.chips.component';
-import { DbxChipDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/text.chip.directive';
-import { DbxColorDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/style/style.color.directive';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
-import { DbxLabelBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/label.block.component';
-import { DbxUnitedStatesAddressComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/address.component';
-import { DbxDetailBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/detail.block.component';
-import { DbxAnchorComponent } from '../../../../../../../../../packages/dbx-web/src/lib/router/layout/anchor/anchor.component';
+import { DbxContentPitDirective } from '@dereekb/dbx-web';
+import { DbxLinkifyComponent } from '@dereekb/dbx-web';
+import { DbxTextChipsComponent } from '@dereekb/dbx-web';
+import { DbxChipDirective } from '@dereekb/dbx-web';
+import { DbxColorDirective } from '@dereekb/dbx-web';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DbxLabelBlockComponent } from '@dereekb/dbx-web';
+import { DbxUnitedStatesAddressComponent } from '@dereekb/dbx-web';
+import { DbxDetailBlockComponent } from '@dereekb/dbx-web';
+import { DbxAnchorComponent } from '@dereekb/dbx-web';
 
 @Component({
-    templateUrl: './text.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent]
+  templateUrl: './text.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent]
 })
 export class DocTextTextComponent {
   readonly fullAddress: UnitedStatesAddressWithContact = {

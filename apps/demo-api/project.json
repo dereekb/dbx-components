@@ -20,9 +20,7 @@
             "command": "npx nx run demo-api:build-base"
           }
         ],
-        "color": true,
-        "tsConfig": "apps/demo-api/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

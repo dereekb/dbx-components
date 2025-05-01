@@ -10,11 +10,11 @@ import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../compone
 import { DocValue } from '../../layout/component/item.list';
 import { DocSelectionItemListComponent } from '../../layout/component/item.list.selection.component';
 import { AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -96,9 +96,9 @@ const DISPLAY_FOR_EXAMPLE_METADATA_VALUE: SearchableValueFieldDisplayFn<string, 
 const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearchableMetadata>((x) => x.name);
 
 @Component({
-    templateUrl: './selection.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
+  templateUrl: './selection.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

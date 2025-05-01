@@ -4,19 +4,19 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { randomNumber } from '@dereekb/util';
 import { ProfileDocumentStore } from '../profile';
 import { GuestbookDocumentStore } from '../guestbook';
-import { DbxActionDirective } from '../../../../../../packages/dbx-core/src/lib/action/directive/context/action.directive';
-import { DbxActionValueDirective } from '../../../../../../packages/dbx-core/src/lib/action/directive/state/action.value.directive';
-import { DbxActionHandlerDirective } from '../../../../../../packages/dbx-core/src/lib/action/directive/state/action.handler.directive';
-import { DbxButtonComponent } from '../../../../../../packages/dbx-web/src/lib/button/button.component';
-import { DbxActionButtonDirective } from '../../../../../../packages/dbx-core/src/lib/button/action/action.button.directive';
-import { DbxErrorComponent } from '../../../../../../packages/dbx-web/src/lib/error/error.component';
-import { DbxActionErrorDirective } from '../../../../../../packages/dbx-web/src/lib/error/error.action.directive';
+import { DbxActionDirective } from '@dereekb/dbx-core';
+import { DbxActionValueDirective } from '@dereekb/dbx-core';
+import { DbxActionHandlerDirective } from '@dereekb/dbx-core';
+import { DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective } from '@dereekb/dbx-web';
 
 @Component({
-    templateUrl: './setup.widget.component.html',
-    providers: [ProfileDocumentStore, GuestbookDocumentStore],
-    standalone: true,
-    imports: [DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
+  templateUrl: './setup.widget.component.html',
+  providers: [ProfileDocumentStore, GuestbookDocumentStore],
+  standalone: true,
+  imports: [DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoSetupDevelopmentWidgetComponent implements OnInit {
   constructor(

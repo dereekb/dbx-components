@@ -4,33 +4,58 @@ import { dateTimeField, timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, delay, map, of, shareReplay } from 'rxjs';
 import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
-import { DbxDetailBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/text/detail.block.component';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
+import { DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
-import { DbxFormSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.input.directive';
-import { DbxFormValueChangeDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.change.directive';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { DateDistancePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/datedistance.pipe';
-import { DateRangeDistancePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/daterangedistance.pipe';
-import { TargetDateToSystemDatePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/targetdatetosystemdate.pipe';
-import { SystemDateToTargetDatePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/systemdatetotargetdate.pipe';
-import { TimezoneAbbreviationPipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/timezoneabbreviation.pipe';
-import { DateDayRangePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/datedayrange.pipe';
-import { DateDayTimeRangePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/datedaytimerange.pipe';
-import { DateTimeRangeOnlyPipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/datetimerangeonly.pipe';
-import { DateTimeRangePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/datetimerange.pipe';
-import { DateTimeRangeOnlyDistancePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/datetimerangeonlydistance.pipe';
-import { MinutesStringPipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/minutesstring.pipe';
-import { TimeDistanceCountdownPipe, TimeDistancePipe } from '../../../../../../../../../packages/dbx-core/src/lib/pipe/date/timedistance.pipe';
+import { DateDistancePipe } from '@dereekb/dbx-core';
+import { DateRangeDistancePipe } from '@dereekb/dbx-core';
+import { TargetDateToSystemDatePipe } from '@dereekb/dbx-core';
+import { SystemDateToTargetDatePipe } from '@dereekb/dbx-core';
+import { TimezoneAbbreviationPipe } from '@dereekb/dbx-core';
+import { DateDayRangePipe } from '@dereekb/dbx-core';
+import { DateDayTimeRangePipe } from '@dereekb/dbx-core';
+import { DateTimeRangeOnlyPipe } from '@dereekb/dbx-core';
+import { DateTimeRangePipe } from '@dereekb/dbx-core';
+import { DateTimeRangeOnlyDistancePipe } from '@dereekb/dbx-core';
+import { MinutesStringPipe } from '@dereekb/dbx-core';
+import { TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
 
 @Component({
-    templateUrl: './pipes.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxDetailBlockComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, AsyncPipe, DatePipe, DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe]
+  templateUrl: './pipes.component.html',
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DbxContentBorderDirective,
+    DbxDetailBlockComponent,
+    DocFormExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxFormValueChangeDirective,
+    AsyncPipe,
+    DatePipe,
+    DateDistancePipe,
+    DateRangeDistancePipe,
+    TargetDateToSystemDatePipe,
+    SystemDateToTargetDatePipe,
+    TimezoneAbbreviationPipe,
+    DateDayRangePipe,
+    DateDayTimeRangePipe,
+    DateTimeRangeOnlyPipe,
+    DateTimeRangePipe,
+    DateTimeRangeOnlyDistancePipe,
+    MinutesStringPipe,
+    TimeDistanceCountdownPipe,
+    TimeDistancePipe
+  ]
 })
 export class DocTextPipesComponent implements OnDestroy {
   // TODO: Should not require a delay to set the value properly

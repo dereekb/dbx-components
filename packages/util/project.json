@@ -21,9 +21,7 @@
             "command": "npx nx run util-test:build-base"
           }
         ],
-        "parallel": false,
-        "tsConfig": "packages/util/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "parallel": false
       }
     },
     "build-base": {

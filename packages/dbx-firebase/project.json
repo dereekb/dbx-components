@@ -22,9 +22,7 @@
           }
         ],
         "parallel": false,
-        "color": true,
-        "tsConfig": "packages/dbx-firebase/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

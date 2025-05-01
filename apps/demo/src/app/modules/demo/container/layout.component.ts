@@ -3,21 +3,21 @@ import { Component, ViewEncapsulation, inject } from '@angular/core';
 import { Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
-import { DbxSidenavComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/sidenav/sidenav.component';
-import { DbxSetStyleDirective } from '../../../../../../../packages/dbx-web/src/lib/layout/style/style.set.directive';
-import { DbxIfSidenavDisplayModeDirective } from '../../../../../../../packages/dbx-web/src/lib/router/layout/sidenav/sidenav.ifdisplaymode.directive';
-import { DbxContentBorderDirective } from '../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
-import { DbxSidenavPageComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/sidenav/sidenav.page.component';
+import { DbxSidenavComponent } from '@dereekb/dbx-web';
+import { DbxSetStyleDirective } from '@dereekb/dbx-web';
+import { DbxIfSidenavDisplayModeDirective } from '@dereekb/dbx-web';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
+import { DbxSidenavPageComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
-import { DbxAnchorListComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/anchorlist/anchorlist.component';
+import { DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
-    templateUrl: './layout.component.html',
-    styleUrls: ['../demo.scss'],
-    encapsulation: ViewEncapsulation.None,
-    standalone: true,
-    imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe]
+  templateUrl: './layout.component.html',
+  styleUrls: ['../demo.scss'],
+  encapsulation: ViewEncapsulation.None,
+  standalone: true,
+  imports: [DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent, UIView, DbxAnchorListComponent, AsyncPipe]
 })
 export class DemoLayoutComponent {
   readonly dbxAuthService = inject(DbxFirebaseAuthService);

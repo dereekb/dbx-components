@@ -21,9 +21,7 @@
             "command": "npx nx run nestjs-mailgun:build-base"
           }
         ],
-        "parallel": false,
-        "tsConfig": "packages/nestjs/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "parallel": false
       }
     },
     "build-base": {

@@ -21,9 +21,7 @@
             "command": "echo 'copying dbx-core license' && cp LICENSE dist/packages/dbx-core"
           }
         ],
-        "color": true,
-        "tsConfig": "packages/dbx-core/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

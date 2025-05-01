@@ -11,9 +11,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/date"],
       "options": {
         "command": "npx nx run date:build-base",
-        "color": true,
-        "tsConfig": "packages/date/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

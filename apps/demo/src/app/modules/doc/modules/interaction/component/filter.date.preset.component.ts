@@ -6,23 +6,23 @@ import { DbxActionFormMapValueFunction } from '@dereekb/dbx-form';
 import { DocInteractionTestDateFilterFormValue, DocInteractionTestDateFilterFormComponent } from './filter.date.form.component';
 import { map, shareReplay } from 'rxjs';
 import { IsModifiedFunction } from '@dereekb/rxjs';
-import { DbxFilterWrapperComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/filter/filter.wrapper.component';
-import { DbxActionDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/context/action.directive';
-import { DbxActionEnforceModifiedDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.enforce.modified.directive';
-import { DbxActionAutoTriggerDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/auto/action.autotrigger.directive';
-import { DbxActionFormDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/action/form.action.directive';
-import { DbxFormSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.input.directive';
+import { DbxFilterWrapperComponent } from '@dereekb/dbx-web';
+import { DbxActionDirective } from '@dereekb/dbx-core';
+import { DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
+import { DbxActionAutoTriggerDirective } from '@dereekb/dbx-core';
+import { DbxActionFormDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
-    selector: 'doc-interaction-test-date-filter-preset-filter',
-    template: `
+  selector: 'doc-interaction-test-date-filter-preset-filter',
+  template: `
     <dbx-filter-wrapper dbxAction dbxActionEnforceModified dbxActionAutoTrigger useInstantTriggerPreset [showButtons]="false" style="display: block; padding: 12px 24px; overflow: hidden">
       <doc-interaction-test-date-filter-form dbxActionForm [dbxActionFormIsModified]="dateRangeIsModified" [dbxFormSource]="formTemplate$" [dbxActionFormMapValue]="mapFormToFilterValue"></doc-interaction-test-date-filter-form>
     </dbx-filter-wrapper>
   `,
-    providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)],
-    standalone: true,
-    imports: [DbxFilterWrapperComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
+  providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)],
+  standalone: true,
+  imports: [DbxFilterWrapperComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestDateFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {
   readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_DATE_TEST_PRESETS;

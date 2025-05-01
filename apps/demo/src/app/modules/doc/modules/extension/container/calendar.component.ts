@@ -9,22 +9,22 @@ import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
 import { timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxCalendarComponent } from '../../../../../../../../../packages/dbx-web/calendar/src/lib/calendar.component';
+import { DbxCalendarComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxTwoColumnComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/column/two/two.column.component';
-import { DbxTwoColumnContextDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/column/two/two.column.context.directive';
-import { DbxTwoColumnFullLeftDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/column/two/two.column.full.left.directive';
-import { DbxTwoBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/block/two.block.component';
-import { DbxTwoColumnRightComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/column/two/two.column.right.component';
+import { DbxTwoColumnComponent } from '@dereekb/dbx-web';
+import { DbxTwoColumnContextDirective } from '@dereekb/dbx-web';
+import { DbxTwoColumnFullLeftDirective } from '@dereekb/dbx-web';
+import { DbxTwoBlockComponent } from '@dereekb/dbx-web';
+import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
-import { DbxFormSourceDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.input.directive';
-import { DbxFormValueChangeDirective } from '../../../../../../../../../packages/dbx-form/src/lib/form/io/form.change.directive';
-import { DbxSubSectionComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/section/subsection.component';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { DbxSubSectionComponent } from '@dereekb/dbx-web';
 import { DocExtensionCalendarScheduleSelectionComponent } from '../component/selection.calendar.component';
 import { AsyncPipe, JsonPipe, DatePipe } from '@angular/common';
 
@@ -33,10 +33,32 @@ export interface TestCalendarEventData extends DateCell {
 }
 
 @Component({
-    templateUrl: './calendar.component.html',
-    providers: [DbxCalendarStore],
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DbxCalendarComponent, MatButton, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxSubSectionComponent, DocExtensionCalendarScheduleSelectionWithFilterComponent, DocExtensionCalendarScheduleSelectionComponent, AsyncPipe, JsonPipe, DatePipe]
+  templateUrl: './calendar.component.html',
+  providers: [DbxCalendarStore],
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureDerivedComponent,
+    DocFeatureExampleComponent,
+    DbxCalendarComponent,
+    MatButton,
+    DbxTwoColumnComponent,
+    DbxTwoColumnContextDirective,
+    DbxTwoColumnFullLeftDirective,
+    DbxTwoBlockComponent,
+    DbxTwoColumnRightComponent,
+    DocFormExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxFormValueChangeDirective,
+    DbxSubSectionComponent,
+    DocExtensionCalendarScheduleSelectionWithFilterComponent,
+    DocExtensionCalendarScheduleSelectionComponent,
+    AsyncPipe,
+    JsonPipe,
+    DatePipe
+  ]
 })
 export class DocExtensionCalendarComponent implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);

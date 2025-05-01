@@ -4,18 +4,18 @@ import { DocFormExampleChecklistFieldsConfig, docFormExampleChecklistFieldsSecti
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, provideFormlyContext } from '@dereekb/dbx-form';
 import { BooleanKeyValueTransformMap } from '@dereekb/util';
-import { DbxFormlyComponent } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.form.component';
+import { DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export type DocFormExampleChecklistFormValue = BooleanKeyValueTransformMap<DocFormExampleChecklistValues>;
 
 @Component({
-    template: `
+  template: `
     <dbx-formly></dbx-formly>
   `,
-    selector: 'dbx-form-example-checklist-form',
-    providers: [provideFormlyContext()],
-    standalone: true,
-    imports: [DbxFormlyComponent]
+  selector: 'dbx-form-example-checklist-form',
+  providers: [provideFormlyContext()],
+  standalone: true,
+  imports: [DbxFormlyComponent]
 })
 export class DocFormExampleChecklistFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleChecklistFormValue, DocFormExampleChecklistFieldsConfig> {
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(

@@ -4,21 +4,21 @@ import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE } from '../component/error.custom.inline.widget.component';
 import { DbxErrorSnackbarService } from '@dereekb/dbx-web';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxErrorComponent } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.component';
-import { DbxErrorDetailsComponent } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.details.component';
-import { DbxErrorViewComponent } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.view.component';
-import { DbxButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.component';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
+import { DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxErrorDetailsComponent } from '@dereekb/dbx-web';
+import { DbxErrorViewComponent } from '@dereekb/dbx-web';
+import { DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
 @Component({
-    templateUrl: './error.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxErrorComponent, DbxErrorDetailsComponent, DbxErrorViewComponent, DbxButtonComponent, DbxButtonSpacerDirective]
+  templateUrl: './error.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxErrorComponent, DbxErrorDetailsComponent, DbxErrorViewComponent, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DocInteractionErrorComponent {
   readonly dbxErrorSnackbarService = inject(DbxErrorSnackbarService);

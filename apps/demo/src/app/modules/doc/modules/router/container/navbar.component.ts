@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
 import { takeLast } from '@dereekb/util';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
-import { DbxNavbarComponent } from '../../../../../../../../../packages/dbx-web/src/lib/router/layout/navbar/navbar.component';
+import { DbxNavbarComponent } from '@dereekb/dbx-web';
 
 @Component({
-    templateUrl: './navbar.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, UIView, DbxNavbarComponent]
+  templateUrl: './navbar.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, UIView, DbxNavbarComponent]
 })
 export class DocRouterNavbarComponent {
   anchors = [

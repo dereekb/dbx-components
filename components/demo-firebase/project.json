@@ -11,9 +11,7 @@
       "outputs": ["{workspaceRoot}/dist/components/demo-firebase"],
       "options": {
         "command": "npx nx run demo-firebase:build-base",
-        "color": true,
-        "tsConfig": "components/demo-firebase/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

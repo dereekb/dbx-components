@@ -1,15 +1,15 @@
 import { DbxFormSearchFormFieldsConfig } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFormSearchFormComponent } from '../../../../../../../../../packages/dbx-form/src/lib/formly/form/search.form.component';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
+import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 
 @Component({
-    templateUrl: './form.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective]
+  templateUrl: './form.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective]
 })
 export class DocFormFormComponent {
   searchText = '';

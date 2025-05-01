@@ -4,18 +4,18 @@ import { ChangeDetectorRef, ElementRef, Component, ViewChild, inject, AfterViewI
 import { DbxPopoverService } from '@dereekb/dbx-web';
 import { DocInteractionExamplePopoverComponent } from '../component/interaction.popover.component';
 import { first } from 'rxjs';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
 import { MatButton } from '@angular/material/button';
-import { DbxSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/style/spacer.directive';
+import { DbxSpacerDirective } from '@dereekb/dbx-web';
 import { JsonPipe } from '@angular/common';
 
 @Component({
-    templateUrl: './popover.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, FlexModule, MatButton, DbxSpacerDirective, JsonPipe]
+  templateUrl: './popover.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, FlexModule, MatButton, DbxSpacerDirective, JsonPipe]
 })
 export class DocInteractionPopoverComponent implements AfterViewInit {
   readonly cdRef = inject(ChangeDetectorRef);

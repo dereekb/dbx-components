@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 
 export interface DocExtensionMapboxContentExampleData {}
 
 @Component({
-    template: `
+  template: `
     <div style="width: 400px;">
       <dbx-content-border>
         <p>Example Content</p>
@@ -13,8 +13,8 @@ export interface DocExtensionMapboxContentExampleData {}
       </dbx-content-border>
     </div>
   `,
-    standalone: true,
-    imports: [DbxContentBorderDirective]
+  standalone: true,
+  imports: [DbxContentBorderDirective]
 })
 export class DocExtensionMapboxContentExampleComponent {
   readonly data? = inject<DocExtensionMapboxContentExampleData>(DBX_INJECTION_COMPONENT_DATA, { optional: true });

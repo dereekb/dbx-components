@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
-import { DbxDialogContentDirective } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/dialog/dialog.content.directive';
+import { DbxDialogContentDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
 @Component({
-    template: `
+  template: `
     <dbx-dialog-content>
       <p>Pick a value.</p>
       <div>
@@ -18,8 +18,8 @@ import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/db
       </div>
     </dbx-dialog-content>
   `,
-    standalone: true,
-    imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective]
+  standalone: true,
+  imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective]
 })
 export class DocActionExampleDialogComponent extends AbstractDialogDirective {
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {

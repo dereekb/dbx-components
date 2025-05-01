@@ -452,3 +452,25 @@ Then run: `npx nx g @angular/core:standalone --path=/apps/demo` -> convert-to-st
 Then run: `npx nx g @angular/core:standalone --path=/components/demo-components` -> prune ng-module
 Then run: `npx nx g @angular/core:standalone --path=/apps/demo` -> prune ng-module
 
+For the dbx-components project due to the way the imports were imported by the migration, we had to fix up the imports in the `demo-components` project.
+
+We used the following regex to find/match all paths to `dbx-web` that were a relative import path.
+
+Search: `(\.\.\/)+packages\/dbx-web(?:\/[\w\.-]+)+`
+Replace: `@dereekb/dbx-web`
+
+```
+import { DbxLinkComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/anchor/anchor.link.component';
+```
+
+VSCode's search/replace returned us:
+
+```
+import { DbxLinkComponent } from '@dereekb/dbx-web';
+```
+
+Which is what we want.
+
+We do the same for the remaining dbx-components imports, `dbx-core`, `dbx-form`, `dbx-firebase`, `dbx-analytics`, etc.
+
+The linting step will clean up all the imports into a single import statement.

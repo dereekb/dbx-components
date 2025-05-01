@@ -1,12 +1,12 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { nameField, textAreaField, textField, toggleField, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '../../../../../../../../../packages/dbx-form/src/lib/formly/formly.context.directive';
+import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 
 export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
   {
@@ -20,9 +20,9 @@ export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
 ];
 
 @Component({
-    templateUrl: './expression.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
+  templateUrl: './expression.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
 })
 export class DocFormExpressionComponent {
   readonly hideExpressionField: FormlyFieldConfig[] = [

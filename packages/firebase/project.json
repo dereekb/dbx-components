@@ -18,9 +18,7 @@
             "command": "npx nx run firebase-test:build-base"
           }
         ],
-        "parallel": false,
-        "tsConfig": "packages/firebase/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "parallel": false
       }
     },
     "build-base": {

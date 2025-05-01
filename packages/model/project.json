@@ -11,9 +11,7 @@
       "outputs": ["{workspaceRoot}/dist/packages/model"],
       "options": {
         "command": "npx nx run model:build-base",
-        "color": true,
-        "tsConfig": "packages/model/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {

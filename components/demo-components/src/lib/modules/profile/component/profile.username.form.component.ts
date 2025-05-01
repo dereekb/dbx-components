@@ -4,20 +4,20 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DemoProfileService } from '../profile.service';
 import { profileUsernameFields } from './profile.form';
 import { of } from 'rxjs';
-import { DbxFormlyComponent } from '../../../../../../../packages/dbx-form/src/lib/formly/formly.form.component';
+import { DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export interface DemoProfileUsernameFormValue {
   username: string;
 }
 
 @Component({
-    template: `
+  template: `
     <dbx-formly></dbx-formly>
   `,
-    selector: 'demo-profile-username-form',
-    providers: [provideFormlyContext()],
-    standalone: true,
-    imports: [DbxFormlyComponent]
+  selector: 'demo-profile-username-form',
+  providers: [provideFormlyContext()],
+  standalone: true,
+  imports: [DbxFormlyComponent]
 })
 export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDirective<DemoProfileUsernameFormValue> {
   readonly profileService = inject(DemoProfileService);

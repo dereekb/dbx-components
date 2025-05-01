@@ -1,15 +1,15 @@
 import { Component, ElementRef, OnInit } from '@angular/core';
 import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { DbxPopoverContentComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popover/popover.content.component';
-import { DbxPopoverHeaderComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popover/popover.header.component';
-import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
-import { DbxPopoverCloseButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popover/popover.close.component';
-import { DbxPopoverControlsDirective } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popover/popover.controls.directive';
-import { DbxBarDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/bar/bar.directive';
+import { DbxPopoverContentComponent } from '@dereekb/dbx-web';
+import { DbxPopoverHeaderComponent } from '@dereekb/dbx-web';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DbxPopoverCloseButtonComponent } from '@dereekb/dbx-web';
+import { DbxPopoverControlsDirective } from '@dereekb/dbx-web';
+import { DbxBarDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/style/spacer.directive';
-import { DbxPopoverScrollContentDirective } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popover/popover.scroll.content.directive';
+import { DbxSpacerDirective } from '@dereekb/dbx-web';
+import { DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { DocInteractionExamplePopoverContentComponent } from './interaction.popover.content.component';
 
 export const DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY = 'popover';
@@ -19,7 +19,7 @@ export interface DocInteractionPopoverConfig {
 }
 
 @Component({
-    template: `
+  template: `
     <dbx-popover-content>
       <dbx-popover-header icon="home" header="Header">
         <span>Custom Content</span>
@@ -39,8 +39,8 @@ export interface DocInteractionPopoverConfig {
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `,
-    standalone: true,
-    imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent]
+  standalone: true,
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent]
 })
 export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirective<number> implements OnInit {
   readonly onCloseValue = 12345;

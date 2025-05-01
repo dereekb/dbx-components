@@ -2,19 +2,19 @@ import { GuestbookEntry } from 'demo-firebase';
 import { Component } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
-import { DbxListComponent } from '../../../../../../../packages/dbx-web/src/lib/layout/list/list.component';
-import { DbxSelectionValueListViewComponent } from '../../../../../../../packages/dbx-web/src/lib/layout/list/list.view.value.selection.component';
+import { DbxListComponent } from '@dereekb/dbx-web';
+import { DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
 import { DatePipe } from '@angular/common';
-import { ToJsDatePipe } from '../../../../../../../packages/dbx-core/src/lib/pipe/date/tojsdate.pipe';
+import { ToJsDatePipe } from '@dereekb/dbx-core';
 
 export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
 
 @Component({
-    selector: 'demo-guestbook-entry-list',
-    template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
-    providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent),
-    standalone: true,
-    imports: [DbxListComponent]
+  selector: 'demo-guestbook-entry-list',
+  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
+  providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent),
+  standalone: true,
+  imports: [DbxListComponent]
 })
 export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWrapperDirective<GuestbookEntry> {
   constructor() {
@@ -26,10 +26,10 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
 }
 
 @Component({
-    template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
-    providers: provideDbxListView(DemoGuestbookEntryListViewComponent),
-    standalone: true,
-    imports: [DbxSelectionValueListViewComponent]
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
+  providers: provideDbxListView(DemoGuestbookEntryListViewComponent),
+  standalone: true,
+  imports: [DbxSelectionValueListViewComponent]
 })
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
   readonly config: DbxSelectionValueListViewConfig<GuestbookEntryWithSelection> = {
@@ -44,7 +44,7 @@ export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionLis
 }
 
 @Component({
-    template: `
+  template: `
     <div class="demo-guestbook-entry-list-item">
       <p class="item-message">"{{ message }}"</p>
       <p class="item-signed">
@@ -54,9 +54,9 @@ export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionLis
       </p>
     </div>
   `,
-    styleUrls: ['./guestbook.scss'],
-    standalone: true,
-    imports: [DatePipe, ToJsDatePipe]
+  styleUrls: ['./guestbook.scss'],
+  standalone: true,
+  imports: [DatePipe, ToJsDatePipe]
 })
 export class DemoGuestbookEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<GuestbookEntry> {
   get updatedAt() {

@@ -4,18 +4,18 @@ import { ListLoadingState, successResult } from '@dereekb/rxjs';
 import { map, Observable, of } from 'rxjs';
 import { DocExtensionWidgetExampleData, DOC_EXTENSION_WIDGET_EXAMPLE_TYPE } from '../component/widget.example.component';
 import { DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from '../component/widget.icon.example.component';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
-import { DbxWidgetViewComponent } from '../../../../../../../../../packages/dbx-web/src/lib/extension/widget/widget.component';
-import { DbxWidgetListGridComponent } from '../../../../../../../../../packages/dbx-web/src/lib/extension/widget/widget.list.component';
+import { DbxContentBorderDirective } from '@dereekb/dbx-web';
+import { DbxWidgetViewComponent } from '@dereekb/dbx-web';
+import { DbxWidgetListGridComponent } from '@dereekb/dbx-web';
 import { JsonPipe } from '@angular/common';
 
 @Component({
-    templateUrl: './widget.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent, JsonPipe]
+  templateUrl: './widget.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DbxWidgetViewComponent, DbxWidgetListGridComponent, JsonPipe]
 })
 export class DocExtensionWidgetComponent {
   readonly examplePair: DbxWidgetDataPair = {

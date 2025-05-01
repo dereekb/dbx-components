@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
 import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, PopupPosition } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DocInteractionExamplePopupContentComponent } from './interaction.popup.content.component';
-import { DbxPopupContentComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popup/popup.content.component';
-import { DbxPopupControlsComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popup/popup.controls.component';
+import { DbxPopupContentComponent } from '@dereekb/dbx-web';
+import { DbxPopupControlsComponent } from '@dereekb/dbx-web';
 
 export const DEFAULT_INTERACTION_POPUP_COMPOSER_POPUP_KEY = 'popup';
 
@@ -13,14 +13,14 @@ export interface DocInteractionPopupConfig {
 }
 
 @Component({
-    template: `
+  template: `
     <dbx-popup-content>
       <dbx-popup-controls [header]="header" controls></dbx-popup-controls>
       <dbx-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></dbx-interaction-example-popup-content>
     </dbx-popup-content>
   `,
-    standalone: true,
-    imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent]
+  standalone: true,
+  imports: [DbxPopupContentComponent, DbxPopupControlsComponent, DocInteractionExamplePopupContentComponent]
 })
 export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> implements OnInit, OnDestroy {
   private readonly popupService = inject(DbxPopupService);

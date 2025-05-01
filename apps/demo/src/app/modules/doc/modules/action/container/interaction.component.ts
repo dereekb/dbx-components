@@ -8,31 +8,52 @@ import { DocActionExampleDialogComponent } from '../component/action.example.dia
 import { DbxActionAnalyticsConfig, DbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
-import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxActionDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/context/action.directive';
-import { DbxActionHandlerDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.handler.directive';
-import { DbxActionValueStreamDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.value.stream.directive';
-import { DbxButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.component';
-import { DbxActionButtonDirective } from '../../../../../../../../../packages/dbx-core/src/lib/button/action/action.button.directive';
-import { DbxActionDisabledDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.disabled.directive';
-import { DbxActionButtonTriggerDirective } from '../../../../../../../../../packages/dbx-core/src/lib/button/action/action.button.trigger.directive';
-import { DbxActionConfirmDirective } from '../../../../../../../../../packages/dbx-web/src/lib/action/action.confirm.directive';
-import { DbxActionValueDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.value.directive';
-import { DbxErrorComponent } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.component';
-import { DbxActionErrorDirective } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.action.directive';
-import { DbxActionSnackbarDirective } from '../../../../../../../../../packages/dbx-web/src/lib/action/snackbar/action.snackbar.directive';
-import { DbxActionSnackbarErrorDirective } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.snackbar.action.directive';
-import { DbxActionPopoverDirective } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/popover/popover.action.directive';
-import { DbxActionDialogDirective } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/dialog/dialog.action.directive';
-import { DbxActionAnalyticsDirective } from '../../../../../../../../../packages/dbx-analytics/src/lib/action/analytics.action.directive';
+import { DbxActionDirective } from '@dereekb/dbx-core';
+import { DbxActionHandlerDirective } from '@dereekb/dbx-core';
+import { DbxActionValueStreamDirective } from '@dereekb/dbx-core';
+import { DbxButtonComponent } from '@dereekb/dbx-web';
+import { DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { DbxActionDisabledDirective } from '@dereekb/dbx-core';
+import { DbxActionButtonTriggerDirective } from '@dereekb/dbx-core';
+import { DbxActionConfirmDirective } from '@dereekb/dbx-web';
+import { DbxActionValueDirective } from '@dereekb/dbx-core';
+import { DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DbxActionSnackbarDirective } from '@dereekb/dbx-web';
+import { DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
+import { DbxActionPopoverDirective } from '@dereekb/dbx-web';
+import { DbxActionDialogDirective } from '@dereekb/dbx-web';
+import { DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
 
 @Component({
-    templateUrl: './interaction.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocActionExampleToolsComponent, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionConfirmDirective, DbxActionValueDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective, DbxActionAnalyticsDirective]
+  templateUrl: './interaction.component.html',
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DocActionExampleToolsComponent,
+    DbxActionDirective,
+    DbxActionHandlerDirective,
+    DbxActionValueStreamDirective,
+    DbxButtonComponent,
+    DbxActionButtonDirective,
+    DbxActionDisabledDirective,
+    DbxActionButtonTriggerDirective,
+    DbxActionConfirmDirective,
+    DbxActionValueDirective,
+    DbxErrorComponent,
+    DbxActionErrorDirective,
+    DbxActionSnackbarDirective,
+    DbxActionSnackbarErrorDirective,
+    DbxActionPopoverDirective,
+    DbxActionDialogDirective,
+    DbxActionAnalyticsDirective
+  ]
 })
 export class DocActionInteractionComponent implements OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

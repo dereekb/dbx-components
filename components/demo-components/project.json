@@ -12,9 +12,7 @@
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
         "command": "npx nx run demo-components:build-base",
-        "color": true,
-        "tsConfig": "components/demo-components/tsconfig.json",
-        "x-g-by-btf-tsconfig": true
+        "color": true
       }
     },
     "build-base": {
