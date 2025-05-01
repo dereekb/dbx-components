@@ -7,18 +7,16 @@ import { DemoOnboardUserComponent } from './container/user.component';
 import { DEMO_ONBOARD_STATES } from './demo.onboard.router';
 
 @NgModule({
-  imports: [
-    DemoRootSharedModule,
-    UIRouterModule.forChild({
-      states: DEMO_ONBOARD_STATES
-    })
-  ],
-  declarations: [
-    // components
-    // container
-    DemoOnboardLayoutComponent,
-    DemoOnboardTosComponent,
-    DemoOnboardUserComponent
-  ]
+    imports: [
+        DemoRootSharedModule,
+        UIRouterModule.forChild({
+            states: DEMO_ONBOARD_STATES
+        }),
+        // components
+        // container
+        DemoOnboardLayoutComponent,
+        DemoOnboardTosComponent,
+        DemoOnboardUserComponent
+    ]
 })
 export class DemoOnboardModule {}

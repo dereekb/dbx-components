@@ -7,13 +7,13 @@ import { DemoRootSharedModule } from 'demo-components';
 import { DocSharedModule } from './modules/shared/doc.shared.module';
 
 @NgModule({
-  imports: [
-    DemoRootSharedModule,
-    DocSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [DocHomeComponent, DocLayoutComponent]
+    imports: [
+        DemoRootSharedModule,
+        DocSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        DocHomeComponent, DocLayoutComponent
+    ]
 })
 export class DocModule {}

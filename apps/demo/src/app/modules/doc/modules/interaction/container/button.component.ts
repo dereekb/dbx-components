@@ -2,11 +2,25 @@ import { Component } from '@angular/core';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxProgressButtonConfig } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
+import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DbxButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.component';
+import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
+import { MatIcon } from '@angular/material/icon';
+import { DbxIconButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/icon/icon.button.component';
+import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
+import { DbxProgressSpinnerButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/progress/spinner.button.component';
+import { DbxProgressBarButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/progress/bar.button.component';
+import { DbxContentPitDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.pit.directive';
+import { DbxColorDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/style/style.color.directive';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
 @Component({
-  templateUrl: './button.component.html'
+    templateUrl: './button.component.html',
+    standalone: true,
+    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
 })
 export class DocInteractionButtonComponent {
   testClicked = '';

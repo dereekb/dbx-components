@@ -5,9 +5,10 @@ import { map } from 'rxjs';
 import { GuestbookEntryDocumentStore } from './guestbook.entry.document.store';
 
 @Directive({
-  exportAs: 'guestbookEntry',
-  selector: '[demoGuestbookEntryDocument]',
-  providers: provideDbxFirebaseDocumentStoreDirective(DemoGuestbookEntryDocumentStoreDirective, GuestbookEntryDocumentStore)
+    exportAs: 'guestbookEntry',
+    selector: '[demoGuestbookEntryDocument]',
+    providers: provideDbxFirebaseDocumentStoreDirective(DemoGuestbookEntryDocumentStoreDirective, GuestbookEntryDocumentStore),
+    standalone: true
 })
 export class DemoGuestbookEntryDocumentStoreDirective extends DbxFirebaseDocumentStoreDirective<GuestbookEntry, GuestbookEntryDocument, GuestbookEntryDocumentStore> {
   constructor() {

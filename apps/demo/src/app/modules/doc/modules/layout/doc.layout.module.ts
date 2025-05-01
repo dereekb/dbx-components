@@ -29,29 +29,27 @@ const declarations = [DocItemListComponent, DocItemListViewComponent, DocSelecti
 export class DocLayoutComponentsModule {}
 
 @NgModule({
-  imports: [
-    DocSharedModule,
-    DocLayoutComponentsModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    // components
-    // containers
-    DocLayoutLayoutComponent,
-    DocLayoutHomeComponent,
-    DocLayoutBarComponent,
-    DocLayoutFlexComponent,
-    DocLayoutSectionComponent,
-    DocLayoutSectionPageComponent,
-    DocLayoutSectionPageTwoComponent,
-    DocLayoutContentComponent,
-    DocLayoutListComponent,
-    DocLayoutTwoColumnsComponent,
-    DocLayoutTwoColumnsChildComponent,
-    DocLayoutTwoBlockComponent
-  ],
-  exports: [DocItemListComponent, DocItemListViewComponent]
+    imports: [
+        DocSharedModule,
+        DocLayoutComponentsModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        // components
+        // containers
+        DocLayoutLayoutComponent,
+        DocLayoutHomeComponent,
+        DocLayoutBarComponent,
+        DocLayoutFlexComponent,
+        DocLayoutSectionComponent,
+        DocLayoutSectionPageComponent,
+        DocLayoutSectionPageTwoComponent,
+        DocLayoutContentComponent,
+        DocLayoutListComponent,
+        DocLayoutTwoColumnsComponent,
+        DocLayoutTwoColumnsChildComponent,
+        DocLayoutTwoBlockComponent
+    ],
+    exports: [DocItemListComponent, DocItemListViewComponent]
 })
 export class DocLayoutModule {}

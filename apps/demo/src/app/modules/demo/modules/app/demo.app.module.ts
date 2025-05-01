@@ -8,18 +8,16 @@ import { DemoAppHistoryComponent } from './container/history.component';
 import { DemoAppSettingsComponent } from './container/settings.component';
 
 @NgModule({
-  imports: [
-    DemoAppSharedModule,
-    UIRouterModule.forChild({
-      states: DEMO_APP_STATES
-    })
-  ],
-  declarations: [
-    // components
-    DemoAppLayoutComponent,
-    DemoAppHomeComponent,
-    DemoAppHistoryComponent,
-    DemoAppSettingsComponent
-  ]
+    imports: [
+        DemoAppSharedModule,
+        UIRouterModule.forChild({
+            states: DEMO_APP_STATES
+        }),
+        // components
+        DemoAppLayoutComponent,
+        DemoAppHomeComponent,
+        DemoAppHistoryComponent,
+        DemoAppSettingsComponent
+    ]
 })
 export class DemoAppModule {}

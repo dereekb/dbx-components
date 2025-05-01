@@ -9,20 +9,18 @@ import { DocAuthFirebaseComponent } from './container/firebase.component';
 import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 
 @NgModule({
-  imports: [
-    DbxFirebaseLoginModule,
-    DocSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    // component
-    // container
-    DocAuthLayoutComponent,
-    DocAuthHomeComponent,
-    DocAuthRoleComponent,
-    DocAuthFirebaseComponent
-  ]
+    imports: [
+        DbxFirebaseLoginModule,
+        DocSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        // component
+        // container
+        DocAuthLayoutComponent,
+        DocAuthHomeComponent,
+        DocAuthRoleComponent,
+        DocAuthFirebaseComponent
+    ]
 })
 export class DocAuthModule {}

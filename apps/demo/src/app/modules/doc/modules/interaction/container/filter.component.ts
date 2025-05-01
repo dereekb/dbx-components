@@ -7,11 +7,26 @@ import { startOfDay } from 'date-fns';
 import { map, of, Observable } from 'rxjs';
 import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
+import { DocInteractionTestFilterPopoverButtonComponent } from '../component/filter.popover.button.component';
+import { DbxFilterMapSourceConnectorDirective } from '../../../../../../../../../packages/dbx-core/src/lib/filter/filter.map.connector.directive';
+import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
+import { DocInteractionTestDateFilterPopoverButtonComponent } from '../component/filter.date.popover.button.component';
+import { DocInteractionTestFilterPresetMenuComponent } from '../component/filter.preset.menu.component';
+import { DbxFilterConnectSourceDirective } from '../../../../../../../../../packages/dbx-core/src/lib/filter/filter.connect.source.directive';
+import { DocInteractionTestFilterPartialPresetMenuComponent } from '../component/filter.partial.preset.menu.component';
+import { DocInteractionTestFilterPresetFilterComponent } from '../component/filter.preset.component';
+import { JsonPipe } from '@angular/common';
 
 @Component({
-  templateUrl: './filter.component.html',
-  providers: [FilterMap],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    templateUrl: './filter.component.html',
+    providers: [FilterMap],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, DocInteractionTestFilterPopoverButtonComponent, DbxFilterMapSourceConnectorDirective, DbxButtonSpacerDirective, DocInteractionTestDateFilterPopoverButtonComponent, DocInteractionTestFilterPresetMenuComponent, DbxFilterConnectSourceDirective, DocInteractionTestFilterPartialPresetMenuComponent, DocInteractionTestFilterPresetFilterComponent, JsonPipe]
 })
 export class DocInteractionFilterComponent implements OnDestroy {
   readonly filterMap = inject(FilterMap<DocInteractionTestFilter>);

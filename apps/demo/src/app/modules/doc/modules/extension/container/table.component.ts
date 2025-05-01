@@ -9,9 +9,18 @@ import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareRepl
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
 import { ExampleTableData } from '../component/table.item';
+import { DbxContentContainerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.container.directive';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DbxTableViewComponent } from '../../../../../../../../../packages/dbx-web/table/src/lib/table.component';
+import { DbxTableDirective } from '../../../../../../../../../packages/dbx-web/table/src/lib/table.directive';
+import { NgIf, AsyncPipe } from '@angular/common';
+import { MatButton } from '@angular/material/button';
 
 @Component({
-  templateUrl: './table.component.html'
+    templateUrl: './table.component.html',
+    standalone: true,
+    imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, NgIf, MatButton, AsyncPipe]
 })
 export class DocExtensionTableComponent implements OnDestroy {
   readonly exampleInput: DateRangeDayDistanceInput = {

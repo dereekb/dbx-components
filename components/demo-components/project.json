@@ -4,16 +4,20 @@
   "projectType": "library",
   "sourceRoot": "components/demo-components/src",
   "prefix": "demo",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
-    "build": {
+    "build-x": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
         "command": "npx nx run demo-components:build-base",
-        "color": true
+        "color": true,
+        "tsConfig": "components/demo-components/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
-    "build-base": {
+    "build": {
       "executor": "@nx/angular:package",
       "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
@@ -40,7 +44,5 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

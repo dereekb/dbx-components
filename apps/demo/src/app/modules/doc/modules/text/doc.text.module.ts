@@ -9,19 +9,17 @@ import { DocTextPipesComponent } from './container/pipes.component';
 import { DocFormComponentsModule } from '../form/doc.form.module';
 
 @NgModule({
-  imports: [
-    DocSharedModule,
-    DocFormComponentsModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    //
-    DocTextHomeComponent,
-    DocTextLayoutComponent,
-    DocTextTextComponent,
-    DocTextPipesComponent
-  ]
+    imports: [
+        DocSharedModule,
+        DocFormComponentsModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        //
+        DocTextHomeComponent,
+        DocTextLayoutComponent,
+        DocTextTextComponent,
+        DocTextPipesComponent
+    ]
 })
 export class DocTextModule {}

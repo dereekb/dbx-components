@@ -2,7 +2,8 @@ import { Component, inject } from '@angular/core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 
 @Component({
-  templateUrl: './settings.component.html'
+    templateUrl: './settings.component.html',
+    standalone: true
 })
 export class DemoAppSettingsComponent {
   readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);

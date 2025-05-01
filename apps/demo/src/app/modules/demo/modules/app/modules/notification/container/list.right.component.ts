@@ -3,7 +3,8 @@ import { loadingStateContext, loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseNotificationItemStore } from '@dereekb/dbx-firebase';
 
 @Component({
-  templateUrl: './list.right.component.html'
+    templateUrl: './list.right.component.html',
+    standalone: true
 })
 export class DemoNotificationListPageRightComponent implements OnDestroy {
   readonly dbxFirebaseNotificationItemStore = inject(DbxFirebaseNotificationItemStore);

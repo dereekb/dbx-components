@@ -2,10 +2,18 @@ import { Component, Input, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
 import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
+import { DbxScheduleSelectionCalendarComponent } from '../../../../../../../../../packages/dbx-form/calendar/src/lib/calendar.schedule.selection.component';
+import { DbxContentBorderDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.border.directive';
+import { DbxContentPitDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.pit.directive';
+import { NgIf, AsyncPipe, JsonPipe } from '@angular/common';
+import { DbxSubSectionComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/section/subsection.component';
+import { DbxScheduleSelectionCalendarDateRangeComponent } from '../../../../../../../../../packages/dbx-form/calendar/src/lib/calendar.schedule.selection.range.component';
+import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from '../../../../../../../../../packages/dbx-form/calendar/src/lib/calendar.schedule.selection.dialog.button.component';
+import { DbxScheduleSelectionCalendarDateDaysComponent } from '../../../../../../../../../packages/dbx-form/calendar/src/lib/calendar.schedule.selection.days.component';
 
 @Component({
-  selector: 'doc-extension-calendar-schedule-example',
-  template: `
+    selector: 'doc-extension-calendar-schedule-example',
+    template: `
     <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
     <dbx-content-border>
       <dbx-content-pit>
@@ -27,7 +35,9 @@ import { map } from 'rxjs';
       </dbx-subsection>
     </dbx-subsection>
   `,
-  providers: [DbxCalendarScheduleSelectionStore]
+    providers: [DbxCalendarScheduleSelectionStore],
+    standalone: true,
+    imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxContentPitDirective, NgIf, DbxSubSectionComponent, DbxScheduleSelectionCalendarDateRangeComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateDaysComponent, AsyncPipe, JsonPipe]
 })
 export class DocExtensionCalendarScheduleSelectionComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

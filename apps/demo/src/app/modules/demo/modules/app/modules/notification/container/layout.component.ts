@@ -5,8 +5,9 @@ import { NotificationItem } from '@dereekb/firebase';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 
 @Component({
-  templateUrl: './layout.component.html',
-  providers: [DbxFirebaseNotificationItemStore]
+    templateUrl: './layout.component.html',
+    providers: [DbxFirebaseNotificationItemStore],
+    standalone: true
 })
 export class DemoNotificationLayoutComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);

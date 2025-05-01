@@ -32,47 +32,45 @@ import { DocExtensionStructureComponent } from './container/structure.component'
 import { DemoRootSharedModule } from 'demo-components';
 
 @NgModule({
-  imports: [
-    DocSharedModule,
-    DbxCalendarModule,
-    DbxFormCalendarModule,
-    DocFormComponentsModule,
-    DbxFormDateScheduleRangeFieldModule,
-    DbxWidgetModule,
-    DbxMapboxModule,
-    DbxFormMapboxModule,
-    DbxDownloadTextModule,
-    DbxTableModule,
-    DbxTableDateModule,
-    DemoRootSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    // component
-    DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent,
-    DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent,
-    DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent,
-    DocExtensionWidgetExampleComponent,
-    DocExtensionWidgetIconExampleComponent,
-    DocExtensionMapboxContentExampleComponent,
-    DocExtensionMapboxMarkersExampleComponent,
-    DocExtensionCalendarScheduleSelectionComponent,
-    DocExtensionCalendarScheduleSelectionWithFilterComponent,
-    DocExtensionTableItemHeaderExampleComponent,
-    DocExtensionTableItemCellExampleComponent,
-    DocExtensionTableItemActionExampleComponent,
-    // container
-    DocExtensionLayoutComponent,
-    DocExtensionHomeComponent,
-    DocExtensionCalendarComponent,
-    DocExtensionTableComponent,
-    DocExtensionWidgetComponent,
-    DocExtensionMapboxComponent,
-    DocExtensionStructureComponent,
-    DocExtensionDownloadComponent
-  ]
+    imports: [
+        DocSharedModule,
+        DbxCalendarModule,
+        DbxFormCalendarModule,
+        DocFormComponentsModule,
+        DbxFormDateScheduleRangeFieldModule,
+        DbxWidgetModule,
+        DbxMapboxModule,
+        DbxFormMapboxModule,
+        DbxDownloadTextModule,
+        DbxTableModule,
+        DbxTableDateModule,
+        DemoRootSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        // component
+        DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent,
+        DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent,
+        DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent,
+        DocExtensionWidgetExampleComponent,
+        DocExtensionWidgetIconExampleComponent,
+        DocExtensionMapboxContentExampleComponent,
+        DocExtensionMapboxMarkersExampleComponent,
+        DocExtensionCalendarScheduleSelectionComponent,
+        DocExtensionCalendarScheduleSelectionWithFilterComponent,
+        DocExtensionTableItemHeaderExampleComponent,
+        DocExtensionTableItemCellExampleComponent,
+        DocExtensionTableItemActionExampleComponent,
+        // container
+        DocExtensionLayoutComponent,
+        DocExtensionHomeComponent,
+        DocExtensionCalendarComponent,
+        DocExtensionTableComponent,
+        DocExtensionWidgetComponent,
+        DocExtensionMapboxComponent,
+        DocExtensionStructureComponent,
+        DocExtensionDownloadComponent
+    ]
 })
 export class DocExtensionModule {
   constructor(dbxWidgetService: DbxWidgetService) {

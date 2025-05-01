@@ -3,15 +3,18 @@ import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/
 import { Profile } from 'demo-firebase';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { profileFields } from './profile.form';
+import { DbxFormlyComponent } from '../../../../../../../packages/dbx-form/src/lib/formly/formly.form.component';
 
 export type DemoProfileFormValue = Pick<Profile, 'bio'>;
 
 @Component({
-  template: `
+    template: `
     <dbx-formly></dbx-formly>
   `,
-  selector: 'demo-profile-form',
-  providers: [provideFormlyContext()]
+    selector: 'demo-profile-form',
+    providers: [provideFormlyContext()],
+    standalone: true,
+    imports: [DbxFormlyComponent]
 })
 export class DemoProfileFormComponent extends AbstractSyncFormlyFormDirective<DemoProfileFormValue> {
   readonly fields: FormlyFieldConfig[] = profileFields();

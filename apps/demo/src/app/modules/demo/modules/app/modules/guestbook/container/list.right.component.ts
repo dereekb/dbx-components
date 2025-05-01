@@ -3,7 +3,8 @@ import { loadingStateContext } from '@dereekb/rxjs';
 import { GuestbookDocumentStore } from 'demo-components';
 
 @Component({
-  templateUrl: './list.right.component.html'
+    templateUrl: './list.right.component.html',
+    standalone: true
 })
 export class DemoGuestbookListPageRightComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);

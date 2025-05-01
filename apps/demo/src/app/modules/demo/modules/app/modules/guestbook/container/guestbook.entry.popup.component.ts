@@ -10,7 +10,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
 }
 
 @Component({
-  template: `
+    template: `
     <dbx-dialog-content>
       <p class="dbx-note">Enter your message for the guest book.</p>
       <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateEntry">
@@ -20,7 +20,8 @@ export interface DemoGuestbookEntryPopupComponentConfig {
         <dbx-error dbxActionError></dbx-error>
       </div>
     </dbx-dialog-content>
-  `
+  `,
+    standalone: true
 })
 export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {
   get guestbookEntryDocumentStore(): GuestbookEntryDocumentStore {

@@ -9,12 +9,12 @@ import { DemoGuestbookViewComponent } from './container/guestbook.view.component
 import { DemoGuestbookEntryPopupComponent } from './container/guestbook.entry.popup.component';
 
 @NgModule({
-  imports: [
-    DemoAppSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [DemoGuestbookEntryPopupComponent, DemoGuestbookViewComponent, DemoGuestbookLayoutComponent, DemoGuestbookListPageComponent, DemoGuestbookListPageRightComponent]
+    imports: [
+        DemoAppSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        DemoGuestbookEntryPopupComponent, DemoGuestbookViewComponent, DemoGuestbookLayoutComponent, DemoGuestbookListPageComponent, DemoGuestbookListPageRightComponent
+    ]
 })
 export class DemoGuestbookModule {}

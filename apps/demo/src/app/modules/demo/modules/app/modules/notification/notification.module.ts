@@ -8,13 +8,13 @@ import { DemoNotificationListPageComponent } from './container/list.component';
 import { DemoNotificationListPageRightComponent } from './container/list.right.component';
 
 @NgModule({
-  imports: [
-    DemoAppSharedModule,
-    DbxFirebaseNotificationModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [DemoNotificationLayoutComponent, DemoNotificationListPageComponent, DemoNotificationListPageRightComponent]
+    imports: [
+        DemoAppSharedModule,
+        DbxFirebaseNotificationModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        DemoNotificationLayoutComponent, DemoNotificationListPageComponent, DemoNotificationListPageRightComponent
+    ]
 })
 export class DemoNotificationModule {}

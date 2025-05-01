@@ -6,13 +6,16 @@ import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.c
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
+import { DbxFilterPopoverButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/interaction/filter/filter.popover.button.component';
 
 @Component({
-  selector: 'doc-interaction-test-filter-popover-button',
-  template: `
+    selector: 'doc-interaction-test-filter-popover-button',
+    template: `
     <dbx-filter-popover-button [buttonDisplay]="buttonDisplay()" [config]="config" [disabled]="disabled()"></dbx-filter-popover-button>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [DbxFilterPopoverButtonComponent]
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
   readonly filterSourceConnector = inject(FilterSourceConnector);

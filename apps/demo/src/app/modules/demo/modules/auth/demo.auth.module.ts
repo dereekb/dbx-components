@@ -11,22 +11,20 @@ import { DemoAuthLoginViewComponent } from './container/login.view.component';
 import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 
 @NgModule({
-  imports: [
-    DemoRootSharedModule,
-    DbxFirebaseLoginModule,
-    UIRouterModule.forChild({
-      states: DEMO_AUTH_STATES
-    })
-  ],
-  declarations: [
-    // components
-    // container
-    DemoAuthLayoutComponent,
-    DemoAuthAuthorizeComponent,
-    DemoAuthErrorComponent,
-    DemoAuthLoginComponent,
-    DemoAuthLoggedOutComponent,
-    DemoAuthLoginViewComponent
-  ]
+    imports: [
+        DemoRootSharedModule,
+        DbxFirebaseLoginModule,
+        UIRouterModule.forChild({
+            states: DEMO_AUTH_STATES
+        }),
+        // components
+        // container
+        DemoAuthLayoutComponent,
+        DemoAuthAuthorizeComponent,
+        DemoAuthErrorComponent,
+        DemoAuthLoginComponent,
+        DemoAuthLoggedOutComponent,
+        DemoAuthLoginViewComponent
+    ]
 })
 export class DemoAuthModule {}

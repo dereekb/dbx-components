@@ -16,27 +16,25 @@ import { DocActionExampleDialogComponent } from './component/action.example.dial
 import { DocActionFormExampleFormTwoComponent } from './component/action.example.form.two.component';
 
 @NgModule({
-  imports: [
-    DocSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    // component
-    DocActionExampleToolsComponent,
-    DocActionFormExampleFormComponent,
-    DocActionFormExampleFormTwoComponent,
-    DocActionExampleDialogComponent,
-    DocActionExamplePopoverComponent,
-    // container
-    DocActionLayoutComponent,
-    DocActionHomeComponent,
-    DocActionContextComponent,
-    DocActionInteractionComponent,
-    DocActionFormComponent,
-    DocActionDirectivesComponent,
-    DocActionMapComponent
-  ]
+    imports: [
+        DocSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        // component
+        DocActionExampleToolsComponent,
+        DocActionFormExampleFormComponent,
+        DocActionFormExampleFormTwoComponent,
+        DocActionExampleDialogComponent,
+        DocActionExamplePopoverComponent,
+        // container
+        DocActionLayoutComponent,
+        DocActionHomeComponent,
+        DocActionContextComponent,
+        DocActionInteractionComponent,
+        DocActionFormComponent,
+        DocActionDirectivesComponent,
+        DocActionMapComponent
+    ]
 })
 export class DocActionModule {}

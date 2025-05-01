@@ -1,10 +1,13 @@
 import { Component, Input } from '@angular/core';
+import { DbxContentBoxDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.box.directive';
+import { MatIcon } from '@angular/material/icon';
+import { NgSwitch, NgSwitchCase } from '@angular/common';
 
 export type DocFeatureDerviedType = 'integrated' | 'uses';
 
 @Component({
-  selector: 'doc-feature-derived',
-  template: `
+    selector: 'doc-feature-derived',
+    template: `
     <div class="doc-feature-derived">
       <dbx-content-box class="doc-feature-derived-content" style="margin-left: 0">
         <mat-icon class="dbx-icon-spacer">star</mat-icon>
@@ -23,7 +26,9 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
         </div>
       </dbx-content-box>
     </div>
-  `
+  `,
+    standalone: true,
+    imports: [DbxContentBoxDirective, MatIcon, NgSwitch, NgSwitchCase]
 })
 export class DocFeatureDerivedComponent {
   @Input()

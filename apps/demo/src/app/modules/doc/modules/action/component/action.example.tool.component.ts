@@ -5,12 +5,20 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { provideFormlyContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
+import { DbxActionSourceDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/context/action.source.directive';
+import { MatDivider } from '@angular/material/divider';
+import { FlexModule } from '@ngbracket/ngx-layout/flex';
+import { DbxErrorComponent } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.component';
+import { DbxActionErrorDirective } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.action.directive';
+import { JsonPipe } from '@angular/common';
 
 @Component({
-  templateUrl: './action.example.tool.component.html',
-  selector: 'dbx-action-example-tools',
-  providers: [provideFormlyContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    templateUrl: './action.example.tool.component.html',
+    selector: 'dbx-action-example-tools',
+    providers: [provideFormlyContext()],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [DbxActionSourceDirective, MatDivider, FlexModule, DbxErrorComponent, DbxActionErrorDirective, JsonPipe]
 })
 export class DocActionExampleToolsComponent {
   readonly hostSourceInstance = inject(DbxActionContextStoreSourceInstance, { host: true, optional: true });

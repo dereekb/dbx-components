@@ -9,7 +9,8 @@ import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, suc
 import { ProfileDocumentStore } from 'demo-components';
 
 @Component({
-  templateUrl: './list.component.html'
+    templateUrl: './list.component.html',
+    standalone: true
 })
 export class DemoNotificationListPageComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);

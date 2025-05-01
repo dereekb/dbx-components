@@ -6,8 +6,9 @@ import { GuestbookDocumentStore, GuestbookEntryDocumentStore } from 'demo-compon
 import { DemoGuestbookEntryPopupComponent } from './guestbook.entry.popup.component';
 
 @Component({
-  selector: 'demo-guestbook-view',
-  templateUrl: './guestbook.view.component.html'
+    selector: 'demo-guestbook-view',
+    templateUrl: './guestbook.view.component.html',
+    standalone: true
 })
 export class DemoGuestbookViewComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);

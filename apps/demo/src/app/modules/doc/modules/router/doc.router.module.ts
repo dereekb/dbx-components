@@ -12,24 +12,22 @@ import { DocRouterNavbarAComponent } from './container/navbar.a.component';
 import { DocRouterNavbarBComponent } from './container/navbar.b.component';
 
 @NgModule({
-  imports: [
-    DocSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    //
-    DocRouterCustomAnchorContentComponent,
-    //
-    DocRouterLayoutComponent,
-    DocRouterHomeComponent,
-    DocRouterAnchorComponent,
-    DocRouterAnchorListComponent,
-    DocRouterNavbarComponent,
-    //
-    DocRouterNavbarAComponent,
-    DocRouterNavbarBComponent
-  ]
+    imports: [
+        DocSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        //
+        DocRouterCustomAnchorContentComponent,
+        //
+        DocRouterLayoutComponent,
+        DocRouterHomeComponent,
+        DocRouterAnchorComponent,
+        DocRouterAnchorListComponent,
+        DocRouterNavbarComponent,
+        //
+        DocRouterNavbarAComponent,
+        DocRouterNavbarBComponent
+    ]
 })
 export class DocRouterModule {}

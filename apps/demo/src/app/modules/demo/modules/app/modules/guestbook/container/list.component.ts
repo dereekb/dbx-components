@@ -4,7 +4,8 @@ import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 
 @Component({
-  templateUrl: './list.component.html'
+    templateUrl: './list.component.html',
+    standalone: true
 })
 export class DemoGuestbookListPageComponent {
   readonly demoAppRouterService = inject(DemoAppRouterService);

@@ -3,9 +3,18 @@ import { DbxActionSuccessHandlerFunction, DbxRouterService } from '@dereekb/dbx-
 import { WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { ProfileDocumentStore } from 'demo-components';
+import { DbxContentBoxDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/content/content.box.directive';
+import { DbxActionDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/context/action.directive';
+import { DbxActionValueDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.value.directive';
+import { DbxActionHandlerDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.handler.directive';
+import { DbxActionSuccessHandlerDirective } from '../../../../../../../../../packages/dbx-core/src/lib/action/directive/state/action.success.handler.directive';
+import { DbxButtonComponent } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.component';
+import { DbxActionButtonDirective } from '../../../../../../../../../packages/dbx-core/src/lib/button/action/action.button.directive';
+import { DbxErrorComponent } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.component';
+import { DbxActionErrorDirective } from '../../../../../../../../../packages/dbx-web/src/lib/error/error.action.directive';
 
 @Component({
-  template: `
+    template: `
     <dbx-content-box>
       <h2>Onboard User</h2>
       <p>Demo showing onboarding state.</p>
@@ -15,7 +24,9 @@ import { ProfileDocumentStore } from 'demo-components';
       </div>
     </dbx-content-box>
   `,
-  providers: [ProfileDocumentStore]
+    providers: [ProfileDocumentStore],
+    standalone: true,
+    imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoOnboardUserComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);

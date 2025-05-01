@@ -30,42 +30,40 @@ import { DocInteractionTestFilterCustomFilterFormComponent } from './component/f
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidgetComponent } from './component/error.custom.inline.widget.component';
 
 @NgModule({
-  imports: [
-    DocSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [
-    // components
-    DocInteractionTestFilterPopoverButtonComponent,
-    DocInteractionTestFilterCustomFilterComponent,
-    DocInteractionTestDateFilterFormComponent,
-    DocInteractionTestDateFilterPopoverButtonComponent,
-    DocInteractionTestDateFilterPresetFilterComponent,
-    DocInteractionTestFilterPresetFilterComponent,
-    DocInteractionTestFilterPresetMenuComponent,
-    DocInteractionTestFilterPartialPresetMenuComponent,
-    DocInteractionTestFilterCustomFilterFormComponent,
-    DocInteractionExampleDialogComponent,
-    DocInteractionExamplePopoverComponent,
-    DocInteractionExamplePopoverContentComponent,
-    DocInteractionExamplePopupComponent,
-    DocInteractionExamplePopupContentComponent,
-    DocInteractionCustomInlineErrorWidgetComponent,
-    DocInteractionCustomErrorWidgetComponent,
-    // container
-    DocInteractionLayoutComponent,
-    DocInteractionHomeComponent,
-    // DocInteractionLoadingComponent,    // standalone
-    DocInteractionButtonComponent,
-    DocInteractionErrorComponent,
-    DocInteractionDialogComponent,
-    DocInteractionFilterComponent,
-    DocInteractionPopupComponent,
-    DocInteractionPopoverComponent,
-    DocInteractionPromptComponent
-  ]
+    imports: [
+        DocSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        // components
+        DocInteractionTestFilterPopoverButtonComponent,
+        DocInteractionTestFilterCustomFilterComponent,
+        DocInteractionTestDateFilterFormComponent,
+        DocInteractionTestDateFilterPopoverButtonComponent,
+        DocInteractionTestDateFilterPresetFilterComponent,
+        DocInteractionTestFilterPresetFilterComponent,
+        DocInteractionTestFilterPresetMenuComponent,
+        DocInteractionTestFilterPartialPresetMenuComponent,
+        DocInteractionTestFilterCustomFilterFormComponent,
+        DocInteractionExampleDialogComponent,
+        DocInteractionExamplePopoverComponent,
+        DocInteractionExamplePopoverContentComponent,
+        DocInteractionExamplePopupComponent,
+        DocInteractionExamplePopupContentComponent,
+        DocInteractionCustomInlineErrorWidgetComponent,
+        DocInteractionCustomErrorWidgetComponent,
+        // container
+        DocInteractionLayoutComponent,
+        DocInteractionHomeComponent,
+        // DocInteractionLoadingComponent,    // standalone
+        DocInteractionButtonComponent,
+        DocInteractionErrorComponent,
+        DocInteractionDialogComponent,
+        DocInteractionFilterComponent,
+        DocInteractionPopupComponent,
+        DocInteractionPopoverComponent,
+        DocInteractionPromptComponent
+    ]
 })
 export class DocInteractionModule {
   readonly dbxErrorWidgetService = inject(DbxErrorWidgetService);

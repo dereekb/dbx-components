@@ -5,12 +5,12 @@ import { DemoRootSharedModule } from 'demo-components';
 import { LandingLayoutComponent } from './container/layout.component';
 
 @NgModule({
-  imports: [
-    DemoRootSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
-  ],
-  declarations: [LandingLayoutComponent]
+    imports: [
+        DemoRootSharedModule,
+        UIRouterModule.forChild({
+            states: STATES
+        }),
+        LandingLayoutComponent
+    ]
 })
 export class LandingModule {}
