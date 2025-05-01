@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DocFormHomeComponent } from './container/home.component';
-import { DocSharedModule } from '../shared/doc.shared.module';
+
 import { DocFormWrapperComponent } from './container/wrapper.component';
 import { DocFormTextEditorComponent } from './container/texteditor.component';
 import { DocFormSelectionComponent } from './container/selection.component';
@@ -17,53 +17,31 @@ import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
 import { FormlyMatNativeSelectModule } from '@ngx-formly/material/native-select';
 import { DocFormExpressionComponent } from './container/expression.component';
-import { DocLayoutComponentsModule } from '../layout/doc.layout.module';
+
 import { DocFormFormComponent } from './container/form.component';
 import { DocFormDateValueComponent } from './container/value.date.component';
 
 @NgModule({
-    imports: [DocSharedModule, FormlyMatNativeSelectModule, 
-        //
-        DocFormExampleChecklistFormComponent,
-        DocFormExampleComponentFormComponent,
-        DocFormExampleComponentFormTestViewAComponent,
-        DocFormExampleComponentFormTestViewBComponent,
-        DocFormExampleComponent],
-    exports: [
-        //
-        DocFormExampleChecklistFormComponent,
-        DocFormExampleComponentFormComponent,
-        DocFormExampleComponentFormTestViewAComponent,
-        DocFormExampleComponentFormTestViewBComponent,
-        DocFormExampleComponent
-    ]
-})
-export class DocFormComponentsModule {}
-
-@NgModule({
-    imports: [
-        DocSharedModule,
-        DocLayoutComponentsModule,
-        FormlyMatNativeSelectModule,
-        DocFormComponentsModule,
-        UIRouterModule.forChild({
-            states: STATES
-        }),
-        // container
-        DocFormLayoutComponent,
-        DocFormHomeComponent,
-        DocFormChecklistComponent,
-        DocFormValueComponent,
-        DocFormDateValueComponent,
-        DocFormSelectionComponent,
-        DocFormExpressionComponent,
-        DocFormFormComponent,
-        DocFormComponentComponent,
-        DocFormDirectiveComponent,
-        DocFormTextEditorComponent,
-        DocFormTemplateComponent,
-        DocFormWrapperComponent,
-        DocFormFormComponent
-    ]
+  imports: [
+    FormlyMatNativeSelectModule,
+    UIRouterModule.forChild({
+      states: STATES
+    }),
+    // container
+    DocFormLayoutComponent,
+    DocFormHomeComponent,
+    DocFormChecklistComponent,
+    DocFormValueComponent,
+    DocFormDateValueComponent,
+    DocFormSelectionComponent,
+    DocFormExpressionComponent,
+    DocFormFormComponent,
+    DocFormComponentComponent,
+    DocFormDirectiveComponent,
+    DocFormTextEditorComponent,
+    DocFormTemplateComponent,
+    DocFormWrapperComponent,
+    DocFormFormComponent
+  ]
 })
 export class DocFormModule {}

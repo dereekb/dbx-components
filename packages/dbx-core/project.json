@@ -4,6 +4,8 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-core/src",
   "prefix": "dbx",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -19,7 +21,9 @@
             "command": "echo 'copying dbx-core license' && cp LICENSE dist/packages/dbx-core"
           }
         ],
-        "color": true
+        "color": true,
+        "tsConfig": "packages/dbx-core/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -55,7 +59,5 @@
         "command": "cd ./dist/packages/dbx-core && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

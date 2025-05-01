@@ -4,6 +4,8 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-form/src",
   "prefix": "dbx",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -20,7 +22,9 @@
           }
         ],
         "parallel": false,
-        "color": true
+        "color": true,
+        "tsConfig": "packages/dbx-form/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -56,7 +60,5 @@
         "command": "cd ./dist/packages/dbx-form && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

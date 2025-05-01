@@ -3,13 +3,17 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/model/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/model"],
       "options": {
         "command": "npx nx run model:build-base",
-        "color": true
+        "color": true,
+        "tsConfig": "packages/model/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -57,7 +61,5 @@
         "command": "cd ./dist/packages/model && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

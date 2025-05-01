@@ -3,6 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/util/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -19,7 +21,9 @@
             "command": "npx nx run util-test:build-base"
           }
         ],
-        "parallel": false
+        "parallel": false,
+        "tsConfig": "packages/util/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -97,7 +101,5 @@
         "command": "cd ./dist/packages/util && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

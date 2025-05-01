@@ -2,7 +2,7 @@ import { OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
-import { DemoAppSharedModule, DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
+import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxLoadingProgressComponent } from '@dereekb/dbx-web';
 
 @Component({

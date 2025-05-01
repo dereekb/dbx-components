@@ -3,7 +3,14 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/zoho/nestjs/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
+    "build": {
+      "options": {
+        "tsConfig": "packages/zoho/nestjs/tsconfig.json",
+        "x-g-by-btf": true
+      }
+    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/test/**/*.ts"],
@@ -28,6 +35,5 @@
         "jestConfig": "packages/zoho/nestjs/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

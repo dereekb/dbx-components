@@ -3,7 +3,15 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/demo-e2e/src",
   "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["demo", "demo-api", "!util-test"],
   "targets": {
+    "build": {
+      "options": {
+        "tsConfig": "apps/demo-e2e/tsconfig.json",
+        "x-g-by-btf": true
+      }
+    },
     "e2e": {
       "executor": "@nx/cypress:cypress",
       "options": {
@@ -20,7 +28,5 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     }
-  },
-  "tags": [],
-  "implicitDependencies": ["demo", "demo-api", "!util-test"]
+  }
 }

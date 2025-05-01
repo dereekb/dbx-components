@@ -13,7 +13,7 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '../../../../../../../../../packages/dbx-web/src/lib/button/button.spacer.directive';
-import { DocLayoutComponentsModule } from '../doc.layout.module';
+
 import { DbxValueListGridSizeDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/grid/list.grid.view.component';
 import { DbxValueListItemModifierDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/modifier/list.view.value.modifier.directive';
 import { DbxListItemAnchorModifierDirective } from '../../../../../../../../../packages/dbx-web/src/lib/router/layout/list/router.list.directive';
@@ -24,9 +24,29 @@ import { DbxListEmptyContentComponent } from '../../../../../../../../../package
 import { AsyncPipe, JsonPipe } from '@angular/common';
 
 @Component({
-    templateUrl: './list.component.html',
-    standalone: true,
-    imports: [DbxContentContainerDirective, DbxContentDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, MatButton, DbxButtonSpacerDirective, DocLayoutComponentsModule, DbxValueListGridSizeDirective, DbxValueListItemModifierDirective, DbxListItemAnchorModifierDirective, DbxListItemIsSelectedModifierDirective, DbxListItemDisableRippleModifierDirective, DbxListTitleGroupDirective, DbxListEmptyContentComponent, AsyncPipe, JsonPipe]
+  templateUrl: './list.component.html',
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DbxContentDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    MatButton,
+    DbxButtonSpacerDirective,
+    DocLayoutComponentsModule,
+    DocLayoutComponentsModule,
+    DocLayoutComponentsModule,
+    DocLayoutComponentsModule,
+    DbxValueListGridSizeDirective,
+    DbxValueListItemModifierDirective,
+    DbxListItemAnchorModifierDirective,
+    DbxListItemIsSelectedModifierDirective,
+    DbxListItemDisableRippleModifierDirective,
+    DbxListTitleGroupDirective,
+    DbxListEmptyContentComponent,
+    AsyncPipe,
+    JsonPipe
+  ]
 })
 export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

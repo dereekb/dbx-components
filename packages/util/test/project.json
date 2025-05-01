@@ -3,7 +3,14 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/util/test/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
+    "build": {
+      "options": {
+        "tsConfig": "packages/util/test/tsconfig.json",
+        "x-g-by-btf": true
+      }
+    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
@@ -28,6 +35,5 @@
         "jestConfig": "packages/util/test/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

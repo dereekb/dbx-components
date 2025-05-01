@@ -3,6 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/zoho/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["util-fetch", "!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -16,7 +18,9 @@
             "command": "npx nx run zoho-nestjs:build-base"
           }
         ],
-        "parallel": false
+        "parallel": false,
+        "tsConfig": "packages/zoho/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -90,7 +94,5 @@
         "command": "cd ./dist/packages/zoho && npm publish --access public"
       }
     }
-  },
-  "tags": [],
-  "implicitDependencies": ["util-fetch", "!util-test"]
+  }
 }

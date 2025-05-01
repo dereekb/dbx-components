@@ -3,7 +3,15 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/nestjs/stripe/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
+    "build": {
+      "options": {
+        "tsConfig": "packages/nestjs/stripe/tsconfig.json",
+        "x-g-by-btf": true
+      }
+    },
     "build-base": {
       "executor": "@nx/js:tsc",
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
@@ -28,7 +36,5 @@
         "jestConfig": "packages/nestjs/stripe/jest.config.ts"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

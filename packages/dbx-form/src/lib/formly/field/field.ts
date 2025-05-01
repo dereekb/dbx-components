@@ -190,5 +190,5 @@ export function validatorsForFieldConfig(input: ValidatorsForFieldConfigInput): 
 
 // MARK: Material
 export interface MaterialFormFieldConfig {
-  readonly materialFormField?: Pick<MaterialFormlyFormFieldProps, 'prefix' | 'suffix' | 'hideLabel' | 'hideRequiredMarker' | 'hideFieldUnderline' | 'floatLabel' | 'appearance' | 'color' | 'hintStart' | 'hintEnd'>;
+  readonly materialFormField?: Partial<Pick<MaterialFormlyFormFieldProps, 'prefix' | 'suffix' | 'hideLabel' | 'hideRequiredMarker' | 'hideFieldUnderline' | 'floatLabel' | 'appearance' | 'color' | 'hintStart' | 'hintEnd'>>;
 }

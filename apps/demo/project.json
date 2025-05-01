@@ -5,13 +5,16 @@
   "prefix": "app",
   "sourceRoot": "apps/demo/src",
   "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/demo"],
       "options": {
         "command": "npx nx run demo:build-base",
-        "color": true
+        "color": true,
+        "tsConfig": "apps/demo/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -117,6 +120,5 @@
         "command": "npx firebase --project=default deploy --only hosting"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"]
+  }
 }

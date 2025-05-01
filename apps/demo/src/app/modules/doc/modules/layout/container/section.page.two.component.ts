@@ -10,15 +10,15 @@ import { DbxTwoColumnFullLeftDirective } from '../../../../../../../../../packag
 import { DbxTwoBlockComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/block/two.block.component';
 import { DbxTwoColumnColumnHeadDirective } from '../../../../../../../../../packages/dbx-web/src/lib/layout/column/two/two.column.head.directive';
 import { DbxFormSearchFormComponent } from '../../../../../../../../../packages/dbx-form/src/lib/formly/form/search.form.component';
-import { DocLayoutComponentsModule } from '../doc.layout.module';
+
 import { DbxListEmptyContentComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/list/list.content.empty.component';
 import { MatButton } from '@angular/material/button';
 import { DbxTwoColumnRightComponent } from '../../../../../../../../../packages/dbx-web/src/lib/layout/column/two/two.column.right.component';
 
 @Component({
-    templateUrl: './section.page.two.component.html',
-    standalone: true,
-    imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DocLayoutComponentsModule, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent]
+  templateUrl: './section.page.two.component.html',
+  standalone: true,
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxFormSearchFormComponent, DocLayoutComponentsModule, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent]
 })
 export class DocLayoutSectionPageTwoComponent implements OnDestroy, OnInit {
   readonly cdRef = inject(ChangeDetectorRef);

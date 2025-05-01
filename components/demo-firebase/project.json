@@ -3,13 +3,17 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "components/demo-firebase/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/components/demo-firebase"],
       "options": {
         "command": "npx nx run demo-firebase:build-base",
-        "color": true
+        "color": true,
+        "tsConfig": "components/demo-firebase/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -47,7 +51,5 @@
         "jestConfig": "components/demo-firebase/jest.config.ts"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

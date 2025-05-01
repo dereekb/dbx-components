@@ -4,6 +4,8 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-firebase/src",
   "prefix": "dbx",
+  "tags": [],
+  "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -20,7 +22,9 @@
           }
         ],
         "parallel": false,
-        "color": true
+        "color": true,
+        "tsConfig": "packages/dbx-firebase/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -69,7 +73,5 @@
         "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
-  "tags": []
+  }
 }

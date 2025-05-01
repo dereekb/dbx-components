@@ -7,7 +7,7 @@
   "tags": [],
   "implicitDependencies": ["!util-test"],
   "targets": {
-    "build-x": {
+    "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],
       "options": {
@@ -17,7 +17,7 @@
         "x-g-by-btf-tsconfig": true
       }
     },
-    "build": {
+    "build-base": {
       "executor": "@nx/angular:package",
       "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/dist/components/demo-components"],

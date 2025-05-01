@@ -3,6 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase-server/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["zoho", "!util-test", "!firebase-server-test", "!firebase-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -25,7 +27,9 @@
             "command": "npx nx run firebase-server-model:build-base"
           }
         ],
-        "parallel": false
+        "parallel": false,
+        "tsConfig": "packages/firebase-server/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -86,7 +90,5 @@
         "command": "cd ./dist/packages/firebase-server && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["zoho", "!util-test", "!firebase-server-test", "!firebase-test"],
-  "tags": []
+  }
 }

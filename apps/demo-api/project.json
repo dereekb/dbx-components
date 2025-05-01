@@ -3,6 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/demo-api/src",
   "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -18,7 +20,9 @@
             "command": "npx nx run demo-api:build-base"
           }
         ],
-        "color": true
+        "color": true,
+        "tsConfig": "apps/demo-api/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       }
     },
     "build-base": {
@@ -129,7 +133,5 @@
         "parallel": false
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

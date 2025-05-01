@@ -6,10 +6,9 @@ import { DemoGuestbookDocumentStoreDirective } from './store/guestbook.document.
 import { DemoGuestbookEntryCollectionStoreDirective } from './store/guestbook.entry.collection.store.directive';
 import { DemoGuestbookEntryDocumentStoreDirective } from './store/guestbook.entry.document.store.directive';
 import { DemoGuestbookEntryFormComponent } from './component/guestbook.entry.form.component';
-import { DemoRootSharedModule } from '../../root.shared.module';
 
 @NgModule({
-  imports: [DemoRootSharedModule],
+  imports: [],
   declarations: [
     // component
     DemoGuestbookEntryFormComponent,

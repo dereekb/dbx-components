@@ -438,3 +438,17 @@ Do the steps from the "Migrate to Nx 17 > Run The Migrations" section to prepare
 You will also need to change `project.json` for the components library by updating the `build-base` target's name to `build` (that is what the tool expects to be linked with `@nx/angular:package`), and update the `build` target to use the `build-temp` target temporarilly. See https://github.com/angular/angular/issues/50483#issuecomment-2419583997 for more information.
 
 After that, you should be able to run the standalone migration as so: `npx nx g @angular/core:standalone --path=/components/demo-components`
+
+There are three migrations steps:
+1. update all components and directives
+2. prune/remove unnecessary ng-modules
+3. standalone bootstrap. You shouldn't need to use this as the above updates should cover this change.
+
+You should run migration 1 first on all projects before running migration 2, as migration 2 will remove files and possibly prevent migration 1 from working properly on projects that depend on those files I.E. `demo` relying on `demo-components`.
+
+Example:
+First run: `npx nx g @angular/core:standalone --path=/components/demo-components` -> convert-to-standalone
+Then run: `npx nx g @angular/core:standalone --path=/apps/demo` -> convert-to-standalone
+Then run: `npx nx g @angular/core:standalone --path=/components/demo-components` -> prune ng-module
+Then run: `npx nx g @angular/core:standalone --path=/apps/demo` -> prune ng-module
+

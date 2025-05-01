@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
-import { DemoRootSharedModule } from '../../root.shared.module';
+
 import { DemoSetupDevelopmentWidgetComponent } from './setup.widget.component';
 
 @NgModule({
-  imports: [DemoRootSharedModule],
+  imports: [],
   declarations: [DemoSetupDevelopmentWidgetComponent],
   exports: [DemoSetupDevelopmentWidgetComponent]
 })

@@ -3,7 +3,14 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/util/fetch/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
+    "build": {
+      "options": {
+        "tsConfig": "packages/util/fetch/tsconfig.json",
+        "x-g-by-btf": true
+      }
+    },
     "build-base": {
       "executor": "@nx/rollup:rollup",
       "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
@@ -47,6 +54,5 @@
         "jestConfig": "packages/util/fetch/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

@@ -3,13 +3,17 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/rxjs/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/rxjs"],
       "options": {
         "command": "npx nx run rxjs:build-base",
-        "color": true
+        "color": true,
+        "tsConfig": "packages/rxjs/tsconfig.json",
+        "x-g-by-btf-tsconfig": true
       },
       "dependsOn": ["^build"]
     },
@@ -58,7 +62,5 @@
         "command": "cd ./dist/packages/rxjs && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }
