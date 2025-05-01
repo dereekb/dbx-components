@@ -1,16 +1,12 @@
 import { Component } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective , DbxAnchorComponent , DbxAnchorContentComponent , DbxAnchorIconComponent , DbxLinkComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 import { MatCard, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions } from '@angular/material/card';
 import { MatRipple } from '@angular/material/core';
-import { DbxAnchorContentComponent } from '@dereekb/dbx-web';
-import { DbxAnchorIconComponent } from '@dereekb/dbx-web';
-import { DbxLinkComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './anchor.component.html',

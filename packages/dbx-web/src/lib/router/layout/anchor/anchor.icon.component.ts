@@ -1,4 +1,4 @@
-import { Component, input, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { MatIconModule } from '@angular/material/icon';

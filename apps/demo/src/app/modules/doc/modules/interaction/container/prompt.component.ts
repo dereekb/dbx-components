@@ -1,15 +1,10 @@
-import { DbxPromptConfirmDialogComponent } from '@dereekb/dbx-web';
+import { DbxPromptConfirmDialogComponent, DbxContentContainerDirective, DbxContentBorderDirective, DbxPromptComponent, DbxPromptBoxDirective, DbxPromptPageComponent } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
 import { Component, inject, signal, ChangeDetectionStrategy, AfterViewInit } from '@angular/core';
 import { first } from 'rxjs';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton, MatAnchor } from '@angular/material/button';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
-import { DbxPromptComponent } from '@dereekb/dbx-web';
-import { DbxPromptBoxDirective } from '@dereekb/dbx-web';
-import { DbxPromptPageComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './prompt.component.html',

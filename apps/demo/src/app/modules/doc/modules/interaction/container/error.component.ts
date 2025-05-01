@@ -3,15 +3,9 @@ import { Maybe, randomNumber, readableError, ReadableError, serverError } from '
 import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE } from '../component/error.custom.inline.widget.component';
-import { DbxErrorSnackbarService } from '@dereekb/dbx-web';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxErrorSnackbarService, DbxContentContainerDirective, DbxErrorComponent, DbxErrorDetailsComponent, DbxErrorViewComponent, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxErrorComponent } from '@dereekb/dbx-web';
-import { DbxErrorDetailsComponent } from '@dereekb/dbx-web';
-import { DbxErrorViewComponent } from '@dereekb/dbx-web';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 

@@ -389,7 +389,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular
+npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky

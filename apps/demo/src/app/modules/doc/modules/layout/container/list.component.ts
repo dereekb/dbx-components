@@ -1,5 +1,25 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListTitleGroupTitleDelegate } from '@dereekb/dbx-web';
+import {
+  listItemModifier,
+  ListItemModifier,
+  ListSelectionState,
+  AnchorForValueFunction,
+  DbxValueListGridItemViewGridSizeConfig,
+  DbxListSelectionMode,
+  DbxValueListItemDecisionFunction,
+  dbxValueListItemDecisionFunction,
+  DbxListTitleGroupTitleDelegate,
+  DbxContentContainerDirective,
+  DbxContentDirective,
+  DbxButtonSpacerDirective,
+  DbxValueListGridSizeDirective,
+  DbxValueListItemModifierDirective,
+  DbxListItemAnchorModifierDirective,
+  DbxListItemIsSelectedModifierDirective,
+  DbxListItemDisableRippleModifierDirective,
+  DbxListTitleGroupDirective,
+  DbxListEmptyContentComponent
+} from '@dereekb/dbx-web';
 import { CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
@@ -7,20 +27,10 @@ import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angula
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, takeFront } from '@dereekb/util';
 import { pascalCase } from 'change-case-all';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { DbxContentDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
-import { DbxValueListGridSizeDirective } from '@dereekb/dbx-web';
-import { DbxValueListItemModifierDirective } from '@dereekb/dbx-web';
-import { DbxListItemAnchorModifierDirective } from '@dereekb/dbx-web';
-import { DbxListItemIsSelectedModifierDirective } from '@dereekb/dbx-web';
-import { DbxListItemDisableRippleModifierDirective } from '@dereekb/dbx-web';
-import { DbxListTitleGroupDirective } from '@dereekb/dbx-web';
-import { DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 import { DocItemListComponent } from '../component/item.list.component';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';

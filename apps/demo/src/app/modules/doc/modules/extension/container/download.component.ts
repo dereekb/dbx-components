@@ -1,12 +1,10 @@
-import { DownloadTextContent } from '@dereekb/dbx-web';
+import { DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
 import { randomNumberFactory, randomPhoneNumberFactory, range } from '@dereekb/util';
 import { Observable, delay, map, of } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxDownloadTextViewComponent } from '@dereekb/dbx-web';
 import { AsyncPipe } from '@angular/common';
 
 function createRandomData() {

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import { DbxContentPageDirective } from '@dereekb/dbx-web';
+import { DbxContentPageDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 
 @Component({

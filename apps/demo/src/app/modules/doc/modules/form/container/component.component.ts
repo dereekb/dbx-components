@@ -1,13 +1,9 @@
-import { DocFormExampleComponentFormConfig, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent } from './../component/component.example.form.component';
+import { DocFormExampleComponentFormConfig, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent, DocFormExampleComponentFormComponent } from './../component/component.example.form.component';
 import { Component } from '@angular/core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxBarDirective, DbxButtonSpacerDirective, DbxSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxBarDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
-import { DbxSpacerDirective } from '@dereekb/dbx-web';
-import { DocFormExampleComponentFormComponent } from '../component/component.example.form.component';
 import { DbxFormFormlyComponentFieldModule } from '@dereekb/dbx-form';
 
 @Component({

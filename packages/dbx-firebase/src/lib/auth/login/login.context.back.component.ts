@@ -1,5 +1,5 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Component, EventEmitter, output, Output } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
 
 @Component({

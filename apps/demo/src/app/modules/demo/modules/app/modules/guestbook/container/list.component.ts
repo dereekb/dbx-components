@@ -1,4 +1,4 @@
-import { AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
+import { AnchorForValueFunction, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
 import { GuestbookWithId } from 'demo-firebase';
 import { Component, inject } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';

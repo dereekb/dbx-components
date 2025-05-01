@@ -1,9 +1,7 @@
 import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { AbstractDialogDirective } from '@dereekb/dbx-web';
-import { DbxDialogContentDirective } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxDialogContentDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
 @Component({
   template: `

@@ -1,4 +1,4 @@
-import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef, OnDestroy, OnInit, inject, model, effect } from '@angular/core';
+import { Directive, EmbeddedViewRef, Injector, TemplateRef, ViewContainerRef, OnDestroy, OnInit, inject, model, effect } from '@angular/core';
 import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';

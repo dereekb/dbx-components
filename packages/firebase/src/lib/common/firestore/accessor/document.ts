@@ -4,13 +4,12 @@
 import { lazyFrom } from '@dereekb/rxjs';
 import { type Observable } from 'rxjs';
 import { type FirestoreAccessorDriverRef } from '../driver/accessor';
-import { type FirestoreCollectionNameRef, type FirestoreModelId, type FirestoreModelIdentityCollectionName, type FirestoreModelIdentityModelType, type FirestoreModelIdentityRef, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef } from './../collection/collection';
+import { type FirestoreCollectionNameRef, type FirestoreModelId, type FirestoreModelIdentityCollectionName, type FirestoreModelIdentityModelType, type FirestoreModelIdentityRef, type FirestoreModelIdRef, type FirestoreModelKey, type FirestoreModelKeyRef, type FirestoreModelTypeRef, type FirestoreModelIdentity, type FirestoreModelTypeModelIdentityRef } from './../collection/collection';
 import { type DocumentReference, type CollectionReference, type Transaction, type WriteBatch, type DocumentSnapshot, type SnapshotOptions, type WriteResult, type FirestoreDataConverter } from '../types';
 import { type FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, type FirestoreDocumentDataAccessor, type FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, type FirestoreAccessorStreamMode, snapshotStreamDataForAccessor, snapshotStreamForAccessor } from './accessor';
 import { type CollectionReferenceRef, type DocumentReferenceRef, type FirestoreContextReference, type FirestoreDataConverterRef } from '../reference';
 import { type FirestoreDocumentContext } from './context';
 import { build, type Building, type Maybe } from '@dereekb/util';
-import { type FirestoreModelTypeRef, type FirestoreModelIdentity, type FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { type InterceptAccessorFactoryFunction } from './accessor.wrap';
 import { incrementUpdateWithAccessorFunction } from './increment';
 import { type FirestoreDataConverterFactory, type FirestoreDataConverterFactoryRef, type InterceptFirestoreDataConverterFactory } from './converter';
@@ -279,7 +278,7 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
   const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputDefaultConverter, converterFactory: inputConverterFactory, modelIdentity } = config;
   const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collectionName) : modelIdentity.collectionName;
-  const converterFactory: FirestoreDataConverterFactory<T> = inputConverterFactory ? (ref) => (ref ? inputConverterFactory(ref) ?? inputDefaultConverter : inputDefaultConverter) : () => inputDefaultConverter;
+  const converterFactory: FirestoreDataConverterFactory<T> = inputConverterFactory ? (ref) => (ref ? (inputConverterFactory(ref) ?? inputDefaultConverter) : inputDefaultConverter) : () => inputDefaultConverter;
 
   const result = ((context?: FirestoreDocumentContext<T>) => {
     const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();

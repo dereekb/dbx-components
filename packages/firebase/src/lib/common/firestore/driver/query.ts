@@ -1,6 +1,5 @@
-import { type FieldPath, type SnapshotListenOptions, type Transaction } from './../types';
+import { type FieldPath, type SnapshotListenOptions, type Transaction, type Query, type QuerySnapshot } from './../types';
 import { type Observable } from 'rxjs';
-import { type Query, type QuerySnapshot } from '../types';
 import { type FirestoreQueryConstraint } from '../query/constraint';
 import { type Maybe } from '@dereekb/util';
 

@@ -1,4 +1,4 @@
-import { Maybe, type PageNumber } from '@dereekb/util';
+import { type PageNumber } from '@dereekb/util';
 import { map, type Observable, type OperatorFunction } from 'rxjs';
 import { LoadingStateValue, type ListLoadingState, type PageLoadingState } from './loading.state';
 import { loadingStateFromObs, valueFromFinishedLoadingState } from './loading.state.rxjs';
@@ -36,16 +36,14 @@ export function pageLoadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boole
 
 /**
  * Returns the value once the LoadingState has finished loading, even if an error occured.
- * 
+ *
  * The value is defaulted to an empty array.
  *
  * @returns Observable of the value
  */
 export function arrayValueFromFinishedLoadingState<L extends ListLoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
   return (obs: Observable<L>) => {
-    return obs.pipe(
-      valueFromFinishedLoadingState<L>(() => ([] as LoadingStateValue<L>))
-    );
+    return obs.pipe(valueFromFinishedLoadingState<L>(() => [] as LoadingStateValue<L>));
   };
 }
 

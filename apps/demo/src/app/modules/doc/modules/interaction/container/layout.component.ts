@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import { ClickableAnchorLinkSegueRef } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { DbxSectionPageComponent } from '@dereekb/dbx-web';
-import { DbxNavbarComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxSectionPageComponent, DbxNavbarComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 
 @Component({

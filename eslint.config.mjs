@@ -1,7 +1,10 @@
 import nx from '@nx/eslint-plugin';
 import unusedImports from 'eslint-plugin-unused-imports';
+import importPlugin from 'eslint-plugin-import';
 
 export default [
+  importPlugin.flatConfigs.recommended,
+  importPlugin.flatConfigs.typescript,
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
@@ -24,6 +27,14 @@ export default [
           argsIgnorePattern: '^_'
         }
       ]
+    }
+  },
+  {
+    files: ['**/*.{ts,tsx}', '!**/*.spec.{ts,tsx}'],
+    rules: {
+      'import/no-unresolved': 'off',
+      'import/namespace': 'off',
+      'import/no-duplicates': ['warn', { considerQueryString: true, 'prefer-inline': true }]
     }
   },
   {

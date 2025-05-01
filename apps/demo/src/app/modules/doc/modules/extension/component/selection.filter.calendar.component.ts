@@ -1,15 +1,11 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component, inject } from '@angular/core';
-import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
+import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
 import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
-import { DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
-import { DbxContentPitDirective } from '@dereekb/dbx-web';
+import { DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective } from '@dereekb/dbx-web';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 
 const daysRangeInFilter = 14;

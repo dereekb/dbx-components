@@ -1,9 +1,9 @@
-import { Directive, forwardRef, Input, model, OnDestroy, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
 import { FirestoreDocument, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
-import { filterMaybe, skipAllInitialMaybe, skipFirstMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 
 /**

@@ -469,8 +469,6 @@ VSCode's search/replace returned us:
 import { DbxLinkComponent } from '@dereekb/dbx-web';
 ```
 
-Which is what we want.
-
 We do the same for the remaining dbx-components imports, `dbx-core`, `dbx-form`, `dbx-firebase`, `dbx-analytics`, etc.
 
 The linting step will clean up all the imports into a single import statement.

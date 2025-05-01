@@ -1,10 +1,8 @@
-import { DbxFormFormlyTextFieldModule, DbxFormSearchFormFieldsConfig } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, DbxFormSearchFormFieldsConfig, DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './form.component.html',

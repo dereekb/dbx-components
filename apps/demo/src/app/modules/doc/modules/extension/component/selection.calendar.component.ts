@@ -2,10 +2,8 @@ import { Component, Input, inject } from '@angular/core';
 import { DbxCalendarScheduleSelectionStoreSelectionMode, DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateDaysComponent, DbxScheduleSelectionCalendarDateDialogButtonComponent, DbxScheduleSelectionCalendarDateRangeComponent } from '@dereekb/dbx-form/calendar';
 import { type Maybe } from '@dereekb/util';
 import { map } from 'rxjs';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
-import { DbxContentPitDirective } from '@dereekb/dbx-web';
+import { DbxContentBorderDirective, DbxContentPitDirective, DbxSubSectionComponent } from '@dereekb/dbx-web';
 import { NgIf, AsyncPipe, JsonPipe } from '@angular/common';
-import { DbxSubSectionComponent } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'doc-extension-calendar-schedule-example',

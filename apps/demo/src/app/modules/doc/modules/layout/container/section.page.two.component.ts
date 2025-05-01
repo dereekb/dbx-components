@@ -3,17 +3,10 @@ import { filterWithSearchString, ListLoadingState, mapLoadingStateValueWithOpera
 import { takeFront } from '@dereekb/util';
 import { Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
 import { DocValue, makeDocValues } from '../component/item.list';
-import { DbxSectionPageComponent } from '@dereekb/dbx-web';
-import { DbxTwoColumnComponent } from '@dereekb/dbx-web';
-import { DbxTwoColumnContextDirective } from '@dereekb/dbx-web';
-import { DbxTwoColumnFullLeftDirective } from '@dereekb/dbx-web';
-import { DbxTwoBlockComponent } from '@dereekb/dbx-web';
-import { DbxTwoColumnColumnHeadDirective } from '@dereekb/dbx-web';
+import { DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 
-import { DbxListEmptyContentComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
 
 @Component({

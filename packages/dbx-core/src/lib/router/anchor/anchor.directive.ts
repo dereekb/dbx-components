@@ -1,10 +1,9 @@
-import { skipFirstMaybe } from '@dereekb/rxjs';
-import { map, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
-import { computed, Directive, Input, model, OnDestroy } from '@angular/core';
+import { Observable } from 'rxjs';
+import { computed, Directive, model } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { ClickableAnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
 import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract anchor directive.

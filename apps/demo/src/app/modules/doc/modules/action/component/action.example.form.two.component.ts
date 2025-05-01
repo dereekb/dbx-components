@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective, textField } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractSyncFormlyFormDirective, textField, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export interface DocActionFormExampleValue {
   name: string;

@@ -1,6 +1,6 @@
 import { LOREM } from '../../shared/lorem';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxListGridViewDirective, DEFAULT_DBX_VALUE_LIST_GRID_DIRECTIVE_TEMPLATE, AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE, DbxListGridViewDirectiveImportsModule } from '@dereekb/dbx-web';
+import { AbstractDbxListGridViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, DbxValueListGridViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_GRID_VIEW_DIRECTIVE_TEMPLATE, DbxListGridViewDirectiveImportsModule } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
 

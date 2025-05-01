@@ -22,7 +22,8 @@ import {
   sourceSelectField,
   SourceSelectLoadSource,
   valueSelectionField,
-  ValueSelectionOptionWithValue
+  ValueSelectionOptionWithValue,
+  DbxFormlyFieldsContextDirective
 } from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
 import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
@@ -30,12 +31,10 @@ import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_D
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 import { DocValue } from '../../layout/component/item.list';
 import { DocSelectionItemListComponent } from '../../layout/component/item.list.selection.component';
-import { AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 
 export type TestStringSearchFunction = (text: string) => string[];
 

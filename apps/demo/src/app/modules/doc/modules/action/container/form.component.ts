@@ -3,20 +3,13 @@ import { WorkUsingObservable, IsModifiedFunction, IsValidFunction, IsEqualFuncti
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
 import { DocActionFormExampleValue, DocActionFormExampleFormComponent } from '../component/action.example.form.component';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxActionDirective } from '@dereekb/dbx-core';
-import { DbxActionHandlerDirective } from '@dereekb/dbx-core';
-import { DbxActionFormDirective } from '@dereekb/dbx-form';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxActionButtonDirective } from '@dereekb/dbx-core';
-import { DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
-import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
+import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { DocActionFormExampleFormTwoComponent } from '../component/action.example.form.two.component';
-import { DbxErrorComponent } from '@dereekb/dbx-web';
-import { DbxActionErrorDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './form.component.html',

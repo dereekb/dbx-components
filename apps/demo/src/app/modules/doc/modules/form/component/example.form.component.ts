@@ -1,9 +1,7 @@
 import { Component } from '@angular/core';
-import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective, DbxFormlyComponent, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map, Observable } from 'rxjs';
-import { DbxFormlyComponent } from '@dereekb/dbx-form';
-import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { JsonPipe } from '@angular/common';
 

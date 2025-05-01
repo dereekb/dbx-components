@@ -1,19 +1,11 @@
 import { Component } from '@angular/core';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
-import { DbxProgressButtonConfig } from '@dereekb/dbx-web';
+import { DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatIcon } from '@angular/material/icon';
-import { DbxIconButtonComponent } from '@dereekb/dbx-web';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
-import { DbxProgressSpinnerButtonComponent } from '@dereekb/dbx-web';
-import { DbxProgressBarButtonComponent } from '@dereekb/dbx-web';
-import { DbxContentPitDirective } from '@dereekb/dbx-web';
-import { DbxColorDirective } from '@dereekb/dbx-web';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 

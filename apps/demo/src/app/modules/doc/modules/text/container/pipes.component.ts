@@ -1,32 +1,15 @@
 import { Component, OnDestroy } from '@angular/core';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { dateTimeField, timezoneStringField } from '@dereekb/dbx-form';
+import { dateTimeField, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, delay, map, of, shareReplay } from 'rxjs';
 import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
-import { DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
-import { DbxFormSourceDirective } from '@dereekb/dbx-form';
-import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { DateDistancePipe } from '@dereekb/dbx-core';
-import { DateRangeDistancePipe } from '@dereekb/dbx-core';
-import { TargetDateToSystemDatePipe } from '@dereekb/dbx-core';
-import { SystemDateToTargetDatePipe } from '@dereekb/dbx-core';
-import { TimezoneAbbreviationPipe } from '@dereekb/dbx-core';
-import { DateDayRangePipe } from '@dereekb/dbx-core';
-import { DateDayTimeRangePipe } from '@dereekb/dbx-core';
-import { DateTimeRangeOnlyPipe } from '@dereekb/dbx-core';
-import { DateTimeRangePipe } from '@dereekb/dbx-core';
-import { DateTimeRangeOnlyDistancePipe } from '@dereekb/dbx-core';
-import { MinutesStringPipe } from '@dereekb/dbx-core';
-import { TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
-import { DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
+import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './pipes.component.html',

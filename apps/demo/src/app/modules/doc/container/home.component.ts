@@ -1,8 +1,7 @@
 import { DOC_ROUTES } from './../doc';
 import { Component } from '@angular/core';
 import { DocFeatureCard, DocFeatureCardListComponent } from '../modules/shared/component/feature.card.list.component';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { DbxSectionPageComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxSectionPageComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './home.component.html',

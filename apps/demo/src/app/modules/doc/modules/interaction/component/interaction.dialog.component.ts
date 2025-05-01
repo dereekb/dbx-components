@@ -1,7 +1,5 @@
 import { Component } from '@angular/core';
-import { AbstractDialogDirective } from '@dereekb/dbx-web';
-import { DbxDialogContentDirective } from '@dereekb/dbx-web';
-import { DbxDialogContentCloseComponent } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
 
 @Component({

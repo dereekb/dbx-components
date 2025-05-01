@@ -3,9 +3,7 @@ import { Component } from '@angular/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxAuthHasRolesDirective } from '@dereekb/dbx-core';
-import { DbxAuthHasAnyRoleDirective } from '@dereekb/dbx-core';
-import { DbxAuthNotAnyRoleDirective } from '@dereekb/dbx-core';
+import { DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective, DbxAuthNotAnyRoleDirective } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './role.component.html',

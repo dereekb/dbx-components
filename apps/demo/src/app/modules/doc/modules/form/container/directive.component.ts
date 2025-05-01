@@ -1,18 +1,13 @@
 import { incrementingNumberTimer, SubscriptionObject, successResult } from '@dereekb/rxjs';
 import { OnDestroy, Component, OnInit } from '@angular/core';
 import { BehaviorSubject, map } from 'rxjs';
-import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormSourceDirectiveMode, textField } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormSourceDirectiveMode, textField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
-import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { MatButton } from '@angular/material/button';
-import { DbxFormLoadingSourceDirective } from '@dereekb/dbx-form';
-import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { JsonPipe } from '@angular/common';
 
 @Component({

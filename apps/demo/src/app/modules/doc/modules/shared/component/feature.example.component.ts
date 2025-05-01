@@ -1,6 +1,5 @@
-import { DbxSectionComponent } from '@dereekb/dbx-web';
+import { DbxSectionComponent, DbxSectionComponent as DbxSectionComponent_1 } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
-import { DbxSectionComponent as DbxSectionComponent_1 } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'doc-feature-example',

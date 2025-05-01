@@ -6,8 +6,7 @@ import { DocFormExampleChecklistFormValue, DocFormExampleChecklistFormComponent 
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective } from '@dereekb/dbx-form';
-import { DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { JsonPipe } from '@angular/common';
 
 @Component({

@@ -1,7 +1,7 @@
 import { anchorTypeForAnchor, ClickableAnchor } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared/lorem';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig, DbxListViewMetaIconComponent, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxValueListViewComponentImportsModule } from '@dereekb/dbx-web';
+import { AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig, DbxListViewMetaIconComponent, DbxListWrapperComponentImportsModule, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxValueListViewComponentImportsModule } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
 

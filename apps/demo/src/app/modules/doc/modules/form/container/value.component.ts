@@ -27,7 +27,9 @@ import {
   DbxFormFormlyPhoneFieldModule,
   DbxFormFormlyBooleanFieldModule,
   DbxFormFormlyNumberFieldModule,
-  DbxFormFormlyArrayFieldModule
+  DbxFormFormlyArrayFieldModule,
+  DbxFormlyFieldsContextDirective,
+  DbxFormSourceDirective
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
@@ -37,8 +39,6 @@ import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
-import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './value.component.html',

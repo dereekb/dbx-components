@@ -1,8 +1,7 @@
 import { DocInteractionTestFilter } from './filter';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractSyncFormlyFormDirective, dateTimeField, provideFormlyContext, textField } from '@dereekb/dbx-form';
-import { DbxFormlyComponent } from '@dereekb/dbx-form';
+import { AbstractSyncFormlyFormDirective, dateTimeField, provideFormlyContext, textField, DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export type DocInteractionTestFilterFormValue = DocInteractionTestFilter;
 

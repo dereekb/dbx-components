@@ -1,12 +1,11 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
+import { DbxFilterButtonConfig, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'doc-interaction-test-filter-popover-button',

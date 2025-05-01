@@ -1,17 +1,11 @@
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
-import { DbxSetStyleDirective } from '@dereekb/dbx-web';
-import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
+import { DbxSetStyleDirective, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
-import { DbxSpacerDirective } from '@dereekb/dbx-web';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
-import { DbxAnchorComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { MatDivider } from '@angular/material/divider';
 import { NgFor, NgIf } from '@angular/common';
-import { DbxAnchorContentComponent } from '@dereekb/dbx-web';
 
 export interface LandingItem {
   name: string;

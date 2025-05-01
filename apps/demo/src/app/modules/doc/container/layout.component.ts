@@ -1,12 +1,7 @@
 import { Component } from '@angular/core';
-import { ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { ClickableAnchorLink, ClickableAnchorLinkTree, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { DOC_HOME_ROUTE, DOC_ROUTES } from '../doc';
-import { DbxSidenavComponent } from '@dereekb/dbx-web';
-import { DbxSetStyleDirective } from '@dereekb/dbx-web';
-import { DbxAppContextStateDirective } from '@dereekb/dbx-core';
-import { DbxIfSidenavDisplayModeDirective } from '@dereekb/dbx-web';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
-import { DbxSidenavPageComponent } from '@dereekb/dbx-web';
+import { DbxSidenavComponent, DbxSetStyleDirective, DbxIfSidenavDisplayModeDirective, DbxContentBorderDirective, DbxSidenavPageComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 
 @Component({

@@ -1,9 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
-import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, PopupPosition } from '@dereekb/dbx-web';
+import { DbxPopupKey, AbstractPopupDirective, DbxPopupService, PopupPosition, DbxPopupContentComponent, DbxPopupControlsComponent } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DocInteractionExamplePopupContentComponent } from './interaction.popup.content.component';
-import { DbxPopupContentComponent } from '@dereekb/dbx-web';
-import { DbxPopupControlsComponent } from '@dereekb/dbx-web';
 
 export const DEFAULT_INTERACTION_POPUP_COMPOSER_POPUP_KEY = 'popup';
 

@@ -1,15 +1,10 @@
-import { DbxActionDirective } from '@dereekb/dbx-core';
+import { DbxActionDirective, DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
-import { DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
 import { NgIf, NgTemplateOutlet, AsyncPipe, JsonPipe } from '@angular/common';
-import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
-import { DbxLoadingComponent } from '@dereekb/dbx-web';
-import { DbxActionLoadingContextDirective } from '@dereekb/dbx-web';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
 
 @Component({

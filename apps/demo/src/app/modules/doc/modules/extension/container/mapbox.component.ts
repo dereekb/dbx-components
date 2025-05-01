@@ -25,10 +25,9 @@ import {
 } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
-import { DbxThemeColor, DBX_THEME_COLORS } from '@dereekb/dbx-web';
+import { DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
 import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, DocExtensionMapboxMarkersExampleComponent } from '../component/mapbox.markers.example.component';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatTabGroup, MatTab, MatTabContent } from '@angular/material/tabs';
@@ -36,14 +35,10 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MapComponent } from 'ngx-mapbox-gl';
 import { NgFor, NgIf, AsyncPipe, JsonPipe } from '@angular/common';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
-import { DbxBarDirective } from '@dereekb/dbx-web';
 import { FlexModule } from '@ngbracket/ngx-layout/flex';
-import { DbxLabelBlockComponent } from '@dereekb/dbx-web';
 import { MatButton } from '@angular/material/button';
-import { DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFormExampleComponent } from '../../form/component/example.form.component';
-import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
-import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxFormlyFieldsContextDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './mapbox.component.html',

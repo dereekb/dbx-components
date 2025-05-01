@@ -1,19 +1,10 @@
 import { Component } from '@angular/core';
 import { SegueRef, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxTwoColumnRightComponent, DbxTwoColumnFullLeftDirective, DbxTwoColumnSrefShowRightDirective, DbxTwoColumnSrefDirective, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton, MatIconButton } from '@angular/material/button';
-import { DbxTwoColumnComponent } from '@dereekb/dbx-web';
-import { DbxTwoColumnContextDirective } from '@dereekb/dbx-web';
-import { DbxTwoBlockComponent } from '@dereekb/dbx-web';
-import { DbxTwoColumnColumnHeadDirective } from '@dereekb/dbx-web';
-import { DbxTwoColumnRightComponent } from '@dereekb/dbx-web';
 import { MatIcon } from '@angular/material/icon';
-import { DbxTwoColumnFullLeftDirective } from '@dereekb/dbx-web';
-import { DbxTwoColumnSrefShowRightDirective } from '@dereekb/dbx-web';
-import { DbxTwoColumnSrefDirective } from '@dereekb/dbx-web';
-import { DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
 
 @Component({

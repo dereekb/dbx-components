@@ -1,11 +1,9 @@
 import { Component } from '@angular/core';
 import { takeLast } from '@dereekb/util';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxNavbarComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { UIView } from '@uirouter/angular';
-import { DbxNavbarComponent } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './navbar.component.html',

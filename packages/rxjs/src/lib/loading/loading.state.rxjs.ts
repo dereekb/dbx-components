@@ -22,7 +22,7 @@ import {
   isPageLoadingStateMetadataEqual,
   type LoadingStateWithError
 } from './loading.state';
-import { filterMaybe, filterMaybeStrict } from '../rxjs/value';
+import { filterMaybeStrict } from '../rxjs/value';
 
 // TODO(BREAKING_CHANGE): Fix all LoadingState types to use the LoadingStateValue inference typings
 
@@ -135,12 +135,15 @@ export function currentValueFromLoadingState<L extends LoadingState>(): Operator
 
 /**
  * Returns the current non-null value from the LoadingState.
- * 
+ *
  * Equivalent to currentValueFromLoadingState() and filterMaybe().
  */
 export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, MaybeSoStrict<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
-    return obs.pipe(map((x) => x.value as LoadingStateValue<L>), filterMaybeStrict());
+    return obs.pipe(
+      map((x) => x.value as LoadingStateValue<L>),
+      filterMaybeStrict()
+    );
   };
 }
 
@@ -158,7 +161,7 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
 
 /**
  * Returns the value once the LoadingState has finished loading, even if an error occured or there is no value.
- * 
+ *
  * Can optionally specify a default value to use instead.
  */
 export function valueFromFinishedLoadingState<L extends LoadingState>(defaultValue: GetterOrValue<LoadingStateValue<L>>): OperatorFunction<L, LoadingStateValue<L>>;
@@ -168,7 +171,7 @@ export function valueFromFinishedLoadingState<L extends LoadingState>(defaultVal
   return (obs: Observable<L>) => {
     return obs.pipe(
       filter(isLoadingStateFinishedLoading),
-      map((x) => (x.value as Maybe<LoadingStateValue<L>> ?? getValueFromGetter(defaultValue)))
+      map((x) => (x.value as Maybe<LoadingStateValue<L>>) ?? getValueFromGetter(defaultValue))
     );
   };
 }

@@ -2,11 +2,8 @@ import { LOREM } from './../../shared/lorem';
 import { Type, InjectionToken, Inject, Component } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext } from '@dereekb/dbx-form';
-import { DbxFormlyComponent } from '@dereekb/dbx-form';
-import { DbxContentBoxDirective } from '@dereekb/dbx-web';
-import { DbxSectionComponent } from '@dereekb/dbx-web';
-import { DbxLinkComponent } from '@dereekb/dbx-web';
+import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
+import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 
 export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN');
 

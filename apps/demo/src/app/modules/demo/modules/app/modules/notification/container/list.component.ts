@@ -6,7 +6,7 @@ import { DbxRouteModelIdDirective, DbxRouterService, dbxRouteModelIdParamRedirec
 import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective, DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
-import { DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookListComponent, ProfileDocumentStore } from 'demo-components';
+import { DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, ProfileDocumentStore } from 'demo-components';
 import { UIView } from '@uirouter/angular';
 import { AsyncPipe } from '@angular/common';
 

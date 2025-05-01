@@ -1,10 +1,7 @@
 import { Component } from '@angular/core';
-import { DbxFirebaseLoginMode } from '@dereekb/dbx-firebase';
+import { DbxFirebaseLoginMode, DbxFirebaseLoginComponent, DbxFirebaseLoginTermsComponent, DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
 import { NgSwitch, NgSwitchCase } from '@angular/common';
-import { DbxFirebaseLoginComponent } from '@dereekb/dbx-firebase';
 import { DbxLinkComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseLoginTermsComponent } from '@dereekb/dbx-firebase';
-import { DbxFirebaseRegisterComponent } from '@dereekb/dbx-firebase';
 
 @Component({
   selector: 'demo-login-view',

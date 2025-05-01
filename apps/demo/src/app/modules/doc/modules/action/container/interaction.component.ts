@@ -1,33 +1,16 @@
 import { MatDialog } from '@angular/material/dialog';
-import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig } from '@dereekb/dbx-web';
+import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
 import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
-import { DbxActionContextMachine, safeDetectChanges } from '@dereekb/dbx-core';
+import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
-import { DbxActionAnalyticsConfig, DbxAnalyticsService } from '@dereekb/dbx-analytics';
+import { DbxActionAnalyticsConfig, DbxAnalyticsService, DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxActionDirective } from '@dereekb/dbx-core';
-import { DbxActionHandlerDirective } from '@dereekb/dbx-core';
-import { DbxActionValueStreamDirective } from '@dereekb/dbx-core';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxActionButtonDirective } from '@dereekb/dbx-core';
-import { DbxActionDisabledDirective } from '@dereekb/dbx-core';
-import { DbxActionButtonTriggerDirective } from '@dereekb/dbx-core';
-import { DbxActionConfirmDirective } from '@dereekb/dbx-web';
-import { DbxActionValueDirective } from '@dereekb/dbx-core';
-import { DbxErrorComponent } from '@dereekb/dbx-web';
-import { DbxActionErrorDirective } from '@dereekb/dbx-web';
-import { DbxActionSnackbarDirective } from '@dereekb/dbx-web';
-import { DbxActionSnackbarErrorDirective } from '@dereekb/dbx-web';
-import { DbxActionPopoverDirective } from '@dereekb/dbx-web';
-import { DbxActionDialogDirective } from '@dereekb/dbx-web';
-import { DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
 
 @Component({
   templateUrl: './interaction.component.html',

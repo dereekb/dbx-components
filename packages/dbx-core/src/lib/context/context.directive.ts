@@ -1,8 +1,5 @@
-import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, OnInit, effect, inject, input } from '@angular/core';
+import { Directive, effect, inject, input } from '@angular/core';
 import { DbxAppContextService } from './context.service';
-import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxAppContextState } from './context';
 import { type Maybe } from '@dereekb/util';
 

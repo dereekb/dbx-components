@@ -1,6 +1,5 @@
-import { DescriptionFieldConfig, MaterialFormFieldConfig } from './../field';
+import { DescriptionFieldConfig, MaterialFormFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from './../field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../field';
 import { TextFieldLengthConfig } from '../value/text/text.field';
 
 export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, MaterialFormFieldConfig {}

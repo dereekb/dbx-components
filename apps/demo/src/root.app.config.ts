@@ -3,7 +3,7 @@ import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, Injector } fro
 import { Category, provideUIRouter, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthLoginService, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAnalyticsUserSource, DbxFirebaseAuthServiceDelegate, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -226,18 +226,18 @@ export const appConfig: ApplicationConfig = {
     }),
 
     // App initializers
-    [{
-      provide: APP_INITIALIZER,
-      useFactory: (injector: Injector) => {
-        return () => {
-          
-          // add any initialization here
-
-        };
-      },
-      deps: [Injector],
-      multi: true
-    }]
+    [
+      {
+        provide: APP_INITIALIZER,
+        useFactory: (injector: Injector) => {
+          return () => {
+            // add any initialization here
+          };
+        },
+        deps: [Injector],
+        multi: true
+      }
+    ]
 
     // provideZoneChangeDetection({ eventCoalescing: true })
   ]
