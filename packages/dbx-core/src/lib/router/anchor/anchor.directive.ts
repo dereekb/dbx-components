@@ -11,6 +11,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 @Directive()
 export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbxAnchor {
   readonly ref = model<Maybe<SegueRefOrSegueRefRouterLink>>();
+
   readonly anchor = model<Maybe<T>>();
   readonly disabled = model<Maybe<boolean>>();
   readonly selected = model<Maybe<boolean>>();
@@ -21,7 +22,7 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
 
     let result: Maybe<T> = anchor;
 
-    if (ref) {
+    if (ref != null) {
       result = asSegueRef(ref) as T;
     }
 
@@ -35,7 +36,11 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     return selected || anchor?.selected;
   });
 
-  readonly typeSignal = computed(() => anchorTypeForAnchor(this.anchorSignal(), this.disabled()));
+  readonly typeSignal = computed(() => {
+    const anchor = this.anchorSignal();
+    const disabled = this.disabled();
+    return anchorTypeForAnchor(anchor, disabled);
+  });
 
   readonly urlSignal = computed(() => this.anchorSignal()?.url);
   readonly targetSignal = computed(() => this.anchorSignal()?.target);

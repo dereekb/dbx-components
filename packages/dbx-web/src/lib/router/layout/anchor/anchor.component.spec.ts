@@ -1,6 +1,6 @@
 import { provideDbxRouterWebUiRouterProviderConfig } from './../../provider/uirouter/uirouter.router.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, viewChild, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ClickableAnchor } from '@dereekb/dbx-core';
@@ -9,6 +9,8 @@ import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
 import { delay, filter, first } from 'rxjs';
+
+jest.setTimeout(1000);
 
 describe('AnchorComponent', () => {
   beforeEach(async () => {
@@ -31,6 +33,7 @@ describe('AnchorComponent', () => {
   function testContentWasShown(): void {
     it('should show content', () => {
       const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`#${CUSTOM_CONTENT_ID}`)).nativeElement;
+
       expect(anchorElement).not.toBeNull();
       expect(anchorElement.textContent).toBe(CUSTOM_CONTENT);
     });
@@ -42,8 +45,9 @@ describe('AnchorComponent', () => {
         testComponent.disabled = true;
         fixture.detectChanges();
 
-        testComponent.anchorComponent?.disabled$
-          .pipe(
+        testComponent
+          .anchorComponent()
+          ?.disabled$.pipe(
             filter(() => true),
             delay(0)
           )
@@ -63,11 +67,13 @@ describe('AnchorComponent', () => {
 
     beforeEach(async () => {
       clicked = false;
+
       testComponent.anchor = {
         onClick: () => {
           clicked = true;
         }
       };
+
       fixture.detectChanges();
     });
 
@@ -75,15 +81,19 @@ describe('AnchorComponent', () => {
     testDisabledTests();
 
     it('should have the click type.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe('clickable');
-        done();
-      });
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(first())
+        .subscribe((type) => {
+          expect(type).toBe('clickable');
+          done();
+        });
     });
 
     it('should display the click version.', (done) => {
-      testComponent.anchorComponent?.type$
-        .pipe(
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(
           filter((x) => x === 'clickable'),
           delay(0)
         )
@@ -96,8 +106,9 @@ describe('AnchorComponent', () => {
     });
 
     it('should respond to clicks.', (done) => {
-      testComponent.anchorComponent?.type$
-        .pipe(
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(
           filter((x) => x === 'clickable'),
           delay(0)
         )
@@ -119,6 +130,8 @@ describe('AnchorComponent', () => {
       testComponent.anchor = {
         ref: 'test'
       };
+
+      fixture.detectChanges();
       fixture.detectChanges();
     });
 
@@ -126,15 +139,19 @@ describe('AnchorComponent', () => {
     testDisabledTests();
 
     it('should have the sref type.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe('sref');
-        done();
-      });
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(first())
+        .subscribe((type) => {
+          expect(type).toBe('sref');
+          done();
+        });
     });
 
     it('should display the sref version.', (done) => {
-      testComponent.anchorComponent?.type$
-        .pipe(
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(
           filter((x) => x === 'sref'),
           delay(0)
         )
@@ -159,15 +176,19 @@ describe('AnchorComponent', () => {
     testDisabledTests();
 
     it('should have the href type.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe('href');
-        done();
-      });
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(first())
+        .subscribe((type) => {
+          expect(type).toBe('href');
+          done();
+        });
     });
 
     it('should display the href version.', (done) => {
-      testComponent.anchorComponent?.type$
-        .pipe(
+      testComponent
+        .anchorComponent()
+        ?.type$.pipe(
           filter((x) => x === 'href'),
           delay(0)
         )
@@ -192,12 +213,11 @@ const CUSTOM_CONTENT = 'Custom Content';
   `
 })
 class TestViewComponent {
+  readonly anchorComponent = viewChild.required(DbxAnchorComponent);
+
   @Input()
   public disabled?: boolean;
 
   @Input()
   public anchor?: ClickableAnchor;
-
-  @ViewChild(DbxAnchorComponent, { static: true })
-  anchorComponent?: DbxAnchorComponent;
 }

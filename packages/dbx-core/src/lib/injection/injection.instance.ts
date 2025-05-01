@@ -1,5 +1,5 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
-import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, BehaviorSubject, combineLatest, share } from 'rxjs';
 import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injection';
 import { Initialized, Destroyable, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { ObservableOrValueGetter, SubscriptionObject, filterMaybe, maybeValueFromObservableOrValueGetter, skipFirstMaybe } from '@dereekb/rxjs';
@@ -18,8 +18,8 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
 
   private readonly _injector: Injector;
 
-  readonly config$ = this._config.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged());
-  readonly template$ = this._template.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged());
+  readonly config$ = this._config.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged(), shareReplay(1));
+  readonly template$ = this._template.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged(), shareReplay(1));
   readonly content$ = this._content.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   get config(): Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>> {

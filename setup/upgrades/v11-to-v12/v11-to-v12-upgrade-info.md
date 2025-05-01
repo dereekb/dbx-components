@@ -471,7 +471,7 @@ import { DbxLinkComponent } from '@dereekb/dbx-web';
 
 We do the same for the remaining dbx-components imports, `dbx-core`, `dbx-form`, `dbx-firebase`, `dbx-analytics`, etc.
 
-The linting step will clean up all the imports into a single import statement.
+You can use the `no-duplicates` from `eslint-plugin-import` rule for fixing those cases. https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-duplicates.md
 
 There may also be some left over modules that aren't removed and have leftover declarations, so just search for `declarations: ` in VSCode to find the leftover modules.
 

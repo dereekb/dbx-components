@@ -183,7 +183,7 @@ jobs:
           command: cd ~/setup-test/myproject && cat package.json
       - run:
           name: Try build components
-          command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
+          command: cd ~/setup-test/myproject && npx nx build myproject-components
       - run:
           name: Try build
           command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api

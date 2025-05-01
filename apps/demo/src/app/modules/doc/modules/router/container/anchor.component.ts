@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
-import { DbxContentContainerDirective , DbxAnchorComponent , DbxAnchorContentComponent , DbxAnchorIconComponent , DbxLinkComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';

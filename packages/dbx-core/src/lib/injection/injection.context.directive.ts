@@ -1,4 +1,4 @@
-import { Directive, EmbeddedViewRef, Injector, TemplateRef, ViewContainerRef, OnDestroy, OnInit, inject, model, effect } from '@angular/core';
+import { Directive, EmbeddedViewRef, Injector, TemplateRef, ViewContainerRef, OnDestroy, OnInit, inject, model, effect, input } from '@angular/core';
 import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
@@ -23,32 +23,14 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
 
-  readonly config = model<Maybe<DbxInjectionComponentConfig<unknown>>>();
+  readonly config = input<Maybe<DbxInjectionComponentConfig<unknown>>>();
 
-  protected readonly _configEffect = effect(
-    () => {
-      const currentConfig = this.config();
-      let reattach = false;
+  protected readonly _configEffect = effect(() => {
+    this.setConfig(this.config());
 
-      if (currentConfig) {
-        if (!this._isDetached) {
-          // detach the original view before setting config.
-          this._viewContainer.detach();
-          this._isDetached = true;
-        }
-      } else if (this._isDetached) {
-        reattach = true;
-      }
-
-      this._instance.config = currentConfig;
-
-      if (reattach) {
-        this._viewContainer.insert(this._embeddedView);
-        this._isDetached = false;
-      }
-    },
-    { allowSignalWrites: true }
-  );
+    // NOTE: we have/call setConfig() because the effect() may not respond to all value changes,
+    // especially when setConfig() ends up being called twice quickly in quick succession.
+  });
 
   ngOnInit() {
     this._instance.content = this._viewContainer;
@@ -99,7 +81,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
           }
         };
 
-        this.config.set(injectionConfig as DbxInjectionComponentConfig<unknown>);
+        this.setConfig(injectionConfig as DbxInjectionComponentConfig<unknown>);
       });
 
       this._currentPromise = promiseRef as PromiseReference<unknown>;
@@ -113,7 +95,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     // if we're still using the same promiseRef
     if (promiseRef && promiseRef === this._currentPromise) {
       // clear the config to reshow the view
-      this.config.set(undefined);
+      this.setConfig(undefined);
 
       // clear the current promise
       this._currentPromise = undefined;
@@ -136,7 +118,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       this._currentPromise = undefined;
 
       // clear the config.
-      this.config.set(undefined);
+      this.setConfig(undefined);
 
       // send a rejection signal to bail out.
       promise.reject(new Error('dbxInjectionContext bailout'));
@@ -145,5 +127,26 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     }
 
     return clearedValue;
+  }
+
+  setConfig(config: Maybe<DbxInjectionComponentConfig<unknown>>) {
+    let reattach = false;
+
+    if (config) {
+      if (!this._isDetached) {
+        // detach the original view before setting config.
+        this._viewContainer.detach();
+        this._isDetached = true;
+      }
+    } else if (this._isDetached) {
+      reattach = true;
+    }
+
+    this._instance.config = config;
+
+    if (reattach) {
+      this._viewContainer.insert(this._embeddedView);
+      this._isDetached = false;
+    }
   }
 }

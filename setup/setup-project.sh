@@ -364,6 +364,9 @@ sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_
 rm serve-server.sh.tmp
 chmod +x serve-server.sh
 
+rm eslint.config.mjs || true
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/eslint.config.template.mjs -o eslint.config.mjs
+
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-web.sh -o serve-web.sh.tmp
 sed -e "s/demo/$ANGULAR_APP_NAME/g" serve-web.sh.tmp > serve-web.sh
 rm serve-web.sh.tmp
@@ -438,7 +441,7 @@ echo "Making tests cacheable in nx cloud..."
 npx --yes json -I -f nx.json -e "this.targetDefaults['build-base'] = { cache: true }";
 
 echo "Make build rely on parent build"
-npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['build-base'], inputs: ['production', '^production'], cache: true }";
+npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true }";
 
 git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
