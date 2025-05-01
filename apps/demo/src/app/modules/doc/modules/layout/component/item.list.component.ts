@@ -3,6 +3,7 @@ import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewD
 import { DocValue } from './item.list';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
  * Demo DbxSelectionListWrapperDirective
@@ -28,4 +29,6 @@ export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirecti
   imports: [MatListModule, MatIconModule],
   standalone: true
 })
-export class DocItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {}
+export class DocItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
+  readonly valuesSignal = toSignal(this.values$);
+}

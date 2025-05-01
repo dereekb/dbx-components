@@ -26,6 +26,7 @@ import { DateTimeRangePipe } from '@dereekb/dbx-core';
 import { DateTimeRangeOnlyDistancePipe } from '@dereekb/dbx-core';
 import { MinutesStringPipe } from '@dereekb/dbx-core';
 import { TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
+import { DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './pipes.component.html',
@@ -54,7 +55,8 @@ import { TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
     DateTimeRangeOnlyDistancePipe,
     MinutesStringPipe,
     TimeDistanceCountdownPipe,
-    TimeDistancePipe
+    TimeDistancePipe,
+    DbxFormTimezoneStringFieldModule
   ]
 })
 export class DocTextPipesComponent implements OnDestroy {

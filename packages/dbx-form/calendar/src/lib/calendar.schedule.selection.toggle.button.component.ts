@@ -60,8 +60,6 @@ export class DbxScheduleSelectionCalendarSelectionToggleButtonComponent {
         break;
     }
 
-    console.log({ buttonDisplay });
-
     return buttonDisplay;
   });
 

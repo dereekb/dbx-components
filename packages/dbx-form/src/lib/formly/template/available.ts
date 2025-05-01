@@ -4,7 +4,7 @@ import { textField, TextFieldConfig } from '../field/value/text/text.field';
 import { workingWrapper } from '../field/wrapper/wrapper';
 
 export interface TextAvailableFieldConfig extends TextFieldConfig, Omit<FieldValueIsAvailableValidatorConfig<string>, 'message'> {
-  isNotAvailableErrorMessage?: string;
+  readonly isNotAvailableErrorMessage?: string;
 }
 
 export function textIsAvailableField(config: TextAvailableFieldConfig): FormlyFieldConfig {

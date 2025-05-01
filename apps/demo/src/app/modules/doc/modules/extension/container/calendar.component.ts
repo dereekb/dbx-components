@@ -4,10 +4,10 @@ import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, 
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
-import { CalendarScheduleSelectionDayState, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import { CalendarScheduleSelectionDayState, DbxFormDateScheduleRangeFieldModule, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
-import { timezoneStringField } from '@dereekb/dbx-form';
+import { DbxFormTimezoneStringFieldModule, timezoneStringField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -54,9 +54,11 @@ export interface TestCalendarEventData extends DateCell {
     DbxSubSectionComponent,
     DocExtensionCalendarScheduleSelectionWithFilterComponent,
     DocExtensionCalendarScheduleSelectionComponent,
+    DbxFormDateScheduleRangeFieldModule,
     AsyncPipe,
     JsonPipe,
-    DatePipe
+    DatePipe,
+    DbxFormTimezoneStringFieldModule
   ]
 })
 export class DocExtensionCalendarComponent implements OnInit {

@@ -8,11 +8,12 @@ import { MatButton } from '@angular/material/button';
 import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DbxSpacerDirective } from '@dereekb/dbx-web';
 import { DocFormExampleComponentFormComponent } from '../component/component.example.form.component';
+import { DbxFormFormlyComponentFieldModule } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './component.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxBarDirective, MatButton, DbxButtonSpacerDirective, DbxSpacerDirective, DocFormExampleComponentFormComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxBarDirective, MatButton, DbxButtonSpacerDirective, DbxSpacerDirective, DocFormExampleComponentFormComponent, DbxFormFormlyComponentFieldModule]
 })
 export class DocFormComponentComponent {
   config: DocFormExampleComponentFormConfig = {

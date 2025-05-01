@@ -1,4 +1,4 @@
-import { DbxFormSearchFormFieldsConfig } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, DbxFormSearchFormFieldsConfig } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
@@ -9,7 +9,7 @@ import { DbxContentBorderDirective } from '@dereekb/dbx-web';
 @Component({
   templateUrl: './form.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFormSearchFormComponent, DbxContentBorderDirective, DbxFormFormlyTextFieldModule]
 })
 export class DocFormFormComponent {
   searchText = '';

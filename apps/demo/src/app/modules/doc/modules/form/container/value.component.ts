@@ -1,6 +1,34 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, toggleField, checkboxField, numberField, latLngTextField, dollarAmountField, numberSliderField } from '@dereekb/dbx-form';
+import {
+  addressField,
+  addressListField,
+  cityField,
+  countryField,
+  emailField,
+  phoneField,
+  nameField,
+  phoneAndLabelSectionField,
+  wrappedPhoneAndLabelField,
+  repeatArrayField,
+  stateField,
+  textAreaField,
+  textField,
+  zipCodeField,
+  phoneListField,
+  toggleField,
+  checkboxField,
+  numberField,
+  latLngTextField,
+  dollarAmountField,
+  numberSliderField,
+  DbxFormFormlyTextFieldModule,
+  DbxFormFormlyWrapperModule,
+  DbxFormFormlyPhoneFieldModule,
+  DbxFormFormlyBooleanFieldModule,
+  DbxFormFormlyNumberFieldModule,
+  DbxFormFormlyArrayFieldModule
+} from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { of } from 'rxjs';
@@ -15,7 +43,7 @@ import { DbxFormSourceDirective } from '@dereekb/dbx-form';
 @Component({
   templateUrl: './value.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormFormlyArrayFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule]
 })
 export class DocFormValueComponent {
   readonly dateValues$ = of({

@@ -13,7 +13,8 @@ import {
   DbxSelectionValueListViewComponentImportsModule,
   DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   DbxSpacerDirective,
-  DbxChipDirective
+  DbxChipDirective,
+  DbxColorDirective
 } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { DocValue, DocValueWithSelection } from './item.list';
@@ -67,7 +68,7 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
       </div>
     </div>
   `,
-  imports: [DbxSpacerDirective, DbxChipDirective],
+  imports: [DbxSpacerDirective, DbxChipDirective, DbxColorDirective],
   standalone: true
 })
 export class DocSelectionItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {

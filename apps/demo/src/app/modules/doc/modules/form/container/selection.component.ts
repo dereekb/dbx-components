@@ -2,7 +2,28 @@ import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit, inject } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, pickableValueFieldValuesConfigForStaticLabeledValues, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, sourceSelectField, SourceSelectLoadSource, valueSelectionField, ValueSelectionOptionWithValue } from '@dereekb/dbx-form';
+import {
+  DbxFormFormlyDbxListFieldModule,
+  DbxFormFormlyPickableFieldModule,
+  DbxFormFormlySearchableFieldModule,
+  DbxFormFormlySourceSelectModule,
+  dbxListField,
+  filterPickableItemFieldValuesByLabel,
+  pickableItemChipField,
+  pickableItemListField,
+  pickableValueFieldValuesConfigForStaticLabeledValues,
+  searchableChipField,
+  searchableStringChipField,
+  searchableTextField,
+  SearchableValueFieldDisplayFn,
+  SearchableValueFieldDisplayValue,
+  SearchableValueFieldStringSearchFn,
+  SearchableValueFieldValue,
+  sourceSelectField,
+  SourceSelectLoadSource,
+  valueSelectionField,
+  ValueSelectionOptionWithValue
+} from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
 import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
@@ -98,7 +119,7 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
 @Component({
   templateUrl: './selection.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule]
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

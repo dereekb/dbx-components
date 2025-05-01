@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { textEditorField } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextEditorFieldModule, textEditorField } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
@@ -11,7 +11,7 @@ import { DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
 @Component({
   templateUrl: './texteditor.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyTextEditorFieldModule]
 })
 export class DocFormTextEditorComponent {
   readonly textEditorField: FormlyFieldConfig[] = [

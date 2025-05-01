@@ -10,8 +10,22 @@ import { DbxFormToggleWrapperComponent } from './toggle.wrapper.component';
 import { DbxFormStyleWrapperComponent } from './style.wrapper.component';
 import { DbxFormWorkingWrapperComponent } from './working.wrapper.component';
 import { AUTO_TOUCH_WRAPPER_KEY, EXPAND_WRAPPER_KEY, FLEX_WRAPPER_KEY, INFO_WRAPPER_KEY, SECTION_WRAPPER_KEY, STYLE_WRAPPER_KEY, SUBSECTION_WRAPPER_KEY, TOGGLE_WRAPPER_KEY, WORKING_WRAPPER_KEY } from './wrapper.key';
+import { FormlyMaterialModule } from '@ngx-formly/material';
 
-const importsAndExports = [AutoTouchFieldWrapperComponent, DbxFormSectionWrapperComponent, DbxFormSubsectionWrapperComponent, DbxFormInfoWrapperComponent, DbxFormExpandWrapperComponent, DbxFormToggleWrapperComponent, DbxFormFlexWrapperComponent, DbxFormStyleWrapperComponent, DbxFormWorkingWrapperComponent];
+const importsAndExports = [
+  AutoTouchFieldWrapperComponent,
+  DbxFormSectionWrapperComponent,
+  DbxFormSubsectionWrapperComponent,
+  DbxFormInfoWrapperComponent,
+  DbxFormExpandWrapperComponent,
+  DbxFormToggleWrapperComponent,
+  DbxFormFlexWrapperComponent,
+  DbxFormStyleWrapperComponent,
+  DbxFormWorkingWrapperComponent,
+  // Formly
+  FormlyModule,
+  FormlyMaterialModule
+];
 
 @NgModule({
   imports: [

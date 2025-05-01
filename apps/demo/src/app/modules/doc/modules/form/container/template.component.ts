@@ -1,4 +1,4 @@
-import { usernamePasswordLoginFields, timezoneStringField } from '@dereekb/dbx-form';
+import { usernamePasswordLoginFields, timezoneStringField, DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
@@ -11,7 +11,7 @@ import { DocFeatureDerivedComponent } from '../../shared/component/feature.deriv
 @Component({
   templateUrl: './template.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormSourceDirective, DocFeatureDerivedComponent, DbxFormTimezoneStringFieldModule]
 })
 export class DocFormTemplateComponent {
   readonly usernamePasswordLoginField: FormlyFieldConfig[] = usernamePasswordLoginFields({
