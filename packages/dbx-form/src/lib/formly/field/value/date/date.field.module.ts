@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxDateTimeFieldComponent } from './datetime.field.component';
-import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
+import { DbxFormFormlyWrapperModule } from '../../wrapper/wrapper.module';
 import { DbxFixedDateRangeFieldComponent } from './fixeddaterange.field.component';
 
 const importsAndExports = [DbxDateTimeFieldComponent, DbxFixedDateRangeFieldComponent, DbxFormFormlyWrapperModule];

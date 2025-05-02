@@ -21,15 +21,29 @@ import {
   numberField,
   latLngTextField,
   dollarAmountField,
-  numberSliderField
+  numberSliderField,
+  DbxFormFormlyTextFieldModule,
+  DbxFormFormlyWrapperModule,
+  DbxFormFormlyPhoneFieldModule,
+  DbxFormFormlyBooleanFieldModule,
+  DbxFormFormlyNumberFieldModule,
+  DbxFormFormlyArrayFieldModule,
+  DbxFormlyFieldsContextDirective,
+  DbxFormSourceDirective
 } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { of } from 'rxjs';
 import { dateTimezoneUtcNormal } from '@dereekb/date';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../component/example.form.component';
 
 @Component({
-  templateUrl: './value.component.html'
+  templateUrl: './value.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormFormlyArrayFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyNumberFieldModule]
 })
 export class DocFormValueComponent {
   readonly dateValues$ = of({

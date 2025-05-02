@@ -1,13 +1,20 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component, OnDestroy } from '@angular/core';
-import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField } from '@dereekb/dbx-form';
+import { dateTimeField, DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, dateRangeField, DbxDateTimePickerConfiguration, dateTimeRangeField, timezoneStringField, fixedDateRangeField, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, Observable, delay, interval, map, of } from 'rxjs';
 import { DateRangeType, DateCellScheduleDayCode, DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, findMaxDate, findMinDate } from '@dereekb/date';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../component/example.form.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-  templateUrl: './value.date.component.html'
+  templateUrl: './value.date.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, AsyncPipe, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule, DbxFormTimezoneStringFieldModule]
 })
 export class DocFormDateValueComponent implements OnDestroy {
   readonly dateValues$ = of({

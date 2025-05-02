@@ -1,11 +1,19 @@
 import { incrementingNumberTimer, SubscriptionObject, successResult } from '@dereekb/rxjs';
 import { OnDestroy, Component, OnInit } from '@angular/core';
 import { BehaviorSubject, map } from 'rxjs';
-import { DbxFormSourceDirectiveMode, textField } from '@dereekb/dbx-form';
+import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, DbxFormSourceDirectiveMode, textField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
+import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../component/example.form.component';
+import { MatButton } from '@angular/material/button';
+import { JsonPipe } from '@angular/common';
 
 @Component({
-  templateUrl: './directive.component.html'
+  templateUrl: './directive.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule]
 })
 export class DocFormDirectiveComponent implements OnInit, OnDestroy {
   private _sub = new SubscriptionObject();

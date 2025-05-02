@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { MatAnchor } from '@angular/material/button';
+import { AnchorUISref, UISref } from '@uirouter/angular';
+import { DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 
 @Component({
   template: `
@@ -8,6 +11,8 @@ import { Component } from '@angular/core';
       <dbx-button-spacer></dbx-button-spacer>
       <a mat-stroked-button uiSref="demo.home">Home</a>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [MatAnchor, AnchorUISref, UISref, DbxButtonSpacerDirective]
 })
 export class DemoAuthLoggedOutComponent {}

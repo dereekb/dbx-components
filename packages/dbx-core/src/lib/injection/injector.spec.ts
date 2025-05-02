@@ -20,8 +20,6 @@ class TestInjectableClassC {
 describe('newWithInjector()', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [],
-      declarations: [],
       providers: [TestInjectableClassA, TestInjectableClassB]
     }).compileComponents();
   });

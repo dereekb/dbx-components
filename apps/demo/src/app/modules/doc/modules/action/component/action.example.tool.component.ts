@@ -3,14 +3,20 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { shareReplay, switchMap } from 'rxjs';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { provideFormlyContext } from '@dereekb/dbx-form';
-import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, DbxActionDirective, DbxActionSourceDirective } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
+import { MatDivider } from '@angular/material/divider';
+import { FlexModule } from '@ngbracket/ngx-layout/flex';
+import { DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './action.example.tool.component.html',
   selector: 'dbx-action-example-tools',
   providers: [provideFormlyContext()],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DbxActionSourceDirective, MatDivider, FlexModule, DbxErrorComponent, DbxActionErrorDirective, JsonPipe]
 })
 export class DocActionExampleToolsComponent {
   readonly hostSourceInstance = inject(DbxActionContextStoreSourceInstance, { host: true, optional: true });

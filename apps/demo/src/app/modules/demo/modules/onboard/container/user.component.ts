@@ -1,8 +1,9 @@
 import { OnInit, Component, inject } from '@angular/core';
-import { DbxActionSuccessHandlerFunction, DbxRouterService } from '@dereekb/dbx-core';
+import { DbxActionSuccessHandlerFunction, DbxRouterService, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxActionButtonDirective } from '@dereekb/dbx-core';
 import { WorkUsingContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { ProfileDocumentStore } from 'demo-components';
+import { DbxContentBoxDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
 
 @Component({
   template: `
@@ -15,7 +16,9 @@ import { ProfileDocumentStore } from 'demo-components';
       </div>
     </dbx-content-box>
   `,
-  providers: [ProfileDocumentStore]
+  providers: [ProfileDocumentStore],
+  standalone: true,
+  imports: [DbxContentBoxDirective, DbxActionDirective, DbxActionValueDirective, DbxActionHandlerDirective, DbxActionSuccessHandlerDirective, DbxButtonComponent, DbxActionButtonDirective, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DemoOnboardUserComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);

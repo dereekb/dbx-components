@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { AbstractDialogDirective } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxDialogContentDirective, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { MatButton } from '@angular/material/button';
 
 @Component({
   template: `
@@ -14,7 +15,9 @@ import { AbstractDialogDirective } from '@dereekb/dbx-web';
         <button mat-raised-button (click)="close()">Cancel</button>
       </div>
     </dbx-dialog-content>
-  `
+  `,
+  standalone: true,
+  imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective]
 })
 export class DocActionExampleDialogComponent extends AbstractDialogDirective {
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {

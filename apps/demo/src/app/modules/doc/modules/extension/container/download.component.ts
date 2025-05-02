@@ -1,8 +1,11 @@
-import { DownloadTextContent } from '@dereekb/dbx-web';
+import { DownloadTextContent, DbxContentContainerDirective, DbxDownloadTextViewComponent } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
 import { randomNumberFactory, randomPhoneNumberFactory, range } from '@dereekb/util';
 import { Observable, delay, map, of } from 'rxjs';
 import { loadingStateFromObs } from '@dereekb/rxjs';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { AsyncPipe } from '@angular/common';
 
 function createRandomData() {
   const randomNumber = randomNumberFactory({ min: 100000, max: 10000000 - 1, round: 'round' });
@@ -33,7 +36,9 @@ function createRandomCsvFile() {
 }
 
 @Component({
-  templateUrl: './download.component.html'
+  templateUrl: './download.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxDownloadTextViewComponent, AsyncPipe]
 })
 export class DocExtensionDownloadComponent {
   readonly csvContent: DownloadTextContent = {

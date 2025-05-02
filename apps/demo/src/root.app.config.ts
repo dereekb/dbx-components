@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { ApplicationConfig, importProvidersFrom, Injector } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, Injector } from '@angular/core';
 import { Category, provideUIRouter, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
@@ -17,6 +17,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
 import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
+import { metaReducers, ROOT_REDUCER } from './app/state/app.state';
 
 // MARK: DbxAnalytics
 export function dbxAnalyticsSegmentApiServiceConfigFactory(injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
@@ -130,7 +131,15 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     // ngRx
     provideEffects(),
-    provideStore(),
+    provideStore(ROOT_REDUCER, {
+      metaReducers,
+      runtimeChecks: {
+        strictStateSerializability: true,
+        strictActionSerializability: true,
+        strictActionWithinNgZone: true,
+        strictActionTypeUniqueness: true
+      }
+    }),
     !environment.production ? provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }) : [],
     // dbx-analytics
     provideDbxAnalyticsSegmentApiService({
@@ -214,7 +223,21 @@ export const appConfig: ApplicationConfig = {
         tosUrl: '/tos/terms',
         privacyUrl: '/tos/privacy'
       }
-    })
+    }),
+
+    // App initializers
+    [
+      {
+        provide: APP_INITIALIZER,
+        useFactory: (injector: Injector) => {
+          return () => {
+            // add any initialization here
+          };
+        },
+        deps: [Injector],
+        multi: true
+      }
+    ]
 
     // provideZoneChangeDetection({ eventCoalescing: true })
   ]

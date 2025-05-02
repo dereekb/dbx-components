@@ -1,8 +1,9 @@
-import { Directive, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Directive, OnDestroy, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { BehaviorSubject, distinctUntilChanged, combineLatest } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 export const APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY = 'dbx_action_disabled_on_success';
 
@@ -13,30 +14,21 @@ export const APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY = 'dbx_action_disabled
   selector: '[dbxActionDisabledOnSuccess]',
   standalone: true
 })
-export class DbxActionDisabledOnSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionDisabledOnSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  private readonly _disableOnSuccess = new BehaviorSubject<boolean>(true);
-  readonly disableOnSuccess$ = this._disableOnSuccess.pipe(distinctUntilChanged());
+  readonly disabledOnSuccess = input<boolean, Maybe<boolean | ''>>(true, { alias: 'dbxActionDisabledOnSuccess', transform: (value) => value !== false });
+  readonly disabledOnSuccess$ = toObservable(this.disabledOnSuccess);
 
-  ngOnInit(): void {
-    this.sub = combineLatest([this.disableOnSuccess$, this.source.isSuccess$]).subscribe(([disableOnSuccess, success]) => {
+  constructor() {
+    super();
+    this.sub = combineLatest([this.disabledOnSuccess$, this.source.isSuccess$]).subscribe(([disableOnSuccess, success]) => {
       this.source.disable(APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY, disableOnSuccess && success);
     });
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._disableOnSuccess.complete();
     this.source.enable(APP_ACTION_DISABLED_ON_SUCCESS_DIRECTIVE_KEY);
-  }
-
-  @Input('dbxActionDisabledOnSuccess')
-  get disabled(): boolean {
-    return this._disableOnSuccess.value;
-  }
-
-  set disabled(disabled: Maybe<boolean | ''>) {
-    this._disableOnSuccess.next(disabled !== false);
   }
 }

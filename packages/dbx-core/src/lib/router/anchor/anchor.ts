@@ -102,9 +102,6 @@ export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract readonly disabled$: Observable<Maybe<boolean>>;
   abstract readonly selected$: Observable<Maybe<boolean>>;
   abstract readonly anchor$: Observable<Maybe<T>>;
-  abstract readonly disabled: Maybe<boolean>;
-  abstract readonly selected: Maybe<boolean>;
-  abstract readonly anchor: Maybe<T>;
   abstract readonly type$: Observable<ClickableAnchorType>;
 }
 

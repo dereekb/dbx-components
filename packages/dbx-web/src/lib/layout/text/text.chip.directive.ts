@@ -1,28 +1,25 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, input, computed } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 @Directive({
   selector: 'dbx-chip',
   host: {
     class: 'dbx-chip mat-standard-chip',
-    '[class]': 'style'
+    '[class]': 'styleSignal()'
   },
   standalone: true
 })
 export class DbxChipDirective {
-  @Input()
-  small?: Maybe<boolean>;
+  readonly small = input<Maybe<boolean>>();
+  readonly block = input<Maybe<boolean>>();
 
-  @Input()
-  block?: Maybe<boolean>;
+  readonly styleSignal = computed(() => {
+    let style = this.small() ? 'dbx-chip-small' : '';
 
-  get style() {
-    let style = this.small ? 'dbx-chip-small' : '';
-
-    if (this.block) {
+    if (this.block()) {
       style = style + ' dbx-chip-block';
     }
 
     return style;
-  }
+  });
 }

@@ -1,8 +1,14 @@
 import { AUTH_ADMIN_ROLE, AUTH_USER_ROLE } from '@dereekb/util';
 import { Component } from '@angular/core';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective, DbxAuthNotAnyRoleDirective } from '@dereekb/dbx-core';
 
 @Component({
-  templateUrl: './role.component.html'
+  templateUrl: './role.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective, DbxAuthNotAnyRoleDirective]
 })
 export class DocAuthRoleComponent {
   readonly noRoles = [];

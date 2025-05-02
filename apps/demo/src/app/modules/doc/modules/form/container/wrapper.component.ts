@@ -1,10 +1,16 @@
 import { MatDialog } from '@angular/material/dialog';
 import { Component, inject } from '@angular/core';
-import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper, toggleField } from '@dereekb/dbx-form';
+import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper, toggleField, DbxFormFormlyWrapperModule, DbxFormFormlyBooleanFieldModule, DbxFormlyFieldsContextDirective, DbxFormFormlyTextFieldModule } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../component/example.form.component';
 
 @Component({
-  templateUrl: './wrapper.component.html'
+  templateUrl: './wrapper.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyWrapperModule, DbxFormFormlyTextFieldModule, DbxFormFormlyBooleanFieldModule]
 })
 export class DocFormWrapperComponent {
   readonly matDialog = inject(MatDialog);

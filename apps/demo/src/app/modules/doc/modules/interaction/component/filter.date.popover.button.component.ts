@@ -1,5 +1,5 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { DbxFilterButtonConfigWithPresetFilter } from '@dereekb/dbx-web';
+import { DbxFilterButtonConfigWithPresetFilter, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { DocInteractionTestFilter } from './filter';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
@@ -11,7 +11,9 @@ import { DocInteractionTestDateFilterPresetFilterComponent } from './filter.date
   template: `
     <dbx-filter-popover-button [buttonDisplay]="buttonDisplay()" [config]="config"></dbx-filter-popover-button>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DbxFilterPopoverButtonComponent]
 })
 export class DocInteractionTestDateFilterPopoverButtonComponent {
   readonly filterSourceConnector = inject(FilterSourceConnector);

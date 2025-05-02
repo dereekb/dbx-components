@@ -105,6 +105,7 @@ FIREBASE_LOCALHOST=0.0.0.0
 FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STORAGE_PORT"
 
 ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
+
 # other config
 LINTER="eslint"
 UNIT_TEST_RUNNER="jest"
@@ -363,6 +364,9 @@ sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_
 rm serve-server.sh.tmp
 chmod +x serve-server.sh
 
+rm eslint.config.mjs || true
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/eslint.config.template.mjs -o eslint.config.mjs
+
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-web.sh -o serve-web.sh.tmp
 sed -e "s/demo/$ANGULAR_APP_NAME/g" serve-web.sh.tmp > serve-web.sh
 rm serve-web.sh.tmp
@@ -388,7 +392,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular
+npm install -D @jscutlery/semver@5.6.0 husky prettier@3.5.3 pretty-quick@^4.1.1 @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -435,6 +439,9 @@ sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS
 # make build-base and run-tests cacheable in nx cloud
 echo "Making tests cacheable in nx cloud..."
 npx --yes json -I -f nx.json -e "this.targetDefaults['build-base'] = { cache: true }";
+
+echo "Make build rely on parent build"
+npx --yes json -I -f nx.json -e "this.targetDefaults['build'] = { dependsOn: ['^build'], inputs: ['production', '^production'], cache: true }";
 
 git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
@@ -527,7 +534,7 @@ rm $API_APP_FOLDER/webpack.config.js.tmp
 
 rm $ANGULAR_COMPONENTS_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/app/project.template.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
-sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
+sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
 rm $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 
 rm $FIREBASE_COMPONENTS_FOLDER/project.json
@@ -553,6 +560,9 @@ download_ts_file () {
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
   sed -e "s:FIREBASE_STAGING_PROJECT_ID:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:APP_CODE_PREFIX_CAPS:$APP_CODE_PREFIX_CAPS:g" -e "s:APP_CODE_PREFIX_CAMEL:$APP_CODE_PREFIX_CAMEL:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
+
+  # sleep for a moment
+  sleep 0.1
 }
 
 ### Setup app components
@@ -818,7 +828,7 @@ download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/index.ts"
 
 # wait for potential download throttling
-sleep 1
+sleep 2
 
 ## Function Folder
 mkdir $API_APP_FOLDER/src/app/function

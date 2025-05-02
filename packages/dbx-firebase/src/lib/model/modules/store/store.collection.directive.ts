@@ -1,22 +1,39 @@
-import { Directive, forwardRef, Input, OnDestroy, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, model, OnDestroy, Provider, Type } from '@angular/core';
 import { FirestoreDocument, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
-import { filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe, skipInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract directive that contains a DbxFirebaseCollectionStore and provides an interface for communicating with other directives.
  */
 @Directive()
 export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements OnDestroy {
-  private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
-  readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
+  readonly maxPages = model<Maybe<number>>(undefined);
+  readonly itemsPerPage = model<Maybe<number>>(undefined);
+  readonly contraints = model<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
 
+  private readonly _maxPages = toObservable(this.maxPages).pipe(skipInitialMaybe());
+  private readonly _itemsPerPage = toObservable(this.itemsPerPage).pipe(skipInitialMaybe());
+  private readonly _constraints = toObservable(this.contraints).pipe(skipInitialMaybe());
+
+  private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
+  private readonly _storeSub = new SubscriptionObject();
+
+  readonly store$ = this._store.pipe(filterMaybe(), shareReplay(1));
   readonly pageLoadingState$ = this.store$.pipe(switchMap((x) => x.pageLoadingState$));
 
   constructor(store: S) {
     this.replaceStore(store);
+
+    // sync inputs to store any time the store changes
+    this._storeSub.subscription = this.store$.subscribe((x) => {
+      x.setConstraints(this._constraints);
+      x.setMaxPages(this._maxPages);
+      x.setItemsPerPage(this._itemsPerPage);
+    });
   }
 
   get store() {
@@ -25,6 +42,7 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
 
   ngOnDestroy(): void {
     this._store.complete();
+    this._storeSub.destroy();
   }
 
   /**
@@ -34,20 +52,16 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
     this._store.next(store);
   }
 
-  // MARK: Inputs
-  @Input()
-  set maxPages(maxPages: Maybe<number>) {
-    this.store.setMaxPages(maxPages);
+  setMaxPages(maxPages: Maybe<number>) {
+    this.maxPages.set(maxPages);
   }
 
-  @Input()
-  set itemsPerPage(itemsPerPage: Maybe<number>) {
-    this.store.setItemsPerPage(itemsPerPage);
+  setItemsPerPage(itemsPerPage: Maybe<number>) {
+    this.itemsPerPage.set(itemsPerPage);
   }
 
-  @Input()
-  set constraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
-    this.store.setConstraints(constraints);
+  setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
+    this.contraints.set(constraints);
   }
 
   next() {
@@ -56,10 +70,6 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
 
   restart() {
     this.store.restart();
-  }
-
-  setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
-    this.store.setConstraints(constraints);
   }
 }
 

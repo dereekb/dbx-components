@@ -1,81 +1,69 @@
-import { skipFirstMaybe } from '@dereekb/rxjs';
-import { map, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
-import { computed, Directive, Input, OnDestroy } from '@angular/core';
+import { Observable } from 'rxjs';
+import { computed, Directive, model } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { ClickableAnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
 import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 /**
  * Abstract anchor directive.
  */
 @Directive()
-export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbxAnchor, OnDestroy {
-  private readonly _selected = new BehaviorSubject<Maybe<boolean>>(false);
-  private readonly _disabled = new BehaviorSubject<Maybe<boolean>>(false);
-  private readonly _anchor = new BehaviorSubject<Maybe<T>>(undefined);
+export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbxAnchor {
+  readonly ref = model<Maybe<SegueRefOrSegueRefRouterLink>>();
 
-  readonly disabled$: Observable<Maybe<boolean>> = this._disabled.pipe(distinctUntilChanged());
-  readonly anchor$: Observable<Maybe<T>> = this._anchor.pipe(skipFirstMaybe(), distinctUntilChanged(), shareReplay(1));
+  readonly anchor = model<Maybe<T>>();
+  readonly disabled = model<Maybe<boolean>>();
+  readonly selected = model<Maybe<boolean>>();
 
-  readonly selected$: Observable<Maybe<boolean>> = combineLatest([this._selected, this.anchor$]).pipe(
-    map(([selected, anchor]) => selected || anchor?.selected),
-    distinctUntilChanged()
-  );
+  readonly anchorSignal = computed(() => {
+    const ref = this.ref();
+    const anchor = this.anchor();
 
-  readonly type$: Observable<ClickableAnchorType> = combineLatest([this.disabled$, this.anchor$]).pipe(
-    delay(0),
-    map(([disabled, anchor]) => anchorTypeForAnchor(anchor, disabled)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+    let result: Maybe<T> = anchor;
 
-  readonly anchorSignal = toSignal(this.anchor$, { initialValue: this._anchor.value });
-  readonly disabledSignal = toSignal(this.disabled$, { initialValue: this._disabled.value });
-  readonly selectedSignal = toSignal(this.selected$, { initialValue: this._selected.value });
-  readonly typeSignal = toSignal(this.type$, { initialValue: anchorTypeForAnchor(this._anchor.value, this._disabled.value) });
+    if (ref != null) {
+      result = asSegueRef(ref) as T;
+    }
+
+    return result;
+  });
+
+  readonly selectedSignal = computed(() => {
+    const selected = this.selected();
+    const anchor = this.anchorSignal();
+
+    return selected || anchor?.selected;
+  });
+
+  readonly typeSignal = computed(() => {
+    const anchor = this.anchorSignal();
+    const disabled = this.disabled();
+    return anchorTypeForAnchor(anchor, disabled);
+  });
 
   readonly urlSignal = computed(() => this.anchorSignal()?.url);
   readonly targetSignal = computed(() => this.anchorSignal()?.target);
 
-  ngOnDestroy(): void {
-    this._selected.complete();
-    this._disabled.complete();
-    this._anchor.complete();
+  readonly anchor$: Observable<Maybe<T>> = toObservable(this.anchorSignal);
+  readonly disabled$: Observable<Maybe<boolean>> = toObservable(this.disabled);
+  readonly selected$: Observable<Maybe<boolean>> = toObservable(this.selectedSignal);
+  readonly type$: Observable<ClickableAnchorType> = toObservable(this.typeSignal);
+
+  // MARK: Accessors
+  setRef(ref: Maybe<SegueRefOrSegueRefRouterLink>) {
+    this.ref.set(ref);
   }
 
-  /**
-   * Convenience input to create an Anchor from the input SegueRef.
-   */
-  @Input()
-  public set ref(ref: Maybe<SegueRefOrSegueRefRouterLink>) {
-    this.anchor = asSegueRef(ref) as T;
+  setAnchor(anchor: Maybe<T>) {
+    this.anchor.set(anchor);
   }
 
-  @Input()
-  public get anchor(): Maybe<T> {
-    return this._anchor.value;
+  setDisabled(disabled: Maybe<boolean>) {
+    this.disabled.set(disabled);
   }
 
-  public set anchor(anchor: Maybe<T>) {
-    this._anchor.next(anchor);
-  }
-
-  @Input()
-  public get disabled(): Maybe<boolean> {
-    return this._disabled.value;
-  }
-
-  public set disabled(disabled: Maybe<boolean>) {
-    this._disabled.next(disabled);
-  }
-
-  @Input()
-  public get selected(): Maybe<boolean> {
-    return this._selected.value;
-  }
-
-  public set selected(selected: Maybe<boolean>) {
-    this._selected.next(selected);
+  setSelected(selected: Maybe<boolean>) {
+    this.selected.set(selected);
   }
 }

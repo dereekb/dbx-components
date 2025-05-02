@@ -1,4 +1,3 @@
-export * from './guestbook.module';
 export * from './component/guestbook.list.component';
 export * from './component/guestbook.entry.form';
 export * from './component/guestbook.entry.form.component';

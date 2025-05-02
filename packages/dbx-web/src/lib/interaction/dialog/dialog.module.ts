@@ -10,4 +10,14 @@ const importsAndExports = [DbxDialogContentDirective, DbxActionDialogDirective, 
   imports: importsAndExports,
   exports: importsAndExports
 })
+export class DbxDialogModule {}
+
+// MARK: Compat
+/**
+ * @deprecated use DbxDialogModule instead.
+ */
+@NgModule({
+  imports: [DbxDialogModule],
+  exports: [DbxDialogModule]
+})
 export class DbxDialogInteractionModule {}

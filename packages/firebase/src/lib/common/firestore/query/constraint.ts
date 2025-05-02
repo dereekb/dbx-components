@@ -1,6 +1,5 @@
-import { type FieldPathOrStringPath, type FieldPathOrStringPathOf } from './../types';
+import { type FieldPathOrStringPath, type FieldPathOrStringPathOf, type DocumentSnapshot, type DocumentData, type FieldPath } from './../types';
 import { type ArrayOrValue, asArray, pushItemOrArrayItemsIntoArray, type SeparateResult, separateValues, type SortingOrder, type Maybe, type StringKeyPropertyKeys, convertToArray } from '@dereekb/util';
-import { type DocumentSnapshot, type DocumentData, type FieldPath } from '../types';
 
 /**
  * Type identifier for a Firestore query constraint.

@@ -11,6 +11,7 @@ import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './cale
 import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
 import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from './calendar.schedule.selection.dialog.button.component';
 import { DbxScheduleSelectionCalendarSelectionToggleButtonComponent } from './calendar.schedule.selection.toggle.button.component';
+import { DbxFormFormlyWrapperModule } from '@dereekb/dbx-form';
 
 const importsAndExports = [
   DbxScheduleSelectionCalendarComponent,
@@ -24,7 +25,9 @@ const importsAndExports = [
   DbxCalendarScheduleSelectionStoreInjectionBlockDirective,
   DbxScheduleSelectionCalendarDateDialogComponent,
   DbxScheduleSelectionCalendarDateDialogButtonComponent,
-  DbxScheduleSelectionCalendarSelectionToggleButtonComponent
+  DbxScheduleSelectionCalendarSelectionToggleButtonComponent,
+  //
+  DbxFormFormlyWrapperModule
 ];
 
 @NgModule({

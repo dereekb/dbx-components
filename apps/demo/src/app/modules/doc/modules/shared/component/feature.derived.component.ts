@@ -1,4 +1,7 @@
 import { Component, Input } from '@angular/core';
+import { DbxContentBoxDirective } from '@dereekb/dbx-web';
+import { MatIcon } from '@angular/material/icon';
+import { NgSwitch, NgSwitchCase } from '@angular/common';
 
 export type DocFeatureDerviedType = 'integrated' | 'uses';
 
@@ -23,7 +26,9 @@ export type DocFeatureDerviedType = 'integrated' | 'uses';
         </div>
       </dbx-content-box>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxContentBoxDirective, MatIcon, NgSwitch, NgSwitchCase]
 })
 export class DocFeatureDerivedComponent {
   @Input()

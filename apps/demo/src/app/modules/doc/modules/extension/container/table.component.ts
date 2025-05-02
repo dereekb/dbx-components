@@ -2,16 +2,23 @@ import { DocExtensionTableItemCellExampleComponent } from './../component/table.
 import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
+import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
 import { beginLoadingPage, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
 import { range } from '@dereekb/util';
 import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
 import { ExampleTableData } from '../component/table.item';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { NgIf, AsyncPipe } from '@angular/common';
+import { MatButton } from '@angular/material/button';
 
 @Component({
-  templateUrl: './table.component.html'
+  templateUrl: './table.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, NgIf, MatButton, AsyncPipe]
 })
 export class DocExtensionTableComponent implements OnDestroy {
   readonly exampleInput: DateRangeDayDistanceInput = {

@@ -18,8 +18,8 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
 
   private readonly _injector: Injector;
 
-  readonly config$ = this._config.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged());
-  readonly template$ = this._template.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged());
+  readonly config$ = this._config.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged(), shareReplay(1));
+  readonly template$ = this._template.pipe(maybeValueFromObservableOrValueGetter(), distinctUntilChanged(), shareReplay(1));
   readonly content$ = this._content.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   get config(): Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>> {

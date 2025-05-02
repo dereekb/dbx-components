@@ -1,30 +1,27 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { type Maybe } from '@dereekb/util';
 
 @Component({
   selector: 'dbx-detail-block-header',
   template: `
-    @if (icon) {
-      <mat-icon>{{ icon }}</mat-icon>
+    @if (icon()) {
+      <mat-icon>{{ icon() }}</mat-icon>
     }
-    @if (header) {
-      <span class="dbx-detail-block-header-label">{{ header }}</span>
+    @if (header()) {
+      <span class="dbx-detail-block-header-label">{{ header() }}</span>
     }
     <ng-content></ng-content>
   `,
   host: {
     class: 'dbx-detail-block-header',
-    '[class]': '{ "dbx-detail-block-header-no-icon": !icon }'
+    '[class]': '{ "dbx-detail-block-header-no-icon": !icon() }'
   },
   imports: [MatIconModule],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxDetailBlockHeaderComponent {
-  @Input()
-  icon?: Maybe<string>;
-
-  @Input()
-  header?: Maybe<string>;
+  readonly icon = input<Maybe<string>>();
+  readonly header = input<Maybe<string>>();
 }

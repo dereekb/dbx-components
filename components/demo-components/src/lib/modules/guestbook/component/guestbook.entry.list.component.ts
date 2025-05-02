@@ -2,13 +2,19 @@ import { GuestbookEntry } from 'demo-firebase';
 import { Component } from '@angular/core';
 import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
+import { DbxListComponent } from '@dereekb/dbx-web';
+import { DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
+import { DatePipe } from '@angular/common';
+import { ToJsDatePipe } from '@dereekb/dbx-core';
 
 export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
 
 @Component({
   selector: 'demo-guestbook-entry-list',
   template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent)
+  providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent),
+  standalone: true,
+  imports: [DbxListComponent]
 })
 export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWrapperDirective<GuestbookEntry> {
   constructor() {
@@ -21,7 +27,9 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
 
 @Component({
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
-  providers: provideDbxListView(DemoGuestbookEntryListViewComponent)
+  providers: provideDbxListView(DemoGuestbookEntryListViewComponent),
+  standalone: true,
+  imports: [DbxSelectionValueListViewComponent]
 })
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
   readonly config: DbxSelectionValueListViewConfig<GuestbookEntryWithSelection> = {
@@ -46,7 +54,9 @@ export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionLis
       </p>
     </div>
   `,
-  styleUrls: ['./guestbook.scss']
+  styleUrls: ['./guestbook.scss'],
+  standalone: true,
+  imports: [DatePipe, ToJsDatePipe]
 })
 export class DemoGuestbookEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<GuestbookEntry> {
   get updatedAt() {

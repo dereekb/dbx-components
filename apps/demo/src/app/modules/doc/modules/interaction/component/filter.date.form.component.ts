@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractSyncFormlyFormDirective, fixedDateRangeField, provideFormlyContext } from '@dereekb/dbx-form';
+import { AbstractSyncFormlyFormDirective, fixedDateRangeField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { DateRange, DateRangeType } from '@dereekb/date';
 import { DocInteractionTestFilterFormValue } from './filter.custom.form.component';
 
@@ -13,7 +13,9 @@ export type DocInteractionTestDateFilterFormValue = {
     <dbx-formly class="dbx-fixeddaterange-field-full-width"></dbx-formly>
   `,
   selector: 'doc-interaction-test-date-filter-form',
-  providers: provideFormlyContext()
+  providers: provideFormlyContext(),
+  standalone: true,
+  imports: [DbxFormlyComponent]
 })
 export class DocInteractionTestDateFilterFormComponent extends AbstractSyncFormlyFormDirective<DocInteractionTestFilterFormValue> {
   readonly fields: FormlyFieldConfig[] = [

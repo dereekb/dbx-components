@@ -41,8 +41,7 @@ describe('DbxAnalyticsService', () => {
         provideDbxAnalyticsService({
           dbxAnalyticsServiceConfigurationFactory: analyticsServiceConfigurationFactory
         })
-      ],
-      declarations: []
+      ]
     }).compileComponents();
 
     analyticsService = TestBed.inject(DbxAnalyticsService);

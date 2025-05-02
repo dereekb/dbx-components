@@ -4,7 +4,7 @@ import { timeoutStartWith } from '../rxjs/timeout';
 import { filterMaybe } from '../rxjs/value';
 import { type LoadingStateContextEvent, type LoadingContext, type LoadingContextEvent } from './loading.context';
 import { beginLoading, isLoadingStateLoading, type LoadingState } from './loading.state';
-import { valueFromFinishedLoadingState, valueFromLoadingState } from './loading.state.rxjs';
+import { valueFromFinishedLoadingState, currentValueFromLoadingState } from './loading.state.rxjs';
 
 // MARK: New
 /**
@@ -164,7 +164,7 @@ export function loadingStateContext<T = unknown, S extends LoadingState<T> = Loa
 
   const loading$: Observable<boolean> = eventStream$.pipe(map(isLoadingStateLoading));
 
-  const currentValue$: Observable<Maybe<T>> = state$.pipe(valueFromLoadingState(), shareReplay(1));
+  const currentValue$: Observable<Maybe<T>> = state$.pipe(currentValueFromLoadingState(), shareReplay(1));
   const valueAfterLoaded$: Observable<Maybe<T>> = state$.pipe(valueFromFinishedLoadingState(), shareReplay(1));
   const value$: Observable<T> = valueAfterLoaded$.pipe(filterMaybe(), shareReplay(1));
 

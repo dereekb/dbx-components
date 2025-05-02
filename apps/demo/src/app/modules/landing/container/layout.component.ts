@@ -1,6 +1,11 @@
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLink, DbxAppContextStateDirective } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
+import { DbxSetStyleDirective, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, DbxButtonSpacerDirective, DbxAnchorContentComponent } from '@dereekb/dbx-web';
+import { FlexModule } from '@ngbracket/ngx-layout/flex';
+import { MatButton } from '@angular/material/button';
+import { MatDivider } from '@angular/material/divider';
+import { NgFor, NgIf } from '@angular/common';
 
 export interface LandingItem {
   name: string;
@@ -16,7 +21,9 @@ export interface LandingItemChild {
 
 @Component({
   templateUrl: './layout.component.html',
-  styleUrls: ['../landing.scss']
+  styleUrls: ['../landing.scss'],
+  standalone: true,
+  imports: [DbxSetStyleDirective, DbxAppContextStateDirective, FlexModule, DbxSpacerDirective, DbxContentContainerDirective, DbxAnchorComponent, MatButton, DbxButtonSpacerDirective, MatDivider, NgFor, NgIf, DbxAnchorContentComponent]
 })
 export class LandingLayoutComponent {
   readonly docsAnchor: ClickableAnchorLink = {

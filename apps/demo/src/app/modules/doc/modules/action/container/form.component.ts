@@ -2,10 +2,19 @@ import { Component } from '@angular/core';
 import { WorkUsingObservable, IsModifiedFunction, IsValidFunction, IsEqualFunction } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
-import { DocActionFormExampleValue } from '../component/action.example.form.component';
+import { DocActionFormExampleValue, DocActionFormExampleFormComponent } from '../component/action.example.form.component';
+import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
+import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
+import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DocActionFormExampleFormTwoComponent } from '../component/action.example.form.two.component';
 
 @Component({
-  templateUrl: './form.component.html'
+  templateUrl: './form.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocActionExampleToolsComponent, DbxActionDirective, DbxActionHandlerDirective, DocActionFormExampleFormComponent, DbxActionFormDirective, DbxButtonComponent, DbxActionButtonDirective, DbxActionEnforceModifiedDirective, DbxFormSourceDirective, DocActionFormExampleFormTwoComponent, DbxErrorComponent, DbxActionErrorDirective]
 })
 export class DocActionFormComponent {
   readonly defaultValue: DocActionFormExampleValue = {

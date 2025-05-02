@@ -3,6 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase-server/model/src",
   "projectType": "library",
+  "tags": [],
   "targets": {
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -28,6 +29,5 @@
         "jestConfig": "packages/firebase-server/model/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

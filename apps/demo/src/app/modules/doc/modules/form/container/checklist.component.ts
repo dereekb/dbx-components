@@ -2,10 +2,17 @@ import { Observable, of, map } from 'rxjs';
 import { Component } from '@angular/core';
 import { DocFormExampleChecklistValues, DocFormExampleChecklistFieldsConfig } from '../component/checklist.example';
 import { successResult } from '@dereekb/rxjs';
-import { DocFormExampleChecklistFormValue } from '../component/checklist.example.form.component';
+import { DocFormExampleChecklistFormValue, DocFormExampleChecklistFormComponent } from '../component/checklist.example.form.component';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DbxFormFormlyChecklistItemFieldModule, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { JsonPipe } from '@angular/common';
 
 @Component({
-  templateUrl: './checklist.component.html'
+  templateUrl: './checklist.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleChecklistFormComponent, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, JsonPipe, DbxFormFormlyChecklistItemFieldModule]
 })
 export class DocFormChecklistComponent {
   value?: DocFormExampleChecklistFormValue;

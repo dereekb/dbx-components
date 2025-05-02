@@ -1,6 +1,5 @@
-import { type LimitedFirestoreDocumentAccessorContextExtension } from './../accessor/document';
+import { type LimitedFirestoreDocumentAccessorContextExtension, type FirestoreDocument } from './../accessor/document';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
-import { type FirestoreDocument } from '../accessor/document';
 import { documentReferencesFromSnapshot, type FirestoreExecutableQuery, type FirestoreQueryFactory } from '../query';
 import { type FirestoreQueryConstraint } from '../query/constraint';
 import { type Transaction } from '../types';

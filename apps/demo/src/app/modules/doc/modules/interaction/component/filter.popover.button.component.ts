@@ -1,5 +1,5 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
+import { DbxFilterButtonConfig, DbxFilterPopoverButtonComponent } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
@@ -12,7 +12,9 @@ import { type Maybe } from '@dereekb/util';
   template: `
     <dbx-filter-popover-button [buttonDisplay]="buttonDisplay()" [config]="config" [disabled]="disabled()"></dbx-filter-popover-button>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DbxFilterPopoverButtonComponent]
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
   readonly filterSourceConnector = inject(FilterSourceConnector);

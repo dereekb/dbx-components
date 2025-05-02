@@ -4,6 +4,8 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/src",
   "prefix": "dbx",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -56,7 +58,5 @@
         "command": "cd ./dist/packages/dbx-web && npm publish --access public"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

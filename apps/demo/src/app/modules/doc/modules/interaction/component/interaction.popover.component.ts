@@ -1,6 +1,8 @@
 import { Component, ElementRef, OnInit } from '@angular/core';
-import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService } from '@dereekb/dbx-web';
+import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
+import { MatButton } from '@angular/material/button';
+import { DocInteractionExamplePopoverContentComponent } from './interaction.popover.content.component';
 
 export const DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY = 'popover';
 
@@ -28,7 +30,9 @@ export interface DocInteractionPopoverConfig {
         <p class="dbx-hint">Configured to return "{{ onCloseValue }}" when closed via a backdrop click.</p>
       </dbx-popover-scroll-content>
     </dbx-popover-content>
-  `
+  `,
+  standalone: true,
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent]
 })
 export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirective<number> implements OnInit {
   readonly onCloseValue = 12345;

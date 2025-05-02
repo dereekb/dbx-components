@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
-import { ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
+import { ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective } from '@dereekb/dbx-core';
 import { DocInteractionTestFilter, DOC_INTERACTION_DATE_TEST_PRESETS } from './filter';
 import { isSameDateDayRange } from '@dereekb/date';
-import { DbxActionFormMapValueFunction } from '@dereekb/dbx-form';
-import { DocInteractionTestDateFilterFormValue } from './filter.date.form.component';
+import { DbxActionFormMapValueFunction, DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DocInteractionTestDateFilterFormValue, DocInteractionTestDateFilterFormComponent } from './filter.date.form.component';
 import { map, shareReplay } from 'rxjs';
 import { IsModifiedFunction } from '@dereekb/rxjs';
+import { DbxFilterWrapperComponent } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'doc-interaction-test-date-filter-preset-filter',
@@ -14,7 +15,9 @@ import { IsModifiedFunction } from '@dereekb/rxjs';
       <doc-interaction-test-date-filter-form dbxActionForm [dbxActionFormIsModified]="dateRangeIsModified" [dbxFormSource]="formTemplate$" [dbxActionFormMapValue]="mapFormToFilterValue"></doc-interaction-test-date-filter-form>
     </dbx-filter-wrapper>
   `,
-  providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)]
+  providers: [provideFilterSourceDirective(DocInteractionTestDateFilterPresetFilterComponent)],
+  standalone: true,
+  imports: [DbxFilterWrapperComponent, DbxActionDirective, DbxActionEnforceModifiedDirective, DbxActionAutoTriggerDirective, DocInteractionTestDateFilterFormComponent, DbxActionFormDirective, DbxFormSourceDirective]
 })
 export class DocInteractionTestDateFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {
   readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_DATE_TEST_PRESETS;

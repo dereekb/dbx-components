@@ -1,4 +1,4 @@
-import { OnDestroy, Input, Directive, inject } from '@angular/core';
+import { Directive, inject, input } from '@angular/core';
 import { emitDelayObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
@@ -14,14 +14,17 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   selector: '[dbxActionIsWorking]',
   standalone: true
 })
-export class DbxActionIsWorkingDirective extends AbstractIfDirective implements OnDestroy {
-  @Input('dbxActionIsWorking')
-  showAfter?: Maybe<number> | '';
+export class DbxActionIsWorkingDirective extends AbstractIfDirective {
+  private readonly _store = inject(DbxActionContextStoreSourceInstance);
 
-  readonly show$ = inject(DbxActionContextStoreSourceInstance).isWorking$.pipe(
+  readonly showAfter = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionIsWorking', transform: (value) => (value === '' ? undefined : value) });
+
+  readonly show$ = this._store.isWorking$.pipe(
     exhaustMap((isWorking) => {
-      if (isWorking && this.showAfter) {
-        return emitDelayObs(false, true, this.showAfter || undefined);
+      const showAfter = this.showAfter();
+
+      if (isWorking && showAfter) {
+        return emitDelayObs(false, true, showAfter);
       } else {
         return of(isWorking);
       }

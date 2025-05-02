@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DocExtensionDownloadComponent } from './container/download.component';
 import { DocExtensionHomeComponent } from './container/home.component';
-import { DocSharedModule } from '../shared/doc.shared.module';
+
 import { DocExtensionLayoutComponent } from './container/layout.component';
 import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { STATES } from './doc.extension.router';
@@ -11,7 +11,7 @@ import { DbxDownloadTextModule, DbxWidgetModule, DbxWidgetService } from '@deree
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
 import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
-import { DocFormComponentsModule } from '../form/doc.form.module';
+
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
@@ -29,14 +29,11 @@ import { DocExtensionTableItemHeaderExampleComponent } from './component/table.i
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './component/example.calendar.schedule.selection.popover.button.component';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './component/example.calendar.schedule.selection.popover.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
-import { DemoRootSharedModule } from 'demo-components';
 
 @NgModule({
   imports: [
-    DocSharedModule,
     DbxCalendarModule,
     DbxFormCalendarModule,
-    DocFormComponentsModule,
     DbxFormDateScheduleRangeFieldModule,
     DbxWidgetModule,
     DbxMapboxModule,
@@ -44,12 +41,9 @@ import { DemoRootSharedModule } from 'demo-components';
     DbxDownloadTextModule,
     DbxTableModule,
     DbxTableDateModule,
-    DemoRootSharedModule,
     UIRouterModule.forChild({
       states: STATES
-    })
-  ],
-  declarations: [
+    }),
     // component
     DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent,
     DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent,

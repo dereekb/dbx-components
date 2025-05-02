@@ -1,9 +1,17 @@
 import { Component } from '@angular/core';
 import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared';
+import { DbxContentContainerDirective, DbxAnchorComponent, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { MatButton } from '@angular/material/button';
+import { MatCard, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions } from '@angular/material/card';
+import { MatRipple } from '@angular/material/core';
 
 @Component({
-  templateUrl: './anchor.component.html'
+  templateUrl: './anchor.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAnchorComponent, MatButton, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardSmImage, MatCardContent, MatCardActions, DbxAnchorContentComponent, DbxAnchorIconComponent, DbxLinkComponent]
 })
 export class DocRouterAnchorComponent {
   lorem = LOREM;

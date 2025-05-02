@@ -1,6 +1,11 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { nameField, textAreaField, textField, toggleField, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
+import { nameField, textAreaField, textField, toggleField, valueSelectionField, ValueSelectionOption, DbxFormlyFieldsContextDirective } from '@dereekb/dbx-form';
+import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../component/example.form.component';
 
 export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
   {
@@ -14,7 +19,9 @@ export const SHOW_VALUE_SELECTION_VALUES: ValueSelectionOption<string>[] = [
 ];
 
 @Component({
-  templateUrl: './expression.component.html'
+  templateUrl: './expression.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureDerivedComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective]
 })
 export class DocFormExpressionComponent {
   readonly hideExpressionField: FormlyFieldConfig[] = [

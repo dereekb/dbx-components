@@ -1,10 +1,14 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { TextChip } from '@dereekb/dbx-web';
+import { TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
 import { UnitedStatesAddressWithContact, unitedStatesAddressString } from '@dereekb/util';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
 @Component({
-  templateUrl: './text.component.html'
+  templateUrl: './text.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent]
 })
 export class DocTextTextComponent {
   readonly fullAddress: UnitedStatesAddressWithContact = {

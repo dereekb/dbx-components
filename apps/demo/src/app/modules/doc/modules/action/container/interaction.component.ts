@@ -1,16 +1,42 @@
 import { MatDialog } from '@angular/material/dialog';
-import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig } from '@dereekb/dbx-web';
+import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig, DbxContentContainerDirective, DbxButtonComponent, DbxActionConfirmDirective, DbxErrorComponent, DbxActionErrorDirective, DbxActionSnackbarDirective, DbxActionSnackbarErrorDirective, DbxActionPopoverDirective, DbxActionDialogDirective } from '@dereekb/dbx-web';
 import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
-import { DbxActionContextMachine, safeDetectChanges } from '@dereekb/dbx-core';
+import { DbxActionContextMachine, safeDetectChanges, DbxActionDirective, DbxActionHandlerDirective, DbxActionValueStreamDirective, DbxActionButtonDirective, DbxActionDisabledDirective, DbxActionButtonTriggerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
-import { DbxActionAnalyticsConfig, DbxAnalyticsService } from '@dereekb/dbx-analytics';
+import { DbxActionAnalyticsConfig, DbxAnalyticsService, DbxActionAnalyticsDirective } from '@dereekb/dbx-analytics';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
 
 @Component({
-  templateUrl: './interaction.component.html'
+  templateUrl: './interaction.component.html',
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DocActionExampleToolsComponent,
+    DbxActionDirective,
+    DbxActionHandlerDirective,
+    DbxActionValueStreamDirective,
+    DbxButtonComponent,
+    DbxActionButtonDirective,
+    DbxActionDisabledDirective,
+    DbxActionButtonTriggerDirective,
+    DbxActionConfirmDirective,
+    DbxActionValueDirective,
+    DbxErrorComponent,
+    DbxActionErrorDirective,
+    DbxActionSnackbarDirective,
+    DbxActionSnackbarErrorDirective,
+    DbxActionPopoverDirective,
+    DbxActionDialogDirective,
+    DbxActionAnalyticsDirective
+  ]
 })
 export class DocActionInteractionComponent implements OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

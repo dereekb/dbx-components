@@ -1,8 +1,14 @@
 import { Component } from '@angular/core';
 import { takeLast } from '@dereekb/util';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxNavbarComponent } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { UIView } from '@uirouter/angular';
 
 @Component({
-  templateUrl: './navbar.component.html'
+  templateUrl: './navbar.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentBorderDirective, UIView, DbxNavbarComponent]
 })
 export class DocRouterNavbarComponent {
   anchors = [

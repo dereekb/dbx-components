@@ -24,7 +24,13 @@ This will setup the migration.json. It will also modify package.json, but it is 
 #### Run the migrations
 - run ```npx nx migrate --run-migrations```. You can ignore the errors on the terminal that look like the following:
  
-```Skipping migration for project demo. Unable to determine 'tsconfig.json' file in workspace config.```
+```Skipping migration for project demo. Unable to determine 'tsconfig.json' file in workspace config```
+
+You might however want to use some of the angular migration tools, such as:
+
+```npx nx g @angular/core:standalone```
+
+This update will update all Angular files to use the new standalone configurations, but it does require the below fix to run.
 
 The dbx-components library is unaffected by these migrations in particular. However, you can resolve the issue with the following steps describe in this issue:
 
@@ -35,9 +41,9 @@ The command-line steps we used are as follow:
 - run ```nx g @nx/plugin:plugin tools/my-plugin```. Just use the "my-plugin" name as-is, this is only temporary:
 - run ```nx generate @nx/plugin:generator tools/my-plugin/src/generators/my-generator```
 - copy the files from the issue/comment above
-- run ```nx generate tools/my-plugin/src/generators/my-generator``` and answer "false" to the question
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` or ```npx nx generate my-generator``` (the option depends on the generator value in `generators.json`) and answer "false" to the question
 - run ```npx nx migrate --run-migrations```. This may take a while depending on the size of the project.
-- run ```nx generate tools/my-plugin/src/generators/my-generator``` and answer "true" to the question to undo the generator's changes
+- run ```nx generate tools/my-plugin/src/generators/my-generator``` or ```npx nx generate my-generator``` (the option depends on the generator value in `generators.json`) and answer "true" to the question to undo the generator's changes
 - 
 (After doing this step it is a good idea to commit the changes on git before continuing)
 
@@ -64,6 +70,12 @@ You'll need to update the following:
 - `Dockerfile`: Update FROM to use `node:22.14-bookworm`
 - `package.json`: Update the `engines` to use `22`. Also update `@types/node` to `22.13.0`
 - `circleci/config.yml`: Update the `cimg/node` version to `22.14`
+- `circleci/config.yml`: Update the orbs versions:
+
+```
+  nx: nrwl/nx@1.7.0
+  node: circleci/node@7.1.0
+```
 
 ### TypeScript
 After the update Typescript was throwing errors related to the NodeJS types not being available while building Demo. Updated `tsconfig.json` for the project to include the following under `compilerOptions`: `"types": ["node"]`, or add `node` to the existing types. This is probably not necessary for projects importing dbx-components.
@@ -179,6 +191,14 @@ Pass --verbose to see the stacktrace.
 
 Solution: https://github.com/nrwl/nx/issues/20671#issuecomment-1850635321
 
+You'll have to create a `webpack.config.js` file in your app-api directory, then update the `build-base` target in `project.json` to use it under the options.
+
+```
+"options": {
+  "webpackConfig": "apps/demo-api/webpack.config.js",
+}
+```
+
 #### Module Deprecations
 All `.forRoot()` methods have been deprecated in favor of provider functions.
 
@@ -211,6 +231,8 @@ bootstrapApplication(UIView, appConfig)
   .catch((err) => console.error(err));
 ...
 ```
+
+Be sure to also move `reflect-metadata` to `project.json` as one of the polyfills.
 
 #### Breaking Changes
 - `LoadingStateContextInstance` usage has been replaced with `loadingStateContext()`.
@@ -247,9 +269,10 @@ bootstrapApplication(UIView, appConfig)
 - Renamed `DbxProgressButtonOptions` to `DbxProgressButtonConfig`.
 - Updated `dbx-progress-spinner-button` and `dbx-progress-bar-button` to use `[config]` instead of `[options]`.
 - Renamed `DbxButtonDisplayContent` to `DbxButtonDisplay` to be inline with the `buttonDisplay` input.
-- Updated inputs for `dbx-mapbox-layout`. Renamed `[opened]` to `[openDrawer]`, `[hasContent]` to `[forceHasDrawerContent]`, `(opened)` to `(drawerOpenedChange)`
+- Updated inputs for `dbx-mapbox-layout`. Renamed `[opened]` to `[openDrawer]`, `[hasContent]` to `[forceHasDrawerContent]`, `(openedChange)` to `(drawerOpenedChange)`
 - Renamed `displayContentObs` in `DbxChecklistItemFieldProps` (and related config) to `displayContent`.
-- `valueFromLoadingState()` now always returns the value from the loading state, where as prior it was equivalent to `valueFromFinishedLoadingState()`, which only returned the value if the loading state was finished loading.
+- `valueFromLoadingState()` now returns an observable that emits `MaybeSoStrict` which always returns the value from the loading state as long as it is not null, where as prior it was equivalent to `valueFromFinishedLoadingState()`, which only returned the value if the loading state was finished loading.
+- Added `currentValueFromLoadingState()`, which returns the current value from the loading state even if the loading state is still loading.
 - dbxButton now has a new icon-only sizing presentation for icon-only buttons that is smaller than a fab. Previously the presentation would be equivalent to what now requires [fab]="true" configuration.
 - Renamed `switchMapMaybeObs` to `switchMapFilterMaybe`.
 - Removed `DbxCalendarRootModule` and replaced with `provideDbxCalendar()`.
@@ -258,7 +281,7 @@ bootstrapApplication(UIView, appConfig)
 
 #### Deprecated Components Removal
 - Removed deprecated `DbxTextCompatModule`, and `dbx-notice`, `dbx-hint`, `dbx-note`, `dbx-success`, `dbx-warn`, `dbx-ok`. `dbx-label` `dbx-form-description` selectors. Use as a CSS class now.
-- Removed deprecated `DbxRouteModelIdFromAuthUserIdDirective` with selector `dbxFirebaseDocumentAuthId`. Use `dbxRouteModelIdFromAuthUserId` instead.
+- Removed deprecated `DbxRouteModelIdFromAuthUserIdDirective` with selector `dbxRouteModelIdFromAuthUserId`. Use `dbxRouteModelIdFromAuthUserId` instead.
 - Removed deprecated `DbxFirebaseDocumentStoreRouteIdDirective` with selector `dbxFirebaseDocumentStoreRouteId`. Use `dbxRouteModelId` instead.
 - Removed deprecated `DbxFirebaseDocumentStoreRouteKeyDirective` with selector `dbxFirebaseDocumentStoreRouteKey`. Use `dbxRouteModelKey` instead.
 
@@ -400,3 +423,56 @@ See https://firebase.google.com/docs/functions/2nd-gen-upgrade#migrate_traffic_t
 You will have to remove all functions and scheduled functions. Anything that says versions v1 in the Firebase console in the functions tab.
 
 It is recommended you deploy to your staging system first with all changes before deploying to production.
+
+
+## Angular Migrations
+### Standalone Migrations
+See the "Migrate to Nx 17 > Run The Migrations" section above for initial setup steps.
+
+```npx nx g @angular/core:standalone```
+
+This update will update all Angular files to use the new standalone configurations, but it does require the below fix to run.
+
+Do the steps from the "Migrate to Nx 17 > Run The Migrations" section to prepare your project for the standalone migrations.
+
+You will also need to change `project.json` for the components library by updating the `build-base` target's name to `build` (that is what the tool expects to be linked with `@nx/angular:package`), and update the `build` target to use the `build-temp` target temporarilly. See https://github.com/angular/angular/issues/50483#issuecomment-2419583997 for more information.
+
+After that, you should be able to run the standalone migration as so: `npx nx g @angular/core:standalone --path=/components/demo-components`
+
+There are three migrations steps:
+1. update all components and directives
+2. prune/remove unnecessary ng-modules
+3. standalone bootstrap. You shouldn't need to use this as the above updates should cover this change.
+
+You should run migration 1 first on all projects before running migration 2, as migration 2 will remove files and possibly prevent migration 1 from working properly on projects that depend on those files I.E. `demo` relying on `demo-components`.
+
+Example:
+First run: `npx nx g @angular/core:standalone --path=/components/demo-components` -> convert-to-standalone
+Then run: `npx nx g @angular/core:standalone --path=/apps/demo` -> convert-to-standalone
+Then run: `npx nx g @angular/core:standalone --path=/components/demo-components` -> prune ng-module
+Then run: `npx nx g @angular/core:standalone --path=/apps/demo` -> prune ng-module
+
+For the dbx-components project due to the way the imports were imported by the migration, we had to fix up the imports in the `demo-components` project.
+
+We used the following regex to find/match all paths to `dbx-web` that were a relative import path.
+
+Search: `(\.\.\/)+packages\/dbx-web(?:\/[\w\.-]+)+`
+Replace: `@dereekb/dbx-web`
+
+```
+import { DbxLinkComponent } from '../../../../../../../packages/dbx-web/src/lib/router/layout/anchor/anchor.link.component';
+```
+
+VSCode's search/replace returned us:
+
+```
+import { DbxLinkComponent } from '@dereekb/dbx-web';
+```
+
+We do the same for the remaining dbx-components imports, `dbx-core`, `dbx-form`, `dbx-firebase`, `dbx-analytics`, etc.
+
+You can use the `no-duplicates` from `eslint-plugin-import` rule for fixing those cases. https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-duplicates.md
+
+There may also be some left over modules that aren't removed and have leftover declarations, so just search for `declarations: ` in VSCode to find the leftover modules.
+
+It did seem like the components that extended `AbstractDbxSelectionListWrapperDirective` did not get updated properly, so we did have to manually fix these.

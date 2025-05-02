@@ -1,14 +1,22 @@
 import { OnInit, Component, inject } from '@angular/core';
-import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
+import { DbxCalendarComponent, DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateCell, DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
 import { Building, Maybe, TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
-import { CalendarScheduleSelectionDayState, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import { CalendarScheduleSelectionDayState, DbxFormDateScheduleRangeFieldModule, DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
-import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
-import { timezoneStringField } from '@dereekb/dbx-form';
+import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
+import { DbxFormTimezoneStringFieldModule, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
+import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxSubSectionComponent } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { MatButton } from '@angular/material/button';
+import { DocFormExampleComponent } from '../../form/component/example.form.component';
+import { DocExtensionCalendarScheduleSelectionComponent } from '../component/selection.calendar.component';
+import { AsyncPipe, JsonPipe, DatePipe } from '@angular/common';
 
 export interface TestCalendarEventData extends DateCell {
   value: string;
@@ -16,7 +24,33 @@ export interface TestCalendarEventData extends DateCell {
 
 @Component({
   templateUrl: './calendar.component.html',
-  providers: [DbxCalendarStore]
+  providers: [DbxCalendarStore],
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureDerivedComponent,
+    DocFeatureExampleComponent,
+    DbxCalendarComponent,
+    MatButton,
+    DbxTwoColumnComponent,
+    DbxTwoColumnContextDirective,
+    DbxTwoColumnFullLeftDirective,
+    DbxTwoBlockComponent,
+    DbxTwoColumnRightComponent,
+    DocFormExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxFormValueChangeDirective,
+    DbxSubSectionComponent,
+    DocExtensionCalendarScheduleSelectionWithFilterComponent,
+    DocExtensionCalendarScheduleSelectionComponent,
+    DbxFormDateScheduleRangeFieldModule,
+    AsyncPipe,
+    JsonPipe,
+    DatePipe,
+    DbxFormTimezoneStringFieldModule
+  ]
 })
 export class DocExtensionCalendarComponent implements OnInit {
   readonly calendarStore = inject(DbxCalendarStore<TestCalendarEventData>);

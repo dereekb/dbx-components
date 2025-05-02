@@ -1,39 +1,34 @@
-import { Input, OnDestroy, Output, EventEmitter, HostListener, Directive } from '@angular/core';
+import { HostListener, Directive, input, output, computed } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
 @Directive({
   selector: '[dbxWindowKeyDownListener]',
   standalone: true
 })
-export class DbxWindowKeyDownListenerDirective implements OnDestroy {
-  private _keysFilter?: Maybe<Set<string>>;
+export class DbxWindowKeyDownListenerDirective {
+  readonly dbxWindowKeyDownListener = output<KeyboardEvent>();
 
-  @Input()
-  appWindowKeyDownEnabled = true;
+  readonly appWindowKeyDownEnabled = input<boolean>();
+  readonly appWindowKeyDownFilter = input<Maybe<string[]>>();
 
-  @Output('dbxWindowKeyDownListener')
-  keyPressed = new EventEmitter<KeyboardEvent>();
-
-  @Input()
-  set appWindowKeyDownFilter(filterOnKeys: string[]) {
+  readonly keysFilter = computed(() => {
+    const filterOnKeys = this.appWindowKeyDownFilter();
     let filter: Maybe<Set<string>>;
 
     if (filterOnKeys) {
       filter = new Set(filterOnKeys);
     }
 
-    this._keysFilter = filter;
-  }
-
-  ngOnDestroy(): void {
-    this.keyPressed.complete();
-  }
+    return filter;
+  });
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if (this.appWindowKeyDownEnabled !== false) {
-      if (!this._keysFilter || this._keysFilter.has(event.key)) {
-        this.keyPressed.emit(event);
+    const keysFilter = this.keysFilter();
+
+    if (this.appWindowKeyDownEnabled() !== false) {
+      if (!keysFilter || keysFilter.has(event.key)) {
+        this.dbxWindowKeyDownListener.emit(event);
       }
     }
   }

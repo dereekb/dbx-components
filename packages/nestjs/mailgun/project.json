@@ -3,6 +3,8 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/nestjs/mailgun/src",
   "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
   "targets": {
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -28,7 +30,5 @@
         "jestConfig": "packages/nestjs/mailgun/jest.config.ts"
       }
     }
-  },
-  "implicitDependencies": ["!util-test"],
-  "tags": []
+  }
 }

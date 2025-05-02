@@ -4,6 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-form/calendar/src",
   "prefix": "dereekb",
+  "tags": [],
   "targets": {
     "build-base": {
       "executor": "@nx/angular:package",
@@ -33,6 +34,5 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     }
-  },
-  "tags": []
+  }
 }

@@ -2,9 +2,10 @@ import { Component } from '@angular/core';
 import { ExampleTableData } from './table.item';
 
 @Component({
-  template: `
+    template: `
     <div>{{ name }}</div>
-  `
+  `,
+    standalone: true
 })
 export class DocExtensionTableItemHeaderExampleComponent {
   item!: ExampleTableData;

@@ -2,7 +2,8 @@ import { LOREM } from './../../shared/lorem';
 import { Type, InjectionToken, Inject, Component } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
+import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 
 export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN');
 
@@ -17,7 +18,9 @@ export interface DocFormExampleComponentFormConfig {
     <dbx-formly></dbx-formly>
   `,
   selector: 'dbx-form-example-component-form',
-  providers: [provideFormlyContext()]
+  providers: [provideFormlyContext()],
+  standalone: true,
+  imports: [DbxFormlyComponent]
 })
 export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleComponentFormValue, DocFormExampleComponentFormConfig> {
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(
@@ -46,7 +49,9 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
         </dbx-section>
       </dbx-content-box>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxContentBoxDirective, DbxSectionComponent]
 })
 export class DocFormExampleComponentFormTestViewAComponent {
   lorem = LOREM;
@@ -64,6 +69,8 @@ export class DocFormExampleComponentFormTestViewAComponent {
         <dbx-link>Terms of Service</dbx-link>
       </p>
     </div>
-  `
+  `,
+  standalone: true,
+  imports: [DbxLinkComponent]
 })
 export class DocFormExampleComponentFormTestViewBComponent {}

@@ -1,4 +1,4 @@
-import { Directive, Input, OnDestroy, inject } from '@angular/core';
+import { Directive, OnDestroy, effect, inject, input } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { ActionContextStoreSource } from '../../action.store.source';
 import { ActionContextStoreSourceMap, ActionKey } from './action.map';
@@ -15,31 +15,33 @@ export class DbxActionMapSourceDirective implements OnDestroy {
 
   readonly source = inject(ActionContextStoreSource, { host: true });
 
-  private _key: Maybe<ActionKey>;
+  readonly key = input<Maybe<ActionKey>>(undefined, { alias: 'dbxActionMapSource' });
+  private _currentKey: Maybe<ActionKey>;
+
+  protected readonly _keyEffect = effect(() => {
+    const nextKey = this.key();
+
+    if (this._currentKey !== nextKey) {
+      this._removeFromToStore();
+    }
+
+    this._currentKey = nextKey;
+    this._addToStore();
+  });
 
   ngOnDestroy(): void {
     this._removeFromToStore();
   }
 
-  @Input('dbxActionMapSource')
-  set key(key: ActionKey) {
-    if (this._key !== key) {
-      this._removeFromToStore();
-    }
-
-    this._key = key;
-    this._addToStore();
-  }
-
   private _addToStore(): void {
-    if (this._key) {
-      this._actionContextStoreSourceMap.addStoreSource(this._key, this.source);
+    if (this._currentKey) {
+      this._actionContextStoreSourceMap.addStoreSource(this._currentKey, this.source);
     }
   }
 
   private _removeFromToStore(): void {
-    if (this._key) {
-      this._actionContextStoreSourceMap.removeStoreSource(this._key);
+    if (this._currentKey) {
+      this._actionContextStoreSourceMap.removeStoreSource(this._currentKey);
     }
   }
 }

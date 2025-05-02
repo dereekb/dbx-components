@@ -2,14 +2,39 @@ import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit, inject } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, pickableValueFieldValuesConfigForStaticLabeledValues, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, sourceSelectField, SourceSelectLoadSource, valueSelectionField, ValueSelectionOptionWithValue } from '@dereekb/dbx-form';
+import {
+  DbxFormFormlyDbxListFieldModule,
+  DbxFormFormlyPickableFieldModule,
+  DbxFormFormlySearchableFieldModule,
+  DbxFormFormlySourceSelectModule,
+  dbxListField,
+  filterPickableItemFieldValuesByLabel,
+  pickableItemChipField,
+  pickableItemListField,
+  pickableValueFieldValuesConfigForStaticLabeledValues,
+  searchableChipField,
+  searchableStringChipField,
+  searchableTextField,
+  SearchableValueFieldDisplayFn,
+  SearchableValueFieldDisplayValue,
+  SearchableValueFieldStringSearchFn,
+  SearchableValueFieldValue,
+  sourceSelectField,
+  SourceSelectLoadSource,
+  valueSelectionField,
+  ValueSelectionOptionWithValue,
+  DbxFormlyFieldsContextDirective
+} from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
 import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 import { DocValue } from '../../layout/component/item.list';
 import { DocSelectionItemListComponent } from '../../layout/component/item.list.selection.component';
-import { AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../component/example.form.component';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -91,7 +116,9 @@ const DISPLAY_FOR_EXAMPLE_METADATA_VALUE: SearchableValueFieldDisplayFn<string, 
 const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearchableMetadata>((x) => x.name);
 
 @Component({
-  templateUrl: './selection.component.html'
+  templateUrl: './selection.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule]
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

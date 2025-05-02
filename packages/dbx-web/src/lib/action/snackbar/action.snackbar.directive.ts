@@ -19,7 +19,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
 
   readonly dbxActionSnackbarDefault = input<Maybe<DbxActionSnackbarType>>();
   readonly dbxActionSnackbarUndo = input<Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>>();
-  readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>>();
+  readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>, Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> | ''>(undefined, { transform: (value: any) => value === '' ? undefined : value });
 
   ngOnInit(): void {
     this.sub = this.source

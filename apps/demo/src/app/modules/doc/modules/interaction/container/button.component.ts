@@ -1,12 +1,18 @@
 import { Component } from '@angular/core';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
-import { DbxProgressButtonConfig } from '@dereekb/dbx-web';
+import { DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { MatIcon } from '@angular/material/icon';
+import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
 @Component({
-  templateUrl: './button.component.html'
+  templateUrl: './button.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
 })
 export class DocInteractionButtonComponent {
   testClicked = '';

@@ -4,6 +4,7 @@
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/table/src",
   "prefix": "dereekb",
+  "tags": [],
   "targets": {
     "build-base": {
       "executor": "@nx/angular:package",
@@ -32,6 +33,5 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     }
-  },
-  "tags": []
+  }
 }

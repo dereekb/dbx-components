@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, type MonoTypeOperatorFunction, type Observable, of, type OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues } from '@dereekb/util';
+import { type DecisionFunction, type GetterOrValue, getValueFromGetter, isMaybeSo, type MapFunction, type Maybe, filterMaybeArrayValues, MaybeSoStrict } from '@dereekb/util';
 import { asObservable, asObservableFromGetter, type MaybeObservableOrValueGetter, type ObservableOrValueGetter, type MaybeObservableOrValue } from './getter';
 import { type ObservableDecisionFunction } from './decision';
 
@@ -92,6 +92,11 @@ export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
 }
 
 /**
+ * Equivalent to filterMaybe, but returns a strict MaybeSoStrict<T> value instead of the template type.
+ */
+export const filterMaybeStrict = filterMaybe as <T>() => OperatorFunction<Maybe<T>, MaybeSoStrict<T>>;
+
+/**
  * Observable filter that filters maybe value from the input array of maybe values
  */
 export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
@@ -101,8 +106,22 @@ export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
 /**
  * Skips all initial maybe values, and then returns all values after the first non-null/undefined value is returned.
  */
-export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<T> {
+export function skipAllInitialMaybe<T>(): MonoTypeOperatorFunction<T> {
   return skipWhile((x: T) => x == null);
+}
+
+/**
+ * Skips only the first maybe value, then returns all values afterwards.
+ */
+export function skipInitialMaybe<T>(): MonoTypeOperatorFunction<T> {
+  return skipMaybes(1);
+}
+
+/**
+ * Skips up to the given number of maybe values, and then returns all values after the first non-null/undefined value is returned.
+ */
+export function skipMaybes<T>(maxToSkip: number): MonoTypeOperatorFunction<T> {
+  return skipWhile((x: T, i: number) => x == null && i < maxToSkip);
 }
 
 /**
@@ -309,4 +328,11 @@ export function emitAfterDelay<T>(value: T, delayTime: number): MonoTypeOperator
 /**
  * @deprecated use switchMapFilterMaybe instead.
  */
-const switchMapMaybeObs = switchMapFilterMaybe;
+export const switchMapMaybeObs = switchMapFilterMaybe;
+
+/**
+ * Skips all initial maybe values, and then returns all values after the first non-null/undefined value is returned.
+ *
+ * @deprecated use skipAllInitialMaybe instead.
+ */
+export const skipFirstMaybe = skipAllInitialMaybe;

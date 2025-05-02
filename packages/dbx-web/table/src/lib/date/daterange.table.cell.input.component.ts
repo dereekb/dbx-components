@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Injectable, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
 import { DbxTableStore } from '../table.store';
-import { MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY, MatDateRangeInput, MatDateRangePicker } from '@angular/material/datepicker';
+import { MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY, MatDatepickerModule } from '@angular/material/datepicker';
 import { DateAdapter } from '@angular/material/core';
 import { Days, type Maybe } from '@dereekb/util';
 import { FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -39,13 +39,13 @@ export interface DbxTableDateRangeDayDistanceInputCellInputComponentConfig {
   /**
    * Button format for the dates
    */
-  buttonFormat?: string;
+  readonly buttonFormat?: string;
   /**
    * Distance from the start to span.
    */
-  daysDistance: Days;
-  minDate?: Maybe<Date>;
-  maxDate?: Maybe<Date>;
+  readonly daysDistance: Days;
+  readonly minDate?: Maybe<Date>;
+  readonly maxDate?: Maybe<Date>;
 }
 
 export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_DISTIANCE_INPUT_CELL_COMPONENT_CONFIG = { daysDistance: 6 };
@@ -74,7 +74,7 @@ export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [MatDateRangeInput, ReactiveFormsModule, MatButtonModule, MatDateRangePicker]
+  imports: [MatDatepickerModule, ReactiveFormsModule, MatButtonModule]
 })
 export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnInit, OnDestroy {
   readonly tableStore = inject(DbxTableStore<DateRangeDayDistanceInput>);
@@ -92,8 +92,8 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnIn
 
   readonly pickerOpened$ = this.range.valueChanges.pipe(startWith(this.range.value));
 
-  readonly minDateSignal = computed(() => this._configSignal().minDate);
-  readonly maxDateSignal = computed(() => this._configSignal().maxDate);
+  readonly minDateSignal = computed(() => this._configSignal().minDate ?? null);
+  readonly maxDateSignal = computed(() => this._configSignal().maxDate ?? null);
   readonly buttonFormatSignal = computed(() => this._configSignal().buttonFormat ?? DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT);
 
   readonly rangeValue$ = this.range.valueChanges.pipe(startWith(this.range.value));

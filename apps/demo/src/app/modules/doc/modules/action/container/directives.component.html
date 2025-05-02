@@ -12,7 +12,7 @@
     <doc-feature-example header="dbxActionHandlerValue" hint="Synchronously passes a value to the success function for the instance.">
       <p>dbxActionHandlerValue takes in a value, getter, or factory that uses the readied value and synchronously returns a value.</p>
       <p>If no value is provided to dbxActionHandlerValue, then it will pass null to the action's success value.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandlerValue] [dbxActionValue]="value$ | async">
+      <dbx-action-example-tools dbxAction [dbxActionHandlerValue]="actionHandlerValue" [dbxActionValue]="value$ | async">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
@@ -22,7 +22,6 @@
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async" [dbxActionSuccessHandler]="onActionSuccess">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </dbx-action-example-tools>
-
       <p>Success value: {{ successValue | json }}</p>
     </doc-feature-example>
 

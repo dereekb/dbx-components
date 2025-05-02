@@ -3,9 +3,14 @@ import { Component } from '@angular/core';
 import { ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DOC_ROUTER_ROOT_ROUTE } from '../doc.router';
 import { DocRouterCustomAnchorContentComponent } from '../component/anchor.content';
+import { DbxContentContainerDirective, DbxAnchorListComponent } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
 @Component({
-  templateUrl: './anchorlist.component.html'
+  templateUrl: './anchorlist.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxAnchorListComponent]
 })
 export class DocRouterAnchorListComponent {
   anchors: ClickableAnchorLinkTree[] = [

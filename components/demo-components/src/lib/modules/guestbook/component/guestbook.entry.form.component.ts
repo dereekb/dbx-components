@@ -3,6 +3,7 @@ import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/
 import { GuestbookEntry } from 'demo-firebase';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { guestbookEntryFields } from './guestbook.entry.form';
+import { DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export type DemoGuestbookEntryFormValue = Pick<GuestbookEntry, 'message' | 'signed' | 'published'>;
 
@@ -11,7 +12,9 @@ export type DemoGuestbookEntryFormValue = Pick<GuestbookEntry, 'message' | 'sign
     <dbx-formly></dbx-formly>
   `,
   selector: 'demo-guestbook-entry-form',
-  providers: [provideFormlyContext()]
+  providers: [provideFormlyContext()],
+  standalone: true,
+  imports: [DbxFormlyComponent]
 })
 export class DemoGuestbookEntryFormComponent extends AbstractSyncFormlyFormDirective<DemoGuestbookEntryFormValue> {
   readonly fields: FormlyFieldConfig[] = guestbookEntryFields();

@@ -1,10 +1,12 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component, inject } from '@angular/core';
-import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
+import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig, DbxScheduleSelectionCalendarComponent } from '@dereekb/dbx-form/calendar';
 import { DateCellScheduleDateFilterConfig, dateCellTiming, formatToISO8601DayStringForSystem, readDaysOfWeekNames } from '@dereekb/date';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 import { map } from 'rxjs';
 import { daysOfWeekNameFunction, isEvenNumber, isOddNumber, randomNumberFactory, range, sortNumbersAscendingFunction } from '@dereekb/util';
+import { DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective } from '@dereekb/dbx-web';
+import { AsyncPipe, JsonPipe } from '@angular/common';
 
 const daysRangeInFilter = 14;
 
@@ -43,7 +45,9 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateCellScheduleDateFi
       </dbx-content-pit>
     </dbx-content-border>
   `,
-  providers: [DbxCalendarScheduleSelectionStore]
+  providers: [DbxCalendarScheduleSelectionStore],
+  standalone: true,
+  imports: [DbxScheduleSelectionCalendarComponent, DbxContentBorderDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxContentPitDirective, AsyncPipe, JsonPipe]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
   readonly dbxCalendarScheduleSelectionStore = inject(DbxCalendarScheduleSelectionStore);

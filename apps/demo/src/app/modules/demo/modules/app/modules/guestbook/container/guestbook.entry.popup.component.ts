@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
-import { AbstractDialogDirective } from '@dereekb/dbx-web';
+import { AbstractDialogDirective, DbxActionModule, DbxButtonModule, DbxDialogModule, DbxErrorComponent } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
 import { WorkUsingContext, switchMapWhileTrue, IsEqualFunction } from '@dereekb/rxjs';
-import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from 'demo-components';
+import { DemoGuestbookEntryFormComponent, DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from 'demo-components';
 import { map } from 'rxjs';
+import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { AsyncPipe } from '@angular/common';
 
 export interface DemoGuestbookEntryPopupComponentConfig {
   guestbookEntryDocumentStore: GuestbookEntryDocumentStore;
@@ -20,7 +22,9 @@ export interface DemoGuestbookEntryPopupComponentConfig {
         <dbx-error dbxActionError></dbx-error>
       </div>
     </dbx-dialog-content>
-  `
+  `,
+  imports: [AsyncPipe, DbxActionFormDirective, DbxDialogModule, DbxActionModule, DbxFormSourceDirective, DbxButtonModule, DemoGuestbookEntryFormComponent, DbxErrorComponent],
+  standalone: true
 })
 export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {
   get guestbookEntryDocumentStore(): GuestbookEntryDocumentStore {

@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormTextAvailableFieldModule } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DemoProfileService } from '../profile.service';
 import { profileUsernameFields } from './profile.form';
 import { of } from 'rxjs';
+import { DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export interface DemoProfileUsernameFormValue {
   username: string;
@@ -14,7 +15,9 @@ export interface DemoProfileUsernameFormValue {
     <dbx-formly></dbx-formly>
   `,
   selector: 'demo-profile-username-form',
-  providers: [provideFormlyContext()]
+  providers: [provideFormlyContext()],
+  standalone: true,
+  imports: [DbxFormlyComponent, DbxFormTextAvailableFieldModule]
 })
 export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDirective<DemoProfileUsernameFormValue> {
   readonly profileService = inject(DemoProfileService);

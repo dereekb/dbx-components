@@ -3,6 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/demo-e2e/src",
   "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["demo", "demo-api", "!util-test"],
   "targets": {
     "e2e": {
       "executor": "@nx/cypress:cypress",
@@ -20,7 +22,5 @@
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]
     }
-  },
-  "tags": [],
-  "implicitDependencies": ["demo", "demo-api", "!util-test"]
+  }
 }

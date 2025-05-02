@@ -1,15 +1,65 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction, DbxListTitleGroupTitleDelegate } from '@dereekb/dbx-web';
-import { CustomDocValue } from './../component/item.list.custom.component';
+import {
+  listItemModifier,
+  ListItemModifier,
+  ListSelectionState,
+  AnchorForValueFunction,
+  DbxValueListGridItemViewGridSizeConfig,
+  DbxListSelectionMode,
+  DbxValueListItemDecisionFunction,
+  dbxValueListItemDecisionFunction,
+  DbxListTitleGroupTitleDelegate,
+  DbxContentContainerDirective,
+  DbxContentDirective,
+  DbxButtonSpacerDirective,
+  DbxValueListGridSizeDirective,
+  DbxValueListItemModifierDirective,
+  DbxListItemAnchorModifierDirective,
+  DbxListItemIsSelectedModifierDirective,
+  DbxListItemDisableRippleModifierDirective,
+  DbxListTitleGroupDirective,
+  DbxListEmptyContentComponent
+} from '@dereekb/dbx-web';
+import { CustomDocValue, DocCustomItemListComponent } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult, beginLoading } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, takeFront } from '@dereekb/util';
 import { pascalCase } from 'change-case-all';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { MatButton } from '@angular/material/button';
+
+import { AsyncPipe, JsonPipe } from '@angular/common';
+import { DocItemListComponent } from '../component/item.list.component';
+import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
+import { DocItemListGridComponent } from '../component/item.list.grid.component';
 
 @Component({
-  templateUrl: './list.component.html'
+  templateUrl: './list.component.html',
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DbxContentDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    MatButton,
+    DbxButtonSpacerDirective,
+    DocItemListComponent,
+    DocItemListGridComponent,
+    DocSelectionItemListComponent,
+    DocCustomItemListComponent,
+    DbxValueListGridSizeDirective,
+    DbxValueListItemModifierDirective,
+    DbxListItemAnchorModifierDirective,
+    DbxListItemIsSelectedModifierDirective,
+    DbxListItemDisableRippleModifierDirective,
+    DbxListTitleGroupDirective,
+    DbxListEmptyContentComponent,
+    AsyncPipe,
+    JsonPipe
+  ]
 })
 export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

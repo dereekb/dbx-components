@@ -93,7 +93,7 @@ export type SortValuesFunction<T> = (values: T[], sortOnCopy?: boolean) => T[];
 /**
  * Input for sortValues().
  */
-export interface SortValuesInput<T> extends MaybeMap<SortCompareFunctionRef<T>> {
+export type SortValuesInput<T> = MaybeMap<Partial<SortCompareFunctionRef<T>>> & {
   /**
    * Values to sort.
    */
@@ -101,27 +101,33 @@ export interface SortValuesInput<T> extends MaybeMap<SortCompareFunctionRef<T>> 
   /**
    * Whether or not to sort on a copy of the input values.
    */
-  readonly sortOnCopy?: boolean;
+  readonly sortOnCopy?: Maybe<boolean>;
   /**
    * Whether or not to always return a copy of the input values, even if no sorting occurs.
    */
-  readonly alwaysReturnCopy?: boolean;
+  readonly alwaysReturnCopy?: Maybe<boolean>;
 }
 
 /**
  * Sorts the input values using the input.
  *
- * @param param0
+ * @param input
  * @returns
  */
-export function sortValues<T>({ values, alwaysReturnCopy, sortOnCopy, sortWith }: SortValuesInput<T>): T[] {
+export function sortValues<T>(input: SortValuesInput<T>): T[] {
+  const { values, alwaysReturnCopy, sortOnCopy, sortWith } = input;
   const doSort = sortWith != null;
+  let result = values;
 
   if (alwaysReturnCopy || (sortOnCopy && doSort)) {
-    values = [...values];
+    result = [...values];
   }
 
-  return doSort ? values.sort(sortWith) : values;
+  if (doSort) {
+    result = result.sort(sortWith);
+  }
+
+  return result;
 }
 
 /**

@@ -21,8 +21,6 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "demo-components": ["components/demo-components/src/index.ts"],
-      "demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/browser": ["packages/browser/src/index.ts"],
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
@@ -36,12 +34,12 @@
       "@dereekb/dbx-web/mapbox": ["packages/dbx-web/mapbox/src/index.ts"],
       "@dereekb/dbx-web/table": ["packages/dbx-web/table/src/index.ts"],
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
-      "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/firebase-server": ["packages/firebase-server/src/index.ts"],
       "@dereekb/firebase-server/mailgun": ["packages/firebase-server/mailgun/src/index.ts"],
       "@dereekb/firebase-server/model": ["packages/firebase-server/model/src/index.ts"],
       "@dereekb/firebase-server/test": ["packages/firebase-server/test/src/index.ts"],
       "@dereekb/firebase-server/zoho": ["packages/firebase-server/zoho/src/index.ts"],
+      "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/my-plugin": ["tools/my-plugin/src/index.ts"],
       "@dereekb/nestjs": ["packages/nestjs/src/index.ts"],
@@ -52,7 +50,9 @@
       "@dereekb/util/fetch": ["packages/util/fetch/src/index.ts"],
       "@dereekb/util/test": ["packages/util/test/src/index.ts"],
       "@dereekb/zoho": ["packages/zoho/src/index.ts"],
-      "@dereekb/zoho/nestjs": ["packages/zoho/nestjs/src/index.ts"]
+      "@dereekb/zoho/nestjs": ["packages/zoho/nestjs/src/index.ts"],
+      "demo-components": ["components/demo-components/src/index.ts"],
+      "demo-firebase": ["components/demo-firebase/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "setup"]

@@ -1,7 +1,7 @@
 import { failDueToSuccess } from '@dereekb/util/test';
 import { DbxInjectionContextDirective } from './injection.context.directive';
 import { DbxInjectionComponentModule } from './injection.component.module';
-import { Component, OnDestroy, Type, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, Type, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { waitForMs } from '@dereekb/util';
@@ -46,11 +46,11 @@ class TestExistingInjectionContent implements OnDestroy {
     <div *dbxInjectionContext>
       <test-existing-content></test-existing-content>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 class TestInjectionContextDirective<T = any> {
-  @ViewChild(DbxInjectionContextDirective, { static: true })
-  injectionContextDirective?: DbxInjectionContextDirective<T>;
+  readonly injectionContextDirective = viewChild.required<DbxInjectionContextDirective<T>>(DbxInjectionContextDirective);
 }
 
 describe('DbxInjectionContextDirective', () => {
@@ -65,6 +65,8 @@ describe('DbxInjectionContextDirective', () => {
   buildTestsWithClass(TestInjectionContextDirective, 'element');
 
   function buildTestsWithClass<C extends TestInjectionContextDirective>(type: Type<C>, selector: string): void {
+    let i = 0;
+
     describe(`selector "${selector}"`, () => {
       let testComponent: TestInjectionContextDirective;
       let fixture: ComponentFixture<TestInjectionContextDirective>;
@@ -74,10 +76,12 @@ describe('DbxInjectionContextDirective', () => {
         fixture = TestBed.createComponent(type);
         testComponent = fixture.componentInstance;
 
+        fixture.detectChanges();
         expect(testComponent).toBeDefined();
 
-        directive = fixture.componentInstance.injectionContextDirective as DbxInjectionContextDirective<any>;
         fixture.detectChanges();
+        directive = fixture.componentInstance.injectionContextDirective();
+        i += 1;
       });
 
       afterEach(() => {
@@ -112,23 +116,23 @@ describe('DbxInjectionContextDirective', () => {
 
       describe('config input', () => {
         it('should show the config-injected content.', () => {
-          directive.config = {
+          directive.setConfig({
             componentClass: TestInjectionContent
-          };
+          });
 
           fixture.detectChanges();
           assetCustomContentVisible();
         });
 
         it('should show original content when config is removed.', () => {
-          directive.config = {
+          directive.setConfig({
             componentClass: TestInjectionContent
-          };
+          });
 
           fixture.detectChanges();
           assetCustomContentVisible();
 
-          directive.config = undefined;
+          directive.setConfig(undefined);
           fixture.detectChanges();
 
           assetExistingContentVisible();
@@ -190,7 +194,7 @@ describe('DbxInjectionContextDirective', () => {
                 componentClass: TestInjectionContent
               },
               use: () => {
-                throw new Error(); // throw an error
+                throw new Error('hello world' + i); // throw an error
               }
             })
             .then(
@@ -202,6 +206,8 @@ describe('DbxInjectionContextDirective', () => {
                 done();
               }
             );
+
+          fixture.detectChanges();
         });
       });
 
@@ -229,8 +235,8 @@ describe('DbxInjectionContextDirective', () => {
             );
 
           fixture.detectChanges();
-
           directive.resetContext();
+          fixture.detectChanges();
         });
 
         it('should not delete existing content if called without a context.', () => {
@@ -246,7 +252,8 @@ describe('DbxInjectionContextDirective', () => {
         });
 
         it('reset, show, reset, show, reset, show.', (done) => {
-          function showContext(i = 0) {
+          function showNextContext(i = 0) {
+            fixture.detectChanges();
             assetExistingContentVisible();
 
             directive
@@ -261,23 +268,26 @@ describe('DbxInjectionContextDirective', () => {
                   failDueToSuccess();
                 },
                 (e) => {
+                  fixture.detectChanges();
                   expect(e).toBeDefined();
 
                   // check the existing content is back.
                   assetExistingContentVisible();
 
                   if (i < 3) {
-                    showContext(i + 1);
+                    showNextContext(i + 1);
                   } else {
                     done();
                   }
                 }
               );
 
+            fixture.detectChanges();
             directive.resetContext();
+            fixture.detectChanges();
           }
 
-          setTimeout(() => showContext());
+          setTimeout(() => showNextContext());
         });
       });
     });

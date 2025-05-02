@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxBasicLoadingComponent, DbxLoadingModule, DbxLoadingProgressComponent } from '@dereekb/dbx-web';
+import { DbxBasicLoadingComponent, DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingModule, DbxLoadingProgressComponent } from '@dereekb/dbx-web';
 import { readableError, ReadableError } from '@dereekb/util';
 import { interval, map, shareReplay } from 'rxjs';
-import { DocSharedModule } from '../../shared/doc.shared.module';
+
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
 @Component({
   templateUrl: './loading.component.html',
-  imports: [DbxLoadingModule, DbxLoadingProgressComponent, DbxBasicLoadingComponent, DocSharedModule],
+  imports: [DbxLoadingModule, DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingProgressComponent, DbxBasicLoadingComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

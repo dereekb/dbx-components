@@ -14,7 +14,7 @@ import { Maybe, ModelKeyTypeNamePair } from '@dereekb/util';
   selector: '[dbxFirebaseModelViewedEvent]',
   standalone: true
 })
-export class DbxfirebaseModelViewedEventDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxFirebaseModelViewedEventDirective extends AbstractSubscriptionDirective implements OnInit {
   readonly dbxFirebaseDocumentStoreDirective = inject(DbxFirebaseDocumentStoreDirective);
   readonly dbxModelObjectStateService = inject(DbxModelObjectStateService);
   readonly dbxFirebaseModelTypesService = inject(DbxFirebaseModelTypesService);

@@ -45,8 +45,8 @@ export function textVerifyPasswordField(config?: TextPasswordFieldConfig): Forml
 }
 
 export interface TextPasswordWithVerifyFieldConfig {
-  password?: TextPasswordFieldConfig;
-  verifyPassword?: TextPasswordFieldConfig;
+  readonly password?: TextPasswordFieldConfig;
+  readonly verifyPassword?: TextPasswordFieldConfig;
 }
 
 export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyFieldConfig): FormlyFieldConfig {
@@ -77,26 +77,26 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
 }
 
 export interface UsernameLoginFieldUsernameConfig {
-  email?: Omit<EmailFieldConfig, 'key'>;
-  username?: Omit<TextFieldConfig, 'key'>;
+  readonly email?: Omit<EmailFieldConfig, 'key'>;
+  readonly username?: Omit<TextFieldConfig, 'key'>;
 }
 
 /**
  * usernamePasswordLoginFields() configuration.
  */
 export interface UsernameLoginFieldsConfig {
-  username: 'email' | 'username' | UsernameLoginFieldUsernameConfig;
-  password?: TextPasswordFieldConfig;
-  verifyPassword?: Maybe<boolean | TextPasswordFieldConfig>;
+  readonly username: 'email' | 'username' | UsernameLoginFieldUsernameConfig;
+  readonly password?: TextPasswordFieldConfig;
+  readonly verifyPassword?: Maybe<boolean | TextPasswordFieldConfig>;
 }
 
 /**
  * Value type exported by usernameLoginFields()
  */
 export interface DefaultUsernameLoginFieldsValue {
-  username: string;
-  password: string;
-  verifyPassword?: string;
+  readonly username: string;
+  readonly password: string;
+  readonly verifyPassword?: string;
 }
 
 /**
@@ -108,6 +108,7 @@ export interface DefaultUsernameLoginFieldsValue {
 export function usernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
   let usernameField: FormlyFieldConfig;
   let usernameFieldConfig: UsernameLoginFieldUsernameConfig = username as UsernameLoginFieldUsernameConfig;
+
   const defaultUsernameFieldConfig = { key: 'username', required: true };
 
   if (typeof username === 'string') {

@@ -21,8 +21,8 @@ import { DatePipe } from '@angular/common';
   standalone: true
 })
 export class DbxTableDateHeaderComponent {
-  left = 'E';
-  right = 'MMM d';
+  readonly left = 'E';
+  readonly right = 'MMM d';
 
   private readonly _dateSignal = signal<Maybe<Date>>(undefined);
   readonly dateSignal = this._dateSignal.asReadonly();

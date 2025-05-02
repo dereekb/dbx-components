@@ -1,5 +1,5 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
 
 @Component({
@@ -11,8 +11,7 @@ import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
   `
 })
 export class DbxFirebaseLoginContextBackButtonComponent {
-  @Output()
-  readonly cancelLogin = new EventEmitter<void>();
+  readonly cancelLogin = output<void>();
 
   readonly anchor: ClickableAnchor = {
     onClick: () => this.cancelLogin.emit()

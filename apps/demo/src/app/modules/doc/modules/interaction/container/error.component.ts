@@ -3,12 +3,16 @@ import { Maybe, randomNumber, readableError, ReadableError, serverError } from '
 import { LOREM } from '../../shared/lorem';
 import { CUSTOM_ERROR_WIDGET_TEST_ERROR_CODE } from '../component/error.custom.widget.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE } from '../component/error.custom.inline.widget.component';
-import { DbxErrorSnackbarService } from '@dereekb/dbx-web';
+import { DbxErrorSnackbarService, DbxContentContainerDirective, DbxErrorComponent, DbxErrorDetailsComponent, DbxErrorViewComponent, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
 const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
 @Component({
-  templateUrl: './error.component.html'
+  templateUrl: './error.component.html',
+  standalone: true,
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxErrorComponent, DbxErrorDetailsComponent, DbxErrorViewComponent, DbxButtonComponent, DbxButtonSpacerDirective]
 })
 export class DocInteractionErrorComponent {
   readonly dbxErrorSnackbarService = inject(DbxErrorSnackbarService);

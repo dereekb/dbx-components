@@ -1,15 +1,19 @@
-import { AnchorForValueFunction } from '@dereekb/dbx-web';
+import { AnchorForValueFunction, DbxActionModule, DbxButtonModule, DbxListEmptyContentComponent, DbxListItemAnchorModifierDirective, DbxListModifierModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule } from '@dereekb/dbx-web';
 import { Component, inject, OnInit } from '@angular/core';
 import { DemoAppRouterService } from '../../../demo.app.router.service';
 import { NotificationItem } from '@dereekb/firebase';
-import { DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
-import { DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
+import { DbxRouteModelIdDirective, DbxRouterService, dbxRouteModelIdParamRedirect } from '@dereekb/dbx-core';
+import { DbxFirebaseCollectionListDirective, DbxFirebaseModelViewedEventDirective, DbxFirebaseNotificationItemListComponent, DbxFirebaseNotificationItemStore, NotificationSummaryDocumentStore } from '@dereekb/dbx-firebase';
 import { distinctUntilChanged, map, of, shareReplay, switchMap } from 'rxjs';
 import { LoadingState, WorkUsingContext, catchLoadingStateErrorWithOperator, successResult } from '@dereekb/rxjs';
-import { ProfileDocumentStore } from 'demo-components';
+import { DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, ProfileDocumentStore } from 'demo-components';
+import { UIView } from '@uirouter/angular';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-  templateUrl: './list.component.html'
+  templateUrl: './list.component.html',
+  imports: [UIView, AsyncPipe, DbxActionModule, DbxTwoBlockComponent, DbxTwoColumnLayoutModule, DbxFirebaseNotificationItemListComponent, DbxButtonModule, DbxListItemAnchorModifierDirective, DbxListEmptyContentComponent, DbxListModifierModule, DemoGuestbookCollectionStoreDirective, DemoGuestbookListComponent, DbxFirebaseCollectionListDirective, DbxRouteModelIdDirective, DbxFirebaseModelViewedEventDirective],
+  standalone: true
 })
 export class DemoNotificationListPageComponent implements OnInit {
   readonly profileDocumentStore = inject(ProfileDocumentStore);

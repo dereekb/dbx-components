@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { ApplicationConfig, importProvidersFrom, Injector } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, Injector } from '@angular/core';
 import { Category, provideUIRouter, StatesModule, UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnviroment, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
@@ -196,7 +196,21 @@ export const appConfig: ApplicationConfig = {
         tosUrl: '/tos/terms',
         privacyUrl: '/tos/privacy'
       }
-    })
+    }),
+
+    // App initializers
+    [{
+      provide: APP_INITIALIZER,
+      useFactory: (injector: Injector) => {
+        return () => {
+          
+          // add any initialization here
+
+        };
+      },
+      deps: [Injector],
+      multi: true
+    }]
 
     // provideZoneChangeDetection({ eventCoalescing: true })
   ]

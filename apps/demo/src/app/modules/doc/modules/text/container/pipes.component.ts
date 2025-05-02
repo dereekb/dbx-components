@@ -1,12 +1,46 @@
 import { Component, OnDestroy } from '@angular/core';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { dateTimeField, timezoneStringField } from '@dereekb/dbx-form';
+import { dateTimeField, timezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormTimezoneStringFieldModule } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, delay, map, of, shareReplay } from 'rxjs';
 import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
+import { DbxContentContainerDirective, DbxContentBorderDirective, DbxDetailBlockComponent } from '@dereekb/dbx-web';
+import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
+import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { DocFormExampleComponent } from '../../form/component/example.form.component';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe } from '@dereekb/dbx-core';
 
 @Component({
-  templateUrl: './pipes.component.html'
+  templateUrl: './pipes.component.html',
+  standalone: true,
+  imports: [
+    DbxContentContainerDirective,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent,
+    DbxContentBorderDirective,
+    DbxDetailBlockComponent,
+    DocFormExampleComponent,
+    DbxFormlyFieldsContextDirective,
+    DbxFormSourceDirective,
+    DbxFormValueChangeDirective,
+    AsyncPipe,
+    DatePipe,
+    DateDistancePipe,
+    DateRangeDistancePipe,
+    TargetDateToSystemDatePipe,
+    SystemDateToTargetDatePipe,
+    TimezoneAbbreviationPipe,
+    DateDayRangePipe,
+    DateDayTimeRangePipe,
+    DateTimeRangeOnlyPipe,
+    DateTimeRangePipe,
+    DateTimeRangeOnlyDistancePipe,
+    MinutesStringPipe,
+    TimeDistanceCountdownPipe,
+    TimeDistancePipe,
+    DbxFormTimezoneStringFieldModule
+  ]
 })
 export class DocTextPipesComponent implements OnDestroy {
   // TODO: Should not require a delay to set the value properly
