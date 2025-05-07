@@ -1,0 +1,17 @@
+<dbx-content-container>
+  <doc-feature-layout header="dbx-iframe">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-iframe" hint="Component that displays a website in an iframe.">
+      <p>dbx-iframe handles creating an iframe then replacing the content with the content from a url or a SafeResourceUrl.</p>
+      <p>The allow attribute is set to "autoplay". If you need to change the allow attributes, extend DbxIframeComponent and replace the template.</p>
+      <dbx-iframe [contentUrl]="contentUrl"></dbx-iframe>
+      <h3>Configuration</h3>
+      <h4>Scrolling</h4>
+      <p>dbx-iframe can be configured to scroll the iframe or not.</p>
+      <dbx-iframe [contentUrl]="contentUrl" [scrolling]="true"></dbx-iframe>
+      <h4>Sanitize URL</h4>
+      <p>dbx-iframe can be configured to sanitize the url or not.</p>
+      <dbx-iframe [contentUrl]="contentUrl" [sanitizeUrl]="true"></dbx-iframe>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

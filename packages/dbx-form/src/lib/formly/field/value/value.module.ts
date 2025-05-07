@@ -4,8 +4,9 @@ import { DbxFormFormlyPhoneFieldModule } from './phone/phone.field.module';
 import { DbxFormFormlyDateFieldModule } from './date/date.field.module';
 import { DbxFormFormlyTextFieldModule } from './text/text.field.module';
 import { DbxFormFormlyNumberFieldModule } from './number/number.field.module';
+import { DbxFormFormlyBooleanFieldModule } from './boolean/boolean.field.module';
 
-const importsAndExports = [DbxFormFormlyArrayFieldModule, DbxFormFormlyDateFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyNumberFieldModule, DbxFormFormlyTextFieldModule];
+const importsAndExports = [DbxFormFormlyArrayFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyDateFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyNumberFieldModule, DbxFormFormlyTextFieldModule];
 
 /**
  * @deprecated import the modules directly

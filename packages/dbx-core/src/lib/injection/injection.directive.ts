@@ -19,7 +19,7 @@ export abstract class AbstractDbxInjectionDirective<T> implements OnInit, OnDest
     this._instance.destroy();
   }
 
-  setConfig(config: Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>>) {
+  setConfig(config: Maybe<ObservableOrValueGetter<Maybe<DbxInjectionComponentConfig<T>>>>) {
     this._instance.config = config;
   }
 

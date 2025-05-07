@@ -48,7 +48,7 @@ export interface DbxRouteModelIdParamRedirectInstance extends DbxRouteModelIdPar
   readonly idFromParams$: Observable<Maybe<ModelKey>>;
   readonly id$: Observable<Maybe<ModelKey>>;
 
-  setParamKey(paramKey: string): void;
+  setParamKey(paramKey: Maybe<string>): void;
 
   setDefaultValue(defaultValue: MaybeObservableOrValueGetter<string>): void;
   setRedirectEnabled(redirect: Maybe<boolean>): void;

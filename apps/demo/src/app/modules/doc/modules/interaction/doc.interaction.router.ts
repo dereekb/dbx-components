@@ -9,6 +9,7 @@ import { DocInteractionFilterComponent } from './container/filter.component';
 import { DocInteractionButtonComponent } from './container/button.component';
 import { DocInteractionErrorComponent } from './container/error.component';
 import { DocInteractionLoadingComponent } from './container/loading.component';
+import { DocInteractionIframeComponent } from './container/iframe.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/interaction',
@@ -47,6 +48,12 @@ export const docInteractionDialogState: Ng2StateDeclaration = {
   component: DocInteractionDialogComponent
 };
 
+export const docInteractionIframeState: Ng2StateDeclaration = {
+  url: '/iframe',
+  name: 'doc.interaction.iframe',
+  component: DocInteractionIframeComponent
+};
+
 export const docInteractionFilterState: Ng2StateDeclaration = {
   url: '/filter',
   name: 'doc.interaction.filter',
@@ -82,5 +89,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docInteractionFilterState,
   docInteractionPromptState,
   docInteractionPopupState,
-  docInteractionPopoverState
+  docInteractionPopoverState,
+  docInteractionIframeState
 ];

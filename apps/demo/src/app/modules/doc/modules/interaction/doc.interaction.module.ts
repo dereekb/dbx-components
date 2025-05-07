@@ -28,6 +28,7 @@ import { DocInteractionTestDateFilterPopoverButtonComponent } from './component/
 import { DocInteractionTestDateFilterPresetFilterComponent } from './component/filter.date.preset.component';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
 import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidgetComponent } from './component/error.custom.inline.widget.component';
+import { DocInteractionIframeComponent } from './container/iframe.component';
 
 @NgModule({
   imports: [
@@ -54,6 +55,7 @@ import { CUSTOM_DBX_ERROR_TEST_ERROR_CODE, DocInteractionCustomInlineErrorWidget
     // container
     DocInteractionLayoutComponent,
     DocInteractionHomeComponent,
+    DocInteractionIframeComponent,
     // DocInteractionLoadingComponent,    // standalone
     DocInteractionButtonComponent,
     DocInteractionErrorComponent,

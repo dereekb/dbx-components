@@ -411,7 +411,7 @@ You can follow the migration guide here:
 
 https://eslint.org/docs/latest/use/configure/migration-guide
 
-You'll need to 
+It might be easier to just copy the new `eslint.config.mjs` files from the v12 of dbx-components templates and edit them to fit your configurations.
 
 ### Deploying to Firebase Gen 2
 If you're deploying for the first time, you may need to deploy using your primary account (that should have more permissions than your service account) so that your primary/elevated permissions account can setup the cloud run functions for future deployments.
@@ -423,6 +423,33 @@ See https://firebase.google.com/docs/functions/2nd-gen-upgrade#migrate_traffic_t
 You will have to remove all functions and scheduled functions. Anything that says versions v1 in the Firebase console in the functions tab.
 
 It is recommended you deploy to your staging system first with all changes before deploying to production.
+
+#### Service Account Roles
+You may need to update your service account roles to allow for the new gen 2 functions.
+
+Because of some Firebase changes, you'll need to add the following roles in IAM to your service account:
+
+- `Firebase Extensions Publisher - Extensions Viewer`
+- `Firebase Extensions Viewer`
+
+You may also see the error:
+
+```
+Request to https://cloudscheduler.googleapis.com/v1/projects/dereekb-components/locations/us-central1/jobs/firebase-schedule-exampleSchedule-us-central1?updateMask=name%2CtimeZone%2ChttpTarget%2Cschedule had HTTP Error: 403, The principal (user or service account) lacks IAM permission "cloudscheduler.jobs.update" for the resource "projects/dereekb-components/locations/us-central1/jobs/firebase-schedule-exampleSchedule-us-central1" (or the resource may not exist).
+```
+
+You will need to add the following roles:
+
+- `Cloud Deployment Manager Service Agent`
+
+#### Enable Cloud Billing
+You may need to enable the `Cloud Billing API` for your project if you see a similar error:
+
+```
+Error: Request to https://cloudbilling.googleapis.com/v1/projects/dereekb-components/billingInfo had HTTP Error: 403, Cloud Billing API has not been used in project 124286307516 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudbilling.googleapis.com/overview?project=124286307516 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+```
+
+https://console.cloud.google.com/apis/library/cloudbilling.googleapis.com?project=<YOUR_PROJECT_ID>
 
 
 ## Angular Migrations
@@ -476,3 +503,19 @@ You can use the `no-duplicates` from `eslint-plugin-import` rule for fixing thos
 There may also be some left over modules that aren't removed and have leftover declarations, so just search for `declarations: ` in VSCode to find the leftover modules.
 
 It did seem like the components that extended `AbstractDbxSelectionListWrapperDirective` did not get updated properly, so we did have to manually fix these.
+
+### Control Flow Migrations
+https://v18.angular.dev/reference/migrations/control-flow
+
+This will update all the ngIf, ngFor, and ngSwitch to use the new control flow syntax.
+
+Collage
+
+- `npx nx g @angular/core:control-flow --path=/components/demo-components`
+
+You may run into warnings about the migration not being able to update some files.
+
+The new syntax for ngSwitch only allows `@switch()` children nodes to be `@case()` or `@default()`, so if you used ngSwitch with some cases mixed with "always" content, then you'll want to update the ngSwitch declaration to be on an ng-container and encapsulate only the switch cases.
+
+### Other Migrations
+Unfortunately the migrations in Angular 19 are not available for migrating inputs/outputs to signals. You will need to manually update the code to use signals.
