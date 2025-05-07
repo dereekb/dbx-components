@@ -1,0 +1,39 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$dbx-iframe-height-var: --dbx-iframe-height;
+
+// MARK: Mixin
+@mixin core() {
+  dbx-iframe {
+    display: block;
+    height: 100%;
+  }
+
+  dbx-iframe iframe {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($theme-config-or-typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-iframe') {
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($theme-config);
+    }
+  }
+}

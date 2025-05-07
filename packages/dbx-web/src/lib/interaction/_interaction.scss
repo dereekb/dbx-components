@@ -1,5 +1,6 @@
 @use './dialog/dialog';
 @use './filter/filter';
+@use './iframe/iframe';
 @use './popover/popover';
 @use './popup/popup';
 @use './prompt/prompt';
@@ -8,6 +9,7 @@
 @mixin all-interaction-core() {
   @include dialog.core();
   @include filter.core();
+  @include iframe.core();
   @include popover.core();
   @include popup.core();
   @include prompt.core();
@@ -17,6 +19,7 @@
 @mixin all-interaction-typography($theme-config) {
   @include dialog.typography($theme-config);
   @include filter.typography($theme-config);
+  @include iframe.typography($theme-config);
   @include popover.typography($theme-config);
   @include popup.typography($theme-config);
   @include prompt.typography($theme-config);
@@ -26,6 +29,7 @@
 @mixin all-interaction-theme($theme-config) {
   @include dialog.theme($theme-config);
   @include filter.theme($theme-config);
+  @include iframe.theme($theme-config);
   @include popover.theme($theme-config);
   @include popup.theme($theme-config);
   @include prompt.theme($theme-config);

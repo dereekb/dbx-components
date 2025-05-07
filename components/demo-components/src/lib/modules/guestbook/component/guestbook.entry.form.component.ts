@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
-import { provideFormlyContext, AbstractSyncFormlyFormDirective } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractSyncFormlyFormDirective , DbxFormlyComponent } from '@dereekb/dbx-form';
 import { GuestbookEntry } from 'demo-firebase';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { guestbookEntryFields } from './guestbook.entry.form';
-import { DbxFormlyComponent } from '@dereekb/dbx-form';
 
 export type DemoGuestbookEntryFormValue = Pick<GuestbookEntry, 'message' | 'signed' | 'published'>;
 

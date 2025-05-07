@@ -22,6 +22,7 @@
       "options": {
         "project": "components/demo-components/ng-package.json"
       },
+      "dependsOn": [],
       "configurations": {
         "production": {
           "tsConfig": "components/demo-components/tsconfig.lib.prod.json"

@@ -46,6 +46,12 @@ export const DOC_INTERACTION_ROUTES = [
     title: 'Popup',
     detail: 'dbx-popup',
     ref: 'doc.interaction.popup'
+  },
+  {
+    icon: 'picture_in_picture',
+    title: 'Iframe',
+    detail: 'dbx-iframe',
+    ref: 'doc.interaction.iframe'
   }
 ];
 
