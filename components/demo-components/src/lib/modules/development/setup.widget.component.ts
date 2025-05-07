@@ -4,13 +4,8 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { randomNumber } from '@dereekb/util';
 import { ProfileDocumentStore } from '../profile';
 import { GuestbookDocumentStore } from '../guestbook';
-import { DbxActionDirective } from '@dereekb/dbx-core';
-import { DbxActionValueDirective } from '@dereekb/dbx-core';
-import { DbxActionHandlerDirective } from '@dereekb/dbx-core';
-import { DbxButtonComponent } from '@dereekb/dbx-web';
-import { DbxActionButtonDirective } from '@dereekb/dbx-core';
-import { DbxErrorComponent } from '@dereekb/dbx-web';
-import { DbxActionErrorDirective } from '@dereekb/dbx-web';
+import { DbxActionDirective , DbxActionValueDirective , DbxActionHandlerDirective , DbxActionButtonDirective } from '@dereekb/dbx-core';
+import { DbxButtonComponent , DbxErrorComponent , DbxActionErrorDirective } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './setup.widget.component.html',

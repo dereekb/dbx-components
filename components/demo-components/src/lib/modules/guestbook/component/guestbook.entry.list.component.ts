@@ -1,9 +1,7 @@
 import { GuestbookEntry } from 'demo-firebase';
 import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef } from '@dereekb/dbx-web';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef , DbxListComponent , DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
-import { DbxListComponent } from '@dereekb/dbx-web';
-import { DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
 import { DatePipe } from '@angular/common';
 import { ToJsDatePipe } from '@dereekb/dbx-core';
 
