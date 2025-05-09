@@ -61,11 +61,11 @@ export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAu
 
     function accessTokenFromTokenResponse(result: ZoomOAuthAccessTokenResponse): ZoomAccessToken {
       const createdAt = new Date().getTime();
-      const { access_token, api_domain, scope, expires_in } = result;
+      const { access_token, api_url, scope, expires_in } = result;
 
       const accessToken: ZoomAccessToken = {
         accessToken: access_token,
-        apiDomain: api_domain,
+        apiDomain: api_url,
         expiresIn: expires_in,
         expiresAt: new Date(createdAt + expires_in * MS_IN_SECOND),
         scope

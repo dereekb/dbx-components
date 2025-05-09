@@ -5,10 +5,9 @@ import { ZoomServerErrorResponseData, handleZoomErrorFetchFactory, interceptZoom
  * Error in the following cases:
  * - the refresh token string is invalid
  */
-export const ZOOM_ACCOUNTS_INVALID_CODE_ERROR_CODE = 'invalid_code';
-export const ZOOM_ACCOUNTS_INVALID_CLIENT_ERROR_CODE = 'invalid_client';
+export const ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE = 'invalid_grant';
 
-export type ZoomOAuthAccessTokenErrorCode = typeof ZOOM_ACCOUNTS_INVALID_CODE_ERROR_CODE | typeof ZOOM_ACCOUNTS_INVALID_CLIENT_ERROR_CODE;
+export type ZoomOAuthAccessTokenErrorCode = typeof ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE;
 
 /**
  * Thrown if the call to the Zoom API creating an access token using a refresh token fails.
@@ -49,8 +48,7 @@ export function parseZoomOAuthServerErrorResponseData(errorResponseData: ZoomSer
     const errorData = zoomServerErrorData(error);
 
     switch (errorData.code) {
-      case ZOOM_ACCOUNTS_INVALID_CODE_ERROR_CODE:
-      case ZOOM_ACCOUNTS_INVALID_CLIENT_ERROR_CODE:
+      case ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE:
         result = new ZoomOAuthAccessTokenError(errorData.code);
         break;
       default:

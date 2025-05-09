@@ -1,13 +1,12 @@
-import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { readZoomOAuthServiceConfigFromConfigService, ZoomOAuthServiceConfig } from './oauth.config';
 import { ZoomOAuthApi } from './oauth.api';
 import { Maybe } from '@dereekb/util';
 
-export type ZoomOAuthServiceConfigFactory = (configService: ConfigService, serverEnvironmentService: ServerEnvironmentService) => ZoomOAuthServiceConfig;
+export type ZoomOAuthServiceConfigFactory = (configService: ConfigService) => ZoomOAuthServiceConfig;
 
-export function zoomOAuthServiceConfigFactory(configService: ConfigService, _: ServerEnvironmentService): ZoomOAuthServiceConfig {
+export function zoomOAuthServiceConfigFactory(configService: ConfigService): ZoomOAuthServiceConfig {
   const config = readZoomOAuthServiceConfigFromConfigService(configService);
   return config;
 }
@@ -46,7 +45,7 @@ export function appZoomOAuthModuleMetadata(config: ProvideAppZoomOAuthMetadataCo
     providers: [
       {
         provide: ZoomOAuthServiceConfig,
-        inject: [ConfigService, ServerEnvironmentService],
+        inject: [ConfigService],
         useFactory: config.zoomOAuthServiceConfigFactory ?? zoomOAuthServiceConfigFactory
       },
       ZoomOAuthApi,

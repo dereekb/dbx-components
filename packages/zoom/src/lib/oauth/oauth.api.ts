@@ -17,8 +17,8 @@ export interface ZoomOAuthUserAccessTokenInput extends ZoomOAuthServerAccessToke
 export interface ZoomOAuthAccessTokenResponse {
   readonly access_token: ZoomAccessTokenString;
   readonly token_type: 'bearer';
+  readonly api_url: ZoomAccessTokenApiDomain;
   readonly scope: ZoomAccessTokenScopesString;
-  readonly api_domain: ZoomAccessTokenApiDomain;
   readonly expires_in: Seconds;
 }
 
@@ -34,7 +34,7 @@ export interface ZoomOAuthAccessTokenErrorResponse {
  */
 export function serverAccessToken(context: ZoomOAuthContext): (input?: ZoomOAuthServerAccessTokenInput) => Promise<ZoomOAuthAccessTokenResponse> {
   return (input) => {
-    return context.fetchJson(`/oauth/v2/token?grant_type=account_credentials&account_id=${input?.accountId ?? context.config.accountId}`, zoomOAuthApiFetchJsonInput(context, input));
+    return context.fetchJson(`/token?grant_type=account_credentials&account_id=${input?.accountId ?? context.config.accountId}`, zoomOAuthApiFetchJsonInput(context, input));
   };
 }
 
@@ -47,7 +47,7 @@ export function serverAccessToken(context: ZoomOAuthContext): (input?: ZoomOAuth
 export function userAccessToken(context: ZoomOAuthContext): (input: ZoomOAuthUserAccessTokenInput) => Promise<ZoomOAuthAccessTokenResponse> {
   return (input) => {
     const refreshToken = input.refreshToken;
-    return context.fetchJson(`/oauth/v2/token?grant_type=refresh_token&refresh_token=${refreshToken}`, zoomOAuthApiFetchJsonInput(context, input));
+    return context.fetchJson(`/token?grant_type=refresh_token&refresh_token=${refreshToken}`, zoomOAuthApiFetchJsonInput(context, input));
   };
 }
 

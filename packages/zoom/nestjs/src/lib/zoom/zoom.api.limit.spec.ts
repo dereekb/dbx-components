@@ -2,19 +2,27 @@ import { appZoomModuleMetadata } from './zoom.module';
 import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZoomApi } from './zoom.api';
-import { fileZoomOAuthAccessTokenCacheService, ZoomOAuthAccessTokenCacheService } from '../accounts/accounts.service';
+import { fileZoomOAuthAccessTokenCacheService, ZoomOAuthAccessTokenCacheService } from '../oauth/oauth.service';
 import { ZoomRecord } from '@dereekb/zoom';
+import { appZoomOAuthModuleMetadata } from '../oauth/oauth.module';
 
 const cacheService = fileZoomOAuthAccessTokenCacheService();
 
-interface TestCandidate extends ZoomRecord {
-  Email: string; // required field
-  First_Name?: string; // not required
-  Last_Name: string;
-}
+@Module(
+  appZoomOAuthModuleMetadata({
+    exports: [ZoomOAuthAccessTokenCacheService],
+    providers: [
+      {
+        provide: ZoomOAuthAccessTokenCacheService,
+        useValue: cacheService
+      }
+    ]
+  })
+)
+class TestZoomOAuthModule {}
 
-@Module(appZoomModuleMetadata({}))
-export class TestZoomModule {}
+@Module(appZoomModuleMetadata({ dependencyModule: TestZoomOAuthModule }))
+class TestZoomModule {}
 
 describe('recruit.api.limit', () => {
   let nest: TestingModule;

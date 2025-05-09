@@ -7,9 +7,9 @@ import { ZoomOAuthAuthFailureError } from './oauth.error.api';
 export type ZoomAccessTokenString = string;
 
 /**
- * Scopes string for a ZoomAccessToken
+ * Scopes string for a ZoomAccessToken that is space-separated.
  *
- * Example: "user:read:user:admin"
+ * Example: "user:read:user:admin api:write:zoom etc:etc:etc"
  */
 export type ZoomAccessTokenScopesString = string;
 
@@ -26,6 +26,9 @@ export type ZoomAccessTokenApiDomain = string;
 export interface ZoomAccessToken {
   readonly accessToken: ZoomAccessTokenString;
   readonly scope: ZoomAccessTokenScopesString;
+  /**
+   * Api domain for the token.
+   */
   readonly apiDomain: ZoomAccessTokenApiDomain;
   /**
    * Length of time the token is valid for.
