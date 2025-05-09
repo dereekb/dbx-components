@@ -4,39 +4,39 @@ import { MailgunOptions } from './mailgun.type';
 
 export abstract class MailgunServiceConfig {
   // Mailgun Config
-  mailgun!: MailgunOptions;
+  readonly mailgun!: MailgunOptions;
 
   /**
    * Base URL to the client.
    */
-  clientUrl!: WebsiteUrl;
+  readonly clientUrl!: WebsiteUrl;
 
   /**
    * Main domain to send emails from.
    */
-  domain!: MailgunSenderDomainString;
+  readonly domain!: MailgunSenderDomainString;
 
   /**
    * Mailgun sender string.
    */
-  sender!: EmailParticipantString;
+  readonly sender!: EmailParticipantString;
 
   /**
    * Additional messages config
    */
-  messages!: {
+  readonly messages!: {
     /**
      * Whether or not to send test emails to Mailgun. Defaults to false.
      *
      * NOTE: Mailgun charges for any sent testmode emails to non-sandbox domains.
      */
-    sendTestEmails?: boolean;
+    readonly sendTestEmails?: boolean;
     /**
      * Global recipient variable prefix to use in emails. Adds each recipient variable to the template variables list with the given prefix.
      *
      * If false, the recipient variables are not added to the variables list.
      */
-    recipientVariablePrefix?: string | false;
+    readonly recipientVariablePrefix?: string | false;
   };
 
   static assertValidConfig(config: MailgunServiceConfig) {

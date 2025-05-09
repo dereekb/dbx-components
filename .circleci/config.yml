@@ -113,6 +113,9 @@ jobs:
       - run:
           name: run zoho tests
           command: npx nx run-all-tests zoho
+      - run:
+          name: run zoom tests
+          command: npx nx run-all-tests zoom
       - store_test_results:
           path: ~/code/.reports/jest/
   # Runs tests for the projects that require the firebase emulators.

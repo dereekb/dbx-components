@@ -1,0 +1,33 @@
+{
+  "name": "zoom-nestjs",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/zoom/nestjs/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/test/**/*.ts"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/zoom/nestjs",
+        "tsConfig": "packages/zoom/nestjs/tsconfig.lib.json",
+        "packageJson": "packages/zoom/nestjs/package.json",
+        "main": "packages/zoom/nestjs/src/index.ts",
+        "assets": ["packages/zoom/nestjs/*.md"]
+      },
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/zoom/nestjs"],
+      "options": {
+        "jestConfig": "packages/zoom/nestjs/jest.config.ts"
+      }
+    }
+  }
+}

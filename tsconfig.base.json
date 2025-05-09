@@ -51,6 +51,8 @@
       "@dereekb/util/test": ["packages/util/test/src/index.ts"],
       "@dereekb/zoho": ["packages/zoho/src/index.ts"],
       "@dereekb/zoho/nestjs": ["packages/zoho/nestjs/src/index.ts"],
+      "@dereekb/zoom": ["packages/zoom/src/index.ts"],
+      "@dereekb/zoom/nestjs": ["packages/zoom/nestjs/src/index.ts"],
       "demo-components": ["components/demo-components/src/index.ts"],
       "demo-firebase": ["components/demo-firebase/src/index.ts"]
     }

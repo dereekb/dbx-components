@@ -72,7 +72,10 @@ export class ZohoServerError<D extends ZohoServerErrorData = ZohoServerErrorData
  * Zoho Server Error that includes the FetchResponseError
  */
 export class ZohoServerFetchResponseError<D extends ZohoServerErrorData = ZohoServerErrorData> extends ZohoServerError<D> {
-  constructor(readonly data: D, readonly responseError: FetchResponseError) {
+  constructor(
+    readonly data: D,
+    readonly responseError: FetchResponseError
+  ) {
     super(data);
   }
 }
@@ -256,7 +259,7 @@ export interface ZohoRateLimitHeaderDetails {
 }
 
 export function zohoRateLimitHeaderDetails(headers: Headers): Maybe<ZohoRateLimitHeaderDetails> {
-  const limitHeader = headers.has(ZOHO_RATE_LIMIT_REMAINING_HEADER);
+  const limitHeader = headers.get(ZOHO_RATE_LIMIT_LIMIT_HEADER);
   const remainingHeader = headers.get(ZOHO_RATE_LIMIT_REMAINING_HEADER);
   const resetHeader = headers.get(ZOHO_RATE_LIMIT_RESET_HEADER);
 
