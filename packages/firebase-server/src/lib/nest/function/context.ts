@@ -1,6 +1,6 @@
 import { type ValidationError } from 'class-validator';
 import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory, TransformAndValidateObjectFactoryDefaults } from '@dereekb/model';
-import { type HttpException, ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
+import { type HttpException, ValidationPipe } from '@nestjs/common';
 import { mapIdentityFunction } from '@dereekb/util';
 import { badRequestError } from '../../function/error';
 
@@ -15,7 +15,7 @@ export abstract class AbstractFirebaseServerActionsContext implements FirebaseSe
   abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<unknown>;
 }
 
-export interface FirebaseServerActionsContextOptions extends FirebaseServerActionsTransformFactoryOptions {}
+export type FirebaseServerActionsContextOptions = FirebaseServerActionsTransformFactoryOptions
 
 export function firebaseServerActionsContext(options?: FirebaseServerActionsContextOptions): FirebaseServerActionsContext {
   return {
@@ -39,7 +39,7 @@ export interface FirebaseServerActionsTransformContext {
   readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory;
 }
 
-export interface FirebaseServerActionsTransformContextOptions extends FirebaseServerActionsTransformFactoryOptions {}
+export type FirebaseServerActionsTransformContextOptions = FirebaseServerActionsTransformFactoryOptions
 
 export function firebaseServerActionsTransformContext(options?: FirebaseServerActionsTransformContextOptions): FirebaseServerActionsTransformContext {
   const firebaseServerActionTransformFactory = firebaseServerActionsTransformFactory(options);

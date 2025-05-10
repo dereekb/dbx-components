@@ -1,7 +1,5 @@
 import { FetchResponseError } from '@dereekb/util/fetch';
-import { BaseError } from 'make-error';
-import { ZoomServerErrorDataWithDetails, ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFunction, parseZoomServerErrorData, ZoomServerError, ParsedZoomServerError } from '../zoom.error.api';
-import { ZoomOAuthAccessTokenErrorCode } from '../oauth';
+import { ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFunction, parseZoomServerErrorData, ParsedZoomServerError } from '../zoom.error.api';
 
 // MARK: Parser
 export const logZoomErrorToConsole = logZoomServerErrorFunction('Zoom');

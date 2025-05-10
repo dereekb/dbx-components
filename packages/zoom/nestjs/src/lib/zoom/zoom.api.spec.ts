@@ -5,9 +5,8 @@ import { ZoomApi } from './zoom.api';
 import { fileZoomOAuthAccessTokenCacheService, ZoomOAuthAccessTokenCacheService } from '../oauth/oauth.service';
 import { appZoomOAuthModuleMetadata } from '../oauth/oauth.module';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
-import { ZoomMeeting, ZoomServerError, ZoomServerFetchResponseError, ZoomUser } from '@dereekb/zoom';
+import { ZoomMeeting, ZoomServerFetchResponseError, ZoomUser } from '@dereekb/zoom';
 import { addHours } from 'date-fns';
-import { Maybe } from '@dereekb/util';
 
 const cacheService = fileZoomOAuthAccessTokenCacheService();
 
