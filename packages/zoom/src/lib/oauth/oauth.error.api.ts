@@ -7,6 +7,11 @@ import { ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFun
  */
 export const ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE = 'invalid_grant';
 
+export interface ZoomOauthInvalidGrantErrorData {
+  readonly reason: 'Invalid Token!';
+  readonly error: 'invalid_grant';
+}
+
 export type ZoomOAuthAccessTokenErrorCode = typeof ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE;
 
 /**
@@ -44,9 +49,12 @@ export function parseZoomOAuthServerErrorResponseData(zoomServerError: ZoomServe
   let result: ParsedZoomServerError | undefined;
 
   if (zoomServerError) {
-    switch (zoomServerError.code) {
+    const potentialErrorStringCode = (zoomServerError as unknown as ZoomOauthInvalidGrantErrorData).error;
+    const errorCode = potentialErrorStringCode ?? zoomServerError.code;
+
+    switch (errorCode) {
       case ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE:
-        result = new ZoomOAuthAccessTokenError(zoomServerError.code);
+        result = new ZoomOAuthAccessTokenError(errorCode);
         break;
       default:
         result = parseZoomServerErrorData(zoomServerError, responseError);

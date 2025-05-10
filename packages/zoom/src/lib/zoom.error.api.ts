@@ -240,7 +240,9 @@ export function omitSilenceZoomErrorKeys(options?: MakeUrlSearchParamsOptions): 
 export type SilenceZoomErrorWithCodesFunction<T> = (silence?: boolean) => (reason: unknown) => T;
 
 /**
- * Used with catch to silence Zoom errors with the specified codes.
+ * Used with catch() to silence Zoom errors with the specified codes.
+ *
+ * For example, when deleting a meeting that does not exist, the error code is 3001. This function can be used to silence that error.
  */
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>): SilenceZoomErrorWithCodesFunction<void>;
 export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T>;

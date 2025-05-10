@@ -48,21 +48,30 @@ export interface ZoomDataArrayResultRef<T> {
 export interface ZoomPageResult<T> extends ZoomDataArrayResultRef<T>, ZoomPageResultInfo {}
 
 /**
+ * Cursor for pagination.
+ */
+export type ZoomPageResultToken = string;
+
+/**
  * Page information within a ZoomPageResult
  */
 export interface ZoomPageResultInfo {
   /**
    * Use the next page token to paginate through large result sets. A next page token will be returned whenever the set of available results exceeds the current page size. This token's expiration period is 15 minutes.
    */
-  readonly next_page_token: string;
+  readonly next_page_token: ZoomPageResultToken;
   /**
    * The number of pages returned for the request made.
+   *
+   * Possibly undefined for some calls.
    */
-  readonly page_count: number;
+  readonly page_count?: number | undefined;
   /**
    * The page number of the current results.
+   *
+   * Possibly undefined for some calls.
    */
-  readonly page_number: PageNumber;
+  readonly page_number?: PageNumber | undefined;
   /**
    * The number of records returned with a single API call.
    */

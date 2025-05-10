@@ -3,7 +3,6 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ZoomApi } from './zoom.api';
 import { fileZoomOAuthAccessTokenCacheService, ZoomOAuthAccessTokenCacheService } from '../oauth/oauth.service';
-import { ZoomRecord } from '@dereekb/zoom';
 import { appZoomOAuthModuleMetadata } from '../oauth/oauth.module';
 
 const cacheService = fileZoomOAuthAccessTokenCacheService();

@@ -259,7 +259,7 @@ export function fileZoomOAuthAccessTokenCacheService(filename: string = DEFAULT_
           (tokenFile as Configurable<ZoomOAuthAccessTokenCacheFileContent>).token = accessToken;
         }
 
-        console.log('updating access token in file: ', { accessToken });
+        // console.log('updating access token in file: ', { accessToken });
 
         try {
           await writeTokenFile(tokenFile);
