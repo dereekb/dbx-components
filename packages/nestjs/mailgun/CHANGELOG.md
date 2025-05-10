@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [12.1.0](https://github.com/dereekb/dbx-components/compare/v12.0.6-dev...v12.1.0) (2025-05-10)
+
+
+### Features
+
+* zoom api ([#29](https://github.com/dereekb/dbx-components/issues/29)) ([555a82a](https://github.com/dereekb/dbx-components/commit/555a82a321c82884d51bcff8bd54ad8c7b4e9f17))
+
+
+
 ## [12.0.6](https://github.com/dereekb/dbx-components/compare/v12.0.5-dev...v12.0.6) (2025-05-07)
 
 
