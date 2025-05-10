@@ -6,8 +6,8 @@ import { hasValueOrNotEmpty, hasValueOrNotEmptyObject } from '../value/maybe';
 export type ForEachKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = (tuple: KeyValueTuple<T, K>, index: number) => void;
 
 export interface ForEachKeyValue<T extends object = object, K extends keyof T = keyof T> {
-  filter?: FilterKeyValueTuplesInput<T, K>;
-  forEach: ForEachKeyValueTupleFunction<T, K>;
+  readonly filter?: FilterKeyValueTuplesInput<T, K>;
+  readonly forEach: ForEachKeyValueTupleFunction<T, K>;
 }
 
 export function forEachKeyValue<T extends object = object, K extends keyof T = keyof T>(obj: T, { forEach, filter }: ForEachKeyValue<T, K>): void {

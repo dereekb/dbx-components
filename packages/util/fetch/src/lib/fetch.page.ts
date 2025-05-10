@@ -8,7 +8,10 @@ export class FetchPageNoNextPageError extends FetchRequestFactoryError {
 }
 
 export class FetchPageLimitReachedError extends FetchRequestFactoryError {
-  constructor(readonly page: FetchPage<unknown, unknown>, readonly limit: number) {
+  constructor(
+    readonly page: FetchPage<unknown, unknown>,
+    readonly limit: number
+  ) {
     super(`The limit of ${limit} for the number of pages to read was reached.`);
   }
 }
@@ -40,6 +43,10 @@ export interface FetchPageResultInfo extends Page {
    * Cursor for this page, if applicable.
    */
   readonly cursor?: Maybe<FetchPageCursor>;
+  /**
+   * Cursor for the next page, if applicable.
+   */
+  readonly nextPageCursor?: Maybe<FetchPageCursor>;
   /**
    * Whether or not there are more results to fetch.
    *
@@ -154,12 +161,13 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
   return (initalInput: I, options?: Maybe<FetchPageFactoryOptions<I, O>>) => {
     const { maxPage: inputMaxPage = defaultMaxPage, maxItemsPerPage: inputMaxItemsPerPage } = options ?? {};
     const maxItemsPerPage = inputMaxItemsPerPage ?? defaultMaxItemsPerPage;
-    const maxPage = inputMaxPage === null ? Number.MAX_SAFE_INTEGER : inputMaxPage ?? FETCH_PAGE_FACTORY_DEFAULT_MAX_PAGE;
+    const maxPage = inputMaxPage === null ? Number.MAX_SAFE_INTEGER : (inputMaxPage ?? FETCH_PAGE_FACTORY_DEFAULT_MAX_PAGE);
 
     function fetchNextWithInput(input: I, previous: Maybe<FetchNextPage<I, O>> = undefined): () => Promise<FetchNextPage<I, O>> {
       return async (): Promise<FetchNextPage<I, O>> => {
         const result: O = await fetch(input);
-        const { cursor, hasNext: readHasNext } = await readFetchPageResultInfo(result);
+        const { cursor: readCursor, nextPageCursor, hasNext: readHasNext } = await readFetchPageResultInfo(result);
+        const cursor = readCursor ?? previous?.cursor;
         const hasNext = readHasNext !== false;
         const page = previous ? previous.page + 1 : FIRST_PAGE;
         const isAtMaxPage = page >= maxPage;
@@ -172,6 +180,7 @@ export function fetchPageFactory<I, O>(config: FetchPageFactoryConfig<I, O>): Fe
           hasNext,
           isAtMaxPage,
           cursor,
+          nextPageCursor,
           fetchNext: cachedGetter(async () => {
             // assert max page
             if (isAtMaxPage) {

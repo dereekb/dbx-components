@@ -5,6 +5,7 @@ import { MailgunApi } from './mailgun.api';
 
 @Injectable()
 export class MailgunService {
+
   private readonly _mailgunApi: MailgunApi;
   private readonly _serverEnvironmentService: ServerEnvironmentService;
 

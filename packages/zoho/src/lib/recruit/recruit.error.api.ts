@@ -8,7 +8,10 @@ import { ZohoDataArrayResultRef } from '../zoho.api.page';
  * Thrown when a record with the given id has no content. Typically also means it does not exist.
  */
 export class ZohoRecruitRecordNoContentError extends BaseError {
-  constructor(readonly moduleName?: ZohoRecruitModuleName, readonly recordId?: ZohoRecruitRecordId) {
+  constructor(
+    readonly moduleName?: ZohoRecruitModuleName,
+    readonly recordId?: ZohoRecruitRecordId
+  ) {
     super(`There was no content or matching records for the content. It may not exist.`);
   }
 }
@@ -96,5 +99,5 @@ export function parseZohoRecruitServerErrorResponseData(errorResponseData: ZohoS
   return result;
 }
 
-export const interceptZohoRecruitErrorResponse = interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorResponseData);
+export const interceptZohoRecruit200StatusWithErrorResponse = interceptZohoErrorResponseFactory(parseZohoRecruitServerErrorResponseData);
 export const handleZohoRecruitErrorFetch = handleZohoErrorFetchFactory(parseZohoRecruitError, logZohoRecruitErrorToConsole);

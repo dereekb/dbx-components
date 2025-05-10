@@ -278,6 +278,7 @@ Be sure to also move `reflect-metadata` to `project.json` as one of the polyfill
 - Removed `DbxCalendarRootModule` and replaced with `provideDbxCalendar()`.
 - Renamed `DbxFormSpacerComponent` to `DbxFormSpacerDirective`.
 - Renamed `DbxFormValueChangesDirective` to `DbxFormValueChangeDirective`.
+- Updated `firebaseServerActionsContext` input to now take an `FirebaseServerActionsContextOptions` value instead of a boolean that corresponded to the logging function.
 
 #### Deprecated Components Removal
 - Removed deprecated `DbxTextCompatModule`, and `dbx-notice`, `dbx-hint`, `dbx-note`, `dbx-success`, `dbx-warn`, `dbx-ok`. `dbx-label` `dbx-form-description` selectors. Use as a CSS class now.
@@ -380,7 +381,7 @@ https://firebase.google.com/docs/functions/2nd-gen-upgrade
 @dereekb/firebase-server functions that used Gen 1 functions are now deprecated. Because of the abstraction, updating should be straightforward. There are several updates that need to occur:
 
 In your app (typically the dbx-components `functions.ts` file), you will need to replace:
-- `onCallWithNestApplicationFactory()` with ` onCallHandlerWithNestApplicationFactory()`
+- `onCallWithNestApplicationFactory()` with `onCallHandlerWithNestApplicationFactory()`
 - `onCallWithNestContextFactory()` with `onCallHandlerWithNestContextFactory()`
 - `onScheduleWithNestApplicationFactory()` with `onScheduleHandlerWithNestApplicationFactory()`
 - `onScheduleWithNestContextFactory()` with `onScheduleHandlerWithNestContextFactory()`

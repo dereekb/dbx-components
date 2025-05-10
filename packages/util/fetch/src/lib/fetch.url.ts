@@ -1,4 +1,4 @@
-import { type Maybe, type ArrayOrValue, type IterableOrValue, type ObjectKey, mergeObjects, useIterableOrValue, type FilterKeyValueTuplesInput } from '@dereekb/util';
+import { type Maybe, type ArrayOrValue, type IterableOrValue, type ObjectKey, mergeObjects, useIterableOrValue } from '@dereekb/util';
 
 /**
  * Options for makeUrlSearchParams()
@@ -8,10 +8,6 @@ export interface MakeUrlSearchParamsOptions {
    * Optional iterable of keys to remove from the search params.
    */
   readonly omitKeys?: Maybe<IterableOrValue<ObjectKey>>;
-  /**
-   * Optional filter for merging the objects together.
-   */
-  readonly mergeFilter?: FilterKeyValueTuplesInput;
 }
 
 /**
@@ -31,4 +27,21 @@ export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Rec
   }
 
   return searchParams;
+}
+
+/**
+ * Merges an array of MakeUrlSearchParamsOptions into a single MakeUrlSearchParamsOptions value.
+ */
+export function mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<MakeUrlSearchParamsOptions>>): MakeUrlSearchParamsOptions {
+  const omitKeys = new Set<ObjectKey>();
+
+  useIterableOrValue(options, (x) => {
+    if (x?.omitKeys != null) {
+      useIterableOrValue(x.omitKeys, (key) => omitKeys.add(key));
+    }
+  });
+
+  return {
+    omitKeys: omitKeys.size > 0 ? Array.from(omitKeys) : undefined
+  };
 }
