@@ -72,7 +72,10 @@ export class ZohoServerError<D extends ZohoServerErrorData = ZohoServerErrorData
  * Zoho Server Error that includes the FetchResponseError
  */
 export class ZohoServerFetchResponseError<D extends ZohoServerErrorData = ZohoServerErrorData> extends ZohoServerError<D> {
-  constructor(readonly data: D, readonly responseError: FetchResponseError) {
+  constructor(
+    readonly data: D,
+    readonly responseError: FetchResponseError
+  ) {
     super(data);
   }
 }
@@ -138,9 +141,7 @@ export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchRespon
 export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: ZohoServerErrorResponseData, fetchResponseError: FetchResponseError) => ParsedZohoServerError;
 
 /**
- * FetchJsonInterceptJsonResponseFunction that intercepts ZohoServerError responses and throws a ZohoServerError.
- *
- * @returns
+ * FetchJsonInterceptJsonResponseFunction that intercepts a 200 response that actually contains a ZohoServerError and throws a ZohoServerError for the error handling to catch.
  */
 export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
   return (json: ZohoServerErrorResponseData | unknown, response: Response) => {
@@ -256,7 +257,7 @@ export interface ZohoRateLimitHeaderDetails {
 }
 
 export function zohoRateLimitHeaderDetails(headers: Headers): Maybe<ZohoRateLimitHeaderDetails> {
-  const limitHeader = headers.has(ZOHO_RATE_LIMIT_REMAINING_HEADER);
+  const limitHeader = headers.get(ZOHO_RATE_LIMIT_LIMIT_HEADER);
   const remainingHeader = headers.get(ZOHO_RATE_LIMIT_REMAINING_HEADER);
   const resetHeader = headers.get(ZOHO_RATE_LIMIT_RESET_HEADER);
 

@@ -8,12 +8,12 @@ import { APP_CODE_PREFIXApiAuthService } from './auth.service';
 import { APP_CODE_PREFIXApiStorageModule } from './storage.module';
 import { MailgunService, MailgunServiceModule } from '@dereekb/nestjs/mailgun';
 import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
-import { isTestNodeEnv } from '@dereekb/nestjs';
+import { ServerEnvironmentService } from '@dereekb/nestjs';
 
-const APP_CODE_PREFIXFirebaseServerActionsContextFactory = (collections: APP_CODE_PREFIXFirestoreCollections, authService: APP_CODE_PREFIXApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService): APP_CODE_PREFIXFirebaseServerActionsContext => {
+const APP_CODE_PREFIXFirebaseServerActionsContextFactory = (serverEnvironmentService: ServerEnvironmentService, collections: APP_CODE_PREFIXFirestoreCollections, authService: APP_CODE_PREFIXApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService): APP_CODE_PREFIXFirebaseServerActionsContext => {
   return {
     ...collections,
-    ...firebaseServerActionsContext(isTestNodeEnv()),
+    ...firebaseServerActionsContext({ logError: serverEnvironmentService.isTestingEnv }),
     storageService,
     authService,
     mailgunService,
@@ -27,9 +27,9 @@ const APP_CODE_PREFIXFirebaseServerActionsContextFactory = (collections: APP_COD
     {
       provide: APP_CODE_PREFIXFirebaseServerActionsContext,
       useFactory: APP_CODE_PREFIXFirebaseServerActionsContextFactory,
-      inject: [APP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIXApiAuthService, FirebaseServerStorageService, MailgunService]
+      inject: [ServerEnvironmentService, APP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIXApiAuthService, FirebaseServerStorageService, MailgunService]
     }
   ],
   exports: [APP_CODE_PREFIXFirebaseServerActionsContext]
 })
-export class APP_CODE_PREFIXApiActionModule {}
+export class APP_CODE_PREFIXApiActionModule { }

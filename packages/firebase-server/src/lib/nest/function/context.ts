@@ -1,6 +1,6 @@
 import { type ValidationError } from 'class-validator';
-import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory } from '@dereekb/model';
-import { type HttpException, ValidationPipe } from '@nestjs/common';
+import { toTransformAndValidateFunctionResultFactory, type TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, type TransformAndValidateObjectFactory, TransformAndValidateObjectFactoryDefaults } from '@dereekb/model';
+import { type HttpException, ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
 import { mapIdentityFunction } from '@dereekb/util';
 import { badRequestError } from '../../function/error';
 
@@ -15,9 +15,11 @@ export abstract class AbstractFirebaseServerActionsContext implements FirebaseSe
   abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<unknown>;
 }
 
-export function firebaseServerActionsContext(logError?: FirebaseServerActionsTransformFactoryLogErrorFunctionInput): FirebaseServerActionsContext {
+export interface FirebaseServerActionsContextOptions extends FirebaseServerActionsTransformFactoryOptions {}
+
+export function firebaseServerActionsContext(options?: FirebaseServerActionsContextOptions): FirebaseServerActionsContext {
   return {
-    ...firebaseServerActionsTransformContext(logError)
+    ...firebaseServerActionsTransformContext(options)
   };
 }
 
@@ -37,8 +39,10 @@ export interface FirebaseServerActionsTransformContext {
   readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory;
 }
 
-export function firebaseServerActionsTransformContext(logError?: FirebaseServerActionsTransformFactoryLogErrorFunctionInput): FirebaseServerActionsTransformContext {
-  const firebaseServerActionTransformFactory = firebaseServerActionsTransformFactory(logError);
+export interface FirebaseServerActionsTransformContextOptions extends FirebaseServerActionsTransformFactoryOptions {}
+
+export function firebaseServerActionsTransformContext(options?: FirebaseServerActionsTransformContextOptions): FirebaseServerActionsTransformContext {
+  const firebaseServerActionTransformFactory = firebaseServerActionsTransformFactory(options);
   const firebaseServerActionTransformFunctionFactory = toTransformAndValidateFunctionResultFactory(firebaseServerActionTransformFactory);
 
   return {
@@ -55,7 +59,9 @@ export const FIREBASE_SERVER_VALIDATION_ERROR_CODE = 'VALIDATION_ERROR';
  * @returns
  */
 export function firebaseServerValidationServerError(validationError: ValidationError[]) {
-  const nestValidationExceptionFactory = new ValidationPipe().createExceptionFactory();
+  const nestValidationExceptionFactory = new ValidationPipe({
+    forbidUnknownValues: false
+  }).createExceptionFactory();
   const nestError = nestValidationExceptionFactory(validationError);
   const data = (nestError as HttpException).getResponse();
 
@@ -77,7 +83,13 @@ export function firebaseServerValidationError(validationError: ValidationError[]
   return badRequestError(serverError);
 }
 
-export function firebaseServerActionsTransformFactory(logError: FirebaseServerActionsTransformFactoryLogErrorFunctionInput = false): TransformAndValidateObjectFactory {
+export interface FirebaseServerActionsTransformFactoryOptions extends Pick<TransformAndValidateObjectFactoryDefaults<any>, 'defaultValidationOptions'> {
+  readonly logError?: FirebaseServerActionsTransformFactoryLogErrorFunctionInput;
+}
+
+export function firebaseServerActionsTransformFactory(options?: FirebaseServerActionsTransformFactoryOptions): TransformAndValidateObjectFactory {
+  const { logError, defaultValidationOptions } = options ?? {};
+
   const logErrorFunction = logError !== false ? (typeof logError === 'function' ? logError : defaultFirebaseServerActionsTransformFactoryLogErrorFunction) : mapIdentityFunction;
 
   return transformAndValidateObjectFactory({
@@ -86,7 +98,8 @@ export function firebaseServerActionsTransformFactory(logError: FirebaseServerAc
       const { data } = serverError;
       logErrorFunction(data as object);
       throw badRequestError(serverError);
-    }
+    },
+    defaultValidationOptions
   });
 }
 

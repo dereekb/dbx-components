@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "module": "commonjs",
+    "declaration": true,
+    "types": [],
+    "target": "ES2022"
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["jest.config.ts", "**/*.spec.ts"]
+}

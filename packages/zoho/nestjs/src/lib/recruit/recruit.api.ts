@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoRecruit, ZohoRecruitContext, createNotes, createNotesForRecord, deleteNotes, executeRestApiFunction, getNotesForRecord, getRecordById, getRecords, insertRecord, searchRecords, searchRecordsPageFactory, updateRecord, upsertRecord, zohoRecruitFactory } from '@dereekb/zoho';
+import { ZohoRecruit, ZohoRecruitContext, createNotes, createNotesForRecord, deleteNotes, executeRestApiFunction, getNotesForRecord, getNotesForRecordPageFactory, getRecordById, getRecords, insertRecord, searchRecords, searchRecordsPageFactory, updateRecord, upsertRecord, zohoRecruitFactory } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -15,7 +15,10 @@ export class ZohoRecruitApi {
     return this.zohoRecruit.recruitContext.zohoRateLimiter;
   }
 
-  constructor(@Inject(ZohoRecruitServiceConfig) readonly config: ZohoRecruitServiceConfig, @Inject(ZohoAccountsApi) readonly zohoAccountsApi: ZohoAccountsApi) {
+  constructor(
+    @Inject(ZohoRecruitServiceConfig) readonly config: ZohoRecruitServiceConfig,
+    @Inject(ZohoAccountsApi) readonly zohoAccountsApi: ZohoAccountsApi
+  ) {
     this.zohoRecruit = zohoRecruitFactory({
       ...config.factoryConfig,
       accountsContext: zohoAccountsApi.accountsContext
@@ -65,6 +68,10 @@ export class ZohoRecruitApi {
 
   get getNotesForRecord() {
     return getNotesForRecord(this.recruitContext);
+  }
+
+  get getNotesForRecordPageFactory() {
+    return getNotesForRecordPageFactory(this.recruitContext);
   }
 
   get executeRestApiFunction() {

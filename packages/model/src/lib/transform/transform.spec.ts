@@ -3,6 +3,8 @@ import { transformAndValidateResultFactory } from './transform.result';
 import { Expose } from 'class-transformer';
 import { IsBoolean } from 'class-validator';
 
+export class TestTransformAndValidateEmptyClass {}
+
 export class TestTransformAndValidateClass {
   @Expose()
   @IsBoolean()
@@ -72,8 +74,11 @@ describe('transformAndValidateResultFactory()', () => {
 });
 
 describe('transformAndValidateObjectResult()', () => {
-  const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateClass, { value: TestTransformAndValidateClass }> = transformAndValidateObjectResult(TestTransformAndValidateClass, async (value) => {
-    return { value };
+  const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateClass, { value: TestTransformAndValidateClass }> = transformAndValidateObjectResult({
+    classType: TestTransformAndValidateClass,
+    fn: async (value) => {
+      return { value };
+    }
   });
 
   it('should return success when the input is valid', async () => {
@@ -93,6 +98,42 @@ describe('transformAndValidateObjectResult()', () => {
     expect(result.success).toBe(false);
     expect(result.validationErrors.length > 0).toBe(true);
     expect(result.validationErrors[0].property).toBe('valid'); // missing
+  });
+
+  describe('class with no expose annotations', () => {
+    const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateEmptyClass, { value: TestTransformAndValidateEmptyClass }> = transformAndValidateObjectResult({
+      classType: TestTransformAndValidateEmptyClass,
+      fn: async (value) => {
+        return { value };
+      }
+    });
+
+    it('should not throw an error', async () => {
+      const result = await transformResult({});
+
+      expect(result.object).toBeInstanceOf(TestTransformAndValidateEmptyClass);
+      expect(result.success).toBe(true);
+    });
+
+    describe('explicitly forbidUnknownValues', () => {
+      const transformResult: TransformAndValidateObjectResultFunction<TestTransformAndValidateEmptyClass, { value: TestTransformAndValidateEmptyClass }> = transformAndValidateObjectResult({
+        classType: TestTransformAndValidateEmptyClass,
+        fn: async (value) => {
+          return { value };
+        },
+        defaultValidationOptions: {
+          forbidUnknownValues: true
+        }
+      });
+
+      it('should throw an error', async () => {
+        const result = (await transformResult({})) as TransformAndValidateObjectErrorResultOutput<TestTransformAndValidateClass>;
+
+        expect(result.object).toBeInstanceOf(TestTransformAndValidateEmptyClass);
+        expect(result.success).toBe(false);
+        expect(result.validationErrors.length).toBe(1);
+      });
+    });
   });
 
   // TODO(TEST): Add context/groups for validation tests

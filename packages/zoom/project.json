@@ -1,0 +1,96 @@
+{
+  "name": "zoom",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/zoom/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["util-fetch", "!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/zoom"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run zoom:build-base"
+          },
+          {
+            "command": "npx nx run zoom-nestjs:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/nestjs/**/*.ts"],
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/zoom",
+        "outputPath": "dist/packages/zoom",
+        "main": "packages/zoom/src/index.ts",
+        "tsConfig": "packages/zoom/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/zoom/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "assets": [
+          {
+            "glob": "packages/zoom/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/zoom"],
+      "options": {
+        "jestConfig": "packages/zoom/jest.config.ts"
+      }
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run zoom tests",
+            "command": "npx nx test zoom"
+          },
+          {
+            "description": "run zoom-nestjs tests",
+            "command": "npx nx test zoom-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/zoom && npm publish --access public"
+      }
+    }
+  }
+}

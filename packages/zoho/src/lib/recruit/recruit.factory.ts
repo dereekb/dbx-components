@@ -1,7 +1,7 @@
 import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZohoRecruitConfig, ZohoRecruitContext, ZohoRecruitContextRef, ZohoRecruitFetchFactory, ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
 import { LogZohoServerErrorFunction } from '../zoho.error.api';
-import { handleZohoRecruitErrorFetch, interceptZohoRecruitErrorResponse } from './recruit.error.api';
+import { handleZohoRecruitErrorFetch, interceptZohoRecruit200StatusWithErrorResponse } from './recruit.error.api';
 import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 import { ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
@@ -59,7 +59,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
 
     const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction);
     const fetchJson = fetchJsonFunction(fetch, {
-      interceptJsonResponse: interceptZohoRecruitErrorResponse, // intercept errors that return status 200
+      interceptJsonResponse: interceptZohoRecruit200StatusWithErrorResponse, // intercept errors that return status 200
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 

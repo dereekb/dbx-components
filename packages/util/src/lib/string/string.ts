@@ -21,6 +21,16 @@ export type ReadStringFunction<T, S extends string = string> = MapFunction<T, S>
 // eslint-disable-next-line
 export type CommaSeparatedString<T = unknown> = string;
 
+/**
+ * Represents a string that is made up of space-separated values.
+ *
+ * Optional generic typing exists for communicating what values are separated within the string.
+ *
+ * I.E. 0 1 2
+ */
+// eslint-disable-next-line
+export type SpaceSeparatedString<T = unknown> = string;
+
 export function caseInsensitiveString(input: string): string;
 export function caseInsensitiveString(input: undefined): undefined;
 export function caseInsensitiveString(input: Maybe<string>): Maybe<string>;
