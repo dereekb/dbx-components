@@ -1,5 +1,5 @@
 import { FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
-import { ZoomServerErrorResponseData, handleZoomErrorFetchFactory, interceptZoomErrorResponseFactory, logZoomServerErrorFunction, parseZoomServerErrorResponseData, zoomServerErrorData, ParsedZoomServerError } from '../zoom.error.api';
+import { ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFunction, parseZoomServerErrorData, ParsedZoomServerError } from '../zoom.error.api';
 
 /**
  * Error in the following cases:
@@ -30,7 +30,7 @@ export class ZoomOAuthAuthFailureError extends FetchRequestFactoryError {
 export const logZoomOAuthErrorToConsole = logZoomServerErrorFunction('ZoomOAuth');
 
 export async function parseZoomOAuthError(responseError: FetchResponseError) {
-  const data: ZoomServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
+  const data: ZoomServerErrorData | undefined = await responseError.response.json().catch((x) => undefined);
   let result: ParsedZoomServerError | undefined;
 
   if (data) {
@@ -40,19 +40,16 @@ export async function parseZoomOAuthError(responseError: FetchResponseError) {
   return result;
 }
 
-export function parseZoomOAuthServerErrorResponseData(errorResponseData: ZoomServerErrorResponseData, responseError: FetchResponseError) {
+export function parseZoomOAuthServerErrorResponseData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError) {
   let result: ParsedZoomServerError | undefined;
-  const error = errorResponseData.error;
 
-  if (error) {
-    const errorData = zoomServerErrorData(error);
-
-    switch (errorData.code) {
+  if (zoomServerError) {
+    switch (zoomServerError.code) {
       case ZOOM_ACCOUNTS_INVALID_GRANT_ERROR_CODE:
-        result = new ZoomOAuthAccessTokenError(errorData.code);
+        result = new ZoomOAuthAccessTokenError(zoomServerError.code);
         break;
       default:
-        result = parseZoomServerErrorResponseData(errorResponseData, responseError);
+        result = parseZoomServerErrorData(zoomServerError, responseError);
         break;
     }
   }
@@ -60,5 +57,4 @@ export function parseZoomOAuthServerErrorResponseData(errorResponseData: ZoomSer
   return result;
 }
 
-export const interceptZoomOAuthErrorResponse = interceptZoomErrorResponseFactory(parseZoomOAuthServerErrorResponseData);
 export const handleZoomOAuthErrorFetch = handleZoomErrorFetchFactory(parseZoomOAuthError, logZoomOAuthErrorToConsole);

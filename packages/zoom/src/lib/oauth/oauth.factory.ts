@@ -1,7 +1,7 @@
 import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZOOM_OAUTH_API_URL, ZoomOAuthConfig, ZoomOAuthContext, ZoomOAuthContextRef, ZoomOAuthFetchFactory, ZoomOAuthFetchFactoryInput, ZoomOAuthMakeUserAccessTokenFactory, ZoomOAuthMakeUserAccessTokenFactoryInput } from './oauth.config';
 import { LogZoomServerErrorFunction } from '../zoom.error.api';
-import { ZoomOAuthAuthFailureError, handleZoomOAuthErrorFetch, interceptZoomOAuthErrorResponse } from './oauth.error.api';
+import { ZoomOAuthAuthFailureError, handleZoomOAuthErrorFetch } from './oauth.error.api';
 import { ZoomAccessToken, ZoomAccessTokenCache, ZoomAccessTokenFactory, ZoomAccessTokenRefresher } from './oauth';
 import { MS_IN_MINUTE, MS_IN_SECOND, Maybe, Milliseconds } from '@dereekb/util';
 import { zoomRateLimitedFetchHandler } from '../zoom.limit';
@@ -55,7 +55,6 @@ export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAu
 
     const fetch: ConfiguredFetch = handleZoomOAuthErrorFetch(baseFetch, logZoomServerErrorFunction);
     const fetchJson = fetchJsonFunction(fetch, {
-      interceptJsonResponse: interceptZoomOAuthErrorResponse, // intercept errors that return status 200
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 

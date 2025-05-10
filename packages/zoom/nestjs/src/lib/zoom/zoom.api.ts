@@ -1,18 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ZoomServiceConfig } from './zoom.config';
-import { Zoom, ZoomContext, zoomFactory } from '@dereekb/zoom';
+import { Zoom, ZoomServerContext, createMeetingForUser, deleteMeeting, getUser, listMeetingsForUser, listMeetingsForUserPageFactory, listUsers, listUsersPageFactory, zoomFactory } from '@dereekb/zoom';
 import { ZoomOAuthApi } from '../oauth';
 
 @Injectable()
 export class ZoomApi {
   readonly zoom: Zoom;
 
-  get zoomContext(): ZoomContext {
-    return this.zoom.zoomContext;
+  get zoomContext(): ZoomServerContext {
+    return this.zoom.zoomServerContext;
   }
 
   get zoomRateLimiter() {
-    return this.zoom.zoomContext.zoomRateLimiter;
+    return this.zoom.zoomServerContext.zoomRateLimiter;
   }
 
   constructor(
@@ -25,7 +25,39 @@ export class ZoomApi {
     })(config.zoom);
   }
 
-  // MARK: Accessors
+  // MARK: Users
+  get getUser() {
+    return getUser(this.zoomContext);
+  }
 
-  // TODO: ...
+  get listUsers() {
+    return listUsers(this.zoomContext);
+  }
+
+  get listUsersPageFactory() {
+    return listUsersPageFactory(this.zoomContext);
+  }
+
+  // MARK: Meetings
+  get listMeetingsForUser() {
+    return listMeetingsForUser(this.zoomContext);
+  }
+
+  get listMeetingsForUserPageFactory() {
+    return listMeetingsForUserPageFactory(this.zoomContext);
+  }
+
+  get createMeetingForUser() {
+    return createMeetingForUser(this.zoomContext);
+  }
+
+  get deleteMeeting() {
+    return deleteMeeting(this.zoomContext);
+  }
+}
+
+export class ZoomApiUserContext {
+  constructor(refreshToken: string) {
+    // TODO: ...
+  }
 }

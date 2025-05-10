@@ -62,5 +62,5 @@ export function parseZohoAccountsServerErrorResponseData(errorResponseData: Zoho
   return result;
 }
 
-export const interceptZohoAccountsErrorResponse = interceptZohoErrorResponseFactory(parseZohoAccountsServerErrorResponseData);
+export const interceptZohoAccounts200StatusWithErrorResponse = interceptZohoErrorResponseFactory(parseZohoAccountsServerErrorResponseData);
 export const handleZohoAccountsErrorFetch = handleZohoErrorFetchFactory(parseZohoAccountsError, logZohoAccountsErrorToConsole);

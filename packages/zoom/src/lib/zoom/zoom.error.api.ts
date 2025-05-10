@@ -1,19 +1,34 @@
 import { FetchResponseError } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-import { ZoomServerErrorDataWithDetails, ZoomServerErrorResponseData, handleZoomErrorFetchFactory, interceptZoomErrorResponseFactory, logZoomServerErrorFunction, parseZoomServerErrorResponseData, ZoomServerError, ParsedZoomServerError } from '../zoom.error.api';
+import { ZoomServerErrorDataWithDetails, ZoomServerErrorData, handleZoomErrorFetchFactory, logZoomServerErrorFunction, parseZoomServerErrorData, ZoomServerError, ParsedZoomServerError } from '../zoom.error.api';
+import { ZoomOAuthAccessTokenErrorCode } from '../oauth';
 
-export async function parseZoomError(responseError: FetchResponseError) {
-  const data: ZoomServerErrorResponseData | undefined = await responseError.response.json().catch((x) => undefined);
+// MARK: Parser
+export const logZoomErrorToConsole = logZoomServerErrorFunction('Zoom');
+
+export async function parseZoomApiError(responseError: FetchResponseError) {
+  const data: ZoomServerErrorData | undefined = await responseError.response.json().catch((x) => undefined);
   let result: ParsedZoomServerError | undefined;
 
   if (data) {
-    result = parseZoomServerErrorResponseData(data, responseError);
+    result = parseZoomApiServerErrorResponseData(data, responseError);
   }
 
   return result;
 }
 
-export const logZoomErrorToConsole = logZoomServerErrorFunction('Zoom');
+export function parseZoomApiServerErrorResponseData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError) {
+  let result: ParsedZoomServerError | undefined;
 
-export const interceptZoomErrorResponse = interceptZoomErrorResponseFactory(parseZoomServerErrorResponseData);
-export const handleZoomErrorFetch = handleZoomErrorFetchFactory(parseZoomError, logZoomErrorToConsole);
+  if (zoomServerError) {
+    switch (zoomServerError.code) {
+      default:
+        result = parseZoomServerErrorData(zoomServerError, responseError);
+        break;
+    }
+  }
+
+  return result;
+}
+
+export const handleZoomErrorFetch = handleZoomErrorFetchFactory(parseZoomApiError, logZoomErrorToConsole);

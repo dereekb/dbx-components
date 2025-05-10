@@ -141,9 +141,7 @@ export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchRespon
 export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: ZohoServerErrorResponseData, fetchResponseError: FetchResponseError) => ParsedZohoServerError;
 
 /**
- * FetchJsonInterceptJsonResponseFunction that intercepts ZohoServerError responses and throws a ZohoServerError.
- *
- * @returns
+ * FetchJsonInterceptJsonResponseFunction that intercepts a 200 response that actually contains a ZohoServerError and throws a ZohoServerError for the error handling to catch.
  */
 export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
   return (json: ZohoServerErrorResponseData | unknown, response: Response) => {

@@ -249,7 +249,7 @@ export function fileZoomOAuthAccessTokenCacheService(filename: string = DEFAULT_
       loadCachedToken: async function (): Promise<Maybe<ZoomAccessToken>> {
         const tokens = await loadTokenFile();
         const token = tokens.token;
-        console.log('retrieving access token from file: ', { token });
+        // console.log('retrieving access token from file: ', { token });
         return token;
       },
       updateCachedToken: async function (accessToken: ZoomAccessToken): Promise<void> {

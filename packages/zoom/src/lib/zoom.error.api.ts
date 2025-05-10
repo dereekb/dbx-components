@@ -1,12 +1,6 @@
-import { MS_IN_MINUTE, Maybe, UnixDateTimeNumber } from '@dereekb/util';
-import { ConfiguredFetch, FetchJsonInterceptJsonResponseFunction, FetchRequestFactoryError, FetchResponseError } from '@dereekb/util/fetch';
+import { ArrayOrValue, MS_IN_MINUTE, Maybe, UnixDateTimeNumber, asArray, iterableToArray, mergeArrays } from '@dereekb/util';
+import { ConfiguredFetch, FetchJsonInterceptJsonResponseFunction, FetchRequestFactoryError, FetchResponseError, MakeUrlSearchParamsOptions, mergeMakeUrlSearchParamsOptions } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
-
-export type ZoomServerErrorResponseDataError = ZoomServerErrorData | ZoomServerErrorCode;
-
-export interface ZoomServerErrorResponseData {
-  readonly error: ZoomServerErrorResponseDataError;
-}
 
 /**
  * A code used in some cases to denote success.
@@ -16,8 +10,14 @@ export const ZOOM_SUCCESS_CODE = 'SUCCESS';
 export type ZoomServerSuccessCode = typeof ZOOM_SUCCESS_CODE;
 export type ZoomServerSuccessStatus = 'success';
 
-export type ZoomServerErrorCode = string;
 export type ZoomServerErrorStatus = 'error';
+
+/**
+ * Zoom server error codes are numbers or strings.
+ *
+ * Check the API docs for specific functions to see what codes are used for what error.
+ */
+export type ZoomServerErrorCode = string | number;
 
 /**
  * Zoom Server Error Data
@@ -38,22 +38,6 @@ export interface ZoomServerErrorData<T = unknown> {
  * Contains details and a status
  */
 export type ZoomServerErrorDataWithDetails<T = unknown> = Required<ZoomServerErrorData<T>>;
-
-export function zoomServerErrorData(error: ZoomServerErrorResponseDataError): ZoomServerErrorData {
-  const errorType = typeof error;
-  let errorData: ZoomServerErrorData;
-
-  if (errorType === 'object') {
-    errorData = error as ZoomServerErrorData;
-  } else {
-    errorData = {
-      code: error as ZoomServerErrorCode,
-      message: ''
-    };
-  }
-
-  return errorData;
-}
 
 /**
  * Zoom Server Error
@@ -138,50 +122,7 @@ export function handleZoomErrorFetchFactory(parseZoomError: ParseZoomFetchRespon
   };
 }
 
-export type ParseZoomServerErrorResponseData = (zoomServerErrorResponseData: ZoomServerErrorResponseData, fetchResponseError: FetchResponseError) => ParsedZoomServerError;
-
-/**
- * FetchJsonInterceptJsonResponseFunction that intercepts ZoomServerError responses and throws a ZoomServerError.
- *
- * @returns
- */
-export function interceptZoomErrorResponseFactory(parseZoomServerErrorResponseData: ParseZoomServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
-  return (json: ZoomServerErrorResponseData | unknown, response: Response) => {
-    const error = (json as ZoomServerErrorResponseData)?.error;
-
-    if (error != null) {
-      const responseError = new FetchResponseError(response);
-
-      if (responseError) {
-        const parsedError = parseZoomServerErrorResponseData(json as ZoomServerErrorResponseData, responseError);
-
-        if (parsedError) {
-          throw parsedError;
-        }
-      }
-    }
-
-    return json;
-  };
-}
-
 // MARK: Parsed Errors
-/**
- * Error in the following (but not limited to) cases:
- * - An extra parameter is provided
- */
-export const ZOOM_INTERNAL_ERROR_CODE = 'INTERNAL_ERROR';
-
-/**
- * Error when the Zoom API returns an internal error
- */
-export class ZoomInternalError extends ZoomServerFetchResponseError {}
-
-/**
- * Error when too many requests are made in a short period of time.
- */
-export const ZOOM_TOO_MANY_REQUESTS_ERROR_CODE = 'TOO_MANY_REQUESTS';
-
 /**
  * The status code that Zoom uses to indicates that too many requests have been made in a short period of time.
  */
@@ -256,28 +197,21 @@ export class ZoomTooManyRequestsError extends ZoomServerFetchResponseError {
 }
 
 /**
- * Function that parses/transforms a ZoomServerErrorResponseData into a general ZoomServerError or other known error type.
+ * Function that parses/transforms a ZoomServerErrorData into a general ZoomServerError or other known error type.
  *
  * @param errorResponseData
  * @param responseError
  * @returns
  */
-export function parseZoomServerErrorResponseData(errorResponseData: ZoomServerErrorResponseData, responseError: FetchResponseError): ZoomServerFetchResponseError | undefined {
+export function parseZoomServerErrorData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError): ZoomServerFetchResponseError | undefined {
   let result: ZoomServerFetchResponseError | undefined;
-  const error = tryFindZoomServerErrorData(errorResponseData, responseError);
 
-  if (error) {
-    const errorData = zoomServerErrorData(error);
-
-    switch (errorData.code) {
-      case ZOOM_INTERNAL_ERROR_CODE:
-        result = new ZoomInternalError(errorData, responseError);
-        break;
-      case ZOOM_TOO_MANY_REQUESTS_ERROR_CODE:
-        result = new ZoomTooManyRequestsError(errorData, responseError);
-        break;
+  if (responseError.response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
+    result = new ZoomTooManyRequestsError(zoomServerError, responseError);
+  } else if (zoomServerError) {
+    switch (zoomServerError.code) {
       default:
-        result = new ZoomServerFetchResponseError(errorData, responseError);
+        result = new ZoomServerFetchResponseError(zoomServerError, responseError);
         break;
     }
   }
@@ -285,16 +219,43 @@ export function parseZoomServerErrorResponseData(errorResponseData: ZoomServerEr
   return result;
 }
 
+// MARK: Silence
+export interface SilenceZoomErrorConfig {
+  /**
+   * If true an error will be thrown if the meeting does not exist.
+   */
+  readonly silenceError?: boolean;
+}
+
 /**
- * Attempts to retrieve an ZoomServerErrorResponseDataError from the input.
+ * Returns a pre-configured MakeUrlSearchParamsOptions that omits the silenceError key.
  *
- * Non-200 errors returned by the Zoom API are returned as the object directly instead of as an ZoomServerErrorResponseData directly.
- *
- * @param errorResponseData
- * @param responseError
- * @returns
+ * If other options are input, it merges those two options together and adds silenceError to the omitted keys.
  */
-export function tryFindZoomServerErrorData(errorResponseData: ZoomServerErrorResponseData | ZoomServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZoomServerErrorResponseDataError> {
-  const error = (errorResponseData as ZoomServerErrorResponseData).error ?? (!responseError.response.ok ? (errorResponseData as unknown as ZoomServerErrorResponseDataError) : undefined);
-  return error;
+export function omitSilenceZoomErrorKeys(options?: MakeUrlSearchParamsOptions): MakeUrlSearchParamsOptions {
+  const omitKeys = ['silenceError'];
+  return mergeMakeUrlSearchParamsOptions([options, { omitKeys }]);
+}
+
+export type SilenceZoomErrorWithCodesFunction<T> = (silence?: boolean) => (reason: unknown) => T;
+
+/**
+ * Used with catch to silence Zoom errors with the specified codes.
+ */
+export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>): SilenceZoomErrorWithCodesFunction<void>;
+export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T>;
+export function silenceZoomErrorWithCodesFunction<T>(codes: ArrayOrValue<ZoomServerErrorCode>, returnFn?: (error: ZoomServerFetchResponseError) => T): SilenceZoomErrorWithCodesFunction<T> {
+  const codesSet = new Set(asArray(codes));
+
+  return (silence?: boolean) => {
+    return (reason: unknown) => {
+      if (silence !== false && reason instanceof ZoomServerFetchResponseError) {
+        if (codesSet.has(reason.code)) {
+          return returnFn?.(reason) as any;
+        }
+      }
+
+      throw reason;
+    };
+  };
 }

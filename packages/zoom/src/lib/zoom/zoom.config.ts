@@ -12,18 +12,36 @@ export interface ZoomFetchFactoryInput {
 
 export type ZoomFetchFactory = FactoryWithInput<ConfiguredFetch, ZoomFetchFactoryInput>;
 
+/**
+ * Denotes the type of authorization used by the ZoomContext.
+ *
+ * - 'server': Uses Server to Server authorization
+ * - 'user': Uses User to Server authorization
+ */
+export type ZoomContextType = 'server' | 'user';
+
+/**
+ * A zoom context that can send requests to the Zoom API.
+ */
 export interface ZoomContext extends ZoomRateLimiterRef {
+  /**
+   * Type of context this is.
+   */
+  readonly type: ZoomContextType;
   /**
    * Performs a fetch as the server.
    */
-  readonly serverFetch: ConfiguredFetch;
+  readonly fetch: ConfiguredFetch;
   /**
    * Performs a json fetch as the server.
    */
+  readonly fetchJson: FetchJsonFunction;
+}
+
+export interface ZoomServerContext extends ZoomContext {
+  readonly type: 'server';
+  readonly serverFetch: ConfiguredFetch;
   readonly serverFetchJson: FetchJsonFunction;
-  /**
-   * Creates a user context from the input.
-   */
   readonly makeUserContext: ZoomUserContextFactory;
   readonly config: ZoomConfig;
 }
@@ -49,12 +67,13 @@ export type ZoomUserContextFactory = FactoryWithRequiredInput<ZoomUserContext, Z
 /**
  * Context used for performing fetch requests for a specific user.
  */
-export interface ZoomUserContext extends ZoomRateLimiterRef {
-  readonly zoomContext: ZoomContext;
+export interface ZoomUserContext extends ZoomContext {
+  readonly type: 'user';
+  readonly zoomServerContext: ZoomServerContext;
   readonly userFetch: ConfiguredFetch;
   readonly userFetchJson: FetchJsonFunction;
 }
 
-export interface ZoomContextRef {
-  readonly zoomContext: ZoomContext;
+export interface ZoomServerContextRef {
+  readonly zoomServerContext: ZoomServerContext;
 }

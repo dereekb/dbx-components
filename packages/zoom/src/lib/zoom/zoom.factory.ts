@@ -1,14 +1,14 @@
 import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
-import { ZoomContext, ZoomContextRef, ZoomFetchFactory, ZoomFetchFactoryInput, ZoomUserContext, ZoomUserContextFactory, ZoomUserContextFactoryInput } from './zoom.config';
+import { ZoomServerContext, ZoomServerContextRef, ZoomFetchFactory, ZoomFetchFactoryInput, ZoomUserContext, ZoomUserContextFactory, ZoomUserContextFactoryInput } from './zoom.config';
 import { LogZoomServerErrorFunction } from '../zoom.error.api';
-import { handleZoomErrorFetch, interceptZoomErrorResponse } from './zoom.error.api';
+import { handleZoomErrorFetch } from './zoom.error.api';
 import { ZoomOAuthContextRef } from '../oauth/oauth.config';
 import { zoomAccessTokenStringFactory } from '../oauth/oauth';
 import { ZoomRateLimitedFetchHandlerConfig, zoomRateLimitedFetchHandler } from '../zoom.limit';
 import { type Maybe } from '@dereekb/util';
 import { ZOOM_API_URL, ZoomConfig } from '../zoom.config';
 
-export type Zoom = ZoomContextRef;
+export type Zoom = ZoomServerContextRef;
 
 export interface ZoomFactoryConfig extends ZoomOAuthContextRef {
   /**
@@ -57,7 +57,6 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
 
     const serverFetch: ConfiguredFetch = handleZoomErrorFetch(baseFetch, logZoomServerErrorFunction);
     const serverFetchJson = fetchJsonFunction(serverFetch, {
-      interceptJsonResponse: interceptZoomErrorResponse, // intercept errors that return status 200
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
     });
 
@@ -75,12 +74,14 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
       });
 
       const userFetchJson = fetchJsonFunction(userFetch, {
-        interceptJsonResponse: interceptZoomErrorResponse, // intercept errors that return status 200
         handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction
       });
 
       const result: ZoomUserContext = {
-        zoomContext,
+        zoomServerContext: zoomContext,
+        type: 'user',
+        fetch: userFetch,
+        fetchJson: userFetchJson,
         userFetch,
         userFetchJson,
         zoomRateLimiter: fetchHandler._rateLimiter
@@ -89,7 +90,10 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
       return result;
     };
 
-    const zoomContext: ZoomContext = {
+    const zoomContext: ZoomServerContext = {
+      type: 'server',
+      fetch: serverFetch,
+      fetchJson: serverFetchJson,
       serverFetch,
       serverFetchJson,
       makeUserContext,
@@ -98,7 +102,7 @@ export function zoomFactory(factoryConfig: ZoomFactoryConfig): ZoomFactory {
     };
 
     const zoom: Zoom = {
-      zoomContext
+      zoomServerContext: zoomContext
     };
 
     return zoom;
