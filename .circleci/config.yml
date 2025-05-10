@@ -273,7 +273,7 @@ jobs:
       - run: npx nx run util:publish-npmjs && npx nx run rxjs:publish-npmjs
       - run: npx nx run date:publish-npmjs && npx nx run model:publish-npmjs && npx nx run browser:publish-npmjs
       - run: npx nx run nestjs:publish-npmjs && npx nx run firebase:publish-npmjs && npx nx run firebase-server:publish-npmjs
-      - run: npx nx run zoho:publish-npmjs
+      - run: npx nx run zoho:publish-npmjs && npx nx run zoom:publish-npmjs
       - run: npx nx run dbx-core:publish-npmjs && npx nx run dbx-web:publish-npmjs && npx nx run dbx-analytics:publish-npmjs && npx nx run dbx-form:publish-npmjs
       - run: npx nx run dbx-firebase:publish-npmjs
 # --- WORKFLOWS ---
