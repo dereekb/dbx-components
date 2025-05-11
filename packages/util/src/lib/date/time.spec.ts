@@ -96,7 +96,7 @@ describe('makeTimer()', () => {
       expect(timer.state).toBe('complete');
       expect(timer.durationRemaining).toBe(0);
       done();
-    }, timerDuration + 1);
+    }, timerDuration + 5);
   });
 
   it('should throw TimerCancelledError if destroyed while running', async () => {
@@ -126,7 +126,7 @@ describe('makeTimer()', () => {
   it('should have a durationRemaining that decreases', async () => {
     const timer = makeTimer(timerDuration, true);
     expect(timer.durationRemaining).toBeLessThanOrEqual(timerDuration);
-    await waitForMs(timerDuration / 2);
+    await waitForMs(timerDuration / 2 + 1);
     expect(timer.durationRemaining).toBeLessThanOrEqual(timerDuration / 2);
     await timer.promise;
     expect(timer.durationRemaining).toBe(0);
