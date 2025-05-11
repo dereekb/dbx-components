@@ -159,14 +159,21 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
   const promiseRef = promiseReference<void>();
 
   const getDurationRemaining = (): Maybe<Milliseconds> => {
+    let result: Maybe<Milliseconds>;
+
     switch (state) {
       case 'complete':
-        return 0;
+        result = 0;
+        break;
       case 'running':
-        return Math.max(0, currentDuration - (new Date().getTime() - startedAt.getTime()));
+        result = Math.max(0, currentDuration - (new Date().getTime() - startedAt.getTime()));
+        break;
       case 'paused':
-        return null;
+        result = null;
+        break;
     }
+
+    return result;
   };
 
   const completeNow = () => {

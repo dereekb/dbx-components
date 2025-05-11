@@ -9,11 +9,11 @@ export interface AllowedSet<T> {
   /**
    * Values that are allowed. Hits against this set result in an initial true.
    */
-  allowed?: Maybe<Set<T>>;
+  readonly allowed?: Maybe<Set<T>>;
   /**
    * Values that are disallowed. Hits against this set result in false.
    */
-  disallowed?: Maybe<Set<T>>;
+  readonly disallowed?: Maybe<Set<T>>;
 }
 
 /**

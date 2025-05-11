@@ -42,6 +42,6 @@ export class DataIsExpiredError<T> extends StoredDataError {
     readonly data: ReadStoredData<T>,
     message?: string
   ) {
-    super(message ?? 'Data is expired.');
+    super(message ?? 'Data has expired.');
   }
 }

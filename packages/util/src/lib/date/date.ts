@@ -93,7 +93,7 @@ export type TimezoneAbbreviation = string;
  * Object that references a TimezoneString.
  */
 export interface TimezoneStringRef {
-  readonly timezone: TimezoneString;
+  timezone: TimezoneString;
 }
 
 /**

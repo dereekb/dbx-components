@@ -62,7 +62,7 @@ describe('DataIsExpiredError', () => {
 
   it('should have a default message if none is provided.', () => {
     const error = new DataIsExpiredError(mockExpiredData);
-    expect(error.message).toBe('Data is expired.');
+    expect(error.message).toBe('Data has expired.');
   });
 
   it('should store the provided data.', () => {

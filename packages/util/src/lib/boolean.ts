@@ -20,9 +20,9 @@ export type IsModified = boolean;
 /**
  * Reduces an array of booleans with the logical AND operation.
  *
- * @param array - Array of boolean values to reduce
- * @param emptyArrayValue - Value to return if the array is empty (default: undefined which becomes false)
- * @returns The result of ANDing all boolean values in the array
+ * @param array - Array of boolean values to reduce.
+ * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, a TypeError will be thrown.
+ * @returns The result of ANDing all boolean values in the array.
  */
 export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithAndFn(emptyArrayValue)(array);
@@ -31,9 +31,9 @@ export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolea
 /**
  * Reduces an array of booleans with the logical OR operation.
  *
- * @param array - Array of boolean values to reduce
- * @param emptyArrayValue - Value to return if the array is empty (default: undefined which becomes false)
- * @returns The result of ORing all boolean values in the array
+ * @param array - Array of boolean values to reduce.
+ * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, a TypeError will be thrown.
+ * @returns The result of ORing all boolean values in the array.
  */
 export function reduceBooleansWithOr(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithOrFn(emptyArrayValue)(array);
@@ -42,8 +42,8 @@ export function reduceBooleansWithOr(array: boolean[], emptyArrayValue?: boolean
 /**
  * Creates a function that reduces an array of booleans with the logical AND operation.
  *
- * @param emptyArrayValue - Value to return if the array is empty (default: undefined which becomes false)
- * @returns A function that takes an array of booleans and returns the result of ANDing them
+ * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError.
+ * @returns A function that takes an array of booleans and returns the result of ANDing them.
  */
 export function reduceBooleansWithAndFn(emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   return reduceBooleansFn((a, b) => a && b, emptyArrayValue);
@@ -52,8 +52,8 @@ export function reduceBooleansWithAndFn(emptyArrayValue?: boolean): (array: bool
 /**
  * Creates a function that reduces an array of booleans with the logical OR operation.
  *
- * @param emptyArrayValue - Value to return if the array is empty (default: undefined which becomes false)
- * @returns A function that takes an array of booleans and returns the result of ORing them
+ * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError.
+ * @returns A function that takes an array of booleans and returns the result of ORing them.
  */
 export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   return reduceBooleansFn((a, b) => a || b, emptyArrayValue);
@@ -62,9 +62,9 @@ export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boole
 /**
  * Creates a function that reduces an array of booleans using a custom reduce function.
  *
- * @param reduceFn - Function that takes two boolean values and returns a single boolean
- * @param emptyArrayValue - Value to return if the array is empty (default: undefined which uses the standard reduce behavior)
- * @returns A function that takes an array of booleans and returns the result of reducing them
+ * @param reduceFn - Function that takes two boolean values and returns a single boolean.
+ * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError because `Array.prototype.reduce` on an empty array without an initial value throws.
+ * @returns A function that takes an array of booleans and returns the result of reducing them.
  */
 export function reduceBooleansFn(reduceFn: (a: boolean, b: boolean) => boolean, emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   const rFn = (array: boolean[]) => Boolean(array.reduce(reduceFn));
@@ -85,22 +85,26 @@ export type BooleanFactory = Factory<boolean>;
 /**
  * Number from 0.0 to 100.0 used for the chance to return true.
  */
-export type BooleanChance = number;
+export type BooleanTrueChance = number;
 
+/**
+ * Configuration for `booleanFactory`.
+ */
 export interface BooleanFactoryConfig {
   /**
-   * Chance of returning true.
+   * Chance of returning true, expressed as a number from 0.0 to 100.0.
+   * For example, a value of 75 means a 75% chance of returning true.
    */
-  chance: BooleanChance;
+  readonly chance: BooleanTrueChance;
 }
 
 /**
  * Creates a new BooleanFactory that generates random boolean values based on chance.
  *
- * @param config - Configuration for the boolean factory, including the chance of returning true
- * @returns A factory function that generates random boolean values
+ * @param config - Configuration for the boolean factory, including the chance of returning true.
+ * @returns A factory function (`BooleanFactory`) that generates random boolean values based on the configured chance.
  */
-export function booleanFactory(config: BooleanFactoryConfig) {
+export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
   const { chance: inputChance } = config;
   const chance = inputChance / 100;
   return () => {
@@ -113,9 +117,9 @@ export function booleanFactory(config: BooleanFactoryConfig) {
 /**
  * Returns a random boolean based on the specified chance.
  *
- * @param chance - Number between 0 and 100 representing the percentage chance of returning true (default: 50)
- * @returns A random boolean value with the specified probability of being true
+ * @param chance - Number between 0.0 and 100.0 representing the percentage chance of returning true (default: 50, i.e., 50%).
+ * @returns A random boolean value with the specified probability of being true.
  */
-export function randomBoolean(chance: BooleanChance = 50): boolean {
+export function randomBoolean(chance: BooleanTrueChance = 50): boolean {
   return booleanFactory({ chance })();
 }
