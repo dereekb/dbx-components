@@ -1,6 +1,6 @@
 import { Component, computed } from '@angular/core';
 import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
-import { Obj, StateOrName, TransitionOptions, UIRouterModule, UISref, UISrefActive } from '@uirouter/angular';
+import { Obj, StateOrName, TransitionOptions, UIRouterModule } from '@uirouter/angular';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 import { toSignal } from '@angular/core/rxjs-interop';
 

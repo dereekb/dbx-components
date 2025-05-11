@@ -1,4 +1,3 @@
-import { type FactoryWithInput, type Getter } from './getter';
 import { cachedGetter } from './getter.cache';
 
 describe('cachedGetter()', () => {

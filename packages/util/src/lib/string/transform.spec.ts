@@ -1,5 +1,4 @@
 import { stringTrimFunction, stringToUppercaseFunction, stringToLowercaseFunction, transformStringFunctionConfig, transformStringFunction, addPrefix, addPrefixFunction, addSuffix, addSuffixFunction, padStartFunction, type TransformStringFunctionConfig, type TransformStringFunction } from './transform';
-import { MAP_IDENTITY } from '../value/map';
 
 describe('stringTrimFunction', () => {
   it('should trim whitespace from both ends of the string.', () => {

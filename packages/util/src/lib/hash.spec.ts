@@ -1,5 +1,5 @@
 import { makeHashDecodeMap, decodeHashedValuesWithDecodeMap, decodeHashedValues, type HashDecodeMap } from './hash';
-import { filterMaybeArrayValues } from './array'; // Mock or ensure this is testable if it has side effects or complex logic not relevant here
+// Mock or ensure this is testable if it has side effects or complex logic not relevant here
 
 // Mock hash function for testing
 const mockHashFn = (value: string): string => `hashed(${value})`;
