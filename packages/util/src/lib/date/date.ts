@@ -93,7 +93,7 @@ export type TimezoneAbbreviation = string;
  * Object that references a TimezoneString.
  */
 export interface TimezoneStringRef {
-  timezone: TimezoneString;
+  readonly timezone: TimezoneString;
 }
 
 /**
@@ -284,10 +284,29 @@ export type UnixDateTimeNumber = number;
  */
 export type DateOrUnixDateTimeNumber = Date | UnixDateTimeNumber;
 
+/**
+ * Number of milliseconds.
+ */
 export type Milliseconds = number;
+
+/**
+ * Number of seconds.
+ */
 export type Seconds = number;
+
+/**
+ * Number of minutes.
+ */
 export type Minutes = number;
+
+/**
+ * Number of hours.
+ */
 export type Hours = number;
+
+/**
+ * Number of days.
+ */
 export type Days = number;
 
 /**
@@ -348,7 +367,8 @@ export type MonthOfYear = number;
 export type DateMonth = number;
 
 /**
- * Retrieves the MonthOfYear value (1-12) from the input Date.
+ * Retrieves the MonthOfYear value (1-12) from the input Date in the current system timezone.
+ *
  * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
  *
  * @param date - The date to extract the month from
@@ -356,6 +376,18 @@ export type DateMonth = number;
  */
 export function monthOfYearFromDate(date: Date): MonthOfYear {
   return monthOfYearFromDateMonth(date.getMonth());
+}
+
+/**
+ * Retrieves the MonthOfYear value (1-12) from the input Date in the UTC timezone.
+ *
+ * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
+ *
+ * @param date - The date to extract the month from
+ * @returns The month of year as a number from 1-12
+ */
+export function monthOfYearFromUTCDate(date: Date): MonthOfYear {
+  return monthOfYearFromDateMonth(date.getUTCMonth());
 }
 
 /**

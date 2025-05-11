@@ -1,5 +1,5 @@
 import { addMilliseconds } from './date';
-import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails, isUnderThreshold } from './expires';
+import { checkAnyHaveExpired, checkAtleastOneNotExpired, isThrottled, expirationDetails, isUnderThreshold, calculateExpirationDate } from './expires';
 
 describe('expirationDetails()', () => {
   describe('hasExpired()', () => {
@@ -104,6 +104,31 @@ describe('expirationDetails()', () => {
             expect(details.getExpirationDate(now)).toBeSameSecondAs(expectedExpiresAt);
           });
         });
+
+        describe('with defaultExpiresFromDateToNow scenarios (expiresFromDate is not set)', () => {
+          const expiresIn = 1000;
+
+          it('should use now if defaultExpiresFromDateToNow is true', () => {
+            const now = new Date();
+            const details = expirationDetails({ expiresIn, defaultExpiresFromDateToNow: true });
+            const expectedExpiresAt = addMilliseconds(now, expiresIn);
+            expect(details.getExpirationDate(now)).toBeSameSecondAs(expectedExpiresAt);
+          });
+
+          it('should use now if defaultExpiresFromDateToNow is undefined (default)', () => {
+            const now = new Date();
+            const details = expirationDetails({ expiresIn, defaultExpiresFromDateToNow: undefined });
+            const expectedExpiresAt = addMilliseconds(now, expiresIn);
+            expect(details.getExpirationDate(now)).toBeSameSecondAs(expectedExpiresAt);
+          });
+
+          it('should return null if defaultExpiresFromDateToNow is false and expiresFromDate is not set', () => {
+            const now = new Date();
+            const details = expirationDetails({ expiresIn, defaultExpiresFromDateToNow: false });
+            // When base date for addMilliseconds is null, the result is null
+            expect(details.getExpirationDate(now)).toBeNull();
+          });
+        });
       });
     });
   });
@@ -204,6 +229,35 @@ describe('expirationDetails()', () => {
         });
       });
     });
+  });
+});
+
+describe('calculateExpirationDate()', () => {
+  it('should return the expiration date if calculable', () => {
+    const expiresAt = new Date(Date.now() + 10000); // 10 seconds in the future
+    const result = calculateExpirationDate({ expiresAt });
+    expect(result).toBeSameSecondAs(expiresAt);
+  });
+
+  it('should return null if the expiration date cannot be determined from the input', () => {
+    const result = calculateExpirationDate({});
+    expect(result).toBeNull();
+  });
+
+  it('should correctly calculate expiration based on expiresIn and now', () => {
+    const now = new Date();
+    const expiresIn = 5000; // 5 seconds
+    const expectedExpiration = addMilliseconds(now, expiresIn);
+    const result = calculateExpirationDate({ expiresIn, now });
+    expect(result).toBeSameSecondAs(expectedExpiration);
+  });
+
+  it('should correctly calculate expiration based on expiresIn and expiresFromDate', () => {
+    const expiresFromDate = new Date(Date.now() - 10000); // 10 seconds ago
+    const expiresIn = 5000; // 5 seconds
+    const expectedExpiration = addMilliseconds(expiresFromDate, expiresIn);
+    const result = calculateExpirationDate({ expiresIn, expiresFromDate });
+    expect(result).toBeSameSecondAs(expectedExpiration);
   });
 });
 

@@ -52,7 +52,7 @@ export function timePeriodCounter(timePeriodLength: number, lastTimePeriodStart?
   return fn as TimePeriodCounter;
 }
 
-export type TimerState = 'running' | 'paused' | 'complete';
+export type TimerState = 'running' | 'paused' | 'complete' | 'cancelled';
 
 /**
  * Timer object that counts down a fixed duration amount.
@@ -102,6 +102,11 @@ export interface Timer extends Destroyable {
   readonly durationRemaining: Maybe<Milliseconds>;
 
   /**
+   * Completes the timer immediately.
+   */
+  completeNow(): void;
+
+  /**
    * Starts the timer if it was not running. Does nothing if already running.
    */
   start(): void;
@@ -144,11 +149,13 @@ export class TimerCancelledError extends BaseError {
  */
 export function makeTimer(duration: Milliseconds, startImmediately = true): Timer {
   const createdAt = new Date();
+
   let startedAt = new Date();
   let pausedAt: Maybe<Date> = undefined;
 
   let state: TimerState = 'paused';
   let currentDuration: Milliseconds = duration;
+
   const promiseRef = promiseReference<void>();
 
   const getDurationRemaining = (): Maybe<Milliseconds> => {
@@ -162,10 +169,14 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
     }
   };
 
+  const completeNow = () => {
+    state = 'complete';
+    promiseRef.resolve();
+  };
+
   const checkComplete = () => {
     if (state !== 'complete' && getDurationRemaining() === 0) {
-      state = 'complete';
-      promiseRef.resolve();
+      completeNow();
     }
   };
 
@@ -208,9 +219,9 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
 
   const destroy = () => {
     checkComplete();
-    if (state === 'running') {
+    if (state !== 'complete') {
+      state = 'cancelled';
       promiseRef.reject(new TimerCancelledError());
-      state = 'complete';
     }
   };
 
@@ -241,6 +252,7 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
     get durationRemaining() {
       return getDurationRemaining();
     },
+    completeNow,
     start,
     stop,
     reset,
