@@ -263,7 +263,6 @@ Be sure to also move `reflect-metadata` to `project.json` as one of the polyfill
 - Renamed `DbxFilterComponentParams` to `DbxFilterComponentConfig`
 - Renamed `DbxFilterPopoverComponentParams` to `DbxFilterPopoverComponentConfig`
 - Renamed `DbxPopoverScrollContentComponent` to `DbxPopoverScrollContentDirective`
-- Renamed `DbxTwoBlockComponent` to `DbxTwoBlockDirective`
 - Converted `DbxPopupWindowState` from an enum to a const object and added `DbxPopupWindowStateType`.
 - Renamed `DbxFormlyFormComponent` to `DbxFormlyComponent`.
 - Renamed `DbxProgressButtonOptions` to `DbxProgressButtonConfig`.
@@ -332,7 +331,9 @@ Remove the `tsConfig` property from all `@nx/jest:jest` configurations in your a
 Error: Pruned lock file creation failed. The following package was not found in the root lock file
 ```
 
-The fix for this issue seems to be setting `"excludeLibsInPackageJson": true` in the `build-base` target.
+The fix for this issue seems to be setting `"excludeLibsInPackageJson": true` in the `build-base` target. The `package.json` also had to be updated to be used for excluding those imports from the generated `package.json`.
+
+Really this is a dbx-components issue but you might find it necessary for your own app too.
 
 ### Migrate to Nx 20
 Nx 20 release info is here:

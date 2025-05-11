@@ -130,6 +130,5 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this._dbxMapboxChangeService?.emitMarkerDestroyed();
-    console.log('destroyed?');
   }
 }
