@@ -54,7 +54,8 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
         response = fetchResponseError.response;
       }
 
-      const shouldRetry = await updateWithResponse(response, fetchResponseError);
+      // response could be null in some cases
+      const shouldRetry = response ? await updateWithResponse(response, fetchResponseError) : false;
 
       if (shouldRetry && retriesAttempted < maxRetries) {
         response = await tryFetch(retriesAttempted + 1);
@@ -63,6 +64,11 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
         if (fetchResponseError != null) {
           throw fetchResponseError;
         }
+      }
+
+      // if response is null at this point but fetchResponseError is not, rethrow the error
+      if (response == null && fetchResponseError != null) {
+        throw fetchResponseError;
       }
 
       return response;
