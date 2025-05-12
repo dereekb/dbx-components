@@ -208,6 +208,12 @@ export function parseZoomServerErrorData(zoomServerError: ZoomServerErrorData, r
 
   if (responseError.response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
     result = new ZoomTooManyRequestsError(zoomServerError, responseError);
+
+    console.warn('ZoomTooManyRequestsError', {
+      result,
+      responseError,
+      headerDetails: (result as ZoomTooManyRequestsError).headerDetails
+    });
   } else if (zoomServerError) {
     switch (zoomServerError.code) {
       default:

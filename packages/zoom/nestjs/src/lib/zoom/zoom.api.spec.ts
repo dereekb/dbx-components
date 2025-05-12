@@ -166,7 +166,6 @@ describe('zoom.api', () => {
             });
 
             cleanupMeeting = result;
-
             expect(result).toBeDefined();
           });
         });
