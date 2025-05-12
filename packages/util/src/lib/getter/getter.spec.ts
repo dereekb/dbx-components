@@ -1,5 +1,4 @@
-import { asGetter } from '@dereekb/util';
-import { getValueFromGetter, type GetterOrValueWithInput, makeWithFactory, makeWithFactoryInput } from './getter';
+import { getValueFromGetter, type GetterOrValueWithInput, makeWithFactory, makeWithFactoryInput, isGetter, asGetter, asObjectCopyFactory, makeGetter, objectCopyFactory, protectedFactory } from './getter';
 
 class TestClass {}
 
@@ -70,6 +69,23 @@ describe('asGetter()', () => {
   });
 });
 
+describe('isGetter()', () => {
+  it('should return true for a function', () => {
+    expect(isGetter(() => 'test')).toBe(true);
+    expect(isGetter(testFunction)).toBe(true);
+  });
+
+  it('should return false for non-function values', () => {
+    expect(isGetter('test')).toBe(false);
+    expect(isGetter(123)).toBe(false);
+    expect(isGetter({})).toBe(false);
+    expect(isGetter([])).toBe(false);
+    expect(isGetter(null)).toBe(false);
+    expect(isGetter(undefined)).toBe(false);
+    expect(isGetter(TestClass)).toBe(false); // Class constructors are not considered simple getters by isNonClassFunction
+  });
+});
+
 describe('makeWithFactory()', () => {
   it('should make the specified number of items using the factory.', () => {
     const factory = () => true;
@@ -94,5 +110,106 @@ describe('makeWithFactoryInput()', () => {
     const values = ['a', 'b', 'c', 'd'];
     const results = makeWithFactoryInput(factoryWithRequiredInput, values);
     expect(results.length).toBe(values.length);
+  });
+});
+
+describe('objectCopyFactory()', () => {
+  it('should return a new copy of the object each time', () => {
+    const original = { a: 1, b: 'test' };
+    const factory = objectCopyFactory(original);
+    const copy1 = factory();
+    const copy2 = factory();
+
+    expect(copy1).toEqual(original);
+    expect(copy2).toEqual(original);
+    expect(copy1).not.toBe(original);
+    expect(copy2).not.toBe(original);
+    expect(copy1).not.toBe(copy2);
+  });
+
+  it('should use the provided copyFunction', () => {
+    const original = { a: 1 };
+    const customCopyFunction = jest.fn((obj) => ({ ...obj, copied: true }));
+    const factory = objectCopyFactory(original, customCopyFunction);
+    const copy = factory();
+
+    expect(customCopyFunction).toHaveBeenCalledWith(original);
+    expect(copy.copied).toBe(true);
+  });
+});
+
+describe('asObjectCopyFactory()', () => {
+  it('should return an objectCopyFactory for a direct object value', () => {
+    const original = { a: 1 };
+    const factory = asObjectCopyFactory(original);
+    const copy = factory();
+
+    expect(copy).toEqual(original);
+    expect(copy).not.toBe(original);
+  });
+
+  it('should pass through an existing ObjectCopyFactory (getter function)', () => {
+    const originalFactory = () => ({ a: 1 });
+    const factory = asObjectCopyFactory(originalFactory);
+    expect(factory).toBe(originalFactory);
+  });
+
+  it('should use the provided copyFunction when creating a new factory', () => {
+    const original = { a: 1 };
+    const customCopyFunction = jest.fn((obj) => ({ ...obj, copied: true }));
+    const factory = asObjectCopyFactory(original, customCopyFunction);
+    const copy = factory();
+
+    expect(customCopyFunction).toHaveBeenCalledWith(original);
+    expect(copy.copied).toBe(true);
+  });
+});
+
+describe('makeGetter()', () => {
+  it('should return a function that returns the input value', () => {
+    const value = 'hello';
+    const getter = makeGetter(value);
+    expect(getter()).toBe(value);
+  });
+
+  it('should return a new getter function each time', () => {
+    const value = { a: 1 };
+    const getter1 = makeGetter(value);
+    const getter2 = makeGetter(value);
+    expect(getter1).not.toBe(getter2);
+    expect(getter1()).toBe(value);
+    expect(getter2()).toBe(value);
+  });
+
+  it('should work with different types of values', () => {
+    const num = 123;
+    const obj = { test: 'case' };
+    const fn = () => 'function';
+
+    expect(makeGetter(num)()).toBe(num);
+    expect(makeGetter(obj)()).toBe(obj);
+    expect(makeGetter(fn)()).toBe(fn);
+  });
+});
+
+describe('protectedFactory()', () => {
+  it('should return a factory that calls the original factory without arguments', () => {
+    const originalValue = 'original factory result';
+    const originalFactory = jest.fn(() => originalValue);
+    const protFactory = protectedFactory(originalFactory);
+
+    // Call the protected factory with an argument, which should be ignored
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (protFactory as any)('some ignored argument');
+
+    expect(originalFactory).toHaveBeenCalledTimes(1);
+    expect(originalFactory).toHaveBeenCalledWith(); // Called with no arguments
+    expect(result).toBe(originalValue);
+  });
+
+  it('should return a new factory function', () => {
+    const originalFactory = () => 'test';
+    const protFactory = protectedFactory(originalFactory);
+    expect(protFactory).not.toBe(originalFactory);
   });
 });

@@ -104,12 +104,6 @@ export interface DbxMapboxStoreState {
   readonly retainContent: boolean;
   /**
    * Custom drawer content configuration.
-   *
-   * @deprecated use drawerContent instead.
-   */
-  readonly content?: Maybe<DbxInjectionComponentConfig<unknown>>;
-  /**
-   * Custom drawer content configuration.
    */
   readonly drawerContent?: Maybe<DbxInjectionComponentConfig<unknown>>;
   /**
@@ -1048,7 +1042,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     shareReplay(1)
   );
 
-  readonly hasDrawerContent$ = this.drawerContent$.pipe(map(Boolean));
+  readonly hasDrawerContent$ = this.drawerContent$.pipe(
+    map((x) => x != null),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly clickEvent$ = this.state$.pipe(
     map((x) => x.clickEvent),
@@ -1074,7 +1072,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   readonly setUseVirtualBound = this.updater((state, useVirtualBound: boolean) => ({ ...state, useVirtualBound }));
   readonly setBoundRefreshSettings = this.updater((state, boundRefreshSettings: Partial<DbxMapboxStoreBoundRefreshSettings>) => ({ ...state, boundRefreshSettings: { ...state.boundRefreshSettings, ...boundRefreshSettings } }));
 
-  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined, useVirtualBound: state.useVirtualBound, boundRefreshSettings: state.boundRefreshSettings }));
+  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, drawerContent: state.retainContent ? state.drawerContent : undefined, useVirtualBound: state.useVirtualBound, boundRefreshSettings: state.boundRefreshSettings }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));
@@ -1113,5 +1111,5 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 }
 
 function setDrawerContent(state: DbxMapboxStoreState, drawerContent: Maybe<DbxInjectionComponentConfig<unknown>>) {
-  return { ...state, drawerContent, content: drawerContent };
+  return { ...state, drawerContent };
 }

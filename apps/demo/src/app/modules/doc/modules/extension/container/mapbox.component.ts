@@ -291,7 +291,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
-    this.dbxMapboxMapStore.setContent({
+    this.dbxMapboxMapStore.setDrawerContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
   }
@@ -309,7 +309,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   addDrawerContent() {
-    this.dbxMapboxMapStore.setContent({
+    this.dbxMapboxMapStore.setDrawerContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
   }
@@ -332,7 +332,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   removeMarker() {
-    this.dbxMapboxMapStore.setContent({
+    this.dbxMapboxMapStore.setDrawerContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
   }
@@ -342,7 +342,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   clearDrawerContent() {
-    this.dbxMapboxMapStore.clearContent();
+    this.dbxMapboxMapStore.clearDrawerContent();
   }
 
   openDrawer() {

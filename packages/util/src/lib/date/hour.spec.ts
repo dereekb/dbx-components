@@ -1,7 +1,7 @@
 import { startOfDay } from 'date-fns';
 import { range } from '../array/array.number';
 import { MINUTES_IN_HOUR } from './date';
-import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
+import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToHoursAndMinutes, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, hoursAndMinutesToString, isMinuteOfDay, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
 
 describe('fractionalHoursToMinutes()', () => {
   it('should convert the fractional hours to minutes.', () => {
@@ -197,5 +197,76 @@ describe('asMinuteOfDay()', () => {
   it('should convert 2000 minutes to 560', () => {
     const result = asMinuteOfDay(2000);
     expect(result).toBe(560);
+  });
+});
+
+describe('isMinuteOfDay()', () => {
+  it('should return true for numbers within the valid range (0-1439)', () => {
+    expect(isMinuteOfDay(0)).toBe(true);
+    expect(isMinuteOfDay(720)).toBe(true);
+    expect(isMinuteOfDay(1439)).toBe(true);
+  });
+
+  it('should return false for numbers outside the valid range', () => {
+    expect(isMinuteOfDay(-1)).toBe(false);
+    expect(isMinuteOfDay(1440)).toBe(false);
+    expect(isMinuteOfDay(10000)).toBe(false);
+  });
+});
+
+describe('dateToHoursAndMinutes()', () => {
+  it('should convert a Date object to hours and minutes for 10:30', () => {
+    const date1 = new Date(2023, 0, 1, 10, 30, 0); // Jan 1, 2023, 10:30:00
+    const result1 = dateToHoursAndMinutes(date1);
+    expect(result1.hour).toBe(10);
+    expect(result1.minute).toBe(30);
+  });
+
+  it('should convert a Date object to hours and minutes for 00:00', () => {
+    const date2 = new Date(2023, 0, 1, 0, 0, 0); // Jan 1, 2023, 00:00:00
+    const result2 = dateToHoursAndMinutes(date2);
+    expect(result2.hour).toBe(0);
+    expect(result2.minute).toBe(0);
+  });
+
+  it('should convert a Date object to hours and minutes for 23:59', () => {
+    const date3 = new Date(2023, 0, 1, 23, 59, 0); // Jan 1, 2023, 23:59:00
+    const result3 = dateToHoursAndMinutes(date3);
+    expect(result3.hour).toBe(23);
+    expect(result3.minute).toBe(59);
+  });
+});
+
+describe('hoursAndMinutesToString()', () => {
+  it('should return an empty string for zero hours and zero minutes', () => {
+    expect(hoursAndMinutesToString({ hour: 0, minute: 0 })).toBe('');
+  });
+
+  it('should correctly format 1 hour and 30 minutes', () => {
+    expect(hoursAndMinutesToString({ hour: 1, minute: 30 })).toBe('1 hours and 30 minutes');
+  });
+
+  it('should correctly format 2 hours and 15 minutes', () => {
+    expect(hoursAndMinutesToString({ hour: 2, minute: 15 })).toBe('2 hours and 15 minutes');
+  });
+
+  it('should correctly format 1 hour only', () => {
+    expect(hoursAndMinutesToString({ hour: 1, minute: 0 })).toBe('1 hours');
+  });
+
+  it('should correctly format 5 hours only', () => {
+    expect(hoursAndMinutesToString({ hour: 5, minute: 0 })).toBe('5 hours');
+  });
+
+  it('should correctly format 45 minutes only', () => {
+    expect(hoursAndMinutesToString({ hour: 0, minute: 45 })).toBe('45 minutes');
+  });
+
+  it('should correctly format 1 minute only', () => {
+    expect(hoursAndMinutesToString({ hour: 0, minute: 1 })).toBe('1 minutes');
+  });
+
+  it('should correctly format 1 hour and 1 minute', () => {
+    expect(hoursAndMinutesToString({ hour: 1, minute: 1 })).toBe('1 hours and 1 minutes');
   });
 });

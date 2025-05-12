@@ -41,6 +41,7 @@ export class DbxFirebaseModelTypeInstanceListViewComponent extends AbstractDbxSe
 }
 
 @Component({
+  selector: 'dbx-firebase-model-type-instance-list-view-item',
   template: `
     <span>{{ title }}</span>
   `,
