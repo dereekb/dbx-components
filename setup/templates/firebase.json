@@ -9,7 +9,7 @@
   "hosting": [
     {
       "target": "staging",
-      "public": "ANGULAR_APP_DIST_FOLDER",
+      "public": "ANGULAR_APP_DIST_FOLDER/browser",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -39,7 +39,7 @@
     },
     {
       "target": "prod",
-      "public": "ANGULAR_APP_DIST_FOLDER",
+      "public": "ANGULAR_APP_DIST_FOLDER/browser",
       "ignore": [
         "firebase.json",
         "**/.*",

@@ -48,7 +48,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"$DEFAULT_SOURCE_BRANCH"}     # develo
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.0.1"}    # update every major version
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"12.1.0"}    # update every major version
 NX_VERSION=${NX_SETUP_VERSIONS:-"20.8.0"}
 ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^18.0.0"}
 TYPESCRIPT_VERSION=${TYPESCRIPT_SETUP_VERSIONS:-">=5.5.0 <5.6.0"}
@@ -252,44 +252,45 @@ then
   echo "Instructions: Firebase Functions - This configuration will be ignored."
   (sleep 3; echo; sleep 1; echo 'N'; sleep 1; echo 'N';) | npx firebase init functions
 
-  echo "Adding alias prod to default"
-  # add prod alias to .firebaserc
-  npx --yes json -I -f .firebaserc -e "this.projects = { ...this.projects, prod: this.projects.default }";
-    
-  # remove the public folder. We will use the app instead.
-  echo "Removing public folder. (We will use the app instead)"
-  rm -r public || true
-
-  # remove the functions folder. We will use the api-app instead.
-  echo "Removing functions folder. (We will use the api-app instead)"
-  rm -r functions || true
-
 else
-  # automatic configuration. This should typically only be used for CI/testing, as using the firebase CLI can pull existing content in after logging in.
-  echo "Initializing firebase automatically using project name..."
-  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firebase.json -o firebase.json.tmp
-  sed -e "s:FIREBASE_PROJECT_ID_STAGING:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" firebase.json.tmp > firebase.json
-  rm firebase.json.tmp
-
-  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/.firebaserc -o .firebaserc.tmp
-  sed -e "s:FIREBASE_PROJECT_ID_STAGING:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" .firebaserc.tmp > .firebaserc
-  rm .firebaserc.tmp
 
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firestore.indexes.json -o firestore.indexes.json
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firestore.rules -o firestore.rules
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/storage.rules -o storage.rules
 fi
 
+# remove the public folder. We will use the app instead.
+echo "Removing public folder. (We will use the app instead)"
+rm -r public || true
+
+# remove the functions folder. We will use the api-app instead.
+echo "Removing functions folder. (We will use the api-app instead)"
+rm -r functions || true
+
+# update firebase.json
+echo "updating firebase.json"
+rm firebase.json || true
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firebase.json -o firebase.json.tmp
+sed -e "s:FIREBASE_PROJECT_ID_STAGING:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" firebase.json.tmp > firebase.json
+rm firebase.json.tmp
+
+# update .firebaserc
+echo "updating .firebaserc"
+rm .firebaserc || true
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/.firebaserc -o .firebaserc.tmp
+sed -e "s:FIREBASE_PROJECT_ID_STAGING:$FIREBASE_STAGING_PROJECT_ID:g" -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" .firebaserc.tmp > .firebaserc
+rm .firebaserc.tmp
+
 # now edit firebase.json to have the correct configuration.
 echo "Updating firebase.json config..."
 
 # Hosting
-npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '/api/**', function: 'api' }, { source: '**', destination: '/index.html' }] }";
+# npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '/api/**', function: 'api' }, { source: '**', destination: '/index.html' }] }";
 
 # Functions
-npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs16', engines: { node: '16' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
+npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs22', engines: { node: '22' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
 
-# Functions
+# Firestore
 npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
 
 # Emulators
