@@ -1,4 +1,4 @@
-import { ArrayOrValue, MS_IN_MINUTE, Maybe, UnixDateTimeNumber, asArray } from '@dereekb/util';
+import { ArrayOrValue, MS_IN_MINUTE, MS_IN_SECOND, Maybe, UnixDateTimeNumber, asArray } from '@dereekb/util';
 import { ConfiguredFetch, FetchRequestFactoryError, FetchResponseError, MakeUrlSearchParamsOptions, mergeMakeUrlSearchParamsOptions } from '@dereekb/util/fetch';
 import { BaseError } from 'make-error';
 
@@ -128,8 +128,17 @@ export function handleZoomErrorFetchFactory(parseZoomError: ParseZoomFetchRespon
  */
 export const ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE = 429;
 
+/**
+ * Also shares the same 429 code as ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE.
+ */
+export const ZOOM_TOO_MANY_REQUESTS_ERROR_CODE = 429;
+
 export type ZoomRateLimitCategory = 'Light' | 'Medium' | 'Heavy';
-export type ZoomRateLimitType = 'Per-second-limit' | 'Daily-limit';
+
+/**
+ * QPS - Queries per second
+ */
+export type ZoomRateLimitType = 'QPS' | 'Per-second-limit' | 'Daily-limit';
 
 export const ZOOM_RATE_LIMIT_CATEGORY_HEADER = 'X-RateLimit-Category';
 export const ZOOM_RATE_LIMIT_TYPE_HEADER = 'X-RateLimit-Type';
@@ -137,18 +146,10 @@ export const ZOOM_RATE_LIMIT_LIMIT_HEADER = 'X-RateLimit-Limit';
 export const ZOOM_RATE_LIMIT_REMAINING_HEADER = 'X-RateLimit-Remaining';
 export const ZOOM_RATE_LIMIT_RETRY_AFTER_HEADER = 'Retry-After';
 
-export const DEFAULT_ZOOM_API_RATE_LIMIT = 100;
-export const DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD = MS_IN_MINUTE;
+export const DEFAULT_ZOOM_API_RATE_LIMIT = 2;
+export const DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD = MS_IN_SECOND;
 
 export interface ZoomRateLimitHeaderDetails {
-  /**
-   * Total limit in a given period.
-   */
-  readonly limit: number;
-  /**
-   * Total number of remaining allowed requests.
-   */
-  readonly remaining: number;
   /**
    * The category of the rate limit.
    */
@@ -158,13 +159,21 @@ export interface ZoomRateLimitHeaderDetails {
    */
   readonly type: ZoomRateLimitType;
   /**
-   * The time at which the rate limit will reset.
+   * Total limit in a given period.
    */
-  readonly retryAfter: UnixDateTimeNumber;
+  readonly limit?: number;
+  /**
+   * Total number of remaining allowed requests.
+   */
+  readonly remaining?: number;
   /**
    * The time at which the rate limit will reset.
    */
-  readonly retryAfterAt: Date;
+  readonly retryAfter?: UnixDateTimeNumber;
+  /**
+   * The time at which the rate limit will reset.
+   */
+  readonly retryAfterAt?: Date;
 }
 
 export function zoomRateLimitHeaderDetails(headers: Headers): Maybe<ZoomRateLimitHeaderDetails> {
@@ -176,13 +185,13 @@ export function zoomRateLimitHeaderDetails(headers: Headers): Maybe<ZoomRateLimi
 
   let result: Maybe<ZoomRateLimitHeaderDetails> = null;
 
-  if (limitHeader != null && remainingHeader != null && retryAfterHeader != null) {
-    const limit = Number(limitHeader);
-    const remaining = Number(remainingHeader);
-    const retryAfter = Number(retryAfterHeader);
-    const retryAfterAt = new Date(retryAfter);
+  if (categoryHeader != null && typeHeader != null) {
     const category = categoryHeader as ZoomRateLimitCategory;
     const type = typeHeader as ZoomRateLimitType;
+    const limit = limitHeader ? Number(limitHeader) : undefined;
+    const remaining = remainingHeader ? Number(remainingHeader) : undefined;
+    const retryAfter = retryAfterHeader ? Number(retryAfterHeader) : undefined;
+    const retryAfterAt = retryAfterHeader ? new Date(retryAfterHeader) : undefined;
 
     result = { limit, remaining, retryAfter, retryAfterAt, category, type };
   }

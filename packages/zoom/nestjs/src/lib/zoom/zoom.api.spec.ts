@@ -7,6 +7,7 @@ import { appZoomOAuthModuleMetadata } from '../oauth/oauth.module';
 import { expectFail, itShouldFail, jestExpectFailAssertErrorType } from '@dereekb/util/test';
 import { ZoomMeeting, ZoomServerFetchResponseError, ZoomUser } from '@dereekb/zoom';
 import { addHours } from 'date-fns';
+import { waitForMs } from '@dereekb/util';
 
 const cacheService = fileZoomOAuthAccessTokenCacheService();
 
@@ -33,6 +34,11 @@ class TestZoomOAuthModule {}
 
 @Module(appZoomModuleMetadata({ dependencyModule: TestZoomOAuthModule }))
 class TestZoomModule {}
+
+/**
+ * Wait 0.5 seconds between each test to avoid hitting the QPS (queries per second) rate limits.
+ */
+const spaceOutTesting: () => Promise<void> = () => waitForMs(500);
 
 describe('zoom.api', () => {
   let nest: TestingModule;
@@ -70,6 +76,10 @@ describe('zoom.api', () => {
       if (!meUser) {
         meUser = await api.getUser({ userId: 'me' });
       }
+    });
+
+    afterEach(async () => {
+      await spaceOutTesting();
     });
 
     // MARK: Users
@@ -184,7 +194,7 @@ describe('zoom.api', () => {
         /*
         describe('meeting', () => {
           let meeting!: ZoomMeeting;
-
+ 
           beforeEach(async () => {
             meeting = await api.createMeetingForUser({
               user: 'me',
@@ -197,11 +207,11 @@ describe('zoom.api', () => {
             });
             cleanupMeeting = meeting;
           });
-
+ 
           describe('listMeetings()', () => {
             it('should list meetings', async () => {
               const result = await api.listMeetingsForUser({ user: 'me' });
-
+ 
               expect(result).toBeDefined();
               expect(result.page_size).toBeDefined();
               expect(result.total_records).toBeGreaterThan(0);
@@ -210,26 +220,26 @@ describe('zoom.api', () => {
               expect(result.data.length).toBeGreaterThan(0);
             });
           });
-
+ 
           describe('listMeetingsPageFactory()', () => {
             it('should list meetings', async () => {
               const listMeetingsPageFactory = api.listMeetingsForUserPageFactory({ user: 'me' });
-
+ 
               const firstPage = await listMeetingsPageFactory.fetchNext();
               expect(firstPage).toBeDefined();
-
+ 
               const { result } = firstPage;
-
+ 
               expect(result.page_size).toBeDefined();
               expect(result.total_records).toBeGreaterThan(0);
               expect(result.next_page_token).toBeFalsy(); // should only have one page of results
               expect(result.data).toBeDefined();
               expect(result.data.length).toBeGreaterThan(0);
-
+ 
               expect(firstPage.hasNext).toBe(false);
             });
           });
-
+ 
           describe('delete', () => {
             it('should delete the meeting', async () => {
               await api.deleteMeeting({

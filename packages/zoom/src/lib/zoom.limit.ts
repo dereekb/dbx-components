@@ -21,19 +21,17 @@ export interface ZoomRateLimitedFetchHandlerConfig {
   /**
    * Custom max rate limit.
    *
-   * Rate limits are different between account types and are described here:
-   *
-   * https://help.zoom.com/portal/en/community/topic/key-changes-in-api-limits-26-9-2018#:~:text=X%2DRATELIMIT%2DREMAINING%20%2D%20Represents,time%20of%20the%20current%20window.&text=Please%20note%20that%20these%20Rate,API%20limit%20changes%20are%20implemented.
+   * The QPS is the main rate limit to watch for. We start slowing down requets after 2 requests per second.
    */
   readonly maxRateLimit?: number;
   /**
    * Custom reset period for the rate limiter.
    *
-   * Defaults to 1 minute in milliseconds.
+   * Defaults to 1 second in milliseconds.
    */
   readonly resetPeriod?: Milliseconds;
   /**
-   * Optional function to execute when too many requests is reached.t
+   * Optional function to execute when too many requests is reached.
    *
    * Defaults to the default logging function, unless false is passed.
    */
@@ -50,10 +48,10 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
   function configForLimit(limit: number, resetAt?: Date): ResetPeriodPromiseRateLimiterConfig {
     return {
       limit: defaultLimit,
-      startLimitAt: Math.ceil(limit / 10), // can do 10% of the requests of the limit before rate limiting begins
-      cooldownRate: 1.2 * (limit / (defaultResetPeriod / MS_IN_SECOND)),
-      exponentRate: 1.08,
-      maxWaitTime: MS_IN_SECOND * 10,
+      startLimitAt: 2,
+      cooldownRate: 1,
+      exponentRate: 1.2,
+      maxWaitTime: MS_IN_SECOND * 5,
       resetPeriod: defaultResetPeriod,
       resetAt
     };
@@ -67,35 +65,41 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
     updateWithResponse: function (response: Response, fetchResponseError?: FetchResponseError): PromiseOrValue<boolean> {
       const hasLimitHeader = response.headers.has(ZOOM_RATE_LIMIT_REMAINING_HEADER);
       let shouldRetry = false;
-      let enabled = false;
+      // let enabled = false;   // rate limiter should not be turned off
 
       if (hasLimitHeader) {
         const headerDetails = zoomRateLimitHeaderDetails(response.headers);
 
         if (headerDetails) {
-          const { limit, retryAfterAt, remaining } = headerDetails;
+          const { type, limit, retryAfterAt, remaining } = headerDetails;
 
-          if (limit !== defaultLimit) {
-            const newConfig = configForLimit(limit, retryAfterAt);
-            rateLimiter.setConfig(newConfig, false);
+          if (response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
+            // For simple query-per-second rate limits, just schedule a retry
+            if (type === 'QPS') {
+              shouldRetry = true;
+
+              try {
+                onTooManyRequests?.(headerDetails, response, fetchResponseError);
+              } catch (e) {}
+            }
           }
 
-          rateLimiter.setRemainingLimit(remaining);
-          rateLimiter.setNextResetAt(retryAfterAt);
-          enabled = true;
+          // NOTE: typically it seems like these headers are not available usually.
+          // There is a daily limit for message requests
+          if (limit != null && retryAfterAt != null && remaining != null) {
+            if (limit !== defaultLimit) {
+              const newConfig = configForLimit(limit, retryAfterAt);
+              rateLimiter.setConfig(newConfig, false);
+            }
 
-          // only retry if it's a TOO MANY REQUESTS error
-          if (response.status === ZOOM_TOO_MANY_REQUESTS_HTTP_STATUS_CODE) {
-            shouldRetry = true;
-
-            try {
-              onTooManyRequests?.(headerDetails, response, fetchResponseError);
-            } catch (e) {}
+            rateLimiter.setRemainingLimit(remaining);
+            rateLimiter.setNextResetAt(retryAfterAt);
+            // enabled = true;
           }
         }
       }
 
-      rateLimiter.setEnabled(enabled);
+      // rateLimiter.setEnabled(enabled);
       return shouldRetry;
     }
   });
