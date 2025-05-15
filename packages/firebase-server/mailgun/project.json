@@ -7,7 +7,6 @@
   "targets": {
     "build-base": {
       "executor": "@nx/js:tsc",
-      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/firebase-server/mailgun",

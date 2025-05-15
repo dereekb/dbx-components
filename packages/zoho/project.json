@@ -23,7 +23,6 @@
     },
     "build-base": {
       "executor": "@nx/rollup:rollup",
-      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/nestjs/**/*.ts"],
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {

@@ -26,7 +26,6 @@
     },
     "build-base": {
       "executor": "@nx/rollup:rollup",
-      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts", "!{projectRoot}/fetch/**/*.ts", "!{projectRoot}/text/**/*.ts"],
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {

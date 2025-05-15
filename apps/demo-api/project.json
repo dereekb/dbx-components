@@ -25,7 +25,6 @@
     },
     "build-base": {
       "executor": "@nx/webpack:webpack",
-      "inputs": ["{projectRoot}/**/*.ts", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "excludeLibsInPackageJson": true,
