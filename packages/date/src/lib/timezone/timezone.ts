@@ -17,10 +17,10 @@ export const allTimezoneInfos = cachedGetter(() => {
 });
 
 export interface TimezoneInfo extends TimezoneStringRef {
-  search: string;
-  lowercase: string;
-  abbreviation: string;
-  lowercaseAbbreviation: string;
+  readonly search: string;
+  readonly lowercase: string;
+  readonly abbreviation: string;
+  readonly lowercaseAbbreviation: string;
 }
 
 export function timezoneInfoForSystem(): TimezoneInfo {

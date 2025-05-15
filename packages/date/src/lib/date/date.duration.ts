@@ -1,7 +1,7 @@
 import { type DateRelativeState, type FractionalHour, type Minutes as UtilMinutes, minutesToFractionalHours, type Maybe, safeCompareEquality } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsNumber, Min } from 'class-validator';
-import { addMinutes } from 'date-fns';
+import { addMinutes, differenceInMinutes } from 'date-fns';
 import { type DateRange, dateRangeRelativeState } from './date.range';
 import { isSameDate } from './date';
 
@@ -44,6 +44,13 @@ export function durationSpanToDateRange(span: DateDurationSpan): DateRange {
   return {
     start: span.startsAt,
     end: addMinutes(span.startsAt, span.duration)
+  };
+}
+
+export function durationSpanFromDateRange(dateRange: DateRange): DateDurationSpan {
+  return {
+    startsAt: dateRange.start,
+    duration: differenceInMinutes(dateRange.end, dateRange.start)
   };
 }
 
