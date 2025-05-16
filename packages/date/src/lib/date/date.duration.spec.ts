@@ -1,7 +1,6 @@
-import { addHours, subDays, addDays, addMinutes as dfnsAddMinutes } from 'date-fns';
+import { subDays, addDays, addMinutes as dfnsAddMinutes } from 'date-fns';
 import { DateDurationSpan, dateDurationSpanEndDate, durationSpanToDateRange, durationSpanFromDateRange, durationSpanDateRelativeState, fractionalHoursInDurationSpan, isSameDurationSpan, type Minutes } from './date.duration';
 import { type DateRange } from './date.range';
-import { DateRelativeState } from '@dereekb/util';
 
 describe('DateDurationSpan', () => {
   it('should create an instance with undefined properties if no template is provided', () => {
