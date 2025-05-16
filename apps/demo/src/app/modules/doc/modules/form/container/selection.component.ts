@@ -23,7 +23,8 @@ import {
   SourceSelectLoadSource,
   valueSelectionField,
   ValueSelectionOptionWithValue,
-  DbxFormlyFieldsContextDirective
+  DbxFormlyFieldsContextDirective,
+  DbxFormSourceDirective
 } from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
 import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
@@ -35,6 +36,7 @@ import { AbstractDbxSelectionListWrapperDirective, DbxContentContainerDirective 
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFormExampleComponent } from '../component/example.form.component';
+import { NgIf } from '@angular/common';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -118,7 +120,7 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
 @Component({
   templateUrl: './selection.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule]
+  imports: [DbxContentContainerDirective, NgIf, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFormExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormFormlyDbxListFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule]
 })
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
   readonly cdRef = inject(ChangeDetectorRef);

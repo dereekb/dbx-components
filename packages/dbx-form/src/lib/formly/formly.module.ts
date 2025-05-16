@@ -6,6 +6,9 @@ import { FormlyMatToggleModule } from '@ngx-formly/material/toggle';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormlyFieldsContextDirective } from './formly.context.directive';
 
+/**
+ * @deprecated
+ */
 @NgModule({
   imports: [DbxFormlyComponent, DbxFormlyFieldsContextDirective, CommonModule, FormsModule, ReactiveFormsModule, FormlyModule, FormlyMatToggleModule],
   exports: [

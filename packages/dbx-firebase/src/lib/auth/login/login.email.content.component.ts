@@ -12,7 +12,7 @@ import { type Maybe } from '@dereekb/util';
 import { NgTemplateOutlet } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxActionErrorDirective, DbxActionModule, DbxLinkComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxErrorComponent } from '@dereekb/dbx-web';
-import { DbxFormSourceDirective } from '@dereekb/dbx-form';
+import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 
 export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
@@ -22,7 +22,7 @@ export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversen
 
 @Component({
   templateUrl: './login.email.content.component.html',
-  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent, DbxFormSourceDirective],
+  imports: [NgTemplateOutlet, DbxErrorComponent, DbxLinkComponent, DbxActionErrorDirective, DbxActionFormDirective, MatButtonModule, DbxActionModule, DbxButtonComponent, DbxButtonSpacerDirective, DbxFirebaseEmailFormComponent, DbxFirebaseEmailRecoveryFormComponent, DbxFormSourceDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
