@@ -521,3 +521,8 @@ The new syntax for ngSwitch only allows `@switch()` children nodes to be `@case(
 
 ### Other Migrations
 Unfortunately the migrations in Angular 19 are not available for migrating inputs/outputs to signals. You will need to manually update the code to use signals.
+
+#### .browserslistrc
+With the update to Angular 18 the internal browserslist is updated to potentially no longer target versions that would work previously. Create a `.browserslistrc` file in the root of the project and make sure it is configured for the versions you need to support.
+
+https://nx.dev/recipes/tips-n-tricks/browser-support

@@ -8,7 +8,7 @@ import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, prov
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'demo-firebase';
 import { FirestoreContext, FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
-import { defaultValidationMessages, provideDbxFormConfiguration } from '@dereekb/dbx-form';
+import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations } from '@dereekb/dbx-form';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
@@ -181,6 +181,7 @@ export const appConfig: ApplicationConfig = {
     provideDbxModelService(),
     // dbx-form, form related
     provideDbxFormConfiguration(),
+    provideDbxFormFormlyFieldDeclarations(),
     // dbx-firebase
     provideDbxFirebase({
       app: {

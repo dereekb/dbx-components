@@ -8,7 +8,6 @@
   "targets": {
     "build-base": {
       "executor": "@nx/angular:package",
-      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/dist/packages/dbx-web/mapbox"],
       "options": {
         "project": "packages/dbx-web/mapbox/ng-package.json"

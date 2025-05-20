@@ -20,7 +20,7 @@ export interface AddressFormlyFieldsConfig {
    *
    * True by default.
    */
-  readonly requiredFields?: boolean;
+  readonly required?: boolean;
   /**
    * Whether or not to include the second address line.
    *
@@ -56,39 +56,39 @@ export function addressLineField(config: AddressLineFieldConfig = {}): FormlyFie
 }
 
 export function addressFormlyFields(config: AddressFormlyFieldsConfig = {}): FormlyFieldConfig[] {
-  const { requiredFields = true, includeLine2 = true, includeCountry = true } = config;
+  const { required = true, includeLine2 = true, includeCountry = true } = config;
 
   const singleLineFields = [
     {
-      field: cityField({ required: requiredFields, ...config.cityField })
+      field: cityField({ required, ...config.cityField })
     },
     {
-      field: stateField({ required: requiredFields, ...config.stateField })
+      field: stateField({ required, ...config.stateField })
     },
     {
-      field: zipCodeField({ required: requiredFields, ...config.zipCodeField })
+      field: zipCodeField({ required, ...config.zipCodeField })
     }
   ];
 
   if (includeCountry) {
     singleLineFields.push({
-      field: countryField({ required: requiredFields, ...config.countryField })
+      field: countryField({ required, ...config.countryField })
     });
   }
 
   let lines: FormlyFieldConfig[];
 
   if (includeLine2) {
-    lines = [addressLineField({ required: requiredFields, ...config.line1Field, line: 1 }), addressLineField({ ...config.line2Field, line: 2 })];
+    lines = [addressLineField({ required, ...config.line1Field, line: 1 }), addressLineField({ ...config.line2Field, line: 2 })];
   } else {
-    lines = [addressLineField({ required: requiredFields, ...config.line1Field, line: 0 })];
+    lines = [addressLineField({ required, ...config.line1Field, line: 0 })];
   }
 
   return [...lines, flexLayoutWrapper(singleLineFields, { size: 1, relative: true })];
 }
 
 // MARK: Address
-export interface AddressFieldConfig extends FieldConfig, DbxFormSectionConfig, AddressFormlyFieldsConfig {}
+export interface AddressFieldConfig extends Readonly<FieldConfig>, DbxFormSectionConfig, AddressFormlyFieldsConfig {}
 
 export function addressField(config: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'address', header = 'Address', hint, required = false } = config;
@@ -109,7 +109,7 @@ export function addressField(config: Partial<AddressFieldConfig> = {}): FormlyFi
 }
 
 // MARK: Address List
-export interface AddressListFieldConfig extends FieldConfig, AddressFormlyFieldsConfig {
+export interface AddressListFieldConfig extends Readonly<FieldConfig>, AddressFormlyFieldsConfig {
   readonly maxAddresses?: number;
 }
 

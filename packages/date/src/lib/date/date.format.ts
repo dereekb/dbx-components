@@ -1,4 +1,4 @@
-import { type DateOrDateString, type DateOrDayString, type ISO8601DateString, type ISO8601DayString, type MapFunction, mapIdentityFunction, type Maybe, repeatString, type UTCDateString } from '@dereekb/util';
+import { type DateOrDateString, type DateOrDayString, type ISO8601DateString, type ISO8601DayString, type MapFunction, mapIdentityFunction, type Maybe, MonthDaySlashDate, repeatString, type UTCDateString } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isSameDay, isValid, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, type DateRange, dateRangeRelativeState, fitUTCDateRangeToDayPeriod, transformDateRangeWithStartOfDay } from './date.range';
@@ -251,11 +251,16 @@ export function formatToISO8601DayStringForUTC(date: Date = new Date()): ISO8601
   return `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1).toString().padStart(2, '0')}-${date.getUTCDate().toString().padStart(2, '0')}`;
 }
 
-export const dateShortDateStringFormat = 'MM/dd/yyyy';
+export const monthDaySlashDateStringFormat = 'MM/dd/yyyy';
 
-export function formatToShortDateString(date: Date = new Date()): ISO8601DayString {
-  return format(date, dateShortDateStringFormat);
+export function formatToMonthDaySlashDate(date: Date = new Date()): MonthDaySlashDate {
+  return format(date, monthDaySlashDateStringFormat);
 }
+
+/**
+ * @deprecated use formatToMonthDaySlashDate instead.
+ */
+export const formatToShortDateString = formatToMonthDaySlashDate;
 
 export const dateMonthDayStringFormat = 'MM/dd';
 
@@ -273,7 +278,7 @@ export function formatToTimeString(date: Date): string {
   return format(date, dateTimeStringFormat);
 }
 
-export const dateShortDateAndTimeStringFormat = `${dateShortDateStringFormat} ${dateTimeStringFormat}`;
+export const dateShortDateAndTimeStringFormat = `${monthDaySlashDateStringFormat} ${dateTimeStringFormat}`;
 
 export function formatToShortDateAndTimeString(date: Date): string {
   return format(date, dateShortDateAndTimeStringFormat);
@@ -350,3 +355,8 @@ export const toISO8601DayString = toISO8601DayStringForSystem;
  * @deprecated use formatToISO8601DayStringForSystem instead for clarity. Will be removed in the future.
  */
 export const formatToISO8601DayString = formatToISO8601DayStringForSystem;
+
+/**
+ * @deprecated use formatToMonthDaySlashDate instead for clarity. Will be removed in the future.
+ */
+export const dateShortDateStringFormat = monthDaySlashDateStringFormat;

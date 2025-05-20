@@ -30,7 +30,6 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{workspaceRoot}/coverage/ANGULAR_COMPONENTS_FOLDER", "{projectRoot}/.reports/jest/ANGULAR_COMPONENTS_NAME.junit.xml"],
       "options": {
         "jestConfig": "ANGULAR_COMPONENTS_FOLDER/jest.config.ts",

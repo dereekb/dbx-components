@@ -17,7 +17,6 @@
     },
     "build-base": {
       "executor": "@angular-devkit/build-angular:application",
-      "inputs": ["{projectRoot}/**/*.ts", "{projectRoot}/**/*.html", "{projectRoot}/**/*.scss", "!{projectRoot}/**/*.spec.ts"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/demo",
