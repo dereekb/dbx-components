@@ -4,8 +4,7 @@
   ".": {
     "types": "./src/index.d.ts",
     "node": {
-      "require": "./index.cjs.js",
-      "import": "./index.mjs"
+      "require": "./index.cjs.js"
     },
     "browser": {
       "require": "./index.cjs.js",

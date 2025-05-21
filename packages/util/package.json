@@ -5,32 +5,31 @@
     ".": {
       "types": "./src/index.d.ts",
       "node": {
-        "require": "./index.cjs.js",
-        "import": "./index.mjs"
+        "require": "./index.cjs.js"
       },
       "browser": {
         "require": "./index.cjs.js",
         "import": "./index.esm.js"
       },
-      "default": "./index.cjs.js"
+      "module": "./index.esm.js",
+      "main": "./index.cjs.js"
     },
     "./test": {
       "types": "./test/src/index.d.ts",
       "main": "./test/src/index.js",
-      "require": "./test/src/index.js",
-      "default": "./test/src/index.js"
+      "require": "./test/src/index.js"
     },
     "./fetch": {
       "types": "./fetch/src/index.d.ts",
+      "module": "./fetch/index.esm.js",
+      "main": "./fetch/index.cjs.js",
       "node": {
-        "require": "./fetch/index.cjs.js",
-        "import": "./fetch/index.mjs"
+        "require": "./fetch/index.cjs.js"
       },
       "browser": {
         "require": "./fetch/index.cjs.js",
         "import": "./fetch/index.esm.js"
-      },
-      "default": "./fetch/index.cjs.js"
+      }
     }
   },
   "peerDependencies": {

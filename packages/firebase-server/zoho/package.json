@@ -1,5 +1,22 @@
 {
   "name": "@dereekb/firebase-server/zoho",
   "version": "12.1.3",
-  "type": "commonjs"
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "require": "./index.cjs.js"
+      },
+      "browser": {
+        "require": "./index.cjs.js",
+        "import": "./index.esm.js"
+      },
+      "default": "./index.cjs.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/firebase": "*",
+    "@dereekb/util": "*",
+    "@dereekb/zoho": "*"
+  }
 }

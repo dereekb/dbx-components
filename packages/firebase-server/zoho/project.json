@@ -6,16 +6,31 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
       "options": {
+        "importPath": "@dereekb/firebase-server/zoho",
         "outputPath": "dist/packages/firebase-server/zoho",
-        "tsConfig": "packages/firebase-server/zoho/tsconfig.lib.json",
-        "packageJson": "packages/firebase-server/zoho/package.json",
         "main": "packages/firebase-server/zoho/src/index.ts",
-        "assets": []
-      },
-      "dependsOn": []
+        "tsConfig": "packages/firebase-server/zoho/tsconfig.lib.json",
+        "compiler": "babel",
+        "project": "packages/firebase-server/zoho/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": false,
+        "assets": [
+          {
+            "glob": "packages/firebase-server/zoho/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint",

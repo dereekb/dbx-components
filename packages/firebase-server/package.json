@@ -22,9 +22,15 @@
     },
     "./zoho": {
       "types": "./zoho/src/index.d.ts",
-      "main": "./zoho/src/index.js",
-      "require": "./zoho/src/index.js",
-      "default": "./zoho/src/index.js"
+      "module": "./zoho/index.esm.js",
+      "main": "./zoho/index.cjs.js",
+      "node": {
+        "require": "./zoho/index.cjs.js"
+      },
+      "browser": {
+        "require": "./zoho/index.cjs.js",
+        "import": "./zoho/index.esm.js"
+      }
     },
     "./model": {
       "types": "./model/src/index.d.ts",
