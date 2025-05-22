@@ -1,12 +1,11 @@
 {
   "name": "@dereekb/zoom",
-  "version": "12.1.3",
+  "version": "12.1.4",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
       "node": {
-        "require": "./index.cjs.js",
-        "import": "./index.mjs"
+        "require": "./index.cjs.js"
       },
       "browser": {
         "require": "./index.cjs.js",

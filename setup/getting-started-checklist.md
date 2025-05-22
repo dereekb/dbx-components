@@ -13,6 +13,8 @@ Those systems are:
 You will need to create a github repo for your project. The instructions below assume github.
 
 ### Creating an SSH Key
+NOTE: Circleci seems to handle this step now, so you can skip this step if you are using CircleCI.
+
 Use ssh-keygen to generate a new SSH key for your project. Generate one that does not have a a pass-phrase, as CircleCI cannot decrypt it otherwise. You should name your key after the name of your project and with `ci` as a prefix (dbxcomponentsci) to differentiate it.
 
 Instructions for generating an SSH key can be found here: https://www.atlassian.com/git/tutorials/git-ssh
@@ -49,6 +51,8 @@ Go to your project settings on CircleCI and to the SSH keys tab. Go to the Addit
 ### Updating .circleci/config.yml 
 #### SSH Key Fingerprints
 Replace the SSH fingerprints with the fingerprints that now show up for your uploaded key on CircleCI. Replace the `SET_THIS_VALUE_TO_BE_VALID` value. You should also update the user.email and user.name values on line 80 to match your desired values.
+
+If CircleCI set this key up for you, copy the fingerprint key. It starts with `SHA256:`. Example: `SHA256:AAAA...`
 
 #### Update Release Git User Details
 Update the `GIT_USER_NAME` and `GIT_USER_EMAIL` values in the `.circleci/config.yml` file to match the desired values.
@@ -127,5 +131,15 @@ Mailgun should be ready to go for tests now. While you're at it you could add yo
 
 `.env.prod` is pre-configured to not be committed to the git repository.
 
+# Firebase
+## Firestore
+You'll need to create a new Firestore database for your project.
 
-## Project
+## App Check
+You'll want to enable App Check for your app to protect it from unauthorized access.
+
+### Configure Recaptcha
+Configure recaptcha for your project(s) at https://www.google.com/recaptcha/admin.
+
+### Enable App Check
+Enable App Check for your project(s) at https://console.firebase.google.com/project/<YOUR_PROJECT_NAME>/appcheck/apps

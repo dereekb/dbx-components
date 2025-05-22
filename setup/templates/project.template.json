@@ -1,4 +1,6 @@
 {
+  "name": "workspace",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
   "prefix": "workspace",
   "targets": {
     "build-all": {
@@ -12,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "description": "",
-        "command": "npx nx run-many --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix"
+        "command": "npx nx run-many --exclude=workspace --target=lint --fix"
       }
     },
     "start-release": {

@@ -1,56 +1,16 @@
-# Zoom OAuth Overview
-These are the instructions for Recruit, but generally apply to Zoom products:
+## Server to Server Integration
+The server to server integration is used to control your organization's zoom account. This type of integration also does not require going through the approval process.
 
-https://www.zoom.com/recruit/developer-guide/apiv2/oauth-overview.html
+### Setup
+To get started, create a new app at https://marketplace.zoom.us/
 
-## For generating an oauth key, do the following steps:
+#### App Credentials
+Copy the credentials to your `.env.local` file and add to CircleCI for deployment. These are the following environment variables that the `@dereekb/zoom` packages uses:
 
-### 1. Register the Client
-https://api-console.zoom.com/
-https://www.zoom.com/recruit/developer-guide/apiv2/register-client.html
+- ZOOM_ACCOUNT_ID
+- ZOOM_CLIENT_ID
+- ZOOM_CLIENT_SECRET
+- ZOOM_SECRET_TOKEN
 
-Create a "Web Based" client. Here's the values used for the demo:
-
-- Client Name: `Localhost`
-- Homepage URL: `http://localhost`
-- Authorized Redirect URIs: `http://localhost/oauth`
-
-Copy your clientId and clientSecret
-
-### 2. Craft Authorization Url
-Edit the following URL with the specific details:
-
-https://accounts.zoom.com/oauth/v2/auth?scope=`Zoom.modules.ALL,Zoom.functions.execute.READ,Zoom.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
-
-https://accounts.zoom.com/oauth/v2/auth?scope=Zoom.modules.ALL,Zoom.functions.execute.READ,Zoom.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
-
-- The scope is the list of roles we want to grant this refresh token
-- The clientId is the client id generated in the previous step
-- The redirectUrl is where the web page will redirect us after we authorize the request.
-- The access_type should be "offline" to get a refresh token
-
-This token lasts for only 2 minutes.
-
-### 3. Authorize using Authorization Url
-
-Open the link created above, and follow all the steps. You will have to authorize for a production system or any sandboxes separately.
-
-Once complete, it will redirect you to a page like the following. It will look like the following:
-
-http://localhost/oauth?code=1000.ABC.123&location=us&accounts-server=https%3A%2F%2Faccounts.zoom.com&
-
-Copy the code from your generated url. We need this code to get a refresh token.
-
-This generated code lasts for 2 minutes.
-
-### 4. Retrive a Refresh Token
-
-Using Postman or some other program, send a post request to the following url:
-
-https://accounts.zoom.com/oauth/v2/token?grant_type=authorization_code&client_id=`{{clientid}}`&client_secret=`{{clientsecret}}`&redirect_uri=`{{redirecturl}}`&code=`{{authCode}}`
-
-- The redirectUrl used previously (`http://localhost/oauth` in the example). If this does not match, you will get an error
-- client_id and client_secret come from the client generated in step 1
-- the auth code is the code from the url in step 3
-
-This refresh token will be used as the 
+#### Scopes
+Select the scopes that you want to grant to your app.

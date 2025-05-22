@@ -1,6 +1,7 @@
 {
   "projectType": "library",
   "sourceRoot": "ANGULAR_COMPONENTS_FOLDER/src",
+  "name": "ANGULAR_COMPONENTS_NAME",
   "prefix": "APP_CODE_PREFIX_LOWER",
   "targets": {
     "build": {
