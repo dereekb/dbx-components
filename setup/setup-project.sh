@@ -510,6 +510,7 @@ rm make-api-package.js.tmp
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/make-env.js -o make-env.js
 echo "PUBLIC_PROD_VARIABLES_HERE" > ".env.prod"
+echo "PUBLIC_STAGING_VARIABLES_HERE" > ".env.staging"
 
 git add --all
 git commit --no-verify -m "checkpoint: added circleci configrations"

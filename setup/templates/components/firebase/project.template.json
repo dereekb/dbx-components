@@ -1,6 +1,7 @@
 {
   "projectType": "library",
   "sourceRoot": "FIREBASE_COMPONENTS_FOLDER/src",
+  "name": "FIREBASE_COMPONENTS_NAME",
   "targets": {
     "build": {
       "executor": "nx:run-commands",

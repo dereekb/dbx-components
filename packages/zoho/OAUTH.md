@@ -20,9 +20,17 @@ Copy your clientId and clientSecret
 ### 2. Craft Authorization Url
 Edit the following URL with the specific details:
 
+Recruit Examples:
+
 https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
 
 https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+
+CRM Examples:
+
+https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoCRM.modules.ALL,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+
+https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.ALL,ZohoCRM.functions.execute.READ,ZohoCRM.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
 
 - The scope is the list of roles we want to grant this refresh token
 - The clientId is the client id generated in the previous step

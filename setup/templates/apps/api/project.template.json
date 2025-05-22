@@ -103,27 +103,60 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME --watch'"
       }
     },
-    "make-env": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "node ./make-env.js prod > API_APP_DIST_FOLDER/.env && cp .env.prod API_APP_DIST_FOLDER/.env.prod"
-      }
-    },
     "build-package-json": {
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./make-api-package.js > API_APP_FOLDER/package.json"
       }
     },
-    "ci-deploy": {
+    "make-env-staging": {
       "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./make-env.js staging > API_APP_DIST_FOLDER/.env && cp .env.staging API_APP_DIST_FOLDER/.env.staging"
+      }
+    },
+    "make-env-prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./make-env.js prod > API_APP_DIST_FOLDER/.env && cp .env.prod API_APP_DIST_FOLDER/.env.prod"
+      }
+    },
+    "ci-deploy-staging": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run API_APP_NAME:build-base:staging"
+          },
+          {
+            "command": "npx nx make-env-staging API_APP_NAME --skip-nx-cache"
+          },
+          {
+            "command": "npx firebase --project=staging deploy --only functions"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "ci-deploy-prod": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
         "commands": [
           {
             "command": "npx nx run API_APP_NAME:build-base:production"
           },
           {
-            "command": "npx nx make-env API_APP_NAME"
+            "command": "npx nx make-env-prod API_APP_NAME --skip-nx-cache"
           },
           {
             "command": "npx firebase --project=prod deploy --only functions"

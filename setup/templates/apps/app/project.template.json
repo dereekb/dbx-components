@@ -28,7 +28,7 @@
           "ANGULAR_APP_FOLDER/src/assets",
           "ANGULAR_APP_FOLDER/src/lib"
         ],
-        "allowedCommonJsDependencies": ["core-js", "make-error", "validator", "date-fns", "date-fns-tz", "mapbox-gl"],
+        "allowedCommonJsDependencies": ["core-js", "make-error", "validator"],
         "stylePreprocessorOptions": {
           "includePaths": ["packages", ""]
         },
@@ -105,16 +105,60 @@
         "jestConfig": "ANGULAR_APP_FOLDER/jest.config.ts"
       }
     },
-    "deploy": {
+    "ci-deploy-prod": {
       "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
       "options": {
-        "command": "npx firebase --project=default deploy --only hosting"
+        "commands": [
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:build-base:prod"
+          },
+          {
+            "command": "npx firebase --project=prod deploy --only hosting:prod"
+          },
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:ci-deploy-prod-rules"
+          }
+        ],
+        "parallel": false
       }
     },
-    "ci-deploy": {
+    "ci-deploy-prod-rules": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx firebase --project=default deploy --only hosting"
+        "command": "npx firebase --project=prod deploy --only firestore:rules,storage"
+      }
+    },
+    "ci-deploy-staging": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:build-base:staging"
+          },
+          {
+            "command": "npx firebase --project=staging deploy --only hosting:staging"
+          },
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:ci-deploy-staging-rules"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "ci-deploy-staging-rules": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx firebase --project=staging deploy --only firestore:rules,storage"
       }
     }
   },
