@@ -14,6 +14,9 @@ orbs:
 jobs:
   build:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       # install node packages
@@ -31,6 +34,9 @@ jobs:
   # Runs tests for the projects that do not require the firebase emulators.
   test-with-node:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -43,6 +49,9 @@ jobs:
   # Runs tests for the projects that require the firebase emulators.
   test-with-node-firebase:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:
@@ -69,6 +78,8 @@ jobs:
   run-release-and-push-to-main:
     <<: *defaults
     environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
       # SETUP REQUIRED - Set the git username and email to the desired values
       GIT_USER_EMAIL: CI_GIT_USER_EMAIL
       GIT_USER_NAME: CI_GIT_USER_NAME
@@ -107,7 +118,8 @@ jobs:
   deploy-to-firebase-staging:
     <<: *defaults
     environment:
-      NX_SKIP_NX_CACHE: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
@@ -129,7 +141,8 @@ jobs:
   deploy-to-firebase-prod:
     <<: *defaults
     environment:
-      NX_SKIP_NX_CACHE: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
       GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
@@ -152,6 +165,9 @@ jobs:
   # REMOVE IF YOU DO NOT NEED TO PUBLISH TO NPM
   publish-to-npm:
     <<: *defaults
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "false"
+      NX_NO_CLOUD: "true"
     steps:
       - checkout
       - attach_workspace:

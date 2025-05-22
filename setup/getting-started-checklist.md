@@ -131,6 +131,10 @@ Mailgun should be ready to go for tests now. While you're at it you could add yo
 
 `.env.prod` is pre-configured to not be committed to the git repository.
 
+# Firebase
+## Firestore
+You'll need to create a new Firestore database for your project.
+
 ## App Check
 You'll want to enable App Check for your app to protect it from unauthorized access.
 
