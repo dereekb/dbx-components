@@ -1,0 +1,3 @@
+describe('basicSyncEntityCommonTypeSynchronizerInstanceFactory()', () => {
+  describe('instance', () => {});
+});
