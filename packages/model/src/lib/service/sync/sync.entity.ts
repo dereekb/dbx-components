@@ -1,4 +1,4 @@
-import { UniqueModel } from '../model';
+import { UniqueModel } from '@dereekb/util';
 import { SyncSourceInfo } from './sync.source';
 
 /**
@@ -13,7 +13,7 @@ export type SyncEntityCommonType = string;
 
 /**
  * A common identifier for an entity that is shared/used between all systems for an entity that should be synchronized.
- * 
+ *
  * This identifier should be used for retrieving a similar entity from any server.
  */
 export type SyncEntityCommonId = string;
@@ -34,7 +34,7 @@ export function syncEntityCommonTypeIdPairFactory(commonType: SyncEntityCommonTy
     if (typeof input === 'string') {
       return {
         commonType,
-        commonId: input,
+        commonId: input
       };
     } else {
       return input;

@@ -33,4 +33,6 @@ export interface SyncSourceClientContext {}
 /**
  * Details for a SyncSource for a specific context, such as an OAuth user/client.
  */
-export interface SyncSourceClientDetails {}
+export interface SyncSourceClientDetails<T = unknown> {
+  readonly details: T;
+}

@@ -1,16 +1,29 @@
 import { BaseError } from 'make-error';
 import { SyncEntity, SyncEntityCommonType, SyncEntityCommonTypeIdPair, SyncEntityCommonTypeIdPairFactoryInput } from './sync.entity';
-import { Maybe } from '../value/maybe.type';
-import { SyncSourceId } from './sync.source';
+import { Maybe } from '@dereekb/util';
+import { UnregisteredSyncEntityCommonTypeError } from './sync.error';
 
 /**
- * Error thrown when the common type is not known/registered.
+ * The context type of source for an entity.
+ *
+ * - Global: The source is available to all contexts. Example: Configured API for the server.
+ * - Context: The source is only available to a specific context. Example: Configured per-user OAuth client for a specific user.
  */
-export class UnregisteredSyncEntityCommonTypeError extends BaseError {
-  constructor(public readonly commonType: SyncEntityCommonType) {
-    super(`The common type "${commonType}" is not registered.`);
-  }
-}
+export type SyncEntityCommonTypeSynchronizerSourceContextType = 'global' | 'context';
+
+/**
+ * The flow type of source for an entity. These are used to determine the order of synchronization.
+ *
+ * - Primary: The general/primary source of truth for an entity. There should typically only be one primary source.
+ * When a primary source returns deleted, then all other sources will be notified for deletion.
+ *
+ * - Secondary: A secondary source for the entity that information can be pulled from and may be used to update the primary source.
+ * When a secondary source returns deleted, then the synchronization will be restarted so the primary source(s) will be synchronized again to confirm the deletion.
+ *
+ * - Replica: A replica of the primary source for the entity that is never used to update other sources.
+ * - Unset: The flow type is not set. This is only used when a source is not configured properly and will be ignored.
+ */
+export type SyncEntityCommonTypeSynchronizerSourceFlowType = 'primary' | 'secondary' | 'replica' | 'unset';
 
 /**
  * The base synchronizer for entities.
