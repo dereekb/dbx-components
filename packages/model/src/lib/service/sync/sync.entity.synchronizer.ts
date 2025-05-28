@@ -110,10 +110,35 @@ export interface SyncEntityCommonTypeSynchronizationResult {
 }
 
 /**
+ * The result of a synchronization. This return type/instance has different implications for different sources of different types.
+ *
+ * - nochange: The entity was unchanged.
+ * - synchronized: The entity was synchronized.
+ * - deleted: The entity was deleted or is already deleted. If this is a primary source then the entity will be deleted from all other sources. If this
+ * is a secondary source then the synchronization will be restarted so the primary source(s) will be resynchronized again.
+ * - failed: The entity was not synchronized due to a failure that was controlled. Unless this is a primary source, should not cancel the synchronization of other sources.
+ * - error: An unexpected error occurred during synchronization.
+ */
+export type SyncEntityCommonTypeSynchronizationEntityResultType = 'nochange' | 'synchronized' | 'deleted' | 'failed' | 'error';
+
+/**
  * Specific entity synchronization information within a SyncEntityCommonTypeSynchronizationResult.
  */
 export interface SyncEntityCommonTypeSynchronizationEntityResult {
+  /**
+   * The entity that was synchronized.
+   *
+   * For results with the "error" result type, the actual id may not be provided or accurate.
+   */
   readonly entity: SyncEntity;
+  /**
+   * The type of result.
+   */
+  readonly type: SyncEntityCommonTypeSynchronizationEntityResultType;
+  /**
+   * The error that occurred during synchronization, if one occured.
+   */
+  readonly error?: Maybe<unknown>;
 }
 
 export interface SyncEntityCommonTypeSynchronizerFunctionContext {}

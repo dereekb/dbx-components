@@ -1,4 +1,4 @@
-import { UniqueModel } from '@dereekb/util';
+import { FactoryWithRequiredInput, MAP_IDENTITY, Maybe, UniqueModel } from '@dereekb/util';
 import { SyncSourceInfo } from './sync.source';
 
 /**
@@ -54,4 +54,46 @@ export interface SyncEntity extends UniqueModel, SyncEntityCommonTypeIdPair {
    * The server information for the entity.
    */
   readonly sourceInfo: SyncSourceInfo;
+}
+
+/**
+ * Configuration for syncEntityFactory().
+ */
+export interface SyncEntityFactoryConfig {
+  /**
+   * The source information to attach to the entity.
+   */
+  readonly sourceInfo: SyncSourceInfo;
+  /**
+   * Optional factory for generating the entity's id from the common id.
+   */
+  readonly idFactory?: Maybe<(commonId: SyncEntityCommonId) => SyncEntityId>;
+}
+
+/**
+ * Factory for creating a SyncEntity.
+ */
+export type SyncEntityFactory = FactoryWithRequiredInput<SyncEntity, SyncEntityCommonTypeIdPair>;
+
+/**
+ * Creates a SyncEntityFactory.
+ *
+ * @param config
+ * @returns
+ */
+export function syncEntityFactory(config: SyncEntityFactoryConfig): SyncEntityFactory {
+  const { idFactory: inputIdFactory, sourceInfo } = config;
+  const idFactory = inputIdFactory ?? MAP_IDENTITY;
+
+  return (input: SyncEntityCommonTypeIdPair) => {
+    const { commonType, commonId } = input;
+    const id = idFactory(commonId);
+
+    return {
+      commonType,
+      commonId,
+      id,
+      sourceInfo
+    };
+  };
 }

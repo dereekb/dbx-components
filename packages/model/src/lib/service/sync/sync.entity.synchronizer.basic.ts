@@ -1,6 +1,6 @@
-import { Maybe, makeValuesGroupMap, filterMaybeArrayValues, sortByNumberFunction, Getter, cachedGetter, performAsyncTasks } from '@dereekb/util';
+import { Maybe, makeValuesGroupMap, filterMaybeArrayValues, sortByNumberFunction, Getter, cachedGetter, performAsyncTasks, pushArrayItemsIntoArray } from '@dereekb/util';
 import { SyncEntityCommonType, SyncEntityCommonTypeIdPair, SyncEntityCommonTypeIdPairFactoryInput, syncEntityCommonTypeIdPairFactory } from './sync.entity';
-import { SyncEntityCommonTypeSynchronizer, SyncEntityCommonTypeSynchronizerFunctionContext, SyncEntityCommonTypeSynchronizerInstance, SyncEntityCommonTypeSynchronizerInstanceFunction, SyncEntityCommonTypeSynchronizerSourceContextType, SyncEntityCommonTypeSynchronizerSourceFlowType } from './sync.entity.synchronizer';
+import { SyncEntityCommonTypeSynchronizationEntityResult, SyncEntityCommonTypeSynchronizationEntityResultType, SyncEntityCommonTypeSynchronizer, SyncEntityCommonTypeSynchronizerFunctionContext, SyncEntityCommonTypeSynchronizerInstance, SyncEntityCommonTypeSynchronizerInstanceFunction, SyncEntityCommonTypeSynchronizerSourceContextType, SyncEntityCommonTypeSynchronizerSourceFlowType } from './sync.entity.synchronizer';
 import { SyncSourceClientContext, SyncSourceId, SyncSourceInfo } from './sync.source';
 import { MultiplePrimarySyncSourceError, NoPrimarySyncSourceError, SynchronizationFailedError } from './sync.error';
 
@@ -11,7 +11,7 @@ export interface BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionIn
   /**
    * The entity to synchronize.
    */
-  readonly entity: SyncEntityCommonTypeIdPair;
+  readonly entityCommonTypeIdPair: SyncEntityCommonTypeIdPair;
   /**
    * The determined flow type of this source.
    */
@@ -35,45 +35,23 @@ export interface BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchroniz
  */
 export type BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunction = (input: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput) => Promise<BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance>;
 
+export type BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction = () => Promise<SyncEntityCommonTypeSynchronizationEntityResult>;
+
 export interface BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance {
   /**
    * Performs the create/update synchronization for the entity.
    *
    * The function should typically never throw an error.
    */
-  synchronize(): Promise<BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityResult>;
+  readonly synchronize: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction;
   /**
    * Synchronizes the deletion of the entity.
    *
+   * For a "primary" source, this is called only when another source suggests a delete.
+   *
    * The function should typically never throw an error.
    */
-  synchronizeDelete(): Promise<BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityResult>;
-}
-
-/**
- * The result of a synchronization. This return type/instance has different implications for different sources of different types.
- *
- * - nochange: The entity was unchanged.
- * - synchronized: The entity was synchronized.
- * - deleted: The entity was deleted or is already deleted. If this is a primary source then the entity will be deleted from all other sources. If this
- * is a secondary source then the synchronization will be restarted so the primary source(s) will be resynchronized again.
- * - failed: The entity was not synchronized due to a failure that was controlled.
- * - error: An unexpected error occurred during synchronization.
- */
-export type BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityResultType = 'nochange' | 'synchronized' | 'deleted' | 'failed' | 'error';
-
-/**
- * The result of synchronizing an entity.
- */
-export interface BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityResult {
-  /**
-   * The type of result.
-   */
-  readonly type: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityResultType;
-  /**
-   * The error that occurred during synchronization, if one occured.
-   */
-  readonly error?: Maybe<unknown>;
+  readonly synchronizeDelete: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction;
 }
 
 /**
@@ -91,7 +69,7 @@ export interface BasicSyncEntityCommonTypeSynchronizerSource {
    * The default flow type of the source.
    */
   readonly defaultFlowType?: Maybe<SyncEntityCommonTypeSynchronizerSourceFlowType>;
-  readonly syncEntity: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunction;
+  readonly syncEntityInstance: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunction;
 }
 
 export interface BasicSyncEntityCommonTypeSynchronizer extends SyncEntityCommonTypeSynchronizer {}
@@ -164,7 +142,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
    * @param entitySourceContext The contextual information for the entity.
    * @returns The relevant sources for the entity.
    */
-  function loadSources(entity: SyncEntityCommonTypeIdPair, entitySourceContext: BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult): BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput[] {
+  function loadSources(entityCommonTypeIdPair: SyncEntityCommonTypeIdPair, entitySourceContext: BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult): BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput[] {
     const { globalSources, contextSources } = entitySourceContext;
 
     // load/filter global sources
@@ -192,7 +170,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
 
         if (sourceContext != null) {
           result = {
-            entity,
+            entityCommonTypeIdPair,
             flowType: sourceContext.flowType ?? x.defaultFlowType ?? 'unset',
             source: x
           };
@@ -213,7 +191,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
         if (sourceContext != null) {
           const flowType = sourceContext.flowType ?? x.defaultFlowType ?? 'unset';
           result = {
-            entity,
+            entityCommonTypeIdPair,
             flowType,
             source: x,
             context: sourceContext
@@ -276,7 +254,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
       const {} = context ?? {};
       const relevantSources = await loadRelevantSources();
 
-      const syncEntityInstances = await Promise.all(relevantSources.map((x) => x.source.syncEntity(x).then((y) => [x, y] as const)));
+      const syncEntityInstances = await Promise.all(relevantSources.map((x) => x.source.syncEntityInstance(x).then((y) => [x, y] as const)));
       const sourcesByFlowType = makeValuesGroupMap(syncEntityInstances, (x) => x[0].flowType);
 
       const primarySources = sourcesByFlowType.get('primary') ?? [];
@@ -293,46 +271,113 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
           throw new MultiplePrimarySyncSourceError(syncEntityCommonTypeIdPair);
       }
 
-      function synchronizeInstance(instance: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance) {
-        return instance.synchronize().catch((error) => {
-          const errorResult: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityResult = {
+      function synchronizeInstance(source: (typeof primarySources)[0], deleted: boolean): Promise<SyncEntityCommonTypeSynchronizationEntityResult> {
+        const [input, sourceInstance] = source;
+        const promise = deleted ? sourceInstance.synchronizeDelete() : sourceInstance.synchronize();
+
+        return promise.catch((error) => {
+          const errorResult: SyncEntityCommonTypeSynchronizationEntityResult = {
             type: 'error',
-            error
+            error,
+            entity: {
+              ...syncEntityCommonTypeIdPair,
+              sourceInfo: input.source.info,
+              id: ''
+            }
           };
 
           return errorResult;
         });
       }
 
-      async function performSynchronizationOfSources() {
+      interface PerformSynchronizationOfSourcesInput {
+        readonly syncRecursionDepth: number;
+        readonly secondaryFlaggedDelete?: boolean;
+      }
+
+      interface PerformSynchronizationOfSourcesResult {
+        readonly synchronizedEntityResults: SyncEntityCommonTypeSynchronizationEntityResult[];
+      }
+
+      async function performSynchronizationOfSources(input: PerformSynchronizationOfSourcesInput) {
+        const { syncRecursionDepth, secondaryFlaggedDelete } = input;
+        let result: Maybe<PerformSynchronizationOfSourcesResult>;
+
         // synchronize the primary source
         const primarySource = primarySources[0];
-        const primarySyncResult = await synchronizeInstance(primarySource[1]);
+        const primarySyncResult = await synchronizeInstance(primarySource, secondaryFlaggedDelete ?? false);
+        const synchronizedEntityResults: SyncEntityCommonTypeSynchronizationEntityResult[] = [primarySyncResult];
 
-        let deleted = false;
+        let primaryFlaggedDelete = false;
 
         switch (primarySyncResult.type) {
-          case 'nochange':
-          case 'synchronized':
-            break;
           case 'deleted':
-            deleted = true;
+            primaryFlaggedDelete = true;
             break;
           case 'failed':
           case 'error':
             throw new SynchronizationFailedError(syncEntityCommonTypeIdPair, primarySyncResult.error);
+          case 'nochange':
+          case 'synchronized':
+          default:
+            break;
         }
 
-        // synchornize all secondary sources, one after the other
+        // synchronize all secondary sources, one after the other. If any secondary source returns deleted and the primary source was not flagged as deleted, then the synchronization will be restarted.
+        for (const secondarySource of secondarySources) {
+          const secondarySyncResult = await synchronizeInstance(secondarySource, primaryFlaggedDelete);
+          synchronizedEntityResults.push(secondarySyncResult);
 
-        // synchronize all replica sources concurrently
+          switch (secondarySyncResult.type) {
+            case 'deleted':
+              if (primaryFlaggedDelete === false) {
+                if (syncRecursionDepth === 1) {
+                  result = await performSynchronizationOfSources({ syncRecursionDepth: syncRecursionDepth + 1, secondaryFlaggedDelete: true });
+                } else {
+                  // continue with the current depth anyways
+                }
+                break;
+              }
+              break;
+            case 'failed':
+            case 'error':
+              throw new SynchronizationFailedError(syncEntityCommonTypeIdPair, secondarySyncResult.error);
+            case 'nochange':
+            case 'synchronized':
+            default:
+              // continue normally
+              break;
+          }
+        }
+
+        // if result was already set, then it was completed in a recursive result
+        if (result == null) {
+          // synchronize all replica sources concurrently
+          const replicaTaskResults = await performAsyncTasks(replicaSources, (x) => synchronizeInstance(x, primaryFlaggedDelete), {
+            sequential: false,
+            maxParallelTasks: 3
+          });
+
+          // add all the results
+          pushArrayItemsIntoArray(
+            synchronizedEntityResults,
+            replicaTaskResults.results.map((x) => x[1])
+          );
+
+          // compute final result
+          result = {
+            synchronizedEntityResults
+          };
+        }
+
+        return result as PerformSynchronizationOfSourcesResult;
       }
 
-      const result = await performSynchronizationOfSources();
+      const result = await performSynchronizationOfSources({ syncRecursionDepth: 0 });
 
       return {
         targetPair: syncEntityCommonTypeIdPair,
-        entitiesSynchronized: [] // todo: pull from result...
+        entitiesSynchronized: result.synchronizedEntityResults
       };
     };
 

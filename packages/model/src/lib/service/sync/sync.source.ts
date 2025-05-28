@@ -26,7 +26,7 @@ export interface SyncSource {
 }
 
 /**
- *
+ * Contextual information for a SyncSource.
  */
 export interface SyncSourceClientContext {}
 
