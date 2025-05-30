@@ -25,6 +25,33 @@
       <p>Success value: {{ successValue | json }}</p>
     </doc-feature-example>
 
+    <doc-feature-example header="dbxActionIdle" hint="Structural directive that shows template content when the action is idle. This does not reappear after working has completed.">
+      <p>dbxActionIdle can be used just like ngIf.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+        <p *dbxActionIdle>Idle!</p>
+        <p *dbxActionIdle="3000">Idle! (Disappears after 3 seconds.)</p>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionIsWorking" hint="Structural directive that shows template content when the action is working. This does not reappear after working has completed.">
+      <p>dbxActionIsWorking can be used just like ngIf.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+        <p *dbxActionIsWorking>Working!</p>
+        <p *dbxActionIsWorking="3000">Working! (Disappears after 3 seconds.)</p>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionTriggered" hint="Structural directive that shows template content when the action is triggered.">
+      <p>dbxActionTriggered can be used just like ngIf.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+        <p *dbxActionTriggered>Triggered!</p>
+        <p *dbxActionTriggered="3000">Triggered! (Disappears after 3 seconds.)</p>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
     <doc-feature-example header="dbxActionHasSuccess" hint="Structural directive that shows template content when the action has success.">
       <p>dbxActionHasSuccess can be used just like ngIf.</p>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">

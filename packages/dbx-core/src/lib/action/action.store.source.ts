@@ -81,6 +81,10 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
     return this.pipeStore((x) => x.state$);
   }
 
+  get idle$(): Observable<boolean> {
+    return this.pipeStore((x) => x.idle$);
+  }
+
   get triggered$(): Observable<boolean> {
     return this.pipeStore((x) => x.triggered$);
   }

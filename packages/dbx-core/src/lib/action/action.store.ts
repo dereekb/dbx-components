@@ -141,6 +141,15 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   readonly isModified$ = this.afterDistinctBoolean((x) => x.isModified);
 
   /**
+   * Pipes true when idle.
+   */
+  readonly idle$ = this.actionState$.pipe(
+    map((x) => x === DbxActionState.IDLE),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
    * Pipes true when triggered.
    */
   readonly triggered$ = this.afterDistinctActionState(DbxActionState.TRIGGERED, () => true);

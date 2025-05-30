@@ -1,5 +1,5 @@
 import { Directive, OnInit, inject, input } from '@angular/core';
-import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
 import { DbxActionSnackbarService } from './action.snackbar.service';
@@ -19,7 +19,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
 
   readonly dbxActionSnackbarDefault = input<Maybe<DbxActionSnackbarType>>();
   readonly dbxActionSnackbarUndo = input<Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>>();
-  readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>, Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> | ''>(undefined, { transform: (value: any) => value === '' ? undefined : value });
+  readonly dbxActionSnackbar = input<Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>, Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> | ''>(undefined, { transform: transformEmptyStringInputToUndefined });
 
   ngOnInit(): void {
     this.sub = this.source

@@ -4,6 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
 import { AbstractIfDirective } from '../../../view/if.directive';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { transformEmptyStringInputToUndefined } from '../../../util/input';
 
 /**
  * Structural directive that displays the content when the store has a success value.
@@ -17,7 +18,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
   private readonly _store = inject(DbxActionContextStoreSourceInstance);
 
-  readonly hideAfter = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionHasSuccess', transform: (value) => (value === '' ? undefined : value) });
+  readonly hideAfter = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionHasSuccess', transform: transformEmptyStringInputToUndefined });
 
   readonly show$ = this._store.isSuccess$.pipe(
     exhaustMap((success) => {
