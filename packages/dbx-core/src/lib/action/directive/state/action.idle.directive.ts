@@ -1,5 +1,5 @@
 import { Directive, inject, input } from '@angular/core';
-import { emitDelayObs, tapLog } from '@dereekb/rxjs';
+import { emitDelayObs } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
 import { AbstractIfDirective } from '../../../view/if.directive';

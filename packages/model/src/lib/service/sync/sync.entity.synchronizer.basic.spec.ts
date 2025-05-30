@@ -1,7 +1,6 @@
-import { SyncEntity, SyncEntityCommonId, SyncEntityCommonTypeIdPair, syncEntityFactory } from './sync.entity';
+import { SyncEntity, SyncEntityCommonTypeIdPair, syncEntityFactory } from './sync.entity';
 import { SyncEntityCommonTypeSynchronizationEntityResult, SyncEntityCommonTypeSynchronizationEntityResultType } from './sync.entity.synchronizer';
-import { BasicSyncEntityCommonTypeSynchronizerConfig, BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult, basicSyncEntityCommonTypeSynchronizerInstanceFactory, BasicSyncEntityCommonTypeSynchronizerSource, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction } from './sync.entity.synchronizer.basic';
-import { NoPrimarySyncSourceError, MultiplePrimarySyncSourceError, SynchronizationFailedError } from './sync.error';
+import { BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult, basicSyncEntityCommonTypeSynchronizerInstanceFactory, BasicSyncEntityCommonTypeSynchronizerSource, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityInstance, BasicSyncEntityCommonTypeSynchronizerSourceSyncEntitySynchronizeFunction } from './sync.entity.synchronizer.basic';
 import { SyncSourceInfo } from './sync.source';
 
 const SYSTEM_SOURCE_ID = 'system';
@@ -39,8 +38,8 @@ const COMMON_TYPE = 'test';
 
 describe('basicSyncEntityCommonTypeSynchronizerInstanceFactory()', () => {
   describe('instance', () => {
-    let testSystemItemResultType: SyncEntityCommonTypeSynchronizationEntityResultType = 'synchronized';
-    let testSourceAItemResultType: SyncEntityCommonTypeSynchronizationEntityResultType = 'synchronized';
+    const testSystemItemResultType: SyncEntityCommonTypeSynchronizationEntityResultType = 'synchronized';
+    const testSourceAItemResultType: SyncEntityCommonTypeSynchronizationEntityResultType = 'synchronized';
 
     const sources: BasicSyncEntityCommonTypeSynchronizerSource[] = [
       // system

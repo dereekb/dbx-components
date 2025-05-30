@@ -1,6 +1,6 @@
 import { Maybe, makeValuesGroupMap, filterMaybeArrayValues, sortByNumberFunction, Getter, cachedGetter, performAsyncTasks, pushArrayItemsIntoArray } from '@dereekb/util';
 import { SyncEntityCommonType, SyncEntityCommonTypeIdPair, SyncEntityCommonTypeIdPairFactoryInput, syncEntityCommonTypeIdPairFactory } from './sync.entity';
-import { SyncEntityCommonTypeSynchronizationEntityResult, SyncEntityCommonTypeSynchronizationEntityResultType, SyncEntityCommonTypeSynchronizer, SyncEntityCommonTypeSynchronizerFunctionContext, SyncEntityCommonTypeSynchronizerInstance, SyncEntityCommonTypeSynchronizerInstanceFunction, SyncEntityCommonTypeSynchronizerSourceContextType, SyncEntityCommonTypeSynchronizerSourceFlowType } from './sync.entity.synchronizer';
+import { SyncEntityCommonTypeSynchronizationEntityResult, SyncEntityCommonTypeSynchronizer, SyncEntityCommonTypeSynchronizerFunctionContext, SyncEntityCommonTypeSynchronizerInstance, SyncEntityCommonTypeSynchronizerInstanceFunction, SyncEntityCommonTypeSynchronizerSourceContextType, SyncEntityCommonTypeSynchronizerSourceFlowType } from './sync.entity.synchronizer';
 import { SyncSourceClientContext, SyncSourceId, SyncSourceInfo } from './sync.source';
 import { MultiplePrimarySyncSourceError, NoPrimarySyncSourceError, SynchronizationFailedError } from './sync.error';
 
@@ -72,7 +72,7 @@ export interface BasicSyncEntityCommonTypeSynchronizerSource {
   readonly syncEntityInstance: BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunction;
 }
 
-export interface BasicSyncEntityCommonTypeSynchronizer extends SyncEntityCommonTypeSynchronizer {}
+export type BasicSyncEntityCommonTypeSynchronizer = SyncEntityCommonTypeSynchronizer
 
 export interface BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult {
   /**

@@ -1,4 +1,3 @@
-import { BaseError } from 'make-error';
 import { SyncEntity, SyncEntityCommonType, SyncEntityCommonTypeIdPair, SyncEntityCommonTypeIdPairFactoryInput } from './sync.entity';
 import { Maybe } from '@dereekb/util';
 import { UnregisteredSyncEntityCommonTypeError } from './sync.error';
