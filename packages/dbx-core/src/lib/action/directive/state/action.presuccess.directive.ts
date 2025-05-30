@@ -4,6 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import { of, exhaustMap, shareReplay } from 'rxjs';
 import { AbstractIfDirective } from '../../../view/if.directive';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
+import { transformEmptyStringInputToUndefined } from '../../../util/input';
 
 /**
  * Structural directive that displays the content before the store has success.
@@ -17,7 +18,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 export class DbxActionPreSuccessDirective extends AbstractIfDirective {
   private readonly _store = inject(DbxActionContextStoreSourceInstance);
 
-  readonly hideFor = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionPreSuccess', transform: (value) => (value === '' ? undefined : value) });
+  readonly hideFor = input<Maybe<number>, Maybe<number> | ''>(undefined, { alias: 'dbxActionPreSuccess', transform: transformEmptyStringInputToUndefined });
 
   readonly show$ = this._store.isSuccess$.pipe(
     exhaustMap((success) => {

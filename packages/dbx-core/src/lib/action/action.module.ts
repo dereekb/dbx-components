@@ -19,6 +19,7 @@ import {
   DbxActionIsWorkingDirective,
   DbxActionDisabledOnSuccessDirective,
   DbxActionPreSuccessDirective,
+  DbxActionIdleDirective,
   DbxActionHandlerValueDirective
 } from './directive';
 
@@ -39,6 +40,7 @@ const importsAndExports = [
   DbxActionAutoModifyDirective,
   DbxActionValueDirective,
   DbxActionContextLoggerDirective,
+  DbxActionIdleDirective,
   DbxActionPreSuccessDirective,
   DbxActionHasSuccessDirective,
   DbxActionSuccessHandlerDirective,

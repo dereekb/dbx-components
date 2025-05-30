@@ -1,6 +1,7 @@
 import { type SortCompareFunction } from '../sort';
 import { type ReadNumberFunction } from './number';
 
+// MARK: Number
 /**
  * SortCompareFunction by string.
  */

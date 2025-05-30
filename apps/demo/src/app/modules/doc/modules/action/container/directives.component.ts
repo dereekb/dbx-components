@@ -5,7 +5,25 @@ import { DbxContentContainerDirective, DbxButtonComponent } from '@dereekb/dbx-w
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
-import { DbxActionDirective, DbxActionHandlerDirective, DbxActionHandlerValueDirective, DbxActionValueDirective, DbxActionButtonDirective, DbxActionSuccessHandlerDirective, DbxActionHasSuccessDirective, DbxActionPreSuccessDirective, DbxActionDisabledOnSuccessDirective, DbxActionAutoModifyDirective, DbxActionAutoTriggerDirective, DbxActionValueStreamDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
+import {
+  DbxActionDirective,
+  DbxActionHandlerDirective,
+  DbxActionHandlerValueDirective,
+  DbxActionValueDirective,
+  DbxActionButtonDirective,
+  DbxActionSuccessHandlerDirective,
+  DbxActionHasSuccessDirective,
+  DbxActionPreSuccessDirective,
+  DbxActionDisabledOnSuccessDirective,
+  DbxActionAutoModifyDirective,
+  DbxActionAutoTriggerDirective,
+  DbxActionValueStreamDirective,
+  DbxActionDisabledDirective,
+  DbxActionEnforceModifiedDirective,
+  DbxActionIdleDirective,
+  DbxActionTriggeredDirective,
+  DbxActionIsWorkingDirective
+} from '@dereekb/dbx-core';
 import { MatButton } from '@angular/material/button';
 import { DocActionFormExampleFormComponent } from '../component/action.example.form.component';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
@@ -23,6 +41,7 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
     DbxActionHandlerDirective,
     DbxActionValueDirective,
     DbxButtonComponent,
+    DbxActionIdleDirective,
     DbxActionButtonDirective,
     DbxActionHandlerValueDirective,
     DbxActionSuccessHandlerDirective,
@@ -37,6 +56,8 @@ import { AsyncPipe, JsonPipe } from '@angular/common';
     DbxActionEnforceModifiedDirective,
     DocActionFormExampleFormComponent,
     DbxActionFormDirective,
+    DbxActionTriggeredDirective,
+    DbxActionIsWorkingDirective,
     AsyncPipe,
     JsonPipe
   ]

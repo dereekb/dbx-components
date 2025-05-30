@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 import { DbxValueListItem, DbxValueListItemDecisionFunction } from '../list.view.value';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { AbstractDbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
+import { transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 
 export const DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY = 'disable_ripple_anchor';
 
@@ -16,7 +17,7 @@ export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DbxValueListItemDecisionFun
   standalone: true
 })
 export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
-  readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<string | DbxValueListItemDecisionFunction<T>>>(undefined, { alias: 'dbxListItemDisableRippleModifier', transform: (x) => (typeof x !== 'string' ? x : undefined) });
+  readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<'' | DbxValueListItemDecisionFunction<T>>>(undefined, { alias: 'dbxListItemDisableRippleModifier', transform: transformEmptyStringInputToUndefined });
 
   readonly disableRippleForItemModifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.disableRippleForItem).pipe(
     map((x) => x ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION),

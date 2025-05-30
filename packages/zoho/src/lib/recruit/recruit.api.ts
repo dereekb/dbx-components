@@ -193,6 +193,9 @@ export function getRecords(context: ZohoRecruitContext): ZohoRecruitGetRecordsFu
  */
 export interface ZohoRecruitSearchRecordsInput<T = ZohoRecruitRecord> extends ZohoRecruitModuleNameRef, ZohoRecruitGetRecordsPageFilter {
   readonly criteria?: Maybe<ZohoRecruitSearchRecordsCriteriaTreeElement<T>>;
+  /**
+   * @deprecated may be deprecated. Waiting on Zoho Recruit to get back to me.
+   */
   readonly email?: Maybe<EmailAddress>;
   readonly phone?: Maybe<PhoneNumber>;
   readonly word?: Maybe<string>;
@@ -217,6 +220,10 @@ export function searchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRec
     if (input.criteria != null) {
       const criteriaString = zohoRecruitSearchRecordsCriteriaString<T>(input.criteria);
       baseInput.criteria = criteriaString;
+    }
+
+    if (!baseInput.word && !input.criteria && !input.email && !input.phone) {
+      throw new Error('At least one of word, criteria, email, or phone must be provided');
     }
 
     const urlParams = zohoRecruitUrlSearchParamsMinusModule(baseInput);

@@ -2,7 +2,8 @@ import { Directive, OnDestroy, OnInit, inject, input } from '@angular/core';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * DbxActionConfirmDirective configuration.
@@ -27,7 +28,7 @@ export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmCon
 export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
   readonly source = inject(DbxActionContextStoreSourceInstance<T, O>, { host: true });
 
-  readonly dbxActionConfirm = input<DbxActionConfirmConfig<T>>();
+  readonly dbxActionConfirm = input<Maybe<DbxActionConfirmConfig<T>>, Maybe<DbxActionConfirmConfig<T> | ''>>(undefined, { transform: transformEmptyStringInputToUndefined });
 
   private readonly _sourceSubscription = new SubscriptionObject();
 

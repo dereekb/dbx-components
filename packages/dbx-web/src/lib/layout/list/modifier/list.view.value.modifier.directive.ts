@@ -5,6 +5,7 @@ import { addModifiers, ArrayOrValue, combineMaps, Maybe, Modifier, ModifierMap, 
 import { MaybeObservableOrValue, maybeValueFromObservableOrValue, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxValueListItemModifier, provideDbxValueListViewModifier } from '../list.view.value.modifier';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 
 /**
  * DbxValueListViewModifier implementation
@@ -15,7 +16,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
   standalone: true
 })
 export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I>, OnDestroy {
-  readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>, Maybe<string | ArrayOrValue<Modifier<I>>>>(undefined, { alias: 'dbxListItemModifier', transform: (x) => (typeof x === 'string' ? undefined : x) });
+  readonly inputModifiers = input<Maybe<ArrayOrValue<Modifier<I>>>, Maybe<'' | ArrayOrValue<Modifier<I>>>>(undefined, { alias: 'dbxListItemModifier', transform: transformEmptyStringInputToUndefined });
 
   private readonly _additionalModifiers = new BehaviorSubject<Maybe<ModifierMap<I>>>(undefined);
 
