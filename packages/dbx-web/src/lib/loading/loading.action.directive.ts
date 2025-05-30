@@ -10,13 +10,14 @@ import { loadingStateContext } from '@dereekb/rxjs';
   selector: '[dbxActionLoadingContext]',
   standalone: true
 })
-export class DbxActionLoadingContextDirective implements OnInit, OnDestroy {
+export class DbxActionLoadingContextDirective implements OnDestroy {
   readonly loadingComponent = inject(DbxLoadingComponent, { host: true });
+
   readonly source = inject(DbxActionContextStoreSourceInstance);
 
   private readonly _context = loadingStateContext({ obs: this.source.loadingState$ });
 
-  ngOnInit(): void {
+  constructor() {
     this.loadingComponent.setContext(this._context);
   }
 

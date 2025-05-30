@@ -6,7 +6,7 @@ import { IsEqualFunction, IsModifiedFunction } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 
 export interface DbxActionPopoverFunctionParams {
-  origin: ElementRef;
+  readonly origin: ElementRef;
 }
 
 export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFunctionParams) => NgPopoverRef<unknown, Maybe<T>>;
