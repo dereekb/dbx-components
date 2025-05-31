@@ -1,11 +1,11 @@
 import { ClientWebAppUrl } from './client';
 
 export interface ClientAppConfig {
-  clientWebAppUrl: ClientWebAppUrl;
+  readonly clientWebAppUrl: ClientWebAppUrl;
 }
 
 export abstract class ClientAppServiceConfig {
-  client!: ClientAppConfig;
+  readonly client!: ClientAppConfig;
 
   static assertValidConfig(config: ClientAppServiceConfig) {
     if (!config.client.clientWebAppUrl) {

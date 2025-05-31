@@ -34,8 +34,8 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
   readonly maxErrorsForThrottle = input<number, Maybe<number>>(MAX_ERRORS_TO_THROTTLE_ON, { transform: (x) => x ?? MAX_ERRORS_TO_THROTTLE_ON });
   readonly triggerLimit = input<Maybe<number>>();
   readonly triggerEnabled = input<boolean, Maybe<string | boolean>>(true, { alias: 'dbxActionAutoTrigger', transform: isNotFalse });
-  readonly useFastTriggerPreset = input<boolean, Maybe<string | boolean>>(false, { transform: isDefinedAndNotFalse });
-  readonly useInstantTriggerPreset = input<boolean, Maybe<string | boolean>>(false, { transform: isDefinedAndNotFalse });
+  readonly useFastTriggerPreset = input<boolean, Maybe<'' | boolean>>(false, { transform: isDefinedAndNotFalse });
+  readonly useInstantTriggerPreset = input<boolean, Maybe<'' | boolean>>(false, { transform: isDefinedAndNotFalse });
 
   readonly triggerDebounceSignal = computed(() => {
     let debounce = this.triggerDebounce();

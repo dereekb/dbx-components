@@ -43,4 +43,9 @@ export interface ZoomAuthClientIdAndSecretPair {
   readonly clientSecret: ZoomOAuthClientSecret;
 }
 
-export interface ZoomConfig {}
+export interface ZoomConfig { }
+
+/**
+ * Secret token used for validating Zoom webhooks.
+ */
+export type ZoomSecretToken = string;
