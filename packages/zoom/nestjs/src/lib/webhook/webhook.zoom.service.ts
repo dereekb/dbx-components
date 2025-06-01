@@ -21,7 +21,7 @@ export interface UpdateForWebhookResponse {
 @Injectable()
 export class ZoomWebhookService {
   private readonly logger = new Logger('ZoomWebhookService');
-  private readonly _config: ZoomWebhookServiceConfig;
+
   private readonly _verifier: ZoomWebhookEventVerifier;
   private readonly _validator: ZoomWebhookEventValidationFunction;
 
@@ -29,19 +29,19 @@ export class ZoomWebhookService {
   readonly configure = zoomEventHandlerConfigurerFactory(this.handler);
 
   constructor(@Inject(ZoomWebhookServiceConfig) config: ZoomWebhookServiceConfig) {
-    this._config = config;
     this._verifier = zoomWebhookEventVerifier(config.webhookConfig.zoomSecretToken);
     this._validator = zoomWebhookEventValidationFunction(config.webhookConfig.zoomSecretToken);
   }
 
   public async updateForWebhook(req: Request, rawBody: Buffer): Promise<UpdateForWebhookResponse> {
     const { valid, event } = this._verifier(req, rawBody);
-    let validationEventResponse: ZoomWebhookValidationResponse | undefined;
     let handled: boolean = false;
+    let validationEventResponse: ZoomWebhookValidationResponse | undefined;
 
     if (!valid) {
       this.logger.warn('Received invalid zoom event: ', event);
     } else if (event.event === ZOOM_WEBHOOK_URL_VALIDATION_EVENT_TYPE) {
+      handled = true;
       validationEventResponse = this._validator(event as ZoomWebhookUrlValidationEvent);
     } else {
       handled = await this.updateForZoomEvent(event);

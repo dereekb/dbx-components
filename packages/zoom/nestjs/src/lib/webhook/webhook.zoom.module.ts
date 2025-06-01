@@ -1,7 +1,7 @@
 import { ZoomWebhookController } from './webhook.zoom.controller';
 import { Module } from '@nestjs/common';
 import { ZoomWebhookService } from './webhook.zoom.service';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ZOOM_SECRET_TOKEN_ENV_VAR, ZoomWebhookServiceConfig } from './webhook.zoom.config';
 
 export function zoomWebhookServiceConfigFactory(configService: ConfigService): ZoomWebhookServiceConfig {
@@ -19,6 +19,7 @@ export function zoomWebhookServiceConfigFactory(configService: ConfigService): Z
  * Configures webhooks for the service.
  */
 @Module({
+  imports: [ConfigModule],
   controllers: [ZoomWebhookController],
   exports: [ZoomWebhookService],
   providers: [

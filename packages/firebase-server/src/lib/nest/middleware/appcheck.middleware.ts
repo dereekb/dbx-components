@@ -1,10 +1,11 @@
 import * as admin from 'firebase-admin';
-import { ForbiddenException, Injectable, Logger, type NestMiddleware } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, Logger, Optional, type NestMiddleware } from '@nestjs/common';
 import { type Request } from 'firebase-functions/v2/https';
 import { type Response } from 'express';
-import { type Maybe } from '@dereekb/util';
+import { SlashPath, type Maybe } from '@dereekb/util';
 import { type AppCheckRequest } from './appcheck';
 import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
+import { GlobalRoutePrefixConfig } from './globalprefix';
 
 /**
  * Middleware that verifies the X-Firebase-AppCheck header using admin.
@@ -15,17 +16,14 @@ import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
 export class FirebaseAppCheckMiddleware implements NestMiddleware {
   private readonly logger = new Logger('FirebaseAppCheckMiddleware');
 
-  static isIgnoredRequest(req: Request): boolean {
-    const isIgnoredRoute = (req as AppCheckRequest).skipAppCheck || FirebaseAppCheckMiddleware.isIgnoredPath(req.baseUrl);
-    return isIgnoredRoute;
-  }
+  private readonly _ignoredWebhookPath: SlashPath;
 
-  static isIgnoredPath(path: string): boolean {
-    return path.startsWith(DEFAULT_BASE_WEBHOOK_PATH);
+  constructor(@Optional() @Inject(GlobalRoutePrefixConfig) private readonly globalRoutePrefixConfig?: Maybe<GlobalRoutePrefixConfig>) {
+    this._ignoredWebhookPath = this.globalRoutePrefixConfig?.globalApiRoutePrefix ? `${this.globalRoutePrefixConfig.globalApiRoutePrefix}${DEFAULT_BASE_WEBHOOK_PATH}` : DEFAULT_BASE_WEBHOOK_PATH;
   }
 
   async use(req: Request, res: Response, next: (error?: Error | unknown) => void) {
-    const isIgnoredRoute = FirebaseAppCheckMiddleware.isIgnoredRequest(req);
+    const isIgnoredRoute = this.isIgnoredRequest(req);
 
     let error: Maybe<Error>;
 
@@ -38,6 +36,15 @@ export class FirebaseAppCheckMiddleware implements NestMiddleware {
     }
 
     next(error);
+  }
+
+  isIgnoredRequest(req: Request): boolean {
+    const isIgnoredRoute = (req as AppCheckRequest).skipAppCheck || this.isIgnoredPath(req.baseUrl);
+    return isIgnoredRoute;
+  }
+
+  isIgnoredPath(path: string): boolean {
+    return path.startsWith(this._ignoredWebhookPath);
   }
 }
 

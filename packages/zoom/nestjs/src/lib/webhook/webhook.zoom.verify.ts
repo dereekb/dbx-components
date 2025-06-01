@@ -23,7 +23,8 @@ export type ZoomWebhookEventVerifier = (req: Request, rawBody: Buffer) => ZoomWe
  */
 export function zoomWebhookEventVerifier(zoomSecretToken: ZoomSecretToken): ZoomWebhookEventVerifier {
   return (request: Request, rawBody: Buffer) => {
-    const message = `v0:${request.headers['x-zm-request-timestamp']}:${JSON.stringify(request.body)}`;
+    const requestBodyString = String(request.body);
+    const message = `v0:${request.headers['x-zm-request-timestamp']}:${requestBodyString}`;
     const hashForVerify = createHmac('sha256', zoomSecretToken).update(message).digest('hex');
     const signature = `v0=${hashForVerify}`;
 
@@ -31,7 +32,7 @@ export function zoomWebhookEventVerifier(zoomSecretToken: ZoomSecretToken): Zoom
 
     const result: ZoomWebhookEventVerificationResult = {
       valid,
-      event: request.body
+      event: JSON.parse(requestBodyString)
     };
 
     return result;
