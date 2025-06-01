@@ -13,6 +13,7 @@ export class ZoomWebhookController {
 
   @Post()
   async handleZoomWebhook(@Req() req: Request, @RawBody() rawBody: RawBodyBuffer) {
-    await this.zoomWebhookService.updateForWebhook(req, rawBody);
+    const { validationEventResponse } = await this.zoomWebhookService.updateForWebhook(req, rawBody);
+    return validationEventResponse;
   }
 }

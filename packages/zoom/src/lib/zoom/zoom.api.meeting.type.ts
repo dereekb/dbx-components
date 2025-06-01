@@ -1,9 +1,22 @@
-import { CommaSeparatedString, DayOfMonth, EmailAddress, ISO8601DateString, Minutes, WebsiteDomain } from '@dereekb/util';
+import { CommaSeparatedString, DayOfMonth, EmailAddress, ISO8601DateString, Minutes, TimezoneString, WebsiteDomain } from '@dereekb/util';
 import { ZoomUserId } from '../zoom.type';
 import { type ZoomUserPersonalMeetingId } from './zoom.api.user.type';
 
-export type ZoomMeetingId = string;
+export type ZoomMeetingId = number;
+
+/**
+ * Unique meeting ID.
+ *
+ * Each meeting instance generates its own meeting UUID - after a meeting ends, a new UUID is generated for the next instance of the meeting. Retrieve a list of UUIDs from past meeting instances using the [**List past meeting instances**](/docs/api/rest/reference/zoom-api/methods#operation/pastMeetings) API. [Double encode](/docs/api/rest/using-zoom-apis/#meeting-id-and-uuid) your UUID when using it for API calls if the UUID begins with a `/` or contains `//` in it.
+ */
+export type ZoomMeetingUUID = string;
+
 export type ZoomMeetingTemplateId = string;
+
+/**
+ * The meeting topic.
+ */
+export type ZoomMeetingTopic = string;
 
 export type ZoomMeetingOccurrenceDuration = number;
 
@@ -61,9 +74,44 @@ export interface ZoomMeeting {
   readonly host_email: EmailAddress;
 
   /**
+   * The ID of the user who is set as the meeting host.
+   */
+  readonly host_id: ZoomUserId;
+
+  /**
    * The meeting ID (meeting number): Unique identifier of the meeting in long format (int64), also known as the meeting number.
    */
   readonly id: ZoomMeetingId;
+
+  /**
+   * The meeting's unique identifier.
+   */
+  readonly uuid: ZoomMeetingUUID;
+
+  /**
+   * The meeting topic.
+   */
+  readonly topic: ZoomMeetingTopic;
+
+  /**
+   * The timezone to format the meeting start time.
+   */
+  readonly timezone: TimezoneString;
+
+  /**
+   * The start time of the meeting.
+   */
+  readonly start_time: ISO8601DateString;
+
+  /**
+   * The meeting duration.
+   */
+  readonly duration: ZoomMeetingDuration;
+
+  /**
+   * The type of meeting.
+   */
+  readonly type: ZoomMeetingType;
 
   /**
    * The URL that registrants can use to register for a meeting. Only returned for meetings with registration enabled.
@@ -80,11 +128,6 @@ export interface ZoomMeeting {
    * The date and time when this meeting was created.
    */
   readonly created_at: ISO8601DateString;
-
-  /**
-   * The meeting duration.
-   */
-  readonly duration?: Minutes;
 
   /**
    * Encrypted passcode for third party endpoints (H323/SIP).
@@ -164,11 +207,22 @@ export type ZoomMeetingPassword = string;
  */
 export type ZoomMeetingDuration = Minutes;
 
+/**
+ * The type of meeting:
+ * - `1` - An instant meeting.
+ * - `2` - A scheduled meeting.
+ * - `3` - A recurring meeting with no fixed time.
+ * - `4` - A PMI Meeting.
+ * - `8` - A recurring meeting with fixed time.
+ * - `10` - A screen share only meeting.
+ */
 export enum ZoomMeetingType {
   INSTANT = 1,
   SCHEDULED = 2,
   RECURRING_NO_FIXED_TIME = 3,
-  RECURRING_FIXED_TIME = 8
+  PMI = 4,
+  RECURRING_FIXED_TIME = 8,
+  SCREEN_SHARE_ONLY = 10
 }
 
 /**

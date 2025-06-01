@@ -1,11 +1,11 @@
-import { RawZoomWebhookEvent } from './webhook.zoom.type';
 import { Request } from 'express';
 import { createHmac } from 'crypto';
 import { ZoomSecretToken } from '@dereekb/zoom';
+import { UntypedZoomWebhookEvent } from './webhook.zoom.type.common';
 
 export interface ZoomWebhookEventVerificationResult {
   readonly valid: boolean;
-  readonly event: RawZoomWebhookEvent;
+  readonly event: UntypedZoomWebhookEvent;
 }
 
 /**
@@ -23,9 +23,9 @@ export type ZoomWebhookEventVerifier = (req: Request, rawBody: Buffer) => ZoomWe
  */
 export function zoomWebhookEventVerifier(zoomSecretToken: ZoomSecretToken): ZoomWebhookEventVerifier {
   return (request: Request, rawBody: Buffer) => {
-    const message = `v0:${request.headers['x-zm-request-timestamp']}:${JSON.stringify(request.body)}`
+    const message = `v0:${request.headers['x-zm-request-timestamp']}:${JSON.stringify(request.body)}`;
     const hashForVerify = createHmac('sha256', zoomSecretToken).update(message).digest('hex');
-    const signature = `v0=${hashForVerify}`
+    const signature = `v0=${hashForVerify}`;
 
     const valid = request.headers['x-zm-signature'] === signature;
 
@@ -36,4 +36,4 @@ export function zoomWebhookEventVerifier(zoomSecretToken: ZoomSecretToken): Zoom
 
     return result;
   };
-};
+}
