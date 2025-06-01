@@ -1,6 +1,6 @@
-import { CommaSeparatedString, DayOfMonth, EmailAddress, ISO8601DateString, Minutes, TimezoneString, WebsiteDomain } from '@dereekb/util';
+import { CommaSeparatedString, DayOfMonth, EmailAddress, FileSize, ISO8601DateString, Minutes, TimezoneString, WebsiteDomain } from '@dereekb/util';
 import { ZoomUserId } from '../zoom.type';
-import { type ZoomUserPersonalMeetingId } from './zoom.api.user.type';
+import { ZoomUser, type ZoomUserPersonalMeetingId } from './zoom.api.user.type';
 
 export type ZoomMeetingId = number;
 
@@ -183,6 +183,11 @@ export interface ZoomMeeting {
    * Meeting settings object.
    */
   readonly settings?: ZoomMeetingSettings;
+
+  /**
+   * Meeting tracking fields.
+   */
+  readonly tracking_fields?: ZoomMeetingTrackingField[];
 }
 
 /**
@@ -394,4 +399,103 @@ export interface ZoomMeetingSettings {
   readonly alternative_host_update_polls?: boolean;
   readonly show_share_button?: boolean;
   readonly allow_multiple_devices?: boolean;
+}
+
+export type ZoomMeetingIssue = 'Unstable audio quality' | 'Unstable video quality' | 'Unstable screen share quality' | 'High CPU occupation' | 'Call Reconnection';
+
+export interface ZoomMeetingChatMessageFile {
+  readonly file_id: string;
+  readonly file_name: string;
+  readonly file_size: FileSize;
+  readonly file_type: string;
+  readonly file_owner_id: ZoomUserId;
+}
+
+/**
+ * The source of the meeting.
+ */
+export type ZoomMeetingSource = string;
+
+export interface PastZoomMeeting extends Pick<ZoomMeeting, 'id' | 'uuid' | 'duration' | 'start_time' | 'host_id' | 'type' | 'topic'> {
+  /**
+   * The time the meeting ended.
+   */
+  readonly end_time: ISO8601DateString;
+
+  /**
+   * The meeting host's department.
+   */
+  readonly dept: string;
+
+  /**
+   * The number of participants in the meeting.
+   */
+  readonly participant_count: number;
+
+  /**
+   * The source of the meeting.
+   */
+  readonly source: ZoomMeetingSource;
+
+  /**
+   * Total number of minutes the meeting lasted.
+   */
+  readonly total_minutes: Minutes;
+}
+
+export type ZoomParticipantId = string;
+
+export type ZoomRegistrantId = string;
+
+export type ZoomParticipantStatus = 'in_meeting' | 'in_waiting_room';
+
+export interface PastZoomMeetingParticipant {
+  readonly id: ZoomUserId | '';
+  readonly name: string;
+  /**
+   * Participant ID.
+   *
+   * This is a unique ID assigned to the participant joining a meeting and is valid for that meeting only.
+   */
+  readonly user_id: ZoomParticipantId;
+  /**
+   * The participant's unique registrant ID.
+   *
+   * This field only returns if you pass the `registrant_id` value for the `include_fields` query parameter.
+   *
+   * This field does not return if the `type` query parameter is the `live` value.
+   */
+  readonly registrant_id: ZoomRegistrantId;
+  /**
+   * The participant's email address.
+   */
+  readonly user_email: EmailAddress;
+  /**
+   * The time the participant joined the meeting.
+   */
+  readonly join_time: ISO8601DateString;
+  /**
+   * The time the participant left the meeting.
+   */
+  readonly leave_time: ISO8601DateString;
+  /**
+   * Participant duration, in seconds, calculated by subtracting the `leave_time` from the `join_time` for the `user_id`.
+   *
+   * If the participant leaves and rejoins the same meeting, they will be assigned a different `user_id` and Zoom displays their new duration in a separate object.
+   *
+   * Note that because of this, the duration may not reflect the total time the user was in the meeting.
+   */
+  readonly duration: Minutes;
+  /**
+   * Indicates if failover happened during the meeting.
+   */
+  readonly failover: boolean;
+  /**
+   * The participant's status in the meeting.
+   */
+  readonly status: ZoomParticipantStatus;
+  /**
+   * Whether the participant is an internal user.
+   */
+  readonly internal_user: boolean;
 }

@@ -1,5 +1,5 @@
 import { ISO8601DateString } from '@dereekb/util';
-import { ZoomMeetingType, ZoomRecurrenceInfo, ZoomMeetingSettings, ZoomMeetingAgenda, ZoomMeetingDuration, ZoomMeetingTrackingField, ZoomMeetingTemplateId, ZoomMeetingPassword, ZoomMeeting, ZoomMeetingId } from './zoom.api.meeting.type';
+import { ZoomMeetingType, ZoomRecurrenceInfo, ZoomMeetingSettings, ZoomMeetingAgenda, ZoomMeetingDuration, ZoomMeetingTrackingField, ZoomMeetingTemplateId, ZoomMeetingPassword, ZoomMeeting, ZoomMeetingId, PastZoomMeeting } from './zoom.api.meeting.type';
 import { ZoomContext } from './zoom.config';
 import { mapToZoomPageResult, zoomFetchPageFactory, ZoomPageFilter, ZoomPageResult } from '../zoom.api.page';
 import { FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
@@ -193,4 +193,42 @@ export const DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE = 3001;
 export function deleteMeeting(context: ZoomContext): DeleteMeetingFunction {
   const silenceDoesNotExistError = silenceZoomErrorWithCodesFunction(DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE);
   return (input) => context.fetchJson(`/meetings/${input.meetingId}?${makeUrlSearchParams(input, omitSilenceZoomErrorKeys())}`, 'DELETE').catch(silenceDoesNotExistError(input.silenceError));
+}
+
+// MARK: Get Past Meeting
+export interface GetPastMeetingInput {
+  readonly meetingId: string;
+}
+
+export type GetPastMeetingResponse = PastZoomMeeting;
+
+export type GetPastMeetingFunction = (input: GetPastMeetingInput) => Promise<GetPastMeetingResponse>;
+
+/**
+ * https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}
+ */
+export function getPastMeeting(context: ZoomContext): GetPastMeetingFunction {
+  return (input) => context.fetchJson(`/past_meetings/${input.meetingId}`, 'GET');
+}
+
+// MARK: Get Past Meeting Participants
+export interface GetPastMeetingParticipantsInput extends ZoomPageFilter {
+  readonly meetingId: ZoomMeetingId;
+}
+
+export type GetPastMeetingParticipantsResponse = ZoomPageResult<PastZoomMeeting>;
+
+export type GetPastMeetingParticipantsFunction = (input: GetPastMeetingParticipantsInput) => Promise<GetPastMeetingParticipantsResponse>;
+
+/**
+ * https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}/participants
+ */
+export function getPastMeetingParticipants(context: ZoomContext): GetPastMeetingParticipantsFunction {
+  return (input) => context.fetchJson(`/past_meetings/${input.meetingId}/participants`, 'GET').then(mapToZoomPageResult('participants'));
+}
+
+export type GetPastMeetingParticipantsPageFactory = FetchPageFactory<GetPastMeetingParticipantsInput, GetPastMeetingParticipantsResponse>;
+
+export function getPastMeetingParticipantsPageFactory(context: ZoomContext): GetPastMeetingParticipantsPageFactory {
+  return zoomFetchPageFactory(getPastMeetingParticipants(context));
 }
