@@ -9,11 +9,17 @@ import {
   ZOOM_WEBHOOK_MEETING_STARTED_EVENT_TYPE,
   ZOOM_WEBHOOK_MEETING_UPDATED_EVENT_TYPE,
   ZoomWebhookMeetingCreatedEvent,
+  ZoomWebhookMeetingCreatedEventPayload,
   ZoomWebhookMeetingDeletedEvent,
+  ZoomWebhookMeetingDeletedEventPayload,
   ZoomWebhookMeetingEndedEvent,
+  ZoomWebhookMeetingEndedEventPayload,
   ZoomWebhookMeetingPermanentlyDeletedEvent,
+  ZoomWebhookMeetingPermanentlyDeletedEventPayload,
   ZoomWebhookMeetingStartedEvent,
-  ZoomWebhookMeetingUpdatedEvent
+  ZoomWebhookMeetingStartedEventPayload,
+  ZoomWebhookMeetingUpdatedEvent,
+  ZoomWebhookMeetingUpdatedEventPayload
 } from './webhook.zoom.type.meeting';
 
 /**
@@ -38,16 +44,16 @@ export type ZoomHandlerMappedSetFunction<T> = HandlerMappedSetFunction<ZoomWebho
 
 export interface ZoomEventHandlerConfigurer extends HandlerBindAccessor<UntypedZoomWebhookEvent, ZoomWebhookEventType> {
   // Meetings
-  handleMeetingCreated: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingCreatedEvent>;
-  handleMeetingUpdated: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingUpdatedEvent>;
-  handleMeetingDeleted: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingDeletedEvent>;
-  handleMeetingStarted: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingStartedEvent>;
-  handleMeetingEnded: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingEndedEvent>;
-  handleMeetingPermanentlyDeleted: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingPermanentlyDeletedEvent>;
+  handleMeetingCreated: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingCreatedEventPayload>;
+  handleMeetingUpdated: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingUpdatedEventPayload>;
+  handleMeetingDeleted: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingDeletedEventPayload>;
+  handleMeetingStarted: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingStartedEventPayload>;
+  handleMeetingEnded: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingEndedEventPayload>;
+  handleMeetingPermanentlyDeleted: ZoomHandlerMappedSetFunction<ZoomWebhookMeetingPermanentlyDeletedEventPayload>;
 }
 
 export const zoomEventHandlerConfigurerFactory = handlerConfigurerFactory<ZoomEventHandlerConfigurer, UntypedZoomWebhookEvent>({
-  configurerForAccessor: (accessor: HandlerBindAccessor<UntypedZoomWebhookEvent>) => {
+  configurerForAccessor: (accessor: HandlerBindAccessor<UntypedZoomWebhookEvent, ZoomWebhookEventType>) => {
     // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<ZoomWebhookEvent<any>, any>(accessor, zoomWebhookEvent);
 

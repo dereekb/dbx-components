@@ -8,7 +8,7 @@ import { omitSilenceZoomErrorKeys, SilenceZoomErrorConfig, silenceZoomErrorWithC
 
 // MARK: Get Meeting
 export interface GetMeetingInput {
-  readonly meetingId: string;
+  readonly meetingId: ZoomMeetingId;
 }
 
 export type GetMeetingResponse = ZoomMeeting;

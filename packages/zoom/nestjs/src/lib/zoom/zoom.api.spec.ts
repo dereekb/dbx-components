@@ -11,6 +11,8 @@ import { waitForMs } from '@dereekb/util';
 
 const cacheService = fileZoomOAuthAccessTokenCacheService();
 
+const MEETING_ID_THAT_DOES_NOT_EXIST = 101010101010;
+
 interface TestCandidate {
   Email: string; // required field
   First_Name?: string; // not required
@@ -182,11 +184,11 @@ describe('zoom.api', () => {
 
         describe('delete meeting', () => {
           itShouldFail('to delete a meeting that does not exist if silenceError is false', async () => {
-            await expectFail(() => api.deleteMeeting({ meetingId: 'test_id_that_does_not_exist', silenceError: false }), jestExpectFailAssertErrorType(ZoomServerFetchResponseError));
+            await expectFail(() => api.deleteMeeting({ meetingId: MEETING_ID_THAT_DOES_NOT_EXIST, silenceError: false }), jestExpectFailAssertErrorType(ZoomServerFetchResponseError));
           });
 
           it('should quietly delete a meeting that does not exist if silenceError is true or undefined', async () => {
-            await api.deleteMeeting({ meetingId: 'test_id_that_does_not_exist' });
+            await api.deleteMeeting({ meetingId: MEETING_ID_THAT_DOES_NOT_EXIST });
           });
         });
 

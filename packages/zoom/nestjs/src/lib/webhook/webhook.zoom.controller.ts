@@ -12,12 +12,15 @@ export class ZoomWebhookController {
   }
 
   @Post()
-  async handleZoomWebhook(@Res() res: Response, @Req() req: Request, @RawBody() rawBody: RawBodyBuffer) {
+  async handleZoomWebhook(@Res() res: Response, @Req() req: Request, @RawBody() rawBody: RawBodyBuffer): Promise<void> {
     const { validationEventResponse } = await this.zoomWebhookService.updateForWebhook(req, rawBody);
 
     if (validationEventResponse) {
-      res.status(200);
       res.json(validationEventResponse);
+    } else {
+      res.json({});
     }
+
+    res.status(200);
   }
 }

@@ -1,6 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Injectable, Logger } from '@nestjs/common';
-import { UntypedZoomWebhookEvent, ZoomApi } from '@dereekb/zoom/nestjs';
+import { UntypedZoomWebhookEvent, ZOOM_WEBHOOK_MEETING_CREATED_EVENT_TYPE, ZOOM_WEBHOOK_MEETING_DELETED_EVENT_TYPE, ZOOM_WEBHOOK_MEETING_UPDATED_EVENT_TYPE, ZoomApi } from '@dereekb/zoom/nestjs';
 import { ZoomWebhookService } from '@dereekb/zoom/nestjs';
 
 @Injectable()
@@ -16,6 +16,36 @@ export class DemoApiZoomWebhookService {
 
     zoomWebhookService.configure(this, (x) => {
       x.set(catchAllHandlerKey(), this.logHandledEvent);
+
+      x.handleMeetingCreated(async (x) => {
+        this.logger.log('Recieved zoom meeting created event successfully', {
+          event: x.event,
+          event_ts: x.event_ts,
+          account: x.payload.account_id,
+          object: x.payload.object
+        });
+
+        const fullMeetingDetails = await this.zoomApi.getMeeting({
+          meetingId: x.payload.object.id
+        });
+
+        console.log('loaded full meeting details', {
+          fullMeetingDetails
+        });
+      });
+
+      x.handleMeetingUpdated((x) => {
+        this.logger.log('Recieved zoom meeting updated event successfully', {
+          event: x.event,
+          event_ts: x.event_ts,
+          account: x.payload.account_id,
+          object: x.payload.object
+        });
+      });
+
+      x.handleMeetingDeleted((x) => {
+        this.logger.log('Recieved zoom meeting deleted event successfully', x);
+      });
     });
   }
 

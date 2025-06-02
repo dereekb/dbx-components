@@ -1,9 +1,9 @@
-import { type Handler, type HandlerFunction, makeHandler } from './handler';
+import { type Handler, type InternalHandlerFunction, type HandlerFunction, makeHandler } from './handler';
 import { type HandlerBindAccessor, handlerBindAccessor, type HandlerConfigurer, handlerConfigurerFactory, handlerMappedSetFunction } from './handler.config';
 
 interface TestConfigurer extends HandlerBindAccessor<number, string> {
   test: boolean;
-  configureWithFn: (fn: HandlerFunction<number>) => void;
+  configureWithFn: (fn: InternalHandlerFunction<number>) => void;
 }
 
 describe('handler config', () => {
@@ -30,7 +30,7 @@ describe('handler config', () => {
         accessor = handlerBindAccessor(boundTo, handler);
       });
 
-      it('should set the function on the handler for that key and use the bound value', () => {
+      it('should set the function on the handler for that key and use the bound value', async () => {
         let wasUsed = false;
 
         const key = '1';
@@ -46,7 +46,7 @@ describe('handler config', () => {
 
         expect(wasUsed).toBe(false);
 
-        const result = handler(value);
+        const result = await handler(value);
         expect(result).toBe(true);
         expect(wasUsed).toBe(true);
       });
@@ -54,7 +54,7 @@ describe('handler config', () => {
   });
 
   describe('handlerMappedSetFunction()', () => {
-    it('should create a set function factory', () => {
+    it('should create a set function factory', async () => {
       const key = '1';
 
       const setFn = handlerMappedSetFunction(handler, key, (x) => x + 1); // input value + 1
@@ -70,14 +70,14 @@ describe('handler config', () => {
 
       expect(wasUsed).toBe(false);
 
-      const result = handler(inputValue);
+      const result = await handler(inputValue);
 
       expect(result).toBe(true);
       expect(wasUsed).toBe(true);
     });
 
     describe('with HandlerBindAccessor input', () => {
-      it('should create a set function factory that maintains the bindings', () => {
+      it('should create a set function factory that maintains the bindings', async () => {
         const key = '1';
 
         const boundTo = {};
@@ -96,7 +96,7 @@ describe('handler config', () => {
 
         expect(wasUsed).toBe(false);
 
-        const result = handler(inputValue);
+        const result = await handler(inputValue);
 
         expect(result).toBe(true);
         expect(wasUsed).toBe(true);
@@ -110,7 +110,7 @@ describe('handler config', () => {
       configurerForAccessor: (accessor: HandlerBindAccessor<number, string>) => ({
         ...accessor,
         test: true,
-        configureWithFn: (fn: HandlerFunction<number>) => accessor.set('1', fn)
+        configureWithFn: (fn: InternalHandlerFunction<number>) => accessor.set('1', fn)
       })
     };
 
@@ -134,7 +134,7 @@ describe('handler config', () => {
           configurer = configurerFactory(handler);
         });
 
-        it('should configure with the input', () => {
+        it('should configure with the input', async () => {
           const boundTo = {};
 
           let wasUsed = false;
@@ -152,7 +152,7 @@ describe('handler config', () => {
 
           expect(wasUsed).toBe(false);
 
-          const result = handler(value);
+          const result = await handler(value);
           expect(result).toBe(true);
           expect(wasUsed).toBe(true);
         });
