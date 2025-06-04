@@ -13,14 +13,14 @@ export class ZoomWebhookController {
 
   @Post()
   async handleZoomWebhook(@Res() res: Response, @Req() req: Request, @RawBody() rawBody: RawBodyBuffer): Promise<void> {
-    const { validationEventResponse } = await this.zoomWebhookService.updateForWebhook(req, rawBody);
+    const { valid, validationEventResponse } = await this.zoomWebhookService.updateForWebhook(req, rawBody);
 
-    if (validationEventResponse) {
-      res.json(validationEventResponse);
+    let response = res.status(200); // always return a 200 status code
+
+    if (valid && validationEventResponse) {
+      response.json(validationEventResponse);
     } else {
-      res.json({});
+      response.json({});
     }
-
-    res.status(200);
   }
 }

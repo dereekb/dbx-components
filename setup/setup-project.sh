@@ -380,7 +380,7 @@ rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/wait-for-ports.sh -o wait-for-ports.sh.tmp
-sed -e "s/9100-9108/$FIREBASE_EMULATOR_PORT_RANGE/g" wait-for-ports.sh.tmp > wait-for-ports.sh
+sed -e "s/9900-9908/$FIREBASE_EMULATOR_PORT_RANGE/g" wait-for-ports.sh.tmp > wait-for-ports.sh
 rm wait-for-ports.sh.tmp
 chmod +x wait-for-ports.sh
 
