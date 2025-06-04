@@ -8,7 +8,11 @@ import { APP_CODE_PREFIX_CAMELExampleUsageOfSchedule } from './function/model/sc
 
 export const {
   initNestServer
-} = nestServerInstance({ moduleClass: APP_CODE_PREFIXApiAppModule });
+} = nestServerInstance({
+  moduleClass: APP_CODE_PREFIXApiAppModule,
+  configureWebhooks: true,
+  globalApiRoutePrefix: '/api' // app needs to respond to all requests prefixed with '/api'
+});
 
 export function allAppFunctions(nest: NestAppPromiseGetter) {
   return {

@@ -41,8 +41,8 @@ export class ZoomWebhookService {
     if (!valid) {
       this.logger.warn('Received invalid zoom event: ', event);
     } else if (event.event === ZOOM_WEBHOOK_URL_VALIDATION_EVENT_TYPE) {
-      handled = true;
       validationEventResponse = this._validator(event as ZoomWebhookUrlValidationEvent);
+      handled = true;
     } else {
       handled = await this.updateForZoomEvent(event);
     }
