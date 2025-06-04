@@ -2,7 +2,7 @@ import { OnInit, Component, inject } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
-import { DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
+import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';
@@ -10,7 +10,7 @@ import { AsyncPipe } from '@angular/common';
 @Component({
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],
-  imports: [DbxLoadingProgressComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, AsyncPipe, DbxLoadingComponent, DbxContentBoxDirective, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxLoadingProgressComponent],
+  imports: [DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, AsyncPipe, DbxLoadingComponent, DbxContentBoxDirective, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxLoadingProgressComponent],
   standalone: true
 })
 export class DemoProfileViewComponent implements OnInit {
