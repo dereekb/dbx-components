@@ -1,5 +1,5 @@
 import { SubscriptionObject } from '../subscription';
-import { startWith, map, type Observable, shareReplay, skipWhile, distinctUntilChanged, filter, first, firstValueFrom, switchMap, from } from 'rxjs';
+import { startWith, map, shareReplay, skipWhile, distinctUntilChanged, filter, first, firstValueFrom, Observable, switchMap, from } from 'rxjs';
 import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray, switchMapWhileTrue, timeoutStartWith } from '../rxjs';
 import { type MapFunctionOutputPair, lastValue, type Destroyable, mapFunctionOutputPair, isMaybeSo, type IndexRef, type GetterOrValue, asGetter, performTaskLoop, type MapFunction, type PromiseOrValue, asPromise, type PageNumber, type Page } from '@dereekb/util';
 import { type ItemIteration, type PageItemIteration } from './iteration';
@@ -102,7 +102,7 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
     shareReplay(1)
   );
 
-  const allSuccessfulStates$: Observable<LoadingState<I>[]> = latestSuccessfulState$.pipe(
+  const _allSuccessfulStates$: Observable<LoadingState<I>[]> = latestSuccessfulState$.pipe(
     scanIntoArray({ immutable: false }),
     /**
      * Don't wait for the first successful state in order to avoid never returning a value on immediate failures.
@@ -112,13 +112,18 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
     shareReplay(1)
   );
 
-  const successfulLoadCount$: Observable<number> = allSuccessfulStates$.pipe(
+  const allSuccessfulStates$: Observable<LoadingState<I>[]> = _allSuccessfulStates$.pipe(
+    map((x) => [...x]), // return a copy of the array, and not the scanIntoArray() result that is mutable
+    shareReplay(1)
+  );
+
+  const successfulLoadCount$: Observable<number> = _allSuccessfulStates$.pipe(
     map((x) => x.length),
     shareReplay(1)
   );
 
   // MARK: ItemAccumulator
-  const currentAllItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = allSuccessfulStates$.pipe(
+  const currentAllItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = _allSuccessfulStates$.pipe(
     scanBuildArray((allSuccessfulStates) => {
       const mapStateToItem = mapFunctionOutputPair(mapLoadingStateValueFunction(mapItemFunction));
 
@@ -156,7 +161,7 @@ export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration
   const allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = hasCompletedInitialLoad$.pipe(switchMapWhileTrue(currentAllItemPairs$), shareReplay(1));
   const allItems$: Observable<O[]> = hasCompletedInitialLoad$.pipe(switchMapWhileTrue(currentAllItems$), shareReplay(1));
 
-  const sub = new SubscriptionObject(allSuccessfulStates$.subscribe());
+  const sub = new SubscriptionObject(_allSuccessfulStates$.subscribe());
   const destroy = () => sub.destroy();
 
   const result: ItemAccumulatorInstance<O, I, N> = {

@@ -1,4 +1,5 @@
 import { type Factory } from './getter/getter';
+import { Maybe, MaybeNot } from './value/maybe.type';
 
 // MARK: Types
 /**
@@ -15,6 +16,19 @@ export type IsEqual = boolean;
  * Type representing whether something has been modified.
  */
 export type IsModified = boolean;
+
+// MARK: Maybe
+/**
+ * If a non-null boolean value is provided, returns the opposite.
+ */
+export function invertMaybeBoolean(x: true): false;
+export function invertMaybeBoolean(x: false): true;
+export function invertMaybeBoolean(x: boolean): boolean;
+export function invertMaybeBoolean(x: MaybeNot): MaybeNot;
+export function invertMaybeBoolean(x: Maybe<boolean>): Maybe<boolean>;
+export function invertMaybeBoolean(x: Maybe<boolean>): Maybe<boolean> {
+  return x == null ? x : !x;
+}
 
 // MARK: Reduce
 /**

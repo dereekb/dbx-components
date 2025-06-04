@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ZoomServiceConfig } from './zoom.config';
-import { Zoom, ZoomServerContext, createMeetingForUser, deleteMeeting, getUser, listMeetingsForUser, listMeetingsForUserPageFactory, listUsers, listUsersPageFactory, zoomFactory } from '@dereekb/zoom';
+import { Zoom, ZoomServerContext, createMeetingForUser, deleteMeeting, getMeeting, getPastMeeting, getPastMeetingParticipants, getUser, listMeetingsForUser, listMeetingsForUserPageFactory, listUsers, listUsersPageFactory, zoomFactory } from '@dereekb/zoom';
 import { ZoomOAuthApi } from '../oauth';
 
 @Injectable()
@@ -51,8 +51,21 @@ export class ZoomApi {
     return createMeetingForUser(this.zoomContext);
   }
 
+  get getMeeting() {
+    return getMeeting(this.zoomContext);
+  }
+
   get deleteMeeting() {
     return deleteMeeting(this.zoomContext);
+  }
+
+  // MARK: Past Meetings
+  get getPastMeeting() {
+    return getPastMeeting(this.zoomContext);
+  }
+
+  get getPastMeetingParticipants() {
+    return getPastMeetingParticipants(this.zoomContext);
   }
 }
 

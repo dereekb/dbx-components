@@ -11,6 +11,7 @@ import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/sto
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
 import { type ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { GlobalRoutePrefixConfig } from './middleware/globalprefix';
 
 export interface NestServer {
   readonly server: express.Express;
@@ -151,6 +152,14 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
             })
           );
         }
+
+        // provide the global prefix config to the app
+        providers.push({
+          provide: GlobalRoutePrefixConfig,
+          useValue: {
+            globalApiRoutePrefix
+          }
+        });
 
         const providersModule: DynamicModule = {
           module: FirebaseNestServerRootModule,

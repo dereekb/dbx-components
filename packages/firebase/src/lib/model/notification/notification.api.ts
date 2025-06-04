@@ -455,6 +455,16 @@ export abstract class AbstractSubscribeToNotificationBoxParams extends TargetMod
   uid!: FirebaseAuthUserId;
 }
 
+export abstract class AbstractSubscribeOrUnsubscribeToNotificationBoxParams extends AbstractSubscribeToNotificationBoxParams {
+  /**
+   * If true, unsubscribes from the notification box instead.
+   */
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  unsubscribe?: Maybe<boolean>;
+}
+
 export interface SendNotificationResult {
   /**
    * Attempted notification type

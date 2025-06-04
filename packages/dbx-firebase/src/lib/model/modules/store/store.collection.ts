@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, Subscription, exhaustMap, first, map, switchMap, tap } from 'rxjs';
+import { Observable, shareReplay, distinctUntilChanged, Subscription, first, map, switchMap, tap } from 'rxjs';
 import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, DocumentDataWithIdAndKey, DocumentReference, FirebaseQuerySnapshotAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction } from '@dereekb/firebase';
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe, ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe, PageNumber } from '@dereekb/util';
@@ -10,7 +10,21 @@ import { DbxFirebaseCollectionLoaderAccessorWithAccumulator } from '../../loader
 export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessorWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
   readonly firestoreCollection$: Observable<Maybe<FirestoreCollectionLike<T, D>>>;
   readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>>;
-
+  /**
+   * Whether or not the iterator has more pages to load.
+   */
+  readonly hasNext$: Observable<boolean>;
+  /**
+   * Whether or not the iterator can load more pages.
+   */
+  readonly canLoadMore$: Observable<boolean>;
+  /**
+   * Whether or not the iterator has more pages to load and can load more pages.
+   */
+  readonly hasNextAndCanLoadMore$: Observable<boolean>;
+  /**
+   * Returns true if the collection has documents.
+   */
   readonly hasDocuments$: Observable<boolean>;
   /**
    * Returns all document references loaded by the accumulator.
@@ -58,7 +72,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
 
   readonly next = this.effect((input: Observable<void>) => {
     return input.pipe(
-      exhaustMap(() =>
+      switchMap(() =>
         this.loader$.pipe(
           first(),
           tap((x) => x.next())
@@ -69,7 +83,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
 
   readonly restart = this.effect((input: Observable<void>) => {
     return input.pipe(
-      exhaustMap(() =>
+      switchMap(() =>
         this.loader$.pipe(
           first(),
           tap((x) => x.restart())
@@ -113,12 +127,18 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly snapshotAccumulator$: Observable<FirebaseQuerySnapshotAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.snapshotAccumulator$));
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));
 
+  readonly hasNext$: Observable<boolean> = this.loader$.pipe(switchMap((x) => x.hasNext$));
+  readonly canLoadMore$: Observable<boolean> = this.loader$.pipe(switchMap((x) => x.canLoadMore$));
+  readonly hasNextAndCanLoadMore$: Observable<boolean> = this.loader$.pipe(switchMap((x) => x.hasNextAndCanLoadMore$));
+
   readonly hasDocuments$: Observable<boolean> = this.loader$.pipe(switchMap((x) => x.hasDocuments$));
   readonly allDocumentRefs$: Observable<DocumentReference<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentRefs$));
   readonly allDocuments$: Observable<D[]> = this.loader$.pipe(switchMap((x) => x.allDocuments$));
   readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentData$));
 
   readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollectionLike<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
+  readonly setWaitForConstraints = this.updater((state, waitForConstraints: boolean) => ({ ...state, waitForConstraints }));
+  readonly setPauseInitialLoader = this.updater((state, pauseInitialLoader: boolean) => ({ ...state, pauseInitialLoader }));
 
   loadToPage(page: PageNumber): Observable<PageNumber> {
     return this.loader$.pipe(switchMap((x) => x.loadToPage(page)));

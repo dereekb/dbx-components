@@ -273,7 +273,7 @@ export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO
 }
 
 /**
- * Time in seconds (instead of ms) since the epoch.
+ * Time in milliseconds since the epoch.
  *
  * Returned by Date.getTime().
  */

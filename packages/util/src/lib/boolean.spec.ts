@@ -1,4 +1,4 @@
-import { reduceBooleansWithAnd, reduceBooleansWithOr, reduceBooleansWithAndFn, reduceBooleansWithOrFn, booleanFactory, randomBoolean, type BooleanFactory } from './boolean';
+import { invertMaybeBoolean, reduceBooleansWithAnd, reduceBooleansWithOr, reduceBooleansWithAndFn, reduceBooleansWithOrFn, booleanFactory, randomBoolean, type BooleanFactory } from './boolean';
 
 describe('reduceBooleansWithAnd', () => {
   it('should return true if all values are true', () => {
@@ -128,5 +128,23 @@ describe('randomBoolean', () => {
     }
     expect(results75.has(true)).toBe(true);
     expect(results75.has(false)).toBe(true);
+  });
+});
+
+describe('invertMaybeBoolean', () => {
+  it('should return false if the input is true', () => {
+    expect(invertMaybeBoolean(true)).toBe(false);
+  });
+
+  it('should return true if the input is false', () => {
+    expect(invertMaybeBoolean(false)).toBe(true);
+  });
+
+  it('should return null if the input is null', () => {
+    expect(invertMaybeBoolean(null)).toBe(null);
+  });
+
+  it('should return undefined if the input is undefined', () => {
+    expect(invertMaybeBoolean(undefined)).toBe(undefined);
   });
 });

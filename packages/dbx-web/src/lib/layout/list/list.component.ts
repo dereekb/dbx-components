@@ -1,9 +1,9 @@
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
-import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, first, distinctUntilChanged } from 'rxjs';
+import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, of, Observable, first, distinctUntilChanged, combineLatest } from 'rxjs';
 import { Component, OnDestroy, ElementRef, HostListener, Directive, inject, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe } from '@dereekb/rxjs';
-import { Maybe, Milliseconds } from '@dereekb/util';
+import { SubscriptionObject, ListLoadingState, filterMaybe, isLoadingStateFinishedLoading, startWithBeginLoading, listLoadingStateContext, switchMapMaybe, PageLoadingState } from '@dereekb/rxjs';
+import { invertMaybeBoolean, Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxLoadingComponent } from '../../loading/loading.component';
@@ -134,6 +134,9 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly disabled = input<Maybe<boolean>>(false);
   readonly selectionMode = input<Maybe<DbxListSelectionMode>>(undefined);
 
+  readonly hasMore = input<Maybe<boolean>>(undefined);
+  readonly hasMore$ = toObservable(this.hasMore);
+
   private readonly _internalContentSignal = signal<Maybe<DbxListInternalContentDirective>>(undefined);
   readonly nativeElementSignal = computed(() => (this._internalContentSignal()?.elementRef as Maybe<ElementRef<HTMLElement>>)?.nativeElement);
 
@@ -148,6 +151,13 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
 
   readonly currentState$: Observable<Maybe<S>> = toObservable(this.state).pipe(switchMapMaybe());
   readonly context = listLoadingStateContext<T, S>({ obs: this.currentState$, showLoadingOnNoValue: false });
+
+  readonly hasMoreFromCurrentState$ = this.currentState$.pipe(map((x) => (x as unknown as PageLoadingState)?.hasNextPage));
+  readonly isEnd$ = combineLatest([this.hasMore$, this.hasMoreFromCurrentState$]).pipe(
+    map((x) => invertMaybeBoolean(x[0] ?? x[1])),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly isEmpty$ = this.context.isEmpty$;
   readonly isEmptyLoading$ = this.context.isEmptyLoading$;
@@ -293,6 +303,7 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly injectedComponentConfigSignal = toSignal(this.injectedComponentConfig$);
   readonly isEmptyAndNotLoadingSignal = toSignal(this.isEmptyAndNotLoading$);
   readonly isEmptyLoadingSignal = toSignal(this.isEmptyLoading$);
+  readonly isEndSignal = toSignal(this.isEnd$);
 
   ngOnDestroy(): void {
     this._scrollTrigger.complete();

@@ -9,11 +9,12 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE = `
-  <dbx-list [state]="currentState$" [config]="configSignal()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
+  <dbx-list [state]="currentState$" [config]="configSignal()" [hasMore]="hasMore()" [disabled]="disabled()" [selectionMode]="selectionModeSignal()">
     <ng-content top select="[top]"></ng-content>
     <ng-content bottom select="[bottom]"></ng-content>
     <ng-content empty select="[empty]"></ng-content>
     <ng-content emptyLoading select="[emptyLoading]"></ng-content>
+    <ng-content end select="[end]"></ng-content>
   </dbx-list>`;
 
 const dbxListWrapperComponentImportsAndExports = [DbxListComponent];
@@ -31,7 +32,10 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   private readonly _config = new BehaviorSubject<MaybeObservableOrValue<C>>(undefined);
   private readonly _stateOverride = new BehaviorSubject<MaybeObservableOrValue<S>>(undefined);
   private readonly _selectionModeOverride = new BehaviorSubject<MaybeObservableOrValue<DbxListSelectionMode>>(undefined);
+
   private readonly _selectionModeOverrideSignal = toSignal(this._selectionModeOverride.pipe(maybeValueFromObservableOrValue()));
+
+  readonly hasMore = input<Maybe<boolean>>(undefined);
 
   readonly clickItem = output<T>();
   readonly loadMore = output<void>();

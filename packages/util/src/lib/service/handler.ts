@@ -15,6 +15,13 @@ export const CATCH_ALL_HANDLE_RESULT_KEY = '__CATCH_ALL_HANDLE_RESULT_KEY__';
  */
 export type HandleResult = boolean;
 
+/**
+ * An internal type for the result of a handler function.
+ *
+ * If void is returned, assumes true.
+ */
+export type InternalHandlerFunctionHandleResult = HandleResult | void;
+
 export type HandlerCatchAllKey = typeof CATCH_ALL_HANDLE_RESULT_KEY;
 export type HandlerKey<K extends PrimativeKey = string> = K | HandlerCatchAllKey;
 
@@ -23,7 +30,12 @@ export type HandlerKey<K extends PrimativeKey = string> = K | HandlerCatchAllKey
  *
  * If the value is not used/"handled", returns false.
  */
-export type HandlerFunction<T> = (value: T) => PromiseOrValue<HandleResult>;
+export type HandlerFunction<T> = (value: T) => Promise<HandleResult>;
+
+/**
+ * HandleFunction, but used only by Handler that can return undefined.
+ */
+export type InternalHandlerFunction<T> = (value: T) => PromiseOrValue<InternalHandlerFunctionHandleResult>;
 
 export interface HandlerSetAccessor<T, K extends PrimativeKey = string> {
   /**
@@ -32,7 +44,13 @@ export interface HandlerSetAccessor<T, K extends PrimativeKey = string> {
    * @param key
    * @param handle
    */
-  set(key: ArrayOrValue<HandlerKey<K>>, handle: HandlerFunction<T>): void;
+  set(key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T>): void;
+  /**
+   * Sets the catch-all handler function to the current handler.
+   *
+   * @param handle
+   */
+  setCatchAll(handle: InternalHandlerFunction<T>): void;
 }
 
 export interface HandlerAccessor<T, K extends PrimativeKey = string> extends HandlerSetAccessor<T, K> {
@@ -48,7 +66,7 @@ export interface HandlerAccessor<T, K extends PrimativeKey = string> extends Han
    * @param key
    * @param handle
    */
-  bindSet(bindTo: unknown, key: ArrayOrValue<HandlerKey<K>>, handle: HandlerFunction<T>): void;
+  bindSet(bindTo: unknown, key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T>): void;
 }
 
 export type Handler<T, K extends PrimativeKey = string> = HandlerFunction<T> & HandlerAccessor<T, K>;
@@ -56,18 +74,22 @@ export type HandlerFactory<T, K extends PrimativeKey = string> = () => Handler<T
 
 export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K> {
   return () => {
-    let catchAll: Maybe<HandlerFunction<T>>;
-    const map = new Map<K, HandlerFunction<T>>();
+    let catchAll: Maybe<InternalHandlerFunction<T>>;
+    const map = new Map<K, InternalHandlerFunction<T>>();
 
-    const set = (key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
+    const setCatchAll = (handle: InternalHandlerFunction<T>) => {
+      catchAll = handle;
+    };
+
+    const set = (key: ArrayOrValue<K>, handle: InternalHandlerFunction<T>) => {
       if (key === CATCH_ALL_HANDLE_RESULT_KEY) {
-        catchAll = handle;
+        setCatchAll(handle);
       } else {
         setKeysOnMap(map, key, handle);
       }
     };
 
-    const bindSet = (bindTo: unknown, key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
+    const bindSet = (bindTo: unknown, key: ArrayOrValue<K>, handle: InternalHandlerFunction<T>) => {
       const bindHandle = handle.bind(bindTo);
       set(key, bindHandle);
     };
@@ -76,10 +98,12 @@ export function handlerFactory<T, K extends PrimativeKey = string>(readKey: Read
       base: ((value: T) => {
         const key = readKey(value);
         const handler = (key != null ? map.get(key) : undefined) ?? catchAll;
-        let handled: PromiseOrValue<boolean> = false;
+        let handled: Promise<boolean>;
 
         if (handler) {
-          handled = handler(value);
+          handled = Promise.resolve(handler(value)).then((x) => x ?? true);
+        } else {
+          handled = Promise.resolve(false);
         }
 
         return handled;
@@ -88,6 +112,7 @@ export function handlerFactory<T, K extends PrimativeKey = string>(readKey: Read
         x.readKey = readKey;
         x.set = set;
         x.bindSet = bindSet;
+        x.setCatchAll = setCatchAll;
       }
     });
 

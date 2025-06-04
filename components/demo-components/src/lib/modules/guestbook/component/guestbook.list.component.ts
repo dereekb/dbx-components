@@ -1,16 +1,28 @@
 import { Guestbook } from 'demo-firebase';
 import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper , DbxListComponent , DbxSelectionValueListViewComponent } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxValueListViewItemComponent,
+  AbstractDbxSelectionListViewDirective,
+  DbxSelectionValueListViewConfig,
+  provideDbxListView,
+  DbxValueAsListItem,
+  provideDbxListViewWrapper,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxSelectionValueListViewComponentImportsModule,
+  DbxListWrapperComponentImportsModule,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE
+} from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 
 export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
 
 @Component({
   selector: 'demo-guestbook-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DemoGuestbookListComponent),
   standalone: true,
-  imports: [DbxListComponent]
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperDirective<Guestbook> {
   constructor() {
@@ -23,10 +35,10 @@ export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperD
 
 @Component({
   selector: 'demo-guestbook-list-view',
-  template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListView(DemoGuestbookListViewComponent),
   standalone: true,
-  imports: [DbxSelectionValueListViewComponent]
+  imports: [DbxSelectionValueListViewComponentImportsModule]
 })
 export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListViewDirective<Guestbook> {
   readonly config: DbxSelectionValueListViewConfig<GuestbookWithSelection> = {

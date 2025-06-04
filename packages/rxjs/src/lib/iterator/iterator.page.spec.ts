@@ -13,7 +13,8 @@ export function makeTestPageIteratorDelegate<T>(makeResultsFn: (page: PageNumber
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<T, TestPageIteratorFilter>) => {
       const result: ItemPageIteratorResult<T> = {
-        value: makeResultsFn(request.page)
+        value: makeResultsFn(request.page),
+        end: false
       };
 
       let resultObs: Observable<ItemPageIteratorResult<T>> = of(result);
@@ -83,6 +84,8 @@ describe('ItemPageIterator', () => {
       instance.latestSuccessfulPageResults$.pipe(first()).subscribe((state) => {
         expect(state).toBeDefined();
         expect(isLoadingStateFinishedLoading(state)).toBe(true);
+
+        expect(state.hasNextPage).toBeDefined();
         expect(state.page).toBe(FIRST_PAGE);
         expect(state.value).toBeDefined();
 
@@ -251,7 +254,7 @@ describe('ItemPageIterator', () => {
           });
       });
 
-      it('state$ should return the previous error/state.', (done) => {
+      it('state observable should return the previous error/state.', (done) => {
         initInstanceWithFilter({ resultError: new Error() });
 
         instance.latestPageResultState$.pipe(first()).subscribe((latestState) => {
@@ -259,8 +262,7 @@ describe('ItemPageIterator', () => {
 
           // Wait for next state triggered by next.
           instance.state$.pipe(skip(1), first()).subscribe((newState) => {
-            expect(newState.latestFinished).toBe(latestState);
-
+            expect(newState.latestFinished).toEqual(latestState);
             done();
           });
 

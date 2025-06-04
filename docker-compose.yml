@@ -25,3 +25,8 @@ services:
       - NODE_EXTRA_CA_CERTS=/code/docker/nginx/certs/firebase.crt
     # extra_hosts:    # uncomment for enabling local development. Don't forget to start the offline nginx server!
     # - "firebase-public.firebaseio.com:0.0.0.0"
+    networks:
+      - demo-api-network
+networks:
+  demo-api-network:
+    driver: bridge

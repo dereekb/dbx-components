@@ -73,7 +73,12 @@ export type ListLoadingState<T = unknown> = LoadingState<T[]>;
 /**
  * LoadingState with a Page.
  */
-export interface PageLoadingState<T = unknown> extends LoadingState<T>, Page {}
+export interface PageLoadingState<T = unknown> extends LoadingState<T>, Page {
+  /**
+   * Whether or not there is a next page. Null/undefined if unknown.
+   */
+  readonly hasNextPage?: Maybe<boolean>;
+}
 
 /**
  * PageLoadingState with a filter.
@@ -81,7 +86,7 @@ export interface PageLoadingState<T = unknown> extends LoadingState<T>, Page {}
 export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> {}
 
 /**
- * LoadingPageState that has an array of the value
+ * LoadingPageState that has an array of the values and
  */
 export type PageListLoadingState<T> = PageLoadingState<T[]>;
 

@@ -1,7 +1,7 @@
 ## SSL Keys for Webhooks Server
 The webhooks nginx configuration requires an SSL cert. The default configured one is not suitable for public usage, as it is set up for cdev.dereekb.com.
 
-In most cases you won't need this functionality. This is for manual testing of services such as Stripe.
+In most cases you won't need this functionality. This is for manual testing of services such as Stripe and Zoom.
 
 ## SSL Keys for firebase-public.firebaseio.com (offline development)
 Typically firebase must be developed while connected to the internet, since it reaches out to https://firebase-public.firebaseio.com/cli.json. If we're offline, it fails and the emulators will fail to update. The issue is tracked here: https://github.com/firebase/firebase-tools/issues/3916
