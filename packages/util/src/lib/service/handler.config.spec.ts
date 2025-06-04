@@ -1,4 +1,4 @@
-import { type Handler, type InternalHandlerFunction, type HandlerFunction, makeHandler } from './handler';
+import { type Handler, type InternalHandlerFunction, makeHandler } from './handler';
 import { type HandlerBindAccessor, handlerBindAccessor, type HandlerConfigurer, handlerConfigurerFactory, handlerMappedSetFunction } from './handler.config';
 
 interface TestConfigurer extends HandlerBindAccessor<number, string> {

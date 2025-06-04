@@ -8,17 +8,11 @@ import {
   ZOOM_WEBHOOK_MEETING_PERMANENTLY_DELETED_EVENT_TYPE,
   ZOOM_WEBHOOK_MEETING_STARTED_EVENT_TYPE,
   ZOOM_WEBHOOK_MEETING_UPDATED_EVENT_TYPE,
-  ZoomWebhookMeetingCreatedEvent,
   ZoomWebhookMeetingCreatedEventPayload,
-  ZoomWebhookMeetingDeletedEvent,
   ZoomWebhookMeetingDeletedEventPayload,
-  ZoomWebhookMeetingEndedEvent,
   ZoomWebhookMeetingEndedEventPayload,
-  ZoomWebhookMeetingPermanentlyDeletedEvent,
   ZoomWebhookMeetingPermanentlyDeletedEventPayload,
-  ZoomWebhookMeetingStartedEvent,
   ZoomWebhookMeetingStartedEventPayload,
-  ZoomWebhookMeetingUpdatedEvent,
   ZoomWebhookMeetingUpdatedEventPayload
 } from './webhook.zoom.type.meeting';
 

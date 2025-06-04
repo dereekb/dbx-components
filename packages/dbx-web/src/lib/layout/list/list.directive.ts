@@ -1,4 +1,4 @@
-import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue, tapLog } from '@dereekb/rxjs';
+import { ListLoadingState, ObservableOrValue, maybeValueFromObservableOrValue, MaybeObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
 import { OnDestroy, Directive, input, output, computed, Signal, NgModule } from '@angular/core';
 import { DbxListComponent, DbxListConfig } from './list.component';

@@ -1,6 +1,6 @@
-import { CommaSeparatedString, DayOfMonth, EmailAddress, FileSize, ISO8601DateString, Minutes, TimezoneString, WebsiteDomain } from '@dereekb/util';
+import { CommaSeparatedString, DayOfMonth, EmailAddress, FileSize, ISO8601DateString, Minutes, TimezoneString } from '@dereekb/util';
 import { ZoomUserId } from '../zoom.type';
-import { ZoomUser, type ZoomUserPersonalMeetingId } from './zoom.api.user.type';
+import { type ZoomUserPersonalMeetingId } from './zoom.api.user.type';
 
 export type ZoomMeetingId = number;
 

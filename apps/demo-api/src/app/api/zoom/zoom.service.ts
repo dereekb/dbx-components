@@ -1,4 +1,3 @@
-import { ZohoRecruitApi } from '@dereekb/zoho/nestjs';
 import { ZoomApi } from '@dereekb/zoom/nestjs';
 import { Inject, Injectable } from '@nestjs/common';
 
