@@ -1,6 +1,6 @@
 import { filterMaybe } from '../rxjs';
 import { type PageLoadingState, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, successPageResult, mapLoadingStateResults, startWithBeginLoading } from '../loading';
-import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot, Configurable } from '@dereekb/util';
+import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot, Configurable, invertMaybeBoolean } from '@dereekb/util';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay, defaultIfEmpty } from 'rxjs';
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
@@ -214,7 +214,17 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
             return of(prevResult).pipe();
           }
         }),
-        map((state) => ({ n: request.n, state }))
+        map((inputState) => {
+          let state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+
+          if (inputState != null) {
+            const end = inputState.value != null ? isItemPageIteratorResultEndResult(inputState.value as ItemPageIteratorResult<V>) : undefined;
+            state = { ...inputState, hasNextPage: invertMaybeBoolean(end) };
+          }
+
+          const result = { n: request.n, state };
+          return result;
+        })
       )
     ),
     scan(
@@ -316,7 +326,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Will emit every time the latest page has finished loading.
    */
   readonly hasReachedEndResult$: Observable<boolean> = this.latestPageResultState$.pipe(
-    map((x) => isItemPageIteratorResultEndResult(x.value as ItemPageIteratorResult<V>)),
+    map((x) => !x.hasNextPage),
     startWith(false), // Has not reached the end
     shareReplay(1)
   );
@@ -496,10 +506,6 @@ function itemPageLoadingStateFromResultPageLoadingState<V>(input: PageLoadingSta
   const result = mapLoadingStateResults(input, {
     mapValue: (result: ItemPageIteratorResult<V>) => result.value
   }) as Configurable<PageLoadingState<V>>;
-
-  if (input.value?.end != null) {
-    result.hasNextPage = !input.value.end;
-  }
-
+  result.hasNextPage = invertMaybeBoolean(input.value?.end);
   return result;
 }
