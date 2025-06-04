@@ -12,7 +12,7 @@ export function distinctUntilArrayLengthChanges<A>(inputGetArray?: (value: A) =>
 }
 
 export interface ScanIntoArrayConfig {
-  immutable?: boolean;
+  readonly immutable?: boolean;
 }
 
 /**
@@ -43,15 +43,15 @@ export interface ScanBuildArrayConfig<T> {
   /**
    *
    */
-  seed?: Maybe<T[]>;
+  readonly seed?: Maybe<T[]>;
   /**
    *
    */
-  accumulatorObs: Observable<Maybe<ArrayOrValue<T>>>;
+  readonly accumulatorObs: Observable<Maybe<ArrayOrValue<T>>>;
   /**
    * Whether or not to flatten array values that are input.
    */
-  flattenArray?: boolean;
+  readonly flattenArray?: boolean;
 }
 
 export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfig<T>;
@@ -85,6 +85,7 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
         return acc;
       }, seed ?? []),
       distinctUntilArrayLengthChanges(),
+      map((x) => [...x]), // always create a copy of the accumulated array when emitting
       shareReplay(1)
     );
   });
@@ -106,7 +107,7 @@ export interface MapEachAsyncConfig {
   /**
    * Whether or not to map only the first
    */
-  onlyFirst?: boolean;
+  readonly onlyFirst?: boolean;
 }
 
 /**

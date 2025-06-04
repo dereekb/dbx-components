@@ -206,6 +206,14 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     this._restart.next();
   }
 
+  setMaxPages(maxPages: Maybe<number>) {
+    this.maxPages = maxPages;
+  }
+
+  setItemsPerPage(itemsPerPage: Maybe<number>) {
+    this.itemsPerPage = itemsPerPage;
+  }
+
   setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
     this.constraints = constraints;
   }

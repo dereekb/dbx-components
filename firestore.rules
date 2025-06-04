@@ -8,7 +8,7 @@ service cloud.firestore {
     }
 
     function resourceIsPublished() {
-      return resource != null && resource.data != null && resource.data.published == true;
+      return resource != null && resource.data != null && resource.data.keys().hasAll(["published"]) && resource.data.published == true;
     }
 
     function resourceIsOwnedByAuthUserId() {
@@ -43,6 +43,7 @@ service cloud.firestore {
 
     match /gb/{guestbook} {
       allow read: if resourceIsPublished();
+      allow list: if resourceIsPublished() || userClaimsIsSysAdmin(); // can only list published guestbooks
 
       match /gbe/{guestbookEntry} {
 
