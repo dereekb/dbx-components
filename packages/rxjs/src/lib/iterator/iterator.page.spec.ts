@@ -83,6 +83,8 @@ describe('ItemPageIterator', () => {
       instance.latestSuccessfulPageResults$.pipe(first()).subscribe((state) => {
         expect(state).toBeDefined();
         expect(isLoadingStateFinishedLoading(state)).toBe(true);
+
+        expect(state.hasNextPage).toBeDefined();
         expect(state.page).toBe(FIRST_PAGE);
         expect(state.value).toBeDefined();
 

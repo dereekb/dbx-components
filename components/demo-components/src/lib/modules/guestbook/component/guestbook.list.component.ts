@@ -13,7 +13,9 @@ import {
   DbxListComponent,
   DbxSelectionValueListViewComponent,
   DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
-  DbxSelectionValueListViewComponentImportsModule
+  DbxSelectionValueListViewComponentImportsModule,
+  DbxListWrapperComponentImportsModule,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE
 } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 
@@ -21,10 +23,10 @@ export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
 
 @Component({
   selector: 'demo-guestbook-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
+  template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   providers: provideDbxListViewWrapper(DemoGuestbookListComponent),
   standalone: true,
-  imports: [DbxListComponent]
+  imports: [DbxListWrapperComponentImportsModule]
 })
 export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperDirective<Guestbook> {
   constructor() {

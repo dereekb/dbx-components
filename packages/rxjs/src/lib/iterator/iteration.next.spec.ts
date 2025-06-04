@@ -35,13 +35,17 @@ describe('iteration.next', () => {
       iteratorNextPageUntilPage(instance, 10).then((page) => {
         expect(page).toBe(expectedFinalPage);
 
-        instance.numberOfPagesLoaded$.pipe(first()).subscribe((pagesLoaded) => {
-          expect(pagesLoaded).toBe(expectedFinalPage + 1);
+        instance.latestPageResultState$.pipe(first()).subscribe((latestPageResultState) => {
+          expect(latestPageResultState.page).toBe(expectedFinalPage);
+          expect(latestPageResultState.hasNextPage).toBe(false);
 
-          instance.hasNextAndCanLoadMore$.pipe(first()).subscribe((hasNextAndCanLoadMore) => {
-            expect(hasNextAndCanLoadMore).toBe(false);
+          instance.numberOfPagesLoaded$.pipe(first()).subscribe((pagesLoaded) => {
+            expect(pagesLoaded).toBe(expectedFinalPage + 1);
 
-            done();
+            instance.hasNextAndCanLoadMore$.pipe(first()).subscribe((hasNextAndCanLoadMore) => {
+              expect(hasNextAndCanLoadMore).toBe(false);
+              done();
+            });
           });
         });
       });

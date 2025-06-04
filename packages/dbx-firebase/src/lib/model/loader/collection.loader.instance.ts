@@ -1,4 +1,4 @@
-import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, ItemAccumulatorNextPageUntilResultsCountFunction, itemAccumulatorNextPageUntilResultsCount, iteratorNextPageUntilPage, iteratorNextPageUntilMaxPageLoadLimit, pageItemAccumulatorCurrentPage, ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
+import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, ItemAccumulatorNextPageUntilResultsCountFunction, itemAccumulatorNextPageUntilResultsCount, iteratorNextPageUntilPage, iteratorNextPageUntilMaxPageLoadLimit, pageItemAccumulatorCurrentPage, ItemAccumulatorNextPageUntilResultsCountResult, tapLog, iterationHasNextAndCanLoadMore } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
 import { DocumentDataWithIdAndKey, DocumentReference, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, firebaseQuerySnapshotAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, GetterOrValue, Initialized, Maybe, PageNumber, countAllInNestedArray } from '@dereekb/util';
@@ -30,7 +30,7 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   readonly constraints$ = this._constraints.pipe(distinctUntilChanged());
 
   readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([this._itemsPerPage.pipe(distinctUntilChanged()), this.constraints$]).pipe(
-    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages } as FirestoreItemPageIteratorFilter)),
+    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages }) as FirestoreItemPageIteratorFilter),
     shareReplay(1)
   );
 
@@ -59,6 +59,21 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   readonly snapshotAccumulator$: Observable<FirebaseQuerySnapshotAccumulator<T>> = this.firestoreIteration$.pipe(
     map((x) => firebaseQuerySnapshotAccumulator<T>(x)),
     cleanupDestroyable(),
+    shareReplay(1)
+  );
+
+  readonly hasNext$: Observable<boolean> = this.firestoreIteration$.pipe(
+    switchMap((x) => x.hasNext$),
+    shareReplay(1)
+  );
+
+  readonly canLoadMore$: Observable<boolean> = this.firestoreIteration$.pipe(
+    switchMap((x) => x.canLoadMore$),
+    shareReplay(1)
+  );
+
+  readonly hasNextAndCanLoadMore$: Observable<boolean> = this.firestoreIteration$.pipe(
+    switchMap((x) => iterationHasNextAndCanLoadMore(x)),
     shareReplay(1)
   );
 
@@ -102,6 +117,9 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
+  /**
+   * Returns true if the first page result has one or more documents.
+   */
   readonly hasDocuments$: Observable<boolean> = this.firestoreIteration$.pipe(
     switchMap((x) => x.firstState$.pipe(map((x) => Boolean(x.value?.length)))),
     shareReplay(1)

@@ -3,6 +3,9 @@
   <ng-content select="[top]"></ng-content>
   <dbx-injection [config]="injectedComponentConfigSignal()"></dbx-injection>
   <ng-content select="[bottom]"></ng-content>
+  @if (isEndSignal()) {
+    <ng-content select="[end]"></ng-content>
+  }
 </div>
 @if (isEmptyAndNotLoadingSignal()) {
   <ng-content select="[empty]"></ng-content>

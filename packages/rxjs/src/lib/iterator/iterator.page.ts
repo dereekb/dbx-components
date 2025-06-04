@@ -1,6 +1,6 @@
 import { filterMaybe } from '../rxjs';
 import { type PageLoadingState, isLoadingStateWithError, isLoadingStateFinishedLoading, isLoadingStateLoading, successPageResult, mapLoadingStateResults, startWithBeginLoading } from '../loading';
-import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot } from '@dereekb/util';
+import { FIRST_PAGE, type Destroyable, type Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, type Maybe, type PageNumber, type Page, isMaybeNot, Configurable } from '@dereekb/util';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, type Observable, of, type OperatorFunction, shareReplay, defaultIfEmpty } from 'rxjs';
 import { type ItemIteratorNextRequest, type PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
@@ -13,7 +13,7 @@ export interface ItemPageLimit {
    *
    * If not defined, the will be no ending iteration.
    */
-  maxPageLoadLimit?: Maybe<number>;
+  readonly maxPageLoadLimit?: Maybe<number>;
 }
 
 export interface ItemPageIteratorRequest<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> extends Page {
@@ -47,11 +47,11 @@ export interface ItemPageIteratorResult<V> {
   /**
    * Error result.
    */
-  error?: Error;
+  readonly error?: Error;
   /**
    * Returned values.
    */
-  value?: V;
+  readonly value?: V;
   /**
    * True if the end has been reached.
    *
@@ -59,7 +59,7 @@ export interface ItemPageIteratorResult<V> {
    *
    * False can be specified to note that despite having no values passed, the end has not yet been reached.
    */
-  end?: boolean;
+  readonly end?: boolean;
 }
 
 export interface ItemPageIteratorDelegate<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
@@ -493,7 +493,13 @@ function mapItemPageLoadingStateFromResultPageLoadingState<V>(): OperatorFunctio
 }
 
 function itemPageLoadingStateFromResultPageLoadingState<V>(input: PageLoadingState<ItemPageIteratorResult<V>>): PageLoadingState<V> {
-  return mapLoadingStateResults(input, {
+  const result = mapLoadingStateResults(input, {
     mapValue: (result: ItemPageIteratorResult<V>) => result.value
-  });
+  }) as Configurable<PageLoadingState<V>>;
+
+  if (input.value?.end != null) {
+    result.hasNextPage = !input.value.end;
+  }
+
+  return result;
 }
