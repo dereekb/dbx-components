@@ -4,16 +4,16 @@ import { arrayFactory } from './array.factory';
 
 // MARK: Make Array
 export interface MakeArray<T> {
-  count: number;
+  readonly count: number;
   /**
    * Makes an item
    */
-  make: FactoryWithInput<T, number>;
+  readonly make: FactoryWithInput<T, number>;
 }
 
 // MARK: Make Random Array
 export interface RandomArrayFactoryConfig<T> extends Omit<MakeArray<T>, 'count'> {
-  random: RandomNumberFactory | RandomNumberFactoryInput;
+  readonly random: RandomNumberFactory | RandomNumberFactoryInput;
 }
 
 /**

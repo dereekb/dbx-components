@@ -1,7 +1,8 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
 import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
-import { NewZohoRecruitNoteData, ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitRecordNote, ZohoRecruitSearchRecordsCriteriaTreeElement, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, zohoRecruitSearchRecordsCriteriaString, ZohoRecruitNoteId, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId } from './recruit';
+import { NewZohoRecruitNoteData, ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitRecordNote, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, ZohoRecruitNoteId, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId } from './recruit';
+import { zohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
 import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, asArray } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
