@@ -1,21 +1,9 @@
 import { NgModule } from '@angular/core';
-import { DbxTableItemHeaderComponent } from './table.item.header.component';
 import { DbxTableViewComponent } from './table.component';
-import { DbxTableInputCellComponent } from './table.cell.input.component';
-import { DbxTableSummaryEndCellComponent } from './table.cell.summaryend.component';
-import { DbxTableSummaryStartCellComponent } from './table.cell.summarystart.component';
-import { DbxTableItemActionComponent } from './table.item.action.component';
-import { DbxTableActionCellComponent } from './table.cell.action.component';
-import { DbxTableItemCellComponent } from './table.item.cell.component';
-import { DbxTableColumnHeaderComponent } from './table.column.header.component';
 import { DbxTableDirective } from './table.directive';
-import { DbxTableColumnFooterComponent } from './table.column.footer.component';
 
-const importsAndExports = [DbxTableDirective, DbxTableViewComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableInputCellComponent, DbxTableActionCellComponent, DbxTableItemCellComponent, DbxTableItemHeaderComponent, DbxTableItemActionComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent];
+const importsAndExports = [DbxTableDirective, DbxTableViewComponent];
 
-/**
- * @deprecated import DbxTableDirective and DbxTableViewComponent directly instead.
- */
 @NgModule({
   imports: importsAndExports,
   exports: importsAndExports

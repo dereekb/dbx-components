@@ -1,14 +1,30 @@
 <dbx-loading [context]="context">
   <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
   <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
-    <table class="dbx-table-view-table" mat-table [dataSource]="elements$" [trackBy]="trackByFunctionSignal() || DEFAULT_TRACK_BY_FUNCTION">
+    <table class="dbx-table-view-table" mat-table [dataSource]="elements$" [trackBy]="trackElementByFunctionSignal()" multiTemplateDataRows>
+      <!-- Group Header column -->
+      <ng-container matColumnDef="groupHeaderColumn" [sticky]="true">
+        <td mat-cell [attr.colspan]="displayedColumnsSignal().length" *matCellDef="let element">
+          <dbx-table-group-header [group]="element.group"></dbx-table-group-header>
+        </td>
+      </ng-container>
+
+      <!-- Group Footer column -->
+      <ng-container matColumnDef="groupFooterColumn" [sticky]="true">
+        <td mat-cell [attr.colspan]="displayedColumnsSignal().length" *matCellDef="let element">
+          <dbx-table-group-footer [group]="element.group"></dbx-table-group-footer>
+        </td>
+      </ng-container>
+
       <!-- Header/Item column -->
       <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
         <th mat-header-cell *matHeaderCellDef>
           <dbx-table-input-cell></dbx-table-input-cell>
         </th>
         <td mat-cell *matCellDef="let element">
-          <dbx-table-item-header [element]="element"></dbx-table-item-header>
+          @if (element.item) {
+            <dbx-table-item-header [item]="element.item"></dbx-table-item-header>
+          }
         </td>
         <td mat-footer-cell *matFooterCellDef>
           <dbx-table-summary-start-cell></dbx-table-summary-start-cell>
@@ -22,7 +38,9 @@
             <dbx-table-column-header [column]="column"></dbx-table-column-header>
           </th>
           <td mat-cell *matCellDef="let element">
-            <dbx-table-item-cell [element]="element" [column]="column"></dbx-table-item-cell>
+            @if (element.item) {
+              <dbx-table-item-cell [item]="element.item" [column]="column"></dbx-table-item-cell>
+            }
           </td>
           <td mat-footer-cell *matFooterCellDef>
             <dbx-table-column-footer [column]="column"></dbx-table-column-footer>
@@ -36,7 +54,9 @@
           <dbx-table-action-cell></dbx-table-action-cell>
         </th>
         <td mat-cell *matCellDef="let element">
-          <dbx-table-item-action [element]="element"></dbx-table-item-action>
+          @if (element.item) {
+            <dbx-table-item-action [item]="element.item"></dbx-table-item-action>
+          }
         </td>
         <td mat-footer-cell *matFooterCellDef>
           <dbx-table-summary-end-cell></dbx-table-summary-end-cell>
@@ -46,7 +66,9 @@
       <!-- Table View -->
       <tr mat-header-row *matHeaderRowDef="displayedColumnsSignal(); sticky: true"></tr>
 
-      <tr mat-row *matRowDef="let row; columns: displayedColumnsSignal()"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['groupHeaderColumn']; when: showGroupHeaderRow"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumnsSignal(); when: showItemRow"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['groupFooterColumn']; when: showGroupFooterRow"></tr>
 
       <tr mat-footer-row *matFooterRowDef="displayedColumnsSignal(); sticky: true"></tr>
     </table>

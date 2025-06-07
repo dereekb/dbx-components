@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
-import { loadingStateContext } from '@dereekb/rxjs';
-import { shareReplay, map, Observable } from 'rxjs';
+import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, tapLog, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { shareReplay, map, Observable, switchMap } from 'rxjs';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { MatTableModule } from '@angular/material/table';
@@ -15,9 +15,34 @@ import { DbxTableItemHeaderComponent } from './table.item.header.component';
 import { DbxTableItemActionComponent } from './table.item.action.component';
 import { DbxTableActionCellComponent } from './table.cell.action.component';
 import { DbxTableColumnHeaderComponent } from './table.column.header.component';
+import { DbxTableItemGroup, DefaultDbxTableItemGroup } from './table';
+import { DbxTableGroupHeaderComponent } from './table.group.header.component';
+import { DbxTableGroupFooterComponent } from './table.group.footer.component';
+import { pushArrayItemsIntoArray } from '@dereekb/util';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
+
+export interface DbxTableViewGroupElement<T, G> {
+  readonly type: 'group';
+  readonly location: 'header' | 'footer';
+  readonly group: DbxTableItemGroup<T, G>;
+}
+
+export interface DbxTableViewItemElement<T, G> {
+  readonly type: 'item';
+  readonly item: T;
+}
+
+export type DbxTableViewElement<T, G> = DbxTableViewGroupElement<T, G> | DbxTableViewItemElement<T, G>;
+
+export function isDbxTableViewGroupElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewGroupElement<T, G> {
+  return element.type === 'group';
+}
+
+export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewItemElement<T, G> {
+  return element.type === 'item';
+}
 
 /**
  * A table with fixed content
@@ -25,12 +50,12 @@ export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
 @Component({
   selector: 'dbx-table-view',
   templateUrl: './table.component.html',
-  imports: [DbxLoadingComponent, InfiniteScrollDirective, MatTableModule, DbxTableInputCellComponent, DbxTableItemHeaderComponent, DbxTableItemCellComponent, DbxTableItemActionComponent, DbxTableActionCellComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent],
+  imports: [DbxLoadingComponent, InfiniteScrollDirective, MatTableModule, DbxTableInputCellComponent, DbxTableItemHeaderComponent, DbxTableItemCellComponent, DbxTableItemActionComponent, DbxTableActionCellComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent, DbxTableGroupHeaderComponent, DbxTableGroupFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxTableViewComponent<I, C, T> {
-  readonly tableStore = inject(DbxTableStore<I, C, T>);
+export class DbxTableViewComponent<I, C, T, G = unknown> {
+  readonly tableStore = inject(DbxTableStore<I, C, T, G>);
 
   readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
     return index;
@@ -51,7 +76,64 @@ export class DbxTableViewComponent<I, C, T> {
   readonly innerColumnsSignal = toSignal(this.innerColumns$);
   readonly innerColumnNamesSignal = toSignal(this.innerColumnNames$);
 
-  readonly elements$ = this.tableStore.items$;
+  readonly elementsState$: Observable<LoadingState<DbxTableViewElement<T, G>[]>> = this.tableStore.groupsState$.pipe(
+    mapLoadingStateValueWithOperator(
+      switchMap((groups) => {
+        return this.tableStore.viewDelegate$.pipe(
+          map((viewDelegate) => {
+            const { groupHeader: inputGroupHeader, groupFooter: inputGroupFooter } = viewDelegate;
+            const hasGroupHeader = inputGroupHeader != null ? (group: DbxTableItemGroup<T, G>) => inputGroupHeader(group) != null : () => false;
+            const hasGroupFooter = inputGroupFooter != null ? (group: DbxTableItemGroup<T, G>) => inputGroupFooter(group) != null : () => false;
+
+            return groups
+              .map((group) => {
+                const { items } = group;
+
+                const itemElements: DbxTableViewItemElement<T, G>[] = items.map((item) => ({
+                  type: 'item',
+                  item
+                }));
+
+                let elements: DbxTableViewElement<T, G>[];
+
+                if ((group as DefaultDbxTableItemGroup<T, G>).default) {
+                  elements = itemElements;
+                } else {
+                  const header = hasGroupHeader(group);
+                  const footer = hasGroupFooter(group);
+
+                  elements = [];
+
+                  if (header) {
+                    elements.push({
+                      type: 'group',
+                      location: 'header',
+                      group
+                    });
+                  }
+
+                  pushArrayItemsIntoArray(elements, itemElements);
+
+                  if (footer) {
+                    elements.push({
+                      type: 'group',
+                      location: 'footer',
+                      group
+                    });
+                  }
+                }
+
+                return elements;
+              })
+              .flat();
+          })
+        );
+      })
+    ),
+    shareReplay(1)
+  );
+
+  readonly elements$ = this.elementsState$.pipe(valueFromFinishedLoadingState([]), shareReplay(1));
 
   readonly displayedColumns$ = this.innerColumnNames$.pipe(
     map((columnNames) => {
@@ -70,15 +152,42 @@ export class DbxTableViewComponent<I, C, T> {
     shareReplay(1)
   );
 
-  readonly trackByFunctionSignal = toSignal(this.trackByFunction$, { initialValue: this.DEFAULT_TRACK_BY_FUNCTION });
+  readonly inputTrackByFunctionSignal = toSignal(this.trackByFunction$, { initialValue: this.DEFAULT_TRACK_BY_FUNCTION });
+  readonly trackElementByFunctionSignal: Signal<TrackByFunction<DbxTableViewElement<T, G>>> = computed(() => {
+    const trackByFunction = this.inputTrackByFunctionSignal() as TrackByFunction<T>;
+
+    const fn: TrackByFunction<DbxTableViewElement<T, G>> = (index: number, element: DbxTableViewElement<T, G>) => {
+      if (element.type === 'item') {
+        return `i_${trackByFunction(index, element.item as T)}`;
+      } else {
+        return `g_${element.group.groupId}`;
+      }
+    };
+
+    return fn;
+  });
 
   readonly context = loadingStateContext({ obs: this.tableStore.dataState$ });
-  readonly dataLoadingContext = loadingStateContext({ obs: this.tableStore.itemsState$ });
+  readonly dataLoadingContext = loadingStateContext({ obs: this.elementsState$ });
 
   readonly contextSignal = toSignal(this.context.state$);
   readonly dataLoadingContextSignal = toSignal(this.dataLoadingContext.state$);
 
+  readonly viewDelegateSignal = toSignal(this.tableStore.viewDelegate$);
+
   onScrollDown(): void {
     this.tableStore.loadMore();
+  }
+
+  showItemRow(_: number, row: DbxTableViewElement<T, G>): boolean {
+    return row.type === 'item';
+  }
+
+  showGroupHeaderRow(_: number, row: DbxTableViewElement<T, G>): boolean {
+    return row.type === 'group' && row.location === 'header';
+  }
+
+  showGroupFooterRow(_: number, row: DbxTableViewElement<T, G>): boolean {
+    return row.type === 'group' && row.location === 'footer';
   }
 }

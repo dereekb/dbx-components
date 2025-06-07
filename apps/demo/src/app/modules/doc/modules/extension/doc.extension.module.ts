@@ -29,6 +29,8 @@ import { DocExtensionTableItemHeaderExampleComponent } from './component/table.i
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './component/example.calendar.schedule.selection.popover.button.component';
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './component/example.calendar.schedule.selection.popover.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
+import { DocExtensionTableGroupHeaderExampleComponent } from './component/table.group.header.example.component';
+import { DocExtensionTableGroupFooterExampleComponent } from './component/table.group.footer.example.component';
 
 @NgModule({
   imports: [
@@ -57,6 +59,8 @@ import { DocExtensionStructureComponent } from './container/structure.component'
     DocExtensionTableItemHeaderExampleComponent,
     DocExtensionTableItemCellExampleComponent,
     DocExtensionTableItemActionExampleComponent,
+    DocExtensionTableGroupHeaderExampleComponent,
+    DocExtensionTableGroupFooterExampleComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,

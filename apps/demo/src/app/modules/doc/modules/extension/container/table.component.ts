@@ -2,18 +2,20 @@ import { DocExtensionTableItemCellExampleComponent } from './../component/table.
 import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
-import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
-import { beginLoadingPage, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
+import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableItemGroup, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
+import { beginLoadingPage, ObservableOrValue, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
 import { range } from '@dereekb/util';
 import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
-import { ExampleTableData } from '../component/table.item';
+import { ExampleTableData, ExampleTableGroupData } from '../component/table.item';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { NgIf, AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
+import { DocExtensionTableGroupHeaderExampleComponent } from '../component/table.group.header.example.component';
+import { DocExtensionTableGroupFooterExampleComponent } from '../component/table.group.footer.example.component';
 
 @Component({
   templateUrl: './table.component.html',
@@ -64,6 +66,37 @@ export class DocExtensionTableComponent implements OnDestroy {
     }
   };
 
+  readonly exampleGroupViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
+    ...this.exampleViewDelegate,
+    groupBy: (items) => {
+      const allEvenItems = items.filter((x) => Number(x.key) % 2 === 0);
+      const allOddItems = items.filter((x) => Number(x.key) % 2 !== 0);
+
+      const groupResult: ObservableOrValue<DbxTableItemGroup<ExampleTableData, ExampleTableGroupData>[]> = [
+        { groupId: 'even', items: allEvenItems, meta: { groupName: 'Even' } },
+        { groupId: 'odd', items: allOddItems, meta: { groupName: 'Odd' } }
+      ];
+
+      return groupResult;
+    },
+    groupHeader: (group: DbxTableItemGroup<ExampleTableData, ExampleTableGroupData>) => {
+      return {
+        componentClass: DocExtensionTableGroupHeaderExampleComponent,
+        init: (x: DocExtensionTableGroupHeaderExampleComponent) => {
+          x.group = group;
+        }
+      };
+    },
+    groupFooter: (group: DbxTableItemGroup<ExampleTableData, ExampleTableGroupData>) => {
+      return {
+        componentClass: DocExtensionTableGroupFooterExampleComponent,
+        init: (x: DocExtensionTableGroupFooterExampleComponent) => {
+          x.group = group;
+        }
+      };
+    }
+  };
+
   readonly exampleDataDelegate: DbxTableContextDataDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     loadData: (input) => {
       const allDays = expandDaysForDateRange(dateRange({ ...input }));
@@ -91,12 +124,19 @@ export class DocExtensionTableComponent implements OnDestroy {
     loadData: (input) => {
       const allDays = expandDaysForDateRange(dateRange({ ...input }));
       const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayStringForSystem(x), meta: x }));
-      const items$: Observable<PageListLoadingState<ExampleTableData>> = this.exampleTableDataItems
-        .pipe(
-          skip(1),
-          switchMap((x) => of(successPageResult(0, x)).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
-        )
-        .pipe(startWith(beginLoadingPage<ExampleTableData[]>(0)));
+
+      const items$: Observable<PageListLoadingState<ExampleTableData>> = this.isLoading$.pipe(
+        switchMap((x) => {
+          const skipCount = x ? 1 : 0;
+
+          return this.exampleTableDataItems
+            .pipe(
+              skip(skipCount),
+              switchMap((x) => of(successPageResult(0, x)).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
+            )
+            .pipe(startWith(beginLoadingPage<ExampleTableData[]>(0)));
+        })
+      );
 
       const result: DbxTableContextData<DateRangeDayDistanceInput, Date, ExampleTableData> = {
         input,
