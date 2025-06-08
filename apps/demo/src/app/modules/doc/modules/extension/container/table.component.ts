@@ -56,6 +56,9 @@ export class DocExtensionTableComponent implements OnDestroy {
     summaryRowEnd: {
       componentClass: DocExtensionTableSummaryRowEndExampleComponent
     },
+    fullSummaryRow: {
+      componentClass: DocExtensionTableFullSummaryRowExampleComponent
+    },
     columnFooter: function (column: DbxTableColumn<Date>) {
       return {
         componentClass: DocExtensionTableColumnFooterExampleComponent,
@@ -93,9 +96,6 @@ export class DocExtensionTableComponent implements OnDestroy {
     summaryRowHeader: undefined,
     summaryRowEnd: undefined,
     columnFooter: undefined,
-    fullSummaryRow: {
-      componentClass: DocExtensionTableFullSummaryRowExampleComponent
-    },
     groupBy: (items) => {
       const allEvenItems = items.filter((x) => Number(x.key) % 2 === 0);
       const allOddItems = items.filter((x) => Number(x.key) % 2 !== 0);

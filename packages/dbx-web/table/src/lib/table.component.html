@@ -65,13 +65,6 @@
         </td>
       </ng-container>
 
-      <!-- Full summary row -->
-      <ng-container matColumnDef="fullSummaryRow" [sticky]="true">
-        <td mat-footer-cell [attr.colspan]="visibleColumnsSignal()" *matFooterCellDef>
-          <dbx-table-full-summary-row></dbx-table-full-summary-row>
-        </td>
-      </ng-container>
-
       <!-- Table View -->
       <tr mat-header-row *matHeaderRowDef="displayedColumnsSignal(); sticky: true"></tr>
 
@@ -80,7 +73,14 @@
       <tr mat-row *matRowDef="let row; columns: ['groupFooterColumn']; when: showGroupFooterRow"></tr>
 
       <tr [ngClass]="{ 'dbx-hide': !showFooterRowSignal() }" mat-footer-row *matFooterRowDef="displayedColumnsSignal(); sticky: true"></tr>
-      <tr [ngClass]="{ 'dbx-hide': !showFullSummaryRowSignal() }" mat-footer-row *matFooterRowDef="['fullSummaryRow']; sticky: true"></tr>
     </table>
   </section>
+  <!-- Full summary row -->
+  @if (showFullSummaryRowSignal()) {
+    <div class="mat-mdc-table dbx-table-view-full-summary-row-container">
+      <div class="mdc-data-table__cell mat-mdc-row">
+        <dbx-table-full-summary-row></dbx-table-full-summary-row>
+      </div>
+    </div>
+  }
 </dbx-loading>

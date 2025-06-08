@@ -25,18 +25,36 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
     });
 
     describe('accessors', () => {
-      it('firestoreIteration$ should return the current iteration.', (done) => {
-        sub.subscription = instance.firestoreIteration$.pipe(first()).subscribe((x) => {
-          expect(x).toBeDefined();
-          done();
+      function describeAccessorTests() {
+        it('firestoreIteration$ should return the current iteration.', (done) => {
+          sub.subscription = instance.firestoreIteration$.pipe(first()).subscribe((x) => {
+            expect(x).toBeDefined();
+            done();
+          });
         });
+
+        it('should return the current accumulator.', (done) => {
+          sub.subscription = instance.accumulator$.pipe(first()).subscribe((x) => {
+            expect(x).toBeDefined();
+            done();
+          });
+        });
+      }
+
+      describe('with constraints set', () => {
+        beforeEach(() => {
+          instance.setConstraints([]);
+        });
+
+        describeAccessorTests();
       });
 
-      it('should return the current accumulator.', (done) => {
-        sub.subscription = instance.accumulator$.pipe(first()).subscribe((x) => {
-          expect(x).toBeDefined();
-          done();
+      describe('with waitForNonNullConstraints set to false', () => {
+        beforeEach(() => {
+          instance.setWaitForNonNullConstraints(false);
         });
+
+        describeAccessorTests();
       });
     });
 

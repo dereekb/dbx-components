@@ -55,10 +55,38 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
           parentStore.setId('test');
         });
 
-        it('should load the iterator.', (done) => {
-          sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
-            expect(iteration).toBeDefined();
-            done();
+        describe('with no constraints set', () => {
+          it('should not load the iterator.', (done) => {
+            sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+              expect(result).toBe(false);
+              done();
+            });
+          });
+
+          describe('with waitForNonNullConstraints set to false', () => {
+            beforeEach(() => {
+              store.setWaitForNonNullConstraints(false);
+            });
+
+            it('should load the iterator.', (done) => {
+              sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
+                expect(iteration).toBeDefined();
+                done();
+              });
+            });
+          });
+        });
+
+        describe('with constraints set', () => {
+          beforeEach(() => {
+            store.setConstraints([]);
+          });
+
+          it('should load the iterator.', (done) => {
+            sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((iteration) => {
+              expect(iteration).toBeDefined();
+              done();
+            });
           });
         });
       });
@@ -78,10 +106,29 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
         });
       });
 
-      it('should provide a firestoreIteration$', (done) => {
-        sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
-          expect(result).toBeDefined();
-          done();
+      describe('with waitForNonNullConstraints set to false', () => {
+        beforeEach(() => {
+          store.setWaitForNonNullConstraints(false);
+        });
+
+        it('should provide a firestoreIteration$', (done) => {
+          sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
+            expect(result).toBeDefined();
+            done();
+          });
+        });
+      });
+
+      describe('with non-null constraint set', () => {
+        beforeEach(() => {
+          store.setConstraints([]);
+        });
+
+        it('should provide a firestoreIteration$', (done) => {
+          sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
+            expect(result).toBeDefined();
+            done();
+          });
         });
       });
     });

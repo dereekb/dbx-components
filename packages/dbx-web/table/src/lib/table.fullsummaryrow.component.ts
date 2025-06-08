@@ -14,7 +14,10 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DbxInjectionComponent]
+  imports: [DbxInjectionComponent],
+  host: {
+    class: 'dbx-h100 dbx-flex-bar'
+  }
 })
 export class DbxTableFullSummaryRowComponent {
   readonly tableStore = inject(DbxTableStore);

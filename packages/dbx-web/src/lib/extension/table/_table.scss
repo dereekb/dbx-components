@@ -36,6 +36,13 @@
       font-weight: 800;
     }
   }
+
+  // MARK: Full summary row
+  .dbx-table-view-full-summary-row-container > .mat-mdc-row {
+    border-top-color: var(--mat-table-row-item-outline-color, var(--mat-app-outline, rgba(0, 0, 0, 0.12)));
+    border-top-width: var(--mat-table-row-item-outline-width, 1px);
+    border-top-style: solid;
+  }
 }
 
 @mixin color($theme-config) {
