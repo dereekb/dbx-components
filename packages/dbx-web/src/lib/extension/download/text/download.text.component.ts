@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, viewChild } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { WorkUsingObservable, LoadingState, loadingStateContext, successResult, valueFromFinishedLoadingState, MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { MS_IN_SECOND, type Maybe } from '@dereekb/util';
-import { Observable, combineLatest, distinctUntilChanged, first, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { Observable, first, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { DownloadTextContent } from './download.text';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -37,11 +37,15 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
   readonly showPreview = input<boolean>(true);
 
   readonly content = input<Maybe<DownloadTextContent>>(undefined);
-  readonly contentState = input<Maybe<LoadingState<DownloadTextContent>>>(undefined);
+  readonly contentState = input<MaybeObservableOrValue<LoadingState<DownloadTextContent>>>(undefined);
+
+  readonly contentState$ = toObservable(this.contentState).pipe(maybeValueFromObservableOrValue(), shareReplay(1));
+
+  readonly contentStateSignal = toSignal(this.contentState$);
 
   readonly contentLoadingStateSignal = computed(() => {
     const content = this.content();
-    const contentState = this.contentState();
+    const contentState = this.contentStateSignal();
 
     let result: Maybe<LoadingState<DownloadTextContent>>;
 
@@ -65,39 +69,31 @@ export class DbxDownloadTextViewComponent extends AbstractSubscriptionDirective 
     })
   );
 
-  readonly contentData$ = this.content$.pipe(map((x) => x?.content));
-
-  readonly fileName$ = this.content$.pipe(
-    map((x) => x?.name ?? 'File'),
-    shareReplay(1)
-  );
-
-  readonly fileUrl$: Observable<Maybe<SafeResourceUrl>> = this.content$.pipe(
-    map((content) => {
-      let fileUrl: Maybe<SafeResourceUrl> = undefined;
-
-      if (content) {
-        const blob = new Blob([content.content], { type: content.mimeType ?? 'application/octet-stream' });
-        fileUrl = this._sanitizer.bypassSecurityTrustResourceUrl(window.URL.createObjectURL(blob));
-      }
-
-      return fileUrl;
-    }),
-    shareReplay(1)
-  );
-
-  readonly downloadReady$ = combineLatest([toObservable(this.downloadButton), this.fileName$, this.fileUrl$]).pipe(
-    map(([button, name, url]) => Boolean(button && name && url)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-
   readonly contentSignal = toSignal(this.content$);
-  readonly contentDataSignal = toSignal(this.contentData$);
 
-  readonly fileNameSignal = toSignal(this.fileName$);
-  readonly fileUrlSignal = toSignal(this.fileUrl$);
-  readonly downloadReadySignal = toSignal(this.downloadReady$);
+  readonly contentDataSignal = computed(() => this.contentSignal()?.content);
+
+  readonly fileUrlSignal = computed(() => {
+    const content = this.contentSignal();
+
+    let fileUrl: Maybe<SafeResourceUrl> = undefined;
+
+    if (content) {
+      const blob = new Blob([content.content], { type: content.mimeType ?? 'application/octet-stream' });
+      fileUrl = this._sanitizer.bypassSecurityTrustResourceUrl(window.URL.createObjectURL(blob));
+    }
+
+    return fileUrl;
+  });
+
+  readonly fileNameSignal = computed(() => this.contentSignal()?.name ?? 'File');
+
+  readonly downloadReadySignal = computed(() => {
+    const downloadButton = this.downloadButton();
+    const fileName = this.fileNameSignal();
+    const fileUrl = this.fileUrlSignal();
+    return Boolean(downloadButton && fileName && fileUrl);
+  });
 
   readonly context = loadingStateContext({ obs: this.contentLoadingState$ });
 

@@ -19,6 +19,8 @@ import { DbxTableItemGroup, DefaultDbxTableItemGroup } from './table';
 import { DbxTableGroupHeaderComponent } from './table.group.header.component';
 import { DbxTableGroupFooterComponent } from './table.group.footer.component';
 import { pushArrayItemsIntoArray } from '@dereekb/util';
+import { NgClass } from '@angular/common';
+import { DbxTableFullSummaryRowComponent } from './table.fullsummaryrow.component';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
@@ -50,7 +52,7 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
 @Component({
   selector: 'dbx-table-view',
   templateUrl: './table.component.html',
-  imports: [DbxLoadingComponent, InfiniteScrollDirective, MatTableModule, DbxTableInputCellComponent, DbxTableItemHeaderComponent, DbxTableItemCellComponent, DbxTableItemActionComponent, DbxTableActionCellComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent, DbxTableGroupHeaderComponent, DbxTableGroupFooterComponent],
+  imports: [DbxLoadingComponent, NgClass, InfiniteScrollDirective, MatTableModule, DbxTableInputCellComponent, DbxTableItemHeaderComponent, DbxTableItemCellComponent, DbxTableItemActionComponent, DbxTableActionCellComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent, DbxTableGroupHeaderComponent, DbxTableGroupFooterComponent, DbxTableFullSummaryRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -147,6 +149,18 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
     return [this.itemsColumnName, ...columnNames, this.actionsColumnName];
   });
 
+  readonly visibleColumnsSignal = computed(() => {
+    const displayedColumns = this.displayedColumnsSignal();
+
+    // TODO: Every time the table is rendered/size changes/etc we should recompute width of the first n columns that span the viewport
+    // in order to calculate a colspan for the group header/footer that is not greater than span of the table for a given view size
+    // I.E. if the screen shrinks to only show the first 4 columns, then the colspan should be 4.
+
+    // as a temporary measure, we just show half the columns
+
+    return displayedColumns.length / 2;
+  });
+
   readonly trackByFunction$: Observable<TrackByFunction<T>> = this.tableStore.viewDelegate$.pipe(
     map((x) => x.trackBy ?? this.DEFAULT_TRACK_BY_FUNCTION),
     shareReplay(1)
@@ -190,4 +204,15 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   showGroupFooterRow(_: number, row: DbxTableViewElement<T, G>): boolean {
     return row.type === 'group' && row.location === 'footer';
   }
+
+  readonly showFooterRowSignal = computed(() => {
+    const viewDelegate = this.viewDelegateSignal();
+    const showFooterRow = viewDelegate && (viewDelegate.summaryRowHeader != null || viewDelegate.columnFooter != null || viewDelegate.summaryRowEnd != null);
+    return showFooterRow;
+  });
+
+  readonly showFullSummaryRowSignal = computed(() => {
+    const viewDelegate = this.viewDelegateSignal();
+    return viewDelegate?.fullSummaryRow != null;
+  });
 }

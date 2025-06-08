@@ -16,6 +16,11 @@ import { NgIf, AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { DocExtensionTableGroupHeaderExampleComponent } from '../component/table.group.header.example.component';
 import { DocExtensionTableGroupFooterExampleComponent } from '../component/table.group.footer.example.component';
+import { DocExtensionTableActionHeaderExampleComponent } from '../component/table.action.header.example.component';
+import { DocExtensionTableSummaryRowHeaderExampleComponent } from '../component/table.summary.row.header.example.component';
+import { DocExtensionTableSummaryRowEndExampleComponent } from '../component/table.summary.row.end.example.component';
+import { DocExtensionTableColumnFooterExampleComponent } from '../component/table.column.footer.example.component';
+import { DocExtensionTableFullSummaryRowExampleComponent } from '../component/table.fullsummaryrow.example.component';
 
 @Component({
   templateUrl: './table.component.html',
@@ -42,6 +47,23 @@ export class DocExtensionTableComponent implements OnDestroy {
   readonly exampleViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     inputHeader: dbxTableDateRangeDayDistanceInputCellInput(),
     columnHeader: dbxTableDateHeaderInjectionFactory(),
+    actionHeader: {
+      componentClass: DocExtensionTableActionHeaderExampleComponent
+    },
+    summaryRowHeader: {
+      componentClass: DocExtensionTableSummaryRowHeaderExampleComponent
+    },
+    summaryRowEnd: {
+      componentClass: DocExtensionTableSummaryRowEndExampleComponent
+    },
+    columnFooter: function (column: DbxTableColumn<Date>) {
+      return {
+        componentClass: DocExtensionTableColumnFooterExampleComponent,
+        init: (x) => {
+          x.column = column;
+        }
+      };
+    },
     itemHeader: function (item: ExampleTableData) {
       return {
         componentClass: DocExtensionTableItemHeaderExampleComponent,
@@ -68,6 +90,12 @@ export class DocExtensionTableComponent implements OnDestroy {
 
   readonly exampleGroupViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     ...this.exampleViewDelegate,
+    summaryRowHeader: undefined,
+    summaryRowEnd: undefined,
+    columnFooter: undefined,
+    fullSummaryRow: {
+      componentClass: DocExtensionTableFullSummaryRowExampleComponent
+    },
     groupBy: (items) => {
       const allEvenItems = items.filter((x) => Number(x.key) % 2 === 0);
       const allOddItems = items.filter((x) => Number(x.key) % 2 !== 0);

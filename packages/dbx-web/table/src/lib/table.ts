@@ -96,7 +96,11 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    */
   readonly actionHeader?: Maybe<DbxInjectionComponentConfig<any>>;
   /**
-   * Summary row header view configuration
+   * Full-width summary row view configuration.
+   */
+  readonly fullSummaryRow?: Maybe<DbxInjectionComponentConfig<any>>;
+  /**
+   * Summary row header view configuration.
    */
   readonly summaryRowHeader?: Maybe<DbxInjectionComponentConfig<any>>;
   /**
@@ -126,25 +130,25 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    */
   columnHeader?(column: DbxTableColumn<C>): Maybe<DbxInjectionComponentConfig<any>>;
   /**
-   * Column footer view configuration for a specific column.
+   * Optional column footer view configuration for a specific column.
    *
    * @param item
    */
   columnFooter?(column: DbxTableColumn<C>): Maybe<DbxInjectionComponentConfig<any>>;
   /**
-   * Item header view configuration for a specific item.
+   * Item header view (left-most column for an item row) configuration for a specific item.
    *
    * @param item
    */
   itemHeader(item: T): Maybe<DbxInjectionComponentConfig<any>>;
   /**
-   * Item cell view configuration for a specific item and column.
+   * Item cell view (middle columns for an item row) configuration for a specific item and column.
    *
    * @param item
    */
   itemCell(column: DbxTableColumn<C>, item: T): Maybe<DbxInjectionComponentConfig<any>>;
   /**
-   * Item action view configuration for a specific item.
+   * Item action view (right-most column for an item row) configuration for a specific item.
    *
    * @param item
    */

@@ -4,7 +4,7 @@ import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocumen
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe, ItemAccumulatorNextPageUntilResultsCountResult } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe, PageNumber } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../../loader/collection.loader.instance';
+import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData, DbxFirebaseCollectionLoaderInstanceInitConfig } from '../../loader/collection.loader.instance';
 import { DbxFirebaseCollectionLoaderAccessorWithAccumulator } from '../../loader/collection.loader';
 
 export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessorWithAccumulator<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
@@ -42,32 +42,34 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setItemsPerPage(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setConstraints(observableOrValue: ObservableOrValue<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>): Subscription;
+  setWaitForNonNullConstraints(observableOrValue: ObservableOrValue<Maybe<boolean>>): Subscription;
   next(observableOrValue: ObservableOrValue<void>): void;
   restart(observableOrValue: ObservableOrValue<void>): void;
 
   readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollectionLike<T, D>>>) => Subscription);
 }
 
-export interface DbxFirebaseCollectionStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface DbxFirebaseCollectionStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends Omit<DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>, 'collection'> {
   readonly firestoreCollection?: Maybe<FirestoreCollectionLike<T, D>>;
-  readonly maxPages?: Maybe<number>;
-  readonly itemsPerPage?: Maybe<number>;
-  readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
 @Injectable()
 export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseCollectionStoreContextState<T, D> = DbxFirebaseCollectionStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseCollectionStore<T, D> {
   // MARK: Effects
   readonly setMaxPages = this.effect((input: Observable<Maybe<number>>) => {
-    return input.pipe(switchMap((maxPages) => this.loader$.pipe(tap((x) => (x.maxPages = maxPages)))));
+    return input.pipe(switchMap((maxPages) => this.loader$.pipe(tap((x) => x.setMaxPages(maxPages)))));
   });
 
   readonly setItemsPerPage = this.effect((input: Observable<Maybe<number>>) => {
-    return input.pipe(switchMap((itemsPerPage) => this.loader$.pipe(tap((x) => (x.itemsPerPage = itemsPerPage)))));
+    return input.pipe(switchMap((itemsPerPage) => this.loader$.pipe(tap((x) => x.setItemsPerPage(itemsPerPage)))));
   });
 
   readonly setConstraints = this.effect((input: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>) => {
     return input.pipe(switchMap((constraints) => this.loader$.pipe(tap((x) => x.setConstraints(constraints)))));
+  });
+
+  readonly setWaitForNonNullConstraints = this.effect((input: Observable<Maybe<boolean>>) => {
+    return input.pipe(switchMap((waitForNonNullConstraints) => this.loader$.pipe(tap((x) => x.setWaitForNonNullConstraints(waitForNonNullConstraints)))));
   });
 
   readonly next = this.effect((input: Observable<void>) => {
@@ -110,7 +112,8 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
             collection,
             maxPages: x.maxPages,
             itemsPerPage: x.itemsPerPage,
-            constraints: x.constraints
+            constraints: x.constraints,
+            waitForNonNullConstraints: x.waitForNonNullConstraints
           })
         )
       )
@@ -137,8 +140,6 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentData$));
 
   readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollectionLike<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
-  readonly setWaitForConstraints = this.updater((state, waitForConstraints: boolean) => ({ ...state, waitForConstraints }));
-  readonly setPauseInitialLoader = this.updater((state, pauseInitialLoader: boolean) => ({ ...state, pauseInitialLoader }));
 
   loadToPage(page: PageNumber): Observable<PageNumber> {
     return this.loader$.pipe(switchMap((x) => x.loadToPage(page)));

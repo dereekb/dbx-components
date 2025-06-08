@@ -181,8 +181,8 @@ export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): Fires
       query,
       countDocs: async () => countDocs(query),
       getFirstDoc: async (transaction?: Transaction) => {
-        const contraintsForOneDoc = addOrReplaceLimitInConstraints(1)(allConstraints);
-        const query = makeQuery(inputQuery, ...contraintsForOneDoc);
+        const constraintsForOneDoc = addOrReplaceLimitInConstraints(1)(allConstraints);
+        const query = makeQuery(inputQuery, ...constraintsForOneDoc);
         const result = await getDocs(query, transaction);
         return result.docs[0];
       },

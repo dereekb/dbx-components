@@ -2,20 +2,22 @@
   <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
   <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
     <table class="dbx-table-view-table" mat-table [dataSource]="elements$" [trackBy]="trackElementByFunctionSignal()" multiTemplateDataRows>
+      <!-- Groups -->
       <!-- Group Header column -->
       <ng-container matColumnDef="groupHeaderColumn" [sticky]="true">
-        <td mat-cell [attr.colspan]="displayedColumnsSignal().length" *matCellDef="let element">
+        <td mat-cell [attr.colspan]="visibleColumnsSignal()" *matCellDef="let element">
           <dbx-table-group-header [group]="element.group"></dbx-table-group-header>
         </td>
       </ng-container>
 
       <!-- Group Footer column -->
       <ng-container matColumnDef="groupFooterColumn" [sticky]="true">
-        <td mat-cell [attr.colspan]="displayedColumnsSignal().length" *matCellDef="let element">
+        <td mat-cell [attr.colspan]="visibleColumnsSignal()" *matCellDef="let element">
           <dbx-table-group-footer [group]="element.group"></dbx-table-group-footer>
         </td>
       </ng-container>
 
+      <!-- Items -->
       <!-- Header/Item column -->
       <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
         <th mat-header-cell *matHeaderCellDef>
@@ -63,6 +65,13 @@
         </td>
       </ng-container>
 
+      <!-- Full summary row -->
+      <ng-container matColumnDef="fullSummaryRow" [sticky]="true">
+        <td mat-footer-cell [attr.colspan]="visibleColumnsSignal()" *matFooterCellDef>
+          <dbx-table-full-summary-row></dbx-table-full-summary-row>
+        </td>
+      </ng-container>
+
       <!-- Table View -->
       <tr mat-header-row *matHeaderRowDef="displayedColumnsSignal(); sticky: true"></tr>
 
@@ -70,7 +79,8 @@
       <tr mat-row *matRowDef="let row; columns: displayedColumnsSignal(); when: showItemRow"></tr>
       <tr mat-row *matRowDef="let row; columns: ['groupFooterColumn']; when: showGroupFooterRow"></tr>
 
-      <tr mat-footer-row *matFooterRowDef="displayedColumnsSignal(); sticky: true"></tr>
+      <tr [ngClass]="{ 'dbx-hide': !showFooterRowSignal() }" mat-footer-row *matFooterRowDef="displayedColumnsSignal(); sticky: true"></tr>
+      <tr [ngClass]="{ 'dbx-hide': !showFullSummaryRowSignal() }" mat-footer-row *matFooterRowDef="['fullSummaryRow']; sticky: true"></tr>
     </table>
   </section>
 </dbx-loading>

@@ -4,8 +4,11 @@ import { map, distinctUntilChanged } from 'rxjs';
 import { DbxTableStore } from './table.store';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
 
+/**
+ * A table header component used for injecting the input picker view.
+ */
 @Component({
-  selector: 'dbx-table-action-cell',
+  selector: 'dbx-table-full-summary-row',
   template: `
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
@@ -13,11 +16,11 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
   standalone: true,
   imports: [DbxInjectionComponent]
 })
-export class DbxTableActionCellComponent {
+export class DbxTableFullSummaryRowComponent {
   readonly tableStore = inject(DbxTableStore);
 
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    map((x) => x.actionHeader),
+    map((x) => x.fullSummaryRow),
     distinctUntilChanged()
   );
 

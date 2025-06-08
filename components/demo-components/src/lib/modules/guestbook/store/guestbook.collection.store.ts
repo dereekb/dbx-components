@@ -6,6 +6,5 @@ import { DemoFirestoreCollections, Guestbook, GuestbookDocument, publishedGuestb
 export class GuestbookCollectionStore extends AbstractDbxFirebaseCollectionStore<Guestbook, GuestbookDocument> {
   constructor(collections: DemoFirestoreCollections) {
     super({ firestoreCollection: collections.guestbookCollection });
-    this.setConstraints(publishedGuestbook()); // todo: replace with filter
   }
 }
