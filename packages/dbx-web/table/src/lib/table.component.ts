@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
-import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, tapLog, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { shareReplay, map, Observable, switchMap } from 'rxjs';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
