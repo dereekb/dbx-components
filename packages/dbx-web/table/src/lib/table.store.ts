@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { beginLoading, filterMaybe, LoadingState, PageListLoadingState, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { asObservable, beginLoading, filterMaybe, LoadingState, mapLoadingStateValueWithOperator, PageListLoadingState, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of } from 'rxjs';
-import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, DbxTableViewDelegate } from './table';
+import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, DbxTableItemGroup, DbxTableViewDelegate, defaultDbxTableItemGroup } from './table';
 
-export interface DbxTableStoreState<I, C, T> {
+export interface DbxTableStoreState<I, C, T, G> {
   /**
    * Contextual input that is passed to the data delegate.
    */
@@ -17,11 +17,11 @@ export interface DbxTableStoreState<I, C, T> {
   /**
    * Delegate used for retrieving view configurations.
    */
-  readonly viewDelegate: Maybe<DbxTableViewDelegate<I, C, T>>;
+  readonly viewDelegate: Maybe<DbxTableViewDelegate<I, C, T, G>>;
 }
 
 @Injectable()
-export class DbxTableStore<I = unknown, C = unknown, T = unknown> extends ComponentStore<DbxTableStoreState<I, C, T>> {
+export class DbxTableStore<I = unknown, C = unknown, T = unknown, G = unknown> extends ComponentStore<DbxTableStoreState<I, C, T, G>> {
   constructor() {
     super({
       input: null,
@@ -102,8 +102,31 @@ export class DbxTableStore<I = unknown, C = unknown, T = unknown> extends Compon
 
   readonly items$: Observable<T[]> = this.itemsState$.pipe(valueFromFinishedLoadingState(), filterMaybe(), shareReplay(1));
 
+  readonly groupsState$: Observable<LoadingState<DbxTableItemGroup<T, G>[]>> = this.itemsState$.pipe(
+    mapLoadingStateValueWithOperator(
+      switchMap((x) => {
+        return this.viewDelegate$.pipe(
+          switchMap((viewDelegate) => {
+            let groups: Observable<DbxTableItemGroup<T, G>[]>;
+
+            if (viewDelegate.groupBy) {
+              groups = asObservable(viewDelegate.groupBy(x));
+            } else {
+              groups = of([defaultDbxTableItemGroup<T, G>(x)]);
+            }
+
+            return groups;
+          })
+        );
+      })
+    ),
+    shareReplay(1)
+  );
+
+  readonly groups$: Observable<DbxTableItemGroup<T, G>[]> = this.groupsState$.pipe(valueFromFinishedLoadingState(), filterMaybe(), shareReplay(1));
+
   // MARK: State Changes
   readonly setInput = this.updater((state, input: Maybe<I>) => ({ ...state, input }));
   readonly setDataDelegate = this.updater((state, dataDelegate: Maybe<DbxTableContextDataDelegate<I, C, T>>) => ({ ...state, dataDelegate }));
-  readonly setViewDelegate = this.updater((state, viewDelegate: Maybe<DbxTableViewDelegate<I, C, T>>) => ({ ...state, viewDelegate }));
+  readonly setViewDelegate = this.updater((state, viewDelegate: Maybe<DbxTableViewDelegate<I, C, T, G>>) => ({ ...state, viewDelegate }));
 }

@@ -17,7 +17,7 @@ export class DbxTableActionCellComponent {
   readonly tableStore = inject(DbxTableStore);
 
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    map((x) => x.summaryRowEnd),
+    map((x) => x.actionHeader),
     distinctUntilChanged()
   );
 

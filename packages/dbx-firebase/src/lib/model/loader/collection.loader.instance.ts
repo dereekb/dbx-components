@@ -5,10 +5,16 @@ import { ArrayOrValue, Destroyable, GetterOrValue, Initialized, Maybe, PageNumbe
 import { DbxFirebaseCollectionLoaderAccessor, DbxFirebaseCollectionLoaderWithAccumulator } from './collection.loader';
 
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  collection?: Maybe<FirestoreCollectionLike<T, D>>;
-  maxPages?: Maybe<number>;
-  itemsPerPage?: Maybe<number>;
-  constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
+  readonly collection?: Maybe<FirestoreCollectionLike<T, D>>;
+  readonly maxPages?: Maybe<number>;
+  readonly itemsPerPage?: Maybe<number>;
+  readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
+  /**
+   * Whether or not to wait for non-null constraints before beginning the iteration.
+   *
+   * Defaults to true.
+   */
+  readonly waitForNonNullConstraints?: Maybe<boolean>;
 }
 
 export type DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = DbxFirebaseCollectionLoaderAccessor<T>;
@@ -24,10 +30,25 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(undefined);
   protected readonly _itemsPerPage = new BehaviorSubject<Maybe<number>>(undefined);
   protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
+  protected readonly _waitForNonNullConstraints = new BehaviorSubject<Maybe<boolean>>(undefined);
   protected readonly _restart = new Subject<void>();
 
   readonly collection$ = this._collection.pipe(distinctUntilChanged());
-  readonly constraints$ = this._constraints.pipe(distinctUntilChanged());
+  readonly currentConstraints$ = this._constraints.pipe(distinctUntilChanged());
+
+  readonly constraints$ = this._waitForNonNullConstraints.pipe(
+    switchMap((waitForNonNullConstraints) => {
+      let obs: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>> = this.currentConstraints$;
+
+      // defaults to true
+      if (waitForNonNullConstraints !== false) {
+        obs = this.currentConstraints$.pipe(filterMaybe());
+      }
+
+      return obs;
+    }),
+    shareReplay(1)
+  );
 
   readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([this._itemsPerPage.pipe(distinctUntilChanged()), this.constraints$]).pipe(
     map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages }) as FirestoreItemPageIteratorFilter),
@@ -207,6 +228,14 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     this._constraints.next(constraints);
   }
 
+  get waitForNonNullConstraints(): Maybe<boolean> {
+    return this._waitForNonNullConstraints.value;
+  }
+
+  set waitForNonNullConstraints(waitForNonNullConstraints: Maybe<boolean>) {
+    this._waitForNonNullConstraints.next(waitForNonNullConstraints);
+  }
+
   get collection(): Maybe<FirestoreCollectionLike<T, D>> {
     return this._collection.value;
   }
@@ -234,6 +263,10 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
 
   setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
     this.constraints = constraints;
+  }
+
+  setWaitForNonNullConstraints(waitForNonNullConstraints: Maybe<boolean>) {
+    this.waitForNonNullConstraints = waitForNonNullConstraints;
   }
 
   setCollection(firestoreCollection: Maybe<FirestoreCollectionLike<T, D>>) {

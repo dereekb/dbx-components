@@ -1,6 +1,6 @@
 services:
   dbx-components-offline-server:
-    image: nginx:1.21
+    image: nginx:1.27
     ports:
       - '80'
       - '443:443'

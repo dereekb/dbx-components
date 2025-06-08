@@ -13,11 +13,13 @@ import { toObservable } from '@angular/core/rxjs-interop';
 export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements OnDestroy {
   readonly maxPages = model<Maybe<number>>(undefined);
   readonly itemsPerPage = model<Maybe<number>>(undefined);
-  readonly contraints = model<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
+  readonly constraints = model<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
+  readonly waitForNonNullConstraints = model<Maybe<boolean>>(undefined);
 
   private readonly _maxPages = toObservable(this.maxPages).pipe(skipInitialMaybe());
   private readonly _itemsPerPage = toObservable(this.itemsPerPage).pipe(skipInitialMaybe());
-  private readonly _constraints = toObservable(this.contraints).pipe(skipInitialMaybe());
+  private readonly _constraints = toObservable(this.constraints).pipe(skipInitialMaybe());
+  private readonly _waitForNonNullConstraints = toObservable(this.waitForNonNullConstraints).pipe(skipInitialMaybe());
 
   private readonly _store = new BehaviorSubject<Maybe<S>>(undefined);
   private readonly _storeSub = new SubscriptionObject();
@@ -33,6 +35,7 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
       x.setConstraints(this._constraints);
       x.setMaxPages(this._maxPages);
       x.setItemsPerPage(this._itemsPerPage);
+      x.setWaitForNonNullConstraints(this._waitForNonNullConstraints);
     });
   }
 
@@ -61,7 +64,11 @@ export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends
   }
 
   setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
-    this.contraints.set(constraints);
+    this.constraints.set(constraints);
+  }
+
+  setWaitForNonNullConstraints(waitForNonNullConstraints: Maybe<boolean>) {
+    this.waitForNonNullConstraints.set(waitForNonNullConstraints);
   }
 
   next() {

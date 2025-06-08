@@ -1,5 +1,5 @@
 <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="guestbookListRef" dbxTwoColumnSrefShowRight>
-  <dbx-two-block left demoGuestbookCollection>
+  <dbx-two-block left demoGuestbookCollection [constraints]="guestbookConstraints">
     <dbx-two-column-head top></dbx-two-column-head>
     <demo-guestbook-list dbxFirebaseCollectionList dbxListItemModifier [dbxListItemAnchorModifier]="makeGuestbookAnchor">
       <div class="text-center dbx-hint dbx-pb3" end>End of list!</div>

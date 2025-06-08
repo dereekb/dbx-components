@@ -1,5 +1,9 @@
 import { ModelKeyRef } from '@dereekb/util';
 
 export interface ExampleTableData extends ModelKeyRef {
-  name: string;
+  readonly name: string;
+}
+
+export interface ExampleTableGroupData {
+  readonly groupName: string;
 }

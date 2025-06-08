@@ -9,6 +9,7 @@ import { DbxRouteModelIdFromAuthUserIdDirective } from '@dereekb/dbx-core';
 import { AsyncPipe, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
+import { publishedGuestbookEntry } from 'demo-firebase';
 
 @Component({
   selector: 'demo-guestbook-view',
@@ -19,6 +20,8 @@ import { DbxFirebaseCollectionListDirective } from '@dereekb/dbx-firebase';
 export class DemoGuestbookViewComponent implements OnDestroy {
   readonly guestbookStore = inject(GuestbookDocumentStore);
   readonly matDialog = inject(MatDialog);
+
+  readonly entryConstraints = publishedGuestbookEntry();
 
   @ViewChild(GuestbookEntryDocumentStore)
   readonly documentStore!: GuestbookEntryDocumentStore;

@@ -9,9 +9,9 @@ import { type Maybe } from '@dereekb/util';
  * Abstract directive that has an element input.
  */
 @Directive()
-export abstract class AbstractDbxTableElementDirective<T, C = unknown> {
+export abstract class AbstractDbxTableItemDirective<T, C = unknown> {
   readonly tableStore = inject(DbxTableStore<unknown, C, T>);
 
-  readonly element = input<Maybe<T>>();
-  readonly element$ = toObservable(this.element).pipe(filterMaybe(), distinctUntilChanged());
+  readonly item = input<Maybe<T>>();
+  readonly item$ = toObservable(this.item).pipe(filterMaybe(), distinctUntilChanged());
 }

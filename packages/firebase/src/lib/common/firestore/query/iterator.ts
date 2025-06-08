@@ -146,7 +146,7 @@ export type InternalFirestoreItemPageIterationInstance<T> = ItemPageIterationIns
  * @param constraints - Array of query constraints to filter
  * @returns Filtered array with disallowed constraints removed
  */
-export function filterDisallowedFirestoreItemPageIteratorInputContraints(constraints: FirestoreQueryConstraint[]): FirestoreQueryConstraint[] {
+export function filterDisallowedFirestoreItemPageIteratorInputConstraints(constraints: FirestoreQueryConstraint[]): FirestoreQueryConstraint[] {
   const isIllegal = new Set([FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]);
   return constraints.filter((x) => !isIllegal.has(x.type));
 }
@@ -177,7 +177,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
 
             // Add filter constraints
             if (filterConstraints != null) {
-              mergeArraysIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputContraints(asArray(filterConstraints)));
+              mergeArraysIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputConstraints(asArray(filterConstraints)));
             }
 
             // Add cursor
@@ -380,3 +380,9 @@ export function firestoreItemPageIteration<T>(config: FirestoreItemPageIteration
 
   return result;
 }
+
+// MARK: Compat
+/**
+ * @deprecated Use filterDisallowedFirestoreItemPageIteratorInputConstraints instead. Mispelling.
+ */
+export const filterDisallowedFirestoreItemPageIteratorInputContraints = filterDisallowedFirestoreItemPageIteratorInputConstraints;

@@ -1,6 +1,6 @@
 services:
   demo-api-webhook-server:
-    image: nginx:1.21
+    image: nginx:1.27
     ports:
       - '8443:8443'
     volumes:
