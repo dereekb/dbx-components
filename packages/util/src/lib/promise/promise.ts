@@ -216,26 +216,51 @@ export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksI
  */
 export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
   const { taskFactory, sequential, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
+  const defaultNonConcurrentTaskKeyFactory = makeDefaultNonConcurrentTaskKeyFactory();
   const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
 
-  if (!maxParallelTasks && !nonConcurrentTaskKeyFactory) {
-    const defaultNonConcurrentTaskKeyFactory = stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
+  function performAllTasksInUnlimitedParallel(input: I[]): Promise<void> {
+    return Promise.all(input.map((value, i) => taskFactory(value, i, defaultNonConcurrentTaskKeyFactory()))) as unknown as Promise<void>;
+  }
 
+  let result: PerformTasksInParallelFunction<I>;
+
+  if (!maxParallelTasks && !nonConcurrentTaskKeyFactory) {
     // if the max number of parallel tasks is not defined, then run all tasks at once, unless there is a nonConcurrentTaskKeyFactory
-    return async (input: I[]) => {
-      await Promise.all(input.map((value, i) => taskFactory(value, i, defaultNonConcurrentTaskKeyFactory())));
-    };
+    result = performAllTasksInUnlimitedParallel;
   } else {
     const performTasks = performTasksFromFactoryInParallelFunction(config);
 
-    return async (input: I[]) => {
+    /**
+     * Performs the input tasks in parallel using the configured performTasks function.
+     *
+     * @param input The input tasks to perform
+     * @returns A promise that resolves when all tasks have completed
+     */
+    function performTasksWithInput(input: I[]) {
       const taskInputFactory = terminatingFactoryFromArray(
         [input], // all in a single task array to run concurrently
         null
       );
+
       return performTasks(taskInputFactory);
-    };
+    }
+
+    if (maxParallelTasks && !nonConcurrentTaskKeyFactory) {
+      result = (input: I[]) => {
+        // if there is no custom nonConcurrentTaskKeyFactory, then we can just run all tasks at once and skip the overhead of performTasksInParallel if the input has less than the maxParallelTasks
+        if (input.length <= maxParallelTasks) {
+          return performAllTasksInUnlimitedParallel(input);
+        } else {
+          return performTasksWithInput(input);
+        }
+      };
+    } else {
+      result = performTasksWithInput;
+    }
   }
+
+  return result;
 }
 
 export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey> {
@@ -290,7 +315,7 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  * @param config
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
-  const defaultNonConcurrentTaskKeyFactory = stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
+  const defaultNonConcurrentTaskKeyFactory = makeDefaultNonConcurrentTaskKeyFactory();
   const { taskFactory, sequential, waitBetweenTaskInputRequests, nonConcurrentTaskKeyFactory, maxParallelTasks: inputMaxParallelTasks, waitBetweenTasks } = config;
   const maxParallelTasks = inputMaxParallelTasks ?? (sequential ? 1 : undefined);
   const maxPromisesToRunAtOneTime = Math.max(1, maxParallelTasks ?? 1);
@@ -489,4 +514,13 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       });
     });
   };
+}
+
+/**
+ * Creates a default non-concurrent task key factory that simply creates increasing number strings.
+ *
+ * @returns A string factory that generates unique keys for non-concurrent tasks.
+ */
+export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
+  return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }
