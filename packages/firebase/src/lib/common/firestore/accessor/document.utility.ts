@@ -193,7 +193,9 @@ export function getDocumentSnapshotDataPair<D extends FirestoreDocument<any>>(do
  * @returns Promise that resolves to an array of document-snapshot-data triplets in the same order as the input documents
  */
 export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]> {
-  return runAsyncTasksForValues(documents, getDocumentSnapshotDataPair);
+  return runAsyncTasksForValues(documents, getDocumentSnapshotDataPair, {
+    maxParallelTasks: 200 // load up to 200 documents at a time in parallel
+  });
 }
 
 /**
