@@ -1,7 +1,8 @@
 import { type DocumentReference, type DocumentSnapshot, type Transaction as GoogleCloudTransaction, type SetOptions } from '@google-cloud/firestore';
 import { from, type Observable } from 'rxjs';
-import { type WithFieldValue, type UpdateData, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentUpdateParams, type FirestoreDataConverter, type DocumentData, type FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { type WithFieldValue, type UpdateData, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentUpdateParams, type FirestoreDataConverter, type DocumentData, type FirestoreAccessorIncrementUpdate, FirestoreAccessorArrayUpdate } from '@dereekb/firebase';
 import { firestoreServerIncrementUpdateToUpdateData } from './increment';
+import { firestoreServerArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 /**
@@ -57,6 +58,10 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
     return this.update(firestoreServerIncrementUpdateToUpdateData(data), params);
+  }
+
+  arrayUpdate(data: FirestoreAccessorArrayUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
+    return this.update(firestoreServerArrayUpdateToUpdateData(data), params);
   }
 
   update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<void> {

@@ -1,8 +1,9 @@
 import { type DocumentReference, type DocumentSnapshot, type Transaction as FirebaseFirestoreTransaction, type UpdateData, type WithFieldValue } from 'firebase/firestore';
 import { from, type Observable } from 'rxjs';
-import { type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type SetOptions, type DocumentData, type FirestoreDataConverter, assertFirestoreUpdateHasData, type WriteResult, type FirestoreAccessorIncrementUpdate } from '../../common/firestore';
+import { type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type SetOptions, type DocumentData, type FirestoreDataConverter, assertFirestoreUpdateHasData, type WriteResult, type FirestoreAccessorIncrementUpdate, FirestoreAccessorArrayUpdate } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 import { firestoreClientIncrementUpdateToUpdateData } from './increment';
+import { firestoreClientArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 /**
@@ -58,6 +59,10 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<void | WriteResult> {
     return this.update(firestoreClientIncrementUpdateToUpdateData(data));
+  }
+
+  arrayUpdate(data: FirestoreAccessorArrayUpdate<T>): Promise<void | WriteResult> {
+    return this.update(firestoreClientArrayUpdateToUpdateData(data));
   }
 
   update(data: UpdateData<object>): Promise<void> {

@@ -4,3 +4,4 @@ export * from './driver.query';
 export * from './error';
 export * from './firestore';
 export * from './increment';
+export * from './array';

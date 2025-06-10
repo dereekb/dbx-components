@@ -1,8 +1,9 @@
 import { onSnapshot, type DocumentReference, type DocumentSnapshot, type UpdateData, type WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { type Observable } from 'rxjs';
-import { assertFirestoreUpdateHasData, type DocumentData, type FirestoreAccessorIncrementUpdate, type FirestoreDataConverter, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, streamFromOnSnapshot, type WriteResult } from '../../common/firestore';
+import { assertFirestoreUpdateHasData, type DocumentData, FirestoreAccessorArrayUpdate, type FirestoreAccessorIncrementUpdate, type FirestoreDataConverter, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, streamFromOnSnapshot, type WriteResult } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 import { firestoreClientIncrementUpdateToUpdateData } from './increment';
+import { firestoreClientArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -47,6 +48,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<void | WriteResult> {
     return this.update(firestoreClientIncrementUpdateToUpdateData(data));
+  }
+
+  arrayUpdate(data: FirestoreAccessorArrayUpdate<T>): Promise<void | WriteResult> {
+    return this.update(firestoreClientArrayUpdateToUpdateData(data));
   }
 
   update(data: UpdateData<object>): Promise<void> {

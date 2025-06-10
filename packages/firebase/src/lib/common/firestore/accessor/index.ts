@@ -13,3 +13,4 @@ export * from './document';
 export * from './document.utility';
 export * from './document.rxjs';
 export * from './increment';
+export * from './array';
