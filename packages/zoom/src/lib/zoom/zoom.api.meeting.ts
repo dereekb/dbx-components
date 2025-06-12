@@ -1,5 +1,5 @@
 import { ISO8601DateString, Maybe } from '@dereekb/util';
-import { ZoomMeetingType, ZoomRecurrenceInfo, ZoomMeetingSettings, ZoomMeetingAgenda, ZoomMeetingDuration, ZoomMeetingTrackingField, ZoomMeetingTemplateId, ZoomMeetingPassword, ZoomMeeting, ZoomMeetingId, PastZoomMeeting, ZoomMeetingOccurrence, ZoomMeetingOccurrenceId } from './zoom.api.meeting.type';
+import { ZoomMeetingType, ZoomRecurrenceInfo, ZoomMeetingSettings, ZoomMeetingAgenda, ZoomMeetingDuration, ZoomMeetingTrackingField, ZoomMeetingTemplateId, ZoomMeetingPassword, ZoomMeeting, ZoomMeetingId, PastZoomMeeting, ZoomMeetingOccurrenceId } from './zoom.api.meeting.type';
 import { ZoomContext } from './zoom.config';
 import { mapToZoomPageResult, zoomFetchPageFactory, ZoomPageFilter, ZoomPageResult } from '../zoom.api.page';
 import { FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';

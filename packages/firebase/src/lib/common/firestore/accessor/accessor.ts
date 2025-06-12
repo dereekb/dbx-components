@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { ArrayOrValue, filterUndefinedValues, type KeyValueTransformMap, type Maybe, objectHasNoKeys } from '@dereekb/util';
+import { filterUndefinedValues, type KeyValueTransformMap, type Maybe, objectHasNoKeys } from '@dereekb/util';
 import { type WriteResult, type SnapshotOptions, type DocumentReference, type DocumentSnapshot, type UpdateData, type WithFieldValue, type PartialWithFieldValue, type SetOptions, type Precondition, type DocumentData, type FirestoreDataConverter } from '../types';
 import { from, map, type Observable, type OperatorFunction } from 'rxjs';
 import { type DocumentReferenceRef } from '../reference';
