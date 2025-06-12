@@ -41,6 +41,8 @@ export type ZoomRegistrationUrl = string;
  */
 export type ZoomMeetingOccurrenceStatus = 'available' | 'deleted';
 
+export type ZoomMeetingOccurrenceId = string;
+
 export interface ZoomMeetingOccurrence {
   /**
    * The meeting duration in minutes.
@@ -51,7 +53,7 @@ export interface ZoomMeetingOccurrence {
    *
    * Recurring webinars can have a maximum of 50 occurrences.
    */
-  readonly occurrence_id: string;
+  readonly occurrence_id: ZoomMeetingOccurrenceId;
   /**
    * The start time of the meeting.
    */

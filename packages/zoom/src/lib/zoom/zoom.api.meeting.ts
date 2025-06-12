@@ -1,5 +1,5 @@
-import { ISO8601DateString } from '@dereekb/util';
-import { ZoomMeetingType, ZoomRecurrenceInfo, ZoomMeetingSettings, ZoomMeetingAgenda, ZoomMeetingDuration, ZoomMeetingTrackingField, ZoomMeetingTemplateId, ZoomMeetingPassword, ZoomMeeting, ZoomMeetingId, PastZoomMeeting } from './zoom.api.meeting.type';
+import { ISO8601DateString, Maybe } from '@dereekb/util';
+import { ZoomMeetingType, ZoomRecurrenceInfo, ZoomMeetingSettings, ZoomMeetingAgenda, ZoomMeetingDuration, ZoomMeetingTrackingField, ZoomMeetingTemplateId, ZoomMeetingPassword, ZoomMeeting, ZoomMeetingId, PastZoomMeeting, ZoomMeetingOccurrence, ZoomMeetingOccurrenceId } from './zoom.api.meeting.type';
 import { ZoomContext } from './zoom.config';
 import { mapToZoomPageResult, zoomFetchPageFactory, ZoomPageFilter, ZoomPageResult } from '../zoom.api.page';
 import { FetchPageFactory, makeUrlSearchParams } from '@dereekb/util/fetch';
@@ -158,6 +158,39 @@ export function createMeetingForUser(context: ZoomContext): (input: CreateMeetin
       body: JSON.stringify(input.template)
     });
   };
+}
+
+// MARK: Update Meeting
+/**
+ * Update Template Notes:
+ *
+ * The start_time value must be a future date. If the value is omitted or a date is in the past, the API ignores this value and does not update any recurring meetings.
+ * The recurrence object is required only when updating the entire series of a recurring meeting with type=8.
+ */
+export type UpdateMeetingTemplate = Partial<ZoomMeeting>;
+
+export interface UpdateMeetingInput {
+  readonly meetingId: ZoomMeetingId;
+  /**
+   * Specific occurrence to update.
+   */
+  readonly occurrence_id?: Maybe<ZoomMeetingOccurrenceId>;
+  readonly template: UpdateMeetingTemplate;
+}
+
+export type UpdateMeetingResponse = unknown;
+
+export type UpdateMeetingFunction = (input: UpdateMeetingInput) => Promise<UpdateMeetingResponse>;
+
+/**
+ * https://developers.zoom.us/docs/api/meetings/#tag/meetings/PUT/meetings/{meetingId}
+ */
+export function updateMeeting(context: ZoomContext): UpdateMeetingFunction {
+  return (input) =>
+    context.fetchJson(`/meetings/${input.meetingId}?${makeUrlSearchParams({ occurrence_id: input.occurrence_id })}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input.template)
+    });
 }
 
 // MARK: Delete Meeting
