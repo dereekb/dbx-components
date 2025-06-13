@@ -1,7 +1,8 @@
 import { type DocumentReference, type WriteBatch as GoogleCloudWriteBatch, type DocumentSnapshot } from '@google-cloud/firestore';
 import { from, type Observable } from 'rxjs';
-import { type WithFieldValue, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams, type UpdateData, type DocumentData, type FirestoreDataConverter, type FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { type WithFieldValue, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams, type UpdateData, type DocumentData, type FirestoreDataConverter, type FirestoreAccessorIncrementUpdate, FirestoreAccessorArrayUpdate } from '@dereekb/firebase';
 import { firestoreServerIncrementUpdateToUpdateData } from './increment';
+import { firestoreServerArrayUpdateToUpdateData } from './array';
 
 // MARK: Accessor
 /**
@@ -10,7 +11,10 @@ import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
   private readonly _batch: GoogleCloudWriteBatch;
 
-  constructor(batch: GoogleCloudWriteBatch, readonly documentRef: DocumentReference<T>) {
+  constructor(
+    batch: GoogleCloudWriteBatch,
+    readonly documentRef: DocumentReference<T>
+  ) {
     this._batch = batch;
   }
 
@@ -51,6 +55,10 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 
   increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
     return this.update(firestoreServerIncrementUpdateToUpdateData(data), params);
+  }
+
+  arrayUpdate(data: FirestoreAccessorArrayUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
+    return this.update(firestoreServerArrayUpdateToUpdateData(data), params);
   }
 
   update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<void> {

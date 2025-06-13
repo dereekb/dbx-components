@@ -137,6 +137,42 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             });
           });
         });
+
+        describe('arrayUpdate()', () => {
+          describe('union', () => {
+            it('should add to the array', async () => {
+              await itemDocument.accessor.update({
+                tags: ['a']
+              });
+
+              await itemDocument.arrayUpdate({
+                union: {
+                  tags: ['b', 'c']
+                }
+              });
+
+              const result = await itemDocument.snapshotData();
+              expect(result?.tags).toEqual(['a', 'b', 'c']);
+            });
+          });
+
+          describe('remove', () => {
+            it('should remove from the array', async () => {
+              await itemDocument.accessor.update({
+                tags: ['a', 'b', 'c']
+              });
+
+              await itemDocument.arrayUpdate({
+                remove: {
+                  tags: ['a', 'b']
+                }
+              });
+
+              const result = await itemDocument.snapshotData();
+              expect(result?.tags).toEqual(['c']);
+            });
+          });
+        });
       });
 
       describe('Subcollections', () => {

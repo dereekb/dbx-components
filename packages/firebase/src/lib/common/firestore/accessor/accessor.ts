@@ -38,6 +38,33 @@ export interface FirestoreDocumentUpdateParams {
 export type FirestoreAccessorIncrementUpdate<T> = Partial<KeyValueTransformMap<PickProperties<T, Maybe<number> | number>, number>>;
 
 /**
+ * Type of change to perform on an array field.
+ */
+export type FirestoreAccessorArrayFieldUpdateChangeType = 'union' | 'remove';
+
+/**
+ * Used for performing array operations on array fields.
+ *
+ * Do not provide both a union and remove for the same field. If both a union and remove are provided for a field, only one update (union or remove) will be used. The behavior is not defined.
+ *
+ * Represents a partial object where keys correspond to array fields in the document
+ * and values represent the amount to increment each field by.
+ *
+ * @template T - The document type containing array field to update
+ */
+export type FirestoreAccessorArrayUpdate<T> = Partial<Record<FirestoreAccessorArrayFieldUpdateChangeType, FirestoreAccessorArrayFieldUpdate<T>>>;
+
+/**
+ * Used for performing array operations on array fields.
+ *
+ * Represents a partial object where keys correspond to array fields in the document
+ * and values represent the amount to increment each field by.
+ *
+ * @template T - The document type containing array field to update
+ */
+export type FirestoreAccessorArrayFieldUpdate<T> = Partial<KeyValueTransformMap<PickProperties<T, Maybe<Array<string>> | Array<string>>, Array<string>>> | Partial<KeyValueTransformMap<PickProperties<T, Maybe<Array<number>> | Array<number>>, Array<number>>>;
+
+/**
  * Interface for accessing and modifying a Firestore document.
  *
  * Provides methods for reading, creating, updating, and deleting document data,
@@ -87,7 +114,9 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
    * If the input data is undefined or an empty object, it will fail.
    * If the document doesn't exist, it will fail.
    *
-   * @param data
+   * @param data - The update data to apply
+   * @param params - Optional parameters for the update operation
+   * @returns A Promise that resolves when the update operation completes
    */
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
   /**
@@ -96,9 +125,20 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
    * If the input data is undefined or an empty object, it will fail.
    * If the document doesn't exist, it will fail.
    *
-   * @param data
+   * @param data - The increment update to apply
+   * @param params - Optional parameters for the update operation
+   * @returns A Promise that resolves when the update operation completes
    */
   increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
+
+  /**
+   * Updates an array field in the document.
+   *
+   * @param data - The array update to apply
+   * @param params - Optional parameters for the update operation
+   * @returns A Promise that resolves when the update operation completes
+   */
+  arrayUpdate(data: FirestoreAccessorArrayUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
 }
 
 /**

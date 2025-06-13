@@ -1,6 +1,6 @@
 import { type Observable } from 'rxjs';
 import { type DocumentData, type DocumentReference, type DocumentSnapshot, type FirestoreDataConverter, type PartialWithFieldValue, type SetOptions, type UpdateData, type WithFieldValue, type WriteResult } from '../types';
-import { type FirestoreAccessorIncrementUpdate, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams } from './accessor';
+import { FirestoreAccessorArrayUpdate, type FirestoreAccessorIncrementUpdate, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams } from './accessor';
 
 // MARK: Abstract Wrapper
 /**
@@ -140,6 +140,17 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
    */
   increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
     return this.accessor.increment(data, params);
+  }
+
+  /**
+   * Updates array fields in the document.
+   *
+   * @param data - The array update to apply
+   * @param params - Optional parameters for the update operation
+   * @returns A Promise that resolves when the update operation completes
+   */
+  arrayUpdate(data: FirestoreAccessorArrayUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
+    return this.accessor.arrayUpdate(data, params);
   }
 }
 
