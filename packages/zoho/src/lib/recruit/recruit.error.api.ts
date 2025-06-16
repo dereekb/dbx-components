@@ -5,6 +5,13 @@ import { ZohoRecruitModuleName, ZohoRecruitRecordId } from './recruit';
 import { ZohoDataArrayResultRef } from '../zoho.api.page';
 
 /**
+ * Error code for when two records are already associated with each other.
+ *
+ * Example being a candidate and a job opening are already associated.
+ */
+export const ZOHO_RECRUIT_ALREADY_ASSOCIATED_ERROR_CODE = 'ALREADY_ASSOCIATED';
+
+/**
  * Thrown when a record with the given id has no content. Typically also means it does not exist.
  */
 export class ZohoRecruitRecordNoContentError extends BaseError {

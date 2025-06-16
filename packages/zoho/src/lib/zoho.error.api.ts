@@ -171,6 +171,11 @@ export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseDa
 export const ZOHO_INTERNAL_ERROR_CODE = 'INTERNAL_ERROR';
 
 /**
+ * Error code for when a failure occured for the given action
+ */
+export const ZOHO_FAILURE_ERROR_CODE = 'FAILURE';
+
+/**
  * Error when the Zoho API returns an internal error
  */
 export class ZohoInternalError extends ZohoServerFetchResponseError {}

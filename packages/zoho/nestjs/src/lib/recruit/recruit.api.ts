@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoRecruit, ZohoRecruitContext, createNotes, createNotesForRecord, deleteNotes, executeRestApiFunction, getNotesForRecord, getNotesForRecordPageFactory, getRecordById, getRecords, insertRecord, searchRecords, searchRecordsPageFactory, updateRecord, upsertRecord, zohoRecruitFactory } from '@dereekb/zoho';
+import { ZohoRecruit, ZohoRecruitContext, associateCandidateRecordsWithJobOpenings, createNotes, createNotesForRecord, deleteNotes, executeRestApiFunction, getNotesForRecord, getNotesForRecordPageFactory, getRecordById, getRecords, insertRecord, searchRecords, searchRecordsPageFactory, updateRecord, upsertRecord, zohoRecruitFactory } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -76,5 +76,9 @@ export class ZohoRecruitApi {
 
   get executeRestApiFunction() {
     return executeRestApiFunction(this.recruitContext);
+  }
+
+  get associateCandidateRecordsWithJobOpenings() {
+    return associateCandidateRecordsWithJobOpenings(this.recruitContext);
   }
 }

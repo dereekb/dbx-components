@@ -31,6 +31,16 @@ export type ZohoRecruitRestFunctionApiName = string;
 export type ZohoRecruitId = string;
 
 /**
+ * Identifier of a Candidate record in Zoho Recruit.
+ */
+export type ZohoRecruitCandidateId = string;
+
+/**
+ * Identifier of a Job Opening record in Zoho Recruit.
+ */
+export type ZohoRecruitJobOpeningId = string;
+
+/**
  * Zoho Recruit record id
  *
  * Example "576214000000569001"

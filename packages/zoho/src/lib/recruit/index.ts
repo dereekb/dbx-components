@@ -1,4 +1,5 @@
 export * from './recruit.api';
+export * from './recruit.api.candidates';
 export * from './recruit.config';
 export * from './recruit.criteria';
 export * from './recruit.criteria.util';

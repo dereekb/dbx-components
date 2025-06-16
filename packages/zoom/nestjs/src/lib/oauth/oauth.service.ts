@@ -128,18 +128,22 @@ export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: Zoo
  *
  * @returns
  */
-export function memoryZoomOAuthAccessTokenCacheService(existingToken?: Maybe<ZoomAccessToken>): ZoomOAuthAccessTokenCacheService {
+export function memoryZoomOAuthAccessTokenCacheService(existingToken?: Maybe<ZoomAccessToken>, logAccessToConsole?: boolean): ZoomOAuthAccessTokenCacheService {
   let token: Maybe<ZoomAccessToken> = existingToken;
 
   function loadZoomAccessTokenCache(): ZoomAccessTokenCache {
     const accessTokenCache: ZoomAccessTokenCache = {
       loadCachedToken: async function (): Promise<Maybe<ZoomAccessToken>> {
-        console.log('retrieving access token from memory: ', { token });
+        if (logAccessToConsole) {
+          console.log('retrieving access token from memory: ', { token });
+        }
         return token;
       },
       updateCachedToken: async function (accessToken: ZoomAccessToken): Promise<void> {
         token = accessToken;
-        console.log('updating access token in memory: ', { accessToken });
+        if (logAccessToConsole) {
+          console.log('updating access token in memory: ', { accessToken });
+        }
       }
     };
 
