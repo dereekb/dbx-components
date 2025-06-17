@@ -108,19 +108,23 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
  *
  * @returns
  */
-export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAccountsAccessTokenCacheRecord): ZohoAccountsAccessTokenCacheService {
+export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAccountsAccessTokenCacheRecord, logAccessToConsole?: boolean): ZohoAccountsAccessTokenCacheService {
   const tokens: ZohoAccountsAccessTokenCacheRecord = existingCache ?? {};
 
   function loadZohoAccessTokenCache(service: ZohoServiceAccessTokenKey): ZohoAccessTokenCache {
     const accessTokenCache: ZohoAccessTokenCache = {
       loadCachedToken: async function (): Promise<Maybe<ZohoAccessToken>> {
         const token = tokens[service];
-        console.log('retrieving access token from memory: ', { token, service });
+        if (logAccessToConsole) {
+          console.log('retrieving access token from memory: ', { token, service });
+        }
         return token;
       },
       updateCachedToken: async function (accessToken: ZohoAccessToken): Promise<void> {
         tokens[service] = accessToken;
-        console.log('updating access token in memory: ', { accessToken, service });
+        if (logAccessToConsole) {
+          console.log('updating access token in memory: ', { accessToken, service });
+        }
       }
     };
 

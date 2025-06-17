@@ -14,6 +14,11 @@ export type ZohoRecruitModuleName = string;
 export const ZOHO_RECRUIT_CANDIDATES_MODULE = 'Candidates';
 
 /**
+ * Job Openings module name
+ */
+export const ZOHO_RECRUIT_JOB_OPENINGS_MODULE = 'Job_Openings';
+
+/**
  * Contains a reference to a module.
  */
 export interface ZohoRecruitModuleNameRef {
@@ -29,6 +34,16 @@ export type ZohoRecruitRestFunctionApiName = string;
  * An identifier in Zoho Recruit.
  */
 export type ZohoRecruitId = string;
+
+/**
+ * Identifier of a Candidate record in Zoho Recruit.
+ */
+export type ZohoRecruitCandidateId = string;
+
+/**
+ * Identifier of a Job Opening record in Zoho Recruit.
+ */
+export type ZohoRecruitJobOpeningId = string;
 
 /**
  * Zoho Recruit record id
@@ -209,6 +224,16 @@ export type ZohoRecruitNoteFileSize = number;
 export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId {}
 
 export type ZohoRecruitRecordNote = ZohoRecruitNote;
+
+/**
+ * The posting title of a job opening.
+ */
+export type ZohoRecruitJobOpeningPostingTitle = string;
+
+/**
+ * The status of a candidate.
+ */
+export type ZohoRecruitCandidateStatus = string;
 
 // MARK: Compat
 /**

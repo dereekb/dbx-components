@@ -63,7 +63,7 @@ export type ZohoRecruitUpsertSingleRecordFunction = <T>(input: ZohoRecruitUpsert
  */
 function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoRecruitUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoRecruitUpdateRecordInput<T>) =>
-    context.fetchJson<ZohoRecruitUpdateRecordResponse>(`/v2/${module}${fetchUrlPrefix}`, zohoRecruitApiFetchJsonInput(fetchMethod, { data: asArray(data) })).then((x) => {
+    context.fetchJson<ZohoRecruitUpdateRecordResponse>(`/v2/${module}${fetchUrlPrefix}`, zohoRecruitApiFetchJsonInput(fetchMethod, { data: asArray(data) })).then((x: ZohoRecruitUpdateRecordResponse) => {
       const isInputMultipleItems = Array.isArray(data);
       const result = zohoRecruitMultiRecordResult<Partial<T>, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(data), x.data);
 
@@ -433,14 +433,20 @@ export function zohoRecruitApiFetchJsonInput(method: string, body?: Maybe<FetchJ
 }
 
 // MARK: Results
-export type ZohoRecruitChangeObjectResponse<T extends ZohoRecruitChangeObjectResponseEntry = ZohoRecruitChangeObjectResponseEntry> = ZohoDataArrayResultRef<T>;
-export type ZohoRecruitChangeObjectResponseEntry<E extends ZohoRecruitChangeObjectResponseSuccessEntry = ZohoRecruitChangeObjectResponseSuccessEntry> = E | ZohoRecruitChangeObjectResponseErrorEntry;
+export type ZohoRecruitChangeObjectLikeResponse<T extends ZohoRecruitChangeObjectLikeResponseEntry = ZohoRecruitChangeObjectLikeResponseEntry> = ZohoDataArrayResultRef<T>;
+export type ZohoRecruitChangeObjectLikeResponseEntry<E extends ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta = ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta> = E | ZohoRecruitChangeObjectResponseErrorEntry;
 
-export interface ZohoRecruitChangeObjectResponseSuccessEntry<D extends ZohoRecruitChangeObjectDetails = ZohoRecruitChangeObjectDetails> {
+export interface ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta {
   readonly code: ZohoServerSuccessCode;
-  readonly details: D;
   readonly status: ZohoServerSuccessStatus;
   readonly message: string;
+}
+
+export type ZohoRecruitChangeObjectResponse<T extends ZohoRecruitChangeObjectResponseEntry = ZohoRecruitChangeObjectResponseEntry> = ZohoRecruitChangeObjectLikeResponse<T>;
+export type ZohoRecruitChangeObjectResponseEntry<E extends ZohoRecruitChangeObjectResponseSuccessEntry = ZohoRecruitChangeObjectResponseSuccessEntry> = ZohoRecruitChangeObjectLikeResponseEntry<E>;
+
+export interface ZohoRecruitChangeObjectResponseSuccessEntry<D extends ZohoRecruitChangeObjectDetails = ZohoRecruitChangeObjectDetails> extends ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta {
+  readonly details: D;
 }
 
 export interface ZohoRecruitChangeObjectResponseErrorEntry extends ZohoServerErrorDataWithDetails {
