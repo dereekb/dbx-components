@@ -1,5 +1,5 @@
 {
-  "version": "12.1.10",
+  "version": "12.1.11",
   "dependencies": {
     "mailgun.js": "^12.0.0"
   },
