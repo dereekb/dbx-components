@@ -1,5 +1,28 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ZohoRecruit, ZohoRecruitContext, associateCandidateRecordsWithJobOpenings, createNotes, createNotesForRecord, deleteNotes, executeRestApiFunction, getNotesForRecord, getNotesForRecordPageFactory, getRecordById, getRecords, insertRecord, searchRecords, searchRecordsPageFactory, updateRecord, upsertRecord, zohoRecruitFactory } from '@dereekb/zoho';
+import {
+  ZohoRecruit,
+  ZohoRecruitContext,
+  ZohoRecruitRecord,
+  associateCandidateRecordsWithJobOpenings,
+  createNotes,
+  createNotesForRecord,
+  deleteNotes,
+  executeRestApiFunction,
+  getNotesForRecord,
+  getNotesForRecordPageFactory,
+  getRecordById,
+  getRecords,
+  insertRecord,
+  searchCandidateAssociatedJobOpeningRecords,
+  searchCandidateAssociatedJobOpeningRecordsPageFactory,
+  searchJobOpeningAssociatedCandidateRecords,
+  searchJobOpeningAssociatedCandidateRecordsPageFactory,
+  searchRecords,
+  searchRecordsPageFactory,
+  updateRecord,
+  upsertRecord,
+  zohoRecruitFactory
+} from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -80,5 +103,21 @@ export class ZohoRecruitApi {
 
   get associateCandidateRecordsWithJobOpenings() {
     return associateCandidateRecordsWithJobOpenings(this.recruitContext);
+  }
+
+  get searchCandidateAssociatedJobOpeningRecords() {
+    return searchCandidateAssociatedJobOpeningRecords(this.recruitContext);
+  }
+
+  get searchCandidateAssociatedJobOpeningRecordsPageFactory() {
+    return searchCandidateAssociatedJobOpeningRecordsPageFactory(this.recruitContext);
+  }
+
+  get searchJobOpeningAssociatedCandidateRecords() {
+    return searchJobOpeningAssociatedCandidateRecords(this.recruitContext);
+  }
+
+  get searchJobOpeningAssociatedCandidateRecordsPageFactory() {
+    return searchJobOpeningAssociatedCandidateRecordsPageFactory(this.recruitContext);
   }
 }

@@ -27,6 +27,21 @@ export interface ZohoPageResult<T, I extends ZohoPageResultInfo = ZohoPageResult
 }
 
 /**
+ * Returns an empty ZohoPageResult that is typed to R and has no more records/results.
+ */
+export function emptyZohoPageResult<T = unknown>(): ZohoPageResult<T> {
+  return {
+    data: [],
+    info: {
+      page: 1,
+      per_page: 100, // default value
+      count: 0,
+      more_records: false
+    }
+  };
+}
+
+/**
  * Page information within a ZohoPageResult
  */
 export interface ZohoPageResultInfo {

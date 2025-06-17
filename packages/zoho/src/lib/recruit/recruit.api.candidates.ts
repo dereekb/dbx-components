@@ -1,9 +1,10 @@
 import { ZohoRecruitContext } from './recruit.config';
 import { ArrayOrValue, asArray, separateValues } from '@dereekb/util';
-import { ZohoRecruitJobOpeningId, ZohoRecruitCandidateId } from './recruit';
-import { zohoRecruitApiFetchJsonInput, ZohoRecruitChangeObjectLikeResponse, ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, ZohoRecruitChangeObjectResponseErrorEntry, zohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResultEntry } from './recruit.api';
+import { ZohoRecruitJobOpeningId, ZohoRecruitCandidateId, ZOHO_RECRUIT_CANDIDATES_MODULE, ZohoRecruitCandidateStatus, ZohoRecruitJobOpeningPostingTitle, ZohoRecruitModuleNameRef, ZohoRecruitRecord, ZOHO_RECRUIT_JOB_OPENINGS_MODULE } from './recruit';
+import { zohoRecruitApiFetchJsonInput, ZohoRecruitChangeObjectLikeResponse, ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, ZohoRecruitChangeObjectResponseErrorEntry, ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResultEntry, ZohoRecruitSearchRecordsResponse, zohoRecruitUrlSearchParamsMinusIdAndModule } from './recruit.api';
 import { ZOHO_FAILURE_ERROR_CODE, ZohoServerErrorDataWithDetails } from '../zoho.error.api';
 import { ZOHO_RECRUIT_ALREADY_ASSOCIATED_ERROR_CODE } from './recruit.error.api';
+import { ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from '../zoho.api.page';
 
 // MARK: Associate Candidates Record
 export type ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInput = ArrayOrValue<ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInputData>;
@@ -58,7 +59,7 @@ export type ZohoRecruitAssociateCandidateRecordsWithJobOpeningsFunction = (input
  */
 export function associateCandidateRecordsWithJobOpenings(context: ZohoRecruitContext): ZohoRecruitAssociateCandidateRecordsWithJobOpeningsFunction {
   return (input: ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInput) =>
-    context.fetchJson<ZohoRecruitAssociateCandidateRecordsWithJobOpeningsResponse>(`/v2/Candidates/actions/associate`, zohoRecruitApiFetchJsonInput('PUT', { data: asArray(input) })).then((x: ZohoRecruitAssociateCandidateRecordsWithJobOpeningsResponse) => {
+    context.fetchJson<ZohoRecruitAssociateCandidateRecordsWithJobOpeningsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/associate`, zohoRecruitApiFetchJsonInput('PUT', { data: asArray(input) })).then((x: ZohoRecruitAssociateCandidateRecordsWithJobOpeningsResponse) => {
       const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
       const result = zohoRecruitMultiRecordResult<ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInput, ZohoRecruitAssociateCandidateRecordsWithJobOpeningsSuccessEntry, ZohoRecruitAssociateCandidateRecordsWithJobOpeningsErrorEntry>(resultInputMap, x.data);
 
@@ -73,4 +74,62 @@ export function associateCandidateRecordsWithJobOpenings(context: ZohoRecruitCon
         allErrorItems: result.errorItems
       };
     });
+}
+
+// MARK: Search Associated Records
+export interface ZohoRecruitSearchAssociatedRecordsInput extends ZohoRecruitModuleNameRef, ZohoRecruitGetRecordsPageFilter {
+  readonly id: ZohoRecruitCandidateId | ZohoRecruitJobOpeningId;
+  /**
+   * Posting title to filter associated Job Openings by
+   */
+  readonly posting_title?: ZohoRecruitJobOpeningPostingTitle;
+  /**
+   * Candidate statuses to filter associated Candidates by
+   */
+  readonly candidate_statuses?: ZohoRecruitCandidateStatus;
+}
+
+export interface ZohoRecruitSearchAssociatedRecordsResponse<T = ZohoRecruitRecord> extends ZohoRecruitSearchRecordsResponse<T> {}
+export type ZohoRecruitSearchAssociatedRecordsFunction<R extends ZohoRecruitSearchAssociatedRecordsResponse> = (input: ZohoRecruitSearchAssociatedRecordsInput) => Promise<R>;
+export function searchAssociatedRecords<R extends ZohoRecruitSearchAssociatedRecordsResponse>(context: ZohoRecruitContext): ZohoRecruitSearchAssociatedRecordsFunction<R> {
+  return (input: ZohoRecruitSearchAssociatedRecordsInput) => {
+    return context.fetchJson<R | null>(`/v2/${input.module}/${input.id}/associate?${zohoRecruitUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => {
+      const result: R = x ?? (emptyZohoPageResult<R['data']['0']>() as R);
+      return result;
+    });
+  };
+}
+
+export type ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsInput = Omit<ZohoRecruitSearchAssociatedRecordsInput, 'module' | 'candidate_statuses'>;
+export type ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsFunction<T extends ZohoRecruitRecord> = (input: ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsInput) => Promise<ZohoRecruitSearchAssociatedRecordsResponse<T>>;
+
+export function searchCandidateAssociatedJobOpeningRecords<T extends ZohoRecruitRecord>(context: ZohoRecruitContext): ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsFunction<T> {
+  const searchAssociatedRecordsFactory = searchAssociatedRecords<ZohoRecruitSearchAssociatedRecordsResponse<T>>(context);
+  return (input: ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsInput) => {
+    return searchAssociatedRecordsFactory({
+      ...input,
+      module: ZOHO_RECRUIT_CANDIDATES_MODULE
+    });
+  };
+}
+
+export function searchCandidateAssociatedJobOpeningRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {
+  return zohoFetchPageFactory(searchCandidateAssociatedJobOpeningRecords<T>(context));
+}
+
+export type ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsInput = Omit<ZohoRecruitSearchAssociatedRecordsInput, 'module' | 'posting_title'>;
+export type ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsFunction<T extends ZohoRecruitRecord> = (input: ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsInput) => Promise<ZohoRecruitSearchAssociatedRecordsResponse<T>>;
+
+export function searchJobOpeningAssociatedCandidateRecords<T extends ZohoRecruitRecord>(context: ZohoRecruitContext, jobOpeningModuleName = ZOHO_RECRUIT_JOB_OPENINGS_MODULE): ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsFunction<T> {
+  const searchAssociatedRecordsFactory = searchAssociatedRecords<ZohoRecruitSearchAssociatedRecordsResponse<T>>(context);
+  return (input: ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsInput) => {
+    return searchAssociatedRecordsFactory({
+      ...input,
+      module: jobOpeningModuleName
+    });
+  };
+}
+
+export function searchJobOpeningAssociatedCandidateRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {
+  return zohoFetchPageFactory(searchJobOpeningAssociatedCandidateRecords<T>(context));
 }
