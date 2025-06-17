@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   ZohoRecruit,
   ZohoRecruitContext,
-  ZohoRecruitRecord,
   associateCandidateRecordsWithJobOpenings,
   createNotes,
   createNotesForRecord,

@@ -4,7 +4,7 @@ import { ZohoRecruitJobOpeningId, ZohoRecruitCandidateId, ZOHO_RECRUIT_CANDIDATE
 import { zohoRecruitApiFetchJsonInput, ZohoRecruitChangeObjectLikeResponse, ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, ZohoRecruitChangeObjectResponseErrorEntry, ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResult, ZohoRecruitMultiRecordResultEntry, ZohoRecruitSearchRecordsResponse, zohoRecruitUrlSearchParamsMinusIdAndModule } from './recruit.api';
 import { ZOHO_FAILURE_ERROR_CODE, ZohoServerErrorDataWithDetails } from '../zoho.error.api';
 import { ZOHO_RECRUIT_ALREADY_ASSOCIATED_ERROR_CODE } from './recruit.error.api';
-import { ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from '../zoho.api.page';
+import { emptyZohoPageResult, zohoFetchPageFactory } from '../zoho.api.page';
 
 // MARK: Associate Candidates Record
 export type ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInput = ArrayOrValue<ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInputData>;
@@ -89,7 +89,7 @@ export interface ZohoRecruitSearchAssociatedRecordsInput extends ZohoRecruitModu
   readonly candidate_statuses?: ZohoRecruitCandidateStatus;
 }
 
-export interface ZohoRecruitSearchAssociatedRecordsResponse<T = ZohoRecruitRecord> extends ZohoRecruitSearchRecordsResponse<T> {}
+export type ZohoRecruitSearchAssociatedRecordsResponse<T = ZohoRecruitRecord> = ZohoRecruitSearchRecordsResponse<T>
 export type ZohoRecruitSearchAssociatedRecordsFunction<R extends ZohoRecruitSearchAssociatedRecordsResponse> = (input: ZohoRecruitSearchAssociatedRecordsInput) => Promise<R>;
 export function searchAssociatedRecords<R extends ZohoRecruitSearchAssociatedRecordsResponse>(context: ZohoRecruitContext): ZohoRecruitSearchAssociatedRecordsFunction<R> {
   return (input: ZohoRecruitSearchAssociatedRecordsInput) => {
