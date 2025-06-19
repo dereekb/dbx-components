@@ -6,6 +6,7 @@ import {
   createNotes,
   createNotesForRecord,
   deleteNotes,
+  deleteRecord,
   executeRestApiFunction,
   getNotesForRecord,
   getNotesForRecordPageFactory,
@@ -58,6 +59,10 @@ export class ZohoRecruitApi {
 
   get updateRecord() {
     return updateRecord(this.recruitContext);
+  }
+
+  get deleteRecord() {
+    return deleteRecord(this.recruitContext);
   }
 
   get getRecordById() {

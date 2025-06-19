@@ -13,11 +13,21 @@ export interface ZohoServerErrorResponseData {
  */
 export const ZOHO_SUCCESS_CODE = 'SUCCESS';
 
+/**
+ * Lowercase status code
+ */
+export const ZOHO_SUCCESS_STATUS = 'success';
+
+/**
+ * Set in the status field
+ */
+export const ZOHO_ERROR_STATUS = 'error';
+
 export type ZohoServerSuccessCode = typeof ZOHO_SUCCESS_CODE;
-export type ZohoServerSuccessStatus = 'success';
+export type ZohoServerSuccessStatus = typeof ZOHO_SUCCESS_STATUS;
 
 export type ZohoServerErrorCode = string;
-export type ZohoServerErrorStatus = 'error';
+export type ZohoServerErrorStatus = typeof ZOHO_ERROR_STATUS;
 
 /**
  * Zoho Server Error Data
