@@ -19,7 +19,8 @@ import {
   ZOHO_RECRUIT_CANDIDATES_MODULE,
   ZohoServerFetchResponseError,
   ZohoRecruitUpdateRecordData,
-  ZohoRecruitUpsertRecordData
+  ZohoRecruitUpsertRecordData,
+  ZOHO_ERROR_STATUS
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
@@ -543,6 +544,51 @@ describe('recruit.api', () => {
                 expect(result.errorItems[0].result.code).toBe(ZOHO_INVALID_DATA_ERROR_CODE);
                 expect(result.errorItems[1].result.code).toBe(ZOHO_DUPLICATE_DATA_ERROR_CODE);
               });
+            });
+          });
+
+          describe('delete', () => {
+            let testCandidateRecordId: ZohoRecruitRecordId;
+
+            describe('exists', () => {
+              beforeEach(async () => {
+                const createNumber = randomNumber({ min: 1000000000000, max: 10000000000000 });
+
+                const result = await api.insertRecord<TestCandidate>({
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  data: {
+                    First_Name: `Delete_${createNumber}`,
+                    Last_Name: 'Candidate',
+                    Email: `delete+${createNumber + 1}@${TEST_ACCOUNT_INSERT_EXPORT_SUFFIX}`
+                  }
+                });
+
+                testCandidateRecordId = result.id;
+              });
+
+              it('should delete a record', async () => {
+                const deleteResult = await api.deleteRecord({
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  ids: testCandidateRecordId
+                });
+
+                expect(deleteResult.data).toHaveLength(1);
+                expect(deleteResult.successItems).toHaveLength(1);
+                expect(deleteResult.successItems[0].details.id).toBe(testCandidateRecordId);
+              });
+            });
+
+            it('should be successful but return an error for the failed delete', async () => {
+              const deleteResult = await api.deleteRecord({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                ids: '12345'
+              });
+
+              expect(deleteResult.data).toHaveLength(1);
+              expect(deleteResult.errorItems).toHaveLength(1);
+              expect(deleteResult.errorItems[0].code).toBe(ZOHO_INVALID_DATA_ERROR_CODE);
+              expect(deleteResult.errorItems[0].message).toBe('record not deleted');
+              expect(deleteResult.errorItems[0].status).toBe(ZOHO_ERROR_STATUS);
             });
           });
 
