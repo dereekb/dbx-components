@@ -20,7 +20,6 @@ import {
   ZohoServerFetchResponseError,
   ZohoRecruitUpdateRecordData,
   ZohoRecruitUpsertRecordData,
-  ZOHO_FAILURE_ERROR_CODE,
   ZOHO_ERROR_STATUS
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
