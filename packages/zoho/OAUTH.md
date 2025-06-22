@@ -22,9 +22,9 @@ Edit the following URL with the specific details:
 
 Recruit Examples:
 
-https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
+https://accounts.zoho.com/oauth/v2/auth?scope=`ZohoRecruit.modules.ALL,ZohoRecruit.settings.all,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE`&client_id=`1000.ABCDE`&response_type=code&access_type=offline&redirect_uri=`http://localhost/oauth`
 
-https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
+https://accounts.zoho.com/oauth/v2/auth?scope=ZohoRecruit.modules.ALL,ZohoRecruit.settings.all,ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE&client_id=1000.ABCDE&response_type=code&access_type=offline&redirect_uri=http://localhost/oauth
 
 CRM Examples:
 

@@ -20,7 +20,8 @@ import {
   ZohoServerFetchResponseError,
   ZohoRecruitUpdateRecordData,
   ZohoRecruitUpsertRecordData,
-  ZOHO_ERROR_STATUS
+  ZOHO_ERROR_STATUS,
+  ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
 
@@ -49,6 +50,7 @@ interface TestCandidate extends ZohoRecruitRecord {
   Email: string; // required field
   First_Name?: string; // not required
   Last_Name: string;
+  Associated_Tags?: string[];
 }
 
 jest.setTimeout(12000);
@@ -870,6 +872,124 @@ describe('recruit.api', () => {
           });
         });
       });
+    });
+
+    describe('tags', () => {
+      describe('createTagsForModule()', () => {
+        it('should create a new tag', async () => {
+          const randomId = randomNumber(100000000000000);
+
+          const result = await api.createTagsForModule({
+            module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+            tags: {
+              name: `Test ${randomId}`.substring(0, ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH)
+            }
+          });
+
+          expect(result.errorItems).toHaveLength(0);
+          expect(result.successItems).toHaveLength(1);
+        });
+      });
+
+      describe('getTagsForModule()', () => {
+        it('should return the list of tags', async () => {
+          const result = await api.getTagsForModule({ module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+          expect(result).toBeDefined();
+        });
+      });
+
+      describe('record', () => {
+        const TEST_TAG_NAME = `Test Tag`;
+
+        let testRecordId: ZohoRecruitRecordId;
+
+        beforeEach(async () => {
+          const testRecords = await loadTestRecords();
+          const recordToUpdate = testRecords[0];
+          testRecordId = recordToUpdate.id;
+        });
+
+        describe('addTagsToRecords()', () => {
+          describe('tag exists', () => {
+            beforeEach(async () => {
+              await api.createTagsForModule({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                tags: {
+                  name: TEST_TAG_NAME
+                }
+              });
+            });
+
+            it('should add a tag to a record', async () => {
+              const result = await api.addTagsToRecords({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                tag_names: TEST_TAG_NAME,
+                ids: testRecordId
+              });
+
+              expect(result.errorItems).toHaveLength(0);
+              expect(result.successItems).toHaveLength(1);
+            });
+
+            describe('record is tagged', () => {
+              beforeEach(async () => {
+                await api.addTagsToRecords({
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  tag_names: TEST_TAG_NAME,
+                  ids: testRecordId
+                });
+              });
+
+              describe('searchRecords()', () => {
+                it('should search results by associated tags', async () => {
+                  const result = await api.searchRecords<TestCandidate>({
+                    module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                    criteria: [{ field: 'Associated_Tags', filter: 'contains', value: TEST_TAG_NAME }]
+                  });
+
+                  expect(result).toBeDefined();
+                  expect(result.data).not.toHaveLength(0);
+                });
+              });
+            });
+          });
+
+          it('should fail if the tag is not known', async () => {
+            const result = await api.addTagsToRecords({
+              module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+              tag_names: `UNKNOWN_TAG_${randomNumber(999999999)}`,
+              ids: testRecordId
+            });
+
+            expect(result.errorItems).toHaveLength(1);
+            expect(result.successItems).toHaveLength(0);
+          });
+        });
+      });
+
+      /*
+      describe('record', () => {
+        let testRecordId: ZohoRecruitRecordId;
+
+        beforeEach(async () => {
+          const testRecords = await loadTestRecords();
+          const recordToUpdate = testRecords[0];
+          testRecordId = recordToUpdate.id;
+        });
+
+        it('should add a tag to a record', async () => {
+          const result = await api.addTagToRecord({
+            module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+            ids: testRecordId,
+            tags: 'Test Tag'
+          });
+
+          expect(result.errorItems).toHaveLength(0);
+          expect(result.successItems).toHaveLength(1);
+        });
+
+      });
+      */
     });
 
     describe('REST API Functions', () => {
