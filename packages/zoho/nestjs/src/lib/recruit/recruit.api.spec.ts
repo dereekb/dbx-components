@@ -774,6 +774,16 @@ describe('recruit.api', () => {
             expect(secondPage.result.data).toHaveLength(itemsPerPage);
           });
         });
+
+        describe('emails', () => {
+          describe('getEmailsForRecord()', () => {
+            it('should return the list of emails for the record', async () => {
+              // No way to add emails, so don't expect any results.
+              const result = await api.getEmailsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+              expect(result.data).toBeDefined();
+            });
+          });
+        });
       });
     });
 

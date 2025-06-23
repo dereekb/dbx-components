@@ -1,7 +1,7 @@
-import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
+import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
 import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
-import { NewZohoRecruitNoteData, ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitRecordNote, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, ZohoRecruitNoteId, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId, ZohoRecruitModuleName } from './recruit';
+import { ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId, ZohoRecruitModuleName, ZOHO_RECRUIT_EMAILS_MODULE, ZohoRecruitRecordEmailMetadata } from './recruit';
 import { zohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
 import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, asArray } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
@@ -278,9 +278,15 @@ export function searchRecordsPageFactory(context: ZohoRecruitContext): SearchRec
 // MARK: Related Records
 export interface ZohoRecruitGetRelatedRecordsFunctionConfig {
   readonly targetModule: ZohoRecruitModuleName;
+  /**
+   * If true, will return an empty page result instead of null when no results are found.
+   *
+   * Defaults to true.
+   */
+  readonly returnEmptyRecordsInsteadOfNull?: boolean;
 }
 
-export type ZohoRecruitGetRelatedRecordsFunctionFactory = <T extends ZohoRecruitRecord>(input: ZohoRecruitGetRelatedRecordsFunctionConfig) => ZohoRecruitGetRelatedRecordsFunction<T>;
+export type ZohoRecruitGetRelatedRecordsFunctionFactory = <T = ZohoRecruitRecord>(input: ZohoRecruitGetRelatedRecordsFunctionConfig) => ZohoRecruitGetRelatedRecordsFunction<T>;
 
 export type ZohoRecruitGetRelatedRecordsPageFilter = ZohoPageFilter;
 export interface ZohoRecruitGetRelatedRecordsRequest extends ZohoRecruitGetRecordByIdInput, ZohoRecruitGetRelatedRecordsPageFilter {
@@ -308,81 +314,25 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
  * @returns a ZohoRecruitGetRelatedRecordsFunctionFactory
  */
 export function getRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
-  return <T extends ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
-    const { targetModule } = config;
-    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET'));
+  return <T = ZohoRecruitRecord>(config: ZohoRecruitGetRelatedRecordsFunctionConfig) => {
+    const { targetModule, returnEmptyRecordsInsteadOfNull = true } = config;
+    return (input: ZohoRecruitGetRelatedRecordsRequest) => context.fetchJson<ZohoRecruitGetRelatedRecordsResponse<T>>(`/v2/${input.module}/${input.id}/${targetModule}?${zohoRecruitUrlSearchParamsMinusIdAndModule(input, input.filter).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? (returnEmptyRecordsInsteadOfNull !== false ? emptyZohoPageResult<T>() : x));
   };
 }
 
-// MARK: Notes
-export interface ZohoRecruitCreateNotesRequest {
-  readonly data: ZohoRecruitCreateNotesRequestEntry[];
+// MARK: Emails
+export type ZohoRecruitGetEmailsForRecordRequest = ZohoRecruitGetRelatedRecordsRequest;
+export type ZohoRecruitGetEmailsForRecordResponse = ZohoPageResult<ZohoRecruitRecordEmailMetadata>;
+export type ZohoRecruitGetEmailsForRecordFunction = (input: ZohoRecruitGetEmailsForRecordRequest) => Promise<ZohoRecruitGetEmailsForRecordResponse>;
+
+export function getEmailsForRecord(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordFunction {
+  return getRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordEmailMetadata>({ targetModule: ZOHO_RECRUIT_EMAILS_MODULE });
 }
 
-export type ZohoRecruitCreateNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitCreateNotesRequestEntry, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
+export type GetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetEmailsForRecordRequest, ZohoRecruitGetEmailsForRecordResponse>;
 
-export type ZohoRecruitCreateNotesRequestEntry = NewZohoRecruitNoteData;
-export type ZohoRecruitCreateNotesResponse = ZohoRecruitChangeObjectResponse;
-export type ZohoRecruitCreateNotesFunction = (input: ZohoRecruitCreateNotesRequest) => Promise<ZohoRecruitCreateNotesResult>;
-
-export function createNotes(context: ZohoRecruitContext) {
-  return (input: ZohoRecruitCreateNotesRequest) =>
-    context.fetchJson<ZohoRecruitCreateNotesResponse>(`/v2/Notes`, zohoRecruitApiFetchJsonInput('POST', { data: input.data })).then((x) => {
-      return zohoRecruitMultiRecordResult<ZohoRecruitCreateNotesRequestEntry, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(input.data), x.data);
-    });
-}
-
-export interface ZohoRecruitDeleteNotesRequest {
-  readonly ids: ArrayOrValue<ZohoRecruitNoteId>;
-}
-
-export type ZohoRecruitDeleteNotesResult = ZohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
-
-export type ZohoRecruitDeleteNotesResponse = ZohoRecruitChangeObjectResponse;
-export type ZohoRecruitDeleteNotesFunction = (input: ZohoRecruitDeleteNotesRequest) => Promise<ZohoRecruitDeleteNotesResult>;
-
-export function deleteNotes(context: ZohoRecruitContext) {
-  return (input: ZohoRecruitDeleteNotesRequest) =>
-    context.fetchJson<ZohoRecruitDeleteNotesResponse>(`/v2/Notes?${makeUrlSearchParams({ ids: input.ids })}`, zohoRecruitApiFetchJsonInput('DELETE')).then((x) => {
-      return zohoRecruitMultiRecordResult<ZohoRecruitNoteId, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>(asArray(input.ids), x.data);
-    });
-}
-
-export type ZohoRecruitGetNotesForRecordRequest = ZohoRecruitGetRelatedRecordsRequest;
-export type ZohoRecruitGetNotesForRecordResponse = ZohoPageResult<ZohoRecruitRecordNote>;
-export type ZohoRecruitGetNotesForRecordFunction = (input: ZohoRecruitGetNotesForRecordRequest) => Promise<ZohoRecruitGetNotesForRecordResponse>;
-
-export function getNotesForRecord(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordFunction {
-  return getRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordNote>({ targetModule: 'Notes' });
-}
-
-export type GetNotesForRecordPageFactory = FetchPageFactory<ZohoRecruitGetNotesForRecordRequest, ZohoRecruitGetNotesForRecordResponse>;
-
-export function getNotesForRecordPageFactory(context: ZohoRecruitContext): GetNotesForRecordPageFactory {
-  return zohoFetchPageFactory(getNotesForRecord(context));
-}
-
-export interface ZohoRecruitCreateNotesForRecordRequest extends ZohoRecruitModuleNameRef {
-  readonly id: ZohoRecruitRecordId;
-  readonly notes: ArrayOrValue<Omit<NewZohoRecruitNoteData, 'se_module' | 'Parent_Id'>>;
-}
-
-export type ZohoRecruitCreateNotesForRecordFunction = (input: ZohoRecruitCreateNotesForRecordRequest) => Promise<ZohoRecruitCreateNotesResult>;
-
-export function createNotesForRecord(context: ZohoRecruitContext): ZohoRecruitCreateNotesForRecordFunction {
-  const createNotesInstance = createNotes(context);
-  return (input: ZohoRecruitCreateNotesForRecordRequest) => {
-    const { module: se_module, id: Parent_Id, notes } = input;
-    const createNotesRequest: ZohoRecruitCreateNotesRequest = {
-      data: asArray(notes).map((x) => ({
-        ...x,
-        se_module,
-        Parent_Id
-      }))
-    };
-
-    return createNotesInstance(createNotesRequest);
-  };
+export function getEmailsForRecordPageFactory(context: ZohoRecruitContext): GetEmailsForRecordPageFactory {
+  return zohoFetchPageFactory(getEmailsForRecord(context));
 }
 
 // MARK: Function

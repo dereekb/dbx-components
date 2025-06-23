@@ -1,5 +1,6 @@
 export * from './recruit.api';
 export * from './recruit.api.candidates';
+export * from './recruit.api.notes';
 export * from './recruit.api.tags';
 export * from './recruit.config';
 export * from './recruit.criteria';
@@ -8,3 +9,4 @@ export * from './recruit.error.api';
 export * from './recruit.factory';
 export * from './recruit';
 export * from './recruit.tags';
+export * from './recruit.notes';
