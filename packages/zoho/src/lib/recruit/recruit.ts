@@ -1,4 +1,4 @@
-import { CommaSeparatedString, ISO8601DateString, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
+import { CommaSeparatedString, EmailAddress, ISO8601DateString, UniqueModelWithId, WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -17,6 +17,16 @@ export const ZOHO_RECRUIT_CANDIDATES_MODULE = 'Candidates';
  * Job Openings module name
  */
 export const ZOHO_RECRUIT_JOB_OPENINGS_MODULE = 'Job_Openings';
+
+/**
+ * Notes module name
+ */
+export const ZOHO_RECRUIT_NOTES_MODULE = 'Notes';
+
+/**
+ * Emails module name
+ */
+export const ZOHO_RECRUIT_EMAILS_MODULE = 'Emails';
 
 /**
  * Contains a reference to a module.
@@ -167,65 +177,6 @@ export type ZohoRecruitRecord = UniqueModelWithId & ZohoRecruitRecordFieldsData;
 export const isZohoRecruitValidUrl: (input: WebsiteUrl) => input is ZohoRecruitValidUrl = isStandardInternetAccessibleWebsiteUrl;
 
 /**
- * Update details returned by the server for an updated record.
- *
- * @deprecated use ZohoRecruitChangeObjectDetails instead.
- */
-export type ZohoRecruitRecordUpdateDetails = ZohoRecruitChangeObjectDetails;
-
-// MARK: Notes
-export type ZohoRecruitNoteId = string;
-
-export interface ZohoRecruitNoteAction {
-  $is_system_action: boolean;
-}
-
-export type ZohoRecruitNoteSourceName = 'NORMAL_USER';
-export type ZohoRecruitNoteSourceType = number;
-
-export interface ZohoRecruitNoteSource {
-  name: ZohoRecruitNoteSourceName;
-  type: ZohoRecruitNoteSourceType;
-}
-
-export type ZohoRecruitNoteOwnerData = ZohoRecruitReferenceData;
-
-export interface ZohoRecruitNoteData {
-  Note_Title: string;
-  Note_Content: string;
-  Parent_Id: ZohoRecruitParentReferenceData;
-  Created_Time: ISO8601DateString;
-  Modified_Time: ISO8601DateString;
-  $attachments: null;
-  $is_edit_allowed: boolean;
-  $editable: boolean;
-  $type_id: ZohoRecruitTypeId;
-  $is_delete_allowed: boolean;
-  $note_action: ZohoRecruitNoteAction;
-  $source: ZohoRecruitNoteSource;
-  $se_module: ZohoRecruitModuleName;
-  $is_shared_to_client: boolean;
-  Note_Owner: ZohoRecruitNoteOwnerData;
-  Created_By: ZohoRecruitCreatedByData;
-  Modified_By: ZohoRecruitModifiedByData;
-  $size: ZohoRecruitNoteFileSize | null;
-  $voice_note: boolean;
-  $status: ZohoRecruitNoteStatus;
-}
-
-export interface NewZohoRecruitNoteData extends Pick<ZohoRecruitNoteData, 'Note_Title' | 'Note_Content'> {
-  Parent_Id: Pick<ZohoRecruitParentReferenceData, 'id'> | ZohoRecruitId;
-  se_module: ZohoRecruitModuleName;
-}
-
-export type ZohoRecruitNoteStatus = string; // TODO
-export type ZohoRecruitNoteFileSize = number;
-
-export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId {}
-
-export type ZohoRecruitRecordNote = ZohoRecruitNote;
-
-/**
  * The posting title of a job opening.
  */
 export type ZohoRecruitJobOpeningPostingTitle = string;
@@ -235,8 +186,45 @@ export type ZohoRecruitJobOpeningPostingTitle = string;
  */
 export type ZohoRecruitCandidateStatus = string;
 
-// MARK: Compat
 /**
- * @deprecated use NewZohoRecruitNewNoteData instead.
+ * Metadata for a record's email.
  */
-export type NewZohoRecruitNewNoteData = NewZohoRecruitNoteData;
+export interface ZohoRecruitRecordEmailMetadata {
+  /**
+   * Whether or not an attachment is present.
+   */
+  attachment: boolean;
+  /**
+   * The subject of the email.
+   */
+  subject: string;
+  /**
+   * The email address the email was sent to.
+   */
+  to: EmailAddress;
+  /**
+   * The email address the email was sent from.
+   */
+  from: EmailAddress;
+  /**
+   * The date the email was sent.
+   */
+  sent_on: ISO8601DateString;
+  /**
+   * The status of the email.
+   */
+  status: ZohoRecruitRecordEmailMetadataStatus[];
+}
+
+export type ZohoRecruitRecordEmailMetadataStatusType = 'sent' | string;
+
+export interface ZohoRecruitRecordEmailMetadataStatus {
+  type: ZohoRecruitRecordEmailMetadataStatusType;
+}
+
+/**
+ * Update details returned by the server for an updated record.
+ *
+ * @deprecated use ZohoRecruitChangeObjectDetails instead.
+ */
+export type ZohoRecruitRecordUpdateDetails = ZohoRecruitChangeObjectDetails;

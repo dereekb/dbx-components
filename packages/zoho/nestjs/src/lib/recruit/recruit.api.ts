@@ -12,6 +12,7 @@ import {
   getNotesForRecordPageFactory,
   getRecordById,
   getRecords,
+  getRelatedRecordsFunctionFactory,
   insertRecord,
   searchCandidateAssociatedJobOpeningRecords,
   searchCandidateAssociatedJobOpeningRecordsPageFactory,
@@ -21,7 +22,12 @@ import {
   searchRecordsPageFactory,
   updateRecord,
   upsertRecord,
-  zohoRecruitFactory
+  zohoRecruitFactory,
+  createTagsForModule,
+  getTagsForModule,
+  addTagsToRecords,
+  getEmailsForRecord,
+  getEmailsForRecordPageFactory
 } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -81,6 +87,18 @@ export class ZohoRecruitApi {
     return searchRecordsPageFactory(this.recruitContext);
   }
 
+  get getRelatedRecordsFunctionFactory() {
+    return getRelatedRecordsFunctionFactory(this.recruitContext);
+  }
+
+  get getEmailsForRecord() {
+    return getEmailsForRecord(this.recruitContext);
+  }
+
+  get getEmailsForRecordPageFactory() {
+    return getEmailsForRecordPageFactory(this.recruitContext);
+  }
+
   get createNotes() {
     return createNotes(this.recruitContext);
   }
@@ -123,5 +141,17 @@ export class ZohoRecruitApi {
 
   get searchJobOpeningAssociatedCandidateRecordsPageFactory() {
     return searchJobOpeningAssociatedCandidateRecordsPageFactory(this.recruitContext);
+  }
+
+  get createTagsForModule() {
+    return createTagsForModule(this.recruitContext);
+  }
+
+  get getTagsForModule() {
+    return getTagsForModule(this.recruitContext);
+  }
+
+  get addTagsToRecords() {
+    return addTagsToRecords(this.recruitContext);
   }
 }
