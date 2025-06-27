@@ -27,7 +27,7 @@ export class DbxColumnSizeDirective implements OnDestroy {
 
     let headerColumn: Maybe<DbxColumnSizeColumnDirective>;
     let tailColumn: Maybe<DbxColumnSizeColumnDirective>;
-    let itemColumns: DbxColumnSizeColumnDirective[] = [];
+    const itemColumns: DbxColumnSizeColumnDirective[] = [];
 
     columnsMap.forEach((column) => {
       const index = column.index();
