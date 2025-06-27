@@ -1,18 +1,18 @@
 <dbx-loading [context]="context">
   <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
-  <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
+  <section class="dbx-table-view" dbx-column-size #columnSize="dbxColumnSize" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
     <table class="dbx-table-view-table" mat-table recycleRows [dataSource]="elementsSignal()" [trackBy]="trackElementByFunctionSignal()" multiTemplateDataRows>
       <!-- Groups -->
       <!-- Group Header column -->
       <ng-container matColumnDef="groupHeaderColumn" [sticky]="true">
-        <td mat-cell [attr.colspan]="visibleColumnsSignal()" *matCellDef="let element">
+        <td mat-cell [attr.colspan]="columnSize.visibleColumnsSignal()" *matCellDef="let element">
           <dbx-table-group-header [group]="element.group"></dbx-table-group-header>
         </td>
       </ng-container>
 
       <!-- Group Footer column -->
       <ng-container matColumnDef="groupFooterColumn" [sticky]="true">
-        <td mat-cell [attr.colspan]="visibleColumnsSignal()" *matCellDef="let element">
+        <td mat-cell [attr.colspan]="columnSize.visibleColumnsSignal()" *matCellDef="let element">
           <dbx-table-group-footer [group]="element.group"></dbx-table-group-footer>
         </td>
       </ng-container>
@@ -20,7 +20,7 @@
       <!-- Items -->
       <!-- Header/Item column -->
       <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
-        <th mat-header-cell *matHeaderCellDef>
+        <th dbx-column-size-column="head" mat-header-cell *matHeaderCellDef>
           <dbx-table-input-cell></dbx-table-input-cell>
         </th>
         <td mat-cell *matCellDef="let element">
@@ -34,7 +34,7 @@
       <!-- Column Definitions -->
       @for (column of innerColumnsSignal(); track column.columnName) {
         <ng-container [matColumnDef]="column.columnName" [sticky]="false">
-          <th mat-header-cell *matHeaderCellDef>
+          <th [dbx-column-size-column]="$index" mat-header-cell *matHeaderCellDef>
             <dbx-table-column-header [column]="column"></dbx-table-column-header>
           </th>
           <td mat-cell *matCellDef="let element">
@@ -48,7 +48,7 @@
 
       <!-- Tail/Action column -->
       <ng-container [matColumnDef]="actionsColumnName" [stickyEnd]="true">
-        <th mat-header-cell *matHeaderCellDef>
+        <th dbx-column-size-column="tail" mat-header-cell *matHeaderCellDef>
           <dbx-table-action-cell></dbx-table-action-cell>
         </th>
         <td mat-cell *matCellDef="let element">

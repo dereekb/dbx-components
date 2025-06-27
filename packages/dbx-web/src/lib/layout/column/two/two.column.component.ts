@@ -1,11 +1,12 @@
 import { OnDestroy, ChangeDetectionStrategy, Component, ElementRef, inject, input, effect } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 import { Observable, combineLatest, distinctUntilChanged, map } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxContentContainerDirective } from '../../content/content.container.directive';
 import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
+import { DbxResizedDirective } from '../../../screen/resize.directive';
+import { ResizedEvent } from '../../../screen/resize';
 
 export interface DbxTwoColumnViewState {
   readonly showRight: boolean;
@@ -27,14 +28,14 @@ export interface DbxTwoColumnViewState {
   template: `
     <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
       @if (!hideLeftColumnSignal() && reverseSizingSignal()) {
-        <div (resized)="viewResized($event)"></div>
+        <div (dbxResized)="viewResized($event)"></div>
       }
       <ng-content select="[left]"></ng-content>
     </dbx-content-container>
     @if (showRightSignal()) {
       <dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column">
         @if (hideLeftColumnSignal() || !reverseSizingSignal()) {
-          <div (resized)="viewResized($event)"></div>
+          <div (dbxResized)="viewResized($event)"></div>
         }
         <ng-content select="[right]"></ng-content>
       </dbx-content-container>
@@ -45,7 +46,7 @@ export interface DbxTwoColumnViewState {
     class: 'dbx-two-column',
     '[class]': 'cssClassSignal()'
   },
-  imports: [AngularResizeEventModule, DbxContentContainerDirective],
+  imports: [DbxResizedDirective, DbxContentContainerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

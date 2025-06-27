@@ -21,6 +21,7 @@ import { DbxTableGroupFooterComponent } from './table.group.footer.component';
 import { pushArrayItemsIntoArray } from '@dereekb/util';
 import { NgClass } from '@angular/common';
 import { DbxTableFullSummaryRowComponent } from './table.fullsummaryrow.component';
+import { DbxColumnSizeDirective, DbxColumnSizeColumnDirective } from './table.column.size.directive';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
@@ -52,7 +53,26 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
 @Component({
   selector: 'dbx-table-view',
   templateUrl: './table.component.html',
-  imports: [DbxLoadingComponent, NgClass, InfiniteScrollDirective, MatTableModule, DbxTableInputCellComponent, DbxTableItemHeaderComponent, DbxTableItemCellComponent, DbxTableItemActionComponent, DbxTableActionCellComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent, DbxTableGroupHeaderComponent, DbxTableGroupFooterComponent, DbxTableFullSummaryRowComponent],
+  imports: [
+    DbxLoadingComponent,
+    NgClass,
+    InfiniteScrollDirective,
+    MatTableModule,
+    DbxTableInputCellComponent,
+    DbxTableItemHeaderComponent,
+    DbxTableItemCellComponent,
+    DbxTableItemActionComponent,
+    DbxTableActionCellComponent,
+    DbxTableColumnHeaderComponent,
+    DbxTableColumnFooterComponent,
+    DbxTableSummaryStartCellComponent,
+    DbxTableSummaryEndCellComponent,
+    DbxTableGroupHeaderComponent,
+    DbxTableGroupFooterComponent,
+    DbxTableFullSummaryRowComponent,
+    DbxColumnSizeDirective,
+    DbxColumnSizeColumnDirective
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

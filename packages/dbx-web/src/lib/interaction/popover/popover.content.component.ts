@@ -1,7 +1,8 @@
 import { BehaviorSubject, throttleTime } from 'rxjs';
 import { OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
-import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ResizedEvent } from '../../screen/resize';
+import { DbxResizedDirective } from '../../screen/resize.directive';
 
 /**
  * Popover content wrapper component.
@@ -9,14 +10,14 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-popover-content',
   template: `
-    <div class="d-block dbx-popover-content" (resized)="onResized($event)" [style.--popoverh]="heightSignal()">
+    <div class="d-block dbx-popover-content" (dbxResized)="onResized($event)" [style.--popoverh]="heightSignal()">
       <ng-content select="[controls]"></ng-content>
       <div class="dbx-popover-content-container">
         <ng-content></ng-content>
       </div>
     </div>
   `,
-  imports: [AngularResizeEventModule],
+  imports: [DbxResizedDirective],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

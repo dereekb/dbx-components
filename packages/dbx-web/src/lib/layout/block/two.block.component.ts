@@ -1,6 +1,7 @@
 import { NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-package';
+import { ResizedEvent } from '../../screen/resize';
+import { DbxResizedDirective } from '../../screen/resize.directive';
 
 /**
  * Wrapper of a block that is broken into two parts, with the bottom content's height
@@ -13,7 +14,7 @@ import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-pac
   selector: 'dbx-two-block',
   template: `
     <div #two class="dbx-two-block-content" [ngStyle]="{ '--dbx-two-block-top-height': topHeightPixelsSignal() }">
-      <div #top class="dbx-two-block-top" (resized)="viewResized($event)">
+      <div #top class="dbx-two-block-top" (dbxResized)="viewResized($event)">
         <ng-content select="[top]"></ng-content>
       </div>
       <div #bottom class="dbx-two-block-bottom">
@@ -25,7 +26,7 @@ import { AngularResizeEventModule, ResizedEvent } from 'angular-resize-event-pac
     class: 'dbx-two-block d-block',
     '[class]': '{ "dbx-two-block-fixed-top": fixedTop() }'
   },
-  imports: [AngularResizeEventModule, NgStyle],
+  imports: [DbxResizedDirective, NgStyle],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

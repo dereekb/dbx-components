@@ -5,7 +5,7 @@
       <dbx-mapbox-layout-drawer></dbx-mapbox-layout-drawer>
     </div>
   </mat-drawer>
-  <mat-drawer-content #content class="dbx-mapbox-layout-content" (resized)="viewResized($event)">
+  <mat-drawer-content #content class="dbx-mapbox-layout-content" (dbxResized)="viewResized($event)">
     <button mat-icon-button (click)="toggleDrawer()" class="dbx-mapbox-layout-drawer-button" [dbxColor]="drawerButtonColor()">
       <mat-icon>{{ buttonIconSignal() }}</mat-icon>
     </button>
