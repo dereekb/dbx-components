@@ -3,13 +3,14 @@ import { DbxTableColumn } from '@dereekb/dbx-web/table';
 import { ExampleTableData } from './table.item';
 
 @Component({
-    template: `
+  template: `
     <div style="text-align: center">
       <div class="dbx-small">{{ name }}</div>
+      <div class="dbx-small">{{ value }}</div>
       <div class="dbx-small dbx-hint">{{ columnName }}</div>
     </div>
   `,
-    standalone: true
+  standalone: true
 })
 export class DocExtensionTableItemCellExampleComponent {
   item!: ExampleTableData;
@@ -17,6 +18,11 @@ export class DocExtensionTableItemCellExampleComponent {
 
   get name() {
     return this.item.name;
+  }
+
+  get value() {
+    const day = this.column.meta.getDay();
+    return this.item.columnValues[day];
   }
 
   get columnName() {

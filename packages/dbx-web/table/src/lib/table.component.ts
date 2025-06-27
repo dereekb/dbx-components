@@ -21,6 +21,7 @@ import { DbxTableGroupFooterComponent } from './table.group.footer.component';
 import { pushArrayItemsIntoArray } from '@dereekb/util';
 import { NgClass } from '@angular/common';
 import { DbxTableFullSummaryRowComponent } from './table.fullsummaryrow.component';
+import { DbxColumnSizeDirective, DbxColumnSizeColumnDirective } from './table.column.size.directive';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
@@ -52,12 +53,32 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
 @Component({
   selector: 'dbx-table-view',
   templateUrl: './table.component.html',
-  imports: [DbxLoadingComponent, NgClass, InfiniteScrollDirective, MatTableModule, DbxTableInputCellComponent, DbxTableItemHeaderComponent, DbxTableItemCellComponent, DbxTableItemActionComponent, DbxTableActionCellComponent, DbxTableColumnHeaderComponent, DbxTableColumnFooterComponent, DbxTableSummaryStartCellComponent, DbxTableSummaryEndCellComponent, DbxTableGroupHeaderComponent, DbxTableGroupFooterComponent, DbxTableFullSummaryRowComponent],
+  imports: [
+    DbxLoadingComponent,
+    NgClass,
+    InfiniteScrollDirective,
+    MatTableModule,
+    DbxTableInputCellComponent,
+    DbxTableItemHeaderComponent,
+    DbxTableItemCellComponent,
+    DbxTableItemActionComponent,
+    DbxTableActionCellComponent,
+    DbxTableColumnHeaderComponent,
+    DbxTableColumnFooterComponent,
+    DbxTableSummaryStartCellComponent,
+    DbxTableSummaryEndCellComponent,
+    DbxTableGroupHeaderComponent,
+    DbxTableGroupFooterComponent,
+    DbxTableFullSummaryRowComponent,
+    DbxColumnSizeDirective,
+    DbxColumnSizeColumnDirective
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly tableStore = inject(DbxTableStore<I, C, T, G>);
+  // readonly table = viewChild.required<MatTable<DbxTableViewElement<T, G>>>(MatTable);
 
   readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
     return index;
@@ -188,6 +209,7 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly dataLoadingContextSignal = toSignal(this.dataLoadingContext.state$);
 
   readonly viewDelegateSignal = toSignal(this.tableStore.viewDelegate$);
+  readonly elementsSignal = toSignal(this.elements$, { initialValue: [] });
 
   onScrollDown(): void {
     this.tableStore.loadMore();

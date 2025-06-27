@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "12.1.13",
+  "version": "12.1.14",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -48,7 +48,6 @@
     "@uirouter/rx": "^1.0.0",
     "@vvo/tzdb": "^6.0.0",
     "angular-calendar": "^0.31.0",
-    "angular-resize-event-package": "3.5.0",
     "change-case-all": "^2.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
