@@ -1,4 +1,4 @@
-import { filterMaybe, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
+import { filterMaybe, maybeValueFromObservableOrValue, tapLog } from '@dereekb/rxjs';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { map, distinctUntilChanged, switchMap, combineLatest } from 'rxjs';
@@ -18,9 +18,10 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
 })
 export class DbxTableItemCellComponent<T, C> extends AbstractDbxTableItemDirective<T, C> {
   readonly column = input<Maybe<DbxTableColumn<C>>>();
+  readonly column$ = toObservable(this.column).pipe(filterMaybe());
 
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    switchMap((viewDelegate) => combineLatest([toObservable(this.column).pipe(filterMaybe()), this.item$]).pipe(map(([column, item]) => viewDelegate.itemCell(column, item)))),
+    switchMap((viewDelegate) => combineLatest([this.column$, this.item$]).pipe(map(([column, item]) => viewDelegate.itemCell(column, item)))),
     maybeValueFromObservableOrValue(),
     distinctUntilChanged()
   );

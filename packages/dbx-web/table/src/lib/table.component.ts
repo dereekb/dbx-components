@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, ViewChild, viewChild, effect, ChangeDetectorRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
-import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, valueFromFinishedLoadingState } from '@dereekb/rxjs';
-import { shareReplay, map, Observable, switchMap } from 'rxjs';
+import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, tapLog, valueFromFinishedLoadingState } from '@dereekb/rxjs';
+import { shareReplay, map, Observable, switchMap, tap } from 'rxjs';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
-import { MatTableModule } from '@angular/material/table';
+import { MatTable, MatTableModule } from '@angular/material/table';
 import { DbxTableInputCellComponent } from './table.cell.input.component';
 import { DbxTableSummaryEndCellComponent } from './table.cell.summaryend.component';
 import { DbxTableSummaryStartCellComponent } from './table.cell.summarystart.component';
@@ -58,6 +58,7 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
 })
 export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly tableStore = inject(DbxTableStore<I, C, T, G>);
+  // readonly table = viewChild.required<MatTable<DbxTableViewElement<T, G>>>(MatTable);
 
   readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
     return index;
@@ -188,6 +189,7 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly dataLoadingContextSignal = toSignal(this.dataLoadingContext.state$);
 
   readonly viewDelegateSignal = toSignal(this.tableStore.viewDelegate$);
+  readonly elementsSignal = toSignal(this.elements$, { initialValue: [] });
 
   onScrollDown(): void {
     this.tableStore.loadMore();

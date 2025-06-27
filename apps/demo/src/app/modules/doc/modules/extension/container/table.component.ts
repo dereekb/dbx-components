@@ -3,8 +3,8 @@ import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableItemGroup, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
-import { beginLoadingPage, ObservableOrValue, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
-import { range } from '@dereekb/util';
+import { beginLoadingPage, ObservableOrValue, PageListLoadingState, successPageResult, successResult, tapLog } from '@dereekb/rxjs';
+import { arrayFactory, randomArrayFactory, randomNumberFactory, range } from '@dereekb/util';
 import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
@@ -22,6 +22,12 @@ import { DocExtensionTableSummaryRowEndExampleComponent } from '../component/tab
 import { DocExtensionTableColumnFooterExampleComponent } from '../component/table.column.footer.example.component';
 import { DocExtensionTableFullSummaryRowExampleComponent } from '../component/table.fullsummaryrow.example.component';
 
+const numberOfTestItems = 15;
+const daysInWeek = 7;
+const randomValue = randomNumberFactory({ min: 0, max: 100000 }, 'round');
+const randomValueArray = arrayFactory(randomValue);
+const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ ...x, columnValues: randomValueArray(daysInWeek) }));
+
 @Component({
   templateUrl: './table.component.html',
   standalone: true,
@@ -33,7 +39,7 @@ export class DocExtensionTableComponent implements OnDestroy {
     distance: 6
   };
 
-  readonly exampleTableData: ExampleTableData[] = range(0, 15).map((x) => ({ name: `Example ${x}`, key: String(x) }));
+  readonly exampleTableData: ExampleTableData[] = range(0, numberOfTestItems).map((x) => ({ name: `Example ${x}`, key: String(x), columnValues: randomValueArray(daysInWeek) }));
   readonly exampleTableDataItems = new BehaviorSubject<ExampleTableData[]>(this.exampleTableData);
 
   readonly isLoading$ = this.exampleTableDataItems.pipe(
@@ -45,6 +51,7 @@ export class DocExtensionTableComponent implements OnDestroy {
   );
 
   readonly exampleViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
+    trackBy: (index, item) => item.key,
     inputHeader: dbxTableDateRangeDayDistanceInputCellInput(),
     columnHeader: dbxTableDateHeaderInjectionFactory(),
     actionHeader: {
@@ -130,7 +137,7 @@ export class DocExtensionTableComponent implements OnDestroy {
       const allDays = expandDaysForDateRange(dateRange({ ...input }));
       const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayStringForSystem(x), meta: x }));
       const items: ExampleTableData[] = [...this.exampleTableData];
-      const items$: Observable<PageListLoadingState<ExampleTableData>> = of(successPageResult(0, items));
+      const items$: Observable<PageListLoadingState<ExampleTableData>> = of(successPageResult(0, items)).pipe(delay(1000));
 
       const result: DbxTableContextData<DateRangeDayDistanceInput, Date, ExampleTableData> = {
         input,
@@ -160,7 +167,7 @@ export class DocExtensionTableComponent implements OnDestroy {
           return this.exampleTableDataItems
             .pipe(
               skip(skipCount),
-              switchMap((x) => of(successPageResult(0, x)).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
+              switchMap((data) => of(successPageResult(0, addRandomValuesToData(data))).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
             )
             .pipe(startWith(beginLoadingPage<ExampleTableData[]>(0)));
         })
@@ -180,7 +187,7 @@ export class DocExtensionTableComponent implements OnDestroy {
   loadMoreItems() {
     const currentItems = this.exampleTableDataItems.value;
     const itemsCount = currentItems.length;
-    const newItems = range(itemsCount + 1, itemsCount + 15).map((x) => ({ name: `Example ${x}`, key: String(x) }));
+    const newItems = range(itemsCount + 1, itemsCount + numberOfTestItems).map((x) => ({ name: `Example ${x}`, key: String(x), columnValues: randomValueArray(daysInWeek) }));
     this.exampleTableDataItems.next([...currentItems, ...newItems]);
   }
 
