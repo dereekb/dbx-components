@@ -1,0 +1,33 @@
+{
+  "name": "nestjs-vapiai",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nestjs/vapiai/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nestjs/vapiai",
+        "tsConfig": "packages/nestjs/vapiai/tsconfig.lib.json",
+        "packageJson": "packages/nestjs/vapiai/package.json",
+        "main": "packages/nestjs/vapiai/src/index.ts",
+        "assets": ["LICENSE"]
+      },
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/nestjs/vapiai"],
+      "options": {
+        "jestConfig": "packages/nestjs/vapiai/jest.config.ts"
+      }
+    }
+  }
+}
