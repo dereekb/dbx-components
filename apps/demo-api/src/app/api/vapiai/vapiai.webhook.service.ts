@@ -1,6 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Injectable, Logger } from '@nestjs/common';
-import { VapiAiApi } from '@dereekb/nestjs/vapiai';
+import { VapiAiApi, VapiAiWebhookResult, VapiResponse } from '@dereekb/nestjs/vapiai';
 import { UntypedVapiAiWebhookEvent, VapiAiWebhookService } from '@dereekb/nestjs/vapiai';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class DemoApiVapiAiWebhookService {
   private readonly _vapiAiApi: VapiAiApi;
   private readonly _vapiAiWebhookService: VapiAiWebhookService;
 
-  private readonly logger = new Logger('DemoApiZoomWebhookService');
+  private readonly logger = new Logger('DemoApiVapiAiWebhookService');
 
   constructor(vapiAiApi: VapiAiApi, vapiAiWebhookService: VapiAiWebhookService) {
     this._vapiAiApi = vapiAiApi;
@@ -18,7 +18,13 @@ export class DemoApiVapiAiWebhookService {
       x.set(catchAllHandlerKey(), this.logHandledEvent);
 
       x.handleEndOfCallReport(async (x) => {
-        this.logger.log('Recieved vapi.ai end of call report event successfully', x);
+        const { call } = x;
+
+        this.logger.log('Recieved vapi.ai end of call report event successfully.');
+
+        console.log({
+          callId: call.id
+        });
       });
     });
   }
@@ -31,11 +37,7 @@ export class DemoApiVapiAiWebhookService {
     return this._vapiAiWebhookService;
   }
 
-  logHandledEvent(event: UntypedVapiAiWebhookEvent): boolean {
-    const handled: boolean = true;
-
-    this.logger.log('Recieved vapi.ai event successfully: ', event);
-
-    return handled;
+  logHandledEvent(event: UntypedVapiAiWebhookEvent) {
+    this.logger.log('Recieved vapi.ai event successfully: ', event.type);
   }
 }

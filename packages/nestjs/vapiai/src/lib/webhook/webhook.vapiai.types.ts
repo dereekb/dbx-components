@@ -1,83 +1,6 @@
-// Types copied from:
-// https://github.com/VapiAI/example-server-javascript-node/blob/main/src/types/vapi.types.ts#L160
-// TODO: Ideally they'll just be available in the server client eventually. Import them from the server client at that point.
-//
-
-import { ChatCompletionCreateParams, ChatCompletionMessageParam, FunctionDefinition } from 'openai/resources';
-
-export interface Model {
-  model: string;
-  systemPrompt?: string;
-  temperature?: number;
-  functions?: {
-    name: string;
-    async?: boolean;
-    description?: string;
-    parameters?: FunctionDefinition | any;
-  }[];
-  provider: string;
-  url?: string;
-}
-
-const PLAY_HT_EMOTIONS = ['female_happy', 'female_sad', 'female_angry', 'female_fearful', 'female_disgust', 'female_surprised'] as const;
-
-type PlayHTEmotion = (typeof PLAY_HT_EMOTIONS)[number];
-
-interface Voice {
-  provider: string;
-  voiceId: string;
-  speed?: number;
-  stability?: number;
-  similarityBoost?: number;
-  style?: number;
-  useSpeakerBoost?: boolean;
-  temperature?: number;
-  emotion?: PlayHTEmotion;
-  voiceGuidance?: number;
-  styleGuidance?: number;
-  textGuidance?: number;
-}
-
-export interface Assistant {
-  // Properties from AssistantUserEditable
-  name?: string;
-  transcriber?: {
-    provider: 'deepgram';
-    model?: string;
-    keywords?: string[];
-  };
-  model?: Model;
-  voice?: Voice;
-  language?: string;
-  forwardingPhoneNumber?: string;
-  firstMessage?: string;
-  voicemailMessage?: string;
-  endCallMessage?: string;
-  endCallPhrases?: string[];
-  interruptionsEnabled?: boolean;
-  recordingEnabled?: boolean;
-  endCallFunctionEnabled?: boolean;
-  dialKeypadFunctionEnabled?: boolean;
-  fillersEnabled?: boolean;
-  clientMessages?: any[];
-  serverMessages?: any[];
-  silenceTimeoutSeconds?: number;
-  responseDelaySeconds?: number;
-  liveTranscriptsEnabled?: boolean;
-  keywords?: string[];
-  parentId?: string;
-  serverUrl?: string;
-  serverUrlSecret?: string;
-
-  // Properties from AssistantPrivileged
-  id?: string;
-  orgId?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export const VAPI_CALL_STATUSES = ['queued', 'ringing', 'in-progress', 'forwarding', 'ended'] as const;
-export type VapiCallStatus = (typeof VAPI_CALL_STATUSES)[number];
+import { DollarAmount, ISO8601DateStringUTCFull, JSONEncodedString, UnixDateTimeNumber, WebsiteUrlWithPrefix } from '@dereekb/util';
+import { Analysis, Artifact, Assistant, Call, CallCostsItem, CallEndedReason, CallStatus, ChatCostsItem, ChatMessagesItem, CostBreakdown, ServerMessageEndOfCallReportCostsItem } from '@vapi-ai/server-sdk/api';
+import { VapiAssistantId, VapiCostsItem } from '../vapiai.type';
 
 export enum VapiWebhookEnum {
   ASSISTANT_REQUEST = 'assistant-request',
@@ -85,84 +8,145 @@ export enum VapiWebhookEnum {
   STATUS_UPDATE = 'status-update',
   END_OF_CALL_REPORT = 'end-of-call-report',
   HANG = 'hang',
+  // TODO: speech update and transcript are not implemented or have documentation. They might be deprecated
+  /**
+   * @deprecated needs documentation link
+   */
   SPEECH_UPDATE = 'speech-update',
+  /**
+   * @deprecated needs documentation link
+   */
   TRANSCRIPT = 'transcript'
 }
 
-export interface ConversationMessage {
-  role: 'user' | 'system' | 'bot' | 'function_call' | 'function_result';
-  message?: string;
-  name?: string;
-  args?: string;
-  result?: string;
-  time: number;
-  endTime?: number;
-  secondsFromStart: number;
-}
-
 interface BaseVapiPayload {
-  call: VapiCall;
+  readonly call: Call;
 }
 
+/**
+ * Assistant request event payload
+ *
+ * https://docs.vapi.ai/server-url/events#retrieving-assistants
+ */
 export interface AssistantRequestPayload extends BaseVapiPayload {
-  type: VapiWebhookEnum.ASSISTANT_REQUEST;
+  readonly type: VapiWebhookEnum.ASSISTANT_REQUEST;
 }
 
+/**
+ * Status update event payload
+ *
+ * https://docs.vapi.ai/server-url/events#call-status-updates
+ */
 export interface StatusUpdatePayload extends BaseVapiPayload {
-  type: VapiWebhookEnum.STATUS_UPDATE;
-  status: VapiCallStatus;
-  messages?: ChatCompletionMessageParam[];
+  readonly type: VapiWebhookEnum.STATUS_UPDATE;
+  readonly status: CallStatus;
 }
 
+/**
+ * Function call event payload
+ *
+ * https://docs.vapi.ai/server-url/events#function-calling
+ */
 export interface FunctionCallPayload extends BaseVapiPayload {
-  type: VapiWebhookEnum.FUNCTION_CALL;
-  functionCall: ChatCompletionCreateParams.Function;
+  readonly type: VapiWebhookEnum.FUNCTION_CALL;
+  readonly functionCall: {
+    readonly name: string;
+    readonly parameters: JSONEncodedString;
+  };
 }
 
+/**
+ * End of call report event payload
+ *
+ * https://docs.vapi.ai/server-url/events#end-of-call-report
+ */
 export interface EndOfCallReportPayload extends BaseVapiPayload {
-  type: VapiWebhookEnum.END_OF_CALL_REPORT;
-  endedReason: string;
-  transcript: string;
-  messages: ConversationMessage[];
-  summary: string;
-  recordingUrl?: string;
+  readonly type: VapiWebhookEnum.END_OF_CALL_REPORT;
+  readonly timestamp: UnixDateTimeNumber;
+  readonly analysis: Analysis;
+  readonly artifact: Artifact;
+  readonly startedAt: ISO8601DateStringUTCFull;
+  readonly endedAt: ISO8601DateStringUTCFull;
+  readonly endedReason: CallEndedReason;
+  readonly cost: DollarAmount;
+  readonly costBreakdown: CostBreakdown;
+  readonly costs: VapiCostsItem[];
+  readonly transcript: string;
+  readonly messages: ChatMessagesItem[];
+  readonly summary: string;
+  readonly recordingUrl?: WebsiteUrlWithPrefix;
+  readonly stereoRecordingUrl?: WebsiteUrlWithPrefix;
+  readonly assistant: Assistant;
 }
 
+/**
+ * Hang event payload
+ *
+ * https://docs.vapi.ai/server-url/events#hang-notifications
+ */
 export interface HangPayload extends BaseVapiPayload {
-  type: VapiWebhookEnum.HANG;
+  readonly type: VapiWebhookEnum.HANG;
 }
 
+/**
+ * @deprecated needs documentation link
+ */
 export interface SpeechUpdatePayload extends BaseVapiPayload {
-  type: VapiWebhookEnum.SPEECH_UPDATE;
-  status: 'started' | 'stopped';
-  role: 'assistant' | 'user';
+  readonly type: VapiWebhookEnum.SPEECH_UPDATE;
+  readonly status: 'started' | 'stopped';
+  readonly role: 'assistant' | 'user';
 }
 
+/**
+ * @deprecated needs documentation link
+ */
 export interface TranscriptPayload {
-  type: VapiWebhookEnum.TRANSCRIPT;
-  role: 'assistant' | 'user';
-  transcriptType: 'partial' | 'final';
-  transcript: string;
+  readonly type: VapiWebhookEnum.TRANSCRIPT;
+  readonly role: 'assistant' | 'user';
+  readonly transcriptType: 'partial' | 'final';
+  readonly transcript: string;
 }
 
-export interface VapiCall {}
 export type VapiPayload = AssistantRequestPayload | StatusUpdatePayload | FunctionCallPayload | EndOfCallReportPayload | SpeechUpdatePayload | TranscriptPayload | HangPayload;
 
-export type FunctionCallMessageResponse =
-  | {
-      result: string;
-    }
-  | any;
+/**
+ * Response returned when a function is called.
+ *
+ * https://docs.vapi.ai/server-url/events#function-calling
+ */
+export type FunctionCallMessageResponse = {
+  readonly result: string | JSONEncodedString;
+};
 
-export interface AssistantRequestMessageResponse {
-  assistant?: Assistant;
-  error?: string;
+/**
+ * Response returned when an assistant request is received.
+ *
+ * https://docs.vapi.ai/server-url/events#retrieving-assistants
+ */
+export type AssistantRequestMessageResponse = AssistantRequestMessageSuccessResponse | AssistantRequestMessageErrorResponse;
+export type AssistantRequestMessageSuccessResponse = AssistantRequestMessageSuccessIdResponse | AssistantRequestMessageSuccessObjectResponse;
+
+export interface AssistantRequestMessageSuccessIdResponse {
+  readonly assistantId: VapiAssistantId;
 }
 
-export interface StatusUpdateMessageResponse {}
-export interface SpeechUpdateMessageResponse {}
-export interface TranscriptMessageResponse {}
-export interface HangMessageResponse {}
-export interface EndOfCallReportMessageResponse {}
+export interface AssistantRequestMessageSuccessObjectResponse {
+  readonly assistant: Assistant;
+}
+
+export interface AssistantRequestMessageErrorResponse {
+  readonly error?: string;
+}
+
+/**
+ * Response that does not return any data.
+ */
+export type VapiVoidResponse = void;
+
+export type StatusUpdateMessageResponse = VapiVoidResponse;
+export type SpeechUpdateMessageResponse = VapiVoidResponse;
+export type TranscriptMessageResponse = VapiVoidResponse;
+export type HangMessageResponse = VapiVoidResponse;
+export type EndOfCallReportMessageResponse = VapiVoidResponse;
 
 export type VapiResponse = AssistantRequestMessageResponse | FunctionCallMessageResponse | EndOfCallReportMessageResponse | HangMessageResponse | StatusUpdateMessageResponse | SpeechUpdateMessageResponse | TranscriptMessageResponse;

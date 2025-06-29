@@ -1,24 +1,32 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, MAP_IDENTITY } from '@dereekb/util';
+import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, MAP_IDENTITY, Maybe } from '@dereekb/util';
 import '../vapiai.type';
-import { AssistantRequestPayload, EndOfCallReportPayload, FunctionCallPayload, HangPayload, SpeechUpdatePayload, StatusUpdatePayload, TranscriptPayload, VapiPayload, VapiWebhookEnum } from './webhook.vapiai.types';
+import { AssistantRequestPayload, EndOfCallReportPayload, FunctionCallPayload, HangPayload, SpeechUpdatePayload, StatusUpdatePayload, TranscriptPayload, VapiPayload, VapiResponse, VapiWebhookEnum } from './webhook.vapiai.types';
 
 export type VapiAiWebhookEventType = VapiWebhookEnum | string;
+
+export interface VapiAiWebhookResult {
+  readonly handled: boolean;
+  /**
+   * Response to return to the vapi server.
+   */
+  readonly response?: VapiResponse;
+}
+
+export interface RawVapiAiWebhookEvent {
+  readonly message: UntypedVapiAiWebhookEvent;
+}
 
 /**
  * A parsed VapiWebhookEventType that contains the relevant data and the original event.
  */
-export interface VapiAiWebhookEvent<T extends VapiPayload = VapiPayload, ET extends VapiAiWebhookEventType = VapiAiWebhookEventType> {
+export type VapiAiWebhookEvent<T extends VapiPayload = VapiPayload, ET extends VapiAiWebhookEventType = VapiAiWebhookEventType> = T & {
   /**
    * The event type
    */
-  readonly event: ET;
-  /**
-   * The relevant payload associated with the event.
-   */
-  readonly payload: T;
-}
+  readonly type: ET;
+};
 
-export type UntypedVapiAiWebhookEvent = VapiAiWebhookEvent<any>;
+export type UntypedVapiAiWebhookEvent = VapiAiWebhookEvent;
 
 /**
  * Creates a ZoomWebhookEvent and treats the data as the input type.
@@ -27,32 +35,44 @@ export type UntypedVapiAiWebhookEvent = VapiAiWebhookEvent<any>;
  * @returns
  */
 export function vapiAiWebhookEvent<T extends VapiPayload>(event: UntypedVapiAiWebhookEvent): VapiAiWebhookEvent<T> {
-  return {
-    event: event.event,
-    payload: event.payload as unknown as T
-  };
+  return event as VapiAiWebhookEvent<T>;
 }
 
 // MARK: Handler
 export type VapiAiEventHandler = Handler<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType>;
-export const vapiaiEventHandlerFactory = handlerFactory<UntypedVapiAiWebhookEvent>((x) => x.event);
+export const vapiaiEventHandlerFactory = handlerFactory<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult>((x) => x.type, {
+  defaultResult: {
+    handled: true,
+    response: undefined
+  },
+  negativeResult: {
+    handled: true,
+    response: undefined
+  }
+});
 
-export type VapiAiHandlerMappedSetFunction<T extends VapiPayload> = HandlerMappedSetFunction<VapiAiWebhookEvent<T>>;
+export type VapiAiHandlerMappedSetFunction<T extends VapiPayload> = HandlerMappedSetFunction<VapiAiWebhookEvent<T>, Maybe<VapiAiWebhookResult>>;
 
-export interface VapiAiEventHandlerConfigurer extends HandlerBindAccessor<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType> {
+export interface VapiAiEventHandlerConfigurer extends HandlerBindAccessor<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult> {
   readonly handleAssistantRequest: VapiAiHandlerMappedSetFunction<AssistantRequestPayload>;
   readonly handleStatusUpdate: VapiAiHandlerMappedSetFunction<StatusUpdatePayload>;
   readonly handleFunctionCall: VapiAiHandlerMappedSetFunction<FunctionCallPayload>;
   readonly handleEndOfCallReport: VapiAiHandlerMappedSetFunction<EndOfCallReportPayload>;
-  readonly handleSpeechUpdate: VapiAiHandlerMappedSetFunction<SpeechUpdatePayload>;
-  readonly handleTranscript: VapiAiHandlerMappedSetFunction<TranscriptPayload>;
   readonly handleHang: VapiAiHandlerMappedSetFunction<HangPayload>;
+  /**
+   * @deprecated
+   */
+  readonly handleSpeechUpdate: VapiAiHandlerMappedSetFunction<SpeechUpdatePayload>;
+  /**
+   * @deprecated
+   */
+  readonly handleTranscript: VapiAiHandlerMappedSetFunction<TranscriptPayload>;
 }
 
-export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<VapiAiEventHandlerConfigurer, UntypedVapiAiWebhookEvent>({
-  configurerForAccessor: (accessor: HandlerBindAccessor<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType>) => {
+export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<VapiAiEventHandlerConfigurer, UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult>({
+  configurerForAccessor: (accessor: HandlerBindAccessor<UntypedVapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult>) => {
     // eslint-disable-next-line
-    const fnWithKey = handlerMappedSetFunctionFactory<VapiAiWebhookEvent<any>, any>(accessor, vapiAiWebhookEvent);
+    const fnWithKey = handlerMappedSetFunctionFactory<VapiAiWebhookEvent<any>, any, VapiAiWebhookEventType, Maybe<VapiAiWebhookResult>>(accessor, vapiAiWebhookEvent);
 
     const configurer: VapiAiEventHandlerConfigurer = {
       ...accessor,
@@ -60,9 +80,9 @@ export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<Vapi
       handleStatusUpdate: fnWithKey(VapiWebhookEnum.STATUS_UPDATE),
       handleFunctionCall: fnWithKey(VapiWebhookEnum.FUNCTION_CALL),
       handleEndOfCallReport: fnWithKey(VapiWebhookEnum.END_OF_CALL_REPORT),
+      handleHang: fnWithKey(VapiWebhookEnum.HANG),
       handleSpeechUpdate: fnWithKey(VapiWebhookEnum.SPEECH_UPDATE),
-      handleTranscript: fnWithKey(VapiWebhookEnum.TRANSCRIPT),
-      handleHang: fnWithKey(VapiWebhookEnum.HANG)
+      handleTranscript: fnWithKey(VapiWebhookEnum.TRANSCRIPT)
     };
 
     return configurer;

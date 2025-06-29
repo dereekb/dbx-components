@@ -1,13 +1,13 @@
 import { type MapFunction } from '../value/map';
 import { type ArrayOrValue } from '../array/array';
 import { type PrimativeKey } from '../key';
-import { InternalHandlerFunction, type Handler, type HandlerAccessor, type HandlerFunction, type HandlerSetAccessor } from './handler';
+import { HandleResult, InternalHandlerFunction, type Handler, type HandlerAccessor, type HandlerFunction, type HandlerSetAccessor } from './handler';
 
 /**
  * Wraps a HandlerAccessor and the item it is bound to in order to be a HandlerSetAccessor.
  */
-export interface HandlerBindAccessor<T, K extends PrimativeKey = string> extends HandlerSetAccessor<T, K> {
-  readonly accessor: HandlerAccessor<T, K>;
+export interface HandlerBindAccessor<T, K extends PrimativeKey = string, R = HandleResult> extends HandlerSetAccessor<T, K, R> {
+  readonly accessor: HandlerAccessor<T, K, R>;
   readonly boundTo: unknown;
 }
 
@@ -18,14 +18,14 @@ export interface HandlerBindAccessor<T, K extends PrimativeKey = string> extends
  * @param accessor
  * @returns
  */
-export function handlerBindAccessor<T, K extends PrimativeKey = string>(boundTo: unknown, accessor: HandlerAccessor<T, K>): HandlerBindAccessor<T, K> {
+export function handlerBindAccessor<T, K extends PrimativeKey = string, R = HandleResult>(boundTo: unknown, accessor: HandlerAccessor<T, K, R>): HandlerBindAccessor<T, K, R> {
   return {
     accessor,
     boundTo,
-    set: (key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
+    set: (key: ArrayOrValue<K>, handle: HandlerFunction<T, R>) => {
       accessor.bindSet(boundTo, key, handle);
     },
-    setCatchAll: (handle: HandlerFunction<T>) => {
+    setCatchAll: (handle: HandlerFunction<T, R>) => {
       accessor.setCatchAll(handle);
     }
   };
@@ -34,7 +34,7 @@ export function handlerBindAccessor<T, K extends PrimativeKey = string>(boundTo:
 /**
  * Contextual function that configures the context's Handler with the input function for the context's key.
  */
-export type HandlerSetFunction<T> = (handlerFunction: InternalHandlerFunction<T>) => void;
+export type HandlerSetFunction<T, R = HandleResult> = (handlerFunction: InternalHandlerFunction<T, R>) => void;
 
 /**
  * Creates a HandlerSetFunction.
@@ -43,8 +43,8 @@ export type HandlerSetFunction<T> = (handlerFunction: InternalHandlerFunction<T>
  * @param key
  * @returns
  */
-export function handlerSetFunction<T, K extends PrimativeKey = string>(accessor: HandlerSetAccessor<T, K>, key: ArrayOrValue<K>): HandlerSetFunction<T> {
-  const fn = (handlerFunction: InternalHandlerFunction<T>) => {
+export function handlerSetFunction<T, K extends PrimativeKey = string, R = HandleResult>(accessor: HandlerSetAccessor<T, K, R>, key: ArrayOrValue<K>): HandlerSetFunction<T, R> {
+  const fn = (handlerFunction: InternalHandlerFunction<T, R>) => {
     accessor.set(key, handlerFunction); // set the handler on the pre-defined key.
   };
 
@@ -53,11 +53,11 @@ export function handlerSetFunction<T, K extends PrimativeKey = string>(accessor:
   return fn;
 }
 
-export type HandlerMappedSetFunction<I> = (handlerFunction: InternalHandlerFunction<I>) => void;
+export type HandlerMappedSetFunction<I, R = HandleResult> = (handlerFunction: InternalHandlerFunction<I, R>) => void;
 
-export function handlerMappedSetFunction<I, T, K extends PrimativeKey = string>(accessor: HandlerSetAccessor<T, K>, key: ArrayOrValue<K>, mapFn: MapFunction<T, I>): HandlerMappedSetFunction<I> {
+export function handlerMappedSetFunction<I, T, K extends PrimativeKey = string, R = HandleResult>(accessor: HandlerSetAccessor<T, K, R>, key: ArrayOrValue<K>, mapFn: MapFunction<T, I>): HandlerMappedSetFunction<I, R> {
   const handlerSet = handlerSetFunction(accessor, key);
-  return (handlerFunction: InternalHandlerFunction<I>) => {
+  return (handlerFunction: InternalHandlerFunction<I, R>) => {
     // set an intermediary function that calls the target function. We don't use an arrow function so we have access to the "this", if bound.
     handlerSet(function (this: unknown, value: T) {
       const mapped = mapFn(value); // fowards "this" to the next call.
@@ -69,27 +69,27 @@ export function handlerMappedSetFunction<I, T, K extends PrimativeKey = string>(
 /**
  * Factory for a HandlerMappedSetFunction<I>.
  */
-export type HandlerMappedSetFunctionFactory<I, K extends PrimativeKey = string> = (key: ArrayOrValue<K>) => HandlerMappedSetFunction<I>;
+export type HandlerMappedSetFunctionFactory<I, K extends PrimativeKey = string, R = HandleResult> = (key: ArrayOrValue<K>) => HandlerMappedSetFunction<I, R>;
 
-export function handlerMappedSetFunctionFactory<I, T, K extends PrimativeKey = string>(accessor: HandlerSetAccessor<T, K>, mapFn: MapFunction<T, I>): HandlerMappedSetFunctionFactory<I, K> {
+export function handlerMappedSetFunctionFactory<I, T, K extends PrimativeKey = string, R = HandleResult>(accessor: HandlerSetAccessor<T, K, R>, mapFn: MapFunction<T, I>): HandlerMappedSetFunctionFactory<I, K, R> {
   return (key: ArrayOrValue<K>) => handlerMappedSetFunction(accessor, key, mapFn);
 }
 
-export type HandlerConfigurerFunction<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (configurer: C) => void;
-export type HandlerConfigurer<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K>) => void;
-export type HandlerConfigurerFactory<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (handler: Handler<T, K>) => HandlerConfigurer<C, T, K>;
+export type HandlerConfigurerFunction<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> = (configurer: C) => void;
+export type HandlerConfigurer<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> = (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K, R>) => void;
+export type HandlerConfigurerFactory<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> = (handler: Handler<T, K, R>) => HandlerConfigurer<C, T, K, R>;
 
 /**
  * Config for handlerConfigurerFactory().
  */
-export interface HandlerConfigurerFactoryConfig<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> {
-  configurerForAccessor: (accessor: HandlerBindAccessor<T, K>) => C;
+export interface HandlerConfigurerFactoryConfig<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> {
+  configurerForAccessor: (accessor: HandlerBindAccessor<T, K, R>) => C;
 }
 
-export function handlerConfigurerFactory<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string>(config: HandlerConfigurerFactoryConfig<C, T, K>): HandlerConfigurerFactory<C, T, K> {
-  return (handler: Handler<T, K>) => {
-    return (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K>) => {
-      const accessor: HandlerBindAccessor<T, K> = handlerBindAccessor(bindTo, handler);
+export function handlerConfigurerFactory<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult>(config: HandlerConfigurerFactoryConfig<C, T, K, R>): HandlerConfigurerFactory<C, T, K, R> {
+  return (handler: Handler<T, K, R>) => {
+    return (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K, R>) => {
+      const accessor: HandlerBindAccessor<T, K, R> = handlerBindAccessor(bindTo, handler);
       const configurer: C = config.configurerForAccessor(accessor);
       configure(configurer);
     };

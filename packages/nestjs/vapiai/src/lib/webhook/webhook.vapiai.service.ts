@@ -1,13 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Request } from 'express';
-import { UntypedVapiAiWebhookEvent, vapiaiEventHandlerConfigurerFactory, vapiaiEventHandlerFactory, VapiAiWebhookEvent, VapiAiWebhookEventType } from './webhook.vapiai';
+import { UntypedVapiAiWebhookEvent, vapiaiEventHandlerConfigurerFactory, vapiaiEventHandlerFactory, VapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult } from './webhook.vapiai';
 import { VapiAiApi } from '../vapiai.api';
 import { Handler } from '@dereekb/util';
 import { vapiAiWebhookEventVerifier, VapiAiWebhookEventVerifier } from './webhook.vapiai.verify';
+import { Maybe } from '@dereekb/util';
+import { VapiResponse } from './webhook.vapiai.types';
+import { VapiAiWebhookServiceConfig } from './webhook.vapi.config';
 
-export interface UpdateForVapiAiWebhookResponse {
+export interface UpdateForVapiAiWebhookResponse extends VapiAiWebhookResult {
   readonly valid: boolean;
-  readonly handled: boolean;
   readonly event: UntypedVapiAiWebhookEvent;
 }
 
@@ -18,43 +20,43 @@ export interface UpdateForVapiAiWebhookResponse {
 export class VapiAiWebhookService {
   private readonly logger = new Logger('VapiAiWebhookService');
 
-  private readonly _vapiaiApi: VapiAiApi;
   private readonly _verifier: VapiAiWebhookEventVerifier;
 
-  readonly handler: Handler<VapiAiWebhookEvent, VapiAiWebhookEventType> = vapiaiEventHandlerFactory();
+  readonly handler: Handler<VapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult> = vapiaiEventHandlerFactory();
   readonly configure = vapiaiEventHandlerConfigurerFactory(this.handler);
 
-  constructor(@Inject(VapiAiApi) vapiaiApi: VapiAiApi) {
-    this._vapiaiApi = vapiaiApi;
-    this._verifier = vapiAiWebhookEventVerifier(vapiaiApi.config.vapiai.config.token);
+  constructor(@Inject(VapiAiWebhookServiceConfig) vapiAiWebhookServiceConfig: VapiAiWebhookServiceConfig) {
+    this._verifier = vapiAiWebhookEventVerifier(vapiAiWebhookServiceConfig.webhookConfig);
   }
 
   public async updateForWebhook(req: Request, rawBody: Buffer): Promise<UpdateForVapiAiWebhookResponse> {
     const { valid, event } = await this._verifier(req, rawBody);
-    let handled: boolean = false;
+    let result: VapiAiWebhookResult = {
+      handled: false
+    };
 
     if (!valid) {
       this.logger.warn('Received invalid Vapi.ai event: ', event);
     } else {
-      handled = await this.updateForVapiAiEvent(event);
+      result = await this.updateForVapiAiEvent(event);
     }
 
-    const result: UpdateForVapiAiWebhookResponse = {
+    const response: UpdateForVapiAiWebhookResponse = {
       valid,
-      handled,
-      event
+      event,
+      ...result
     };
 
-    return result;
+    return response;
   }
 
-  async updateForVapiAiEvent(event: UntypedVapiAiWebhookEvent): Promise<boolean> {
-    const handled: boolean = await this.handler(event);
+  async updateForVapiAiEvent(event: UntypedVapiAiWebhookEvent): Promise<VapiAiWebhookResult> {
+    const result: VapiAiWebhookResult = await this.handler(event);
 
-    if (!handled) {
+    if (!result.handled) {
       this.logger.warn('Received unexpected/unhandled Vapi.ai event: ', event);
     }
 
-    return handled;
+    return result;
   }
 }

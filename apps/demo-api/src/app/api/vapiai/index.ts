@@ -1,1 +1,1 @@
-export * from './zoom.module';
+export * from './vapiai.module';
