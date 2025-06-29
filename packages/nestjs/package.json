@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "12.1.14",
+  "version": "12.2.0",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -20,6 +20,12 @@
       "main": "./mailgun/src/index.js",
       "require": "./mailgun/src/index.js",
       "default": "./mailgun/src/index.js"
+    },
+    "./vapiai": {
+      "types": "./vapiai/src/index.d.ts",
+      "main": "./vapiai/src/index.js",
+      "require": "./vapiai/src/index.js",
+      "default": "./vapiai/src/index.js"
     }
   },
   "main": "./src/index.js",

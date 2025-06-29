@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "12.1.14",
+  "version": "12.2.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -46,6 +46,7 @@
     "@uirouter/angular": "15.0.0",
     "@uirouter/core": "^6.1.1",
     "@uirouter/rx": "^1.0.0",
+    "@vapi-ai/server-sdk": "^0.9.3",
     "@vvo/tzdb": "^6.0.0",
     "angular-calendar": "^0.31.0",
     "change-case-all": "^2.1.0",
@@ -70,6 +71,7 @@
     "ngx-infinite-scroll": "^18.0.0",
     "ngx-mapbox-gl": "git+https://git@github.com/dereekb/ngx-mapbox-gl#2df784c783083d7c1eb6f5118ee871ca725eda62",
     "ngx-mat-intl-tel-input": "^5.0.0",
+    "openai": "^5.8.2",
     "reflect-metadata": ">= 0.1.12 < 0.3.0",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxjs": "^7.5.0",

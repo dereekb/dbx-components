@@ -1,0 +1,7 @@
+{
+  "name": "@dereekb/nestjs/vapiai",
+  "version": "12.2.0",
+  "type": "commonjs",
+  "peerDependencies": {},
+  "dependencies": {}
+}

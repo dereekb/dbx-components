@@ -30,30 +30,30 @@ export type HandlerKey<K extends PrimativeKey = string> = K | HandlerCatchAllKey
  *
  * If the value is not used/"handled", returns false.
  */
-export type HandlerFunction<T> = (value: T) => Promise<HandleResult>;
+export type HandlerFunction<T, R = HandleResult> = (value: T) => Promise<R>;
 
 /**
  * HandleFunction, but used only by Handler that can return undefined.
  */
-export type InternalHandlerFunction<T> = (value: T) => PromiseOrValue<InternalHandlerFunctionHandleResult>;
+export type InternalHandlerFunction<T, R = HandleResult> = (value: T) => PromiseOrValue<R | void>;
 
-export interface HandlerSetAccessor<T, K extends PrimativeKey = string> {
+export interface HandlerSetAccessor<T, K extends PrimativeKey = string, R = HandleResult> {
   /**
    * Adds a new handler function to the current handler.
    *
    * @param key
    * @param handle
    */
-  set(key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T>): void;
+  set(key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T, R>): void;
   /**
    * Sets the catch-all handler function to the current handler.
    *
    * @param handle
    */
-  setCatchAll(handle: InternalHandlerFunction<T>): void;
+  setCatchAll(handle: InternalHandlerFunction<T, R>): void;
 }
 
-export interface HandlerAccessor<T, K extends PrimativeKey = string> extends HandlerSetAccessor<T, K> {
+export interface HandlerAccessor<T, K extends PrimativeKey = string, R = HandleResult> extends HandlerSetAccessor<T, K, R> {
   /**
    * Used to read a handler key from the input value.
    */
@@ -66,22 +66,32 @@ export interface HandlerAccessor<T, K extends PrimativeKey = string> extends Han
    * @param key
    * @param handle
    */
-  bindSet(bindTo: unknown, key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T>): void;
+  bindSet(bindTo: unknown, key: ArrayOrValue<HandlerKey<K>>, handle: InternalHandlerFunction<T, R>): void;
 }
 
-export type Handler<T, K extends PrimativeKey = string> = HandlerFunction<T> & HandlerAccessor<T, K>;
-export type HandlerFactory<T, K extends PrimativeKey = string> = () => Handler<T, K>;
+export type Handler<T, K extends PrimativeKey = string, R = HandleResult> = HandlerFunction<T, R> & HandlerAccessor<T, K, R>;
+export type HandlerFactory<T, K extends PrimativeKey = string, R = HandleResult> = () => Handler<T, K, R>;
 
-export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K> {
+export interface HandlerFactoryOptions<R = HandleResult> {
+  readonly defaultResult: R;
+  readonly negativeResult: R;
+}
+
+export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K, HandleResult>;
+export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options: HandlerFactoryOptions<R>): HandlerFactory<T, K, R>;
+export function handlerFactory<T, K extends PrimativeKey = string, R = HandleResult>(readKey: ReadKeyFunction<T, K>, options?: HandlerFactoryOptions<R>): HandlerFactory<T, K, R> {
+  const defaultResultValue = (options?.defaultResult ?? true) as R;
+  const negativeResultValue = (options?.negativeResult ?? false) as R;
+
   return () => {
-    let catchAll: Maybe<InternalHandlerFunction<T>>;
-    const map = new Map<K, InternalHandlerFunction<T>>();
+    let catchAll: Maybe<InternalHandlerFunction<T, R>>;
+    const map = new Map<K, InternalHandlerFunction<T, R>>();
 
-    const setCatchAll = (handle: InternalHandlerFunction<T>) => {
+    const setCatchAll = (handle: InternalHandlerFunction<T, R>) => {
       catchAll = handle;
     };
 
-    const set = (key: ArrayOrValue<K>, handle: InternalHandlerFunction<T>) => {
+    const set = (key: ArrayOrValue<K>, handle: InternalHandlerFunction<T, R>) => {
       if (key === CATCH_ALL_HANDLE_RESULT_KEY) {
         setCatchAll(handle);
       } else {
@@ -89,25 +99,25 @@ export function handlerFactory<T, K extends PrimativeKey = string>(readKey: Read
       }
     };
 
-    const bindSet = (bindTo: unknown, key: ArrayOrValue<K>, handle: InternalHandlerFunction<T>) => {
+    const bindSet = (bindTo: unknown, key: ArrayOrValue<K>, handle: InternalHandlerFunction<T, R>) => {
       const bindHandle = handle.bind(bindTo);
       set(key, bindHandle);
     };
 
-    const fn = build<Handler<T, K>>({
+    const fn = build<Handler<T, K, R>>({
       base: ((value: T) => {
         const key = readKey(value);
         const handler = (key != null ? map.get(key) : undefined) ?? catchAll;
-        let handled: Promise<boolean>;
+        let handled: Promise<R>;
 
         if (handler) {
-          handled = Promise.resolve(handler(value)).then((x) => x ?? true);
+          handled = Promise.resolve(handler(value)).then((x) => x ?? defaultResultValue);
         } else {
-          handled = Promise.resolve(false);
+          handled = Promise.resolve(negativeResultValue);
         }
 
         return handled;
-      }) as Handler<T, K>,
+      }) as Handler<T, K, R>,
       build: (x) => {
         x.readKey = readKey;
         x.set = set;

@@ -19,6 +19,9 @@
           },
           {
             "command": "npx nx run nestjs-mailgun:build-base"
+          },
+          {
+            "command": "npx nx run nestjs-vapiai:build-base"
           }
         ],
         "parallel": false
@@ -61,6 +64,10 @@
           {
             "description": "run nestjs-mailgun tests",
             "command": "npx nx test nestjs-mailgun"
+          },
+          {
+            "description": "run nestjs-vapiai tests",
+            "command": "npx nx test nestjs-vapiai"
           }
         ],
         "color": true,

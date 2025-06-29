@@ -1,6 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Injectable, Logger } from '@nestjs/common';
-import { UntypedZoomWebhookEvent, ZoomApi , ZoomWebhookService } from '@dereekb/zoom/nestjs';
+import { UntypedZoomWebhookEvent, ZoomApi, ZoomWebhookService } from '@dereekb/zoom/nestjs';
 
 @Injectable()
 export class DemoApiZoomWebhookService {

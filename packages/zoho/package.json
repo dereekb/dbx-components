@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoho",
-  "version": "12.1.14",
+  "version": "12.2.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",
