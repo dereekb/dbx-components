@@ -1,11 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Request } from 'express';
 import { UntypedVapiAiWebhookEvent, vapiaiEventHandlerConfigurerFactory, vapiaiEventHandlerFactory, VapiAiWebhookEvent, VapiAiWebhookEventType, VapiAiWebhookResult } from './webhook.vapiai';
-import { VapiAiApi } from '../vapiai.api';
-import { Handler } from '@dereekb/util';
+import { Handler  } from '@dereekb/util';
 import { vapiAiWebhookEventVerifier, VapiAiWebhookEventVerifier } from './webhook.vapiai.verify';
-import { Maybe } from '@dereekb/util';
-import { VapiResponse } from './webhook.vapiai.types';
 import { VapiAiWebhookServiceConfig } from './webhook.vapi.config';
 
 export interface UpdateForVapiAiWebhookResponse extends VapiAiWebhookResult {

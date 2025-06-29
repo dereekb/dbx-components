@@ -1,7 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Injectable, Logger } from '@nestjs/common';
-import { VapiAiApi, VapiAiWebhookResult, VapiResponse } from '@dereekb/nestjs/vapiai';
-import { UntypedVapiAiWebhookEvent, VapiAiWebhookService } from '@dereekb/nestjs/vapiai';
+import { VapiAiApi,  UntypedVapiAiWebhookEvent, VapiAiWebhookService } from '@dereekb/nestjs/vapiai';
 
 @Injectable()
 export class DemoApiVapiAiWebhookService {

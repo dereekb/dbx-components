@@ -1,7 +1,5 @@
-import { ServerError } from '@dereekb/util';
 import { VapiClient } from '@vapi-ai/server-sdk';
-import { Request } from 'express';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { VapiAiServiceConfig } from './vapiai.config';
 
 @Injectable()

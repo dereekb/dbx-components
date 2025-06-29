@@ -1,5 +1,5 @@
 import { DollarAmount, ISO8601DateStringUTCFull, JSONEncodedString, UnixDateTimeNumber, WebsiteUrlWithPrefix } from '@dereekb/util';
-import { Analysis, Artifact, Assistant, Call, CallCostsItem, CallEndedReason, CallStatus, ChatCostsItem, ChatMessagesItem, CostBreakdown, ServerMessageEndOfCallReportCostsItem } from '@vapi-ai/server-sdk/api';
+import { Analysis, Artifact, Assistant, Call, CallEndedReason, CallStatus, ChatMessagesItem, CostBreakdown } from '@vapi-ai/server-sdk/api';
 import { VapiAssistantId, VapiCostsItem } from '../vapiai.type';
 
 export enum VapiWebhookEnum {

@@ -5,7 +5,7 @@ export const VAPI_AI_WEBHOOK_HMAC_SECRET_TOKEN_ENV_VAR = 'VAPI_AI_WEBHOOK_HMAC_S
 export const VAPI_AI_WEBHOOK_SECRET_VERIFICATION_TYPE_ENV_VAR = 'VAPI_AI_WEBHOOK_SECRET_VERIFICATION_TYPE';
 export const VAPI_AI_WEBHOOK_SIGNATURE_PREFIX_ENV_VAR = 'VAPI_AI_WEBHOOK_SIGNATURE_PREFIX';
 
-export interface VapiAiWebhookConfig extends VapiApiWebhookEventVerificationConfig {}
+export type VapiAiWebhookConfig = VapiApiWebhookEventVerificationConfig
 
 /**
  * Configuration for VapiAiService
