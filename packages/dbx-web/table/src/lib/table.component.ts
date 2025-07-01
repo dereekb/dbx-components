@@ -22,8 +22,6 @@ import { pushArrayItemsIntoArray } from '@dereekb/util';
 import { NgClass } from '@angular/common';
 import { DbxTableFullSummaryRowComponent } from './table.fullsummaryrow.component';
 import { DbxColumnSizeDirective, DbxColumnSizeColumnDirective } from './table.column.size.directive';
-import { DataSource } from '@angular/cdk/table';
-import { ArrayDataSource } from '@angular/cdk/collections';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';

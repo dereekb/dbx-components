@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { LoadingState, ObservableOrValue, PageListLoadingState } from '@dereekb/rxjs';
-import { ReadKeyFunction, type Maybe } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { TrackByFunction } from '@angular/core';
 
