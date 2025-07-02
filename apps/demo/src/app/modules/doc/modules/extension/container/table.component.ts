@@ -3,9 +3,9 @@ import { startOfDay } from 'date-fns';
 import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableItemGroup, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
-import { beginLoadingPage, ObservableOrValue, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
-import { arrayFactory, randomNumberFactory, range } from '@dereekb/util';
-import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
+import { beginLoadingPage, ObservableOrValue, PageListLoadingState, SubscriptionObject, successPageResult, successResult } from '@dereekb/rxjs';
+import { arrayFactory, incrementingNumberFactory, randomNumberFactory, range } from '@dereekb/util';
+import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap, timer, interval, filter, first } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
 import { ExampleTableData, ExampleTableGroupData } from '../component/table.item';
@@ -24,9 +24,10 @@ import { DocExtensionTableFullSummaryRowExampleComponent } from '../component/ta
 
 const numberOfTestItems = 15;
 const daysInWeek = 7;
-const randomValue = randomNumberFactory({ min: 0, max: 100000 }, 'round');
-const randomValueArray = arrayFactory(randomValue);
-const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ ...x, columnValues: randomValueArray(daysInWeek) }));
+let increase = 0;
+const nextNumberValue = incrementingNumberFactory({});
+const randomValueArray = arrayFactory(nextNumberValue);
+const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ ...x, columnValues: randomValueArray(daysInWeek).map((x) => x + increase) }));
 
 @Component({
   templateUrl: './table.component.html',
@@ -39,7 +40,8 @@ export class DocExtensionTableComponent implements OnDestroy {
     distance: 6
   };
 
-  readonly exampleTableData: ExampleTableData[] = range(0, numberOfTestItems).map((x) => ({ name: `Example ${x}`, key: String(x), columnValues: randomValueArray(daysInWeek) }));
+  readonly increaseSubscription = new SubscriptionObject();
+  readonly exampleTableData: ExampleTableData[] = range(0, numberOfTestItems).map((x) => ({ name: `Example ${x}`, key: String(x), columnValues: randomValueArray(daysInWeek).map((x) => x + increase) }));
   readonly exampleTableDataItems = new BehaviorSubject<ExampleTableData[]>(this.exampleTableData);
 
   readonly isLoading$ = this.exampleTableDataItems.pipe(
@@ -167,7 +169,7 @@ export class DocExtensionTableComponent implements OnDestroy {
           return this.exampleTableDataItems
             .pipe(
               skip(skipCount),
-              switchMap((data) => of(successPageResult(0, addRandomValuesToData(data))).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
+              switchMap((data) => of(successPageResult(0, data)).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
             )
             .pipe(startWith(beginLoadingPage<ExampleTableData[]>(0)));
         })
@@ -191,7 +193,23 @@ export class DocExtensionTableComponent implements OnDestroy {
     this.exampleTableDataItems.next([...currentItems, ...newItems]);
   }
 
+  ngOnInit(): void {
+    this.increaseSubscription.subscription = this.isLoading$
+      .pipe(
+        filter((x) => !x),
+        first(),
+        switchMap(() => interval(5000))
+      )
+      .subscribe(() => {
+        increase += 1;
+
+        const newItems = this.exampleTableDataItems.value.map((x) => ({ ...x, columnValues: x.columnValues.map((x) => x + 1) }));
+        this.exampleTableDataItems.next(newItems);
+      });
+  }
+
   ngOnDestroy(): void {
     this.exampleTableDataItems.complete();
+    this.increaseSubscription.destroy();
   }
 }

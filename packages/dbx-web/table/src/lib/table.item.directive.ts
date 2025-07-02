@@ -1,5 +1,5 @@
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe, tapLog } from '@dereekb/rxjs';
 import { Directive, inject, input } from '@angular/core';
 import { distinctUntilChanged } from 'rxjs';
 import { DbxTableStore } from './table.store';
@@ -13,5 +13,5 @@ export abstract class AbstractDbxTableItemDirective<T, C = unknown> {
   readonly tableStore = inject(DbxTableStore<unknown, C, T>);
 
   readonly item = input<Maybe<T>>();
-  readonly item$ = toObservable(this.item).pipe(filterMaybe(), distinctUntilChanged());
+  readonly item$ = toObservable(this.item);
 }
