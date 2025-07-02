@@ -1,6 +1,6 @@
 import { separateValues, type Maybe } from '@dereekb/util';
 import { type FirebaseAuthUserId, type FirestoreModelKey, firestoreSubObject, firestoreModelIdString, firestoreDate, optionalFirestoreUID, firestoreString, optionalFirestoreString, firestorePassThroughField, optionalFirestoreBoolean, type SavedToFirestoreIfTrue } from '../../common';
-import { type NotificationId, type NotificationTemplateType } from './notification.id';
+import { NotificationTaskType, type NotificationId, type NotificationTemplateType } from './notification.id';
 import { isAfter } from 'date-fns';
 import { sortByDateFunction } from '@dereekb/date';
 
@@ -31,9 +31,9 @@ export interface NotificationItem<D extends NotificationItemMetadata = {}> {
    */
   cat: Date;
   /**
-   * Notification template type.
+   * Notification task/template type.
    */
-  t: NotificationTemplateType;
+  t: NotificationTemplateType | NotificationTaskType;
   /**
    * User who created this notification, if applicable.
    */

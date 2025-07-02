@@ -29,7 +29,8 @@ import {
   snapshotConverterFunctions,
   optionalFirestoreDate,
   firestoreUniqueStringArray,
-  type SavedToFirestoreIfFalse
+  type SavedToFirestoreIfFalse,
+  optionalFirestoreArray
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
@@ -359,7 +360,13 @@ export enum NotificationSendType {
   /**
    * Sends the notification even if the NotificationBox does not exist.
    */
-  SEND_WITHOUT_CREATING_BOX = 2
+  SEND_WITHOUT_CREATING_BOX = 2,
+  /**
+   * A task notification.
+   *
+   * This is used with Task-type notifications.
+   */
+  TASK_NOTIFICATION = 3
 }
 
 export enum NotificationSendState {
@@ -372,7 +379,7 @@ export enum NotificationSendState {
    */
   QUEUED = 0,
   /**
-   * Notification has been sent. Will still show as sent even if there were no messages/recipients to send for this medium.
+   * Notification has been sent/complete. Will still show as sent even if there were no messages/recipients to send for this medium.
    */
   SENT = 1,
   /**
@@ -401,17 +408,9 @@ export enum NotificationSendState {
   CONFIG_ERROR = 7
 }
 
-export enum NotificationType {
-  /**
-   * Normal notification that is sent to everyone that is configured for the notification box.
-   */
-  NORMAL = 0,
-  /**
-   * Notification that goes to only the configured users.
-   */
-  AD_HOC = 1
-}
-
+/**
+ * Notification recipient send flags.
+ */
 export enum NotificationRecipientSendFlag {
   /**
    * Will send to all recipients.
@@ -459,6 +458,11 @@ export interface NotificationSendFlags {
 }
 
 /**
+ * Arbitrary unique string that denotes checkpoint progress for a multi-step task.
+ */
+export type NotificationTaskCheckpointString = string;
+
+/**
  * Contains information about which recipients were already sent their messages, etc.
  */
 export interface NotificationSendCheckpoints {
@@ -470,8 +474,12 @@ export interface NotificationSendCheckpoints {
    * Set of emails that the notification was set to via email.
    */
   esr: EmailAddress[];
-
-  // TODO: Add push notification checkpoint details
+  /**
+   * Set of checkpoint strings that denote checkpoint progress for a task.
+   *
+   * Used for multi-step tasks.
+   */
+  tpr: NotificationTaskCheckpointString[];
 }
 
 export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
@@ -517,10 +525,16 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
   sat: Date;
   /**
    * Sending attempts count.
+   *
+   * Only incremented when sending encounters an issue/error.
    */
   a: number;
   /**
-   * Notification has been delivered or should be archived. This is now safe to sync to the NotificationWeek and then delete this.
+   * Notification has been delivered or should be archived.
+   *
+   * This is now safe to sync to the NotificationWeek (not applicable for task-type notifications) and then delete this.
+   *
+   * For Task-type notifications, this is always set to false, as when the task is completed it is deleted.
    */
   d: boolean;
 }
@@ -551,7 +565,8 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
     a: firestoreNumber({ default: 0 }),
     d: firestoreBoolean({ default: false }),
     tsr: firestoreUniqueStringArray(),
-    esr: firestoreUniqueStringArray()
+    esr: firestoreUniqueStringArray(),
+    tpr: firestoreUniqueStringArray()
   }
 });
 

@@ -51,7 +51,7 @@ import {
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter } from '@dereekb/util';
-import { NotificationInitServerActions, NotificationSendService, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 
@@ -79,6 +79,7 @@ export interface DemoApiContext {
   get notificationServerActions(): NotificationServerActions;
   get notificationInitServerActions(): NotificationInitServerActions;
   get notificationSendService(): NotificationSendService;
+  get notificationTaskService(): NotificationTaskService;
 }
 
 // MARK: Admin
@@ -113,6 +114,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get notificationSendService() {
     return this.instance.notificationSendService;
+  }
+
+  get notificationTaskService() {
+    return this.instance.notificationTaskService;
   }
 
   get profileServerActions() {
@@ -159,6 +164,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get notificationSendService() {
     return this.get(NotificationSendService);
+  }
+
+  get notificationTaskService() {
+    return this.get(NotificationTaskService);
   }
 
   get profileServerActions() {
@@ -212,6 +221,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.notificationSendService;
   }
 
+  get notificationTaskService() {
+    return this.instance.notificationTaskService;
+  }
+
   get notificationInitServerActions() {
     return this.instance.notificationInitServerActions;
   }
@@ -260,6 +273,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get notificationSendService() {
     return this.get(NotificationSendService);
+  }
+
+  get notificationTaskService() {
+    return this.get(NotificationTaskService);
   }
 
   get profileServerActions() {

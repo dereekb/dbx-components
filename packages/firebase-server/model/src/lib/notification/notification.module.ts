@@ -5,10 +5,11 @@ import { NotificationTemplateService } from './notification.config.service';
 import { type Maybe } from '@dereekb/util';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationSendService } from './notification.send.service';
+import { NotificationTaskService } from './notification.task.service';
 
 // MARK: Provider Factories
-export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService) {
-  return { ...context, notificationTemplateService, notificationSendService };
+export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) {
+  return { ...context, notificationTemplateService, notificationSendService, notificationTaskService };
 }
 
 export function notificationServerActionsFactory(context: NotificationServerActionsContext) {
@@ -27,6 +28,7 @@ export interface ProvideAppNotificationMetadataConfig extends Pick<ModuleMetadat
   /**
    * The AppNotificationModule requires the following dependencies in order to initialze properly:
    * - NotificationSendService
+   * - NotificationTaskService
    * - BaseNotificationServerActionsContext (BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN)
    * - NotificationInitServerActionsContextConfig (NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN)
    * - NotificationTemplateServiceTypeConfigArray (NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN)
@@ -60,7 +62,7 @@ export function appNotificationModuleMetadata(config: ProvideAppNotificationMeta
       {
         provide: NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN,
         useFactory: notificationServerActionsContextFactory,
-        inject: [BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationTemplateService, NotificationSendService]
+        inject: [BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationTemplateService, NotificationSendService, NotificationTaskService]
       },
       {
         provide: NotificationTemplateService,

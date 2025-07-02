@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
+import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTaskService, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContextWithNotificationServices } from './notification.action.context';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoNotificationTemplateServiceConfigsArrayFactory } from './notification.factory';
 import { DemoApiActionModule } from '../../firebase/action.module';
 import { demoNotificationSendServiceFactory } from './notification.send.service';
 import { demoNotificationInitServerActionsContextConfig } from './notification.init';
+import { demoNotificationTaskServiceFactory } from './notification.task.service';
 
-export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService) => ({ ...context, notificationTemplateService });
+export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) => ({ ...context, notificationTemplateService, notificationSendService, notificationTaskService });
 
 /**
  * Dependencies for the NotificationModule
@@ -18,6 +19,11 @@ export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (
     {
       provide: NotificationSendService,
       useFactory: demoNotificationSendServiceFactory,
+      inject: [DemoFirebaseServerActionsContext]
+    },
+    {
+      provide: NotificationTaskService,
+      useFactory: demoNotificationTaskServiceFactory,
       inject: [DemoFirebaseServerActionsContext]
     },
     {
@@ -35,7 +41,7 @@ export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (
       inject: [DemoFirebaseServerActionsContext]
     }
   ],
-  exports: [DemoApiActionModule, NotificationSendService, BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN]
+  exports: [DemoApiActionModule, NotificationSendService, NotificationTaskService, BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN]
 })
 export class NotificationDependencyModule {}
 
@@ -49,7 +55,7 @@ export class NotificationDependencyModule {}
       {
         provide: DemoFirebaseServerActionsContextWithNotificationServices,
         useFactory: demoFirebaseServerActionsContextWithNotificationServicesFactory,
-        inject: [DemoFirebaseServerActionsContext, NotificationTemplateService]
+        inject: [DemoFirebaseServerActionsContext, NotificationTemplateService, NotificationSendService, NotificationTaskService]
       }
     ],
     exports: [DemoFirebaseServerActionsContextWithNotificationServices]
