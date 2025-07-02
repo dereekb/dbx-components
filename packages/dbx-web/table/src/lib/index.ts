@@ -16,5 +16,6 @@ export * from './table.item.cell.component';
 export * from './table.item.directive';
 export * from './table.item.header.component';
 export * from './table.module';
+export * from './table.reader';
 export * from './table.store';
 export * from './table';
