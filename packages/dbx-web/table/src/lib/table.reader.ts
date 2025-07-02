@@ -76,11 +76,18 @@ export interface DbxTableReaderDelegate<C, T, O> {
   trackItem: DbxTableReaderItemTrackByFunction<T>;
 }
 
-export interface DbxTableReader<C, T, O> {
+export interface DbxTableReaderConfig<C, T, O, G = unknown> {
   /**
    * Delegate used for retrieving the data for a specific column and item/row.
    */
   readonly delegate: DbxTableReaderDelegate<C, T, O>;
+  /**
+   * The table store used for retrieving the items.
+   */
+  readonly tableStore: DbxTableStore<unknown, C, T, G>;
+}
+
+export interface DbxTableReader<C, T, O, G = unknown> extends DbxTableReaderConfig<C, T, O, G> {
   /**
    * Retrieves all cell data pairs for a specific column.
    */
@@ -103,18 +110,7 @@ export interface DbxTableReader<C, T, O> {
   cellDataForColumnAndItem(column: DbxTableColumn<C>, item: T): Observable<Maybe<O>>;
 }
 
-export interface DbxTableReaderConfig<C, T, O> {
-  /**
-   * Delegate used for retrieving the data for a specific column and item/row.
-   */
-  readonly delegate: DbxTableReaderDelegate<C, T, O>;
-  /**
-   * The table store used for retrieving the items.
-   */
-  readonly tableStore: DbxTableStore<unknown, C, T>;
-}
-
-export function dbxTableReader<C, T, O>(config: DbxTableReaderConfig<C, T, O>): DbxTableReader<C, T, O> {
+export function dbxTableReader<C, T, O, G = unknown>(config: DbxTableReaderConfig<C, T, O, G>): DbxTableReader<C, T, O, G> {
   const { delegate, tableStore } = config;
   const { items$ } = tableStore;
   const { readItemCellDataForColumn, trackColumn: inputTrackColumn, trackItem } = delegate;
@@ -263,6 +259,7 @@ export function dbxTableReader<C, T, O>(config: DbxTableReaderConfig<C, T, O>): 
   };
 
   return {
+    tableStore,
     delegate,
     cellDataPairsForColumn,
     cellDataForColumn,
