@@ -8,5 +8,6 @@ export * from './notification.send.service.text';
 export * from './notification.send.service';
 export * from './notification.send';
 export * from './notification.task.service';
+export * from './notification.task.service.handler';
 export * from './notification.error';
 export * from './notification.util';

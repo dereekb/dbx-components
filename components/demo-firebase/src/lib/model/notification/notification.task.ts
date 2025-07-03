@@ -1,15 +1,23 @@
-import { CreateNotificationTaskTemplate, createNotificationTaskTemplate, FirebaseAuthUserId, NotificationTaskType } from '@dereekb/firebase';
+import { CreateNotificationTaskTemplate, createNotificationTaskTemplate, FirebaseAuthUserId, NotificationTaskServiceHandleNotificationTaskResult, NotificationTaskType } from '@dereekb/firebase';
 import { ProfileDocument } from '../profile';
 import { Maybe } from '@dereekb/util';
 
 // MARK: Example Notification
-export const EXAMPLE_NOTIFICATION_TASK_TEMPLATE_TYPE: NotificationTaskType = 'E';
+export const EXAMPLE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'E';
 
-export type ExampleNotificationTaskCheckpoint = 'part_a' | 'part_b';
+export type ExampleNotificationTaskCheckpoint = 'part_a' | 'part_b' | 'part_c';
 
 export interface ExampleNotificationTaskData {
   readonly uid: FirebaseAuthUserId; // user id to store in the notification
+  readonly value?: Maybe<number>;
+  /**
+   * If this value is defined, the task handler will return whatever value is present here.
+   */
+  readonly result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>;
 }
+
+export const EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE = 100;
+export const EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE = 200;
 
 export interface ExampleNotificationTaskInput extends Omit<ExampleNotificationTaskData, 'uid'> {
   readonly profileDocument: ProfileDocument;
@@ -21,7 +29,7 @@ export function exampleNotificationTaskTemplate(input: ExampleNotificationTaskIn
   const uid = profileDocument.id;
 
   return createNotificationTaskTemplate({
-    type: EXAMPLE_NOTIFICATION_TASK_TEMPLATE_TYPE,
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
     /**
      * The notification model is the model to which this notification should be created on/delivered to when looking for a NotificationBox.
      */
@@ -38,7 +46,7 @@ export function exampleNotificationTaskTemplate(input: ExampleNotificationTaskIn
 }
 
 // MARK: Example Unique Notification
-export const EXAMPLE_UNIQUE_NOTIFICATION_TASK_TEMPLATE_TYPE: NotificationTaskType = 'EU';
+export const EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'EU';
 
 export type ExampleUniqueNotificationTaskCheckpoint = 'part_a' | 'part_b';
 
@@ -49,14 +57,15 @@ export interface ExampleUniqueNotificationTaskData {
 export interface ExampleUniqueNotificationTaskInput extends Omit<ExampleUniqueNotificationTaskData, 'uid'> {
   readonly profileDocument: ProfileDocument;
   readonly completedCheckpoints?: Maybe<ExampleUniqueNotificationTaskCheckpoint[]>;
+  readonly overrideExistingTask?: boolean;
 }
 
 export function exampleUniqueNotificationTaskTemplate(input: ExampleUniqueNotificationTaskInput): CreateNotificationTaskTemplate {
-  const { profileDocument } = input;
+  const { profileDocument, overrideExistingTask } = input;
   const uid = profileDocument.id;
 
   return createNotificationTaskTemplate({
-    type: EXAMPLE_UNIQUE_NOTIFICATION_TASK_TEMPLATE_TYPE,
+    type: EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE,
     /**
      * The notification model is the model to which this notification should be created on/delivered to when looking for a NotificationBox.
      */
@@ -69,6 +78,10 @@ export function exampleUniqueNotificationTaskTemplate(input: ExampleUniqueNotifi
       uid
     },
     completedCheckpoints: input.completedCheckpoints,
-    unique: true
+    unique: true,
+    overrideExistingTask
   });
 }
+
+// MARK: All Tasks
+export const ALL_NOTIFICATION_TASK_TYPES: NotificationTaskType[] = [EXAMPLE_NOTIFICATION_TASK_TYPE, EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE];

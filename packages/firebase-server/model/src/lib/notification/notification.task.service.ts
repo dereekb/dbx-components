@@ -1,5 +1,5 @@
-import { NotificationTaskType, NotificationTask, NotificationTaskCheckpointString, NotificationItemMetadata, NotificationTaskServiceTaskHandlerCompletionType } from '@dereekb/firebase';
-import { ArrayOrValue } from '@dereekb/util';
+import { NotificationTaskType, NotificationTask, NotificationTaskCheckpointString, NotificationItemMetadata, NotificationTaskServiceTaskHandlerCompletionType, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { ArrayOrValue, Maybe, Milliseconds } from '@dereekb/util';
 
 /**
  * Provides a reference to a NotificationTaskService instance.
@@ -19,19 +19,10 @@ export abstract class NotificationTaskService {
   /**
    * Returns the NotificationTaskServiceTaskHandler for the input NotificationTaskType.
    */
-  abstract taskHandlerForNotificationTaskType(notificationTaskType: NotificationTaskType): NotificationTaskServiceTaskHandler;
+  abstract taskHandlerForNotificationTaskType(notificationTaskType: NotificationTaskType): Maybe<NotificationTaskServiceTaskHandler>;
 }
 
-export interface NotificationTaskServiceHandleNotificationTaskResult<D extends NotificationItemMetadata = {}> {
-  /**
-   * Completion type for the task result.
-   */
-  readonly completion: NotificationTaskServiceTaskHandlerCompletionType;
-  /**
-   * Updates the metadata for the notification item.
-   */
-  readonly updateMetadata?: Partial<D>;
-}
+export type NotificationTaskServiceTaskHandlerFunction<D extends NotificationItemMetadata = {}> = (notificationTask: NotificationTask<D>) => Promise<NotificationTaskServiceHandleNotificationTaskResult<D>>;
 
 /**
  * Service dedicated to handling NotificationTask values.
@@ -42,5 +33,5 @@ export interface NotificationTaskServiceTaskHandler {
    *
    * Can throw an error if the task cannot be handled due to a configuration error.
    */
-  handleNotificationTask<D extends NotificationItemMetadata>(notificationTask: NotificationTask<D>): Promise<NotificationTaskServiceHandleNotificationTaskResult<D>>;
+  handleNotificationTask: NotificationTaskServiceTaskHandlerFunction;
 }

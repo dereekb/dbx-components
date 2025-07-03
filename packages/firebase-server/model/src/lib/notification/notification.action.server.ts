@@ -77,9 +77,9 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
-import { addHours, addMinutes, isPast } from 'date-fns';
+import { addHours, addMinutes, hoursToMilliseconds, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
 import { notificationBoxDoesNotExist, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
@@ -795,6 +795,9 @@ export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETR
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
+export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
+export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
+
 export function sendNotificationFactory(context: NotificationServerActionsContext) {
   const { appNotificationTemplateTypeInfoRecordService, notificationSendService, notificationTaskService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
@@ -858,8 +861,16 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             if (!notificationTaskHandler) {
               tryRun = false;
               const delay = UNKNOWN_NOTIFICATION_TASK_TYPE_HOURS_DELAY;
-              console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being delayed by ${delay} hours.`);
-              nextSat = addHours(new Date(), delay);
+
+              if (notification.a < UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS) {
+                console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being delayed by ${delay} hours.`);
+                nextSat = addHours(new Date(), delay);
+              } else {
+                console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being deleted.`);
+
+                // delete the notification
+                await deleteNotification();
+              }
             }
           } else {
             templateInstance = notificationTemplateService.templateInstanceForType(t);
@@ -979,38 +990,54 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           const notificationTask: NotificationTask = {
             taskType: item.t,
             item,
+            data: item.d,
             checkpoints: notification.tpr
           };
 
+          // calculate results
+          const notificationTemplate: Partial<Notification> = {};
+
           // perform the task
           try {
-            const { completion } = await notificationTaskHandler.handleNotificationTask(notificationTask);
+            const { completion, updateMetadata, delayUntil } = await notificationTaskHandler.handleNotificationTask(notificationTask);
             notificationTaskCompletionType = completion;
-
-            // calculate results
-            const notificationTemplate: Partial<Notification> = {};
+            success = true;
 
             switch (completion) {
               case true:
                 notificationTemplate.d = true; // mark as done
                 break;
               case false:
+                // failed
                 notificationTemplate.a = notification.a + 1; // increase attempts count
+                success = false;
                 break;
               default:
                 // add the checkpoint to the notification
                 notificationTemplate.tpr = [...notification.tpr, ...asArray(completion)];
+                notificationTemplate.n = {
+                  ...notification.n,
+                  d: {
+                    ...notification.n.d,
+                    ...updateMetadata
+                  }
+                };
                 break;
             }
 
-            await notificationDocument.update(notificationTemplate);
+            // do not update sat if the task is complete
+            if (completion !== true && delayUntil != null) {
+              notificationTemplate.sat = dateOrMillisecondsToDate(delayUntil);
+            }
 
             notificationMarkedDone = notificationTemplate.d === true;
-            success = true;
           } catch (e) {
             console.error(`Failed handling task for notification "${notification.id}" with type "${notificationTask.taskType}": `, e);
+            notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS);
             success = false;
           }
+
+          await notificationDocument.update(notificationTemplate);
         }
       }
 

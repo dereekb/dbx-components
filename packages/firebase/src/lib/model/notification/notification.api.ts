@@ -514,11 +514,20 @@ export interface SendNotificationResult {
   /**
    * Whether or not the notification was deleted.
    *
-   * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist.
+   * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist, or the notification has reached the maximum number of send attempts.
    */
   readonly deletedNotification: boolean;
+  /**
+   * Whether or not the notification exists.
+   */
   readonly exists: boolean;
+  /**
+   * Whether or not the NotificationBox exists.
+   */
   readonly boxExists: boolean;
+  /**
+   * Whether or not the run was tried.
+   */
   readonly tryRun: boolean;
   /**
    * Send emails result.
