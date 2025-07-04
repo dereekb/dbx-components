@@ -28,6 +28,7 @@ demoApiFunctionContextFactory((f) => {
               d: false,
               tsr: [],
               esr: [],
+              tpr: [],
               ts: NotificationSendState.QUEUED,
               es: NotificationSendState.QUEUED,
               ps: NotificationSendState.QUEUED,

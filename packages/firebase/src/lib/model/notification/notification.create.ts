@@ -1,8 +1,8 @@
 import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues, isThrottled } from '@dereekb/util';
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
-import { notificationBoxIdForModel, type NotificationTemplateType } from './notification.id';
-import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFirestoreModelKeyInput, type Transaction, readFirestoreModelKey } from '../../common';
+import { notificationBoxIdForModel, NotificationTaskType, notificationTaskUniqueId, NotificationTaskUniqueId, type NotificationTemplateType } from './notification.id';
+import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type ReadFirestoreModelKeyInput, type Transaction, isFirestoreModelId, readFirestoreModelKey } from '../../common';
 import { type NotificationItem } from './notification.item';
 
 /**
@@ -12,7 +12,7 @@ export interface CreateNotificationTemplateItem extends Omit<NotificationItem, '
   /**
    * Custom created at date for the item.
    */
-  cat?: Maybe<Date>;
+  readonly cat?: Maybe<Date>;
 }
 
 /**
@@ -22,11 +22,30 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
   /**
    * Model key of the NotificationBox's target model (not the NotificationBox's key)
    */
-  notificationModel: ModelKey;
+  readonly notificationModel: ModelKey;
   /**
    * Item template
    */
-  n: CreateNotificationTemplateItem;
+  readonly n: CreateNotificationTemplateItem;
+  // MARK: Notification Task Only
+  /**
+   * Whether or not this notification task is "unique".
+   *
+   * If true, the notification task will be created using a unique key based on the target model's id and the task type.
+   *
+   * If a string, the notification task will be created with the provided unique key.
+   *
+   * Only used for Notification Tasks.
+   */
+  readonly unique?: boolean | NotificationTaskUniqueId;
+  /**
+   * Whether or not to override an existing task with the same unique key when creating.
+   *
+   * Defaults to true.
+   *
+   * Only used for Notification Tasks.
+   */
+  readonly overrideExistingTask?: boolean;
 }
 
 export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNotificationTemplate, 'notificationModel'>>, Partial<Omit<CreateNotificationTemplateItem, 't'>> {
@@ -37,7 +56,7 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
   /**
    * Template type
    */
-  readonly type: NotificationTemplateType;
+  readonly type: NotificationTemplateType | NotificationTaskType;
   /**
    * Overrides st
    */
@@ -72,6 +91,8 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
   const {
     notificationModel: inputNotification,
     type,
+    unique,
+    overrideExistingTask,
     // notification
     sendType,
     recipients,
@@ -79,6 +100,8 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     r,
     rf,
     sat,
+    // task notifications
+    tpr,
     // item
     createdBy,
     targetModel: inputTargetModel,
@@ -111,6 +134,7 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     notificationModel,
     st: sendType ?? st,
     sat,
+    tpr,
     rf,
     r: recipients ?? r,
     n: {
@@ -121,7 +145,9 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
       s: subject ?? s,
       g: message ?? g,
       d
-    }
+    },
+    unique,
+    overrideExistingTask
   };
 
   return template;
@@ -179,13 +205,17 @@ export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNo
   readonly accessor?: FirestoreDocumentAccessor<Notification, NotificationDocument>;
 }
 
-export interface CreateNotificationDocumentPairResult {
+export interface CreateNotificationDocumentPairResult extends Pick<CreateNotificationTemplate, 'overrideExistingTask'> {
   readonly notificationDocument: NotificationDocument;
   readonly notification: Notification;
   /**
    * Whether or not the notification was created.
    */
   readonly notificationCreated: boolean;
+  /**
+   * Whether or not the notification is considered a task notification.
+   */
+  readonly isNotificationTask: boolean;
 }
 
 /**
@@ -197,7 +227,7 @@ export interface CreateNotificationDocumentPairResult {
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context } = input;
-  const { notificationModel, st, sat, r, rf, n, ts, es, ps, ns } = template;
+  const { notificationModel, st, sat, r, rf, n, ts, es, ps, ns, tpr, unique: inputUnique, overrideExistingTask } = template;
 
   let accessor = inputAccessor;
   const notificationBoxId = notificationBoxIdForModel(notificationModel);
@@ -214,9 +244,28 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     throw new Error('createNotificationDocument() failed as neither an accessor nor sufficient information was provided about the target.');
   }
 
-  const notificationDocument: NotificationDocument = accessor.newDocument();
-  const id = notificationDocument.id;
+  let notificationDocument: NotificationDocument;
+  const isNotificationTask = st === NotificationSendType.TASK_NOTIFICATION;
 
+  if (isNotificationTask && inputUnique) {
+    let uniqueId: NotificationTaskUniqueId;
+
+    if (typeof inputUnique === 'string') {
+      uniqueId = inputUnique;
+
+      if (!isFirestoreModelId(uniqueId)) {
+        throw new Error('Input "unique" notification task id is not a valid firestore model id.');
+      }
+    } else {
+      uniqueId = notificationTaskUniqueId(notificationModel, n.t);
+    }
+
+    notificationDocument = accessor.loadDocumentForId(uniqueId);
+  } else {
+    notificationDocument = accessor.newDocument();
+  }
+
+  const id = notificationDocument.id;
   const notification: Notification = {
     st: st ?? NotificationSendType.INIT_BOX_AND_SEND,
     sat: sat ?? new Date(),
@@ -236,15 +285,29 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     d: false,
     tsr: [],
     esr: [],
+    tpr: [],
     ts: ts ?? NotificationSendState.QUEUED,
     es: es ?? NotificationSendState.QUEUED,
     ps: ps ?? NotificationSendState.QUEUED,
     ns: ns ?? NotificationSendState.QUEUED
   };
 
+  if (isNotificationTask) {
+    notification.tpr = tpr ?? []; // only set for task notifications
+    // no recipients
+    notification.r = [];
+    // no send states
+    notification.ts = NotificationSendState.NONE;
+    notification.es = NotificationSendState.NONE;
+    notification.ps = NotificationSendState.NONE;
+    notification.ns = NotificationSendState.NONE;
+  }
+
   return {
     notificationDocument,
     notification,
+    isNotificationTask,
+    overrideExistingTask,
     notificationCreated: false
   };
 }
@@ -256,10 +319,14 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
  */
 export async function createNotificationDocument(input: CreateNotificationDocumentPairInput): Promise<CreateNotificationDocumentPairResult> {
   const pair = createNotificationDocumentPair(input);
-  const { notification, notificationDocument } = pair;
+  const { notification, notificationDocument, isNotificationTask, overrideExistingTask } = pair;
 
   if (input.shouldCreateNotification !== false && shouldSendCreatedNotificationInput(input)) {
-    await notificationDocument.create(notification);
+    if (isNotificationTask && overrideExistingTask) {
+      await notificationDocument.accessor.set(notification);
+    } else {
+      await notificationDocument.create(notification);
+    }
     (pair as Building<CreateNotificationDocumentPairResult>).notificationCreated = true;
   }
 

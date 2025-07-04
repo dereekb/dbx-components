@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, viewChild, effect, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
 import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, valueFromFinishedLoadingState } from '@dereekb/rxjs';
@@ -79,11 +79,6 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
 export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly tableStore = inject(DbxTableStore<I, C, T, G>);
   readonly table = viewChild.required<MatTable<DbxTableViewElement<T, G>>>(MatTable);
-
-  /**
-   * TEMPORARY: the cdk seems to not implement change detection properly
-   */
-  readonly cdRef = inject(ChangeDetectorRef);
 
   readonly DEFAULT_TRACK_BY_FUNCTION: TrackByFunction<any> = (index) => {
     return index;
@@ -219,13 +214,6 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
 
   readonly viewDelegateSignal = toSignal(this.tableStore.viewDelegate$);
   readonly elementsSignal = toSignal(this.elements$, { initialValue: [] });
-
-  readonly _elementEffect = effect(() => {
-    const table = this.table();
-    table.dataSource = this.elementsSignal(); // signal to render the rows
-    table.renderRows();
-    this.cdRef.detectChanges(); // detect changes
-  });
 
   onScrollDown(): void {
     this.tableStore.loadMore();

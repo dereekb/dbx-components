@@ -1,8 +1,7 @@
 import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, Maybe } from '@dereekb/util';
-import '../vapiai.type';
-import { AssistantRequestPayload, EndOfCallReportPayload, FunctionCallPayload, HangPayload, SpeechUpdatePayload, StatusUpdatePayload, TranscriptPayload, VapiPayload, VapiResponse, VapiWebhookEnum } from './webhook.vapiai.types';
+import { AssistantRequestPayload, EndOfCallReportPayload, FunctionCallPayload, HangPayload, SpeechUpdatePayload, StatusUpdatePayload, TranscriptPayload, VapiPayload, VapiPayloadType, VapiResponse } from './webhook.vapiai.types';
 
-export type VapiAiWebhookEventType = VapiWebhookEnum | string;
+export type VapiAiWebhookEventType = VapiPayloadType | string;
 
 export interface VapiAiWebhookResult {
   readonly handled: boolean;
@@ -29,7 +28,7 @@ export type VapiAiWebhookEvent<T extends VapiPayload = VapiPayload, ET extends V
 export type UntypedVapiAiWebhookEvent = VapiAiWebhookEvent;
 
 /**
- * Creates a ZoomWebhookEvent and treats the data as the input type.
+ * Creates a VapiAiWebhookEvent and treats the data as the input type.
  *
  * @param event
  * @returns
@@ -76,13 +75,13 @@ export const vapiaiEventHandlerConfigurerFactory = handlerConfigurerFactory<Vapi
 
     const configurer: VapiAiEventHandlerConfigurer = {
       ...accessor,
-      handleAssistantRequest: fnWithKey(VapiWebhookEnum.ASSISTANT_REQUEST),
-      handleStatusUpdate: fnWithKey(VapiWebhookEnum.STATUS_UPDATE),
-      handleFunctionCall: fnWithKey(VapiWebhookEnum.FUNCTION_CALL),
-      handleEndOfCallReport: fnWithKey(VapiWebhookEnum.END_OF_CALL_REPORT),
-      handleHang: fnWithKey(VapiWebhookEnum.HANG),
-      handleSpeechUpdate: fnWithKey(VapiWebhookEnum.SPEECH_UPDATE),
-      handleTranscript: fnWithKey(VapiWebhookEnum.TRANSCRIPT)
+      handleAssistantRequest: fnWithKey('assistant-request'),
+      handleStatusUpdate: fnWithKey('status-update'),
+      handleFunctionCall: fnWithKey('function-call'),
+      handleEndOfCallReport: fnWithKey('end-of-call-report'),
+      handleHang: fnWithKey('hang'),
+      handleSpeechUpdate: fnWithKey('speech-update'),
+      handleTranscript: fnWithKey('transcript')
     };
 
     return configurer;

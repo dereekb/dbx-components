@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "12.2.1",
+  "version": "12.3.0",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -26,6 +26,12 @@
       "main": "./vapiai/src/index.js",
       "require": "./vapiai/src/index.js",
       "default": "./vapiai/src/index.js"
+    },
+    "./openai": {
+      "types": "./openai/src/index.d.ts",
+      "main": "./openai/src/index.js",
+      "require": "./openai/src/index.js",
+      "default": "./openai/src/index.js"
     }
   },
   "main": "./src/index.js",

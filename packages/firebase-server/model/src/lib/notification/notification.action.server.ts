@@ -71,18 +71,21 @@ import {
   UpdateNotificationSummaryParams,
   type NotificationMessage,
   type NotificationBoxDocumentReferencePair,
-  loadNotificationBoxDocumentForReferencePair
+  loadNotificationBoxDocumentForReferencePair,
+  NotificationTask,
+  NotificationTaskServiceTaskHandlerCompletionType
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
-import { addHours, addMinutes, isPast } from 'date-fns';
+import { addHours, addMinutes, hoursToMilliseconds, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
 import { notificationBoxDoesNotExist, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
+import { NotificationTaskServiceRef, NotificationTaskServiceTaskHandler } from './notification.task.service';
 
 /**
  * Injection token for the BaseNotificationServerActionsContext
@@ -95,7 +98,7 @@ export const BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'BA
 export const NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'NOTIFICATION_SERVER_ACTION_CONTEXT';
 
 export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference {}
-export interface NotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, FirestoreContextReference {}
+export interface NotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, AppNotificationTemplateTypeInfoRecordServiceRef, FirebaseServerAuthServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, NotificationTaskServiceRef, FirestoreContextReference {}
 
 export abstract class NotificationServerActions {
   abstract createNotificationUser(params: CreateNotificationUserParams): AsyncNotificationUserCreateAction<CreateNotificationUserParams>;
@@ -783,6 +786,8 @@ export function updateNotificationBoxRecipientFactory(context: NotificationServe
 
 export const UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY = 8;
 export const UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS = 1;
+export const UNKNOWN_NOTIFICATION_TASK_TYPE_HOURS_DELAY = 8;
+export const UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS = 1;
 
 export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY = UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
 export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS = 5;
@@ -790,8 +795,11 @@ export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETR
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
+export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
+export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
+
 export function sendNotificationFactory(context: NotificationServerActionsContext) {
-  const { appNotificationTemplateTypeInfoRecordService, notificationSendService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
+  const { appNotificationTemplateTypeInfoRecordService, notificationSendService, notificationTaskService, notificationTemplateService, authService, notificationBoxCollection, notificationCollectionGroup, notificationUserCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const createNotificationBoxInTransaction = createNotificationBoxInTransactionFactory(context);
   const notificationUserAccessor = notificationUserCollection.documentAccessor();
 
@@ -799,15 +807,14 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
     const { ignoreSendAtThrottle } = params;
 
     return async (notificationDocument: NotificationDocument) => {
-      // does nothing currently.
-
-      const { throttled, tryRun, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
+      const { throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 
         let [notificationBox, notification] = await Promise.all([notificationBoxDocument.snapshotData(), getDocumentSnapshotData(notificationDocumentInTransaction)]);
 
         const model = inferKeyFromTwoWayFlatFirestoreModelKey(notificationBoxDocument.id);
+        const isNotificationTask = notification?.st === NotificationSendType.TASK_NOTIFICATION;
 
         let tryRun = true;
         let throttled = false;
@@ -833,6 +840,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         let onlySendToExplicitlyEnabledRecipients: Maybe<boolean>;
         let onlyTextExplicitlyEnabledRecipients: Maybe<boolean>;
         let templateInstance: Maybe<NotificationTemplateServiceInstance>;
+        let notificationTaskHandler: Maybe<NotificationTaskServiceTaskHandler>;
 
         async function deleteNotification() {
           tryRun = false;
@@ -843,63 +851,84 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         // create/init the notification box if necessary/configured.
         if (notification && tryRun) {
           // if we're still trying to run, check the template is ok. If not, cancel the run.
-          const { t } = notification.n;
+          const {
+            t // notification task/template type
+          } = notification.n;
 
-          templateInstance = notificationTemplateService.templateInstanceForType(t);
-          isConfiguredTemplateType = templateInstance.isConfiguredType;
+          if (isNotificationTask) {
+            notificationTaskHandler = notificationTaskService.taskHandlerForNotificationTaskType(t);
 
-          const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
-
-          isKnownTemplateType = templateTypeInfo != null;
-          onlySendToExplicitlyEnabledRecipients = notification.ois ?? templateTypeInfo?.onlySendToExplicitlyEnabledRecipients;
-          onlyTextExplicitlyEnabledRecipients = notification.ots ?? templateTypeInfo?.onlyTextExplicitlyEnabledRecipients;
-
-          if (!isConfiguredTemplateType) {
-            // log the issue that an notification with an unconfigured type was queued
-            const retryAttempts = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS;
-            const delay = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
-
-            if (notification.a < retryAttempts) {
-              if (isKnownTemplateType) {
-                console.warn(`Unconfigured but known template type of "${t}" (${templateTypeInfo.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
-              } else {
-                console.warn(`Unknown template type of "${t}" was found in a Notification. Send is being delayed by ${delay} hours.`);
-              }
-
-              // delay send for 12 hours, for a max of 24 hours incase it is an issue.
-              nextSat = addHours(new Date(), delay);
+            if (!notificationTaskHandler) {
               tryRun = false;
-            } else {
-              console.warn(`Unconfigured template type of "${t}" was found in a Notification. The Notification has reached the delete threshhold after failing to send due to misconfiguration multiple times and is being deleted.`);
+              const delay = UNKNOWN_NOTIFICATION_TASK_TYPE_HOURS_DELAY;
 
-              // after attempting to send 3 times, delete it.
-              await deleteNotification();
-            }
-          }
+              if (notification.a < UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS) {
+                console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being delayed by ${delay} hours.`);
+                nextSat = addHours(new Date(), delay);
+              } else {
+                console.warn(`Notification task type of "${t}" was found in a Notification but has no handler. Action is being deleted.`);
 
-          // handle the notification box's absence
-          if (!notificationBox && tryRun) {
-            switch (notification.st) {
-              case NotificationSendType.INIT_BOX_AND_SEND:
-                const { notificationBoxTemplate } = await createNotificationBoxInTransaction({ notificationBoxDocument }, transaction);
-                notificationBox = notificationBoxTemplate;
-                createdBox = true;
-                break;
-              case NotificationSendType.SEND_IF_BOX_EXISTS:
-                // delete the notification since it won't get sent.
+                // delete the notification
                 await deleteNotification();
-                break;
-              case NotificationSendType.SEND_WITHOUT_CREATING_BOX:
-                // continue with current tryRun
-                break;
+              }
             }
-          }
+          } else {
+            templateInstance = notificationTemplateService.templateInstanceForType(t);
+            isConfiguredTemplateType = templateInstance.isConfiguredType;
 
-          // if the notification box is not initialized/synchronized yet, do not run.
-          if (tryRun && notificationBox && notificationBox.s) {
-            notificationBoxNeedsInitialization = true;
-            tryRun = false;
-            nextSat = addMinutes(new Date(), NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
+            const templateTypeInfo = appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[t];
+
+            isKnownTemplateType = templateTypeInfo != null;
+            onlySendToExplicitlyEnabledRecipients = notification.ois ?? templateTypeInfo?.onlySendToExplicitlyEnabledRecipients;
+            onlyTextExplicitlyEnabledRecipients = notification.ots ?? templateTypeInfo?.onlyTextExplicitlyEnabledRecipients;
+
+            if (!isConfiguredTemplateType) {
+              // log the issue that an notification with an unconfigured type was queued
+              const retryAttempts = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS;
+              const delay = isKnownTemplateType ? KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY : UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_HOURS_DELAY;
+
+              if (notification.a < retryAttempts) {
+                if (isKnownTemplateType) {
+                  console.warn(`Unconfigured but known template type of "${t}" (${templateTypeInfo.name}) was found in a Notification. Send is being delayed by ${delay} hours.`);
+                } else {
+                  console.warn(`Unknown template type of "${t}" was found in a Notification. Send is being delayed by ${delay} hours.`);
+                }
+
+                // delay send for 12 hours, for a max of 24 hours incase it is an issue.
+                nextSat = addHours(new Date(), delay);
+                tryRun = false;
+              } else {
+                console.warn(`Unconfigured template type of "${t}" was found in a Notification. The Notification has reached the delete threshhold after failing to send due to misconfiguration multiple times and is being deleted.`);
+
+                // after attempting to send 3 times, delete it.
+                await deleteNotification();
+              }
+            }
+
+            // handle the notification box's absence
+            if (!notificationBox && tryRun) {
+              switch (notification.st) {
+                case NotificationSendType.INIT_BOX_AND_SEND:
+                  const { notificationBoxTemplate } = await createNotificationBoxInTransaction({ notificationBoxDocument }, transaction);
+                  notificationBox = notificationBoxTemplate;
+                  createdBox = true;
+                  break;
+                case NotificationSendType.SEND_IF_BOX_EXISTS:
+                  // delete the notification since it won't get sent.
+                  await deleteNotification();
+                  break;
+                case NotificationSendType.SEND_WITHOUT_CREATING_BOX:
+                  // continue with current tryRun
+                  break;
+              }
+            }
+
+            // if the notification box is not initialized/synchronized yet, do not run.
+            if (tryRun && notificationBox && notificationBox.s) {
+              notificationBoxNeedsInitialization = true;
+              tryRun = false;
+              nextSat = addMinutes(new Date(), NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES);
+            }
           }
         }
 
@@ -918,6 +947,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
         return {
           throttled,
+          isNotificationTask,
           deletedNotification,
           createdBox,
           notificationBoxModelKey: model,
@@ -926,6 +956,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           notification,
           templateInstance,
           isKnownTemplateType,
+          notificationTaskHandler,
           isConfiguredTemplateType,
           tryRun,
           onlySendToExplicitlyEnabledRecipients,
@@ -942,259 +973,329 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       let loadMessageFunctionFailure: boolean = false;
       let buildMessageFailure: boolean = false;
       let notificationMarkedDone: boolean = false;
+      let notificationTaskCompletionType: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
 
       const notificationTemplateType: Maybe<NotificationTemplateType> = templateInstance?.type;
 
-      // notification is only null/undefined if it didn't exist.
-      if (notification != null) {
-        if (tryRun && templateInstance != null) {
-          // first load the message function
-          const messageFunction = await templateInstance
-            .loadMessageFunction({
-              item: notification.n,
-              notification,
-              notificationBox: {
-                m: notificationBoxModelKey
-              }
-            })
-            .catch((e) => {
-              loadMessageFunctionFailure = true;
-              success = false;
-              console.error(`Failed loading message function for type ${notificationTemplateType}: `, e);
-              return undefined;
-            });
+      if (isNotificationTask) {
+        await handleNotificationTask();
+      } else {
+        await handleNormalNotification();
+      }
 
-          if (messageFunction) {
-            function filterOutNoContentNotificationMessages(messages: NotificationMessage<any>[]) {
-              return messages.filter((x) => !x.flag);
+      async function handleNotificationTask() {
+        if (tryRun && notification != null && notificationTaskHandler) {
+          const { n: item } = notification;
+
+          const notificationTask: NotificationTask = {
+            taskType: item.t,
+            item,
+            data: item.d,
+            checkpoints: notification.tpr
+          };
+
+          // calculate results
+          const notificationTemplate: Partial<Notification> = {};
+
+          // perform the task
+          try {
+            const { completion, updateMetadata, delayUntil } = await notificationTaskHandler.handleNotificationTask(notificationTask);
+            notificationTaskCompletionType = completion;
+            success = true;
+
+            switch (completion) {
+              case true:
+                notificationTemplate.d = true; // mark as done
+                break;
+              case false:
+                // failed
+                notificationTemplate.a = notification.a + 1; // increase attempts count
+                success = false;
+                break;
+              default:
+                // add the checkpoint to the notification
+                notificationTemplate.tpr = [...notification.tpr, ...asArray(completion)];
+                notificationTemplate.n = {
+                  ...notification.n,
+                  d: {
+                    ...notification.n.d,
+                    ...updateMetadata
+                  }
+                };
+                break;
             }
 
-            // expand recipients
-            const {
-              emails: emailRecipients,
-              texts: textRecipients,
-              notificationSummaries: notificationSummaryRecipients
-            } = await expandNotificationRecipients({
-              notification,
-              notificationBox,
-              authService,
-              notificationUserAccessor,
-              globalRecipients: messageFunction.globalRecipients,
-              onlySendToExplicitlyEnabledRecipients,
-              onlyTextExplicitlyEnabledRecipients,
-              notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
-            });
+            // do not update sat if the task is complete
+            if (completion !== true && delayUntil != null) {
+              notificationTemplate.sat = dateOrMillisecondsToDate(delayUntil);
+            }
 
-            let { es, ts, ps, ns, esr: currentEsr, tsr: currentTsr } = notification;
+            notificationMarkedDone = notificationTemplate.d === true;
+          } catch (e) {
+            console.error(`Failed handling task for notification "${notification.id}" with type "${notificationTask.taskType}": `, e);
+            notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS);
+            success = false;
+          }
 
-            // do emails
-            let esr: EmailAddress[] | undefined;
+          await notificationDocument.update(notificationTemplate);
+        }
+      }
 
-            if (es === NotificationSendState.QUEUED || es === NotificationSendState.SENT_PARTIAL) {
-              const emailRecipientsAlreadySentTo = new Set<EmailAddress>(currentEsr.map((x) => x.toLowerCase()));
-              const emailInputContexts: NotificationMessageInputContext[] = emailRecipients
-                .filter((x) => !emailRecipientsAlreadySentTo.has(x.emailAddress.toLowerCase()))
-                .map((x) => {
-                  const context: NotificationMessageInputContext = {
-                    recipient: {
-                      n: x.name,
-                      e: x.emailAddress,
-                      t: x.phoneNumber
+      /**
+       * Handles a normal (non-task) notification.
+       */
+      async function handleNormalNotification() {
+        // notification is only null/undefined if it didn't exist.
+        if (notification != null) {
+          if (tryRun && templateInstance != null) {
+            // first load the message function
+            const messageFunction = await templateInstance
+              .loadMessageFunction({
+                item: notification.n,
+                notification,
+                notificationBox: {
+                  m: notificationBoxModelKey
+                }
+              })
+              .catch((e) => {
+                loadMessageFunctionFailure = true;
+                success = false;
+                console.error(`Failed loading message function for type ${notificationTemplateType}: `, e);
+                return undefined;
+              });
+
+            if (messageFunction) {
+              function filterOutNoContentNotificationMessages(messages: NotificationMessage<any>[]) {
+                return messages.filter((x) => !x.flag);
+              }
+
+              // expand recipients
+              const {
+                emails: emailRecipients,
+                texts: textRecipients,
+                notificationSummaries: notificationSummaryRecipients
+              } = await expandNotificationRecipients({
+                notification,
+                notificationBox,
+                authService,
+                notificationUserAccessor,
+                globalRecipients: messageFunction.globalRecipients,
+                onlySendToExplicitlyEnabledRecipients,
+                onlyTextExplicitlyEnabledRecipients,
+                notificationSummaryIdForUid: notificationSendService.notificationSummaryIdForUidFunction
+              });
+
+              let { es, ts, ps, ns, esr: currentEsr, tsr: currentTsr } = notification;
+
+              // do emails
+              let esr: EmailAddress[] | undefined;
+
+              if (es === NotificationSendState.QUEUED || es === NotificationSendState.SENT_PARTIAL) {
+                const emailRecipientsAlreadySentTo = new Set<EmailAddress>(currentEsr.map((x) => x.toLowerCase()));
+                const emailInputContexts: NotificationMessageInputContext[] = emailRecipients
+                  .filter((x) => !emailRecipientsAlreadySentTo.has(x.emailAddress.toLowerCase()))
+                  .map((x) => {
+                    const context: NotificationMessageInputContext = {
+                      recipient: {
+                        n: x.name,
+                        e: x.emailAddress,
+                        t: x.phoneNumber
+                      }
+                    };
+
+                    return context;
+                  });
+
+                const emailMessages = await Promise.all(emailInputContexts.map(messageFunction))
+                  .then(filterOutNoContentNotificationMessages)
+                  .catch((e) => {
+                    console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
+                    buildMessageFailure = true;
+                    return undefined;
+                  });
+
+                if (emailMessages?.length) {
+                  if (notificationSendService.emailSendService != null) {
+                    let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>>;
+
+                    try {
+                      sendInstance = await notificationSendService.emailSendService.buildSendInstanceForEmailNotificationMessages(emailMessages);
+                    } catch (e) {
+                      console.error(`Failed building email send instance for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                      es = NotificationSendState.CONFIG_ERROR;
                     }
-                  };
 
-                  return context;
-                });
-
-              const emailMessages = await Promise.all(emailInputContexts.map(messageFunction))
-                .then(filterOutNoContentNotificationMessages)
-                .catch((e) => {
-                  console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
-                  buildMessageFailure = true;
-                  return undefined;
-                });
-
-              if (emailMessages?.length) {
-                if (notificationSendService.emailSendService != null) {
-                  let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>>;
-
-                  try {
-                    sendInstance = await notificationSendService.emailSendService.buildSendInstanceForEmailNotificationMessages(emailMessages);
-                  } catch (e) {
-                    console.error(`Failed building email send instance for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                    if (sendInstance) {
+                      try {
+                        sendEmailsResult = await sendInstance();
+                      } catch (e) {
+                        console.error(`Failed sending email notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                        es = NotificationSendState.SEND_ERROR;
+                      }
+                    }
+                  } else {
+                    console.error(`Failed sending email notification "${notification.id}" with type "${notificationTemplateType}" due to no email service being configured.`);
                     es = NotificationSendState.CONFIG_ERROR;
                   }
 
-                  if (sendInstance) {
-                    try {
-                      sendEmailsResult = await sendInstance();
-                    } catch (e) {
-                      console.error(`Failed sending email notification "${notification.id}" with type "${notificationTemplateType}": `, e);
-                      es = NotificationSendState.SEND_ERROR;
+                  if (sendEmailsResult != null) {
+                    const { success, failed } = sendEmailsResult;
+                    esr = success.length ? currentEsr.concat(success.map((x) => x.toLowerCase())) : undefined;
+
+                    if (failed.length > 0) {
+                      es = NotificationSendState.SENT_PARTIAL;
+                    } else {
+                      es = NotificationSendState.SENT;
                     }
                   }
                 } else {
-                  console.error(`Failed sending email notification "${notification.id}" with type "${notificationTemplateType}" due to no email service being configured.`);
-                  es = NotificationSendState.CONFIG_ERROR;
+                  es = NotificationSendState.SENT;
                 }
-
-                if (sendEmailsResult != null) {
-                  const { success, failed } = sendEmailsResult;
-                  esr = success.length ? currentEsr.concat(success.map((x) => x.toLowerCase())) : undefined;
-
-                  if (failed.length > 0) {
-                    es = NotificationSendState.SENT_PARTIAL;
-                  } else {
-                    es = NotificationSendState.SENT;
-                  }
-                }
-              } else {
-                es = NotificationSendState.SENT;
               }
-            }
 
-            // do phone numbers
-            let tsr: E164PhoneNumber[] | undefined;
+              // do phone numbers
+              let tsr: E164PhoneNumber[] | undefined;
 
-            if (ts === NotificationSendState.QUEUED || ts === NotificationSendState.SENT_PARTIAL) {
-              const textRecipientsAlreadySentTo = new Set<E164PhoneNumber>(currentTsr);
-              const textInputContexts: NotificationMessageInputContext[] = textRecipients
-                .filter((x) => !textRecipientsAlreadySentTo.has(x.phoneNumber))
-                .map((x) => {
+              if (ts === NotificationSendState.QUEUED || ts === NotificationSendState.SENT_PARTIAL) {
+                const textRecipientsAlreadySentTo = new Set<E164PhoneNumber>(currentTsr);
+                const textInputContexts: NotificationMessageInputContext[] = textRecipients
+                  .filter((x) => !textRecipientsAlreadySentTo.has(x.phoneNumber))
+                  .map((x) => {
+                    const context: NotificationMessageInputContext = {
+                      recipient: {
+                        n: x.name,
+                        e: x.emailAddress,
+                        t: x.phoneNumber
+                      }
+                    };
+
+                    return context;
+                  });
+
+                const textMessages = await Promise.all(textInputContexts.map(messageFunction))
+                  .then(filterOutNoContentNotificationMessages)
+                  .catch((e) => {
+                    console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
+                    buildMessageFailure = true;
+                    return undefined;
+                  });
+
+                if (textMessages?.length) {
+                  if (notificationSendService.textSendService != null) {
+                    let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendTextMessagesResult>>;
+
+                    try {
+                      sendInstance = await notificationSendService.textSendService.buildSendInstanceForTextNotificationMessages(textMessages);
+                    } catch (e) {
+                      console.error(`Failed building text send instance for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                      ts = NotificationSendState.CONFIG_ERROR;
+                    }
+
+                    if (sendInstance) {
+                      try {
+                        sendTextsResult = await sendInstance();
+                      } catch (e) {
+                        console.error(`Failed sending text notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                        ts = NotificationSendState.SEND_ERROR;
+                      }
+                    }
+                  } else {
+                    console.error(`Failed sending text notification "${notification.id}" with type "${notificationTemplateType}" due to no text service being configured.`);
+                    ts = NotificationSendState.CONFIG_ERROR;
+                  }
+
+                  if (sendTextsResult != null) {
+                    const { success, failed } = sendTextsResult;
+                    tsr = success.length ? currentTsr.concat(success) : undefined;
+
+                    if (failed.length > 0) {
+                      ts = NotificationSendState.SENT_PARTIAL;
+                    } else {
+                      ts = NotificationSendState.SENT;
+                    }
+                  }
+                } else {
+                  ts = NotificationSendState.SENT;
+                }
+              }
+
+              ps = NotificationSendState.NO_TRY;
+              // NOTE: FCM token management will probably done with a separate system within Notification that stores FCMs for specific users in the app. May also use UIDs to determine who got the push notificdation or not...
+
+              // do notification summaries
+              if (ns === NotificationSendState.QUEUED || ns === NotificationSendState.SENT_PARTIAL) {
+                const notificationSummaryInputContexts: NotificationMessageInputContext[] = notificationSummaryRecipients.map((x) => {
                   const context: NotificationMessageInputContext = {
                     recipient: {
                       n: x.name,
-                      e: x.emailAddress,
-                      t: x.phoneNumber
+                      s: x.notificationSummaryId
                     }
                   };
 
                   return context;
                 });
 
-              const textMessages = await Promise.all(textInputContexts.map(messageFunction))
-                .then(filterOutNoContentNotificationMessages)
-                .catch((e) => {
-                  console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
-                  buildMessageFailure = true;
-                  return undefined;
-                });
+                const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(messageFunction))
+                  .then(filterOutNoContentNotificationMessages)
+                  .catch((e) => {
+                    console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
+                    buildMessageFailure = true;
+                    return undefined;
+                  });
 
-              if (textMessages?.length) {
-                if (notificationSendService.textSendService != null) {
-                  let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendTextMessagesResult>>;
+                if (notificationSummaryMessages?.length) {
+                  if (notificationSendService.notificationSummarySendService != null) {
+                    let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendNotificationSummaryMessagesResult>>;
 
-                  try {
-                    sendInstance = await notificationSendService.textSendService.buildSendInstanceForTextNotificationMessages(textMessages);
-                  } catch (e) {
-                    console.error(`Failed building text send instance for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
-                    ts = NotificationSendState.CONFIG_ERROR;
-                  }
-
-                  if (sendInstance) {
                     try {
-                      sendTextsResult = await sendInstance();
+                      sendInstance = await notificationSendService.notificationSummarySendService.buildSendInstanceForNotificationSummaryMessages(notificationSummaryMessages);
                     } catch (e) {
-                      console.error(`Failed sending text notification "${notification.id}" with type "${notificationTemplateType}": `, e);
-                      ts = NotificationSendState.SEND_ERROR;
+                      console.error(`Failed building notification summary send instance for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                      ns = NotificationSendState.CONFIG_ERROR;
                     }
-                  }
-                } else {
-                  console.error(`Failed sending text notification "${notification.id}" with type "${notificationTemplateType}" due to no text service being configured.`);
-                  ts = NotificationSendState.CONFIG_ERROR;
-                }
 
-                if (sendTextsResult != null) {
-                  const { success, failed } = sendTextsResult;
-                  tsr = success.length ? currentTsr.concat(success) : undefined;
-
-                  if (failed.length > 0) {
-                    ts = NotificationSendState.SENT_PARTIAL;
+                    if (sendInstance) {
+                      try {
+                        sendNotificationSummaryResult = await sendInstance();
+                        ns = NotificationSendState.SENT;
+                      } catch (e) {
+                        console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                        ns = NotificationSendState.SEND_ERROR;
+                      }
+                    }
                   } else {
-                    ts = NotificationSendState.SENT;
-                  }
-                }
-              } else {
-                ts = NotificationSendState.SENT;
-              }
-            }
-
-            ps = NotificationSendState.NO_TRY;
-            // NOTE: FCM token management will probably done with a separate system within Notification that stores FCMs for specific users in the app. May also use UIDs to determine who got the push notificdation or not...
-
-            // do notification summaries
-            if (ns === NotificationSendState.QUEUED || ns === NotificationSendState.SENT_PARTIAL) {
-              const notificationSummaryInputContexts: NotificationMessageInputContext[] = notificationSummaryRecipients.map((x) => {
-                const context: NotificationMessageInputContext = {
-                  recipient: {
-                    n: x.name,
-                    s: x.notificationSummaryId
-                  }
-                };
-
-                return context;
-              });
-
-              const notificationSummaryMessages = await Promise.all(notificationSummaryInputContexts.map(messageFunction))
-                .then(filterOutNoContentNotificationMessages)
-                .catch((e) => {
-                  console.error(`Failed building message function for type ${notificationTemplateType}: `, e);
-                  buildMessageFailure = true;
-                  return undefined;
-                });
-
-              if (notificationSummaryMessages?.length) {
-                if (notificationSendService.notificationSummarySendService != null) {
-                  let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendNotificationSummaryMessagesResult>>;
-
-                  try {
-                    sendInstance = await notificationSendService.notificationSummarySendService.buildSendInstanceForNotificationSummaryMessages(notificationSummaryMessages);
-                  } catch (e) {
-                    console.error(`Failed building notification summary send instance for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                    console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}" due to no notification summary service being configured.`);
                     ns = NotificationSendState.CONFIG_ERROR;
                   }
-
-                  if (sendInstance) {
-                    try {
-                      sendNotificationSummaryResult = await sendInstance();
-                      ns = NotificationSendState.SENT;
-                    } catch (e) {
-                      console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}": `, e);
-                      ns = NotificationSendState.SEND_ERROR;
-                    }
-                  }
                 } else {
-                  console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}" due to no notification summary service being configured.`);
-                  ns = NotificationSendState.CONFIG_ERROR;
+                  ns = NotificationSendState.SENT;
                 }
-              } else {
-                ns = NotificationSendState.SENT;
               }
-            }
 
-            // calculate results
-            const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns, esr, tsr };
-            success = notificationSendFlagsImplyIsComplete(notificationTemplate);
+              // calculate results
+              const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns, esr, tsr };
+              success = notificationSendFlagsImplyIsComplete(notificationTemplate);
 
-            if (success) {
-              notificationTemplate.d = true;
-            } else {
-              notificationTemplate.a = notification.a + 1;
-
-              if (notificationTemplate.a >= NOTIFICATION_MAX_SEND_ATTEMPTS) {
+              if (success) {
                 notificationTemplate.d = true;
-              }
-            }
+              } else {
+                notificationTemplate.a = notification.a + 1;
 
-            await notificationDocument.update(notificationTemplate);
-            notificationMarkedDone = notificationTemplate.d === true;
-          }
-        } else {
-          switch (notification.st) {
-            case NotificationSendType.SEND_IF_BOX_EXISTS:
-              // deleted successfully
-              success = deletedNotification;
-              break;
+                if (notificationTemplate.a >= NOTIFICATION_MAX_SEND_ATTEMPTS) {
+                  notificationTemplate.d = true;
+                }
+              }
+
+              await notificationDocument.update(notificationTemplate);
+              notificationMarkedDone = notificationTemplate.d === true;
+            }
+          } else {
+            switch (notification.st) {
+              case NotificationSendType.SEND_IF_BOX_EXISTS:
+                // deleted successfully
+                success = deletedNotification;
+                break;
+            }
           }
         }
       }
@@ -1202,11 +1303,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       const result: SendNotificationResult = {
         notificationTemplateType,
         isKnownTemplateType,
+        isNotificationTask,
         isConfiguredTemplateType,
         throttled,
         exists: notification != null,
         boxExists: notificationBox != null,
         notificationBoxNeedsInitialization,
+        notificationTaskCompletionType,
         createdBox,
         deletedNotification,
         notificationMarkedDone,
@@ -1232,6 +1335,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
     return async () => {
       let notificationBoxesCreated: number = 0;
       let notificationsDeleted: number = 0;
+      let notificationTasksVisited: number = 0;
       let notificationsVisited: number = 0;
       let notificationsSucceeded: number = 0;
       let notificationsDelayed: number = 0;
@@ -1244,7 +1348,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       const sendNotificationParams: SendNotificationParams = { key: firestoreDummyKey(), throwErrorIfSent: false };
       const sendNotificationInstance = await sendNotification(sendNotificationParams);
 
-      // iterate through all JobApplication items that need to be synced
+      // iterate through all notification items that need to be synced
       // eslint-disable-next-line no-constant-condition
       while (true) {
         const sendQueuedNotificationsResults = await sendQueuedNotifications();
@@ -1258,6 +1362,10 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
             notificationsDelayed = 1;
           } else {
             notificationsFailed += 1;
+          }
+
+          if (result.isNotificationTask) {
+            notificationTasksVisited += 1;
           }
 
           if (result.deletedNotification) {
@@ -1302,6 +1410,7 @@ export function sendQueuedNotificationsFactory(context: NotificationServerAction
       const result: SendQueuedNotificationsResult = {
         notificationBoxesCreated,
         notificationsDeleted,
+        notificationTasksVisited,
         notificationsVisited,
         notificationsSucceeded,
         notificationsDelayed,
@@ -1323,6 +1432,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
     return async () => {
       let notificationBoxesUpdatesCount: number = 0;
       let notificationsDeleted: number = 0;
+      const notificationTasksDeletedCount: number = 0;
       let notificationWeeksCreated: number = 0;
       let notificationWeeksUpdated: number = 0;
 
@@ -1356,9 +1466,12 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
           notificationDocumentsGroupedByNotificationBox,
           async (notificationDocumentsInSameBox) => {
             const allPairs = await getDocumentSnapshotDataPairs(notificationDocumentsInSameBox);
+
             const allPairsWithDataAndMarkedDeleted = allPairs.filter((x) => x.data?.d);
 
-            const pairsGroupedByWeek = Array.from(makeValuesGroupMap(allPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries());
+            const { included: taskPairsWithDataAndMarkedDeleted, excluded: normalPairsWithDataAndMarkedDeleted } = separateValues(allPairsWithDataAndMarkedDeleted, (x) => x.data?.st === NotificationSendType.TASK_NOTIFICATION);
+
+            const pairsGroupedByWeek = Array.from(makeValuesGroupMap(normalPairsWithDataAndMarkedDeleted, (x) => yearWeekCode((x.data as Notification).sat)).entries());
 
             // batch incase there are a lot of new notifications to move to week
             const pairsGroupedByWeekInBatches = pairsGroupedByWeek
@@ -1410,8 +1523,15 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
               });
             });
 
+            // delete all the task notifications
+            const writeBatch = firestoreContext.batch();
+            const writeBatchAccessor = notificationCollectionGroup.documentAccessorForTransaction(writeBatch);
+            await Promise.all(taskPairsWithDataAndMarkedDeleted.map((x) => writeBatchAccessor.loadDocumentFrom(x.document).accessor.delete()));
+            await writeBatch.commit();
+
             let weeksCreated = 0;
             let weeksUpdated = 0;
+            const tasksDeleted = taskPairsWithDataAndMarkedDeleted.length;
 
             notificationWeekResults.results.forEach((x) => {
               if (x[1].created) {
@@ -1424,7 +1544,8 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
             const result = {
               weeksCreated,
               weeksUpdated,
-              itemsDeleted: allPairsWithDataAndMarkedDeleted.length
+              itemsDeleted: allPairsWithDataAndMarkedDeleted.length,
+              tasksDeleted
             };
 
             return result;
@@ -1439,6 +1560,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
       const result: CleanupSentNotificationsResult = {
         notificationBoxesUpdatesCount,
+        notificationTasksDeletedCount,
         notificationsDeleted,
         notificationWeeksCreated,
         notificationWeeksUpdated

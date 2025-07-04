@@ -1,0 +1,7 @@
+{
+  "name": "@dereekb/nestjs/openai",
+  "version": "12.3.0",
+  "type": "commonjs",
+  "peerDependencies": {},
+  "dependencies": {}
+}

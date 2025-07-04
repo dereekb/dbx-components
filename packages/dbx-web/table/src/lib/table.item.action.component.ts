@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, distinctUntilChanged } from 'rxjs';
+import { map } from 'rxjs';
 import { AbstractDbxTableItemDirective } from './table.item.directive';
 import { DbxInjectionComponent, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { MaybeObservableOrValue, maybeValueFromObservableOrValue } from '@dereekb/rxjs';
@@ -21,13 +21,12 @@ export class DbxTableItemActionComponent<T> extends AbstractDbxTableItemDirectiv
       let obs: MaybeObservableOrValue<DbxInjectionComponentConfig> = undefined;
 
       if (itemAction) {
-        obs = this.item$.pipe(map((x) => itemAction(x)));
+        obs = this.item$.pipe(map((x) => (x != null ? itemAction(x) : undefined)));
       }
 
       return obs;
     }),
-    maybeValueFromObservableOrValue(),
-    distinctUntilChanged()
+    maybeValueFromObservableOrValue()
   );
 
   readonly configSignal = toSignal(this.config$);

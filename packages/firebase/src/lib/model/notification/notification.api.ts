@@ -8,6 +8,7 @@ import { type NotificationUserDefaultNotificationBoxRecipientConfig, type Notifi
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { IsE164PhoneNumber } from '@dereekb/model';
 import { type NotificationSendEmailMessagesResult, type NotificationSendTextMessagesResult, type NotificationSendNotificationSummaryMessagesResult } from './notification.send';
+import { NotificationTaskServiceTaskHandlerCompletionType } from './notification.task';
 
 export const NOTIFICATION_RECIPIENT_NAME_MIN_LENGTH = 0;
 export const NOTIFICATION_RECIPIENT_NAME_MAX_LENGTH = 42;
@@ -475,6 +476,10 @@ export interface SendNotificationResult {
    */
   readonly isKnownTemplateType: Maybe<boolean>;
   /**
+   * Whether or not the notification was of a task type.
+   */
+  readonly isNotificationTask: boolean;
+  /**
    * Whether or not the notification was of a configured type.
    */
   readonly isConfiguredTemplateType: Maybe<boolean>;
@@ -488,6 +493,10 @@ export interface SendNotificationResult {
    * In cases where the Notification is set to SEND_IF_BOX_EXISTS and the box does not exist, this will return true.
    */
   readonly success: boolean;
+  /**
+   * Completion type for the notification task, if applicable.
+   */
+  readonly notificationTaskCompletionType?: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
   /**
    * Whether or not the notification was marked as done.
    *
@@ -505,29 +514,38 @@ export interface SendNotificationResult {
   /**
    * Whether or not the notification was deleted.
    *
-   * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist.
+   * This typically only occurs when SEND_IF_BOX_EXISTS is set and the box does not exist, or the notification has reached the maximum number of send attempts.
    */
   readonly deletedNotification: boolean;
+  /**
+   * Whether or not the notification exists.
+   */
   readonly exists: boolean;
+  /**
+   * Whether or not the NotificationBox exists.
+   */
   readonly boxExists: boolean;
+  /**
+   * Whether or not the run was tried.
+   */
   readonly tryRun: boolean;
   /**
    * Send emails result.
    *
-   * Undefined if not attempted.
+   * Undefined if not attempted or a task notification.
    */
   readonly sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
   /**
    *
    * Send texts result.
    *
-   * Undefined if not attempted.
+   * Undefined if not attempted or a task notification.
    */
   readonly sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
   /**
    * Send notification summaries result.
    *
-   * Undefined if not attempted.
+   * Undefined if not attempted or a task notification.
    */
   readonly sendNotificationSummaryResult: Maybe<NotificationSendNotificationSummaryMessagesResult>;
   /**
@@ -545,9 +563,10 @@ export interface SendNotificationResult {
  */
 export class SendQueuedNotificationsParams {}
 
-export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
   readonly notificationBoxesCreated: number;
   readonly notificationsVisited: number;
+  readonly notificationTasksVisited: number;
   readonly notificationsSucceeded: number;
   readonly notificationsDelayed: number;
   readonly notificationsFailed: number;
@@ -564,6 +583,7 @@ export interface CleanupSentNotificationsResult {
    * Number of total updates. May include the same notification box more than once.
    */
   readonly notificationBoxesUpdatesCount: number;
+  readonly notificationTasksDeletedCount: number;
   readonly notificationsDeleted: number;
   readonly notificationWeeksCreated: number;
   readonly notificationWeeksUpdated: number;

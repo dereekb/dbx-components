@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [12.3.0](https://github.com/dereekb/dbx-components/compare/v12.2.1-dev...v12.3.0) (2025-07-04)
+
+
+### Features
+
+* notification tasks ([60e9959](https://github.com/dereekb/dbx-components/commit/60e995919b14d3262191cbeedc26a169c179ff24))
+
+
+
 ## [12.2.1](https://github.com/dereekb/dbx-components/compare/v12.2.0-dev...v12.2.1) (2025-07-02)
 
 

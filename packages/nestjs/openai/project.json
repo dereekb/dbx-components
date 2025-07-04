@@ -1,0 +1,33 @@
+{
+  "name": "nestjs-openai",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nestjs/openai/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nestjs/openai",
+        "tsConfig": "packages/nestjs/openai/tsconfig.lib.json",
+        "packageJson": "packages/nestjs/openai/package.json",
+        "main": "packages/nestjs/openai/src/index.ts",
+        "assets": ["LICENSE"]
+      },
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/nestjs/openai"],
+      "options": {
+        "jestConfig": "packages/nestjs/openai/jest.config.ts"
+      }
+    }
+  }
+}

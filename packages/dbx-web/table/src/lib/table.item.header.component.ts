@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map, distinctUntilChanged, switchMap } from 'rxjs';
+import { map, switchMap } from 'rxjs';
 import { AbstractDbxTableItemDirective } from './table.item.directive';
 import { maybeValueFromObservableOrValue } from '@dereekb/rxjs';
 import { DbxInjectionComponent } from '@dereekb/dbx-core';
@@ -16,9 +16,8 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
 })
 export class DbxTableItemHeaderComponent<T> extends AbstractDbxTableItemDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    switchMap((viewDelegate) => this.item$.pipe(map((x) => viewDelegate.itemHeader(x)))),
-    maybeValueFromObservableOrValue(),
-    distinctUntilChanged()
+    switchMap((viewDelegate) => this.item$.pipe(map((x) => (x != null ? viewDelegate.itemHeader(x) : undefined)))),
+    maybeValueFromObservableOrValue()
   );
 
   readonly configSignal = toSignal(this.config$);

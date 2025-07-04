@@ -1,5 +1,5 @@
 import { type FactoryWithRequiredInput } from '@dereekb/util';
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, FirestoreModelIdInput, firestoreModelId } from '../../common';
 
 /**
  * The NotificationBox's id is the two way flat firestore model key of the object that it represents.
@@ -57,6 +57,35 @@ export const DEFAULT_NOTIFICATION_TEMPLATE_TYPE = 'D';
  *
  * Types are generally intended to be handled case-insensitively by notification services.
  *
- * Ideally type type values are shorter to reduce database size impact.
+ * Ideally type values are shorter to reduce database size impact.
  */
 export type NotificationTemplateType = string;
+
+/**
+ * Task type identifier of the notification, which is used to pass this task to the appropriate handler.
+ *
+ * Ideally type values are shorter to reduce database size impact.
+ */
+export type NotificationTaskType = string;
+
+/**
+ * Unique key for a notification task.
+ *
+ * Used as the notification task's id, so it must follow Firestore model id rules.
+ *
+ * Using a unique key for a notification task ensures that only one of this type of task can exist at a single time.
+ *
+ * If a unique key is reused, the new task will replace the old task.
+ */
+export type NotificationTaskUniqueId = FirestoreModelId;
+
+/**
+ * Creates a NotificationTaskUniqueId from the input model id and task type.
+ *
+ * @param input model id input
+ * @param taskType task type
+ * @returns NotificationTaskUniqueId
+ */
+export function notificationTaskUniqueId(input: FirestoreModelIdInput, taskType: NotificationTaskType): NotificationTaskUniqueId {
+  return `${firestoreModelId(input)}_${taskType}`; // combineation of model id and template type
+}

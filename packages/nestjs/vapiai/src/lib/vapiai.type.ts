@@ -1,4 +1,4 @@
-import { ChatCostsItem, CallCostsItem, ServerMessageEndOfCallReportCostsItem } from '@vapi-ai/server-sdk/api';
+import { Vapi } from '@vapi-ai/server-sdk';
 
 /**
  * Secret token used by Vapi.ai for making requests.
@@ -34,9 +34,22 @@ export type VapiApiWebhookEventVerificationType = 'none' | 'secret' | 'hmac';
 /**
  * Cost item used by Vapi.ai.
  */
-export type VapiCostsItem = ChatCostsItem | CallCostsItem | ServerMessageEndOfCallReportCostsItem;
+export type VapiCostsItem = Vapi.ServerMessageEndOfCallReport.Costs.Item;
 
 /**
  * Assistant id used by Vapi.ai.
  */
 export type VapiAssistantId = string;
+
+export type VapiTranscript = string;
+
+export interface VapiTranscriptRef {
+  transcript?: VapiTranscript;
+}
+
+/**
+ * Call with transcript.
+ *
+ * The Vapi.ai server-sdk does not include the transcript in the call object, so we extend it here.
+ */
+export interface VapiCallWithTranscript extends Vapi.Call, VapiTranscriptRef {}

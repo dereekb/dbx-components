@@ -290,6 +290,26 @@ export type DateOrUnixDateTimeNumber = Date | UnixDateTimeNumber;
 export type Milliseconds = number;
 
 /**
+ * A date or a number of milliseconds.
+ */
+export type DateOrMilliseconds = Date | Milliseconds;
+
+/**
+ * Converts the input DateOrMilliseconds to a Date.
+ *
+ * If the input is a Date, it is returned as is.
+ *
+ * If the input is a number of milliseconds, it is added to the current date.
+ *
+ * @param dateOrMilliseconds - The date or milliseconds to convert to a Date.
+ * @param now - The current date to use when adding milliseconds. Defaults to the current time.
+ * @returns The Date representation of the input.
+ */
+export function dateOrMillisecondsToDate(dateOrMilliseconds: DateOrMilliseconds, now?: Maybe<Date>): Date {
+  return isDate(dateOrMilliseconds) ? dateOrMilliseconds : addMilliseconds(now ?? new Date(), dateOrMilliseconds);
+}
+
+/**
  * Number of seconds.
  */
 export type Seconds = number;
