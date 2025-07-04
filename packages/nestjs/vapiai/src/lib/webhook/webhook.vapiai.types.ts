@@ -2,8 +2,10 @@ import { DollarAmount, ISO8601DateStringUTCFull, JSONEncodedString, UnixDateTime
 import { VapiAssistantId, VapiCostsItem, VapiTranscriptRef } from '../vapiai.type';
 import { Vapi } from '@vapi-ai/server-sdk';
 
+export type BaseVapiPayloadCall = Required<Pick<Vapi.Call, 'id' | 'orgId' | 'createdAt' | 'updatedAt' | 'type' | 'monitor' | 'transport' | 'status' | 'assistantId' | 'assistantOverrides'>>;
+
 interface BaseVapiPayload {
-  readonly call: Vapi.Call;
+  readonly call: BaseVapiPayloadCall & Partial<Vapi.Call>;
 }
 
 /**
@@ -11,14 +13,14 @@ interface BaseVapiPayload {
  *
  * https://docs.vapi.ai/server-url/events#retrieving-assistants
  */
-export type AssistantRequestPayload = Vapi.ServerMessageAssistantRequest;
+export type AssistantRequestPayload = BaseVapiPayload & Omit<Vapi.ServerMessageAssistantRequest, 'call'>;
 
 /**
  * Status update event payload
  *
  * https://docs.vapi.ai/server-url/events#call-status-updates
  */
-export type StatusUpdatePayload = Vapi.ServerMessageStatusUpdate;
+export type StatusUpdatePayload = BaseVapiPayload & Omit<Vapi.ServerMessageStatusUpdate, 'call'>;
 
 /**
  * Function call event payload
@@ -35,7 +37,7 @@ export interface FunctionCallPayload extends BaseVapiPayload {
  *
  * https://docs.vapi.ai/server-url/events#end-of-call-report
  */
-export interface EndOfCallReportPayload extends Vapi.ServerMessageEndOfCallReport, VapiTranscriptRef {
+export interface EndOfCallReportPayload extends BaseVapiPayload, Omit<Vapi.ServerMessageEndOfCallReport, 'call'>, VapiTranscriptRef {
   readonly timestamp: UnixDateTimeNumber;
   readonly startedAt: ISO8601DateStringUTCFull;
   readonly endedAt: ISO8601DateStringUTCFull;
@@ -54,17 +56,17 @@ export interface EndOfCallReportPayload extends Vapi.ServerMessageEndOfCallRepor
  *
  * https://docs.vapi.ai/server-url/events#hang-notifications
  */
-export type HangPayload = Vapi.ServerMessageHang;
+export type HangPayload = BaseVapiPayload & Omit<Vapi.ServerMessageHang, 'call'>;
 
 /**
  * @deprecated needs documentation link
  */
-export type SpeechUpdatePayload = Vapi.ServerMessageSpeechUpdate;
+export type SpeechUpdatePayload = BaseVapiPayload & Omit<Vapi.ServerMessageSpeechUpdate, 'call'>;
 
 /**
  * @deprecated needs documentation link
  */
-export type TranscriptPayload = Vapi.ServerMessageTranscript;
+export type TranscriptPayload = BaseVapiPayload & Omit<Vapi.ServerMessageTranscript, 'call'>;
 
 export type VapiPayload = AssistantRequestPayload | StatusUpdatePayload | FunctionCallPayload | EndOfCallReportPayload | SpeechUpdatePayload | TranscriptPayload | HangPayload;
 
