@@ -4,6 +4,7 @@ import { OpenAIWebhookService } from './webhook.openai.service';
 import { OPENAI_WEBHOOK_SECRET_ENV_VAR, OpenAIWebhookServiceConfig } from './webhook.openai.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OpenAIWebhookSecret } from '../openai.type';
+import { OpenAIModule } from '../openai.module';
 
 export function openAIWebhookServiceConfigFactory(configService: ConfigService): OpenAIWebhookServiceConfig {
   const config: OpenAIWebhookServiceConfig = {
@@ -17,7 +18,7 @@ export function openAIWebhookServiceConfigFactory(configService: ConfigService):
 }
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, OpenAIModule],
   controllers: [OpenAIWebhookController],
   providers: [
     {
