@@ -46,7 +46,7 @@
     "@uirouter/angular": "15.0.0",
     "@uirouter/core": "^6.1.1",
     "@uirouter/rx": "^1.0.0",
-    "@vapi-ai/server-sdk": "^0.9.3",
+    "@vapi-ai/server-sdk": "^0.10.0",
     "@vvo/tzdb": "^6.0.0",
     "angular-calendar": "^0.31.0",
     "change-case-all": "^2.1.0",

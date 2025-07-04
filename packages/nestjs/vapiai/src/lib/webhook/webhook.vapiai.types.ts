@@ -1,26 +1,9 @@
 import { DollarAmount, ISO8601DateStringUTCFull, JSONEncodedString, UnixDateTimeNumber, WebsiteUrlWithPrefix } from '@dereekb/util';
-import { Analysis, Artifact, Assistant, Call, CallEndedReason, CallStatus, ChatMessagesItem, CostBreakdown } from '@vapi-ai/server-sdk/api';
-import { VapiAssistantId, VapiCostsItem } from '../vapiai.type';
-
-export enum VapiWebhookEnum {
-  ASSISTANT_REQUEST = 'assistant-request',
-  FUNCTION_CALL = 'function-call',
-  STATUS_UPDATE = 'status-update',
-  END_OF_CALL_REPORT = 'end-of-call-report',
-  HANG = 'hang',
-  // TODO: speech update and transcript are not implemented or have documentation. They might be deprecated
-  /**
-   * @deprecated needs documentation link
-   */
-  SPEECH_UPDATE = 'speech-update',
-  /**
-   * @deprecated needs documentation link
-   */
-  TRANSCRIPT = 'transcript'
-}
+import { VapiAssistantId, VapiCostsItem, VapiTranscriptRef } from '../vapiai.type';
+import { Vapi } from '@vapi-ai/server-sdk';
 
 interface BaseVapiPayload {
-  readonly call: Call;
+  readonly call: Vapi.Call;
 }
 
 /**
@@ -28,19 +11,14 @@ interface BaseVapiPayload {
  *
  * https://docs.vapi.ai/server-url/events#retrieving-assistants
  */
-export interface AssistantRequestPayload extends BaseVapiPayload {
-  readonly type: VapiWebhookEnum.ASSISTANT_REQUEST;
-}
+export type AssistantRequestPayload = Vapi.ServerMessageAssistantRequest;
 
 /**
  * Status update event payload
  *
  * https://docs.vapi.ai/server-url/events#call-status-updates
  */
-export interface StatusUpdatePayload extends BaseVapiPayload {
-  readonly type: VapiWebhookEnum.STATUS_UPDATE;
-  readonly status: CallStatus;
-}
+export type StatusUpdatePayload = Vapi.ServerMessageStatusUpdate;
 
 /**
  * Function call event payload
@@ -48,11 +26,8 @@ export interface StatusUpdatePayload extends BaseVapiPayload {
  * https://docs.vapi.ai/server-url/events#function-calling
  */
 export interface FunctionCallPayload extends BaseVapiPayload {
-  readonly type: VapiWebhookEnum.FUNCTION_CALL;
-  readonly functionCall: {
-    readonly name: string;
-    readonly parameters: JSONEncodedString;
-  };
+  readonly type: 'function-call';
+  readonly functionCall: Vapi.FunctionCall;
 }
 
 /**
@@ -60,23 +35,18 @@ export interface FunctionCallPayload extends BaseVapiPayload {
  *
  * https://docs.vapi.ai/server-url/events#end-of-call-report
  */
-export interface EndOfCallReportPayload extends BaseVapiPayload {
-  readonly type: VapiWebhookEnum.END_OF_CALL_REPORT;
+export interface EndOfCallReportPayload extends Vapi.ServerMessageEndOfCallReport, VapiTranscriptRef {
   readonly timestamp: UnixDateTimeNumber;
-  readonly analysis: Analysis;
-  readonly artifact: Artifact;
   readonly startedAt: ISO8601DateStringUTCFull;
   readonly endedAt: ISO8601DateStringUTCFull;
-  readonly endedReason: CallEndedReason;
   readonly cost: DollarAmount;
-  readonly costBreakdown: CostBreakdown;
+  readonly costBreakdown: Vapi.CostBreakdown;
   readonly costs: VapiCostsItem[];
   readonly transcript: string;
-  readonly messages: ChatMessagesItem[];
+  readonly messages: Vapi.Chat.Messages.Item[];
   readonly summary: string;
   readonly recordingUrl?: WebsiteUrlWithPrefix;
   readonly stereoRecordingUrl?: WebsiteUrlWithPrefix;
-  readonly assistant: Assistant;
 }
 
 /**
@@ -84,30 +54,21 @@ export interface EndOfCallReportPayload extends BaseVapiPayload {
  *
  * https://docs.vapi.ai/server-url/events#hang-notifications
  */
-export interface HangPayload extends BaseVapiPayload {
-  readonly type: VapiWebhookEnum.HANG;
-}
+export type HangPayload = Vapi.ServerMessageHang;
 
 /**
  * @deprecated needs documentation link
  */
-export interface SpeechUpdatePayload extends BaseVapiPayload {
-  readonly type: VapiWebhookEnum.SPEECH_UPDATE;
-  readonly status: 'started' | 'stopped';
-  readonly role: 'assistant' | 'user';
-}
+export type SpeechUpdatePayload = Vapi.ServerMessageSpeechUpdate;
 
 /**
  * @deprecated needs documentation link
  */
-export interface TranscriptPayload {
-  readonly type: VapiWebhookEnum.TRANSCRIPT;
-  readonly role: 'assistant' | 'user';
-  readonly transcriptType: 'partial' | 'final';
-  readonly transcript: string;
-}
+export type TranscriptPayload = Vapi.ServerMessageTranscript;
 
 export type VapiPayload = AssistantRequestPayload | StatusUpdatePayload | FunctionCallPayload | EndOfCallReportPayload | SpeechUpdatePayload | TranscriptPayload | HangPayload;
+
+export type VapiPayloadType = VapiPayload['type'];
 
 /**
  * Response returned when a function is called.
@@ -131,7 +92,7 @@ export interface AssistantRequestMessageSuccessIdResponse {
 }
 
 export interface AssistantRequestMessageSuccessObjectResponse {
-  readonly assistant: Assistant;
+  readonly assistant: Vapi.Assistant;
 }
 
 export interface AssistantRequestMessageErrorResponse {
@@ -150,3 +111,25 @@ export type HangMessageResponse = VapiVoidResponse;
 export type EndOfCallReportMessageResponse = VapiVoidResponse;
 
 export type VapiResponse = AssistantRequestMessageResponse | FunctionCallMessageResponse | EndOfCallReportMessageResponse | HangMessageResponse | StatusUpdateMessageResponse | SpeechUpdateMessageResponse | TranscriptMessageResponse;
+
+// MARK: Compat
+
+/**
+ * @deprecated use VapiWebhookPayloadType instead.
+ */
+export enum VapiWebhookEnum {
+  ASSISTANT_REQUEST = 'assistant-request',
+  FUNCTION_CALL = 'function-call',
+  STATUS_UPDATE = 'status-update',
+  END_OF_CALL_REPORT = 'end-of-call-report',
+  HANG = 'hang',
+  // TODO: speech update and transcript are not implemented or have documentation. They might be deprecated
+  /**
+   * @deprecated needs documentation link
+   */
+  SPEECH_UPDATE = 'speech-update',
+  /**
+   * @deprecated needs documentation link
+   */
+  TRANSCRIPT = 'transcript'
+}
