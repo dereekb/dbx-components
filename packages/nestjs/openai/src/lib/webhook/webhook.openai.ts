@@ -1,4 +1,4 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory, Maybe } from '@dereekb/util';
+import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
 import '../openai.type';
 import { BatchCancelledWebhookEvent, BatchCompletedWebhookEvent, BatchExpiredWebhookEvent, BatchFailedWebhookEvent, EvalRunCanceledWebhookEvent, EvalRunFailedWebhookEvent, EvalRunSucceededWebhookEvent, FineTuningJobCancelledWebhookEvent, FineTuningJobFailedWebhookEvent, FineTuningJobSucceededWebhookEvent, ResponseCancelledWebhookEvent, ResponseCompletedWebhookEvent, ResponseFailedWebhookEvent, ResponseIncompleteWebhookEvent, UnwrapWebhookEvent } from 'openai/resources/webhooks';
 

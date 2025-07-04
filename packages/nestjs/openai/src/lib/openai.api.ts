@@ -1,4 +1,3 @@
-import { VapiClient } from '@vapi-ai/server-sdk';
 import { Inject, Injectable } from '@nestjs/common';
 import { OpenAIServiceConfig } from './openai.config';
 import { OpenAI } from 'openai';

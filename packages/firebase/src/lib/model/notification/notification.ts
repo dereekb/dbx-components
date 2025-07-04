@@ -29,8 +29,7 @@ import {
   snapshotConverterFunctions,
   optionalFirestoreDate,
   firestoreUniqueStringArray,
-  type SavedToFirestoreIfFalse,
-  optionalFirestoreArray
+  type SavedToFirestoreIfFalse
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 

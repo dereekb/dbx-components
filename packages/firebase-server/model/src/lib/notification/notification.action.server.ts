@@ -1432,7 +1432,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
     return async () => {
       let notificationBoxesUpdatesCount: number = 0;
       let notificationsDeleted: number = 0;
-      let notificationTasksDeletedCount: number = 0;
+      const notificationTasksDeletedCount: number = 0;
       let notificationWeeksCreated: number = 0;
       let notificationWeeksUpdated: number = 0;
 
@@ -1531,7 +1531,7 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
             let weeksCreated = 0;
             let weeksUpdated = 0;
-            let tasksDeleted = taskPairsWithDataAndMarkedDeleted.length;
+            const tasksDeleted = taskPairsWithDataAndMarkedDeleted.length;
 
             notificationWeekResults.results.forEach((x) => {
               if (x[1].created) {

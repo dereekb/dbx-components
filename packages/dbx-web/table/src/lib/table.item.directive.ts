@@ -1,7 +1,5 @@
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filterMaybe, tapLog } from '@dereekb/rxjs';
 import { Directive, inject, input } from '@angular/core';
-import { distinctUntilChanged } from 'rxjs';
 import { DbxTableStore } from './table.store';
 import { type Maybe } from '@dereekb/util';
 

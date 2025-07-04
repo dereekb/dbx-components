@@ -1,7 +1,6 @@
-import { filterMaybe, maybeValueFromObservableOrValue, tapLog } from '@dereekb/rxjs';
-import { ChangeDetectionStrategy, Component, input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { map, distinctUntilChanged, switchMap, combineLatest } from 'rxjs';
+import { map, switchMap, combineLatest } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { AbstractDbxTableItemDirective } from './table.item.directive';
 import { DbxTableColumn } from './table';

@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, viewChild, effect, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
 import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, valueFromFinishedLoadingState } from '@dereekb/rxjs';
 import { shareReplay, map, Observable, switchMap, throttleTime } from 'rxjs';
 import { DbxLoadingComponent } from '@dereekb/dbx-web';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
-import { MatRecycleRows, MatTable, MatTableModule } from '@angular/material/table';
+import { MatTable, MatTableModule } from '@angular/material/table';
 import { DbxTableInputCellComponent } from './table.cell.input.component';
 import { DbxTableSummaryEndCellComponent } from './table.cell.summaryend.component';
 import { DbxTableSummaryStartCellComponent } from './table.cell.summarystart.component';

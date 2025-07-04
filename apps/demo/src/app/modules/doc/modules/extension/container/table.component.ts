@@ -1,11 +1,11 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns';
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayStringForSystem } from '@dereekb/date';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableDirective, DbxTableItemGroup, DbxTableViewComponent, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
 import { beginLoadingPage, ObservableOrValue, PageListLoadingState, SubscriptionObject, successPageResult, successResult } from '@dereekb/rxjs';
-import { arrayFactory, incrementingNumberFactory, randomNumberFactory, range } from '@dereekb/util';
-import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap, timer, interval, filter, first } from 'rxjs';
+import { arrayFactory, incrementingNumberFactory, range } from '@dereekb/util';
+import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap, interval, filter, first } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
 import { ExampleTableData, ExampleTableGroupData } from '../component/table.item';
@@ -34,7 +34,7 @@ const addRandomValuesToData = (data: ExampleTableData[]) => data.map((x) => ({ .
   standalone: true,
   imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxTableViewComponent, DbxTableDirective, NgIf, MatButton, AsyncPipe]
 })
-export class DocExtensionTableComponent implements OnDestroy {
+export class DocExtensionTableComponent implements OnDestroy, OnInit {
   readonly exampleInput: DateRangeDayDistanceInput = {
     date: startOfDay(new Date()),
     distance: 6

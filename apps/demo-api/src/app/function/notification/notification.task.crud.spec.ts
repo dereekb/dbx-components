@@ -5,7 +5,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { NotificationDocument, NotificationSendState, NotificationSendType, createNotificationDocument, CreateNotificationTemplate, delayCompletion } from '@dereekb/firebase';
 import { EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, exampleNotificationTaskTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
-import { UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS, UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
+import { UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
@@ -175,7 +175,7 @@ demoApiFunctionContextFactory((f) => {
                       });
 
                       describe('task delay result during run', () => {
-                        let delayUntil = addMonths(new Date(), 1);
+                        const delayUntil = addMonths(new Date(), 1);
 
                         beforeEach(async () => {
                           const notification = await assertSnapshotData(nbn.document);
