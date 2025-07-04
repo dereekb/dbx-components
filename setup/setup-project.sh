@@ -827,6 +827,7 @@ download_api_ts_file "src/app/common/model/notification/notification.init.ts"
 download_api_ts_file "src/app/common/model/notification/notification.mailgun.ts"
 download_api_ts_file "src/app/common/model/notification/notification.send.mailgun.service.ts"
 download_api_ts_file "src/app/common/model/notification/notification.send.service.ts"
+download_api_ts_file "src/app/common/model/notification/notification.task.service.ts"
 download_api_ts_file "src/app/common/model/notification/notification.module.ts"
 download_api_ts_file "src/app/common/model/notification/index.ts"
 
