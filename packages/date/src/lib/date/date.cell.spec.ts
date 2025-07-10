@@ -20,7 +20,8 @@ import {
   dateCellTimingStart,
   isDateCellTiming,
   isFullDateCellTiming,
-  updateDateCellTimingToTimezoneFunction
+  updateDateCellTimingToTimezoneFunction,
+  dateCellTimingFromDateCellTimingStartsAtEndRange
 } from './date.cell';
 import { MS_IN_DAY, MINUTES_IN_DAY, type TimezoneString, MINUTES_IN_HOUR } from '@dereekb/util';
 import { guessCurrentTimezone, requireCurrentTimezone, roundDownToHour, roundDownToMinute } from './date';
@@ -950,6 +951,28 @@ describe('isValidDateCellTiming()', () => {
 
         const isValid = isValidDateCellTiming(timing);
         expect(isValid).toBe(true);
+      });
+    });
+  });
+});
+
+describe('dateCellTimingFromDateCellTimingStartsAtEndRange()', () => {
+  describe('function', () => {
+    const startOfToday = startOfDay(new Date());
+    const systemTiming = dateCellTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
+
+    describe('system time', () => {
+      const timing = systemTiming;
+
+      it('should return a copy of the timing.', () => {
+        const result = dateCellTimingFromDateCellTimingStartsAtEndRange(timing); // use the first event again
+
+        expect(result.timezone).toBe(timing.timezone);
+        expect(result.end).toBeSameSecondAs(timing.end);
+        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
+        expect(result.duration).toBe(timing.duration);
+
+        expect(isValidDateCellTiming(result)).toBe(true);
       });
     });
   });

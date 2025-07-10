@@ -746,7 +746,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       } else {
         result = combineLatest([this._rawDateTimeDateValue$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this._presetsPickerFilter$]).pipe(
           map(([selectedDate, isAllowedDate]) => {
-            let allowedPresets: DateTimePreset[] = [];
+            const allowedPresets: DateTimePreset[] = [];
 
             if (selectedDate) {
               // iterate each preset and check if it is allowed

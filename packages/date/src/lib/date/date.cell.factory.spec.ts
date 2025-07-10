@@ -6,7 +6,6 @@ import {
   dateCellIndexRange,
   dateCellTimingExpansionFactory,
   dateCellTimingDateFactory,
-  dateCellTimingFromDateCellTimingStartsAtEndRange,
   dateCellTimingRelativeIndexArrayFactory,
   dateCellTimingRelativeIndexFactory,
   dateCellTimingStartDateFactory,
@@ -1234,28 +1233,6 @@ describe('getRelativeIndexForDateCellTiming()', () => {
   it('one week later should return an index of 7', () => {
     const result = getRelativeIndexForDateCellTiming(timing, addDays(startsAt, 7));
     expect(result).toBe(7);
-  });
-});
-
-describe('dateCellTimingFromDateCellTimingStartsAtEndRange()', () => {
-  describe('function', () => {
-    const startOfToday = startOfDay(new Date());
-    const systemTiming = dateCellTiming({ startsAt: addHours(startOfToday, 3), duration: 60 }, 2); // 2 days
-
-    describe('system time', () => {
-      const timing = systemTiming;
-
-      it('should return a copy of the timing.', () => {
-        const result = dateCellTimingFromDateCellTimingStartsAtEndRange(timing); // use the first event again
-
-        expect(result.timezone).toBe(timing.timezone);
-        expect(result.end).toBeSameSecondAs(timing.end);
-        expect(result.startsAt).toBeSameSecondAs(timing.startsAt);
-        expect(result.duration).toBe(timing.duration);
-
-        expect(isValidDateCellTiming(result)).toBe(true);
-      });
-    });
   });
 });
 
