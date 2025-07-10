@@ -1,5 +1,5 @@
 import { type Maybe, type ReadableTimeString, type ArrayOrValue, type ISO8601DateString, asArray, filterMaybeArrayValues, type DecisionFunction, type Milliseconds, type TimezoneString, type LogicalDate, type DateOrDayString, isISO8601DayStringStart, type MapFunction, mapIdentityFunction, MinuteOfDay, UnixDateTimeNumber, ISO8601DayString } from '@dereekb/util';
-import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction } from '@dereekb/date';
+import { dateFromLogicalDate, DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, utcDayForDate, safeToJsDate, findMinDate, findMaxDate, isSameDateHoursAndMinutes, getTimezoneAbbreviation, isSameDateDay, dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, toJsDayDate, isSameDate, dateTimeMinuteWholeDayDecisionFunction, dateTimeMinuteDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of, combineLatestWith, filter, skip } from 'rxjs';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup, ValidationErrors, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -561,16 +561,13 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([
-    this._config.pipe(
-      first(),
-      switchMap(() => (this.timeOnly ? of(null) : this.dateValue$))
-    ),
-    this.timeInput$.pipe(startWith(null)),
-    this.fullDay$,
-    this.timeDate$,
-    this.isTimeCleared$
-  ]).pipe(
+  protected readonly _rawDateTimeDateValue$: Observable<Maybe<Date>> = this._config.pipe(
+    first(),
+    switchMap(() => (this.timeOnly ? of(null) : this.dateValue$))
+  );
+  protected readonly _rawDateTimeTimeValue$: Observable<Maybe<ReadableTimeString>> = this.timeInput$.pipe(startWith(null));
+
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this._rawDateTimeDateValue$, this._rawDateTimeTimeValue$, this.fullDay$, this.timeDate$, this.isTimeCleared$]).pipe(
     map(([date, timeString, fullDay, timeDate, isTimeCleared]) => {
       let result: Maybe<Date>;
 
@@ -721,9 +718,65 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly presets$: Observable<DateTimePreset[]> = this._presets.pipe(
+  readonly allPresets$: Observable<DateTimePreset[]> = this._presets.pipe(
     switchMapFilterMaybe(),
     map((x: DateTimePresetConfiguration[]) => x.map(dateTimePreset)),
+    shareReplay(1)
+  );
+
+  readonly _presetsPickerFilter$ = this.dateTimePickerConfig$.pipe(
+    map((config) => {
+      if (config) {
+        const filter = dateTimeMinuteDecisionFunction(config); // filter that the date must be in the given range
+        return (x: Date | null) => (x != null ? filter(x) : true);
+      } else {
+        return () => true;
+      }
+    })
+  );
+
+  readonly presets$: Observable<DateTimePreset[]> = combineLatest([this.allPresets$, this.fullDay$]).pipe(
+    switchMap(([x, fullDay]) => {
+      let result: Observable<DateTimePreset[]>;
+
+      if (this.timeOnly) {
+        result = of(x); // do not filter based on the date
+      } else if (fullDay) {
+        result = of([]);
+      } else {
+        result = combineLatest([this._rawDateTimeDateValue$.pipe(throttleTime(1000, undefined, { leading: true, trailing: true })), this._presetsPickerFilter$]).pipe(
+          map(([selectedDate, isAllowedDate]) => {
+            let allowedPresets: DateTimePreset[] = [];
+
+            if (selectedDate) {
+              // iterate each preset and check if it is allowed
+              x.forEach((preset) => {
+                const value = preset.value();
+                let presetDate: Maybe<Date>;
+
+                if (value.logicalDate) {
+                  presetDate = dateFromLogicalDate(value.logicalDate);
+                } else if (value.timeString) {
+                  presetDate = readableTimeStringToDate(value.timeString, {
+                    date: selectedDate,
+                    useSystemTimezone: true
+                  });
+                }
+
+                // the computed date should be within the allowed range
+                if (presetDate && isAllowedDate(presetDate)) {
+                  allowedPresets.push(preset);
+                }
+              });
+            }
+
+            return allowedPresets;
+          })
+        );
+      }
+
+      return result;
+    }),
     shareReplay(1)
   );
 

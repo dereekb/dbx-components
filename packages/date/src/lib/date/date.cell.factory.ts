@@ -766,28 +766,6 @@ export function getRelativeDateForDateCellTiming(timing: DateCellTimingStartsAt,
   return dateCellTimingDateFactory(timing)(input);
 }
 
-/**
- * Converts a DateCellTimingStartsAtEndRange to a DateCellTiming by calculating the difference in hours from the last startsAt timing and the end.
- *
- * @param dateCellTimingStartEndRange
- * @param event
- * @param timezone
- * @returns
- */
-export function dateCellTimingFromDateCellTimingStartsAtEndRange(dateCellTimingStartsAtEndRange: DateCellTimingStartsAtEndRange): DateCellTiming {
-  const { startsAt, timezone, end } = dateCellTimingStartsAtEndRange;
-  const duration = calculateExpectedDateCellTimingDuration(dateCellTimingStartsAtEndRange);
-
-  const timing = {
-    timezone,
-    end,
-    startsAt,
-    duration
-  };
-
-  return timing;
-}
-
 export interface UpdateDateCellTimingWithDateCellTimingEventInput {
   /**
    * Target timing to update.
