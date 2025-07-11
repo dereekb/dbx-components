@@ -7,11 +7,11 @@ import { BehaviorSubject } from 'rxjs';
 export type DbxColumnSizeColumnValue = 'head' | 'tail' | number;
 
 @Directive({
-  exportAs: 'dbxColumnSize',
-  selector: '[dbx-column-size]',
+  exportAs: 'dbxTableColumnSize',
+  selector: '[dbx-table-column-size]',
   standalone: true
 })
-export class DbxColumnSizeDirective implements OnDestroy {
+export class DbxTableColumnSizeDirective implements OnDestroy {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly resized = resizeSignal(this.elementRef);
 
@@ -24,10 +24,12 @@ export class DbxColumnSizeDirective implements OnDestroy {
     const columnsMap = this.columnsSignal() as Map<DbxColumnSizeColumnValue, DbxColumnSizeColumnDirective>;
 
     const { width } = resized.newRect;
+    let visibleColumns = 0;
+
+    const itemColumns: DbxColumnSizeColumnDirective[] = [];
 
     let headerColumn: Maybe<DbxColumnSizeColumnDirective>;
     let tailColumn: Maybe<DbxColumnSizeColumnDirective>;
-    const itemColumns: DbxColumnSizeColumnDirective[] = [];
 
     columnsMap.forEach((column) => {
       const index = column.index();
@@ -48,25 +50,25 @@ export class DbxColumnSizeDirective implements OnDestroy {
     const headerColumnWidth = headerColumn?.width || 0;
     const tailColumnWidth = tailColumn?.width || 0;
 
-    let remainingWidth = width - headerColumnWidth;
-    let visibleColumns = 1;
+    let remainingTableWidth = width - headerColumnWidth;
+    visibleColumns = 1;
     let i = 0;
 
-    while (remainingWidth > 0 && i < itemColumns.length) {
+    while (remainingTableWidth > 0 && i < itemColumns.length) {
       const nextColumn = itemColumns[i];
       i += 1;
 
       const columnWidth = nextColumn.width;
 
-      remainingWidth -= columnWidth;
+      remainingTableWidth -= columnWidth;
 
-      if (remainingWidth >= 0) {
+      if (remainingTableWidth >= 0) {
         visibleColumns += 1;
       }
     }
 
     // show the tail column
-    if (tailColumn != null && visibleColumns === itemColumns.length + 1 && remainingWidth - tailColumnWidth > 0) {
+    if (tailColumn != null && visibleColumns === itemColumns.length + 1 && Math.abs(remainingTableWidth - tailColumnWidth) < 3) {
       visibleColumns += 1;
     }
 
@@ -97,7 +99,7 @@ export class DbxColumnSizeDirective implements OnDestroy {
   standalone: true
 })
 export class DbxColumnSizeColumnDirective implements OnInit, OnDestroy {
-  readonly dbxColumnSizeDirective = inject(DbxColumnSizeDirective);
+  readonly dbxColumnSizeDirective = inject(DbxTableColumnSizeDirective);
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly index = input.required<DbxColumnSizeColumnValue>({ alias: 'dbx-column-size-column' });
 

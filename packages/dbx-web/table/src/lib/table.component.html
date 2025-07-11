@@ -1,6 +1,6 @@
 <dbx-loading [context]="context">
   <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
-  <section class="dbx-table-view" dbx-column-size #columnSize="dbxColumnSize" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
+  <section class="dbx-table-view" dbx-table-column-size #columnSize="dbxTableColumnSize" infinite-scroll [infiniteScrollDistance]="scrollDistance()" [infiniteScrollThrottle]="throttleScroll()" [scrollWindow]="false" (scrolled)="onScrollDown()">
     <table class="dbx-table-view-table" mat-table [dataSource]="elementsSignal()" [trackBy]="trackElementByFunctionSignal()" multiTemplateDataRows>
       <!-- Groups -->
       <!-- Group Header column -->
