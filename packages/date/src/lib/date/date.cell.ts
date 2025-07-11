@@ -673,13 +673,7 @@ export interface CalculateExpectedDateCellTimingDurationPair {
   readonly expectedFinalStartsAt: Date;
 }
 
-/**
- * Returns the expected duration from the input.
- *
- * @param timing
- * @returns
- */
-export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStartsAtEndRange): CalculateExpectedDateCellTimingDurationPair {
+function _calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStartsAtEndRange) {
   const { end, startsAt, timezone } = timing;
   const normalInstance = dateTimezoneUtcNormal(timezone);
 
@@ -699,6 +693,22 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
 
   const finalMsDifferenceBetweenStartAndEnd = differenceInMilliseconds(endInUtcNormal, startsAtInUtcNormal);
   const duration = (finalMsDifferenceBetweenStartAndEnd / MS_IN_MINUTE) % MINUTES_IN_DAY || MINUTES_IN_DAY;
+
+  return {
+    duration,
+    normalInstance,
+    endInUtcNormal
+  };
+}
+
+/**
+ * Returns the expected duration from the input.
+ *
+ * @param timing DateCellTimingStartsAtEndRange
+ * @returns CalculateExpectedDateCellTimingDurationPair
+ */
+export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStartsAtEndRange): CalculateExpectedDateCellTimingDurationPair {
+  const { duration, normalInstance, endInUtcNormal } = _calculateExpectedDateCellTimingDurationPair(timing);
   const expectedFinalStartsAtUtc = addMinutes(endInUtcNormal, -duration);
   const expectedFinalStartsAt = normalInstance.targetDateToBaseDate(expectedFinalStartsAtUtc); // 2024-11-03T03:00:00.000Z
 
@@ -708,15 +718,38 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
   };
 }
 
+/**
+ * Returns the duration calculated from the input.
+ *
+ * @param timing DateCellTimingStartsAtEndRange
+ * @returns Minutes
+ */
 export function calculateExpectedDateCellTimingDuration(timing: DateCellTimingStartsAtEndRange): Minutes {
-  return calculateExpectedDateCellTimingDurationPair(timing).duration;
+  return _calculateExpectedDateCellTimingDurationPair(timing).duration;
+}
+
+/**
+ * Creates a DateCellTiming from the input timing by using calculateExpectedDateCellTimingDuration()
+ *
+ * @param timing DateCellTimingStartsAtEndRange
+ * @returns DateCellTiming
+ */
+export function dateCellTimingFromDateCellTimingStartsAtEndRange(timing: DateCellTimingStartsAtEndRange): DateCellTiming {
+  const { startsAt, end, timezone } = timing;
+  const duration = calculateExpectedDateCellTimingDuration(timing);
+  return {
+    startsAt,
+    duration,
+    end,
+    timezone
+  };
 }
 
 /**
  * Returns the final StartsAt time.
  *
- * @param timing
- * @returns
+ * @param timing DateCellTimingStartsAtEndRange
+ * @returns DateCellTimingEvent
  */
 export function dateCellTimingFinalStartsAtEvent(timing: DateCellTimingStartsAtEndRange): DateCellTimingEvent {
   const { duration, expectedFinalStartsAt: startsAt } = calculateExpectedDateCellTimingDurationPair(timing);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, TrackByFunction, inject, computed, input, Signal, viewChild, ElementRef } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxTableStore } from './table.store';
 import { LoadingState, loadingStateContext, mapLoadingStateValueWithOperator, valueFromFinishedLoadingState } from '@dereekb/rxjs';
@@ -21,7 +21,8 @@ import { DbxTableGroupFooterComponent } from './table.group.footer.component';
 import { pushArrayItemsIntoArray } from '@dereekb/util';
 import { NgClass } from '@angular/common';
 import { DbxTableFullSummaryRowComponent } from './table.fullsummaryrow.component';
-import { DbxColumnSizeDirective, DbxColumnSizeColumnDirective } from './table.column.size.directive';
+import { DbxTableColumnSizeDirective, DbxColumnSizeColumnDirective } from './table.column.size.directive';
+import { DBX_TABLE_COLUMN_SIZE_PARENT_ELEMENT_REF_TOKEN } from './table.column.size';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
@@ -70,8 +71,14 @@ export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, 
     DbxTableGroupHeaderComponent,
     DbxTableGroupFooterComponent,
     DbxTableFullSummaryRowComponent,
-    DbxColumnSizeDirective,
+    DbxTableColumnSizeDirective,
     DbxColumnSizeColumnDirective
+  ],
+  providers: [
+    {
+      provide: DBX_TABLE_COLUMN_SIZE_PARENT_ELEMENT_REF_TOKEN,
+      useExisting: ElementRef
+    }
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
@@ -172,18 +179,6 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly displayedColumnsSignal = computed(() => {
     const columnNames = this.innerColumnNamesSignal() || [];
     return [this.itemsColumnName, ...columnNames, this.actionsColumnName];
-  });
-
-  readonly visibleColumnsSignal = computed(() => {
-    const displayedColumns = this.displayedColumnsSignal();
-
-    // TODO: Every time the table is rendered/size changes/etc we should recompute width of the first n columns that span the viewport
-    // in order to calculate a colspan for the group header/footer that is not greater than span of the table for a given view size
-    // I.E. if the screen shrinks to only show the first 4 columns, then the colspan should be 4.
-
-    // as a temporary measure, we just show half the columns
-
-    return displayedColumns.length / 2;
   });
 
   readonly trackByFunction$: Observable<TrackByFunction<T>> = this.tableStore.viewDelegate$.pipe(

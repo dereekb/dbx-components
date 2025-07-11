@@ -6,6 +6,8 @@ export * from './table.cell.summarystart.component';
 export * from './table.column.directive';
 export * from './table.column.header.component';
 export * from './table.column.footer.component';
+export * from './table.column.size.directive';
+export * from './table.column.size';
 export * from './table.component';
 export * from './table.directive';
 export * from './table.group.directive';
