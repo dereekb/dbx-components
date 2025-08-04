@@ -19,8 +19,8 @@ import { ObservableOrValueGetter } from '@dereekb/rxjs';
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
   readonly content = viewChild('content', { read: ViewContainerRef });
 
-  readonly config = input<Maybe<ObservableOrValueGetter<DbxInjectionComponentConfig<T>>>>();
-  readonly template = input<Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>>>();
+  readonly config = input<Maybe<ObservableOrValueGetter<Maybe<DbxInjectionComponentConfig<T>>>>>();
+  readonly template = input<Maybe<ObservableOrValueGetter<Maybe<DbxInjectionTemplateConfig<T>>>>>();
 
   // allow signal writes for each as during their initialization they may write to a signal in some cases when initializing
   protected readonly _contentEffect = effect(() => this.setContent(this.content()), { allowSignalWrites: true });

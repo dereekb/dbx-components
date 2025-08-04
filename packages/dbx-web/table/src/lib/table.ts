@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { LoadingState, ObservableOrValue, PageListLoadingState } from '@dereekb/rxjs';
-import { type Maybe } from '@dereekb/util';
+import { CssClassesArray, type Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { TrackByFunction } from '@angular/core';
 
@@ -153,4 +153,8 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    * @param item
    */
   itemAction?(item: T): Maybe<DbxInjectionComponentConfig<any>>;
+  /**
+   * Optional classes to apply to the table.
+   */
+  tableClasses?: CssClassesArray;
 }

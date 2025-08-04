@@ -23,7 +23,7 @@ export abstract class AbstractDbxInjectionDirective<T> implements OnInit, OnDest
     this._instance.config = config;
   }
 
-  setTemplate(template: Maybe<ObservableOrValueGetter<DbxInjectionTemplateConfig<T>>>) {
+  setTemplate(template: Maybe<ObservableOrValueGetter<Maybe<DbxInjectionTemplateConfig<T>>>>) {
     this._instance.template = template;
   }
 
