@@ -79,6 +79,18 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  .dbx-list-view-no-meta-padding {
+    .mdc-list-item--with-trailing-meta.mdc-list-item {
+      padding-left: 4px;
+      padding-right: 0;
+    }
+
+    .mdc-list-item--with-trailing-meta .mdc-list-item__end {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+
   .dbx-list-view-group {
     .dbx-list-view-group-header {
       z-index: 100;

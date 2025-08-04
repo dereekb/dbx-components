@@ -84,7 +84,7 @@ export interface DbxTableReaderConfig<C, T, O, G = unknown> {
   /**
    * The table store used for retrieving the items.
    */
-  readonly tableStore: DbxTableStore<unknown, C, T, G>;
+  readonly tableStore: DbxTableStore<any, C, T, G>;
 }
 
 export interface DbxTableReader<C, T, O, G = unknown> extends DbxTableReaderConfig<C, T, O, G> {
