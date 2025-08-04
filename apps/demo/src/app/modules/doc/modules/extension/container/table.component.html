@@ -6,6 +6,7 @@
       <h3>Grouping</h3>
       <p>You can group items together and add custom headers and footers for each group by adding configuration to the view delegate while utilizing the same data delegate.</p>
       <p>Headers/footers can each individually be shown/hidden on a per-group basis. The groupHeader or groupFooter viewDelegate functions just need to return undefined if the header/footer should not be shown for that group.</p>
+      <p>The table also has custom css class "dbx-content-height-max" configured via the viewDelegate</p>
       <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleGroupViewDelegate" [dbxTableDataDelegate]="exampleDataDelegate"></dbx-table-view>
       <h3>Context Loading</h3>
       <p class="dbx-hint">While the context is loading the table shows a spinning loader.</p>

@@ -41,18 +41,47 @@ $dbx-grey-color-contrast-var: --dbx-grey-color-contrast;
 $dbx-disabled-color-contrast-var: --dbx-disabled-color-contrast;
 $dbx-bg-color-contrast-var: --dbx-bg-color-contrast;
 
+$dbx-app-height-additional-offset-var: --dbx-app-height-additional-offset;
+$dbx-app-height-base-var: --dbx-app-height-base;
+$dbx-app-height-var: --dbx-app-height;
+
+$dbx-page-height-additional-offset-var: --dbx-page-height-additional-offset;
+$dbx-page-height-base-var: --dbx-page-height-base;
+$dbx-page-height-var: --dbx-page-height;
+
+$dbx-content-height-additional-offset-var: --dbx-content-height-additional-offset;
+$dbx-content-headers-count-var: --dbx-content-headers-count;
+$dbx-content-height-base-var: --dbx-content-height-base;
+$dbx-content-height-var: --dbx-content-height;
+$dbx-nested-content-height-var: --dbx-nested-content-height;
+
 // vars
 $vh100: var($vh100-var);
 
 $top-banner-height: var($top-banner-height-var);
 $bottom-banner-height: var($bottom-banner-height-var);
-$app-height: calc($vh100 - ($top-banner-height - $bottom-banner-height));
+
+$app-height-base: calc($vh100 - ($top-banner-height - $bottom-banner-height));
+// $app-height-base: var($dbx-app-height-base-var);
+
+$app-height: calc($app-height-base - var($dbx-app-height-additional-offset-var, 0px));
+// $app-height: var($dbx-app-height-var);
 
 $page-navbar-height: var($page-navbar-height-var);
 $content-navbar-height: var($content-navbar-height-var);
 
-$page-height: calc($app-height - $page-navbar-height);
-$content-height: calc($page-height - $content-navbar-height);
+$page-height-base: calc($app-height - $page-navbar-height);
+// $page-height-base: var($dbx-page-height-base-var);
+
+$page-height: calc($page-height-base - var($dbx-page-height-additional-offset-var, 0px));
+// $page-height: var($dbx-page-height-var);
+
+$content-headers-count: var($dbx-content-headers-count-var, 0);
+$content-height-base: calc($page-height - ($content-navbar-height * ($content-headers-count)));
+// $content-height-base: var($dbx-content-height-base-var);
+
+$content-height: calc($content-height-base - var($dbx-content-height-additional-offset-var, 0px));
+$nested-content-height: calc(var($dbx-content-height-var) - $content-navbar-height);
 
 $box-max-width: var($box-max-width-var);
 $content-max-width: var($content-max-width-var);

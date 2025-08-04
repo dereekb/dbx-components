@@ -28,11 +28,51 @@
 
     #{theming.$two-column-left-width-var}: theming.get-dbx-two-column-left-width($theme-config);
 
+    #{theming.$dbx-app-height-additional-offset-var}: 0px;
+    #{theming.$dbx-page-height-additional-offset-var}: 0px;
+    #{theming.$dbx-content-height-additional-offset-var}: 0px;
+
     // root height
     &.dbx-style-root {
       display: block;
-      height: theming.$app-height;
       overflow: hidden;
+      @include theming.app-height();
+    }
+
+    // content sizing/heights
+    /**
+    These heights rely on the variable set by the dbx height related mixins (app-height(), page-height(), content-height(), etc.).
+    */
+    .dbx-app-height {
+      height: var(theming.$dbx-app-height-var);
+    }
+
+    .dbx-app-height-max {
+      max-height: var(theming.$dbx-app-height-var);
+    }
+
+    .dbx-page-height {
+      height: var(theming.$dbx-page-height-var);
+    }
+
+    .dbx-page-height-max {
+      max-height: var(theming.$dbx-page-height-var);
+    }
+
+    .dbx-content-height {
+      height: var(theming.$dbx-content-height-var);
+    }
+
+    .dbx-content-height-max {
+      max-height: var(theming.$dbx-content-height-var);
+    }
+
+    .dbx-nested-content-height {
+      height: var(theming.$dbx-nested-content-height-var);
+    }
+
+    .dbx-nested-content-height-max {
+      max-height: var(theming.$dbx-nested-content-height-var);
     }
   }
 }

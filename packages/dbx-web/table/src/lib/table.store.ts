@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { asObservable, beginLoading, filterMaybe, LoadingState, mapLoadingStateValueWithOperator, PageListLoadingState, valueFromFinishedLoadingState } from '@dereekb/rxjs';
-import { type Maybe } from '@dereekb/util';
+import { spaceSeparatedCssClasses, type Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of } from 'rxjs';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, DbxTableItemGroup, DbxTableViewDelegate, defaultDbxTableItemGroup } from './table';
@@ -66,6 +66,12 @@ export class DbxTableStore<I = unknown, C = unknown, T = unknown, G = unknown> e
   );
 
   readonly viewDelegate$ = this.currentViewDelegate$.pipe(filterMaybe());
+  readonly tableCssClasses$ = this.viewDelegate$.pipe(map((x) => x.tableClasses));
+  readonly spaceSeparatedTableCssClasses$ = this.tableCssClasses$.pipe(
+    map((x) => spaceSeparatedCssClasses(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly dataState$: Observable<LoadingState<DbxTableContextData<I, C, T>>> = combineLatest([this.input$, this.dataDelegate$]).pipe(
     switchMap(([input, dataDelegate]) => {

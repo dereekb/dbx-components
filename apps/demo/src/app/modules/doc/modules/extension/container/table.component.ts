@@ -97,7 +97,8 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
       return {
         componentClass: DocExtensionTableItemActionExampleComponent
       };
-    }
+    },
+    tableClasses: ['dbx-content-height-max']
   };
 
   readonly exampleGroupViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {

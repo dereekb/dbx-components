@@ -6,8 +6,10 @@
 // MARK: Mixin
 @mixin core() {
   .dbx-table-view {
-    height: 600px;
-    overflow: auto;
+    .dbx-table-view-table-wrapper {
+      max-height: 600px;
+      overflow: auto;
+    }
 
     .dbx-table-view-table {
       width: 100%;

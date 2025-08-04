@@ -210,6 +210,8 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
   readonly viewDelegateSignal = toSignal(this.tableStore.viewDelegate$);
   readonly elementsSignal = toSignal(this.elements$, { initialValue: [] });
 
+  readonly tableCssClasses = toSignal(this.tableStore.spaceSeparatedTableCssClasses$);
+
   onScrollDown(): void {
     this.tableStore.loadMore();
   }

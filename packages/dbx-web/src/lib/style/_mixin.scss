@@ -52,10 +52,13 @@
 */
 @mixin app-height($additionalOffset: 0) {
   @if $additionalOffset !=0 {
-    height: calc(variables.$app-height - #{$additionalOffset});
-  } @else {
-    height: variables.$app-height;
+    // set the variable, which will update the css calculation at runtime
+    #{variables.$dbx-app-height-additional-offset-var}: #{$additionalOffset};
   }
+
+  #{variables.$dbx-app-height-base-var}: variables.$app-height-base;
+  #{variables.$dbx-app-height-var}: variables.$app-height;
+  height: var(variables.$dbx-app-height-var);
 }
 
 /**
@@ -63,23 +66,27 @@
 */
 @mixin page-height($additionalOffset: 0) {
   @if $additionalOffset !=0 {
-    height: calc(variables.$page-height - #{$additionalOffset});
-  } @else {
-    height: variables.$page-height;
+    #{variables.$dbx-page-height-additional-offset-var}: #{$additionalOffset};
   }
+
+  #{variables.$dbx-page-height-base-var}: variables.$page-height-base;
+  #{variables.$dbx-page-height-var}: variables.$page-height;
+  height: var(variables.$dbx-page-height-var);
 }
 
 /**
   Content height that sets the height to $content-height with an optional offset.
 */
-@mixin content-height($additionalOffset: 0) {
-  $temp: variables.$content-height;
-
+@mixin content-height($additionalOffset: 0, $headers: 0) {
   @if $additionalOffset !=0 {
-    height: calc($temp - #{$additionalOffset});
-  } @else {
-    height: $temp;
+    #{variables.$dbx-content-height-additional-offset-var}: #{$additionalOffset};
   }
+
+  #{variables.$dbx-content-headers-count-var}: #{$headers};
+  #{variables.$dbx-content-height-base-var}: variables.$content-height-base;
+  #{variables.$dbx-content-height-var}: variables.$content-height;
+  #{variables.$dbx-nested-content-height-var}: variables.$nested-content-height;
+  height: var(variables.$dbx-content-height-var);
 }
 
 /**
@@ -90,17 +97,7 @@
     @error "Headers count #{$headers} must be greater than 1.";
   }
 
-  @if $headers == 1 {
-    @include content-height($additionalOffset); // content-height properly handles this case.
-  } @else {
-    $temp: calc(variables.$content-height - variables.$content-navbar-height * ($headers - 1));
-
-    @if $additionalOffset !=0 {
-      height: calc($temp - #{$additionalOffset});
-    } @else {
-      height: $temp;
-    }
-  }
+  @include content-height($additionalOffset, $headers);
 }
 
 /**
