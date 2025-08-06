@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { DbxColorDirective, DbxThemeColor } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
+import { DbxColorDirective } from '../style/style.color.directive';
+import { DbxThemeColor } from '../style/style';
 
 /**
  * Configuration for the DbxNumberWithLimitComponent.

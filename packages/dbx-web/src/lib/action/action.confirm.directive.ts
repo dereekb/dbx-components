@@ -4,7 +4,6 @@ import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.com
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
-import { Observable } from 'rxjs';
 
 /**
  * DbxActionConfirmDirective configuration.

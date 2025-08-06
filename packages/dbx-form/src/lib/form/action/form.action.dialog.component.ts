@@ -1,13 +1,15 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { AbstractDialogDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxActionModule, DbxButtonModule, DbxThemeColor, DbxButtonStyle } from '@dereekb/dbx-web';
-import { MatButton } from '@angular/material/button';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { AbstractDialogDirective, DbxDialogContentDirective, DbxDialogContentCloseComponent, DbxActionModule, DbxButtonModule, DbxButtonStyle } from '@dereekb/dbx-web';
 import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dialog';
 import { Maybe } from '@dereekb/util';
-import { DbxActionFormDirective, DbxFormlyComponent, DbxFormlyContext, DbxFormSourceDirective, provideFormlyContext } from '@dereekb/dbx-form';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter, SubscriptionObject, WorkUsingContext } from '@dereekb/rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { distinctUntilChanged } from 'rxjs';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
+import { DbxFormlyContext, provideFormlyContext } from '../../formly/formly.context';
+import { DbxFormlyComponent } from '../../formly/formly.form.component';
+import { DbxFormSourceDirective } from '../io/form.input.directive';
+import { DbxActionFormDirective } from './form.action.directive';
 
 export interface DbxFormActionDialogComponentButtonConfig extends DbxButtonDisplay, DbxButtonStyle {}
 
@@ -52,7 +54,7 @@ export interface DbxFormActionDialogComponentConfig<O> {
   providers: [provideFormlyContext()],
   imports: [DbxDialogContentDirective, DbxActionModule, DbxButtonModule, DbxDialogContentCloseComponent, DbxFormlyComponent, DbxFormSourceDirective, DbxActionFormDirective, DbxFormlyComponent]
 })
-export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, DbxFormActionDialogComponentConfig<O>> implements OnInit {
+export class DbxFormActionDialogComponent<O> extends AbstractDialogDirective<O, DbxFormActionDialogComponentConfig<O>> implements OnInit, OnDestroy {
   private readonly _fieldsSub = new SubscriptionObject();
 
   readonly context = inject(DbxFormlyContext<O>, { self: true });
