@@ -48,7 +48,7 @@ export enum DbxButtonDisplayType {
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly type = input<Maybe<DbxButtonType>>();
-  readonly style = input<Maybe<DbxButtonStyle>>();
+  readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
   readonly color = input<ThemePalette | DbxThemeColor>(undefined);
   readonly spinnerColor = input<ThemePalette | DbxThemeColor>(undefined);
@@ -64,7 +64,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly typeSignal = computed(() => {
-    const style = this.style();
+    const style = this.buttonStyle();
     let type = this.type() ?? style?.type;
 
     if (!type) {
@@ -90,7 +90,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       [key: string]: string;
     };
 
-    const style = this.style();
+    const style = this.buttonStyle();
     const customButtonColorValue = this.customButtonColor() ?? style?.customButtonColor;
 
     if (customButtonColorValue) {

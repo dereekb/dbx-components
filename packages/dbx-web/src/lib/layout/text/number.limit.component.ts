@@ -6,7 +6,7 @@ import { DbxThemeColor } from '../style/style';
 /**
  * Configuration for the DbxNumberWithLimitComponent.
  */
-export interface NumberWithLimit<T extends number> {
+export interface NumberWithLimit<T extends number = number> {
   /**
    * Number to display, if applicable.
    */
@@ -46,7 +46,7 @@ export interface NumberWithLimit<T extends number> {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxNumberWithLimitComponent<T extends number> {
+export class DbxNumberWithLimitComponent<T extends number = number> {
   readonly number = input<NumberWithLimit<T>>();
   readonly rounded = input<boolean>();
 

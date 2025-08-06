@@ -46,7 +46,7 @@ export interface DbxFormActionDialogComponentConfig<O> {
       <dbx-dialog-content-close (close)="close()"></dbx-dialog-content-close>
       <div>
         <dbx-formly dbxActionForm [dbxFormSource]="initialValue$"></dbx-formly>
-        <dbx-button dbxActionButton [buttonDisplay]="submitButtonConfig" [style]="submitButtonConfig" [raised]="true"></dbx-button>
+        <dbx-button dbxActionButton [buttonDisplay]="submitButtonConfig" [buttonStyle]="submitButtonConfig" [raised]="true"></dbx-button>
       </div>
     </dbx-dialog-content>
   `,
