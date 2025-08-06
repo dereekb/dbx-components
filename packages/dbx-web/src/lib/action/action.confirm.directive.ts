@@ -4,6 +4,7 @@ import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.com
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance, transformEmptyStringInputToUndefined } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
+import { Observable } from 'rxjs';
 
 /**
  * DbxActionConfirmDirective configuration.
@@ -40,6 +41,10 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
 
   ngOnDestroy(): void {
     this._sourceSubscription.destroy();
+  }
+
+  protected getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig> {
+    return this.dbxActionConfirm();
   }
 
   protected override _handleDialogResult(result: boolean): boolean {

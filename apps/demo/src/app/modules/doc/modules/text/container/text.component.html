@@ -120,6 +120,24 @@
       <dbx-detail-block header="No Icon Example">
         <span>{{ lorem }}</span>
       </dbx-detail-block>
+
+      <div>
+        <p>You can use the "alignHeader" input to wrap the header's content in a flex and push the content right so it is aligned with the title. This example is limited to 350px and the background color slighltly darkened.</p>
+        <div style="width: 350px; background: #00000012">
+          <dbx-detail-block icon="attach_money" header="Aligned Header Cost" [alignHeader]="true">
+            <dbx-number-with-limit header [number]="numberLimitC"></dbx-number-with-limit>
+            <p>This is the content of the detail block.</p>
+          </dbx-detail-block>
+        </div>
+      </div>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-number-with-limit" hint="Displays a number that can be paired with a limit and be colored based on the ratio between the number and limit.">
+      <p>A</p>
+      <dbx-number-with-limit [number]="numberLimitA"></dbx-number-with-limit>
+      <p>The number can be configured with a prefix, suffix, and format function.</p>
+      <dbx-number-with-limit [number]="numberLimitB"></dbx-number-with-limit>
+      <p>Dollar amount example with rounded edges.</p>
+      <dbx-number-with-limit [number]="numberLimitC" [rounded]="true"></dbx-number-with-limit>
     </doc-feature-example>
     <h4>Text Classes (css classes)</h4>
     <doc-feature-example header=".dbx-hint">

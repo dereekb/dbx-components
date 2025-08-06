@@ -7,8 +7,9 @@ import { DbxLabelBlockComponent } from './label.block.component';
 import { DbxLinkifyComponent } from './linkify.component';
 import { DbxChipDirective } from './text.chip.directive';
 import { DbxTextChipsComponent } from './text.chips.component';
+import { DbxNumberWithLimitComponent } from './number.limit.component';
 
-const importsAndExports = [DbxUnitedStatesAddressComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
+const importsAndExports = [DbxUnitedStatesAddressComponent, DbxNumberWithLimitComponent, DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxLabelBlockComponent, DbxLinkifyComponent, DbxTextChipsComponent, DbxIconSpacerDirective];
 
 @NgModule({
   imports: importsAndExports,

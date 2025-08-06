@@ -17,15 +17,16 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
   private _currentDialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _currentDialogPromise?: Promise<boolean>;
 
-  /**
-   * Config used when showDialog() is called.
-   */
-  config?: Maybe<DbxPromptConfirmConfig>;
+  protected abstract getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig>;
 
   showDialog(): Observable<boolean> {
+    return this.showDialogWithConfig(this.getDefaultDialogConfig());
+  }
+
+  protected showDialogWithConfig(config: Maybe<DbxPromptConfirmConfig>): Observable<boolean> {
     if (!this._currentDialogPromise) {
       this._currentDialogPromise = new Promise<boolean>((resolve) => {
-        this._currentDialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog, this.config);
+        this._currentDialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog, config);
         this._currentDialogRef.afterClosed().subscribe((result: Maybe<boolean>) => {
           this._currentDialogRef = undefined;
           this._currentDialogPromise = undefined;
@@ -54,7 +55,7 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
 export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
   readonly dbxPromptConfirm = input<Maybe<DbxPromptConfirmConfig>>();
 
-  protected readonly _dbxPromptConfirmConfigEffect = effect(() => {
-    this.config = this.dbxPromptConfirm();
-  });
+  protected override getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig> {
+    return this.dbxPromptConfirm();
+  }
 }

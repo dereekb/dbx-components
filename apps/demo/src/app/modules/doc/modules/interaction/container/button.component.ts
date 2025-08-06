@@ -6,13 +6,14 @@ import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatIcon } from '@angular/material/icon';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
+import { MatButtonModule } from '@angular/material/button';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
 @Component({
   templateUrl: './button.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
+  imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
 })
 export class DocInteractionButtonComponent {
   testClicked = '';

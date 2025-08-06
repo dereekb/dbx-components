@@ -16,6 +16,35 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
     padding: $mat-dialog-container-padding;
   }
 
+  .dbx-dialog-content-with-header {
+    height: 100%;
+    $dbx-dialog-content-header-height: 22px;
+    $dbx-dialog-content-header-padding: 18px;
+
+    .dbx-dialog-content-close.dbx-dialog-content-close-padding {
+      padding-bottom: 12px;
+    }
+
+    .dbx-dialog-content-header {
+      height: $dbx-dialog-content-header-height;
+      margin: 0;
+    }
+
+    &.dbx-p0 .dbx-dialog-content-header {
+      padding: $dbx-dialog-content-header-padding 0;
+    }
+
+    // h3 gets padded away from edge
+    &.dbx-p0 h3.dbx-dialog-content-header {
+      padding-left: $dbx-dialog-content-header-padding/2;
+    }
+
+    // add case specifically for dbx-two-column
+    .dbx-two-column {
+      height: calc(100% - ($dbx-dialog-content-header-height + ($dbx-dialog-content-header-padding * 2)));
+    }
+  }
+
   .dbx-dialog-content.normal-dialog-content {
     min-width: unset;
   }
