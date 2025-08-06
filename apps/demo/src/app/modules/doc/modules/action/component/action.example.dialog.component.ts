@@ -19,7 +19,7 @@ import { MatButton } from '@angular/material/button';
   standalone: true,
   imports: [DbxDialogContentDirective, MatButton, DbxButtonSpacerDirective]
 })
-export class DocActionExampleDialogComponent extends AbstractDialogDirective {
+export class DocActionExampleDialogComponent extends AbstractDialogDirective<number> {
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {
     const dialogRef = matDialog.open(DocActionExampleDialogComponent, {});
     return dialogRef;

@@ -5,6 +5,7 @@ import { cutToPrecision } from './round';
  * Whole dollar amounts, before the ','.
  */
 export type WholeDollarAmount = number;
+
 /**
  * Dollar amount number.
  */
@@ -17,11 +18,21 @@ export interface DollarsPair {
 }
 
 /**
+ * Unit to affix to a dollar amount string.
+ */
+export type DollarAmountUnit = string;
+
+/**
  * String representing a dollar amount.
  *
- * Is formatted as a number with two decimal places.
+ * Is formatted as a number with two decimal places. No unit is affixed.
  */
 export type DollarAmountString = string;
+
+/**
+ * String representing a dollar amount with a unit prefix.
+ */
+export type DollarAmountStringWithUnit<U extends DollarAmountUnit> = `${U}${DollarAmountString}`;
 
 export const DOLLAR_AMOUNT_STRING_REGEX = /^\$?([0-9]+)\.?([0-9][0-9])$/;
 
@@ -53,4 +64,20 @@ export function dollarAmountString(number: Maybe<number>): string {
   } else {
     return '0.00';
   }
+}
+
+/**
+ * Function that formats the input number as a dollar amount string with a unit.
+ *
+ * @param unit
+ * @returns
+ */
+export type DollarAmountStringWithUnitFunction<U extends DollarAmountUnit> = ((amount: DollarAmount) => DollarAmountStringWithUnit<U>) & {
+  readonly unit: U;
+};
+
+export function dollarAmountStringWithUnitFunction<U extends DollarAmountUnit>(unit: U = '$' as U): DollarAmountStringWithUnitFunction<U> {
+  const fn = (amount: DollarAmount) => `${unit}${dollarAmountString(amount)}`;
+  fn.unit = unit;
+  return fn as DollarAmountStringWithUnitFunction<U>;
 }

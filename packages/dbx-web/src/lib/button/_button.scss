@@ -23,6 +23,18 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  .dbx-button-wrap-group {
+    > dbx-button {
+      display: inline-block;
+      padding: 0 6px 6px 0;
+    }
+
+    > button,
+    > dbx-icon-button {
+      margin: 0 6px 6px 0;
+    }
+  }
+
   dbx-button.dbx-w100,
   dbx-button.dbx-button-wide {
     // when using dbx-w100 with dbx-button, make the button full width

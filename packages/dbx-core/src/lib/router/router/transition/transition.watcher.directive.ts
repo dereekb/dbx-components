@@ -23,6 +23,8 @@ export abstract class AbstractTransitionWatcherDirective extends AbstractTransit
 
   // MARK: Action
   protected zoneUpdateForSuccessfulTransition(): void {
+    // TODO: NgZone Deprecation
+    // remove this function and replace, if necessary or remove entirely with angular zoneless implementation details.
     this.ngZone.run(() => this.updateForSuccessfulTransition());
   }
 

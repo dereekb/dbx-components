@@ -42,6 +42,10 @@ export class DbxActionConfirmDirective<T = unknown, O = unknown> extends Abstrac
     this._sourceSubscription.destroy();
   }
 
+  protected getDefaultDialogConfig(): Maybe<DbxPromptConfirmConfig> {
+    return this.dbxActionConfirm();
+  }
+
   protected override _handleDialogResult(result: boolean): boolean {
     if (result) {
       this.source.readyValue(this.dbxActionConfirm()?.readyValue as unknown as T);

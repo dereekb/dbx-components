@@ -78,6 +78,12 @@ $dbx-detail-block-content-offset: 30px;
     padding-top: 3px;
   }
 
+  .dbx-detail-block-header.dbx-detail-block-header-align {
+    .dbx-detail-block-header-label {
+      white-space: pre;
+    }
+  }
+
   .dbx-detail-block {
     display: block;
 
@@ -213,11 +219,27 @@ $dbx-detail-block-content-offset: 30px;
 
   .dbx-outlined-text {
     color: $text-color;
-    text-shadow: -1px -1px 0 $outlined-text-color, 1px -1px 0 $outlined-text-color, -1px 1px 0 $outlined-text-color, 1px 1px 0 $outlined-text-color;
+    text-shadow:
+      -1px -1px 0 $outlined-text-color,
+      1px -1px 0 $outlined-text-color,
+      -1px 1px 0 $outlined-text-color,
+      1px 1px 0 $outlined-text-color;
   }
 
   .dbx-nowrap {
     white-space: nowrap;
+  }
+
+  .dbx-number-with-limit {
+    padding: 2px 6px;
+
+    .dbx-number-with-limit-divider {
+      margin: 0 3px;
+    }
+  }
+
+  .dbx-number-with-limit-rounded {
+    border-radius: 12px;
   }
 }
 

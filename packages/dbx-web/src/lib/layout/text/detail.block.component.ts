@@ -8,7 +8,7 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 @Component({
   selector: 'dbx-detail-block',
   template: `
-    <dbx-detail-block-header [icon]="icon()" [header]="header()">
+    <dbx-detail-block-header [icon]="icon()" [header]="header()" [alignHeader]="alignHeader()">
       <ng-content select="[header]"></ng-content>
     </dbx-detail-block-header>
     <div class="dbx-detail-block-content">
@@ -25,4 +25,5 @@ import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 export class DbxDetailBlockComponent {
   readonly icon = input<Maybe<string>>();
   readonly header = input<Maybe<string>>();
+  readonly alignHeader = input<boolean>(false);
 }

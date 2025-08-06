@@ -11,6 +11,7 @@ import { WorkUsingObservable, WorkUsingContext } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
+import { DbxFormActionDialogComponent, textAreaField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './interaction.component.html',
@@ -116,5 +117,24 @@ export class DocActionInteractionComponent implements OnDestroy {
 
   handleOpenDialog: DbxActionDialogFunction = () => {
     return DocActionExampleDialogComponent.openDialog(this.matDialog);
+  };
+
+  handleOpenFormDialog: DbxActionDialogFunction = () => {
+    return DbxFormActionDialogComponent.openDialogWithForm(this.matDialog, {
+      header: 'Form Dialog Example',
+      fields: [
+        textAreaField({
+          key: 'test',
+          label: 'Test',
+          placeholder: 'Enter test text',
+          required: true
+        })
+      ],
+      submitButtonConfig: {
+        text: 'Custom Submit Button',
+        icon: 'save',
+        color: 'warn'
+      }
+    });
   };
 }

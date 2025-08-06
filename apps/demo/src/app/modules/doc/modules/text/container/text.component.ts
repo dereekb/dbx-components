@@ -1,14 +1,14 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent } from '@dereekb/dbx-web';
+import { TextChip, DbxContentContainerDirective, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent, NumberWithLimit, DbxNumberWithLimitComponent } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
-import { UnitedStatesAddressWithContact, unitedStatesAddressString } from '@dereekb/util';
+import { UnitedStatesAddressWithContact, dollarAmountString, unitedStatesAddressString } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 
 @Component({
   templateUrl: './text.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxContentPitDirective, DbxLinkifyComponent, DbxTextChipsComponent, DbxChipDirective, DbxColorDirective, DbxButtonSpacerDirective, DbxLabelBlockComponent, DbxNumberWithLimitComponent, DbxUnitedStatesAddressComponent, DbxDetailBlockComponent, DbxAnchorComponent]
 })
 export class DocTextTextComponent {
   readonly fullAddress: UnitedStatesAddressWithContact = {
@@ -59,4 +59,25 @@ export class DocTextTextComponent {
       text: 'c'
     }
   ];
+
+  readonly numberLimitA: NumberWithLimit<number> = {
+    value: 10,
+    limit: 100
+  };
+
+  readonly numberLimitB: NumberWithLimit<number> = {
+    value: 100,
+    limit: 10,
+    prefix: 'PRE',
+    suffix: 'SUF',
+    formatNumber: (number) => `${number}%`
+  };
+
+  readonly numberLimitC: NumberWithLimit<number> = {
+    value: 10,
+    limit: 100,
+    prefix: '$',
+    formatNumber: dollarAmountString,
+    suffix: 'USD'
+  };
 }
