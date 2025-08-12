@@ -75,6 +75,10 @@
           {
             "description": "run nestjs-openai tests",
             "command": "npx nx test nestjs-openai"
+          },
+          {
+            "description": "run nestjs-typeform tests",
+            "command": "npx nx test nestjs-typeform"
           }
         ],
         "color": true,

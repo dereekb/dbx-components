@@ -1,0 +1,33 @@
+{
+  "name": "nestjs-typeform",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nestjs/typeform/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["!util-test"],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nestjs/typeform",
+        "tsConfig": "packages/nestjs/typeform/tsconfig.lib.json",
+        "packageJson": "packages/nestjs/typeform/package.json",
+        "main": "packages/nestjs/typeform/src/index.ts",
+        "assets": ["LICENSE"]
+      },
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/packages/nestjs/typeform"],
+      "options": {
+        "jestConfig": "packages/nestjs/typeform/jest.config.ts"
+      }
+    }
+  }
+}
