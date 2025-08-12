@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "12.3.4",
+  "version": "12.3.5",
   "license": "MIT",
   "scripts": {
     "postinstall": "echo >> .env.local",
@@ -43,6 +43,7 @@
     "@ngx-formly/material": "^6.0.0",
     "@nx/devkit": "19.8.9",
     "@placemarkio/geo-viewport": "^1.0.2",
+    "@typeform/api-client": "^2.5.1",
     "@uirouter/angular": "15.0.0",
     "@uirouter/core": "^6.1.1",
     "@uirouter/rx": "^1.0.0",

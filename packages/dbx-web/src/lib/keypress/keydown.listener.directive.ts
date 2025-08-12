@@ -1,6 +1,9 @@
 import { HostListener, Directive, input, output, computed } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 
+/**
+ * Binds to the window:keydown event and emits events.
+ */
 @Directive({
   selector: '[dbxWindowKeyDownListener]',
   standalone: true
@@ -8,11 +11,23 @@ import { type Maybe } from '@dereekb/util';
 export class DbxWindowKeyDownListenerDirective {
   readonly dbxWindowKeyDownListener = output<KeyboardEvent>();
 
-  readonly appWindowKeyDownEnabled = input<boolean>();
+  /**
+   * @deprecated Use dbxWindowKeyDownEnabled instead.
+   */
+  readonly appWindowKeyDownEnabled = input<Maybe<boolean>>();
+
+  /**
+   * @deprecated Use dbxWindowKeyDownFilter instead.
+   */
   readonly appWindowKeyDownFilter = input<Maybe<string[]>>();
 
-  readonly keysFilter = computed(() => {
-    const filterOnKeys = this.appWindowKeyDownFilter();
+  readonly dbxWindowKeyDownEnabled = input<Maybe<boolean>>();
+  readonly dbxWindowKeyDownFilter = input<Maybe<string[]>>();
+
+  readonly isEnabledSignal = computed(() => this.dbxWindowKeyDownEnabled() ?? this.appWindowKeyDownEnabled());
+
+  readonly keysFilterSignal = computed(() => {
+    const filterOnKeys = this.dbxWindowKeyDownFilter() ?? this.appWindowKeyDownFilter();
     let filter: Maybe<Set<string>>;
 
     if (filterOnKeys) {
@@ -24,9 +39,10 @@ export class DbxWindowKeyDownListenerDirective {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    const keysFilter = this.keysFilter();
+    const keysFilter = this.keysFilterSignal();
+    const enabled = this.isEnabledSignal();
 
-    if (this.appWindowKeyDownEnabled() !== false) {
+    if (enabled !== false) {
       if (!keysFilter || keysFilter.has(event.key)) {
         this.dbxWindowKeyDownListener.emit(event);
       }

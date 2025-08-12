@@ -3,6 +3,7 @@ import { DemoApiStripeModule } from './stripe/stripe.module';
 import { DemoApiZoomModule } from './zoom/zoom.module';
 import { DemoApiVapiAiModule } from './vapiai';
 import { DemoApiOpenAIModule } from './openai';
+import { DemoApiTypeformModule } from './typeform';
 
 @Module({
   imports: [
@@ -10,7 +11,8 @@ import { DemoApiOpenAIModule } from './openai';
     DemoApiStripeModule,
     DemoApiZoomModule,
     DemoApiVapiAiModule,
-    DemoApiOpenAIModule
+    DemoApiOpenAIModule,
+    DemoApiTypeformModule
   ],
   exports: []
 })

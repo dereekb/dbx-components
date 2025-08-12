@@ -19,6 +19,10 @@
   .dbx-table-view-loading {
   }
 
+  .dbx-table-view.dbx-content-height-max > .dbx-table-view-table-wrapper {
+    max-height: calc(var(--dbx-content-height));
+  }
+
   // MARK: Date
   .dbx-table-date-range-distance-input-cell {
     min-width: 140px;

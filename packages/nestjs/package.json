@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "12.3.4",
+  "version": "12.3.5",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -32,6 +32,12 @@
       "main": "./openai/src/index.js",
       "require": "./openai/src/index.js",
       "default": "./openai/src/index.js"
+    },
+    "./typeform": {
+      "types": "./typeform/src/index.d.ts",
+      "main": "./typeform/src/index.js",
+      "require": "./typeform/src/index.js",
+      "default": "./typeform/src/index.js"
     }
   },
   "main": "./src/index.js",

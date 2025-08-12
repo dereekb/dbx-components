@@ -81,11 +81,13 @@ export interface UsernameLoginFieldUsernameConfig {
   readonly username?: Omit<TextFieldConfig, 'key'>;
 }
 
+export type UsernameLoginFieldUsernameConfigInput = 'email' | 'username' | UsernameLoginFieldUsernameConfig;
+
 /**
  * usernamePasswordLoginFields() configuration.
  */
 export interface UsernameLoginFieldsConfig {
-  readonly username: 'email' | 'username' | UsernameLoginFieldUsernameConfig;
+  readonly username: UsernameLoginFieldUsernameConfigInput;
   readonly password?: TextPasswordFieldConfig;
   readonly verifyPassword?: Maybe<boolean | TextPasswordFieldConfig>;
 }
@@ -93,8 +95,7 @@ export interface UsernameLoginFieldsConfig {
 /**
  * Value type exported by usernameLoginFields()
  */
-export interface DefaultUsernameLoginFieldsValue {
-  readonly username: string;
+export interface DefaultUsernameLoginFieldsValue extends DefaultUsernameLoginFieldValue {
   readonly password: string;
   readonly verifyPassword?: string;
 }
@@ -106,6 +107,20 @@ export interface DefaultUsernameLoginFieldsValue {
  * @returns
  */
 export function usernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
+  const usernameField = usernameLoginField(username);
+  const passwordField = verifyPassword ? textPasswordWithVerifyFieldGroup({ password, verifyPassword: verifyPassword === true ? undefined : verifyPassword }) : textPasswordField(password);
+
+  return [usernameField, passwordField];
+}
+
+/**
+ * Value type exported by usernameLoginField()
+ */
+export interface DefaultUsernameLoginFieldValue {
+  readonly username: string;
+}
+
+export function usernameLoginField(username: UsernameLoginFieldUsernameConfigInput): FormlyFieldConfig {
   let usernameField: FormlyFieldConfig;
   let usernameFieldConfig: UsernameLoginFieldUsernameConfig = username as UsernameLoginFieldUsernameConfig;
 
@@ -129,7 +144,5 @@ export function usernamePasswordLoginFields({ username, password, verifyPassword
     usernameField = textField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
   }
 
-  const passwordField = verifyPassword ? textPasswordWithVerifyFieldGroup({ password, verifyPassword: verifyPassword === true ? undefined : verifyPassword }) : textPasswordField(password);
-
-  return [usernameField, passwordField];
+  return usernameField;
 }
