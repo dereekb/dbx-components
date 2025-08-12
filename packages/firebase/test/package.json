@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase/test",
-  "version": "12.3.4",
+  "version": "12.3.5",
   "type": "commonjs",
   "peerDependencies": {
     "@dereekb/util": "*",
