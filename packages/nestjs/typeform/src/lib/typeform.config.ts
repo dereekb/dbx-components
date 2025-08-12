@@ -3,7 +3,7 @@ import { TypeformClientOptions } from './typeform.type';
 /**
  * Default environment variable for the Typeform API key.
  */
-export const TYPEFORM_TOKEN_ENV_VAR = 'TYPEFORM_TOKEN';
+export const TYPEFORM_SECRET_TOKEN_ENV_VAR = 'TYPEFORM_SECRET_TOKEN';
 export const TYPEFORM_BASE_URL_ENV_VAR = 'TYPEFORM_BASE_URL';
 
 export interface TypeformServiceApiConfig {
