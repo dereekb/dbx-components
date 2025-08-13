@@ -25,6 +25,9 @@
           },
           {
             "command": "npx nx run nestjs-openai:build-base"
+          },
+          {
+            "command": "npx nx run nestjs-typeform:build-base"
           }
         ],
         "parallel": false

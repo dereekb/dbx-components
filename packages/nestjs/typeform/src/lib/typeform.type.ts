@@ -44,15 +44,16 @@ export type TypeformFormName = string;
 export type TypeformFormResponseToken = string;
 
 /**
- * Details about a form response that are hidden from the user.
+ * A record containing hidden data that was added to the form response.
+ *
+ * The data differs depending on the form's configuration.
+ *
+ * The type has utm fields added for convenience.
  */
-export interface TypeformFormHiddenMetadata {
-  readonly email: EmailAddress;
-  readonly lastname: string;
-  readonly source: string;
-  readonly utm_campaign: string;
-  readonly utm_medium: string;
-  readonly utm_source: string;
+export interface TypeformFormHiddenMetadata extends Partial<Record<string, any>> {
+  readonly utm_campaign?: string;
+  readonly utm_medium?: string;
+  readonly utm_source?: string;
 }
 
 export interface TypeformFormResponseDefinition extends MaybeSo<TypeformResponse['definition']> {
