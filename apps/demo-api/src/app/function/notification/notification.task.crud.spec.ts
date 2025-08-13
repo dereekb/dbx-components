@@ -4,7 +4,7 @@ import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNoti
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { NotificationDocument, NotificationSendState, NotificationSendType, createNotificationDocument, CreateNotificationTemplate, delayCompletion } from '@dereekb/firebase';
-import { EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, exampleNotificationTaskTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
+import { EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, exampleNotificationTaskTemplate, exampleNotificationTaskWithNoModelTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
 import { UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
@@ -115,98 +115,111 @@ demoApiFunctionContextFactory((f) => {
                 });
 
                 describe('known notification type', () => {
-                  initNotificationTask(() => {
+                  function describeTestsWithLoadParams(description: string, loadParams?: () => Partial<CreateNotificationTemplate>) {
+                    describe(description, () => {
+                      initNotificationTask(loadParams);
+
+                      demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
+                        describe('handle task', () => {
+                          it('should have handled the notification task', async () => {
+                            let notification = await assertSnapshotData(nbn.document);
+                            expect((notification.n.d as any)?.value).not.toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+
+                            const result = await nbn.sendNotification();
+
+                            expect(result.tryRun).toBe(true);
+                            expect(result.success).toBe(true);
+                            expect(result.isNotificationTask).toBe(true);
+                            expect(result.boxExists).toBe(false);
+                            expect(result.deletedNotification).toBe(false);
+                            expect(result.notificationTaskCompletionType).toBe('part_b'); // part_b should be completed now
+
+                            notification = await assertSnapshotData(nbn.document);
+                            expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+                          });
+
+                          describe('task fails', () => {
+                            const failureDelayUntil = addMonths(new Date(), 1);
+
+                            beforeEach(async () => {
+                              const notification = await assertSnapshotData(nbn.document);
+
+                              await nbn.document.update({
+                                n: {
+                                  ...notification.n,
+                                  d: {
+                                    result: {
+                                      completion: false,
+                                      delayUntil: failureDelayUntil.toISOString() // define a next time to delay until
+                                    }
+                                  }
+                                }
+                              });
+                            });
+
+                            it('should have failed to handle the notification task', async () => {
+                              const result = await nbn.sendNotification();
+
+                              expect(result.tryRun).toBe(true);
+                              expect(result.success).toBe(false);
+                              expect(result.deletedNotification).toBe(false);
+                              expect(result.notificationTaskCompletionType).toBe(false);
+
+                              const notification = await assertSnapshotData(nbn.document);
+                              expect(notification.sat).toBeSameSecondAs(failureDelayUntil);
+                              expect(notification.a).toBe(1); // send attempt count increases by one
+                            });
+                          });
+
+                          describe('task delay result during run', () => {
+                            const delayUntil = addMonths(new Date(), 1);
+
+                            beforeEach(async () => {
+                              const notification = await assertSnapshotData(nbn.document);
+
+                              await nbn.document.update({
+                                n: {
+                                  ...notification.n,
+                                  d: {
+                                    result: {
+                                      completion: delayCompletion(), // no
+                                      delayUntil: delayUntil.toISOString()
+                                    }
+                                  }
+                                }
+                              });
+                            });
+
+                            it('should delay the next notification run', async () => {
+                              const result = await nbn.sendNotification();
+
+                              expect(result.tryRun).toBe(true);
+                              expect(result.success).toBe(true); // was successful
+                              expect(result.deletedNotification).toBe(false);
+                              expect(result.notificationTaskCompletionType).toBeDefined(); // empty array
+
+                              // check notification changes
+                              const notification = await assertSnapshotData(nbn.document);
+                              expect(notification.sat).toBeSameSecondAs(delayUntil);
+                              expect(notification.a).toBe(1); // send attempt should still be 1
+                            });
+                          });
+                        });
+                      });
+                    });
+                  }
+
+                  describeTestsWithLoadParams('with notification model', () => {
                     return exampleNotificationTaskTemplate({
                       profileDocument: p.document,
                       completedCheckpoints: ['part_a'] // part_a is complete
                     });
                   });
 
-                  demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
-                    describe('handle task', () => {
-                      it('should have handled the notification task', async () => {
-                        let notification = await assertSnapshotData(nbn.document);
-                        expect((notification.n.d as any)?.value).not.toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
-
-                        const result = await nbn.sendNotification();
-
-                        expect(result.tryRun).toBe(true);
-                        expect(result.success).toBe(true);
-                        expect(result.isNotificationTask).toBe(true);
-                        expect(result.boxExists).toBe(false);
-                        expect(result.deletedNotification).toBe(false);
-                        expect(result.notificationTaskCompletionType).toBe('part_b'); // part_b should be completed now
-
-                        notification = await assertSnapshotData(nbn.document);
-                        expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
-                      });
-
-                      describe('task fails', () => {
-                        const failureDelayUntil = addMonths(new Date(), 1);
-
-                        beforeEach(async () => {
-                          const notification = await assertSnapshotData(nbn.document);
-
-                          await nbn.document.update({
-                            n: {
-                              ...notification.n,
-                              d: {
-                                result: {
-                                  completion: false,
-                                  delayUntil: failureDelayUntil.toISOString() // define a next time to delay until
-                                }
-                              }
-                            }
-                          });
-                        });
-
-                        it('should have failed to handle the notification task', async () => {
-                          const result = await nbn.sendNotification();
-
-                          expect(result.tryRun).toBe(true);
-                          expect(result.success).toBe(false);
-                          expect(result.deletedNotification).toBe(false);
-                          expect(result.notificationTaskCompletionType).toBe(false);
-
-                          const notification = await assertSnapshotData(nbn.document);
-                          expect(notification.sat).toBeSameSecondAs(failureDelayUntil);
-                          expect(notification.a).toBe(1); // send attempt count increases by one
-                        });
-                      });
-
-                      describe('task delay result during run', () => {
-                        const delayUntil = addMonths(new Date(), 1);
-
-                        beforeEach(async () => {
-                          const notification = await assertSnapshotData(nbn.document);
-
-                          await nbn.document.update({
-                            n: {
-                              ...notification.n,
-                              d: {
-                                result: {
-                                  completion: delayCompletion(), // no
-                                  delayUntil: delayUntil.toISOString()
-                                }
-                              }
-                            }
-                          });
-                        });
-
-                        it('should delay the next notification run', async () => {
-                          const result = await nbn.sendNotification();
-
-                          expect(result.tryRun).toBe(true);
-                          expect(result.success).toBe(true); // was successful
-                          expect(result.deletedNotification).toBe(false);
-                          expect(result.notificationTaskCompletionType).toBeDefined(); // empty array
-
-                          // check notification changes
-                          const notification = await assertSnapshotData(nbn.document);
-                          expect(notification.sat).toBeSameSecondAs(delayUntil);
-                          expect(notification.a).toBe(1); // send attempt should still be 1
-                        });
-                      });
+                  describeTestsWithLoadParams('without notification model', () => {
+                    return exampleNotificationTaskWithNoModelTemplate({
+                      uid: p.document.id,
+                      completedCheckpoints: ['part_a'] // part_a is complete
                     });
                   });
                 });
