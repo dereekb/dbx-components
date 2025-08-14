@@ -1,5 +1,5 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
-import { FetchFileResponse, FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, fetchUploadFile, FetchUploadFileBody, makeUrlSearchParams, parseFetchFileResponse } from '@dereekb/util/fetch';
+import { FetchFileResponse, FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams, parseFetchFileResponse } from '@dereekb/util/fetch';
 import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
 import {
   ZohoRecruitCommaSeparateFieldNames,
@@ -21,11 +21,10 @@ import {
   ZohoRecruitRecordAttachmentMetadata,
   ZohoRecruitAttachmentRecordId,
   ZohoRecruitAttachmentCategoryId,
-  ZohoRecruitAttachmentCategoryName,
   KnownZohoRecruitAttachmentCategoryName
 } from './recruit';
 import { zohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
-import { ArrayOrValue, CommaSeparatedString, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, WebsiteUrlWithPrefix, asArray, joinStrings, joinStringsWithCommas, joinStringsWithSpaces, splitCommaSeparatedString } from '@dereekb/util';
+import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZOHO_SUCCESS_STATUS, ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
 import { ZohoDateTimeString } from '../zoho.type';

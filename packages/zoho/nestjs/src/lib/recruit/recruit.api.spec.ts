@@ -24,7 +24,6 @@ import {
   ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
-import * as FormData from 'form-data';
 
 // NOTE: Should have test canidates available on the Zoho Sandbox that is being used. Use test_candidates.csv to generate if needed.
 
