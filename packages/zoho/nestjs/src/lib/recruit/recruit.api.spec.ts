@@ -24,6 +24,7 @@ import {
   ZOHO_RECRUIT_TAG_NAME_MAX_LENGTH
 } from '@dereekb/zoho';
 import { Getter, cachedGetter, randomNumber } from '@dereekb/util';
+import * as FormData from 'form-data';
 
 // NOTE: Should have test canidates available on the Zoho Sandbox that is being used. Use test_candidates.csv to generate if needed.
 
@@ -785,7 +786,6 @@ describe('recruit.api', () => {
           });
         });
 
-        /*
         describe('attachments', () => {
           describe('getAttachmentsForRecord()', () => {
             it('should return the list of attachments for the record', async () => {
@@ -793,9 +793,76 @@ describe('recruit.api', () => {
               const result = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
               expect(result.data).toBeDefined();
             });
-          })
-        })
-        */
+          });
+
+          describe('uploadAttachmentForRecord()', () => {
+            /*
+            it('should upload the attachment using the body', async () => {
+
+              const formData = new FormData();
+
+              formData.append('file', 'text', {
+                contentType: 'text/plain',
+                filename: 'test.txt'
+              });
+
+              const length = formData.getLengthSync();
+              console.log({ length });
+
+              const result = await api.uploadAttachmentForRecord({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                id: testRecordId,
+                formData: formData as any,
+                attachmentCategoryName: 'Others'
+              });
+
+              const textResponse = await result.text();
+
+              console.log({
+                result,
+                textResponse
+              });
+
+              expect(result).toBeDefined();
+            });
+            */
+            /*
+            it('should upload the attachment using the attachment_url', async () => {
+
+              const result = await api.uploadAttachmentForRecord({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                id: testRecordId,
+                attachmentUrl: 'https://github.com/dereekb/dbx-components/blob/develop/apps/demo/src/assets/brand/icon.png?raw=true',
+                attachmentCategoryName: 'Others'
+              });
+
+              console.log({
+                result
+              });
+
+              expect(result).toBeDefined();
+            });
+            */
+          });
+
+          describe('downloadAttachmentForRecord()', () => {
+            it('should download the attachment', async () => {
+              const attachments = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+              const attachmentId = attachments.data[0]?.id;
+
+              if (attachmentId) {
+                // No way to add attachments, so don't expect any results.
+                const result = await api.downloadAttachmentForRecord({
+                  id: testRecordId,
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  attachment_id: attachmentId
+                });
+
+                expect(result.response).toBeDefined();
+              }
+            });
+          });
+        });
       });
     });
 

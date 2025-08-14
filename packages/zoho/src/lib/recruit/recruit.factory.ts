@@ -66,6 +66,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
     const recruitContext: ZohoRecruitContext = {
       fetch,
       fetchJson,
+      accessTokenStringFactory,
       config: {
         ...config,
         apiUrl

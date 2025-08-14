@@ -29,7 +29,10 @@ import {
   getEmailsForRecord,
   getEmailsForRecordPageFactory,
   getAttachmentsForRecordPageFactory,
-  getAttachmentsForRecord
+  getAttachmentsForRecord,
+  downloadAttachmentForRecord,
+  uploadAttachmentForRecord,
+  deleteAttachmentFromRecord
 } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -107,6 +110,18 @@ export class ZohoRecruitApi {
 
   get getAttachmentsForRecordPageFactory() {
     return getAttachmentsForRecordPageFactory(this.recruitContext);
+  }
+
+  get uploadAttachmentForRecord() {
+    return uploadAttachmentForRecord(this.recruitContext);
+  }
+
+  get downloadAttachmentForRecord() {
+    return downloadAttachmentForRecord(this.recruitContext);
+  }
+
+  get deleteAttachmentFromRecord() {
+    return deleteAttachmentFromRecord(this.recruitContext);
   }
 
   get createNotes() {

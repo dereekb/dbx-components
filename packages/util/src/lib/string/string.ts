@@ -1,5 +1,6 @@
+import { ArrayOrValue, asArray } from '../array';
 import { type MapFunction } from '../value/map';
-import { type Maybe } from '../value/maybe.type';
+import { MaybeNot, type Maybe } from '../value/maybe.type';
 
 /**
  * Converts a string to a value.
@@ -31,6 +32,8 @@ export type CommaSeparatedString<T = unknown> = string;
 // eslint-disable-next-line
 export type SpaceSeparatedString<T = unknown> = string;
 
+export const COMMA_JOINER = ',';
+
 export function caseInsensitiveString(input: string): string;
 export function caseInsensitiveString(input: undefined): undefined;
 export function caseInsensitiveString(input: Maybe<string>): Maybe<string>;
@@ -38,10 +41,54 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
   return input?.toLocaleLowerCase();
 }
 
+/**
+ * Joins an array of strings into a single string. Trims and omits empty values.
+ *
+ * @param input string or array of strings
+ * @param joiner string to join the strings with. Defaults to a comma.
+ * @param trim whether or not to trim the strings before joining. Defaults to false.
+ * @returns joined string, or null/undefined if the input is null/undefined
+ */
+export function joinStrings(input: MaybeNot, joiner?: string, trim?: boolean): MaybeNot;
+export function joinStrings(input: ArrayOrValue<Maybe<string>>, joiner?: string, trim?: boolean): string;
+export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: string = COMMA_JOINER, trim: boolean = false): Maybe<string> {
+  if (input == null) {
+    return input;
+  }
+
+  let array: Maybe<string>[] = asArray(input);
+
+  if (trim) {
+    array = array.map((x) => x?.trim());
+  }
+
+  return array.filter(Boolean).join(joiner);
+}
+
+/**
+ * Joins an array of strings into a single string using commas. Does not trim empty values by default.
+ *
+ * @param input string or array of strings
+ * @param trim whether or not to trim the strings before joining. Defaults to false.
+ * @returns joined string, or null/undefined if the input is null/undefined
+ */
+export function joinStringsWithCommas(input: MaybeNot): MaybeNot;
+export function joinStringsWithCommas(input: ArrayOrValue<Maybe<string>>): string;
+export function joinStringsWithCommas(input: Maybe<ArrayOrValue<Maybe<string>>>, trim: boolean = false): Maybe<string> {
+  return joinStrings(input, COMMA_JOINER, trim);
+}
+
+/**
+ * Splits a comma-separated string into an array of strings.
+ *
+ * @param input string to split
+ * @param mapFn function to map each split string to a value
+ * @returns array of strings
+ */
 export function splitCommaSeparatedString(input: CommaSeparatedString<string>): string[];
 export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T>): T[];
 export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T> = (x) => x as unknown as T): T[] {
-  const splits = input.split(',');
+  const splits = input.split(COMMA_JOINER);
   return splits.map((x) => mapFn(x.trim()));
 }
 
@@ -111,6 +158,8 @@ export function splitJoinRemainder(input: string, separator: string, limit: numb
 
 export type FirstNameLastNameTuple = [string, string | undefined];
 
+export const SPACE_JOINER = ' ';
+
 /**
  * Splits the input string like it is a name with a space separating the first and last name string.
  *
@@ -118,20 +167,19 @@ export type FirstNameLastNameTuple = [string, string | undefined];
  * @returns
  */
 export function splitJoinNameString(input: string): FirstNameLastNameTuple {
-  return splitJoinRemainder(input, ' ', 2) as FirstNameLastNameTuple;
+  return splitJoinRemainder(input, SPACE_JOINER, 2) as FirstNameLastNameTuple;
 }
 
 /**
  * Joins one or more strings together with spaces. Extra spaces are trimmed from the values.
  *
- * @param input
- * @returns
+ * @param input string or array of strings
+ * @returns joined string, or null/undefined if the input is null/undefined
  */
-export function joinStringsWithSpaces(input: Maybe<string>[]): string {
-  return input
-    .map((x) => x?.trim())
-    .filter((x) => Boolean(x))
-    .join(' ');
+export function joinStringsWithSpaces(input: MaybeNot): MaybeNot;
+export function joinStringsWithSpaces(input: ArrayOrValue<Maybe<string>>): string;
+export function joinStringsWithSpaces(input: Maybe<ArrayOrValue<Maybe<string>>>): Maybe<string> {
+  return joinStrings(input, SPACE_JOINER, true);
 }
 
 /**

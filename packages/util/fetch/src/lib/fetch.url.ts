@@ -1,4 +1,4 @@
-import { type Maybe, type ArrayOrValue, type IterableOrValue, type ObjectKey, mergeObjects, useIterableOrValue, filterNullAndUndefinedValues } from '@dereekb/util';
+import { type Maybe, type ArrayOrValue, type IterableOrValue, type ObjectKey, mergeObjects, useIterableOrValue, filterEmptyPojoValues, filterEmptyValues } from '@dereekb/util';
 
 /**
  * Options for makeUrlSearchParams()
@@ -9,9 +9,17 @@ export interface MakeUrlSearchParamsOptions {
    */
   readonly omitKeys?: Maybe<IterableOrValue<ObjectKey>>;
   /**
-   * Whether to filter out null and undefined values from the input objects.
+   * Whether to filter out empty values from the input objects.
    *
    * Defaults to true.
+   */
+  readonly filterEmptyValues?: boolean;
+  /**
+   * Whether to filter out null and undefined empty values from the input objects.
+   *
+   * Defaults to true.
+   *
+   * @deprecated Use filterEmptyValues instead.
    */
   readonly filterNullAndUndefinedValues?: boolean;
 }
@@ -24,9 +32,9 @@ export interface MakeUrlSearchParamsOptions {
  * @returns
  */
 export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>) {
-  const { omitKeys, filterNullAndUndefinedValues: filterValues = true } = options ?? {};
+  const { omitKeys, filterNullAndUndefinedValues, filterEmptyValues: filterValues = filterNullAndUndefinedValues ?? true } = options ?? {};
   const mergedInput = Array.isArray(input) ? mergeObjects(input) : input;
-  const filteredInput = filterValues ? filterNullAndUndefinedValues(mergedInput ?? {}) : mergedInput;
+  const filteredInput = filterValues ? filterEmptyPojoValues(mergedInput ?? {}) : mergedInput;
   const searchParams = new URLSearchParams(filteredInput as unknown as Record<string, string>);
 
   if (omitKeys != null) {
