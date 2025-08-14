@@ -27,7 +27,9 @@ import {
   getTagsForModule,
   addTagsToRecords,
   getEmailsForRecord,
-  getEmailsForRecordPageFactory
+  getEmailsForRecordPageFactory,
+  getAttachmentsForRecordPageFactory,
+  getAttachmentsForRecord
 } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -97,6 +99,14 @@ export class ZohoRecruitApi {
 
   get getEmailsForRecordPageFactory() {
     return getEmailsForRecordPageFactory(this.recruitContext);
+  }
+
+  get getAttachmentsForRecord() {
+    return getAttachmentsForRecord(this.recruitContext);
+  }
+
+  get getAttachmentsForRecordPageFactory() {
+    return getAttachmentsForRecordPageFactory(this.recruitContext);
   }
 
   get createNotes() {

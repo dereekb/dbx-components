@@ -988,6 +988,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           const { n: item } = notification;
 
           const notificationTask: NotificationTask = {
+            notificationDocument,
             taskType: item.t,
             item,
             data: item.d,

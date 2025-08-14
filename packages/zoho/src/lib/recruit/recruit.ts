@@ -29,6 +29,11 @@ export const ZOHO_RECRUIT_NOTES_MODULE = 'Notes';
 export const ZOHO_RECRUIT_EMAILS_MODULE = 'Emails';
 
 /**
+ * Attachments module name
+ */
+export const ZOHO_RECRUIT_ATTACHMENTS_MODULE = 'Attachments';
+
+/**
  * Contains a reference to a module.
  */
 export interface ZohoRecruitModuleNameRef {
@@ -220,6 +225,100 @@ export type ZohoRecruitRecordEmailMetadataStatusType = 'sent' | string;
 
 export interface ZohoRecruitRecordEmailMetadataStatus {
   type: ZohoRecruitRecordEmailMetadataStatusType;
+}
+
+export const ZOHO_RECRUIT_RECORD_ATTACHMENT_METADATA_ATTACH_TYPE_RESUME = 'Resume';
+
+export interface ZohoRecruitRecordAttachmentMetadataAttachType extends ZohoRecruitReferenceData {
+  name: typeof ZOHO_RECRUIT_RECORD_ATTACHMENT_METADATA_ATTACH_TYPE_RESUME | string;
+}
+
+/**
+ * Record id for an attachment.
+ */
+export type ZohoRecruitAttachmentRecordId = ZohoRecruitRecordId;
+
+/**
+ * The size of the attachment in bytes, stored as a string.
+ */
+export type ZohoRecruitRecordAttachmentMetadataSize = string;
+
+/**
+ * Metadata for a record's attachment.
+ */
+export interface ZohoRecruitRecordAttachmentMetadata {
+  /**
+   * The type of attachment
+   */
+  $attach_type: ZohoRecruitRecordAttachmentMetadataAttachType;
+  /**
+   * Last time the attachment was modified
+   */
+  Modified_Time: ISO8601DateString;
+  /**
+   * The category of the attachment
+   */
+  Category: ZohoRecruitRecordAttachmentMetadataAttachType;
+  /**
+   * The name of the attachment
+   */
+  File_Name: string;
+  /**
+   * The size of the attachment in bytes, stored as a string.
+   */
+  Size: ZohoRecruitRecordAttachmentMetadataSize;
+  /**
+   * The time the attachment was created
+   */
+  Created_Time: ISO8601DateString;
+  /**
+   * The parent record id for this attachment
+   */
+  Parent_Id: ZohoRecruitRecordId;
+  /**
+   * Owner of the attachment
+   */
+  Attachment_Owner: ZohoRecruitUserReferenceData;
+  /**
+   * Internal file identifier for the attachment
+   */
+  $file_id: string;
+  /**
+   * Type marker (e.g., "Attachment")
+   */
+  $type: 'Attachment' | string;
+  /**
+   * Direct URL to the attachment, when available
+   */
+  Attachment_URL: string | null;
+  /**
+   * User who last modified this attachment
+   */
+  Modified_By: ZohoRecruitUserReferenceData;
+  /**
+   * Attachment record id
+   */
+  id: ZohoRecruitAttachmentRecordId;
+  /**
+   * User who created this attachment
+   */
+  Created_By: ZohoRecruitUserReferenceData;
+  /**
+   * Whether the attachment is editable
+   */
+  $editable: boolean;
+  /**
+   * Module this attachment belongs to (e.g., Candidates)
+   */
+  $se_module: ZohoRecruitModuleName;
+  /**
+   * Link URL when the attachment is a link
+   */
+  $link_url?: string | null;
+  /**
+   * Number of linked documents
+   */
+  $link_docs: number;
 }
 
 /**

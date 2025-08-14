@@ -784,6 +784,18 @@ describe('recruit.api', () => {
             });
           });
         });
+
+        /*
+        describe('attachments', () => {
+          describe('getAttachmentsForRecord()', () => {
+            it('should return the list of attachments for the record', async () => {
+              // No way to add attachments, so don't expect any results.
+              const result = await api.getAttachmentsForRecord({ id: testRecordId, module: ZOHO_RECRUIT_CANDIDATES_MODULE });
+              expect(result.data).toBeDefined();
+            });
+          })
+        })
+        */
       });
     });
 

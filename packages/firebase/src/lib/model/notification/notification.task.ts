@@ -1,12 +1,16 @@
 import { NotificationItem, NotificationItemMetadata } from './notification.item';
 import { NotificationTaskType } from './notification.id';
-import { NotificationTaskCheckpointString } from './notification';
+import { NotificationDocument, NotificationTaskCheckpointString } from './notification';
 import { ArrayOrValue, Maybe, Milliseconds } from '@dereekb/util';
 
 /**
  * A NotificationTask is the final result of the expanded notification with a task type.
  */
 export interface NotificationTask<D extends NotificationItemMetadata = {}> {
+  /**
+   * Notification document for this task
+   */
+  readonly notificationDocument: NotificationDocument;
   /**
    * Task type identifier of the notification, which is used to pass this task to the appropriate handler.
    *
@@ -32,6 +36,36 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
  */
 export function delayCompletion(): NotificationTaskServiceTaskHandlerCompletionType {
   return [];
+}
+
+/**
+ * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task was partially completed, and to process the next part in the future.
+ */
+export function notificationTaskPartiallyComplete<D extends NotificationItemMetadata = {}>(completedParts: ArrayOrValue<NotificationTaskCheckpointString>, updateMetadata?: Partial<D>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+  return {
+    completion: completedParts,
+    updateMetadata
+  };
+}
+
+/**
+ * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task was completed successfully.
+ */
+export function notificationTaskComplete<D extends NotificationItemMetadata = {}>(updateMetadata?: Partial<D>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+  return {
+    completion: true,
+    updateMetadata
+  };
+}
+
+/**
+ * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task failed.
+ */
+export function notificationTaskFailed<D extends NotificationItemMetadata = {}>(updateMetadata?: Partial<D>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+  return {
+    completion: false,
+    updateMetadata
+  };
 }
 
 /**

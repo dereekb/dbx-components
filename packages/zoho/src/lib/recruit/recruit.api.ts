@@ -1,7 +1,7 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
 import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
-import { ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId, ZohoRecruitModuleName, ZOHO_RECRUIT_EMAILS_MODULE, ZohoRecruitRecordEmailMetadata } from './recruit';
+import { ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId, ZohoRecruitModuleName, ZOHO_RECRUIT_EMAILS_MODULE, ZohoRecruitRecordEmailMetadata, ZOHO_RECRUIT_ATTACHMENTS_MODULE, ZohoRecruitRecordAttachmentMetadata } from './recruit';
 import { zohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
 import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, asArray } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
@@ -333,6 +333,21 @@ export type GetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetEmail
 
 export function getEmailsForRecordPageFactory(context: ZohoRecruitContext): GetEmailsForRecordPageFactory {
   return zohoFetchPageFactory(getEmailsForRecord(context));
+}
+
+// MARK: Attachments
+export type ZohoRecruitGetAttachmentsForRecordRequest = ZohoRecruitGetRelatedRecordsRequest;
+export type ZohoRecruitGetAttachmentsForRecordResponse = ZohoPageResult<ZohoRecruitRecordAttachmentMetadata>;
+export type ZohoRecruitGetAttachmentsForRecordFunction = (input: ZohoRecruitGetAttachmentsForRecordRequest) => Promise<ZohoRecruitGetAttachmentsForRecordResponse>;
+
+export function getAttachmentsForRecord(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordFunction {
+  return getRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordAttachmentMetadata>({ targetModule: ZOHO_RECRUIT_ATTACHMENTS_MODULE });
+}
+
+export type GetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoRecruitGetAttachmentsForRecordRequest, ZohoRecruitGetAttachmentsForRecordResponse>;
+
+export function getAttachmentsForRecordPageFactory(context: ZohoRecruitContext): GetAttachmentsForRecordPageFactory {
+  return zohoFetchPageFactory(getAttachmentsForRecord(context));
 }
 
 // MARK: Function

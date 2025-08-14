@@ -1,7 +1,6 @@
 import { catchAllHandlerKey } from '@dereekb/util';
 import { Injectable, Logger } from '@nestjs/common';
-import { TypeformApi, TypeformWebhookService } from '@dereekb/nestjs/typeform';
-import { TypeformWebhookEvent } from 'packages/nestjs/typeform/src/lib/webhook/webhook.typeform';
+import { TypeformWebhookEvent, TypeformApi, TypeformWebhookService } from '@dereekb/nestjs/typeform';
 
 @Injectable()
 export class DemoApiTypeformWebhookService {
