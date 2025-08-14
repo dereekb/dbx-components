@@ -1,5 +1,6 @@
 export * from './error';
 export * from './fetch';
+export * from './fetch.file';
 export * from './fetch.limit';
 export * from './fetch.type';
 export * from './fetch.page';

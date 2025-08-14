@@ -3,6 +3,7 @@ export * from './dencoder';
 export * from './factory';
 export * from './html';
 export * from './json';
+export * from './mimetype';
 export * from './password';
 export * from './prefix';
 export * from './string';

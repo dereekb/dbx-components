@@ -1,4 +1,19 @@
-import { DEFAULT_CUT_STRING_END_TEXT, cutStringFunction, joinStringsWithSpaces, repeatString, splitJoinNameString, splitJoinRemainder } from './string';
+import { DEFAULT_CUT_STRING_END_TEXT, cutStringFunction, joinStrings, joinStringsWithSpaces, repeatString, splitJoinNameString, splitJoinRemainder } from './string';
+
+describe('joinStrings()', () => {
+  it('should join the strings', () => {
+    const values = ['a', 'b', 'c'];
+    const string = values.join(',');
+
+    const result = joinStrings(values);
+    expect(result).toBe(string);
+  });
+
+  it('should return null if null is input', () => {
+    const result = joinStrings(null);
+    expect(result).toBeNull();
+  });
+});
 
 describe('splitJoinRemainder()', () => {
   it('should handle having a single value', () => {

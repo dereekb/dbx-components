@@ -244,6 +244,23 @@ export type ZohoRecruitAttachmentRecordId = ZohoRecruitRecordId;
 export type ZohoRecruitRecordAttachmentMetadataSize = string;
 
 /**
+ * Attachment category id
+ */
+export type ZohoRecruitAttachmentCategoryId = string;
+
+/**
+ * Known attachment category names
+ */
+export type KnownZohoRecruitAttachmentCategoryName = 'Resume' | 'Offer' | 'Contracts' | 'Criminal records' | 'Mandatory reporter' | 'Teaching certification' | 'Health records' | 'Others' | 'Cover Letter' | 'Formatted Resume';
+
+/**
+ * Attachment category name
+ *
+ * I.E. "Resume"
+ */
+export type ZohoRecruitAttachmentCategoryName = KnownZohoRecruitAttachmentCategoryName | string;
+
+/**
  * Metadata for a record's attachment.
  */
 export interface ZohoRecruitRecordAttachmentMetadata {

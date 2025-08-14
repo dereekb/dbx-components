@@ -1,9 +1,30 @@
 import { ZohoDataArrayResultRef, ZohoPageFilter, ZohoPageResult, emptyZohoPageResult, zohoFetchPageFactory } from './../zoho.api.page';
-import { FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams } from '@dereekb/util/fetch';
+import { FetchFileResponse, FetchJsonBody, FetchJsonInput, FetchPage, FetchPageFactory, FetchPageFactoryOptions, makeUrlSearchParams, parseFetchFileResponse } from '@dereekb/util/fetch';
 import { ZohoRecruitConfigApiUrlInput, ZohoRecruitContext, zohoRecruitConfigApiUrl } from './recruit.config';
-import { ZohoRecruitCommaSeparateFieldNames, ZohoRecruitCustomViewId, ZohoRecruitDraftOrSaveState, ZohoRecruitFieldName, ZohoRecruitModuleNameRef, ZohoRecruitChangeObjectDetails, ZohoRecruitRecord, ZohoRecruitRecordId, ZohoRecruitTerritoryId, ZohoRecruitTrueFalseBoth, ZohoRecruitRestFunctionApiName, ZohoRecruitUserId, ZohoRecruitModuleName, ZOHO_RECRUIT_EMAILS_MODULE, ZohoRecruitRecordEmailMetadata, ZOHO_RECRUIT_ATTACHMENTS_MODULE, ZohoRecruitRecordAttachmentMetadata } from './recruit';
+import {
+  ZohoRecruitCommaSeparateFieldNames,
+  ZohoRecruitCustomViewId,
+  ZohoRecruitDraftOrSaveState,
+  ZohoRecruitFieldName,
+  ZohoRecruitModuleNameRef,
+  ZohoRecruitChangeObjectDetails,
+  ZohoRecruitRecord,
+  ZohoRecruitRecordId,
+  ZohoRecruitTerritoryId,
+  ZohoRecruitTrueFalseBoth,
+  ZohoRecruitRestFunctionApiName,
+  ZohoRecruitUserId,
+  ZohoRecruitModuleName,
+  ZOHO_RECRUIT_EMAILS_MODULE,
+  ZohoRecruitRecordEmailMetadata,
+  ZOHO_RECRUIT_ATTACHMENTS_MODULE,
+  ZohoRecruitRecordAttachmentMetadata,
+  ZohoRecruitAttachmentRecordId,
+  ZohoRecruitAttachmentCategoryId,
+  KnownZohoRecruitAttachmentCategoryName
+} from './recruit';
 import { zohoRecruitSearchRecordsCriteriaString, ZohoRecruitSearchRecordsCriteriaTreeElement } from './recruit.criteria';
-import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, asArray } from '@dereekb/util';
+import { ArrayOrValue, EmailAddress, Maybe, PhoneNumber, SortingOrder, UniqueModelWithId, WebsiteUrlWithPrefix, asArray, joinStringsWithCommas } from '@dereekb/util';
 import { assertRecordDataArrayResultHasContent, zohoRecruitRecordCrudError } from './recruit.error.api';
 import { ZOHO_SUCCESS_STATUS, ZohoServerErrorDataWithDetails, ZohoServerErrorStatus, ZohoServerSuccessCode, ZohoServerSuccessStatus } from '../zoho.error.api';
 import { ZohoDateTimeString } from '../zoho.type';
@@ -348,6 +369,154 @@ export type GetAttachmentsForRecordPageFactory = FetchPageFactory<ZohoRecruitGet
 
 export function getAttachmentsForRecordPageFactory(context: ZohoRecruitContext): GetAttachmentsForRecordPageFactory {
   return zohoFetchPageFactory(getAttachmentsForRecord(context));
+}
+
+/**
+ * Maximum attachment size allowed by Zoho Recruit.
+ *
+ * 20MB
+ */
+export const ZOHO_RECRUIT_ATTACHMENT_MAX_SIZE = 20 * 1024 * 1024;
+
+export interface ZohoRecruitUploadAttachmentForRecordRequest extends ZohoRecruitGetRecordByIdInput {
+  /**
+   * Requires the use of a FormData object.
+   *
+   * Max of 20MB are allowed
+   *
+   * @deprecated Use attachmentUrl instead for now.
+   */
+  readonly formData?: FormData;
+  /**
+   * File url to pull the file from.
+   *
+   * Either this or formData must be provided.
+   */
+  readonly attachmentUrl?: WebsiteUrlWithPrefix;
+  /**
+   * The category id(s) of the attachment.
+   *
+   * Either this or attachments_category must be provided.
+   */
+  readonly attachmentCategoryId?: ArrayOrValue<ZohoRecruitAttachmentCategoryId>;
+  /**
+   * The category name(s) of the attachment.
+   *
+   * Either this or attachments_category_id must be provided.
+   *
+   * Example: "Resume"
+   */
+  readonly attachmentCategoryName?: ArrayOrValue<KnownZohoRecruitAttachmentCategoryName>;
+}
+
+export type ZohoRecruitUploadAttachmentForRecordResponse = Response;
+export type ZohoRecruitUploadAttachmentForRecordFunction = (input: ZohoRecruitUploadAttachmentForRecordRequest) => Promise<ZohoRecruitUploadAttachmentForRecordResponse>;
+
+/**
+ * Uploads an attachment to a record.
+ *
+ * https://www.zoho.com/recruit/developer-guide/apiv2/upload-attachment.html
+ *
+ * @param context
+ * @returns
+ */
+export function uploadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitUploadAttachmentForRecordFunction {
+  return (input: ZohoRecruitUploadAttachmentForRecordRequest) => {
+    const { attachmentCategoryId, attachmentCategoryName, formData } = input;
+
+    const urlParams = {
+      attachments_category_id: joinStringsWithCommas(attachmentCategoryId),
+      attachments_category: joinStringsWithCommas(attachmentCategoryName),
+      attachment_url: input.attachmentUrl
+    };
+
+    if (!urlParams.attachments_category_id?.length && !urlParams.attachments_category?.length) {
+      throw new Error('attachmentCategoryId or attachmentCategoryName must be provided and not empty.');
+    }
+
+    if (formData != null) {
+      delete urlParams.attachment_url;
+    }
+
+    const url = `https://recruitsandbox.zoho.com/recruit/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}?${makeUrlSearchParams(urlParams).toString()}`;
+    let response: Promise<Response>;
+
+    if (urlParams.attachment_url) {
+      response = context.fetch(url, { method: 'POST' });
+    } else if (formData != null) {
+      throw new Error('unsupported currently. Use the attachmentUrl parameter instead.');
+
+      // There is something weird going on with sending requests this way and zoho's server is rejecting it.
+
+      /*
+      response = context.fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'content-length': '210'
+        },
+        body: formData
+      });
+      */
+
+      /*
+      const fullUrl = (context.config.apiUrl as string) + url;
+      const accessToken = await context.accessTokenStringFactory();
+
+      response = fetch(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: formData,
+        method: 'POST'
+      });
+
+      console.log({ response });
+      */
+    } else {
+      throw new Error('body or attachmentUrl must be provided.');
+    }
+
+    return response;
+  };
+}
+
+export interface ZohoRecruitDownloadAttachmentForRecordRequest extends ZohoRecruitGetRecordByIdInput {
+  readonly attachment_id: ZohoRecruitAttachmentRecordId;
+}
+
+export type ZohoRecruitDownloadAttachmentForRecordResponse = FetchFileResponse;
+export type ZohoRecruitDownloadAttachmentForRecordFunction = (input: ZohoRecruitDownloadAttachmentForRecordRequest) => Promise<ZohoRecruitDownloadAttachmentForRecordResponse>;
+
+/**
+ * Downloads an attachment from a record.
+ *
+ * https://www.zoho.com/recruit/developer-guide/apiv2/download-attachments.html
+ *
+ * @param context
+ * @returns
+ */
+export function downloadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitDownloadAttachmentForRecordFunction {
+  return (input: ZohoRecruitDownloadAttachmentForRecordRequest) => context.fetch(`/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'GET' }).then(parseFetchFileResponse);
+}
+
+export interface ZohoRecruitDeleteAttachmentFromRecordRequest extends ZohoRecruitGetRecordByIdInput {
+  readonly attachment_id: ZohoRecruitAttachmentRecordId;
+}
+
+export type ZohoRecruitDeleteAttachmentFromRecordResponse = Response;
+export type ZohoRecruitDeleteAttachmentFromRecordFunction = (input: ZohoRecruitDeleteAttachmentFromRecordRequest) => Promise<ZohoRecruitDeleteAttachmentFromRecordResponse>;
+
+/**
+ * Deletes an attachment from a record.
+ *
+ * https://www.zoho.com/recruit/developer-guide/apiv2/delete-attachments.html
+ *
+ * @param context
+ * @returns
+ */
+export function deleteAttachmentFromRecord(context: ZohoRecruitContext): ZohoRecruitDeleteAttachmentFromRecordFunction {
+  return (input: ZohoRecruitDeleteAttachmentFromRecordRequest) => context.fetch(`/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'DELETE' });
 }
 
 // MARK: Function

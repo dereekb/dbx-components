@@ -1,3 +1,8 @@
+/**
+ * The HTTP method to use for the request.
+ *
+ * I.E. 'GET', 'POST', 'PUT', 'DELETE', etc.
+ */
 export type FetchMethod = Request['method'];
 
 export interface RequestTimeoutRef {
