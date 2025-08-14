@@ -51,6 +51,13 @@ export type NotificationKey = FirestoreModelKey;
 export const DEFAULT_NOTIFICATION_TEMPLATE_TYPE = 'D';
 
 /**
+ * The default notification model to use for a task notification.
+ *
+ * Task notifications are not required to specify a notification model since notification tasks do not interact with NotificationBoxes.
+ */
+export const DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY: FirestoreModelKey = 'notmodel/notkey';
+
+/**
  * Template type identifier of the notification.
  *
  * Provides default information for the notification.

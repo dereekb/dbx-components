@@ -45,6 +45,28 @@ export function exampleNotificationTaskTemplate(input: ExampleNotificationTaskIn
   });
 }
 
+export interface ExampleNotificationTaskWithNoModelInput extends Pick<ExampleNotificationTaskData, 'uid'> {
+  readonly completedCheckpoints?: Maybe<ExampleNotificationTaskCheckpoint[]>;
+}
+
+/**
+ * Same as exampleNotificationTaskTemplate but the created template has no notification model.
+ *
+ * @param input Same
+ * @returns
+ */
+export function exampleNotificationTaskWithNoModelTemplate(input: ExampleNotificationTaskWithNoModelInput): CreateNotificationTaskTemplate {
+  const { uid } = input;
+
+  return createNotificationTaskTemplate({
+    type: EXAMPLE_NOTIFICATION_TASK_TYPE,
+    data: {
+      uid
+    },
+    completedCheckpoints: input.completedCheckpoints
+  });
+}
+
 // MARK: Example Unique Notification
 export const EXAMPLE_UNIQUE_NOTIFICATION_TASK_TYPE: NotificationTaskType = 'EU';
 
