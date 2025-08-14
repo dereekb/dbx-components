@@ -1,0 +1,92 @@
+**Jessica M. Carter**  
+Austin, TX | (512) 555-4821 | jcarter.educator@email.com | LinkedIn: linkedin.com/in/j
+
+---
+
+**Professional Summary**  
+ Dynamic and student-focused educator with 10 years of experience teaching middle school and high school students in Texas. Dedicated to fostering a positive learning environment, promoting academic excellence, and integrating innovative teaching strategies to meet diverse learning needs. Skilled in curriculum development, classroom management, and building strong relationships with students, parents, and faculty.
+
+---
+
+**Certifications**
+
+* Texas Educator Certificate – Secondary English Language Arts (Grades 6–12)
+
+* ESL Supplemental Certification (Texas Education Agency)
+
+* Google Certified Educator, Level 2
+
+---
+
+**Professional Experience**
+
+**English Language Arts Teacher**  
+ *McCallum High School – Austin Independent School District, Austin, TX*  
+ *August 2017 – Present*
+
+* Teach 9th–11th grade English, including Pre-AP and Honors courses, to classes averaging 25–28 students.
+
+* Integrate technology tools such as Google Classroom, Kahoot, and Edpuzzle to enhance engagement.
+
+* Collaborate with the English department to align curriculum with TEKS standards and district goals.
+
+* Mentor new teachers through the district’s Teacher Induction Program.
+
+* Increased STAAR ELA passing rates by 14% over three years.
+
+**Middle School English & Reading Teacher**  
+ *Bowie Middle School – Midland Independent School District, Midland, TX*  
+ *August 2014 – June 2017*
+
+* Instructed 7th and 8th grade students in English and Reading, focusing on developing critical thinking and writing skills.
+
+* Designed differentiated lesson plans for students with varying reading levels and ESL backgrounds.
+
+* Led after-school creative writing club, resulting in multiple student publications in local youth magazines.
+
+* Coordinated campus literacy initiatives, increasing library checkouts by 30%.
+
+**Middle School Language Arts Teacher**  
+ *Garcia Middle School – Northside Independent School District, San Antonio, TX*  
+ *August 2012 – June 2014*
+
+* Taught 6th grade Language Arts to diverse classrooms, including students with IEPs and 504 accommodations.
+
+* Implemented a project-based learning approach to integrate literature, history, and the arts.
+
+* Developed and maintained strong communication with parents through biweekly newsletters and conferences.
+
+---
+
+**Education**  
+ **Master of Education (M.Ed.), Curriculum and Instruction**  
+ Texas State University – San Marcos, TX, 2012
+
+**Bachelor of Arts (B.A.), English**  
+ University of Texas at Austin – Austin, TX, 2010
+
+---
+
+**Key Skills**
+
+* TEKS Curriculum Alignment
+
+* Classroom Technology Integration
+
+* Differentiated Instruction
+
+* Literacy Development
+
+* Student Engagement Strategies
+
+* Data-Driven Instruction
+
+* Conflict Resolution & Classroom Management
+
+---
+
+**Awards & Recognition**
+
+* Teacher of the Year, McCallum High School, 2021
+
+* District Excellence in Education Award, Midland ISD, 2016
