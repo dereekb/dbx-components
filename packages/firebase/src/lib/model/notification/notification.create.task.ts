@@ -1,7 +1,6 @@
 import { Maybe } from '@dereekb/util';
 import { NotificationSendType, NotificationTaskCheckpointString } from './notification';
 import { CreateNotificationTemplate, createNotificationTemplate, CreateNotificationTemplateInput } from './notification.create';
-import { FirestoreModelKey } from '../../common';
 import { DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY } from './notification.id';
 
 /**
