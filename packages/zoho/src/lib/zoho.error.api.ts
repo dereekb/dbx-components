@@ -116,7 +116,7 @@ export function logZohoServerErrorFunction(zohoApiNamePrefix: string): LogZohoSe
  * @param fetch
  * @returns
  */
-export type HandleZohoErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZohoServerErrorFunction) => ConfiguredFetch;
+export type HandleZohoErrorFetchFactory = (fetch: ConfiguredFetch, logError?: LogZohoServerErrorFunction, onError?: (error: ParsedZohoServerError) => void) => ConfiguredFetch;
 
 export type ParsedZohoServerError = FetchRequestFactoryError | ZohoServerError | undefined;
 export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseError) => Promise<ParsedZohoServerError>;
@@ -128,7 +128,7 @@ export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseE
  * @returns
  */
 export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchResponseErrorFunction, defaultLogError: LogZohoServerErrorFunction): HandleZohoErrorFetchFactory {
-  return (fetch: ConfiguredFetch, logError: LogZohoServerErrorFunction = defaultLogError) => {
+  return (fetch: ConfiguredFetch, logError: LogZohoServerErrorFunction = defaultLogError, onError?: (error: ParsedZohoServerError) => void) => {
     return async (x, y) => {
       try {
         return await fetch(x, y); // await to catch thrown errors
@@ -138,6 +138,7 @@ export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchRespon
 
           if (error) {
             logError(error); // log before throwing.
+            onError?.(error); // perform a task
             throw error;
           }
         }
@@ -179,6 +180,13 @@ export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseDa
  * - An extra parameter is provided
  */
 export const ZOHO_INTERNAL_ERROR_CODE = 'INTERNAL_ERROR';
+
+/**
+ * Error code for when an invalid oauth token is provided.
+ */
+export const ZOHO_INVALID_TOKEN_ERROR_CODE = 'INVALID_TOKEN';
+
+export class ZohoInvalidTokenError extends ZohoServerFetchResponseError {}
 
 /**
  * Error code for when a failure occured for the given action
@@ -313,6 +321,9 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
     switch (errorData.code) {
       case ZOHO_INTERNAL_ERROR_CODE:
         result = new ZohoInternalError(errorData, responseError);
+        break;
+      case ZOHO_INVALID_TOKEN_ERROR_CODE:
+        result = new ZohoInvalidTokenError(errorData, responseError);
         break;
       case ZOHO_INVALID_AUTHORIZATION_ERROR_CODE:
         result = new ZohoInvalidAuthorizationError(errorData, responseError);

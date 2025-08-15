@@ -59,6 +59,10 @@ export interface ZohoAccessTokenCache {
    * Updates the cache with the given access token.
    */
   updateCachedToken(accessToken: ZohoAccessToken): Promise<void>;
+  /**
+   * Clears the cached token.
+   */
+  clearCachedToken(): Promise<void>;
 }
 
 /**
@@ -66,7 +70,12 @@ export interface ZohoAccessTokenCache {
  *
  * Throws an ZohoAccountsAuthRetrievalError error if the token could not be retrieved.
  */
-export type ZohoAccessTokenFactory = () => Promise<ZohoAccessToken>;
+export type ZohoAccessTokenFactory = (() => Promise<ZohoAccessToken>) & {
+  /**
+   * Resets/expires the existing token in the factory, if using a cache.
+   */
+  resetAccessToken(): Promise<void>;
+};
 
 /**
  * A ZohoAccessTokenFactory that always generates a new ZohoAccessToken.

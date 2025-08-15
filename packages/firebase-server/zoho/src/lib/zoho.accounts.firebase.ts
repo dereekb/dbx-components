@@ -59,6 +59,24 @@ export function firebaseZohoAccountsAccessTokenCacheService(systemStateCollectio
               await documentInTransaction.update(templateOrUpdate);
             }
           });
+        },
+        clearCachedToken: async function (): Promise<void> {
+          await systemStateCollection.firestoreContext.runTransaction(async (transaction) => {
+            const documentInTransaction = loadZohoAccessTokenSystemState(systemStateCollection.documentAccessorForTransaction(transaction));
+            const existingData = await documentInTransaction.snapshotData();
+
+            const templateOrUpdate: SystemState<ZohoAccessTokenSystemStateData> = {
+              data: {
+                tokens: [],
+                lat: new Date()
+              }
+            };
+
+            // clear the tokens
+            if (existingData) {
+              await documentInTransaction.update(templateOrUpdate);
+            }
+          });
         }
       };
 
