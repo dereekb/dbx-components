@@ -1,5 +1,5 @@
-import { MaybeSo, Maybe, filterMaybeArrayValues, joinStringsWithCommas } from '@dereekb/util';
-import { TypeformFormResponseDefinition, TypeformFormResponseAnswer, TypeformFormResponseDefinitionField, TypeformFormResponseDefinitionFieldId } from '../typeform.type';
+import { Maybe, filterMaybeArrayValues, joinStringsWithCommas } from '@dereekb/util';
+import { TypeformFormResponseAnswer, TypeformFormResponseDefinitionField, TypeformFormResponseDefinitionFieldId } from '../typeform.type';
 import { TypeformWebhookFormResponse } from './webhook.typeform.type';
 import { findTypeformTemplateRefsInString } from '../typeform.util';
 
