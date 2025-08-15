@@ -56,6 +56,9 @@ export interface TypeformFormHiddenMetadata extends Partial<Record<string, any>>
   readonly utm_source?: string;
 }
 
+export type TypeformFormResponseDefinitionFieldId = string;
+export type TypeformFormResponseDefinitionField = MaybeSo<TypeformFormResponseDefinition['fields']>[0];
+
 export interface TypeformFormResponseDefinition extends MaybeSo<TypeformResponse['definition']> {
   readonly id: TypeformFormId;
   readonly title: TypeformFormName;
