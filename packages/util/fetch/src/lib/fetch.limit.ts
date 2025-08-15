@@ -48,7 +48,7 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
       let fetchResponseError: Maybe<FetchResponseError>;
 
       try {
-        response = await makeFetch(request);
+        response = await makeFetch(request.clone());
       } catch (e) {
         fetchResponseError = e as FetchResponseError;
         response = fetchResponseError.response;
