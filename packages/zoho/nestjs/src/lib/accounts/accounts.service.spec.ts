@@ -111,6 +111,9 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
           loadCachedToken: async () => undefined,
           updateCachedToken: async (x) => {
             cachedValueA = x;
+          },
+          clearCachedToken: async () => {
+            cachedValueA = undefined;
           }
         })
       },
@@ -123,7 +126,8 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
               expiresAt: new Date(Date.now() - 1000) // expired 1 second ago
             };
           },
-          updateCachedToken: async (x) => {}
+          updateCachedToken: async (x) => {},
+          clearCachedToken: async () => {}
         })
       },
       memoryZohoAccountsAccessTokenCacheService(),
@@ -133,6 +137,9 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
           loadCachedToken: async () => tokenToReturn,
           updateCachedToken: async (x) => {
             cachedValueB = x;
+          },
+          clearCachedToken: async () => {
+            cachedValueB = undefined;
           }
         })
       },
@@ -142,7 +149,8 @@ describe('mergeZohoAccountsAccessTokenCacheServices()', () => {
           loadCachedToken: async () => undefined,
           updateCachedToken: async (x) => {
             throw new Error('test test test');
-          }
+          },
+          clearCachedToken: async () => {}
         })
       }
     ]);

@@ -261,6 +261,14 @@ export type KnownZohoRecruitAttachmentCategoryName = 'Resume' | 'Offer' | 'Contr
 export type ZohoRecruitAttachmentCategoryName = KnownZohoRecruitAttachmentCategoryName | string;
 
 /**
+ * The type of attachment.
+ *
+ * "Attachment" - Download the attachment to retrieve the value.
+ * "Link URL" - Use the Attachment_URL property to retrieve the value.
+ */
+export type ZohoRecruitAttachmentType = 'Attachment' | 'Link URL';
+
+/**
  * Metadata for a record's attachment.
  */
 export interface ZohoRecruitRecordAttachmentMetadata {
@@ -301,9 +309,9 @@ export interface ZohoRecruitRecordAttachmentMetadata {
    */
   $file_id: string;
   /**
-   * Type marker (e.g., "Attachment")
+   * Type of attachment, and how to retrieve the value.
    */
-  $type: 'Attachment' | string;
+  $type: ZohoRecruitAttachmentType;
   /**
    * Direct URL to the attachment, when available
    */

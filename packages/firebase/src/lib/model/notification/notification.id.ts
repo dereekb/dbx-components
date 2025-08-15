@@ -46,6 +46,16 @@ export type NotificationId = FirestoreModelId;
 export type NotificationKey = FirestoreModelKey;
 
 /**
+ * Equivalent to NotificationId, but can be used to more specifically refer to a Notification with a task type.
+ */
+export type NotificationTaskId = NotificationId;
+
+/**
+ * Equivalent to NotificationKey, but can be used to more specifically refer to a Notification with a task type.
+ */
+export type NotificationTaskKey = NotificationKey;
+
+/**
  * The default notification template type that can be provided to subscribe to notifications not specified in the configurations.
  */
 export const DEFAULT_NOTIFICATION_TEMPLATE_TYPE = 'D';
@@ -85,6 +95,13 @@ export type NotificationTaskType = string;
  * If a unique key is reused, the new task will replace the old task.
  */
 export type NotificationTaskUniqueId = FirestoreModelId;
+
+/**
+ * Reference to a notification task key
+ */
+export interface NotificationTaskKeyRef {
+  readonly taskKey: NotificationTaskKey;
+}
 
 /**
  * Creates a NotificationTaskUniqueId from the input model id and task type.

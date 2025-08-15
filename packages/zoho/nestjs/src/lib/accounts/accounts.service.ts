@@ -92,6 +92,9 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
               }
             }
           });
+        },
+        clearCachedToken: async function () {
+          await Promise.allSettled(accessCachesForServices.map((x) => x.clearCachedToken()));
         }
       };
 
@@ -115,6 +118,7 @@ export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAc
     const accessTokenCache: ZohoAccessTokenCache = {
       loadCachedToken: async function (): Promise<Maybe<ZohoAccessToken>> {
         const token = tokens[service];
+
         if (logAccessToConsole) {
           console.log('retrieving access token from memory: ', { token, service });
         }
@@ -124,6 +128,13 @@ export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAc
         tokens[service] = accessToken;
         if (logAccessToConsole) {
           console.log('updating access token in memory: ', { accessToken, service });
+        }
+      },
+      clearCachedToken: async function (): Promise<void> {
+        delete tokens[service];
+
+        if (logAccessToConsole) {
+          console.log('clearing access token in memory: ', { service });
         }
       }
     };
@@ -244,6 +255,13 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
           await writeTokenFile(tokens);
         } catch (e) {
           console.error('Failed updating access token in file: ', e);
+        }
+      },
+      clearCachedToken: async function (): Promise<void> {
+        try {
+          await writeTokenFile({});
+        } catch (e) {
+          console.error('Failed clearing access token in file: ', e);
         }
       }
     };

@@ -1,6 +1,6 @@
 import { fetchJsonFunction, fetchApiFetchService, ConfiguredFetch, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZohoRecruitConfig, ZohoRecruitContext, ZohoRecruitContextRef, ZohoRecruitFetchFactory, ZohoRecruitFetchFactoryInput, zohoRecruitConfigApiUrl } from './recruit.config';
-import { LogZohoServerErrorFunction } from '../zoho.error.api';
+import { LogZohoServerErrorFunction, ZohoInvalidTokenError } from '../zoho.error.api';
 import { handleZohoRecruitErrorFetch, interceptZohoRecruit200StatusWithErrorResponse } from './recruit.error.api';
 import { ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
@@ -57,7 +57,12 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
     const apiUrl = zohoRecruitConfigApiUrl(config.apiUrl);
     const baseFetch = fetchFactory({ apiUrl });
 
-    const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction);
+    const fetch: ConfiguredFetch = handleZohoRecruitErrorFetch(baseFetch, logZohoServerErrorFunction, (x) => {
+      if (x instanceof ZohoInvalidTokenError) {
+        accountsContext.loadAccessToken.resetAccessToken();
+      }
+    });
+
     const fetchJson = fetchJsonFunction(fetch, {
       interceptJsonResponse: interceptZohoRecruit200StatusWithErrorResponse, // intercept errors that return status 200
       handleFetchJsonParseErrorFunction: returnNullHandleFetchJsonParseErrorFunction

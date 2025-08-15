@@ -75,6 +75,10 @@ export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): Z
       return result;
     };
 
+    tokenRefresher.resetAccessToken = async () => {
+      return config.accessTokenCache?.clearCachedToken();
+    };
+
     const loadAccessToken: ZohoAccessTokenFactory = zohoAccountsZohoAccessTokenFactory({
       tokenRefresher,
       accessTokenCache: config.accessTokenCache
@@ -124,7 +128,11 @@ export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAcces
    */
   let currentToken: Maybe<ZohoAccessToken> = null;
 
-  return async () => {
+  const resetAccessToken = async () => {
+    currentToken = null;
+  };
+
+  const fn = async () => {
     // load from cache
     if (!currentToken) {
       const cachedToken = await accessTokenCache?.loadCachedToken();
@@ -163,4 +171,8 @@ export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAcces
 
     return currentToken;
   };
+
+  fn.resetAccessToken = resetAccessToken;
+
+  return fn;
 }

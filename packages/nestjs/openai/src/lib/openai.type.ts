@@ -1,3 +1,6 @@
+import { MaybeSo } from '@dereekb/util';
+import { OpenAI } from 'openai';
+
 /**
  * Api key used by OpenAI for making requests.
  */
@@ -22,3 +25,13 @@ export type OpenAIWebhookSecret = string;
  * Assistant id used by OpenAI.
  */
 export type OpenAIAssistantId = string;
+
+/**
+ * OpenAI response id
+ */
+export type OpenAIResponseId = string;
+
+/**
+ * Metadata for an OpenAI request.
+ */
+export type OpenAIResponseMetadata = MaybeSo<OpenAI.Responses.Response['metadata']>;
