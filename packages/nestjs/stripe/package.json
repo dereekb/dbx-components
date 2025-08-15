@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs/stripe",
-  "version": "12.3.8",
+  "version": "12.3.9",
   "type": "commonjs",
   "peerDependencies": {},
   "dependencies": {}
