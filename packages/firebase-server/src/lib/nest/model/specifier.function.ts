@@ -1,10 +1,20 @@
 import { type ModelFirebaseCrudFunctionSpecifier, type ModelFirebaseCrudFunctionSpecifierRef, MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } from '@dereekb/firebase';
-import { type Maybe, objectToMap, type PromiseOrValue, serverError } from '@dereekb/util';
-import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { Configurable, type Maybe, objectToMap, type PromiseOrValue, serverError } from '@dereekb/util';
+import { NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { badRequestError } from '../../function/error';
+import { assertRequestRequiresAuthForFunction, OnCallWithAuthAwareNestRequireAuthRef, OnCallWithNestContext, OnCallWithNestContextRequest } from '../function/call';
 
 export type OnCallSpecifierHandlerNestContextRequest<N, I = unknown> = NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
-export type OnCallSpecifierHandlerFunction<N, I = unknown, O = void> = (request: OnCallSpecifierHandlerNestContextRequest<N, I>) => PromiseOrValue<O>;
+export type OnCallSpecifierHandlerFunctionWithAuth<N, I = unknown, O = unknown> = ((request: OnCallSpecifierHandlerNestContextRequest<N, I>) => PromiseOrValue<O>) & {
+  readonly _requiresAuth?: true;
+};
+
+export type OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I = unknown> = NestContextCallableRequestWithOptionalAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
+export type OnCallSpecifierHandlerFunctionWithOptionalAuth<N, I = unknown, O = unknown> = ((request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I>) => PromiseOrValue<O>) & {
+  readonly _requireAuth: false;
+};
+
+export type OnCallSpecifierHandlerFunction<N, I = unknown, O = void> = (OnCallSpecifierHandlerFunctionWithAuth<N, I, O> | OnCallSpecifierHandlerFunctionWithOptionalAuth<N, I, O>) & OnCallWithAuthAwareNestRequireAuthRef;
 
 // TODO(FUTURE): Add typing magic to ensure all expected function keys are present here.
 
@@ -16,19 +26,23 @@ export type OnCallSpecifierHandlerConfig<N> = {
   readonly [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
 };
 
-export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallSpecifierHandlerFunction<N, I, O> {
+export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallWithNestContext<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef {
   const map = objectToMap(config);
 
-  return async (request) => {
+  const fn = (request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I>) => {
     const { specifier = MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } = request;
     const handler = map.get(specifier);
 
     if (handler != null) {
-      return await handler(request);
+      assertRequestRequiresAuthForFunction(handler, request);
+      return handler(request as any) as PromiseOrValue<O>;
     } else {
       throw unknownModelCrudFunctionSpecifierError(specifier);
     }
   };
+
+  (fn as Configurable<OnCallWithAuthAwareNestRequireAuthRef>)._requireAuth = false;
+  return fn;
 }
 
 export function unknownModelCrudFunctionSpecifierError(specifier: ModelFirebaseCrudFunctionSpecifier) {

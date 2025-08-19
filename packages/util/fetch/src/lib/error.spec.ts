@@ -7,7 +7,7 @@ const testFetch: FetchService = fetchService({
   makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
 });
 
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 describe('requireOkResponse()', () => {
   const forbiddenUrl = 'https://components.dereekb.com/api/webhook';

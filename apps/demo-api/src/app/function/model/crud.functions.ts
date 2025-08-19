@@ -7,10 +7,19 @@ import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallReadModel
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
 import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
+import { createProfile } from '../profile/profile.create';
+import { createNotification } from '../notification/notification.create';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
-  guestbook: createGuestbook
+  guestbook: createGuestbook,
+  //
+  // Without Auth Examples
+  // These are just to show how to create functions that do not assert auth.
+  profile: createProfile,
+  notification: onCallSpecifierHandler({
+    _: createNotification
+  })
 };
 
 // MARK: Read
@@ -53,4 +62,4 @@ export const demoCallModelMap: OnCallModelMap = {
   delete: onCallDeleteModel(demoDeleteModelMap)
 };
 
-export const demoCallModel = onCallWithDemoNestContext(inAuthContext(onCallModel(demoCallModelMap)));
+export const demoCallModel = onCallWithDemoNestContext(onCallModel(demoCallModelMap));

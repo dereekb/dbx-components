@@ -1,46 +1,42 @@
 import { type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallReadModelParams, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
-import { type OnCallWithAuthorizedNestContext } from '../function/call';
-import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithAuthorizedNestContext } from '../function/call';
+import { type NestContextCallableRequestWithAuth, type NestContextCallableRequestWithOptionalAuth } from '../function/nest';
 import { type AssertModelCrudRequestFunction } from './crud.assert.function';
+import { _onCallWithCallTypeFunction } from './call.model.function';
 
 // MARK: Function
-export type OnCallReadModelFunction<N, I = unknown, O = unknown> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;
+export type OnCallReadModelRequest<N, I = unknown> = NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
+export type OnCallReadModelFunctionWithAuth<N, I = unknown, O = unknown> = ((request: OnCallReadModelRequest<N, I>) => PromiseOrValue<O>) & {
+  readonly _requiresAuth?: true;
+};
+
+export type OnCallReadModelRequestWithOptionalAuth<N, I = unknown> = NestContextCallableRequestWithOptionalAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
+export type OnCallReadModelFunctionWithOptionalAuth<N, I = unknown, O = unknown> = ((request: OnCallReadModelRequestWithOptionalAuth<N, I>) => PromiseOrValue<O>) & {
+  readonly _requireAuth: false;
+};
+
+export type OnCallReadModelFunction<N, I = unknown, O = unknown> = OnCallReadModelFunctionWithAuth<N, I, O> & OnCallWithAuthAwareNestRequireAuthRef;
+export type OnCallReadModelFunctionAuthAware<N, I = unknown, O = unknown> = OnCallReadModelFunction<N, I, O> | OnCallReadModelFunctionWithOptionalAuth<N, I, O>;
 
 export type OnCallReadModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  readonly [K in FirestoreModelTypes<T>]?: OnCallReadModelFunction<N, any, any>;
+  readonly [K in FirestoreModelTypes<T>]?: OnCallReadModelFunctionAuthAware<N, any, any>;
 };
 
 export interface OnCallReadModelConfig<N> {
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallReadModelParams>;
 }
 
-/**
- * Creates a OnCallWithAuthorizedNestContext function for updating model params.
- *
- * @param map
- * @returns
- */
 export function onCallReadModel<N>(map: OnCallReadModelMap<N>, config: OnCallReadModelConfig<N> = {}): OnCallWithAuthorizedNestContext<N, OnCallReadModelParams, unknown> {
-  const { preAssert = () => undefined } = config;
+  const { preAssert } = config;
 
-  return (request) => {
-    const modelType = request.data?.modelType;
-    const readFn = map[modelType];
-
-    if (readFn) {
-      const specifier = request.data.specifier;
-      preAssert({ call: 'read', crud: 'read', request, modelType, specifier });
-      return readFn({
-        ...request,
-        specifier,
-        data: request.data.data
-      });
-    } else {
-      throw readModelUnknownModelTypeError(modelType);
-    }
-  };
+  return _onCallWithCallTypeFunction(map as any, {
+    callType: 'read',
+    crudType: 'read',
+    preAssert,
+    throwOnUnknownModelType: readModelUnknownModelTypeError
+  }) as OnCallWithAuthorizedNestContext<N, OnCallReadModelParams, unknown>;
 }
 
 export function readModelUnknownModelTypeError(modelType: FirestoreModelType) {

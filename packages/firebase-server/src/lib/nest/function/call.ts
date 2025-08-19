@@ -1,8 +1,7 @@
 import { type Configurable, type PromiseOrValue } from '@dereekb/util';
 import { type CallableRequest } from 'firebase-functions/lib/common/providers/https';
 import { type NestApplicationContextRequest, type NestContextCallableRequest, type NestContextCallableRequestWithAuth } from './nest';
-import { isContextWithAuthData } from '../../function/context';
-import { unauthenticatedContextHasNoUidError } from '../../function/error';
+import { assertIsContextWithAuthData } from '../../function/context';
 import { type MakeNestContext } from '../nest.provider';
 
 // MARK: Application
@@ -27,7 +26,48 @@ export function setNestContextOnRequest<N, I>(makeNestContext: MakeNestContext<N
 }
 
 // MARK: Context With Auth
-export type OnCallWithAuthorizedNestContext<N, I = unknown, O = unknown> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
+export type OnCallWithAuthorizedNestContext<N, I = unknown, O = unknown> = ((request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>) & {
+  readonly _requiresAuth?: true;
+};
+
+export type OnCallWithOptionalAuthorizedNestContext<N, I = unknown, O = unknown> = OnCallWithNestContext<N, I, O> & {
+  readonly _requireAuth: false;
+};
+
+/**
+ * Wraps the input OnCallWithNestContext function to flag it as optional to have auth data.
+ *
+ * @param fn
+ * @returns
+ */
+export function optionalAuthContext<N, I, O>(fn: OnCallWithNestContext<N, I, O>): OnCallWithOptionalAuthorizedNestContext<N, I, O> {
+  const fnWithOptionalAuth = ((request: OnCallWithNestContextRequest<N, I>) => fn(request)) as OnCallWithOptionalAuthorizedNestContext<N, I, O>;
+  (fnWithOptionalAuth as Configurable<OnCallWithOptionalAuthorizedNestContext<N, I, O>>)._requireAuth = false;
+  return fnWithOptionalAuth;
+}
+
+export type OnCallWithAuthAwareNestContext<N, I = unknown, O = unknown> = (OnCallWithAuthorizedNestContext<N, I, O> | OnCallWithOptionalAuthorizedNestContext<N, I, O>) & OnCallWithAuthAwareNestRequireAuthRef;
+
+export interface OnCallWithAuthAwareNestRequireAuthRef {
+  /**
+   * If false, auth is not required.
+   *
+   * If true or not defined, then auth is required.
+   */
+  readonly _requireAuth?: boolean;
+}
+
+/**
+ * Asserts that the input request has auth data if the inputOnCallWithAuthAwareNestRequireAuthRef object is flagged to require auth.
+ *
+ * @param fn
+ * @param request
+ */
+export function assertRequestRequiresAuthForFunction(fn: OnCallWithAuthAwareNestRequireAuthRef, request: OnCallWithNestContextRequest<any, any>) {
+  if (fn._requireAuth !== false) {
+    assertIsContextWithAuthData(request);
+  }
+}
 
 /**
  * Creates an OnCallWithNestContext wrapper that validates the input CallableContext to assert the context has auth data before entering the function.
@@ -37,10 +77,7 @@ export type OnCallWithAuthorizedNestContext<N, I = unknown, O = unknown> = (requ
  */
 export function inAuthContext<N, I, O>(fn: OnCallWithAuthorizedNestContext<N, I, O>): OnCallWithNestContext<N, I, O> {
   return (request) => {
-    if (isContextWithAuthData(request)) {
-      return fn(request);
-    } else {
-      throw unauthenticatedContextHasNoUidError();
-    }
+    assertIsContextWithAuthData(request);
+    return fn(request);
   };
 }

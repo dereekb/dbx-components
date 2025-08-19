@@ -1,9 +1,12 @@
 import { type ErrorMessageOrPartialServerError, isServerError, partialServerError, type ServerError, type StringErrorCode, type ThrowErrorFunction } from '@dereekb/util';
 import type * as admin from 'firebase-admin';
-import { type FirebaseErrorCode } from '@dereekb/firebase';
+import { DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE, type FirebaseErrorCode } from '@dereekb/firebase';
 import { HttpsError } from 'firebase-functions/https';
 
-export const NO_AUTH_ERROR_CODE = 'NO_AUTH';
+/**
+ * @deprecated use DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE instead
+ */
+export const NO_AUTH_ERROR_CODE = DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE;
 
 export function unauthenticatedContextHasNoAuthData() {
   return unauthenticatedError({
@@ -12,7 +15,10 @@ export function unauthenticatedContextHasNoAuthData() {
   });
 }
 
-export const NO_UID_ERROR_CODE = 'NO_USER_UID';
+/**
+ * @deprecated use DBX_FIREBASE_SERVER_NO_UID_ERROR_CODE instead
+ */
+export const NO_UID_ERROR_CODE = DBX_FIREBASE_SERVER_NO_AUTH_ERROR_CODE;
 
 export function unauthenticatedContextHasNoUidError() {
   return unauthenticatedError({
