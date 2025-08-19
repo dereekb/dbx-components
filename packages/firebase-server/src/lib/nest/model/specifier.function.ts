@@ -2,7 +2,7 @@ import { type ModelFirebaseCrudFunctionSpecifier, type ModelFirebaseCrudFunction
 import { Configurable, type Maybe, objectToMap, type PromiseOrValue, serverError } from '@dereekb/util';
 import { NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { badRequestError } from '../../function/error';
-import { assertRequestRequiresAuthForFunction, OnCallWithAuthAwareNestRequireAuthRef, OnCallWithNestContext, OnCallWithNestContextRequest } from '../function/call';
+import { assertRequestRequiresAuthForFunction, OnCallWithAuthAwareNestRequireAuthRef, OnCallWithNestContext } from '../function/call';
 
 export type OnCallSpecifierHandlerNestContextRequest<N, I = unknown> = NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef;
 export type OnCallSpecifierHandlerFunctionWithAuth<N, I = unknown, O = unknown> = ((request: OnCallSpecifierHandlerNestContextRequest<N, I>) => PromiseOrValue<O>) & {

@@ -2,7 +2,7 @@ import { systemStateExampleRead } from './../system/systemstate.read';
 import { createGuestbook } from './../guestbook/guestbook.crud';
 import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
-import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
+import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
 import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallReadModelMap, DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
 import { updateNotificationUser, resyncNotificationUser } from '../notification/notificationuser.update';
 import { updateNotificationBox, updateNotificationBoxRecipient } from '../notification/notificationbox.update';
