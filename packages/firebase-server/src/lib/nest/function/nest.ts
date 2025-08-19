@@ -1,6 +1,7 @@
 import { type INestApplicationContext } from '@nestjs/common';
 import { type CallableRequest } from 'firebase-functions/lib/common/providers/https';
 import { type CallableContextWithAuthData } from '../../function/context';
+import { OnCallWithNestContextRequest } from './call';
 
 export type NestApplicationContextRequest<R> = R & {
   readonly nestApplication: INestApplicationContext;
@@ -30,6 +31,11 @@ export function injectNestApplicationContextIntoRequest<R>(nestContext: INestApp
 
 // MARK: Types
 export type NestContextCallableRequest<N, I> = NestContextRequest<N, CallableRequest<I>>;
+
+/**
+ * Equivalent to OnCallWithNestContextRequest
+ */
+export type NestContextCallableRequestWithOptionalAuth<N, I> = OnCallWithNestContextRequest<N, I>;
 
 /**
  * NestContextCallableRequest that has valid auth attached to it.

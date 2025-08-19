@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-core",
-  "version": "12.3.10",
+  "version": "12.3.11",
   "peerDependencies": {
     "@dereekb/util": "*",
     "@dereekb/rxjs": "*",
