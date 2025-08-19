@@ -1,30 +1,30 @@
 import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, type UserRelated } from '@dereekb/firebase';
 import { type ArrayOrValue, type AuthRole, containsAllValues, asArray } from '@dereekb/util';
 import { forbiddenError } from '../../function/error';
-import { type NestContextCallableRequestWithAuth } from '../function/nest';
+import { type NestContextCallableRequestWithOptionalAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 
-export function assertIsAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+export function assertIsAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   if (!isAdminInRequest(request)) {
     throw forbiddenError();
   }
 }
 
-export function isAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+export function isAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   return request.nest.authService.context(request).isAdmin;
 }
 
-export function assertIsAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithAuth<N, I>, requireUid?: boolean) {
+export function assertIsAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithOptionalAuth<N, I>, requireUid?: boolean) {
   if (!isAdminOrTargetUserInRequestData(request, requireUid)) {
     throw forbiddenError();
   }
 
-  return request.data.uid ?? request.auth.uid;
+  return request.data.uid ?? request.auth?.uid;
 }
 
-export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithAuth<N, I>, requireUid = false) {
+export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I extends Partial<UserRelated> = Partial<UserRelated>>(request: NestContextCallableRequestWithOptionalAuth<N, I>, requireUid = false) {
   const uid = request.data.uid;
-  const authUid = request.auth.uid;
+  const authUid = request.auth?.uid;
 
   let isAdminOrTargetUser = true;
 
@@ -35,7 +35,7 @@ export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestC
   return isAdminOrTargetUser;
 }
 
-export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   if (!hasSignedTosInRequest(request)) {
     throw forbiddenError({
       message: 'ToS has not been signed.'
@@ -43,11 +43,11 @@ export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContex
   }
 }
 
-export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   return request.nest.authService.context(request).hasSignedTos;
 }
 
-export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
+export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
   if (!hasAuthRolesInRequest(request, authRoles)) {
     throw forbiddenError({
       message: 'Missing required auth roles.',
@@ -58,7 +58,7 @@ export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<an
   }
 }
 
-export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
+export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
   return containsAllValues(request.nest.authService.context(request).authRoles, authRoles);
 }
 
@@ -69,7 +69,7 @@ export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any,
  *
  * @param request
  */
-export function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+export function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithOptionalAuth<N, I>) {
   const claims = request.nest.authService.context(request).claims;
   return claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY] != null;
 }

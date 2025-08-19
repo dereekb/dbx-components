@@ -3,11 +3,11 @@ import { FirestoreModelIdentity, FirestoreModelType, FirestoreModelTypes, ModelF
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, OnCallWithAuthAwareNestContext, OnCallWithAuthAwareNestRequireAuthRef, OnCallWithNestContext, OnCallWithNestContextRequest } from '../function/call';
 import { AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
-import { NestContextCallableRequest } from '../function/nest';
+import { NestContextCallableRequest, NestContextCallableRequestWithAuth } from '../function/nest';
 
 // MARK: Function
 export type OnCallModelMap = {
-  readonly [call: OnCallFunctionType]: OnCallWithAuthAwareNestContext<any, OnCallTypedModelParams>;
+  readonly [call: OnCallFunctionType]: OnCallWithNestContext<any, OnCallTypedModelParams>;
 };
 
 export interface OnCallModelConfig {
@@ -23,18 +23,33 @@ export interface OnCallModelConfig {
 export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {}): OnCallWithNestContext<unknown, OnCallTypedModelParams> {
   const { preAssert = () => undefined } = config;
 
-  return (request: any) => {
-    const call = request.data?.call ?? '';
-    const callFn = map[call];
+  return (request) => {
+    const call = request.data?.call;
 
-    if (callFn) {
-      const { specifier, modelType } = request.data;
-      preAssert({ call, crud: 'call', request, modelType, specifier });
-      return callFn(request);
+    if (call) {
+      const callFn = map[call];
+
+      if (callFn) {
+        const { specifier, modelType } = request.data;
+        preAssert({ call, crud: 'call', request, modelType, specifier });
+        return callFn(request);
+      } else {
+        throw onCallModelUnknownCallTypeError(call);
+      }
     } else {
-      throw onCallModelUnknownCallTypeError(call);
+      throw onCallModelMissingCallTypeError();
     }
   };
+}
+
+export function onCallModelMissingCallTypeError() {
+  return badRequestError(
+    serverError({
+      status: 400,
+      code: 'CALL_TYPE_MISSING_ERROR',
+      message: `The call type was missing from the request.`
+    })
+  );
 }
 
 export function onCallModelUnknownCallTypeError(call: OnCallFunctionType) {
