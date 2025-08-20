@@ -33,7 +33,7 @@ import {
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from 'demo-firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from 'demo-firebase';
 import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
@@ -1453,6 +1453,7 @@ demoApiFunctionContextFactory((f) => {
 
                         return template;
                       });
+
                       demoNotificationContext({ f, doc: () => notificationDocument }, (nbn) => {
                         describe('via sendQueuedNotifications()', () => {
                           it('should have tried but not sent the queued notification.', async () => {
@@ -1544,6 +1545,13 @@ demoApiFunctionContextFactory((f) => {
                                       // check still does not exist
                                       notificationBoxExists = await nb.document.exists();
                                       expect(notificationBoxExists).toBe(true);
+
+                                      // check the send callback for this type was called
+                                      expect(result.onSendAttemptedResult).toBeDefined();
+                                      expect(result.onSendAttemptedResult?.value).toBe(EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT);
+
+                                      expect(result.onSendSuccessResult).toBeDefined();
+                                      expect(result.onSendSuccessResult?.value).toBe(EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT);
                                     });
                                   });
                                 } else {
@@ -1576,6 +1584,9 @@ demoApiFunctionContextFactory((f) => {
                                   expect(result.tryRun).toBe(false);
                                   expect(result.success).toBe(true);
                                   expect(result.deletedNotification).toBe(true);
+
+                                  // check the send callback for this type was not called
+                                  expect(result.onSendAttemptedResult).toBeUndefined();
 
                                   // check still does not exist
                                   notificationBoxExists = await nb.document.exists();
@@ -1688,7 +1699,7 @@ demoApiFunctionContextFactory((f) => {
                             if (initialNotificationBoxExists) {
                               describe('notification box exists', () => {
                                 if (initialNotificationBoxInitialized) {
-                                  it('should have sent the notifixcation', async () => {
+                                  it('should have sent the notification', async () => {
                                     let notificationBoxExists = await nb.document.exists();
                                     expect(notificationBoxExists).toBe(initialNotificationBoxExists);
 

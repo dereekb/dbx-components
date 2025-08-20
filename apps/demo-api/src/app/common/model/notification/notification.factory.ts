@@ -1,5 +1,5 @@
-import { EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from 'demo-firebase'; // TODO: rename to demo-firebase
-import { NotificationMessageFunctionFactoryConfig, NotificationMessageInputContext, NotificationMessageContent, NotificationMessage, firestoreModelId, NotificationMessageFlag } from '@dereekb/firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, ExampleNotificationData, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE } from 'demo-firebase'; // TODO: rename to demo-firebase
+import { NotificationMessageFunctionFactoryConfig, NotificationMessageInputContext, NotificationMessageContent, NotificationMessage, firestoreModelId, NotificationMessageFlag, notificationMessageFunction } from '@dereekb/firebase';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-server/model';
 
@@ -9,7 +9,7 @@ export function demoNotificationTestFactory(context: DemoFirebaseServerActionsCo
     type: TEST_NOTIFICATIONS_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
       const { item } = config;
-      return async (inputContext: NotificationMessageInputContext) => {
+      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const content: NotificationMessageContent = {
           title: 'This is a test notification',
           action: 'View test',
@@ -23,7 +23,7 @@ export function demoNotificationTestFactory(context: DemoFirebaseServerActionsCo
         };
 
         return result;
-      };
+      });
     }
   };
 }
@@ -34,24 +34,34 @@ export function demoExampleNotificationFactory(context: DemoFirebaseServerAction
       const { item } = config;
       const { d } = item;
 
-      return async (inputContext: NotificationMessageInputContext) => {
-        const content: NotificationMessageContent = {
-          title: 'This is a test notification',
-          openingMessage: `This is a test notification intended for user with uid "${item.d?.uid}". This is a test message and contains the opening text of a notification.`,
-          closingMessage: `This is the closing part of the message.`,
-          action: 'View test',
-          actionUrl: ``
-        };
+      return notificationMessageFunction(
+        async (inputContext: NotificationMessageInputContext) => {
+          const content: NotificationMessageContent = {
+            title: 'This is a test notification',
+            openingMessage: `This is a test notification intended for user with uid "${item.d?.uid}". This is a test message and contains the opening text of a notification.`,
+            closingMessage: `This is the closing part of the message.`,
+            action: 'View test',
+            actionUrl: ``
+          };
 
-        const result: NotificationMessage = {
-          inputContext,
-          item,
-          content,
-          flag: d?.skipSend ? NotificationMessageFlag.DO_NOT_SEND : undefined
-        };
+          const result: NotificationMessage = {
+            inputContext,
+            item,
+            content,
+            flag: d?.skipSend ? NotificationMessageFlag.DO_NOT_SEND : undefined
+          };
 
-        return result;
-      };
+          return result;
+        },
+        {
+          onSendAttempted: async () => {
+            return EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT;
+          },
+          onSendSuccess: async () => {
+            return EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT;
+          }
+        }
+      );
     }
   };
 }
@@ -61,7 +71,7 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
     type: GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
       const { item } = config;
-      return async (inputContext: NotificationMessageInputContext) => {
+      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const entryId = firestoreModelId(item.m as string);
         const actionUrl = context.mailgunService.mailgunApi.clientUrl + `/guestbook/${entryId}`;
 
@@ -78,7 +88,7 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
         };
 
         return result;
-      };
+      });
     }
   };
 }
@@ -88,7 +98,7 @@ export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebase
     type: GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE,
     factory: async (config: NotificationMessageFunctionFactoryConfig<{}>) => {
       const { item } = config;
-      return async (inputContext: NotificationMessageInputContext) => {
+      return notificationMessageFunction(async (inputContext: NotificationMessageInputContext) => {
         const entryId = firestoreModelId(item.m as string);
         const actionUrl = context.mailgunService.mailgunApi.clientUrl + `/guestbook/${entryId}`;
 
@@ -105,7 +115,7 @@ export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebase
         };
 
         return result;
-      };
+      });
     }
   };
 }

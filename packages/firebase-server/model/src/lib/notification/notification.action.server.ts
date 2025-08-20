@@ -73,7 +73,9 @@ import {
   type NotificationBoxDocumentReferencePair,
   loadNotificationBoxDocumentForReferencePair,
   NotificationTask,
-  NotificationTaskServiceTaskHandlerCompletionType
+  NotificationTaskServiceTaskHandlerCompletionType,
+  SendNotificationResultOnSendCompleteResult,
+  NotificationMessageFunctionExtrasCallbackDetails
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -974,6 +976,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       let buildMessageFailure: boolean = false;
       let notificationMarkedDone: boolean = false;
       let notificationTaskCompletionType: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
+      let onSendAttemptedResult: Maybe<SendNotificationResultOnSendCompleteResult>;
+      let onSendSuccessResult: Maybe<SendNotificationResultOnSendCompleteResult>;
 
       const notificationTemplateType: Maybe<NotificationTemplateType> = templateInstance?.type;
 
@@ -1289,6 +1293,40 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
               await notificationDocument.update(notificationTemplate);
               notificationMarkedDone = notificationTemplate.d === true;
+
+              const callbackDetails: NotificationMessageFunctionExtrasCallbackDetails = {
+                success,
+                updatedSendFlags: notificationTemplate,
+                sendEmailsResult,
+                sendTextsResult,
+                sendNotificationSummaryResult
+              };
+
+              // call onSendAttempted, if one is configured
+              if (messageFunction?.onSendAttempted) {
+                onSendAttemptedResult = await messageFunction
+                  .onSendAttempted(callbackDetails)
+                  .then((value) => {
+                    return { value };
+                  })
+                  .catch((e) => {
+                    console.warn(`Caught exception while calling onSendAttempted for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                    return { error: e };
+                  });
+              }
+
+              // call onSendSuccess, if one is configured
+              if (notificationMarkedDone && messageFunction?.onSendSuccess) {
+                onSendSuccessResult = await messageFunction
+                  .onSendSuccess(callbackDetails)
+                  .then((value) => {
+                    return { value };
+                  })
+                  .catch((e) => {
+                    console.warn(`Caught exception while calling onSendSuccess for notification "${notification.id}" with type "${notificationTemplateType}": `, e);
+                    return { error: e };
+                  });
+              }
             }
           } else {
             switch (notification.st) {
@@ -1320,7 +1358,9 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         sendTextsResult,
         sendNotificationSummaryResult,
         loadMessageFunctionFailure,
-        buildMessageFailure
+        buildMessageFailure,
+        onSendAttemptedResult,
+        onSendSuccessResult
       };
 
       return result;

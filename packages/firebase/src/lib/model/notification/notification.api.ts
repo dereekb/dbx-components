@@ -466,6 +466,17 @@ export abstract class AbstractSubscribeOrUnsubscribeToNotificationBoxParams exte
   unsubscribe?: Maybe<boolean>;
 }
 
+export interface SendNotificationResultOnSendCompleteResult<T = unknown> {
+  /**
+   * Value, if returned by the onSendSuccess callback.
+   */
+  readonly value?: T;
+  /**
+   * Error value if the onSendSuccess callback throws an error.
+   */
+  readonly error?: Maybe<unknown>;
+}
+
 export interface SendNotificationResult {
   /**
    * Attempted notification type
@@ -556,6 +567,14 @@ export interface SendNotificationResult {
    * Failed while attempting to build a message
    */
   readonly buildMessageFailure: boolean;
+  /**
+   * Result of the onSendAttempted callback, if called.
+   */
+  readonly onSendAttemptedResult?: Maybe<SendNotificationResultOnSendCompleteResult>;
+  /**
+   * Result of the onSendSuccess callback, if called.
+   */
+  readonly onSendSuccessResult?: Maybe<SendNotificationResultOnSendCompleteResult>;
 }
 
 /**
