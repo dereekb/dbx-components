@@ -1,7 +1,7 @@
 import { type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallCreateModelParams, type OnCallCreateModelResult, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
-import { OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithAuthorizedNestContext } from '../function/call';
+import { type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
 import { NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { _onCallWithCallTypeFunction } from './call.model.function';
@@ -28,15 +28,15 @@ export interface OnCallCreateModelConfig<N> {
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallCreateModelParams>;
 }
 
-export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCallCreateModelConfig<N> = {}): OnCallWithAuthorizedNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult> {
-  const { preAssert = () => undefined } = config;
+export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>, config: OnCallCreateModelConfig<N> = {}): OnCallWithNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult> {
+  const { preAssert } = config;
 
   return _onCallWithCallTypeFunction(map as any, {
     callType: 'create',
     crudType: 'create',
     preAssert,
     throwOnUnknownModelType: createModelUnknownModelTypeError
-  }) as OnCallWithAuthorizedNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult>;
+  }) as OnCallWithNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult>;
 }
 
 export function createModelUnknownModelTypeError(modelType: FirestoreModelType) {

@@ -16,6 +16,9 @@ export const TEST_NOTIFICATIONS_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo
 // MARK: Example Notification
 export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE: NotificationTemplateType = 'E';
 
+export const EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT = 1;
+export const EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT = 2;
+
 export const EXAMPLE_NOTIFICATION_TEMPLATE_TYPE_INFO: NotificationTemplateTypeInfo = {
   type: EXAMPLE_NOTIFICATION_TEMPLATE_TYPE,
   name: 'Example Notification',

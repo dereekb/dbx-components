@@ -1,8 +1,9 @@
 import { type Building, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
-import { type Notification, type NotificationBox } from './notification';
+import { NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
 import { type DocumentDataWithIdAndKey } from '../../common';
+import { NotificationSendEmailMessagesResult, NotificationSendTextMessagesResult, NotificationSendNotificationSummaryMessagesResult } from './notification.send';
 
 /**
  * Contextual information when
@@ -139,11 +140,29 @@ export interface NotificationMessageFunctionFactoryConfig<D extends Notification
  */
 export type NotificationMessageFunctionFactory<D extends NotificationItemMetadata = {}> = (config: NotificationMessageFunctionFactoryConfig<D>) => Promise<NotificationMessageFunction>;
 
+export interface NotificationMessageFunctionExtrasCallbackDetails {
+  readonly success: boolean;
+  readonly updatedSendFlags: NotificationSendFlags;
+  readonly sendEmailsResult?: Maybe<NotificationSendEmailMessagesResult>;
+  readonly sendTextsResult?: Maybe<NotificationSendTextMessagesResult>;
+  readonly sendNotificationSummaryResult?: Maybe<NotificationSendNotificationSummaryMessagesResult>;
+}
+
+export type NotificationMessageFunctionExtrasCallbackFunction = (callbackDetails: NotificationMessageFunctionExtrasCallbackDetails) => Promise<unknown>;
+
 export interface NotificationMessageFunctionExtras {
   /**
    * Any global/additional recipient(s) that should be added to all Notifications associated with this NotificationMessageFunctionExtras.
    */
   readonly globalRecipients?: Maybe<NotificationRecipientWithConfig[]>;
+  /**
+   * Called each time the notification attempts to send something.
+   */
+  readonly onSendAttempted?: NotificationMessageFunctionExtrasCallbackFunction;
+  /**
+   * Called when the notification has is marked as done after sending to all recipients.
+   */
+  readonly onSendSuccess?: NotificationMessageFunctionExtrasCallbackFunction;
 }
 
 export type NotificationMessageFunctionWithoutExtras = (inputContext: NotificationMessageInputContext) => Promise<NotificationMessage>;
@@ -164,6 +183,8 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
   if (extras) {
     const fnWithExtras = fn as Building<NotificationMessageFunction>;
     fnWithExtras.globalRecipients = extras.globalRecipients;
+    fnWithExtras.onSendAttempted = extras.onSendAttempted;
+    fnWithExtras.onSendSuccess = extras.onSendSuccess;
     return fnWithExtras as NotificationMessageFunction;
   } else {
     return fn;

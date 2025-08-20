@@ -1,7 +1,7 @@
 import { type PromiseOrValue, serverError } from '@dereekb/util';
 import { type FirestoreModelType, type FirestoreModelIdentity, type FirestoreModelTypes, type OnCallUpdateModelParams, type ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function/error';
-import { OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithAuthorizedNestContext } from '../function/call';
+import { type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext } from '../function/call';
 import { type NestContextCallableRequestWithAuth, type NestContextCallableRequestWithOptionalAuth } from '../function/nest';
 import { type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { _onCallWithCallTypeFunction } from './call.model.function';
@@ -28,7 +28,7 @@ export interface OnCallUpdateModelConfig<N> {
   readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallUpdateModelParams>;
 }
 
-export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCallUpdateModelConfig<N> = {}): OnCallWithAuthorizedNestContext<N, OnCallUpdateModelParams, unknown> {
+export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCallUpdateModelConfig<N> = {}): OnCallWithNestContext<N, OnCallUpdateModelParams, unknown> {
   const { preAssert } = config;
 
   return _onCallWithCallTypeFunction(map as any, {
@@ -36,7 +36,7 @@ export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>, config: OnCal
     crudType: 'update',
     preAssert,
     throwOnUnknownModelType: updateModelUnknownModelTypeError
-  }) as OnCallWithAuthorizedNestContext<N, OnCallUpdateModelParams, unknown>;
+  }) as OnCallWithNestContext<N, OnCallUpdateModelParams, unknown>;
 }
 
 export function updateModelUnknownModelTypeError(modelType: FirestoreModelType) {
