@@ -797,6 +797,7 @@ export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETR
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
+export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
 
@@ -860,7 +861,14 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           if (isNotificationTask) {
             notificationTaskHandler = notificationTaskService.taskHandlerForNotificationTaskType(t);
 
-            if (!notificationTaskHandler) {
+            if (notificationTaskHandler) {
+              if (notification.a >= NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS) {
+                tryRun = false;
+
+                console.warn(`Configured notification task of type "${t}" has reached the delete threshhold after being attempted ${notification.a} times. Deleting notification task.`);
+                await deleteNotification();
+              }
+            } else {
               tryRun = false;
               const delay = UNKNOWN_NOTIFICATION_TASK_TYPE_HOURS_DELAY;
 
