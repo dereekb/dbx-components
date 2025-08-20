@@ -3,7 +3,7 @@ import { FirestoreModelIdentity, FirestoreModelType, FirestoreModelTypes, ModelF
 import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, OnCallWithAuthAwareNestContext, OnCallWithAuthAwareNestRequireAuthRef, OnCallWithNestContext, OnCallWithNestContextRequest } from '../function/call';
 import { AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
-import { NestContextCallableRequest, NestContextCallableRequestWithAuth } from '../function/nest';
+import { NestContextCallableRequest } from '../function/nest';
 
 // MARK: Function
 export type OnCallModelMap = {
