@@ -79,7 +79,7 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, hoursToMilliseconds, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -1302,10 +1302,11 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 sendNotificationSummaryResult
               };
 
+              const { onSendAttempted, onSendSuccess } = messageFunction;
+
               // call onSendAttempted, if one is configured
-              if (messageFunction?.onSendAttempted) {
-                onSendAttemptedResult = await messageFunction
-                  .onSendAttempted(callbackDetails)
+              if (onSendAttempted) {
+                onSendAttemptedResult = await asPromise(onSendAttempted(callbackDetails))
                   .then((value) => {
                     return { value };
                   })
@@ -1316,9 +1317,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               }
 
               // call onSendSuccess, if one is configured
-              if (notificationMarkedDone && messageFunction?.onSendSuccess) {
-                onSendSuccessResult = await messageFunction
-                  .onSendSuccess(callbackDetails)
+              if (notificationMarkedDone && onSendSuccess) {
+                onSendSuccessResult = await asPromise(onSendSuccess(callbackDetails))
                   .then((value) => {
                     return { value };
                   })
