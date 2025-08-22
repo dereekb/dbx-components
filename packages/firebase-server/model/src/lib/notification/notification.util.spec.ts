@@ -43,6 +43,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
 
       const notificationUser: NotificationUser = {
         b: [],
+        x: [],
         bc,
         uid,
         dc: { c: {} },
@@ -246,6 +247,7 @@ describe('updateNotificationUserNotificationBoxRecipientConfig()', () => {
     describe('box config does not exist in associated NotificationUser', () => {
       const notificationUser: NotificationUser = {
         b: [],
+        x: [],
         bc: [],
         uid,
         dc: { c: {} },

@@ -76,15 +76,12 @@ import {
   NotificationTaskServiceTaskHandlerCompletionType,
   SendNotificationResultOnSendCompleteResult,
   NotificationMessageFunctionExtrasCallbackDetails,
-  NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
   updateNotificationUserNotificationSendExclusions,
-  notificationSendExclusionCanSendFunction,
-  setIdAndKeyFromSnapshotOnDocumentData,
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
   applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
 } from '@dereekb/firebase';
-import { assertSnapshotData, badRequestError, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
+import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
@@ -608,7 +605,7 @@ export function updateNotificationBoxRecipientExclusionInTransactionFactory(cont
       throw new Error('setExclusion was undefined. Maybe you wanted to call updateNotificationBoxRecipientInTransactionFactory() instead?');
     } else if (!inputUid && i != null) {
       // only load the notification box if targeting a recipient by index
-      let notificationBox = await notificationBoxDocument.snapshotData();
+      const notificationBox = await notificationBoxDocument.snapshotData();
 
       if (!notificationBox) {
         throw notificationBoxExclusionTargetInvalidError();
@@ -628,7 +625,7 @@ export function updateNotificationBoxRecipientExclusionInTransactionFactory(cont
     }
 
     const notificationUserDocument = await notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(targetUid);
-    let notificationUser = await notificationUserDocument.snapshotData();
+    const notificationUser = await notificationUserDocument.snapshotData();
 
     if (notificationUser) {
       // only update if the user exists
