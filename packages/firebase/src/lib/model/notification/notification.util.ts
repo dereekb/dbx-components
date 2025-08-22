@@ -1,9 +1,9 @@
-import { filterKeysOnPOJOFunction, type Maybe } from '@dereekb/util';
-import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState } from './notification';
+import { ArrayOrValue, asArray, Configurable, filterKeysOnPOJOFunction, reduceBooleansWithAnd, type Maybe } from '@dereekb/util';
+import { type Notification, type NotificationBox, type NotificationBoxDocument, NotificationRecipientSendFlag, type NotificationSendFlags, NotificationSendState, NotificationUser } from './notification';
 import { type NotificationUserNotificationBoxRecipientConfig, type NotificationBoxRecipient, NotificationBoxRecipientFlag, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationBoxRecipientTemplateConfigRecord } from './notification.config';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
 import { type FirebaseAuthUserId, type FirestoreDocumentAccessor, type FirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey } from '../../common';
-import { notificationBoxIdForModel } from './notification.id';
+import { NotificationBoxId, notificationBoxIdForModel, NotificationId, NotificationBoxSendExclusionList, NotificationBoxSendExclusion } from './notification.id';
 
 // MARK: NotificationUser
 export interface EffectiveNotificationBoxRecipientConfigInput {
@@ -42,11 +42,127 @@ export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotifica
     t: gc.t ?? notificationUserNotificationBoxConfig.t,
     // no custom name or notification summary allowed
     n: undefined,
-    s: undefined // should never be defined since uid is defined
+    s: undefined, // should never be defined since uid is defined
+    // always resync x
+    x: notificationUserNotificationBoxConfig.x
   };
 
   return nextRecipient;
 }
+
+export interface UpdateNotificationUserNotificationSendExclusionsInput {
+  readonly notificationUser: Pick<NotificationUser, 'b' | 'x' | 'bc'>;
+  readonly addExclusions?: ArrayOrValue<NotificationBoxSendExclusion>;
+  readonly removeExclusions?: ArrayOrValue<NotificationBoxSendExclusion>;
+}
+
+export interface UpdateNotificationUserNotificationSendExclusionsResult {
+  readonly nextExclusions: NotificationBoxSendExclusionList;
+  readonly update: Pick<NotificationUser, 'x' | 'ns' | 'bc'>;
+}
+
+export function updateNotificationUserNotificationSendExclusions(input: UpdateNotificationUserNotificationSendExclusionsInput): UpdateNotificationUserNotificationSendExclusionsResult {
+  const { notificationUser, addExclusions: inputAddExclusions, removeExclusions: inputRemoveExclusions } = input;
+  const { b: associatedNotificationBoxes, x: currentExclusions, bc: notificationBoxConfigs } = notificationUser;
+
+  let addExclusions: NotificationBoxSendExclusionList = [];
+  let removeExclusions: NotificationBoxSendExclusionList = [];
+
+  if (inputAddExclusions) {
+    addExclusions = asArray(inputAddExclusions);
+  }
+
+  if (inputRemoveExclusions) {
+    removeExclusions = asArray(inputRemoveExclusions);
+  }
+
+  const removeExclusionsSet = new Set(removeExclusions);
+  const initialNextExclusions = [...addExclusions, ...currentExclusions].filter((x) => !removeExclusionsSet.has(x));
+
+  // verify each exclusion is related to atleast one notification box
+  const nextExclusions = initialNextExclusions.filter((exclusion) => {
+    const firstMatch = associatedNotificationBoxes.findIndex((x) => x.startsWith(exclusion));
+    return firstMatch !== -1;
+  });
+
+  const update = applyExclusionsToNotificationUserNotificationBoxRecipientConfigs({
+    x: nextExclusions,
+    bc: notificationBoxConfigs,
+    notificationUser,
+    recalculateNs: true
+  }) as Configurable<Pick<NotificationUser, 'x' | 'bc' | 'ns'>>;
+
+  update.x = nextExclusions;
+
+  return {
+    nextExclusions,
+    update
+  };
+}
+
+export interface ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsParams {
+  readonly x?: NotificationBoxSendExclusionList;
+  readonly bc?: Maybe<NotificationUserNotificationBoxRecipientConfig[]>;
+  readonly notificationUser?: Pick<NotificationUser, 'bc' | 'x'>;
+  readonly recalculateNs?: boolean;
+}
+
+export type ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResult = Pick<NotificationUser, 'bc' | 'ns'>;
+
+export function applyExclusionsToNotificationUserNotificationBoxRecipientConfigs(params: ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsParams): ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResult {
+  const { x: inputX, bc: inputBc, notificationUser, recalculateNs } = params;
+
+  const x = inputX ?? notificationUser?.x ?? [];
+  const currentBc = inputBc ?? notificationUser?.bc ?? [];
+
+  // test the new configs and update the exclusion and ns flags
+  const canSendToNotificationBoxFunction = notificationSendExclusionCanSendFunction(x);
+
+  const nextBc = currentBc.map((x) => {
+    const currentNotificationBoxExcluded = Boolean(x.x);
+    const isExcluded = !canSendToNotificationBoxFunction(x.nb); // excluded if cannot send
+
+    let updatedConfig: NotificationUserNotificationBoxRecipientConfig = x;
+
+    if (currentNotificationBoxExcluded !== isExcluded) {
+      updatedConfig = {
+        ...x,
+        x: isExcluded,
+        ns: true
+      };
+    }
+
+    return updatedConfig;
+  });
+
+  const update: ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResult = {
+    bc: nextBc,
+    ns: recalculateNs ? calculateNsForNotificationUserNotificationBoxRecipientConfigs(nextBc) : undefined
+  };
+
+  return update;
+}
+
+export function calculateNsForNotificationUserNotificationBoxRecipientConfigs(configs: NotificationUserNotificationBoxRecipientConfig[]): boolean {
+  return configs.some((x) => x.ns);
+}
+
+/**
+ * Function that returns true if the notification is not excluded from being sent.
+ */
+export type NotificationSendExclusionCanSendFunction = ((notification: NotificationId | NotificationBoxId) => boolean) & {
+  readonly _exclusions: NotificationBoxSendExclusionList;
+};
+
+export const notificationSendExclusionCanSendFunction = (exclusions: NotificationBoxSendExclusionList): NotificationSendExclusionCanSendFunction => {
+  const fn = (notification: NotificationId | NotificationBoxId) => {
+    return exclusions.findIndex((x) => notification.startsWith(x)) === -1;
+  };
+
+  fn._exclusions = exclusions;
+
+  return fn;
+};
 
 // MARK: Notification
 /**
@@ -146,7 +262,7 @@ export function mergeNotificationUserNotificationBoxRecipientConfigs(a: Notifica
   return {
     ...mergeNotificationBoxRecipients(a, b),
     // retain the following states always
-    f: a.f === NotificationBoxRecipientFlag.OPT_OUT ? a.f : b.f ?? a.f, // do not override if marked OPT OUT
+    f: a.f === NotificationBoxRecipientFlag.OPT_OUT ? a.f : (b.f ?? a.f), // do not override if marked OPT OUT
     nb: a.nb,
     rm: a.rm,
     ns: a.ns,

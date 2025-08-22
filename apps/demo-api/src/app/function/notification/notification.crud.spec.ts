@@ -1,6 +1,6 @@
 import { demoCallModel } from './../model/crud.functions';
 import { addMinutes, isFuture } from 'date-fns';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import {
@@ -33,7 +33,7 @@ import {
   NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
-import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate } from 'demo-firebase';
+import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate, profileIdentity } from 'demo-firebase';
 import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
@@ -1165,6 +1165,143 @@ demoApiFunctionContextFactory((f) => {
                               await nb.updateRecipient({
                                 uid: u2.uid,
                                 insert: true
+                              });
+                            });
+
+                            describe('exclusion list', () => {
+                              demoNotificationUserContext({ f, u: u2, init: true }, (nu) => {
+                                it('should add the user to the exclusion list', async () => {
+                                  let notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.x).toHaveLength(0);
+                                  expect(notificationUser.bc).toHaveLength(1);
+
+                                  await nb.updateRecipient({
+                                    uid: u2.uid,
+                                    setExclusion: true
+                                  });
+
+                                  notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.x).toHaveLength(1);
+                                  expect(notificationUser.bc).toHaveLength(1);
+                                  expect(notificationUser.bc[0].x).toBe(true);
+                                  expect(notificationUser.bc[0].ns).toBe(true);
+
+                                  let notificationBox = await assertSnapshotData(nb.document);
+                                  expect(notificationBox.r).toHaveLength(1);
+                                  expect(notificationBox.r[0].x).toBeUndefined();
+
+                                  await nu.resyncNotificationUser();
+
+                                  notificationUser = await assertSnapshotData(nu.document);
+                                  expect(notificationUser.x).toHaveLength(1);
+                                  expect(notificationUser.bc).toHaveLength(1);
+                                  expect(notificationUser.bc[0].x).toBe(true);
+                                  expect(notificationUser.bc[0].ns).toBeUndefined();
+
+                                  notificationBox = await assertSnapshotData(nb.document);
+                                  expect(notificationBox.r).toHaveLength(1);
+                                  expect(notificationBox.r[0].x).toBe(true);
+                                });
+
+                                describe('on exclusion list', () => {
+                                  beforeEach(async () => {
+                                    await nb.updateRecipient({
+                                      uid: u2.uid,
+                                      setExclusion: true
+                                    });
+                                  });
+
+                                  describe('synced', () => {
+                                    beforeEach(async () => {
+                                      await nu.resyncNotificationUser();
+                                    });
+
+                                    it('should remove the exclusion from the NotificationUser', async () => {
+                                      let notificationUser = await assertSnapshotData(nu.document);
+                                      expect(notificationUser.x).toHaveLength(1);
+                                      expect(notificationUser.bc).toHaveLength(1);
+                                      expect(notificationUser.bc[0].x).toBe(true);
+                                      expect(notificationUser.bc[0].ns).toBeUndefined();
+
+                                      let notificationBox = await assertSnapshotData(nb.document);
+                                      expect(notificationBox.r).toHaveLength(1);
+                                      expect(notificationBox.r[0].x).toBe(true);
+
+                                      await nb.updateRecipient({
+                                        uid: u2.uid,
+                                        setExclusion: false
+                                      });
+
+                                      notificationUser = await assertSnapshotData(nu.document);
+                                      expect(notificationUser.x).toHaveLength(0);
+                                      expect(notificationUser.bc).toHaveLength(1);
+                                      expect(notificationUser.bc[0].x).toBeUndefined();
+                                      expect(notificationUser.bc[0].ns).toBe(true); // needs to be sync'd
+
+                                      notificationBox = await assertSnapshotData(nb.document);
+                                      expect(notificationBox.r).toHaveLength(1);
+                                      expect(notificationBox.r[0].x).toBe(true);
+
+                                      await nu.resyncNotificationUser();
+
+                                      notificationUser = await assertSnapshotData(nu.document);
+                                      expect(notificationUser.x).toHaveLength(0);
+                                      expect(notificationUser.bc).toHaveLength(1);
+                                      expect(notificationUser.bc[0].x).toBeUndefined();
+                                      expect(notificationUser.bc[0].ns).toBeUndefined();
+
+                                      notificationBox = await assertSnapshotData(nb.document);
+                                      expect(notificationBox.r).toHaveLength(1);
+                                      expect(notificationBox.r[0].x).toBeUndefined();
+                                    });
+                                  });
+                                });
+
+                                describe('adding new notification boxes that are excluded', () => {
+                                  demoAuthorizedUserAdminContext({ f }, (u3) => {
+                                    demoProfileContext({ f, u: u3 }, (p3) => {
+                                      demoNotificationBoxContext(
+                                        {
+                                          f,
+                                          for: p3, // NotificationBox is for the profile
+                                          createIfNeeded: true
+                                        },
+                                        (nb2) => {
+                                          beforeEach(async () => {
+                                            // For this test, we ignore all pr values. This x value is used properly when updating the NotificationUser via the associations.
+                                            await nu.document.update({
+                                              x: [`${profileIdentity.collectionName}`]
+                                            });
+                                          });
+
+                                          it('should mark the configs for newly added notification boxes that are excluded as excluded', async () => {
+                                            let notificationUser = await assertSnapshotData(nu.document);
+                                            expect(notificationUser.x).toHaveLength(1);
+                                            expect(notificationUser.bc).toHaveLength(1);
+                                            expect(notificationUser.bc[0].x).toBeUndefined(); // is undefined since we did not update properly here.
+                                            expect(notificationUser.bc[0].ns).toBeUndefined();
+
+                                            // add the first user as a recipient of the new notification box
+                                            await nb2.updateRecipient({
+                                              uid: u2.uid,
+                                              insert: true
+                                            });
+
+                                            notificationUser = await assertSnapshotData(nu.document);
+
+                                            expect(notificationUser.x).toHaveLength(1);
+                                            expect(notificationUser.b).toHaveLength(2);
+                                            expect(notificationUser.bc).toHaveLength(2);
+                                            expect(notificationUser.bc[0].x).toBe(true); // should be fixed now
+                                            expect(notificationUser.bc[0].ns).toBe(true); // needs sync since the inconsistent state from our edit was repaired
+                                            expect(notificationUser.bc[1].x).toBe(true);
+                                            expect(notificationUser.bc[1].ns).toBe(true); // since the exclusion was applied ns is set true anways
+                                          });
+                                        }
+                                      );
+                                    });
+                                  });
+                                });
                               });
                             });
 

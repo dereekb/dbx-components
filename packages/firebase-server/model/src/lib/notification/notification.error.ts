@@ -8,7 +8,8 @@ import {
   type FirebaseAuthUserId,
   NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE,
   NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE,
-  NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
+  NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE,
+  NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE
 } from '@dereekb/firebase';
 import { preconditionConflictError } from '@dereekb/firebase-server';
 
@@ -40,6 +41,13 @@ export function notificationBoxDoesNotExist() {
   return preconditionConflictError({
     message: `A NotificationBox does not exist for this model.`,
     code: NOTIFICATION_BOX_DOES_NOT_EXIST_ERROR_CODE
+  });
+}
+
+export function notificationBoxExclusionTargetInvalidError() {
+  return preconditionConflictError({
+    message: `The target for exclusion is invalid. The target recipient on the NotificationBox must be exist on the NotificationBox and have a uid to be excluded.`,
+    code: NOTIFICATION_BOX_EXCLUSION_TARGET_INVALID_ERROR_CODE
   });
 }
 

@@ -386,6 +386,19 @@ export class UpdateNotificationBoxRecipientParams extends UpdateNotificationBoxR
   @IsOptional()
   @IsBoolean()
   remove?: Maybe<boolean>;
+
+  /**
+   * If true, the target recipient will have this NotificationBox added to their exclusion list.
+   * If false, the target recipient will have this NotificationBox removed from their exclusion list.
+   *
+   * If set, the other functions are ignored.
+   *
+   * If targeting the user by the index, the NotificationBox must exist, and the user must have a uid, otherwise an error will be thrown.
+   */
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  setExclusion?: Maybe<boolean>;
 }
 
 export class NotificationRecipientParams {
