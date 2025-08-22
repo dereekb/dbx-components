@@ -1,6 +1,8 @@
 import { type FirestoreQueryConstraint, where } from '../../common/firestore';
 import { type NotificationSummary, type Notification, type NotificationBox, type NotificationUser } from './notification';
 import { toISODateString } from '@dereekb/date';
+import { NotificationBoxSendExclusion } from './notification.id';
+import { type ArrayOrValue } from '@dereekb/util';
 
 // MARK: NotificationUser
 /**
@@ -11,6 +13,16 @@ import { toISODateString } from '@dereekb/date';
  */
 export function notificationUsersFlaggedForNeedsSyncQuery(): FirestoreQueryConstraint[] {
   return [where<NotificationUser>('ns', '==', true)];
+}
+
+/**
+ * Query for notificationUsers that have excluded any of the input notification box ids.
+ *
+ * @param now
+ * @returns
+ */
+export function notificationUserHasExclusionQuery(exclusionId: ArrayOrValue<NotificationBoxSendExclusion>): FirestoreQueryConstraint[] {
+  return [where<NotificationUser>('x', 'array-contains-any', exclusionId)];
 }
 
 // MARK: NotificationSummary

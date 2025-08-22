@@ -1,4 +1,4 @@
-import { type Building, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { PromiseOrValue, type Building, type Maybe, type WebsiteUrl } from '@dereekb/util';
 import { type NotificationRecipient, type NotificationRecipientWithConfig } from './notification.config';
 import { NotificationSendFlags, type Notification, type NotificationBox } from './notification';
 import { type NotificationItem, type NotificationItemMetadata } from './notification.item';
@@ -148,7 +148,7 @@ export interface NotificationMessageFunctionExtrasCallbackDetails {
   readonly sendNotificationSummaryResult?: Maybe<NotificationSendNotificationSummaryMessagesResult>;
 }
 
-export type NotificationMessageFunctionExtrasCallbackFunction = (callbackDetails: NotificationMessageFunctionExtrasCallbackDetails) => Promise<unknown>;
+export type NotificationMessageFunctionExtrasCallbackFunction = (callbackDetails: NotificationMessageFunctionExtrasCallbackDetails) => PromiseOrValue<unknown>;
 
 export interface NotificationMessageFunctionExtras {
   /**

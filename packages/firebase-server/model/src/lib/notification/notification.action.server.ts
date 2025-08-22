@@ -75,15 +75,19 @@ import {
   NotificationTask,
   NotificationTaskServiceTaskHandlerCompletionType,
   SendNotificationResultOnSendCompleteResult,
-  NotificationMessageFunctionExtrasCallbackDetails
+  NotificationMessageFunctionExtrasCallbackDetails,
+  updateNotificationUserNotificationSendExclusions,
+  setIdAndKeyFromKeyIdRefOnDocumentData,
+  calculateNsForNotificationUserNotificationBoxRecipientConfigs,
+  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, hoursToMilliseconds, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
-import { notificationBoxDoesNotExist, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
+import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
@@ -154,6 +158,7 @@ export function createNotificationUserFactory(context: NotificationServerActions
 
       const newUserTemplate: NotificationUser = {
         uid,
+        x: [],
         bc: [],
         b: [],
         dc: {
@@ -226,14 +231,21 @@ export function updateNotificationUserFactory(context: NotificationServerActions
           const updateTemplateBc = updateNotificationUserNotificationBoxRecipientConfigs(updateTemplate.bc ?? notificationUser.bc, inputBc, appNotificationTemplateTypeInfoRecordService);
 
           if (updateTemplateBc != null) {
-            updateTemplate.bc = updateTemplateBc;
+            // re-apply exclusions to the updated configs
+            const withExclusions = applyExclusionsToNotificationUserNotificationBoxRecipientConfigs({
+              notificationUser,
+              bc: updateTemplateBc,
+              recalculateNs: false
+            });
+
+            updateTemplate.bc = withExclusions.bc;
             updateTemplate.b = updateTemplateBc.map((x) => x.nb);
           }
         }
 
         // if bc is being updated, then also update ns
         if (updateTemplate.bc != null) {
-          updateTemplate.ns = updateTemplate.bc.some((x) => x.ns);
+          updateTemplate.ns = calculateNsForNotificationUserNotificationBoxRecipientConfigs(updateTemplate.bc);
         }
 
         await notificationUserDocumentInTransaction.update(updateTemplate);
@@ -569,6 +581,73 @@ export function updateNotificationBoxFactory({ firebaseServerActionTransformFunc
   });
 }
 
+export interface UpdateNotificationBoxRecipientExclusionInTransactionInput extends NotificationBoxDocumentReferencePair {
+  readonly params: UpdateNotificationBoxRecipientParams;
+}
+
+export interface UpdateNotificationBoxRecipientExclusionInTransactionResult {
+  readonly notificationUserUpdate: Partial<NotificationUser>;
+}
+
+export function updateNotificationBoxRecipientExclusionInTransactionFactory(context: BaseNotificationServerActionsContext) {
+  const { notificationBoxCollection, notificationUserCollection } = context;
+
+  return async (input: UpdateNotificationBoxRecipientExclusionInTransactionInput, transaction: Transaction): Promise<Maybe<UpdateNotificationBoxRecipientExclusionInTransactionResult>> => {
+    const { params } = input;
+    const { uid: inputUid, i, setExclusion } = params;
+
+    const notificationBoxDocument: NotificationBoxDocument = loadNotificationBoxDocumentForReferencePair(input, notificationBoxCollection.documentAccessorForTransaction(transaction));
+
+    let targetUid = inputUid;
+    let result: Maybe<UpdateNotificationBoxRecipientExclusionInTransactionResult> = undefined;
+
+    if (setExclusion == null) {
+      throw new Error('setExclusion was undefined. Maybe you wanted to call updateNotificationBoxRecipientInTransactionFactory() instead?');
+    } else if (!inputUid && i != null) {
+      // only load the notification box if targeting a recipient by index
+      const notificationBox = await notificationBoxDocument.snapshotData();
+
+      if (!notificationBox) {
+        throw notificationBoxExclusionTargetInvalidError();
+      }
+
+      const targetRecipient = notificationBox.r.find((x) => x.i === i);
+
+      if (!targetRecipient || !targetRecipient.uid) {
+        throw notificationBoxExclusionTargetInvalidError();
+      } else {
+        targetUid = targetRecipient.uid;
+      }
+    }
+
+    if (!targetUid) {
+      throw notificationBoxExclusionTargetInvalidError();
+    }
+
+    const notificationUserDocument = await notificationUserCollection.documentAccessorForTransaction(transaction).loadDocumentForId(targetUid);
+    const notificationUser = await notificationUserDocument.snapshotData();
+
+    if (notificationUser) {
+      // only update if the user exists
+      const targetExclusions = [notificationBoxDocument.id];
+
+      const { update: notificationUserUpdate } = updateNotificationUserNotificationSendExclusions({
+        notificationUser,
+        addExclusions: setExclusion ? targetExclusions : undefined,
+        removeExclusions: setExclusion ? undefined : targetExclusions
+      });
+
+      await notificationUserDocument.update(notificationUserUpdate);
+
+      result = {
+        notificationUserUpdate
+      };
+    }
+
+    return result;
+  };
+}
+
 export interface UpdateNotificationBoxRecipientInTransactionInput extends NotificationBoxDocumentReferencePair {
   /**
    * Parameters to update the notification box recipient with.
@@ -599,8 +678,12 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
   return async (input: UpdateNotificationBoxRecipientInTransactionInput, transaction: Transaction): Promise<Maybe<UpdateNotificationBoxRecipientInTransactionResult>> => {
     const { params, allowCreateNotificationBoxIfItDoesNotExist, throwErrorIfNotificationBoxDoesNotExist } = input;
 
-    const { uid, i, insert, remove, configs: inputC } = params;
-    const findRecipientFn = (x: NotificationBoxRecipient) => (uid != null && x.uid === uid) || (i != null && i === i);
+    const { uid, i, insert, remove, configs: inputC, setExclusion } = params;
+    const findRecipientFn = (x: NotificationBoxRecipient) => (uid != null && x.uid === uid) || (i != null && x.i === i);
+
+    if (setExclusion != null) {
+      throw new Error('exclusion update must be processed by updateNotificationBoxRecipientExclusionInTransactionFactory() function.');
+    }
 
     const notificationBoxDocument: NotificationBoxDocument = loadNotificationBoxDocumentForReferencePair(input, notificationBoxCollection.documentAccessorForTransaction(transaction));
 
@@ -693,6 +776,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
             const notificationUserTemplate: NotificationUser = {
               uid: notificationUserId,
               b: [],
+              x: [],
               bc: [],
               ns: false,
               dc: {
@@ -767,18 +851,29 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
 export function updateNotificationBoxRecipientFactory(context: NotificationServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
   const updateNotificationBoxRecipientInTransaction = updateNotificationBoxRecipientInTransactionFactory(context);
+  const updateNotificationBoxRecipientExclusionInTransaction = updateNotificationBoxRecipientExclusionInTransactionFactory(context);
 
   return firebaseServerActionTransformFunctionFactory(UpdateNotificationBoxRecipientParams, async (params) => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       await firestoreContext.runTransaction(async (transaction) => {
-        await updateNotificationBoxRecipientInTransaction(
-          {
-            params,
-            throwErrorIfNotificationBoxDoesNotExist: true,
-            notificationBoxDocument
-          },
-          transaction
-        );
+        if (params.setExclusion != null) {
+          await updateNotificationBoxRecipientExclusionInTransaction(
+            {
+              params,
+              notificationBoxDocument
+            },
+            transaction
+          );
+        } else {
+          await updateNotificationBoxRecipientInTransaction(
+            {
+              params,
+              throwErrorIfNotificationBoxDoesNotExist: true,
+              notificationBoxDocument
+            },
+            transaction
+          );
+        }
       });
 
       return notificationBoxDocument;
@@ -797,6 +892,7 @@ export const KNOWN_BUT_UNCONFIGURED_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETR
 export const NOTIFICATION_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_BOX_NOT_INITIALIZED_DELAY_MINUTES = 8;
 
+export const NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS = 5;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS = 3;
 export const NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS = hoursToMilliseconds(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_HOURS);
 
@@ -813,7 +909,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
 
-        let [notificationBox, notification] = await Promise.all([notificationBoxDocument.snapshotData(), getDocumentSnapshotData(notificationDocumentInTransaction)]);
+        let [notificationBox, notification] = await Promise.all([getDocumentSnapshotData(notificationBoxDocument), getDocumentSnapshotData(notificationDocumentInTransaction)]);
 
         const model = inferKeyFromTwoWayFlatFirestoreModelKey(notificationBoxDocument.id);
         const isNotificationTask = notification?.st === NotificationSendType.TASK_NOTIFICATION;
@@ -860,7 +956,14 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           if (isNotificationTask) {
             notificationTaskHandler = notificationTaskService.taskHandlerForNotificationTaskType(t);
 
-            if (!notificationTaskHandler) {
+            if (notificationTaskHandler) {
+              if (notification.a >= NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS) {
+                tryRun = false;
+
+                console.warn(`Configured notification task of type "${t}" has reached the delete threshhold after being attempted ${notification.a} times. Deleting notification task.`);
+                await deleteNotification();
+              }
+            } else {
               tryRun = false;
               const delay = UNKNOWN_NOTIFICATION_TASK_TYPE_HOURS_DELAY;
 
@@ -912,7 +1015,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               switch (notification.st) {
                 case NotificationSendType.INIT_BOX_AND_SEND:
                   const { notificationBoxTemplate } = await createNotificationBoxInTransaction({ notificationBoxDocument }, transaction);
-                  notificationBox = notificationBoxTemplate;
+                  notificationBox = setIdAndKeyFromKeyIdRefOnDocumentData(notificationBoxTemplate, notificationBoxDocument);
                   createdBox = true;
                   break;
                 case NotificationSendType.SEND_IF_BOX_EXISTS:
@@ -1302,10 +1405,11 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 sendNotificationSummaryResult
               };
 
+              const { onSendAttempted, onSendSuccess } = messageFunction;
+
               // call onSendAttempted, if one is configured
-              if (messageFunction?.onSendAttempted) {
-                onSendAttemptedResult = await messageFunction
-                  .onSendAttempted(callbackDetails)
+              if (onSendAttempted) {
+                onSendAttemptedResult = await asPromise(onSendAttempted(callbackDetails))
                   .then((value) => {
                     return { value };
                   })
@@ -1316,9 +1420,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               }
 
               // call onSendSuccess, if one is configured
-              if (notificationMarkedDone && messageFunction?.onSendSuccess) {
-                onSendSuccessResult = await messageFunction
-                  .onSendSuccess(callbackDetails)
+              if (notificationMarkedDone && onSendSuccess) {
+                onSendSuccessResult = await asPromise(onSendSuccess(callbackDetails))
                   .then((value) => {
                     return { value };
                   })

@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/zoom",
-  "version": "12.3.12",
+  "version": "12.3.13",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

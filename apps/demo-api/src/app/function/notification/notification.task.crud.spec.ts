@@ -5,7 +5,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { NotificationDocument, NotificationSendState, NotificationSendType, createNotificationDocument, CreateNotificationTemplate, delayCompletion } from '@dereekb/firebase';
 import { EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, exampleNotificationTaskTemplate, exampleNotificationTaskWithNoModelTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
-import { UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
+import { NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS, UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
@@ -84,7 +84,7 @@ demoApiFunctionContextFactory((f) => {
                           await nbn.document.update({ a: UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS });
                         });
 
-                        it('should have tried but and deleted the queued notification task', async () => {
+                        it('should have tried and deleted the queued notification task', async () => {
                           const result = await nbn.sendAllQueuedNotifications();
                           expect(result.notificationTasksVisited).toBe(1);
                           expect(result.notificationsVisited).toBe(1);
@@ -168,6 +168,24 @@ demoApiFunctionContextFactory((f) => {
                               const notification = await assertSnapshotData(nbn.document);
                               expect(notification.sat).toBeSameSecondAs(failureDelayUntil);
                               expect(notification.a).toBe(1); // send attempt count increases by one
+                            });
+
+                            describe('attempt count is at maximum tries', () => {
+                              beforeEach(async () => {
+                                await nbn.document.update({ a: NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS });
+                              });
+
+                              it('should have deleted the queued notification task', async () => {
+                                const result = await nbn.sendNotification();
+
+                                expect(result.tryRun).toBe(false);
+                                expect(result.success).toBe(false);
+                                expect(result.deletedNotification).toBe(true);
+                                expect(result.notificationTaskCompletionType).toBeUndefined();
+
+                                const notificationExists = await nbn.document.exists();
+                                expect(notificationExists).toBe(false);
+                              });
                             });
                           });
 

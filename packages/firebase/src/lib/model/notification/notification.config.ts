@@ -43,8 +43,8 @@ export function mergeNotificationBoxRecipientTemplateConfigs(a?: Maybe<Notificat
   };
 }
 
-export function effectiveNotificationBoxRecipientTemplateConfig(x: NotificationBoxRecipientTemplateConfig): NotificationBoxRecipientTemplateConfig {
-  const { sd, se, st, sp, sn } = x;
+export function effectiveNotificationBoxRecipientTemplateConfig(a: NotificationBoxRecipientTemplateConfig): NotificationBoxRecipientTemplateConfig {
+  const { sd, se, st, sp, sn } = a;
 
   return {
     sd,
@@ -142,6 +142,12 @@ export enum NotificationBoxRecipientFlag {
  */
 export interface NotificationBoxRecipient extends NotificationRecipient, IndexRef {
   /**
+   * Whether or not this recipient has been marked as excluded.
+   *
+   * This can only be updated by removing the exclusion from the.
+   */
+  x?: Maybe<SavedToFirestoreIfTrue>;
+  /**
    * Enabled config types
    */
   c: NotificationBoxRecipientTemplateConfigRecord;
@@ -170,7 +176,7 @@ export function newNotificationBoxRecipientForUid(uid: FirebaseAuthUserId, i: nu
 /**
  * Default NotificationUserNotificationBoxRecipientConfig.
  */
-export interface NotificationUserDefaultNotificationBoxRecipientConfig extends Omit<NotificationBoxRecipient, 'i' | 'n' | 's' | 'uid'> {
+export interface NotificationUserDefaultNotificationBoxRecipientConfig extends Omit<NotificationBoxRecipient, 'i' | 'n' | 's' | 'uid' | 'x'> {
   /**
    * Locked state.
    *
@@ -353,7 +359,8 @@ export const firestoreNotificationBoxRecipient = firestoreSubObject<Notification
       s: optionalFirestoreString(),
       f: optionalFirestoreEnum({ dontStoreIf: NotificationBoxRecipientFlag.ENABLED }),
       c: firestoreNotificationBoxRecipientTemplateConfigRecord(),
-      lk: optionalFirestoreBoolean({ dontStoreValueIf: false })
+      lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
+      x: optionalFirestoreBoolean({ dontStoreValueIf: false })
     }
   }
 });
@@ -380,6 +387,7 @@ export const firestoreNotificationUserNotificationBoxRecipientConfig = firestore
       lk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       bk: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       i: firestoreNumber({ default: UNSET_INDEX_NUMBER }),
+      x: optionalFirestoreBoolean({ dontStoreValueIf: false }),
       n: optionalFirestoreString(),
       t: optionalFirestoreString(),
       e: optionalFirestoreString(),

@@ -1,10 +1,10 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext, demoGuestbookEntryContext, demoNotificationBoxContext, demoNotificationContext, demoNotificationSummaryContext, demoNotificationUserContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { Notification, NotificationBox, NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigArrayEntryParam, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, firestoreDummyKey, firestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
+import { DocumentDataWithIdAndKey, Notification, NotificationBox, NotificationBoxRecipient, NotificationBoxRecipientFlag, NotificationBoxRecipientTemplateConfigArrayEntryParam, NotificationRecipientSendFlag, NotificationSendState, NotificationSendType, UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, firestoreDummyKey, firestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { DEMO_API_NOTIFICATION_SUMMARY_ID_FOR_UID, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, profileIdentity } from 'demo-firebase';
 import { expandNotificationRecipients } from '@dereekb/firebase-server/model';
-import { assertSnapshotData } from '@dereekb/firebase-server';
+import { assertSnapshotData, assertSnapshotDataWithKey } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('notification.util', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -67,9 +67,11 @@ demoApiFunctionContextFactory((f) => {
                   }
                 ];
 
-                const notificationBox: NotificationBox = {
+                const notificationBox: DocumentDataWithIdAndKey<NotificationBox> = {
                   ...baseNotificationBox,
-                  r
+                  r,
+                  id: firestoreDummyKey(),
+                  key: firestoreDummyKey()
                 };
 
                 const result = await expandNotificationRecipients({
@@ -106,9 +108,11 @@ demoApiFunctionContextFactory((f) => {
                   }
                 ];
 
-                const notificationBox: NotificationBox = {
+                const notificationBox: DocumentDataWithIdAndKey<NotificationBox> = {
                   ...baseNotificationBox,
-                  r
+                  r,
+                  id: firestoreDummyKey(),
+                  key: firestoreDummyKey()
                 };
 
                 const result = await expandNotificationRecipients({
@@ -227,6 +231,8 @@ demoApiFunctionContextFactory((f) => {
                                       readonly checkGlobalConfig?: boolean;
                                       readonly checkDefaultConfig?: boolean;
                                       readonly checkOptOutFromFlag?: boolean;
+                                      readonly checkSendExclusionFlag?: boolean;
+                                      readonly isAssociatedWithNotificationBox?: boolean;
                                     }
 
                                     function describeNotificationShouldBeSentToUser(expectation: LikeNotificationShouldBeSentExpectation) {
@@ -238,8 +244,14 @@ demoApiFunctionContextFactory((f) => {
                                         expect(notification.ps).toBe(NotificationSendState.QUEUED);
                                         expect(notification.ns).toBe(NotificationSendState.QUEUED);
 
-                                        expect(notificationBox.r).toHaveLength(0); // no recipients in the box
-                                        expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
+                                        if (!expectation.isAssociatedWithNotificationBox) {
+                                          expect(notificationBox.r).toHaveLength(0); // no recipients in the box
+                                          expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
+                                        } else {
+                                          expect(notificationBox.r).toHaveLength(1); // should have the recipient in the box
+                                          expect(notification.r).toHaveLength(1); // the person who created the guestbook entry
+                                        }
+
                                         expect(notification.r[0].uid).toBe(u.uid);
                                         expect(notification.r[0].s).toBeUndefined();
 
@@ -276,10 +288,16 @@ demoApiFunctionContextFactory((f) => {
 
                                       describe('expandNotificationRecipients()', () => {
                                         it('should expand the user recipient', async () => {
-                                          const [notificationBox, notification] = await Promise.all([assertSnapshotData(nb.document), assertSnapshotData(nbn.document)]);
+                                          const [notificationBox, notification] = await Promise.all([assertSnapshotDataWithKey(nb.document), assertSnapshotData(nbn.document)]);
 
-                                          expect(notificationBox.r).toHaveLength(0); // no recipients in the box
-                                          expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
+                                          if (!expectation.isAssociatedWithNotificationBox) {
+                                            expect(notificationBox.r).toHaveLength(0); // no recipients in the box
+                                            expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
+                                          } else {
+                                            expect(notificationBox.r).toHaveLength(1); // should have the recipient in the box
+                                            expect(notification.r).toHaveLength(1); // the person who created the guestbook entry
+                                          }
+
                                           expect(notification.r[0].uid).toBe(u.uid);
 
                                           const result = await expandNotificationRecipients({
@@ -294,7 +312,12 @@ demoApiFunctionContextFactory((f) => {
 
                                           expect(result._internal.globalRecipients).toHaveLength(0);
                                           expect(result._internal.explicitRecipients).toHaveLength(1);
-                                          expect(result._internal.allBoxRecipientConfigs).toHaveLength(0);
+
+                                          if (!expectation.isAssociatedWithNotificationBox) {
+                                            expect(result._internal.allBoxRecipientConfigs).toHaveLength(0);
+                                          } else {
+                                            expect(result._internal.allBoxRecipientConfigs).toHaveLength(1);
+                                          }
 
                                           const explicitRecipient = result._internal.explicitRecipients[0];
                                           expect(explicitRecipient.uid).toBeDefined();
@@ -302,23 +325,32 @@ demoApiFunctionContextFactory((f) => {
                                           expect(explicitRecipient.s).toBeUndefined();
                                           expect(explicitRecipient.e).toBeUndefined();
 
-                                          expect(Array.from(result._internal.nonNotificationBoxUidRecipientConfigs.keys())).toHaveLength(1);
-                                          expect(Array.from(result._internal.notificationUserRecipientConfigs.entries())).toHaveLength(1);
+                                          if (!expectation.isAssociatedWithNotificationBox) {
+                                            expect(Array.from(result._internal.nonNotificationBoxUidRecipientConfigs.keys())).toHaveLength(1);
+                                            expect(Array.from(result._internal.notificationUserRecipientConfigs.entries())).toHaveLength(1);
+                                          }
 
                                           const notificationUser = await nu.document.snapshotData();
                                           expect(notificationUser).toBeDefined();
 
                                           const userNotificationUserRecipientConfig = result._internal.notificationUserRecipientConfigs.get(u.uid);
-                                          expect(userNotificationUserRecipientConfig).toBeDefined();
+
+                                          if (!expectation.isAssociatedWithNotificationBox) {
+                                            expect(userNotificationUserRecipientConfig).toBeDefined();
+                                          }
 
                                           if (expectation.checkOptOutFromFlag) {
                                             expect(result._internal.otherNotificationUserUidOptOuts).toContain(u.uid);
+                                          } else if (expectation.checkSendExclusionFlag) {
+                                            expect(result._internal.otherNotificationUserUidSendExclusions).toContain(u.uid);
                                           } else {
-                                            // when not opt-out from all, the user details should be made available
-                                            const authUser = result._internal.userDetailsMap.get(u.uid);
-                                            expect(authUser).toBeDefined();
-                                            expect(authUser?.email).toBeDefined();
-                                            expect(authUser?.phoneNumber).toBeDefined();
+                                            if (!expectation.isAssociatedWithNotificationBox) {
+                                              // when not opt-out from all, the user details should be made available
+                                              const authUser = result._internal.userDetailsMap.get(u.uid);
+                                              expect(authUser).toBeDefined();
+                                              expect(authUser?.email).toBeDefined();
+                                              expect(authUser?.phoneNumber).toBeDefined();
+                                            }
                                           }
 
                                           if (userNotificationUserRecipientConfig) {
@@ -379,6 +411,31 @@ demoApiFunctionContextFactory((f) => {
                                     // Not associated with NotificationBox
                                     describe('user not associated with guestbook notification box', () => {
                                       describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true });
+
+                                      describe('exclusion list', () => {
+                                        describe('attempts to be excluded from guestbook', () => {
+                                          beforeEach(async () => {
+                                            // since the user is not associated with the notification box, adding the exclusion does nothing
+                                            await nb.updateRecipient({
+                                              uid: u.uid,
+                                              setExclusion: true
+                                            });
+                                          });
+
+                                          describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: true });
+
+                                          /*
+                                          describe('synced', () => {
+
+                                            beforeEach(async () => {
+                                              await nu.resyncNotificationUser();
+                                            });
+
+                                            describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false });
+                                          });
+                                          */
+                                        });
+                                      });
 
                                       describe('global configuration', () => {
                                         function beforeEachUpdateNotificationUserGlobalConfig(gc: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams) {
@@ -519,6 +576,38 @@ demoApiFunctionContextFactory((f) => {
 
                                               describeNotificationShouldBeSentToUser({ email: false, text: false, notificationSummary: false, checkOptOutFromFlag: true });
                                             });
+                                          });
+                                        });
+                                      });
+                                    });
+
+                                    describe('user is associated with guestbook notification box', () => {
+                                      beforeEach(async () => {
+                                        await nb.updateRecipient({
+                                          uid: u.uid,
+                                          insert: true
+                                        });
+                                      });
+
+                                      describe('exclusion list', () => {
+                                        describe('excluded from guestbook', () => {
+                                          beforeEach(async () => {
+                                            await nb.updateRecipient({
+                                              uid: u.uid,
+                                              setExclusion: true
+                                            });
+                                          });
+
+                                          describe('not synced', () => {
+                                            describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: true, text: false, notificationSummary: true });
+                                          });
+
+                                          describe('exclusion synced', () => {
+                                            beforeEach(async () => {
+                                              await nu.resyncNotificationUser();
+                                            });
+
+                                            describeNotificationShouldBeSentToUser({ isAssociatedWithNotificationBox: true, email: false, text: false, notificationSummary: false });
                                           });
                                         });
                                       });

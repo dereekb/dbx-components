@@ -27,7 +27,10 @@ import {
   mergeNotificationUserDefaultNotificationBoxRecipientConfig,
   type NotificationSummaryIdForUidFunction,
   firestoreDummyKey,
-  type NotificationSummary
+  type NotificationSummary,
+  notificationSendExclusionCanSendFunction,
+  DocumentDataWithIdAndKey,
+  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
 } from '@dereekb/firebase';
 import { type FirebaseServerAuthService } from '@dereekb/firebase-server';
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type PhoneNumber, UNSET_INDEX_NUMBER, type ModelKey } from '@dereekb/util';
@@ -47,7 +50,7 @@ export function makeNewNotificationSummaryTemplate(model: ModelKey): Notificatio
 // MARK: ExpandNotificationRecipients
 export interface ExpandNotificationRecipientsInput {
   readonly notification: Notification;
-  readonly notificationBox?: Maybe<NotificationBox>;
+  readonly notificationBox?: Maybe<DocumentDataWithIdAndKey<NotificationBox>>;
   readonly authService: FirebaseServerAuthService;
   /**
    * Used for loading NotificationUsers in the system for accessing default configurations for the "other" recipients not in the NotificationBox.
@@ -130,6 +133,7 @@ export interface ExpandNotificationRecipientsInternal {
   readonly explicitOtherRecipientTextNumbers: Map<PhoneNumber, NotificationRecipientWithConfig>;
   readonly explicitOtherRecipientNotificationSummaryIds: Map<NotificationSummaryId, NotificationRecipientWithConfig>;
   readonly otherNotificationUserUidOptOuts: Set<NotificationUserId>;
+  readonly otherNotificationUserUidSendExclusions: Set<NotificationUserId>;
   readonly nonNotificationBoxUidRecipientConfigs: Map<FirebaseAuthUserId, NotificationRecipientWithConfig>;
   readonly notificationUserRecipientConfigs: Map<NotificationUserId, NotificationUserDefaultNotificationBoxRecipientConfig>;
 }
@@ -154,6 +158,8 @@ export interface ExpandNotificationRecipientsResult {
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
   const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients: inputOnlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
+
+  const notificationBoxId = notificationBox?.id;
   const notificationSummaryIdForUid = inputNotificationSummaryIdForUid ?? (() => undefined);
   const notificationTemplateType = notification.n.t || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
   const recipientFlag = recipientFlagOverride ?? notification.rf ?? NotificationRecipientSendFlag.NORMAL;
@@ -189,8 +195,8 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
   // find all recipients in the NotificationBox with the target template type flagged for them.
   allBoxRecipientConfigs.forEach((x) => {
-    // ignore opt-out flagged recipients
-    if (!x.f) {
+    // ignore opt-out flagged recipients and excluded recipients
+    if (!x.f && !x.x) {
       const relevantConfig = x.c[notificationTemplateType];
       const effectiveTemplateConfig = relevantConfig ? effectiveNotificationBoxRecipientTemplateConfig(relevantConfig) : undefined;
 
@@ -220,6 +226,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
   });
 
   const otherNotificationUserUidOptOuts = new Set<NotificationUserId>();
+  const otherNotificationUserUidSendExclusions = new Set<NotificationUserId>();
   const notificationUserRecipientConfigs = new Map<NotificationUserId, NotificationUserDefaultNotificationBoxRecipientConfig>();
 
   if (nonNotificationBoxUidRecipientConfigs.size > 0) {
@@ -232,16 +239,24 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
 
     notificationUsers.forEach((x) => {
       const { data: notificationUser } = x;
-      const { dc, gc } = notificationUser;
+      const { x: exclusions, dc, gc } = notificationUser;
 
+      const canSendNotification = notificationSendExclusionCanSendFunction(exclusions);
       const effectiveConfig = mergeNotificationUserDefaultNotificationBoxRecipientConfig(dc, gc);
       const uid = x.document.id;
 
       notificationUserRecipientConfigs.set(uid, effectiveConfig);
 
+      // check if flagged for opt out on the global/default config
       if (effectiveConfig.f) {
         // if flagged for opt out, add to set
         otherNotificationUserUidOptOuts.add(uid);
+      }
+
+      const isAllowedToSend = notificationBoxId ? canSendNotification(notificationBoxId) : true;
+
+      if (!isAllowedToSend) {
+        otherNotificationUserUidSendExclusions.add(uid);
       }
     });
   }
@@ -259,8 +274,8 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     const uid = x.uid;
 
     if (uid) {
-      if (otherNotificationUserUidOptOuts.has(uid)) {
-        return; // do not add to the recipients at all, user has opted out
+      if (otherNotificationUserUidOptOuts.has(uid) || otherNotificationUserUidSendExclusions.has(uid)) {
+        return; // do not add to the recipients at all, user has opted out or send is excluded
       }
 
       const notificationUserRecipientConfig = notificationUserRecipientConfigs.get(uid);
@@ -319,6 +334,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     explicitOtherRecipientTextNumbers,
     explicitOtherRecipientNotificationSummaryIds,
     otherNotificationUserUidOptOuts,
+    otherNotificationUserUidSendExclusions,
     nonNotificationBoxUidRecipientConfigs,
     notificationUserRecipientConfigs
   };
@@ -513,7 +529,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     const sendNotificationSummaryEnabled = x.effectiveTemplateConfig?.sn;
     const shouldSendNotificationSummary = checkShouldSendNotificationSummary(sendNotificationSummaryEnabled);
 
-    if (shouldSendNotificationSummary && !notificationSummaryUidsSet.has(uid ?? '')) {
+    if (shouldSendNotificationSummary) {
       let notificationSummaryId: Maybe<NotificationSummaryId>;
 
       if (uid) {
@@ -548,7 +564,7 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
       const sendNotificationSummaryEnabled = x.sn;
       const shouldSendNotificationSummary = checkShouldSendNotificationSummary(sendNotificationSummaryEnabled);
 
-      if (shouldSendNotificationSummary) {
+      if (shouldSendNotificationSummary && !notificationSummaryUidsSet.has(uid ?? '')) {
         let notificationSummaryId: Maybe<NotificationSummaryId>;
 
         if (uid) {
@@ -609,7 +625,7 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigInput {
   /**
    * The existing NotificationUser.
    */
-  readonly notificationUser: Pick<NotificationUser, 'gc' | 'bc'>;
+  readonly notificationUser: Pick<NotificationUser, 'x' | 'gc' | 'bc'>;
   /**
    * If true, flag as if the recipient is being inserted into the NotificationBox since it does not exist there.
    */
@@ -718,6 +734,15 @@ export function updateNotificationUserNotificationBoxRecipientConfig(input: Upda
     } else {
       updatedBc.push(updatedNotificationUserBoxEntry);
     }
+
+    // re-apply exclusions to the updated config(s)
+    const withExclusions = applyExclusionsToNotificationUserNotificationBoxRecipientConfigs({
+      notificationUser,
+      bc: updatedBc,
+      recalculateNs: false
+    });
+
+    updatedBc = withExclusions.bc;
 
     // sync index with input NotificationBoxRecipient
     updatedNotificationUserBoxEntry.i = notificationBoxRecipient.i;

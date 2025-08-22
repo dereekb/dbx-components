@@ -1,11 +1,25 @@
 import { type FactoryWithRequiredInput } from '@dereekb/util';
-import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, FirestoreModelIdInput, firestoreModelId } from '../../common';
+import { type FirestoreModelId, type FirestoreModelKey, type FlatFirestoreModelKey, twoWayFlatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, type FirebaseAuthUserId, firestoreModelKey, type RootFirestoreModelIdentity, FirestoreModelIdInput, firestoreModelId, FirestoreCollectionName } from '../../common';
 
 /**
  * The NotificationBox's id is the two way flat firestore model key of the object that it represents.
  */
 export type NotificationBoxId = FlatFirestoreModelKey;
 export type NotificationBoxKey = FirestoreModelKey;
+
+/**
+ * A notification box id (or firestore collection name) that is used to exclude a user from receiving notifications from that box or any notification boxes that start with the same prefix.
+ *
+ * This is used in cases where a user might be removed from access temporarily and should not recieve any notifications from that box or any child boxes.
+ *
+ * For example, if a box with id ab_123 is excluded, then any notifications to child boxes that start with ab_123 (e.g. ab_123_cd_456) will also be excluded.
+ */
+export type NotificationBoxSendExclusion = FirestoreCollectionName | NotificationBoxId;
+
+/**
+ * List of notification box exclusions.
+ */
+export type NotificationBoxSendExclusionList = NotificationBoxSendExclusion[];
 
 /**
  * Creates a NotificationBoxId from the input FirestoreModelKey.
@@ -65,7 +79,7 @@ export const DEFAULT_NOTIFICATION_TEMPLATE_TYPE = 'D';
  *
  * Task notifications are not required to specify a notification model since notification tasks do not interact with NotificationBoxes.
  */
-export const DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY: FirestoreModelKey = 'notmodel/notkey';
+export const DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY: FirestoreModelKey = 'not/not';
 
 /**
  * Template type identifier of the notification.

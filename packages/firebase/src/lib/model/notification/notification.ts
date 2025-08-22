@@ -1,6 +1,6 @@
 import { type E164PhoneNumber, type EmailAddress, type Maybe, type NeedsSyncBoolean } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { inferNotificationBoxRelatedModelKey, type NotificationBoxId } from './notification.id';
+import { inferNotificationBoxRelatedModelKey, NotificationBoxSendExclusionList, type NotificationBoxId } from './notification.id';
 import { type NotificationBoxRecipient, firestoreNotificationBoxRecipient, firestoreNotificationRecipientWithConfig, type NotificationRecipientWithConfig, type NotificationUserNotificationBoxRecipientConfig, firestoreNotificationUserNotificationBoxRecipientConfig, type NotificationUserDefaultNotificationBoxRecipientConfig, firestoreNotificationUserDefaultNotificationBoxRecipientConfig } from './notification.config';
 import { UNKNOWN_YEAR_WEEK_CODE, type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { type UserRelatedById, type UserRelated } from '../user';
@@ -81,6 +81,18 @@ export interface NotificationUser extends UserRelated, UserRelatedById {
    */
   b: NotificationBoxId[];
   /**
+   * Notification box id exclusion list. This value is treated used to generated send opt-outs.
+   *
+   * This list is used to exclude a user from recieving notifications from the NotificationBoxes in this list.
+   *
+   * Values in this list are usually populated from functions from the model controlling the NotificationBox.
+   *
+   * The user must be associated with atleast one NotificationBoxId that matches items in this list, otherwise non-matching items are removed.
+   *
+   * The exclusions are sync'd to the corresponding bc values, which are then sync'd to the NotificationBoxes.
+   */
+  x: NotificationBoxSendExclusionList;
+  /**
    * Global config override.
    *
    * This config effectively overrides all other configs, both NotificationBox configs and direct/default configs when used.
@@ -115,6 +127,7 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
   fields: {
     uid: firestoreUID(),
     b: firestoreModelIdArrayField,
+    x: firestoreModelIdArrayField,
     dc: firestoreNotificationUserDefaultNotificationBoxRecipientConfig,
     gc: firestoreNotificationUserDefaultNotificationBoxRecipientConfig,
     bc: firestoreObjectArray({
