@@ -1,4 +1,4 @@
-import { type ModuleMetadata } from '@nestjs/common';
+import { Global, Module, type ModuleMetadata } from '@nestjs/common';
 import { NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, notificationInitServerActions, NotificationInitServerActions, type NotificationInitServerActionsContextConfig } from './notification.action.init.server';
 import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, type BaseNotificationServerActionsContext, NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, notificationServerActions, NotificationServerActions, type NotificationServerActionsContext } from './notification.action.server';
 import { NotificationTemplateService } from './notification.config.service';
@@ -6,13 +6,14 @@ import { type Maybe } from '@dereekb/util';
 import { ConfigModule } from '@nestjs/config';
 import { NotificationSendService } from './notification.send.service';
 import { NotificationTaskService } from './notification.task.service';
+import { exportMutableNotificationExpediteService, MutableNotificationExpediteService, NotificationExpediteService, provideMutableNotificationExpediteService } from './notification.expedite.service';
 
 // MARK: Provider Factories
-export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) {
-  return { ...context, notificationTemplateService, notificationSendService, notificationTaskService };
+export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService, notificationsExpediteService: NotificationExpediteService) {
+  return { ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationsExpediteService };
 }
 
-export function notificationServerActionsFactory(context: NotificationServerActionsContext) {
+export function notificationServerActionsFactory(context: NotificationServerActionsContext, mutableNotificationExpediteService: MutableNotificationExpediteService) {
   return notificationServerActions(context);
 }
 
@@ -27,6 +28,7 @@ export function notificationInitServerActionsFactory(context: NotificationServer
 export interface ProvideAppNotificationMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
    * The AppNotificationModule requires the following dependencies in order to initialze properly:
+   * - MutableNotificationExpediteService
    * - NotificationSendService
    * - NotificationTaskService
    * - BaseNotificationServerActionsContext (BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN)
@@ -46,6 +48,9 @@ export interface ProvideAppNotificationMetadataConfig extends Pick<ModuleMetadat
  * - NotificationTemplateService
  * - NotificationServerActions
  * - NotificationInitServerActions
+ * - NotificationExpediteService (MutableNotificationExpediteService is used as the existing, but it is not re-exported)
+ *
+ * Be sure the class that delares the module using this function also extends AbstractAppNotificationModule.
  *
  * @param provide
  * @param useFactory
@@ -57,12 +62,16 @@ export function appNotificationModuleMetadata(config: ProvideAppNotificationMeta
 
   return {
     imports: [ConfigModule, ...dependencyModuleImport, ...(imports ?? [])],
-    exports: [NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationTemplateService, NotificationServerActions, NotificationInitServerActions, ...(exports ?? [])],
+    exports: [NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationExpediteService, NotificationTemplateService, NotificationServerActions, NotificationInitServerActions, ...(exports ?? [])],
     providers: [
+      {
+        provide: NotificationExpediteService,
+        useExisting: MutableNotificationExpediteService
+      },
       {
         provide: NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN,
         useFactory: notificationServerActionsContextFactory,
-        inject: [BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationTemplateService, NotificationSendService, NotificationTaskService]
+        inject: [BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationTemplateService, NotificationSendService, NotificationTaskService, NotificationExpediteService]
       },
       {
         provide: NotificationTemplateService,
@@ -71,7 +80,7 @@ export function appNotificationModuleMetadata(config: ProvideAppNotificationMeta
       {
         provide: NotificationServerActions,
         useFactory: notificationServerActionsFactory,
-        inject: [NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN]
+        inject: [NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NotificationExpediteService]
       },
       {
         provide: NotificationInitServerActions,
@@ -82,3 +91,23 @@ export function appNotificationModuleMetadata(config: ProvideAppNotificationMeta
     ]
   };
 }
+
+/**
+ * Abstract module that should be extended when using appNotificationModuleMetadata.
+ */
+@Module({})
+export abstract class AbstractAppNotificationModule {
+  constructor(mutableNotificationExpediteService: MutableNotificationExpediteService, actions: NotificationServerActions) {
+    mutableNotificationExpediteService.setNotificationServerActions(actions);
+  }
+}
+
+/**
+ * Pre-configured global provider for MutableNotificationExpediteService/NotificationExpediteService.
+ */
+@Global()
+@Module({
+  providers: provideMutableNotificationExpediteService(),
+  exports: exportMutableNotificationExpediteService()
+})
+export class GlobalNotificationModule {}

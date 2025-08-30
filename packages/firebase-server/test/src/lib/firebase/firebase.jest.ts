@@ -7,7 +7,10 @@ import { BaseError } from 'make-error';
  * Error thrown when the error type was different than the expected type.
  */
 export class JestExpectedHttpErrorWithSpecificServerErrorCode extends BaseError {
-  constructor(readonly httpError: HttpsError, readonly expectedErrorCode: string) {
+  constructor(
+    readonly httpError: HttpsError,
+    readonly expectedErrorCode: string
+  ) {
     const { code } = httpError.details as ServerError;
     super(`Expected HttpError with an error code of "${expectedErrorCode}", but recieved "${code}" instead.`);
   }
@@ -26,6 +29,7 @@ export function jestExpectFailAssertHttpErrorServerErrorCode(expectedCode: strin
   return (error) => {
     if (error instanceof HttpsError) {
       const { code } = error.details as ServerError;
+
       if (code !== expectedCode) {
         throw new JestExpectedHttpErrorWithSpecificServerErrorCode(error, expectedCode);
       }

@@ -140,6 +140,22 @@ demoApiFunctionContextFactory((f) => {
           describe('scenarios', () => {
             describe('Example Notification', () => {
               demoNotificationBoxContext({ f, for: p, createIfNeeded: true, initIfNeeded: true }, (nb_p) => {
+                describe('Expedite Send', () => {
+                  it('should send immediately if expediteSend is true', async () => {
+                    let notifications = await nb_p.loadAllNotificationsForNotificationBox();
+                    expect(notifications).toHaveLength(0);
+
+                    const createInstance = await f.profileServerActions.createTestNotification({ expediteSend: true });
+                    await createInstance(p.document);
+
+                    notifications = await nb_p.loadAllNotificationsForNotificationBox();
+                    expect(notifications).toHaveLength(1);
+
+                    const notification = notifications[0];
+                    expect(notification.data?.ns).toBe(NotificationSendState.SENT);
+                  });
+                });
+
                 describe('Notification Message Send Test', () => {
                   beforeEach(async () => {
                     const createInstance = await f.profileServerActions.createTestNotification({});
@@ -156,7 +172,14 @@ demoApiFunctionContextFactory((f) => {
                     },
                     (nbn) => {
                       it('should send a notifications', async () => {
+                        const notifications = await nb_p.loadAllNotificationsForNotificationBox();
+                        expect(notifications).toHaveLength(1);
+
+                        const notification = notifications[0];
+                        expect(notification.data?.ps).toBe(NotificationSendState.QUEUED); // show it is queued after test notification was created
+
                         const result = await nbn.sendNotification({});
+
                         expect(result.success).toBe(true);
                         expect(result.sendNotificationSummaryResult).toBeDefined();
                         expect(result.sendNotificationSummaryResult?.success).toHaveLength(1);

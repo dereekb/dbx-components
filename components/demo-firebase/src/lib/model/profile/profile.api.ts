@@ -12,6 +12,14 @@ export class ProfileCreateTestNotificationParams extends InferredTargetModelPara
   @IsBoolean()
   @IsOptional()
   skipSend?: Maybe<boolean>;
+
+  /**
+   * If true, will expedite the sending of the notification.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  expediteSend?: Maybe<boolean>;
 }
 
 export class SetProfileUsernameParams extends InferredTargetModelParams {
