@@ -1,4 +1,4 @@
-import { Global, Injectable, Module, type ModuleMetadata } from '@nestjs/common';
+import { Global, Module, type ModuleMetadata } from '@nestjs/common';
 import { NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, notificationInitServerActions, NotificationInitServerActions, type NotificationInitServerActionsContextConfig } from './notification.action.init.server';
 import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, type BaseNotificationServerActionsContext, NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, notificationServerActions, NotificationServerActions, type NotificationServerActionsContext } from './notification.action.server';
 import { NotificationTemplateService } from './notification.config.service';
