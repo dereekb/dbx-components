@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTaskService, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
+import { BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTaskService, NotificationTemplateService, appNotificationModuleMetadata, AbstractAppNotificationModule } from '@dereekb/firebase-server/model';
 import { APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices } from './notification.action.context';
 import { APP_CODE_PREFIXFirebaseServerActionsContext } from '../../firebase/action.context';
 import { APP_CODE_PREFIXNotificationTemplateServiceConfigsArrayFactory } from './notification.factory';
@@ -61,4 +61,4 @@ export class NotificationDependencyModule { }
     exports: [APP_CODE_PREFIXFirebaseServerActionsContextWithNotificationServices]
   })
 )
-export class NotificationModule { }
+export class NotificationModule extends AbstractAppNotificationModule {}

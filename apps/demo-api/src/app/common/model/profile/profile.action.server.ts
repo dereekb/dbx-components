@@ -3,11 +3,12 @@ import { AsyncProfileUpdateAction, exampleNotificationTemplate, ProfileCreateTes
 import { type Maybe } from '@dereekb/util';
 import { NotificationFirestoreCollections, FirestoreContextReference, createNotificationDocument, twoWayFlatFirestoreModelKey, NotificationSummaryId } from '@dereekb/firebase';
 import { usernameAlreadyTakenError } from './profile.error';
+import { NotificationExpediteServiceRef } from '@dereekb/firebase-server/model';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
  */
-export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference {}
+export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections, NotificationFirestoreCollections, FirestoreContextReference, NotificationExpediteServiceRef {}
 
 /**
  * Server-only profile actions.
@@ -135,11 +136,14 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
 }
 
 export function createTestNotificationFactory(context: ProfileServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
+  const { notificationExpediteService, firebaseServerActionTransformFunctionFactory, notificationSummaryCollection } = context;
+
   return firebaseServerActionTransformFunctionFactory(ProfileCreateTestNotificationParams, async (params) => {
-    const { skipSend } = params;
+    const { skipSend, expediteSend } = params;
 
     return async (document: ProfileDocument) => {
+      const expediteInstance = notificationExpediteService.expediteInstance();
+
       // load the existing notification summary if it exists and check number of
       const notificationSummaryId = twoWayFlatFirestoreModelKey(document.key);
       const notificationSummaryDocument = notificationSummaryCollection.documentAccessor().loadDocumentForId(notificationSummaryId as NotificationSummaryId);
@@ -151,13 +155,18 @@ export function createTestNotificationFactory(context: ProfileServerActionsConte
       }
 
       // create a new notification
-      await createNotificationDocument({
+      const createResult = await createNotificationDocument({
         context,
         template: exampleNotificationTemplate({
           profileDocument: document,
           skipSend
         })
       });
+
+      if (expediteSend) {
+        expediteInstance.enqueueCreateResult(createResult);
+        await expediteInstance.send();
+      }
 
       return document;
     };

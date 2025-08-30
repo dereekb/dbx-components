@@ -327,6 +327,7 @@ export async function createNotificationDocument(input: CreateNotificationDocume
     } else {
       await notificationDocument.create(notification);
     }
+
     (pair as Building<CreateNotificationDocumentPairResult>).notificationCreated = true;
   }
 

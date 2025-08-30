@@ -10,4 +10,5 @@ export * from './notification.send';
 export * from './notification.task.service';
 export * from './notification.task.service.handler';
 export * from './notification.error';
+export * from './notification.expedite.service';
 export * from './notification.util';

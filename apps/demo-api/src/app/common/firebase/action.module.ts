@@ -9,14 +9,16 @@ import { DemoApiStorageModule } from './storage.module';
 import { MailgunService, MailgunServiceModule } from '@dereekb/nestjs/mailgun';
 import { appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { ServerEnvironmentService } from '@dereekb/nestjs';
+import { NotificationExpediteService } from '@dereekb/firebase-server/model';
 
-const demoFirebaseServerActionsContextFactory = (serverEnvironmentService: ServerEnvironmentService, collections: DemoFirestoreCollections, authService: DemoApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService): DemoFirebaseServerActionsContext => {
+const demoFirebaseServerActionsContextFactory = (serverEnvironmentService: ServerEnvironmentService, collections: DemoFirestoreCollections, authService: DemoApiAuthService, storageService: FirebaseServerStorageService, mailgunService: MailgunService, notificationExpediteService: NotificationExpediteService): DemoFirebaseServerActionsContext => {
   return {
     ...collections,
     ...firebaseServerActionsContext({ logError: serverEnvironmentService.isTestingEnv }),
     storageService,
     authService,
     mailgunService,
+    notificationExpediteService,
     appNotificationTemplateTypeInfoRecordService: appNotificationTemplateTypeInfoRecordService(DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD)
   };
 };
@@ -27,7 +29,7 @@ const demoFirebaseServerActionsContextFactory = (serverEnvironmentService: Serve
     {
       provide: DemoFirebaseServerActionsContext,
       useFactory: demoFirebaseServerActionsContextFactory,
-      inject: [ServerEnvironmentService, DemoFirestoreCollections, DemoApiAuthService, FirebaseServerStorageService, MailgunService]
+      inject: [ServerEnvironmentService, DemoFirestoreCollections, DemoApiAuthService, FirebaseServerStorageService, MailgunService, NotificationExpediteService]
     }
   ],
   exports: [DemoFirebaseServerActionsContext]

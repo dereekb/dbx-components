@@ -34,7 +34,7 @@ import {
 } from '@dereekb/firebase';
 import { demoNotificationTestFactory } from '../../common/model/notification/notification.factory';
 import { EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_ATTEMPTED_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_ON_SEND_SUCCESS_RESULT, EXAMPLE_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE, GUESTBOOK_ENTRY_LIKED_NOTIFICATION_TEMPLATE_TYPE, TEST_NOTIFICATIONS_TEMPLATE_TYPE, exampleNotificationTemplate, profileIdentity } from 'demo-firebase';
-import { UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
+import { MutableNotificationExpediteService, UNKNOWN_NOTIFICATION_TEMPLATE_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { demoNotificationMailgunSendService } from '../../common/model/notification/notification.send.mailgun.service';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { UNSET_INDEX_NUMBER } from '@dereekb/util';
@@ -91,6 +91,17 @@ demoApiFunctionContextFactory((f) => {
         });
 
         // TODO: it should fail
+      });
+    });
+
+    describe('appNotificationModuleMetadata()', () => {
+      describe('MutableNotificationExpediteService', () => {
+        it('the notification module should have configured the MutableNotificationExpediteService', () => {
+          const service = f.nest.get(MutableNotificationExpediteService);
+          expect(service).toBeDefined();
+
+          expect(service.getNotificationServerActions()).toBeDefined();
+        });
       });
     });
 
