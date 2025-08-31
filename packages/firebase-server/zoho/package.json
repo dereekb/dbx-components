@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server/zoho",
-  "version": "12.3.13",
+  "version": "12.4.0",
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [12.4.0](https://github.com/dereekb/dbx-components/compare/v12.3.12-dev-dev...v12.4.0) (2025-08-30)
+
+
+### Features
+
+* added NotificationExpediteService ([bdfc0b3](https://github.com/dereekb/dbx-components/commit/bdfc0b35f11d3f60f0daa5fd4522f31da593f7d7))
+
+
+
 ## [12.3.13](https://github.com/dereekb/dbx-components/compare/v12.3.12-dev...v12.3.13) (2025-08-22)
 
 
