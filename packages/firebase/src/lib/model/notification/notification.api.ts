@@ -443,13 +443,18 @@ export class NotificationRecipientParams {
 export class SendNotificationParams extends TargetModelParams {
   /**
    * Whether or not to ignore the send at time. Defaults to false.
+   *
+   * If true, the send at time will be ignored and the notification will be sent immediately.
    */
   @Expose()
   @IsOptional()
   @IsBoolean()
   ignoreSendAtThrottle?: Maybe<boolean>;
+
   /**
    * Whether or not to throw an error if the notification has already been sent or is being sent.
+   *
+   * Defaults to false.
    */
   @Expose()
   @IsOptional()

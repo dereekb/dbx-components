@@ -1,4 +1,4 @@
-import { DEFAULT_CUT_STRING_END_TEXT, cutStringFunction, joinStrings, joinStringsWithSpaces, repeatString, splitJoinNameString, splitJoinRemainder } from './string';
+import { DEFAULT_CUT_STRING_END_TEXT, cutStringFunction, flattenWhitespace, joinStrings, joinStringsWithSpaces, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder } from './string';
 
 describe('joinStrings()', () => {
   it('should join the strings', () => {
@@ -147,5 +147,25 @@ describe('cutStringFunction()', () => {
         expect(result).toBe(`abcd${DEFAULT_CUT_STRING_END_TEXT}`);
       });
     });
+  });
+});
+
+describe('flattenWhitespace()', () => {
+  it('should flatten the whitespace', () => {
+    const testString = 'a b      c    d\n  \n       \ne';
+    const expected = 'a b c d\n \n \ne';
+
+    const result = flattenWhitespace(testString);
+    expect(result).toBe(expected);
+  });
+});
+
+describe('simplifyWhitespace()', () => {
+  it('should simplify the whitespace and trim whitespace from the end', () => {
+    const testString = 'a      b\n\nc          d\ne       ';
+    const expected = 'a b\nc d\ne';
+
+    const result = simplifyWhitespace(testString);
+    expect(result).toBe(expected);
   });
 });
