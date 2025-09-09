@@ -1,4 +1,4 @@
-import { VapiAiApi, VapiCallWithTranscript } from '@dereekb/nestjs/vapiai';
+import { VapiAiApi } from '@dereekb/nestjs/vapiai';
 import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
