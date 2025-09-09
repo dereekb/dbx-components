@@ -32,7 +32,8 @@ import {
   getAttachmentsForRecord,
   downloadAttachmentForRecord,
   uploadAttachmentForRecord,
-  deleteAttachmentFromRecord
+  deleteAttachmentFromRecord,
+  removeTagsFromRecords
 } from '@dereekb/zoho';
 import { ZohoRecruitServiceConfig } from './recruit.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
@@ -178,5 +179,9 @@ export class ZohoRecruitApi {
 
   get addTagsToRecords() {
     return addTagsToRecords(this.recruitContext);
+  }
+
+  get removeTagsFromRecords() {
+    return removeTagsFromRecords(this.recruitContext);
   }
 }

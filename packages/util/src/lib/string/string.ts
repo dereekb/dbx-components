@@ -247,3 +247,25 @@ export function cutStringFunction(config: CutStringFunctionConfig): CutStringFun
 export function cutString(input: Maybe<string>, maxLength: number, endText?: Maybe<string>): Maybe<string> {
   return cutStringFunction({ maxLength, endText })(input);
 }
+
+/**
+ * Replaces all whitespaces with a single space.
+ *
+ * Newlines are preserved.
+ *
+ * @param input
+ * @returns
+ */
+export function flattenWhitespace(input: string): string {
+  return input.replace(/[^\S\r\n]+/g, ' ').trim();
+}
+
+/**
+ * Reduces multiple newlines to a single newline and reduces multiple whitespaces to a single space.
+ *
+ * @param input
+ * @returns
+ */
+export function simplifyWhitespace(input: string): string {
+  return input.split(/\r?\n/).filter(Boolean).map(flattenWhitespace).join('\n');
+}

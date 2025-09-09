@@ -1053,6 +1053,48 @@ describe('recruit.api', () => {
             expect(result.successItems).toHaveLength(0);
           });
         });
+
+        describe('removeTagsFromRecords()', () => {
+          describe('tag exists', () => {
+            beforeEach(async () => {
+              await api.createTagsForModule({
+                module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                tags: {
+                  name: TEST_TAG_NAME
+                }
+              });
+            });
+
+            describe('record is tagged', () => {
+              beforeEach(async () => {
+                await api.addTagsToRecords({
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  tag_names: TEST_TAG_NAME,
+                  ids: testRecordId
+                });
+              });
+
+              it('should remove a tag from a record', async () => {
+                const result = await api.removeTagsFromRecords({
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  tag_names: TEST_TAG_NAME,
+                  ids: testRecordId
+                });
+
+                expect(result.errorItems).toHaveLength(0);
+                expect(result.successItems).toHaveLength(1);
+
+                const record = await api.getRecordById({
+                  module: ZOHO_RECRUIT_CANDIDATES_MODULE,
+                  id: testRecordId
+                });
+
+                expect((record as any).Associated_Tags).toBeDefined();
+                expect((record as any).Associated_Tags).toHaveLength(0);
+              });
+            });
+          });
+        });
       });
 
       /*

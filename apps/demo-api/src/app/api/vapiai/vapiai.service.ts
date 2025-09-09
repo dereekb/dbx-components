@@ -12,6 +12,17 @@ export class DemoVapiAiService {
   get vapiAiApi(): VapiAiApi {
     return this._vapiAiApi;
   }
+
+  // MARK: Accessors
+  /**
+   * Gets a call by ID.
+   *
+   * @param callId
+   * @returns
+   */
+  getCall(callId: string) {
+    return this.vapiAiApi.getCall(callId);
+  }
 }
 
 export interface DemoVapiAiServiceRef {

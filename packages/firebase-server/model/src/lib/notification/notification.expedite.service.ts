@@ -1,7 +1,9 @@
-import { CreateNotificationDocumentPairResult, firestoreDummyKey, NotificationDocument, SendNotificationResult } from '@dereekb/firebase';
+import { CreateNotificationDocumentPairResult, firestoreDummyKey, NotificationDocument, SendNotificationParams, SendNotificationResult } from '@dereekb/firebase';
 import { NotificationServerActions } from './notification.action.server';
 import { Abstract, Injectable, Provider } from '@nestjs/common';
 import { runAsyncTasksForValues } from '@dereekb/util';
+
+export type NotificationExpediteServiceSendNotificationOptions = Pick<SendNotificationParams, 'ignoreSendAtThrottle' | 'throwErrorIfSent'>;
 
 /**
  * Interface for a service that allows access to a NotificationServerActions instance and "expediting" the sending of notification(s) that should be emitted immediately for timeliness.
@@ -17,7 +19,7 @@ export abstract class NotificationExpediteService {
   /**
    * Attempts to immediately send/run the input notification document.
    */
-  abstract sendNotification(notificationDocument: NotificationDocument): Promise<SendNotificationResult>;
+  abstract sendNotification(notificationDocument: NotificationDocument, options?: NotificationExpediteServiceSendNotificationOptions): Promise<SendNotificationResult>;
 
   /**
    * Creates a new NotificationExpediteServiceInstance.
@@ -49,7 +51,7 @@ export interface NotificationExpediteServiceInstance {
   /**
    * Attempts to send all the queued notifications.
    */
-  send(): Promise<SendNotificationResult[]>;
+  send(options?: NotificationExpediteServiceSendNotificationOptions): Promise<SendNotificationResult[]>;
 }
 
 /**
@@ -80,8 +82,8 @@ export function notificationExpediteServiceInstance(notificationExpediteService:
     return enqueued;
   };
 
-  const send = async () => {
-    const results = await runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x), {
+  const send = async (options?: NotificationExpediteServiceSendNotificationOptions) => {
+    const results = await runAsyncTasksForValues(_documentsToSend, (x) => notificationExpediteService.sendNotification(x, options), {
       nonConcurrentTaskKeyFactory: (x) => x.parent.id // only send one notification at a time for a notification box
     });
 
@@ -130,8 +132,8 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
     this._notificationServerActions = notificationServerActions;
   }
 
-  async sendNotification(notificationDocument: NotificationDocument): Promise<SendNotificationResult> {
-    const sendNotification = await this._notificationServerActions.sendNotification({ key: firestoreDummyKey() });
+  async sendNotification(notificationDocument: NotificationDocument, options?: NotificationExpediteServiceSendNotificationOptions): Promise<SendNotificationResult> {
+    const sendNotification = await this._notificationServerActions.sendNotification({ key: firestoreDummyKey(), ...options });
     return sendNotification(notificationDocument);
   }
 

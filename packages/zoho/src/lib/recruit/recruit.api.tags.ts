@@ -124,9 +124,9 @@ export type ZohoRecruitAddTagsToRecordsResult = ZohoRecruitMultiRecordResult<Zoh
 export type ZohoRecruitAddTagsToRecordsFunction = (input: ZohoRecruitAddTagsToRecordsRequest) => Promise<ZohoRecruitAddTagsToRecordsResult>;
 
 /**
- * Associates one or more candidates with one or more job openings.
+ * Adds one or more tags to one or more records.
  *
- * https://www.zoho.com/recruit/developer-guide/apiv2/associate-candidate.html
+ * https://www.zoho.com/recruit/developer-guide/apiv2/add-tags.html
  *
  * @param context
  * @returns
@@ -136,5 +136,44 @@ export function addTagsToRecords(context: ZohoRecruitContext): ZohoRecruitAddTag
     context.fetchJson<ZohoRecruitAddTagsToRecordsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/add_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoRecruitApiFetchJsonInput('POST')).then((x: ZohoRecruitAddTagsToRecordsResponse) => {
       const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
       return zohoRecruitMultiRecordResult<ZohoRecruitAddTagsToRecordsRequest, ZohoRecruitAddTagsToRecordsSuccessEntry, ZohoRecruitAddTagsToRecordsErrorEntry>(resultInputMap, x.data);
+    });
+}
+
+// MARK: Remove Tag From Record
+export type ZohoRecruitRemoveTagsFromRecordsRequest = ZohoRecruitAddTagsToRecordsRequest;
+export type ZohoRecruitRemoveTagsFromRecordsResultDetails = ZohoRecruitAddTagsToRecordsResultDetails;
+
+export interface ZohoRecruitRemoveTagsFromRecordsSuccessEntry extends ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta {
+  readonly details: ZohoRecruitRemoveTagsFromRecordsResultDetails;
+}
+
+export type ZohoRecruitRemoveTagsFromRecordsResponse = ZohoRecruitChangeObjectLikeResponse<ZohoRecruitRemoveTagsFromRecordsSuccessEntry>;
+
+/**
+ * Contains all the details of the error.
+ */
+export type ZohoRecruitRemoveTagsFromRecordsErrorEntryDetails = ZohoRecruitRemoveTagsFromRecordsResultDetails;
+
+export type ZohoRecruitRemoveTagsFromRecordsErrorEntry = ZohoRecruitChangeObjectResponseErrorEntry & {
+  readonly details: ZohoRecruitRemoveTagsFromRecordsErrorEntryDetails;
+};
+
+export type ZohoRecruitRemoveTagsFromRecordsResult = ZohoRecruitMultiRecordResult<ZohoRecruitRemoveTagsFromRecordsRequest, ZohoRecruitRemoveTagsFromRecordsSuccessEntry, ZohoRecruitRemoveTagsFromRecordsErrorEntry>;
+
+export type ZohoRecruitRemoveTagsFromRecordsFunction = (input: ZohoRecruitRemoveTagsFromRecordsRequest) => Promise<ZohoRecruitRemoveTagsFromRecordsResult>;
+
+/**
+ * Removes one or more tags from one or more records.
+ *
+ * https://www.zoho.com/recruit/developer-guide/apiv2/remove-tags.html
+ *
+ * @param context
+ * @returns
+ */
+export function removeTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitRemoveTagsFromRecordsFunction {
+  return (input: ZohoRecruitRemoveTagsFromRecordsRequest) =>
+    context.fetchJson<ZohoRecruitRemoveTagsFromRecordsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/remove_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoRecruitApiFetchJsonInput('POST')).then((x: ZohoRecruitRemoveTagsFromRecordsResponse) => {
+      const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
+      return zohoRecruitMultiRecordResult<ZohoRecruitRemoveTagsFromRecordsRequest, ZohoRecruitRemoveTagsFromRecordsSuccessEntry, ZohoRecruitRemoveTagsFromRecordsErrorEntry>(resultInputMap, x.data);
     });
 }

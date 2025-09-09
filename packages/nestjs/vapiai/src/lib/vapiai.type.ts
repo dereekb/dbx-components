@@ -37,6 +37,11 @@ export type VapiApiWebhookEventVerificationType = 'none' | 'secret' | 'hmac';
 export type VapiCostsItem = Vapi.ServerMessageEndOfCallReport.Costs.Item;
 
 /**
+ * Vapi.ai Call identifier
+ */
+export type VapiCallId = string;
+
+/**
  * Assistant id used by Vapi.ai.
  */
 export type VapiAssistantId = string;
