@@ -29,6 +29,14 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
    * Current checkpoints for the notification task.
    */
   readonly checkpoints: NotificationTaskCheckpointString[];
+  /**
+   * Date the task was originally created at
+   */
+  readonly createdAt: Date;
+  /**
+   * True if the task is flagged as unique.
+   */
+  readonly unique: boolean;
 }
 
 /**
