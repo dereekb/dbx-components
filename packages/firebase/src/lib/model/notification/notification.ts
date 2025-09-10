@@ -496,6 +496,10 @@ export interface NotificationSendCheckpoints {
 
 export interface Notification extends NotificationSendFlags, NotificationSendCheckpoints {
   /**
+   * Created at date/time
+   */
+  cat: Date;
+  /**
    * Send type
    */
   st: NotificationSendType;
@@ -549,6 +553,15 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    * For Task-type notifications, this is always set to false, as when the task is completed it is deleted.
    */
   d: boolean;
+  /**
+   * Unique Notification Task flag
+   *
+   * Only used for tasks.
+   *
+   * If flagged true, this task will be re-read and compared with the created at time before a task step is saved/completed when running the task.
+   * If the created at time is different, the task changes are abandoned, and a success is returned.
+   */
+  ut?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 export type NotificationRoles = GrantedUpdateRole;
@@ -561,6 +574,7 @@ export class NotificationDocument extends AbstractFirestoreDocumentWithParent<No
 
 export const notificationConverter = snapshotConverterFunctions<Notification>({
   fields: {
+    cat: firestoreDate({ saveDefaultAsNow: true }),
     st: firestoreEnum<NotificationSendType>({ default: NotificationSendType.SEND_IF_BOX_EXISTS }),
     rf: optionalFirestoreEnum<NotificationRecipientSendFlag>(),
     ts: firestoreEnum<NotificationSendState>({ default: NotificationSendState.NONE }),
@@ -578,7 +592,8 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
     d: firestoreBoolean({ default: false }),
     tsr: firestoreUniqueStringArray(),
     esr: firestoreUniqueStringArray(),
-    tpr: firestoreUniqueStringArray()
+    tpr: firestoreUniqueStringArray(),
+    ut: optionalFirestoreBoolean({ dontStoreIf: false })
   }
 });
 

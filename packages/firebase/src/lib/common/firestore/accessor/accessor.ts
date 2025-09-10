@@ -104,6 +104,8 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
   /**
    * Sets the data in the database. Can additionally pass options to configure merging of fields.
    *
+   * Set uses the converter to transform the input data.
+   *
    * @param data
    */
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;

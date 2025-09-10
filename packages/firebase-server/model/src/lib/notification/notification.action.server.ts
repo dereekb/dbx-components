@@ -1,4 +1,4 @@
-import { yearWeekCode } from '@dereekb/date';
+import { isSameDate, yearWeekCode } from '@dereekb/date';
 import {
   type AsyncNotificationSummaryCreateAction,
   type AsyncNotificationUserCreateAction,
@@ -1070,6 +1070,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       });
 
       let success = false;
+      let isUniqueNotificationTask = false;
+      let uniqueNotificationTaskConflict = false;
 
       let sendEmailsResult: Maybe<NotificationSendEmailMessagesResult>;
       let sendTextsResult: Maybe<NotificationSendTextMessagesResult>;
@@ -1092,14 +1094,17 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
       async function handleNotificationTask() {
         if (tryRun && notification != null && notificationTaskHandler) {
-          const { n: item } = notification;
+          const { n: item, cat, ut } = notification;
 
+          const unique = ut ?? false;
           const notificationTask: NotificationTask = {
             notificationDocument,
             taskType: item.t,
             item,
             data: item.d,
-            checkpoints: notification.tpr
+            checkpoints: notification.tpr,
+            createdAt: cat,
+            unique
           };
 
           // calculate results
@@ -1145,7 +1150,22 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             success = false;
           }
 
-          await notificationDocument.update(notificationTemplate);
+          // notification tasks are read
+          let saveTaskResult = true;
+
+          if (unique) {
+            isUniqueNotificationTask = true;
+            const latestNotification = await notificationDocument.snapshotData();
+
+            if (!latestNotification || !isSameDate(latestNotification.cat, notification.cat)) {
+              saveTaskResult = false;
+              uniqueNotificationTaskConflict = true;
+            }
+          }
+
+          if (saveTaskResult) {
+            await notificationDocument.update(notificationTemplate);
+          }
         }
       }
 
@@ -1446,6 +1466,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         notificationTemplateType,
         isKnownTemplateType,
         isNotificationTask,
+        isUniqueNotificationTask,
+        uniqueNotificationTaskConflict,
         isConfiguredTemplateType,
         throttled,
         exists: notification != null,

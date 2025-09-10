@@ -15,6 +15,7 @@ demoApiFunctionContextFactory((f) => {
 
           beforeEach(async () => {
             baseNotification = {
+              cat: new Date(),
               st: NotificationSendType.INIT_BOX_AND_SEND,
               n: {
                 id: '0',

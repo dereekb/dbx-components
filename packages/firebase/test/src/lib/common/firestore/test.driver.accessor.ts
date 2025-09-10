@@ -331,19 +331,33 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               let exists = await privateDataAccessor.exists();
               expect(exists).toBe(false);
 
+              const createdAt = new Date();
+              const settings = {
+                test: {
+                  north: true
+                }
+              };
+
               await privateDataAccessor.set({
                 values: [],
                 num: 0,
-                createdAt: new Date(),
-                settings: {
-                  test: {
-                    north: true
-                  }
-                }
+                createdAt,
+                settings
               });
 
               exists = await privateDataAccessor.exists();
               expect(exists).toBe(true);
+
+              const getResult = await privateDataAccessor.get();
+              const data = getResult.data();
+
+              expect(data).toBeDefined();
+
+              expect(data?.num).toBe(0);
+              expect(data?.values).toEqual([]);
+              expect(data?.createdAt).toBeInstanceOf(Date);
+              expect(data?.createdAt.toISOString()).toBe(createdAt.toISOString());
+              expect(data?.settings).toEqual(settings);
             });
           });
 

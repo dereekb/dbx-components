@@ -41,14 +41,14 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
   /**
    * Whether or not to override an existing task with the same unique key when creating.
    *
-   * Defaults to true.
+   * Defaults to false.
    *
    * Only used for Notification Tasks.
    */
   readonly overrideExistingTask?: boolean;
 }
 
-export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNotificationTemplate, 'notificationModel'>>, Partial<Omit<CreateNotificationTemplateItem, 't'>> {
+export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNotificationTemplate, 'notificationModel'>>, Partial<Omit<CreateNotificationTemplateItem, 't' | 'cat'>> {
   /**
    * Model key input of the NotificationBox's target model (not the NotificationBox/key)
    */
@@ -184,6 +184,12 @@ export function shouldSendCreatedNotificationInput(input: ShouldSendCreatedNotif
 
 export interface CreateNotificationDocumentPairInput extends ShouldSendCreatedNotificationInput {
   /**
+   * Now to use when creating the notification.
+   *
+   * Default is the current time.
+   */
+  readonly now?: Maybe<Date>;
+  /**
    * Additional flag controlling whether or not to create the notification.
    */
   readonly shouldCreateNotification?: Maybe<boolean>;
@@ -226,8 +232,13 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  * @param template
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
-  const { template, accessor: inputAccessor, transaction, context } = input;
-  const { notificationModel, st, sat, r, rf, n, ts, es, ps, ns, tpr, unique: inputUnique, overrideExistingTask } = template;
+  const { template, accessor: inputAccessor, transaction, context, now } = input;
+  const { notificationModel, cat: inputCat, st, sat, r, rf, n, ts, es, ps, ns, tpr, unique: inputUnique, overrideExistingTask: inputOverrideExistingTask } = template;
+
+  /**
+   * Use the input, or default to true if inputUnique is true.
+   */
+  const overrideExistingTask = inputOverrideExistingTask != null ? inputOverrideExistingTask : inputUnique ? true : undefined;
 
   let accessor = inputAccessor;
   const notificationBoxId = notificationBoxIdForModel(notificationModel);
@@ -266,7 +277,9 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
   }
 
   const id = notificationDocument.id;
+  const cat = inputCat ?? now ?? new Date();
   const notification: Notification = {
+    cat,
     st: st ?? NotificationSendType.INIT_BOX_AND_SEND,
     sat: sat ?? new Date(),
     rf,

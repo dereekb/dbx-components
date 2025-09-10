@@ -509,6 +509,14 @@ export interface SendNotificationResult {
    */
   readonly isNotificationTask: boolean;
   /**
+   * True if the notification task is flagged as unique.
+   */
+  readonly isUniqueNotificationTask: boolean;
+  /**
+   * True if the notification task is flagged as unique and there was a conflict where a new notification task was created while the old one was mid-task.
+   */
+  readonly uniqueNotificationTaskConflict: boolean;
+  /**
    * Whether or not the notification was of a configured type.
    */
   readonly isConfiguredTemplateType: Maybe<boolean>;
@@ -600,7 +608,7 @@ export interface SendNotificationResult {
  */
 export class SendQueuedNotificationsParams {}
 
-export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
+export interface SendQueuedNotificationsResult extends Omit<SendNotificationResult, 'throttled' | 'isNotificationTask' | 'isUniqueNotificationTask' | 'uniqueNotificationTaskConflict' | 'isConfiguredTemplateType' | 'isKnownTemplateType' | 'notificationTemplateType' | 'notificationMarkedDone' | 'deletedNotification' | 'createdBox' | 'success' | 'exists' | 'boxExists' | 'notificationBoxNeedsInitialization' | 'tryRun' | 'loadMessageFunctionFailure' | 'buildMessageFailure'> {
   readonly notificationBoxesCreated: number;
   readonly notificationsVisited: number;
   readonly notificationTasksVisited: number;
