@@ -89,7 +89,7 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
 
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
   const {
-    notificationModel: inputNotification,
+    notificationModel: inputNotificationModel,
     type,
     unique,
     overrideExistingTask,
@@ -116,7 +116,7 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     d: inputD
   } = input;
 
-  const notificationModel = readFirestoreModelKey(inputNotification) as string;
+  const notificationModel = readFirestoreModelKey(inputNotificationModel) as string;
   const targetModel = inputTargetModel ? readFirestoreModelKey(inputTargetModel) : undefined;
   let d = data ?? inputD;
 
@@ -302,7 +302,8 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
     ts: ts ?? NotificationSendState.QUEUED,
     es: es ?? NotificationSendState.QUEUED,
     ps: ps ?? NotificationSendState.QUEUED,
-    ns: ns ?? NotificationSendState.QUEUED
+    ns: ns ?? NotificationSendState.QUEUED,
+    ut: inputUnique != null
   };
 
   if (isNotificationTask) {

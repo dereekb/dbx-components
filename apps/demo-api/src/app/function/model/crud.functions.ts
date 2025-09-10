@@ -9,6 +9,7 @@ import { updateNotificationBox, updateNotificationBoxRecipient } from '../notifi
 import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
 import { createProfile } from '../profile/profile.create';
 import { createNotification } from '../notification/notification.create';
+import { notificationSend } from '../notification/notification.update';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -48,6 +49,9 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   notificationBox: onCallSpecifierHandler({
     _: updateNotificationBox,
     recipient: updateNotificationBoxRecipient
+  }),
+  notification: onCallSpecifierHandler({
+    send: notificationSend
   })
 };
 
