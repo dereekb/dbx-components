@@ -85,6 +85,14 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
    * Overrides d
    */
   readonly data?: Maybe<object>;
+  /**
+   * Overrides ois
+   */
+  readonly explicitOptInSendOnly?: Maybe<boolean>;
+  /**
+   * Overrides ots
+   */
+  readonly explicitOptInTextSmsSendOnly?: Maybe<boolean>;
 }
 
 export function createNotificationTemplate(input: CreateNotificationTemplateInput): CreateNotificationTemplate {
@@ -113,6 +121,10 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     s,
     m,
     g,
+    ois: inputOis,
+    ots: inputOts,
+    explicitOptInSendOnly,
+    explicitOptInTextSmsSendOnly,
     d: inputD
   } = input;
 
@@ -130,6 +142,9 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
     }
   }
 
+  const ois = explicitOptInSendOnly ?? inputOis ?? null;
+  const ots = explicitOptInTextSmsSendOnly ?? inputOts ?? null;
+
   const template: CreateNotificationTemplate = {
     notificationModel,
     st: sendType ?? st,
@@ -146,6 +161,8 @@ export function createNotificationTemplate(input: CreateNotificationTemplateInpu
       g: message ?? g,
       d
     },
+    ois,
+    ots,
     unique,
     overrideExistingTask
   };
@@ -233,7 +250,7 @@ export interface CreateNotificationDocumentPairResult extends Pick<CreateNotific
  */
 export function createNotificationDocumentPair(input: CreateNotificationDocumentPairInput): CreateNotificationDocumentPairResult {
   const { template, accessor: inputAccessor, transaction, context, now } = input;
-  const { notificationModel, cat: inputCat, st, sat, r, rf, n, ts, es, ps, ns, tpr, unique: inputUnique, overrideExistingTask: inputOverrideExistingTask } = template;
+  const { notificationModel, cat: inputCat, st, sat, r, rf, n, ts, es, ps, ns, ois, ots, tpr, unique: inputUnique, overrideExistingTask: inputOverrideExistingTask } = template;
 
   /**
    * Use the input, or default to true if inputUnique is true.
@@ -295,10 +312,13 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
       d: n.d
     },
     a: 0,
+    at: 0,
     d: false,
     tsr: [],
     esr: [],
     tpr: [],
+    ois,
+    ots,
     ts: ts ?? NotificationSendState.QUEUED,
     es: es ?? NotificationSendState.QUEUED,
     ps: ps ?? NotificationSendState.QUEUED,

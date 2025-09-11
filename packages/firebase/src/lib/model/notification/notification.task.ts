@@ -12,6 +12,18 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
    */
   readonly notificationDocument: NotificationDocument;
   /**
+   * The number of attempts that have occurred for this task.
+   *
+   * Corresponds to the "a" field in the notification task document.
+   */
+  readonly totalSendAttempts: number;
+  /**
+   * The sum of failures and checkpoint delays that have occurred for this task's current checkpoint.
+   *
+   * Corresponds to the "at" field in the notification task document.
+   */
+  readonly currentCheckpointSendAttempts: number;
+  /**
    * Task type identifier of the notification, which is used to pass this task to the appropriate handler.
    *
    * Ideally type values are shorter to reduce database size impact.
@@ -27,14 +39,20 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
   readonly data?: Maybe<D>;
   /**
    * Current checkpoints for the notification task.
+   *
+   * Corresponds to the "tsr" field in the notification task document.
    */
   readonly checkpoints: NotificationTaskCheckpointString[];
   /**
    * Date the task was originally created at
+   *
+   * Corresponds to the "cat" field in the notification task document.
    */
   readonly createdAt: Date;
   /**
    * True if the task is flagged as unique.
+   *
+   * Corresponds to the "ut" field in the notification task document.
    */
   readonly unique: boolean;
 }

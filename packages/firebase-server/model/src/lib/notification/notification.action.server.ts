@@ -1101,6 +1101,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           const unique = ut ?? false;
           const notificationTask: NotificationTask = {
             notificationDocument,
+            totalSendAttempts: notification.a,
+            currentCheckpointSendAttempts: notification.at ?? 0,
             taskType: item.t,
             item,
             data: item.d,
@@ -1144,6 +1146,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               case false:
                 // failed
                 notificationTemplate.a = notification.a + 1; // increase attempts count
+                notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempts count
 
                 // remove any completions, if applicable
                 notificationTemplate.tpr = removeFromCompletionsWithTaskResult(notification.tpr, handleTaskResult);
@@ -1151,6 +1154,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 break;
               default:
                 // default case called if not true or false, which implies either a delay or partial completion
+
+                // update the checkpoint attempts count
+                if (Array.isArray(completion) && completion.length === 0) {
+                  notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempt/delays count
+                } else {
+                  notificationTemplate.at = 0; // reset checkpoint attempt/delay count
+                }
 
                 // add the checkpoint to the notification
                 notificationTemplate.tpr = [
