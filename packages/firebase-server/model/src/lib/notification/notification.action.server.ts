@@ -79,11 +79,13 @@ import {
   updateNotificationUserNotificationSendExclusions,
   setIdAndKeyFromKeyIdRefOnDocumentData,
   calculateNsForNotificationUserNotificationBoxRecipientConfigs,
-  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
+  applyExclusionsToNotificationUserNotificationBoxRecipientConfigs,
+  NotificationTaskCheckpointString,
+  NotificationTaskServiceHandleNotificationTaskResult
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, hoursToMilliseconds, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -1112,9 +1114,28 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
           // perform the task
           try {
-            const { completion, updateMetadata, delayUntil } = await notificationTaskHandler.handleNotificationTask(notificationTask);
+            const handleTaskResult = await notificationTaskHandler.handleNotificationTask(notificationTask);
+            const { completion, updateMetadata, delayUntil } = handleTaskResult;
+
             notificationTaskCompletionType = completion;
             success = true;
+
+            function removeFromCompletionsWithTaskResult(inputCompletions: NotificationTaskCheckpointString[], handleTaskResult: NotificationTaskServiceHandleNotificationTaskResult) {
+              const { removeAllCompletedCheckpoints, removeFromCompletedCheckpoints } = handleTaskResult;
+
+              let result: NotificationTaskCheckpointString[];
+
+              if (removeAllCompletedCheckpoints) {
+                result = [];
+              } else if (removeFromCompletedCheckpoints != null) {
+                const removeFromCompletionsSet = new Set(asArray(removeFromCompletedCheckpoints));
+                result = inputCompletions.filter((x) => !removeFromCompletionsSet.has(x));
+              } else {
+                result = inputCompletions;
+              }
+
+              return result;
+            }
 
             switch (completion) {
               case true:
@@ -1123,16 +1144,26 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               case false:
                 // failed
                 notificationTemplate.a = notification.a + 1; // increase attempts count
+
+                // remove any completions, if applicable
+                notificationTemplate.tpr = removeFromCompletionsWithTaskResult(notification.tpr, handleTaskResult);
                 success = false;
                 break;
               default:
+                // default case called if not true or false, which implies either a delay or partial completion
+
                 // add the checkpoint to the notification
-                notificationTemplate.tpr = [...notification.tpr, ...asArray(completion)];
+                notificationTemplate.tpr = [
+                  ...removeFromCompletionsWithTaskResult(notification.tpr, handleTaskResult), // remove any completions, if applicable
+                  ...asArray(completion)
+                ];
+
+                // calculate the updated notification item
                 notificationTemplate.n = {
                   ...notification.n,
                   d: {
                     ...notification.n.d,
-                    ...updateMetadata
+                    ...(updateMetadata ? filterOnlyUndefinedValues(updateMetadata) : undefined) // ignore any undefined values
                   }
                 };
                 break;

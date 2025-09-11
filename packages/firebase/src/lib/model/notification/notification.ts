@@ -564,7 +564,8 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
   ut?: Maybe<SavedToFirestoreIfTrue>;
 }
 
-export type NotificationRoles = GrantedUpdateRole;
+export type NotificationSendRole = 'send';
+export type NotificationRoles = GrantedReadRole | GrantedUpdateRole | NotificationSendRole;
 
 export class NotificationDocument extends AbstractFirestoreDocumentWithParent<NotificationBox, Notification, NotificationDocument, typeof notificationIdentity> {
   get modelIdentity() {

@@ -657,14 +657,19 @@ export type NotificationBoxModelCrudFunctionsConfig = {
       recipient: UpdateNotificationBoxRecipientParams;
     };
   };
-  readonly notification: null;
+  readonly notification: {
+    update: {
+      send: [SendNotificationParams, SendNotificationResult];
+    };
+  };
   readonly notificationWeek: null;
 };
 
 export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
   notificationUser: ['update:_,resync'],
   notificationSummary: ['update:_'],
-  notificationBox: ['update:_,recipient']
+  notificationBox: ['update:_,recipient'],
+  notification: ['update:send']
 };
 
 export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<NotificationFunctionTypeMap, NotificationBoxModelCrudFunctionsConfig> {
@@ -683,6 +688,11 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
     updateNotificationBox: {
       update: ModelFirebaseCrudFunction<UpdateNotificationBoxParams>;
       recipient: ModelFirebaseCrudFunction<UpdateNotificationBoxRecipientParams>;
+    };
+  };
+  abstract notification: {
+    updateNotification: {
+      send: ModelFirebaseCrudFunction<SendNotificationParams, SendNotificationResult>;
     };
   };
 }
