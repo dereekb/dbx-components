@@ -312,6 +312,7 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
       d: n.d
     },
     a: 0,
+    at: 0,
     d: false,
     tsr: [],
     esr: [],

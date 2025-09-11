@@ -29,7 +29,8 @@ import {
   snapshotConverterFunctions,
   optionalFirestoreDate,
   firestoreUniqueStringArray,
-  type SavedToFirestoreIfFalse
+  type SavedToFirestoreIfFalse,
+  optionalFirestoreNumber
 } from '../../common';
 import { type NotificationItem, firestoreNotificationItem } from './notification.item';
 
@@ -540,11 +541,19 @@ export interface Notification extends NotificationSendFlags, NotificationSendChe
    */
   sat: Date;
   /**
-   * Sending attempts count.
+   * Total sending attempts count.
    *
    * Only incremented when sending encounters an issue/error.
    */
   a: number;
+  /**
+   * Current task sending and delays attempts count.
+   *
+   * Only incremented when sending returns a delay or a failure for the current task checkpoint.
+   *
+   * Reset when a non-failure is returned, and when a checkpoint is completed.
+   */
+  at?: Maybe<number>;
   /**
    * Notification has been delivered or should be archived.
    *
@@ -590,6 +599,7 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
     ots: optionalFirestoreBoolean({ dontStoreIf: true }),
     sat: firestoreDate(),
     a: firestoreNumber({ default: 0 }),
+    at: optionalFirestoreNumber({ dontStoreIf: 0 }),
     d: firestoreBoolean({ default: false }),
     tsr: firestoreUniqueStringArray(),
     esr: firestoreUniqueStringArray(),
