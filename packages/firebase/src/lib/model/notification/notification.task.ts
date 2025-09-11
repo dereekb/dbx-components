@@ -12,6 +12,10 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
    */
   readonly notificationDocument: NotificationDocument;
   /**
+   * The number of attempts that have occurred for this task.
+   */
+  readonly sendingAttempts: number;
+  /**
    * Task type identifier of the notification, which is used to pass this task to the appropriate handler.
    *
    * Ideally type values are shorter to reduce database size impact.

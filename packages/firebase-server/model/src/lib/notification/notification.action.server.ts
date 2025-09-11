@@ -1101,6 +1101,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
           const unique = ut ?? false;
           const notificationTask: NotificationTask = {
             notificationDocument,
+            sendingAttempts: notification.a,
             taskType: item.t,
             item,
             data: item.d,
