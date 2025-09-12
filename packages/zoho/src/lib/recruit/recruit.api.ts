@@ -31,6 +31,13 @@ import { ZohoDateTimeString } from '../zoho.type';
 import { BaseError } from 'make-error';
 
 // MARK: Insert/Update/Upsert Response
+/**
+ * The maximum number of records allowed for most CRUD functions.
+ *
+ * This is a limit enforced by the Zoho Recruit API
+ */
+export const ZOHO_RECRUIT_CRUD_FUNCTION_MAX_RECORDS_LIMIT = 100;
+
 export type ZohoRecruitUpdateRecordResult<T> = ZohoRecruitMultiRecordResult<T, ZohoRecruitChangeObjectResponseSuccessEntry, ZohoRecruitChangeObjectResponseErrorEntry>;
 export type ZohoRecruitUpdateRecordResponse = ZohoRecruitChangeObjectResponse;
 

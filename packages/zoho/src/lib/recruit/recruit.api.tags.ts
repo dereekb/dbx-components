@@ -82,6 +82,11 @@ export function getTagsForModulePageFactory(context: ZohoRecruitContext): GetTag
 }
 
 // MARK: Add Tag To Record
+/**
+ * Limit enforced by Zoho Recruit
+ */
+export const ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED = 100;
+
 export interface ZohoRecruitAddTagsToRecordsRequest extends ZohoRecruitModuleNameRef {
   /**
    * Tag names to add to the records.
@@ -89,6 +94,8 @@ export interface ZohoRecruitAddTagsToRecordsRequest extends ZohoRecruitModuleNam
   readonly tag_names: ArrayOrValue<ZohoRecruitTagName>;
   /**
    * Ids corresponding to the records in the module to add the tags to.
+   *
+   * Max of 100 ids.
    */
   readonly ids: ArrayOrValue<ZohoRecruitRecordId>;
 }
@@ -132,14 +139,24 @@ export type ZohoRecruitAddTagsToRecordsFunction = (input: ZohoRecruitAddTagsToRe
  * @returns
  */
 export function addTagsToRecords(context: ZohoRecruitContext): ZohoRecruitAddTagsToRecordsFunction {
-  return (input: ZohoRecruitAddTagsToRecordsRequest) =>
-    context.fetchJson<ZohoRecruitAddTagsToRecordsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/add_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoRecruitApiFetchJsonInput('POST')).then((x: ZohoRecruitAddTagsToRecordsResponse) => {
+  return (input: ZohoRecruitAddTagsToRecordsRequest) => {
+    if (Array.isArray(input.ids) && input.ids.length > ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {
+      throw new Error(`Cannot add tags to more than ${ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} records at once.`);
+    }
+
+    return context.fetchJson<ZohoRecruitAddTagsToRecordsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/add_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoRecruitApiFetchJsonInput('POST')).then((x: ZohoRecruitAddTagsToRecordsResponse) => {
       const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
       return zohoRecruitMultiRecordResult<ZohoRecruitAddTagsToRecordsRequest, ZohoRecruitAddTagsToRecordsSuccessEntry, ZohoRecruitAddTagsToRecordsErrorEntry>(resultInputMap, x.data);
     });
+  };
 }
 
 // MARK: Remove Tag From Record
+/**
+ * Limit enforced by Zoho Recruit
+ */
+export const ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED = 100;
+
 export type ZohoRecruitRemoveTagsFromRecordsRequest = ZohoRecruitAddTagsToRecordsRequest;
 export type ZohoRecruitRemoveTagsFromRecordsResultDetails = ZohoRecruitAddTagsToRecordsResultDetails;
 
@@ -171,9 +188,14 @@ export type ZohoRecruitRemoveTagsFromRecordsFunction = (input: ZohoRecruitRemove
  * @returns
  */
 export function removeTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitRemoveTagsFromRecordsFunction {
-  return (input: ZohoRecruitRemoveTagsFromRecordsRequest) =>
-    context.fetchJson<ZohoRecruitRemoveTagsFromRecordsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/remove_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoRecruitApiFetchJsonInput('POST')).then((x: ZohoRecruitRemoveTagsFromRecordsResponse) => {
+  return (input: ZohoRecruitRemoveTagsFromRecordsRequest) => {
+    if (Array.isArray(input.ids) && input.ids.length > ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED) {
+      throw new Error(`Cannot remove tags from more than ${ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED} records at once.`);
+    }
+
+    return context.fetchJson<ZohoRecruitRemoveTagsFromRecordsResponse>(`/v2/${ZOHO_RECRUIT_CANDIDATES_MODULE}/actions/remove_tags?${makeUrlSearchParams({ tag_names: input.tag_names, ids: input.ids })}`, zohoRecruitApiFetchJsonInput('POST')).then((x: ZohoRecruitRemoveTagsFromRecordsResponse) => {
       const resultInputMap = x.data.map(() => input); // assign "input" to each value for now
       return zohoRecruitMultiRecordResult<ZohoRecruitRemoveTagsFromRecordsRequest, ZohoRecruitRemoveTagsFromRecordsSuccessEntry, ZohoRecruitRemoveTagsFromRecordsErrorEntry>(resultInputMap, x.data);
     });
+  };
 }
