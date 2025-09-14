@@ -139,7 +139,7 @@ export function usernameLoginField(username: UsernameLoginFieldUsernameConfigInp
   }
 
   if (usernameFieldConfig.email) {
-    usernameField = emailField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
+    usernameField = emailField({ ...usernameFieldConfig.email, ...defaultUsernameFieldConfig });
   } else {
     usernameField = textField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
   }

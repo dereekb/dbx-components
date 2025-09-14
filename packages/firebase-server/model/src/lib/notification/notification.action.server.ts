@@ -1186,7 +1186,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
             notificationMarkedDone = notificationTemplate.d === true;
           } catch (e) {
-            console.error(`Failed handling task for notification "${notification.id}" with type "${notificationTask.taskType}": `, e);
+            console.error(`Failed handling task for notification "${notification.key}" with type "${notificationTask.taskType}": `, e);
+            notificationTemplate.a = notification.a + 1; // increase attempts count
             notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS);
             success = false;
           }
