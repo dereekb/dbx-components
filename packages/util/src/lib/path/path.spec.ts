@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {
@@ -203,6 +203,96 @@ describe('isolateSlashPathFunction', () => {
 
       const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: parts.length } })(path);
       expect(result).toBe('/c/d/e/');
+    });
+  });
+});
+
+describe('slashPathDetails()', () => {
+  it('should return the details of the path', () => {
+    const folder = '/a/b/c'; // absolute path
+    const file = 'd.e';
+    const path = `${folder}/${file}`;
+    const details = slashPathDetails(path);
+
+    expect(details.type).toBe('typedfile');
+    expect(details.startType).toBe('absolute');
+    expect(details.path).toBe(path);
+    expect(details.folderPath).toBe(folder);
+    expect(details.file).toBe(file);
+    expect(details.typedFile).toBe(file);
+    expect(details.fileFolder).toBe('c');
+  });
+
+  it('should return the details of a relative path', () => {
+    const folder = 'a/b/c'; // relative path
+    const file = 'd.e';
+    const path = `${folder}/${file}`;
+    const details = slashPathDetails(path);
+
+    expect(details.type).toBe('typedfile');
+    expect(details.startType).toBe('relative');
+    expect(details.path).toBe(path);
+    expect(details.folderPath).toBe(folder);
+    expect(details.file).toBe(file);
+    expect(details.typedFile).toBe(file);
+    expect(details.fileFolder).toBe('c');
+  });
+
+  describe('file', () => {
+    it('should return the details of an untyped file at a relative root path', () => {
+      const file = 'd';
+      const path = `${file}`;
+      const details = slashPathDetails(path);
+
+      expect(details.type).toBe('file');
+      expect(details.startType).toBe('relative');
+      expect(details.path).toBe(path);
+      expect(details.folderPath).toBe(undefined);
+      expect(details.file).toBe(file);
+      expect(details.typedFile).toBeUndefined();
+      expect(details.fileFolder).toBeUndefined();
+    });
+
+    it('should return the details of an untyped file at an absolute root path', () => {
+      const file = 'd';
+      const path = `${SLASH_PATH_SEPARATOR}${file}`;
+      const details = slashPathDetails(path);
+
+      expect(details.type).toBe('file');
+      expect(details.startType).toBe('absolute');
+      expect(details.path).toBe(path);
+      expect(details.folderPath).toBe(SLASH_PATH_SEPARATOR);
+      expect(details.file).toBe(file);
+      expect(details.typedFile).toBeUndefined();
+      expect(details.fileFolder).toBeUndefined();
+    });
+
+    it('should return the details of a typed file at a relative root path', () => {
+      const file = 'd.e';
+      const path = `${file}`;
+      const details = slashPathDetails(path);
+
+      expect(details.type).toBe('typedfile');
+      expect(details.startType).toBe('relative');
+      expect(details.path).toBe(path);
+      expect(details.folderPath).toBe(undefined);
+      expect(details.file).toBe(file);
+      expect(details.typedFile).toBe(file);
+      expect(details.fileFolder).toBeUndefined();
+    });
+
+    it('should return the details of a typed file at an absolute root path', () => {
+      const file = 'd.e';
+      const path = `${SLASH_PATH_SEPARATOR}${file}`;
+      const details = slashPathDetails(path);
+
+      expect(details.type).toBe('typedfile');
+      expect(details.startType).toBe('absolute');
+      expect(details.path).toBe(path);
+      expect(details.folderPath).toBe(SLASH_PATH_SEPARATOR);
+      expect(details.file).toBe(file);
+      expect(details.typedFile).toBe(file);
+      expect(details.fileFolder).toBeUndefined();
     });
   });
 });

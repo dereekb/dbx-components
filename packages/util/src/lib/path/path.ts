@@ -1,5 +1,5 @@
 import { chainMapSameFunctions, type MapSameFunction } from '../value/map';
-import { asArray, type ArrayOrValue, pushItemOrArrayItemsIntoArray } from '../array/array';
+import { asArray, type ArrayOrValue, pushItemOrArrayItemsIntoArray, lastValue } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from '../string/char';
 import { chainMapFunction, indexRange, type IndexRangeInput, mapIdentityFunction, type Maybe } from '../value';
 import { type FactoryWithRequiredInput } from '../getter/getter';
@@ -20,24 +20,46 @@ export const DEFAULT_SLASH_PATH_ILLEGAL_CHARACTERS = ['#', '[', ']', '*', '?'];
 export const DEFAULT_SLASH_PATH_ILLEGAL_CHARACTER_REPLACEMENT = '_';
 
 /**
+ * A relative folder path that does not start with a slash.
+ */
+export type RelativeSlashPathFolder = `${string}${SlashPathSeparatorString}`;
+
+/**
+ * An absolute folder path that starts with a slash.
+ */
+export type AbsoluteSlashPathFolder = `${SlashPathSeparatorString}${string}${SlashPathSeparatorString}`;
+
+/**
  * A forward-slash path string.
  */
-export type SlashPathFolder = `${SlashPathSeparatorString}${string}${SlashPathSeparatorString}` | `${string}${SlashPathSeparatorString}`;
+export type SlashPathFolder = AbsoluteSlashPathFolder | RelativeSlashPathFolder | `${SlashPathSeparatorString}`;
 
 /**
- * A file name without a type.
+ * A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')
  */
-export type SlashPathFile = string;
+export type SlashPathUntypedFile = string;
 
 /**
- * A file name
+ * A file name that contains a file type identifier (e.g. 'image.png')
  */
 export type SlashPathTypedFile = `${string}${SlashFileTypeSeparatorString}${string}`;
+
+/**
+ * A SlashPath file name
+ */
+export type SlashPathFile = SlashPathUntypedFile | SlashPathTypedFile;
 
 /**
  * A simple path made up of UTF-8 characters and slashes
  */
 export type SlashPath = SlashPathFolder | SlashPathFile | SlashPathTypedFile;
+
+/**
+ * A part of a slash path.
+ *
+ * Does not contain any slashes.
+ */
+export type SlashPathPart = string | SlashPathTypedFile;
 
 /**
  * Function that modifies the input SlashPath
@@ -111,9 +133,9 @@ export function isValidSlashPath(input: string): input is SlashPath {
  *
  * @param slashPath
  */
-export function slashPathName(slashPath: SlashPath): string {
+export function slashPathName(slashPath: SlashPath): SlashPathPart {
   const parts = slashPathParts(slashPath);
-  return parts[parts.length - 1];
+  return lastValue(parts);
 }
 
 /**
@@ -122,7 +144,7 @@ export function slashPathName(slashPath: SlashPath): string {
  * @param slashPath
  * @returns
  */
-export function slashPathParts(slashPath: SlashPath): string[] {
+export function slashPathParts(slashPath: SlashPath): SlashPathPart[] {
   return slashPath.split(SLASH_PATH_SEPARATOR).filter((x) => Boolean(x));
 }
 
@@ -259,25 +281,25 @@ export interface SlashPathValidationFactoryConfig {
   /**
    * Set of illegal characters to find/replace. If not provided, used the DEFAULT_SLASH_PATH_ILLEGAL_CHARACTERS
    */
-  illegalStrings?: ArrayOrValue<string>;
+  readonly illegalStrings?: ArrayOrValue<string>;
   /**
    * String used to replace all encountered illegal characters.
    *
    * Is true by default.
    */
-  replaceIllegalCharacters?: string | boolean;
+  readonly replaceIllegalCharacters?: string | boolean;
   /**
    * Whether or not to replace extra dots by treating them as illegal characters.
    *
    * Will replace extra dots with the input value, or if true, will replace them with the value for replaceIllegalCharacters.
    */
-  replaceIllegalDots?: string | boolean;
+  readonly replaceIllegalDots?: string | boolean;
   /**
    * Whether or not to validate a final time after replacing elements and throw an error if it is still not valid.
    *
    * Disabled by default unless replaceIllegalCharacters and replaceIllegalDots are false.
    */
-  throwError?: boolean;
+  readonly throwError?: boolean;
 }
 
 export function slashPathValidationFactory(config?: SlashPathValidationFactoryConfig): SlashPathValidationFactory {
@@ -322,15 +344,15 @@ export interface SlashPathFactoryConfig {
   /**
    * SlashPath start type to enforce
    */
-  startType?: SlashPathStartType;
+  readonly startType?: SlashPathStartType;
   /**
    * Prefix paths to append
    */
-  basePath?: ArrayOrValue<SlashPathFolder>;
+  readonly basePath?: ArrayOrValue<SlashPathFolder>;
   /**
    * SlashPathValidationFactoryConfig to use for validation.
    */
-  validate?: boolean | SlashPathValidationFactoryConfig;
+  readonly validate?: boolean | SlashPathValidationFactoryConfig;
 }
 
 export function slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFactory {
@@ -371,15 +393,15 @@ export interface IsolateSlashPathFunctionConfig {
   /**
    * Range to isolate
    */
-  range: IndexRangeInput;
+  readonly range: IndexRangeInput;
   /**
    * Start type to force the result to be.
    */
-  startType?: SlashPathStartType;
+  readonly startType?: SlashPathStartType;
   /**
    * Whether or not to isolate the path to a file path. If true, the result string will not end with a slash.
    */
-  asFile?: boolean;
+  readonly asFile?: boolean;
 }
 
 /**
@@ -415,5 +437,85 @@ export function isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig)
     } else {
       return joined;
     }
+  };
+}
+
+// MARK: Details
+export interface SlashPathDetails {
+  /**
+   * The full path
+   */
+  readonly path: SlashPath;
+  /**
+   * The path type
+   */
+  readonly type: SlashPathType;
+  /**
+   * The last part of the path
+   */
+  readonly file: SlashPathFile | SlashPathTypedFile;
+  /**
+   * The last part of the path if it is a typed file
+   */
+  readonly typedFile: Maybe<SlashPathTypedFile>;
+  /**
+   * Contains the name of the folder the file is in, if applicable.
+   */
+  readonly fileFolder: Maybe<SlashPathPart>;
+  /**
+   * Contains all parts of the path, minus the file part.
+   *
+   * If there is only one path part and the path is a relative path, this will be undefined.
+   */
+  readonly folderPath: Maybe<SlashPathFolder>;
+  /**
+   * The start type of the path.
+   */
+  readonly startType: SlashPathStartType;
+  /**
+   * All parts of the path
+   */
+  readonly parts: SlashPathPart[];
+}
+
+/**
+ * Returns the details of a path.
+ *
+ * @param path The path to get details for.
+ * @returns The details of the path.
+ */
+export function slashPathDetails(path: SlashPath): SlashPathDetails {
+  const type = slashPathType(path);
+  const parts = slashPathParts(path);
+  const fileIndex = parts.length - 1;
+  const file = parts[fileIndex];
+
+  let folderPath: Maybe<SlashPathFolder>;
+  let fileFolder: Maybe<SlashPathPart>;
+  const pathStartsWithSlash = path.startsWith(SLASH_PATH_SEPARATOR);
+
+  if (fileIndex === 0) {
+    folderPath = pathStartsWithSlash ? SLASH_PATH_SEPARATOR : undefined;
+    fileFolder = undefined;
+  } else {
+    const folderPathParts = parts.slice(0, fileIndex);
+    folderPath = folderPathParts.join(SLASH_PATH_SEPARATOR) as SlashPathFolder;
+
+    if (pathStartsWithSlash) {
+      folderPath = (SLASH_PATH_SEPARATOR + folderPath) as SlashPathFolder;
+    }
+
+    fileFolder = folderPathParts[folderPathParts.length - 1];
+  }
+
+  return {
+    path,
+    type,
+    file,
+    startType: pathStartsWithSlash ? 'absolute' : 'relative',
+    typedFile: type === 'typedfile' ? (file as SlashPathTypedFile) : undefined,
+    fileFolder,
+    folderPath,
+    parts
   };
 }
