@@ -2,6 +2,7 @@ import { type MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, type SlashPathFolder, useCallback } from '@dereekb/util';
 import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder } from '@dereekb/firebase';
+import { Readable } from 'stream';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -11,6 +12,8 @@ import { type FirebaseStorageAccessorFile, type StorageRawDataString, type Stora
 export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFixture) {
   describe('FirebaseStorageAccessor', () => {
     describe('file()', () => {
+      const secondBucket = 'second-bucket';
+
       const doesNotExistFilePath = 'test.png';
       let doesNotExistFile: FirebaseStorageAccessorFile;
 
@@ -19,10 +22,18 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       const existsFileContentType = 'text/plain';
       let existsFile: FirebaseStorageAccessorFile;
 
+      let secondBucketTarget: FirebaseStorageAccessorFile;
+
       beforeEach(async () => {
         doesNotExistFile = f.storageContext.file(doesNotExistFilePath);
         existsFile = f.storageContext.file(existsFilePath);
         await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType });
+
+        // delete the does not exist file and second bucket target if it exists
+        await doesNotExistFile.delete().catch(() => null);
+
+        secondBucketTarget = f.storageContext.file({ bucketId: secondBucket, pathString: doesNotExistFilePath });
+        await secondBucketTarget.delete().catch(() => null);
       });
 
       describe('uploading', () => {
@@ -156,7 +167,130 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
             }
           });
 
-          // TODO(TEST): Upload using a nodejs stream
+          it('should upload a string using a stream using a WritableStream', async () => {
+            if (uploadFile.uploadStream != null) {
+              const myText = 'This is a test string.';
+
+              // Create a readable stream from the string
+              const readableStream = Readable.from(myText, { encoding: 'utf-8' });
+
+              const stream = uploadFile.uploadStream();
+              readableStream.pipe(stream, { end: true });
+
+              await new Promise((resolve, reject) => {
+                stream.on('finish', resolve);
+                stream.on('error', reject);
+              });
+
+              const exists = await uploadFile.exists();
+              expect(exists).toBe(true);
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe('text/plain');
+
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
+
+              const decoded = Buffer.from(result).toString('utf-8');
+              expect(decoded).toBe(myText);
+            }
+          });
+        });
+      });
+
+      describe('copy()', () => {
+        it('should copy the file to a new location in the same bucket.', async () => {
+          if (existsFile.copy != null) {
+            let exists = await doesNotExistFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = doesNotExistFile.storagePath;
+
+            const result = await existsFile.copy(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const doesNotExistFileExists = await doesNotExistFile.exists();
+            expect(doesNotExistFileExists).toBe(true);
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(true); // original still exists
+          }
+        });
+
+        it('should copy the file to a new location to a different bucket.', async () => {
+          if (existsFile.copy != null) {
+            const secondBucket = {
+              bucketId: 'second-bucket',
+              pathString: secondBucketTarget.storagePath.pathString
+            };
+
+            const targetFile = f.storageContext.file(secondBucket);
+
+            let exists = await targetFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = targetFile.storagePath;
+
+            const result = await existsFile.copy(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const targetFileExists = await targetFile.exists();
+            expect(targetFileExists).toBe(true);
+
+            const doesNotExistExists = await doesNotExistFile.exists();
+            expect(doesNotExistExists).toBe(false); // on a different bucket
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(true); // original still exists
+          }
+        });
+      });
+
+      describe('move()', () => {
+        it('should move the file to a new location in the same bucket.', async () => {
+          if (existsFile.move != null) {
+            let exists = await doesNotExistFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = doesNotExistFile.storagePath;
+
+            const result = await existsFile.move(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const doesNotExistExists = await doesNotExistFile.exists();
+            expect(doesNotExistExists).toBe(true);
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(false); // check was moved
+          }
+        });
+
+        it('should move the file to a new location to a different bucket.', async () => {
+          if (existsFile.move != null) {
+            const secondBucket = {
+              bucketId: 'second-bucket',
+              pathString: doesNotExistFile.storagePath.pathString
+            };
+
+            const targetFile = f.storageContext.file(secondBucket);
+
+            let exists = await targetFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = targetFile.storagePath;
+
+            const result = await existsFile.move(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const targetFileExists = await targetFile.exists();
+            expect(targetFileExists).toBe(true);
+
+            const doesNotExistStillDoesNotExists = await doesNotExistFile.exists();
+            expect(doesNotExistStillDoesNotExists).toBe(false);
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(false); // check was moved
+          }
         });
       });
 

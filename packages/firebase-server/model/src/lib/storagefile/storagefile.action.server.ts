@@ -3,7 +3,10 @@ import { FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, typ
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { NotificationExpediteServiceRef } from '../notification';
-import { StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
+import { StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
+import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError } from './storagefile.error';
+import { Maybe } from '@dereekb/util';
+import { HttpsError } from 'firebase-functions/https';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -52,15 +55,77 @@ export function createStorageFileFactory(context: BaseStorageFileServerActionsCo
 }
 
 export function initializeStorageFileFromUploadFactory(context: StorageFileServerActionsContext) {
-  const { storageFileCollection, firestoreContext, storageFileInitializeFromUploadService, firebaseServerActionTransformFunctionFactory } = context;
+  const { storageFileInitializeFromUploadService, storageService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(InitializeStorageFileFromUploadParams, async (params) => {
-    const {} = params;
+    const { bucketId, pathString } = params;
 
     return async () => {
-      const storageFileDocument = null as any;
+      const file = storageService.file({ bucketId, pathString });
 
-      // TODO: ...
+      // file must exist
+      const exists = await file.exists();
+
+      if (!exists) {
+        throw uploadedFileDoesNotExistError();
+      }
+
+      // file must be allowed to be initialized
+      const isAllowedToBeInitialized = await storageFileInitializeFromUploadService.checkFileIsAllowedToBeInitialized(file);
+
+      if (!isAllowedToBeInitialized) {
+        throw uploadedFileIsNotAllowedToBeInitializedError();
+      }
+
+      let storageFileDocument: StorageFileDocument | undefined;
+      let initializationResult: StorageFileInitializeFromUploadResult;
+
+      let httpsError: Maybe<HttpsError>;
+
+      try {
+        initializationResult = await storageFileInitializeFromUploadService.initializeFromUpload({
+          file
+        });
+
+        switch (initializationResult.resultType) {
+          case 'success':
+            try {
+              // can now delete the uploaded file
+              await file.delete();
+            } catch (e) {
+              // log errors here, but do nothing.
+              console.error(`initializeStorageFileFromUpload(): Error deleting successfully processed uploaded file (${bucketId}/${pathString})`, e);
+            }
+
+            if (initializationResult.storageFileDocument) {
+              storageFileDocument = initializationResult.storageFileDocument;
+            } else {
+              httpsError = uploadedFileInitializationDiscardedError();
+            }
+            break;
+          case 'processor_error':
+            if (initializationResult.initializationError) {
+              throw initializationResult.initializationError; // re-throw the encountered error
+            }
+            break;
+          case 'no_determiner_match':
+          case 'no_processor_configured':
+          default:
+            httpsError = uploadedFileInitializationFailedError({
+              resultType: initializationResult.resultType
+            });
+            break;
+        }
+      } catch (e) {
+        console.error(`initializeStorageFileFromUpload(): Error initializing storage file (${bucketId}/${pathString}) from upload`, e);
+        httpsError = uploadedFileInitializationFailedError({ resultType: 'processor_error' });
+      }
+
+      if (httpsError) {
+        throw httpsError;
+      } else if (!storageFileDocument) {
+        throw uploadedFileInitializationDiscardedError(); // throw again for redundancy
+      }
 
       return storageFileDocument;
     };

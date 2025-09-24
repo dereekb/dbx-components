@@ -232,36 +232,45 @@ export interface CombineUploadFileTypeDeterminerConfig {
 
 /**
  * Combines multiple UploadedFileTypeDeterminer instances into a single determiner.
- 
+ *
+ * If a single determiner is provided, it will be returned and not wrapped.
+ *
  * @param determiners The determiners to combine.
  * @returns The combined determiner.
  */
 export function combineUploadFileTypeDeterminers(config: CombineUploadFileTypeDeterminerConfig): UploadedFileTypeDeterminer {
   const { determiners, completeSearchAtLevel: inputCompleteSearchAtLevel, completeSearchOnFirstMatch: inputCompleteSearchOnFirstMatch } = config;
+  let result: UploadedFileTypeDeterminer;
 
-  const possibleFileTypes = unique(determiners.map((d) => d.getPossibleFileTypes()).flat());
-  const completeSearchOnFirstMatch = Boolean(inputCompleteSearchOnFirstMatch);
-  const completeSearchAtLevel = completeSearchOnFirstMatch ? LOW_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL : (inputCompleteSearchAtLevel ?? EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL);
+  if (determiners.length === 1) {
+    result = determiners[0];
+  } else {
+    const possibleFileTypes = unique(determiners.map((d) => d.getPossibleFileTypes()).flat());
+    const completeSearchOnFirstMatch = Boolean(inputCompleteSearchOnFirstMatch);
+    const completeSearchAtLevel = completeSearchOnFirstMatch ? LOW_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL : (inputCompleteSearchAtLevel ?? EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL);
 
-  return {
-    determine: async (input) => {
-      let result: Maybe<UploadedFileTypeDeterminerResult>;
+    result = {
+      determine: async (input) => {
+        let result: Maybe<UploadedFileTypeDeterminerResult>;
 
-      for (const determiner of determiners) {
-        const stepResult = await determiner.determine(input);
+        for (const determiner of determiners) {
+          const stepResult = await determiner.determine(input);
 
-        if (stepResult) {
-          if (stepResult.level >= completeSearchAtLevel) {
-            result = stepResult;
-            break;
-          } else if (!result || stepResult.level > result.level) {
-            result = stepResult; // update result to the higher level match
+          if (stepResult) {
+            if (stepResult.level >= completeSearchAtLevel) {
+              result = stepResult;
+              break;
+            } else if (!result || stepResult.level > result.level) {
+              result = stepResult; // update result to the higher level match
+            }
           }
         }
-      }
 
-      return result;
-    },
-    getPossibleFileTypes: () => possibleFileTypes
-  };
+        return result;
+      },
+      getPossibleFileTypes: () => possibleFileTypes
+    };
+  }
+
+  return result;
 }

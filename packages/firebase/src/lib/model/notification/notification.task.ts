@@ -114,7 +114,7 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}>(
 export type NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint = ArrayOrValue<NotificationTaskCheckpointString>;
 
 /**
- * Result of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
+ * Result type of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
  *
  * true: The task was completed successfully and can now be discarded.
  * false: The task was not completed successfully and should be retried again in the future. Note there are a maximum number of retry attempts before the task is deleted. Use delayCompletion() to avoid increasing the attempt count.

@@ -1,17 +1,35 @@
-import { type StorageUploadOptions, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorage, type StoragePath, assertStorageUploadOptionsStringFormat, type StorageDeleteFileOptions, type StorageListFilesOptions, storageListFilesResultFactory, type StorageListItemResult, type StorageListFilesResult, type StorageMetadata, type StorageBucketId, type StorageCustomMetadata } from '@dereekb/firebase';
+import {
+  type StorageUploadOptions,
+  type FirebaseStorageAccessorDriver,
+  type FirebaseStorageAccessorFile,
+  type FirebaseStorageAccessorFolder,
+  type FirebaseStorage,
+  type StoragePath,
+  assertStorageUploadOptionsStringFormat,
+  type StorageDeleteFileOptions,
+  type StorageListFilesOptions,
+  storageListFilesResultFactory,
+  type StorageListItemResult,
+  type StorageListFilesResult,
+  type StorageMetadata,
+  type StorageBucketId,
+  type StorageCustomMetadata,
+  StorageSlashPath,
+  StorageMoveOptions
+} from '@dereekb/firebase';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
-import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata } from '@google-cloud/storage';
+import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
-export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
+export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
   return storage.bucket(path.bucketId);
 }
 
-export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
+export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): GoogleCloudFile {
   return googleCloudStorageBucketForStorageFilePath(storage, path).file(path.pathString);
 }
 
-export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile>;
+export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile> & Required<Pick<FirebaseStorageAccessorFile<GoogleCloudFile>, 'uploadStream' | 'getStream'>>;
 
 export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, metadata: FileMetadata): StorageMetadata {
   const fullPath = file.name;
@@ -69,7 +87,37 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     };
   }
 
-  return {
+  function makeStoragePathForPath(newPath: StorageSlashPath | StoragePath): StoragePath {
+    let path: StoragePath;
+
+    if (typeof newPath === 'string') {
+      path = {
+        bucketId: file.bucket.name,
+        pathString: newPath
+      };
+    } else {
+      path = newPath;
+    }
+
+    return path;
+  }
+
+  async function copy(newPath: StorageSlashPath | StoragePath, options?: MoveFileAtomicOptions) {
+    const newStoragePath = makeStoragePathForPath(newPath);
+    const newFile: GoogleCloudStorageAccessorFile = googleCloudStorageAccessorFile(storage, newStoragePath);
+    return _copyWithFile(newFile, options);
+  }
+
+  async function _copyWithFile(newFile: GoogleCloudStorageAccessorFile, options?: MoveFileAtomicOptions) {
+    const copyOptions: CopyOptions = {
+      ...options
+    };
+
+    await file.copy(newFile.reference, copyOptions);
+    return newFile;
+  }
+
+  const accessorFile: GoogleCloudStorageAccessorFile = {
     reference: file,
     storagePath,
     exists: async () => file.exists().then((x) => x[0]),
@@ -109,8 +157,34 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
       return file.save(data, makeUploadOptions(options));
     },
     uploadStream: (options) => file.createWriteStream(makeUploadOptions(options)),
+    move: async (newPath: StorageSlashPath | StoragePath, options: StorageMoveOptions) => {
+      const newStoragePath = makeStoragePathForPath(newPath);
+      let newFile: GoogleCloudStorageAccessorFile = googleCloudStorageAccessorFile(storage, newStoragePath);
+
+      const moveOptions: MoveFileAtomicOptions = {
+        ...options
+      };
+
+      await file.moveFileAtomic(newFile.reference, moveOptions).catch(async (e) => {
+        if (e instanceof ApiError && e.response?.statusMessage === 'Not Implemented') {
+          // NOTE: This is not implemented in storage emulator, so it will fail with this error in testing.
+          // https://github.com/firebase/firebase-tools/issues/3751
+
+          // we can perform the same task using copy and then deleting this file.
+          await copy(newPath, moveOptions);
+          await accessorFile.delete();
+        } else {
+          throw e;
+        }
+      });
+
+      return newFile;
+    },
+    copy,
     delete: (options: StorageDeleteFileOptions) => file.delete(options).then((x) => undefined)
   };
+
+  return accessorFile;
 }
 
 export type GoogleCloudStorageAccessorFolder = FirebaseStorageAccessorFolder<GoogleCloudFile>;

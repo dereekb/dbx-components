@@ -1,5 +1,5 @@
-import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef } from '../storage';
-import { type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
+import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, StorageSlashPath } from '../storage';
+import { StorageMoveOptions, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -63,6 +63,18 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    * Optional implementation.
    */
   uploadStream?(options?: StorageUploadOptions): NodeJS.WritableStream;
+  /**
+   * Moves the file to a new location.
+   *
+   * Optional implementation.
+   */
+  move?(newPath: StorageSlashPath | StoragePath, options?: StorageMoveOptions): Promise<FirebaseStorageAccessorFile<R>>;
+  /**
+   * Copies the file to a new location.
+   *
+   * Optional implementation.
+   */
+  copy?(newPath: StorageSlashPath | StoragePath, options?: StorageMoveOptions): Promise<FirebaseStorageAccessorFile<R>>;
   /**
    * Deletes the file.
    *

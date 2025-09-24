@@ -1,3 +1,6 @@
+import { FirebaseStorageAccessorFile, StorageFileDocument, StorageFileInitializeFromUploadResultType } from '@dereekb/firebase';
+import { Maybe, PromiseOrValue } from '@dereekb/util';
+
 /**
  * Provides a reference to a StorageFileInitializeFromUploadService instance.
  */
@@ -5,7 +8,44 @@ export interface StorageFileInitializeFromUploadServiceRef {
   readonly storageFileInitializeFromUploadService: StorageFileInitializeFromUploadService;
 }
 
+export interface StorageFileInitializeFromUploadInput {
+  /**
+   * The target file.
+   *
+   * This file should not be modified (e.g. deleted) during the processor call.
+   */
+  readonly file: FirebaseStorageAccessorFile;
+}
+
+export interface StorageFileInitializeFromUploadResult {
+  /**
+   * Whether or not the initialization was successful.
+   */
+  readonly resultType: StorageFileInitializeFromUploadResultType;
+  /**
+   * The initialized StorageFile value, if applicable.
+   */
+  readonly storageFileDocument?: Maybe<StorageFileDocument>;
+  /**
+   * Any error that occurred during processing.
+   */
+  readonly initializationError?: Maybe<unknown>;
+}
+
 /**
- * Service dedicated to initializing a StorageFile value from an uploaded file.
+ * Service dedicated to initializing a StorageFileDocument value from an uploaded file.
  */
-export abstract class StorageFileInitializeFromUploadService {}
+export abstract class StorageFileInitializeFromUploadService {
+  /**
+   * Returns true if the file is allowed to be initialized.
+   *
+   * @param file
+   */
+  abstract checkFileIsAllowedToBeInitialized(file: FirebaseStorageAccessorFile): PromiseOrValue<boolean>;
+  /**
+   * Initializes a StorageFileDocument value from an uploaded file.
+   *
+   * The input file is unchanged, only new content is created.
+   */
+  abstract initializeFromUpload(input: StorageFileInitializeFromUploadInput): Promise<StorageFileInitializeFromUploadResult>;
+}

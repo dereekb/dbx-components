@@ -136,6 +136,18 @@ export type StorageUploadTask = {
 export type StorageClientUploadResult = unknown;
 export type StorageUploadResult = StorageClientUploadResult | unknown;
 
+export interface StoragePreconditionOptions {
+  ifGenerationMatch?: number | string;
+  ifGenerationNotMatch?: number | string;
+  ifMetagenerationMatch?: number | string;
+  ifMetagenerationNotMatch?: number | string;
+}
+
+export interface StorageMoveOptions {
+  userProject?: string;
+  preconditionOpts?: StoragePreconditionOptions;
+}
+
 export interface StorageUploadOptions {
   readonly resumable?: boolean;
   /**

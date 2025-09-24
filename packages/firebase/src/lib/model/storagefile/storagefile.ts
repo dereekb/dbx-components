@@ -2,6 +2,7 @@ import { type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, FirebaseAuthUserId, FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate } from '../../common';
 import { StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
+import { NotificationKey } from '../notification';
 
 export abstract class StorageFileFirestoreCollections {
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
@@ -49,7 +50,7 @@ export enum StorageFileProcessingState {
    */
   QUEUED = 1,
   /**
-   * The StorageFile is currently being processed.
+   * The StorageFile has an associated NotificationTask for it.
    */
   PROCESSING = 2,
   /**
@@ -80,6 +81,20 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * Processing state of the storage file.
    */
   ps: StorageFileProcessingState;
+  /**
+   * The NotificationTask key for this storage file.
+   *
+   * Set only if the StorageFile has an associated NotificationTask.
+   *
+   * Cleared once the processing stage is no longer PROCESSING.
+   */
+  pn?: Maybe<NotificationKey>;
+  /**
+   * The date that state was last updated to PROCESSING.
+   *
+   * Is used as a way to track if processing should be checked on.
+   */
+  pat?: Maybe<Date>;
   /**
    * User who uploaded this file, if applicable.
    */
@@ -119,6 +134,8 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
     cat: firestoreDate(),
     fs: firestoreEnum<StorageFileState>({ default: StorageFileState.INIT }),
     ps: firestoreEnum<StorageFileProcessingState>({ default: StorageFileProcessingState.INIT }),
+    pn: optionalFirestoreString(),
+    pat: optionalFirestoreDate(),
     uby: optionalFirestoreString(),
     o: optionalFirestoreString(),
     p: optionalFirestoreString(),

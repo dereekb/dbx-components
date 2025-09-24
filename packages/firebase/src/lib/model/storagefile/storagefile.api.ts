@@ -6,9 +6,6 @@ import { StorageFileTypes } from './storagefile';
 import { StorageBucketId, StoragePath, StorageSlashPath } from '../../common/storage';
 import { Maybe } from '@dereekb/util';
 
-export const STORAGE_FILE_NAME_MIN_LENGTH = 0;
-export const STORAGE_FILE_NAME_MAX_LENGTH = 42;
-
 /**
  * Used for directly create a new StorageFile.
  */
@@ -27,7 +24,14 @@ export class InitializeStorageFileFromUploadParams implements StoragePath {
   pathString!: StorageSlashPath;
 }
 
-export class ProcessStorageFileParams extends TargetModelParams {}
+export class ProcessStorageFileParams extends TargetModelParams {
+  /**
+   * If set, will run the processing immediately instead of waiting for the next scheduled run.
+   */
+  @Expose()
+  @IsBoolean()
+  runImmediately?: Maybe<boolean>;
+}
 
 export interface ProcessStorageFileResult {}
 
