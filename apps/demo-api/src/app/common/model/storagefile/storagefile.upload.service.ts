@@ -5,7 +5,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   const storageFileUploadServiceConfig: StorageFileInitializeFromUploadServiceConfig = {
     validate: true,
     determiner: [],
-    processors: []
+    initializer: [{}]
   };
 
   return storageFileInitializeFromUploadService(storageFileUploadServiceConfig);

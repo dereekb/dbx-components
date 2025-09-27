@@ -35,6 +35,16 @@ export type AbsoluteSlashPathFolder = `${SlashPathSeparatorString}${string}${Sla
 export type SlashPathFolder = AbsoluteSlashPathFolder | RelativeSlashPathFolder | `${SlashPathSeparatorString}`;
 
 /**
+ * A relative folder path that is just an empty string.
+ */
+export type EmptyRelativeSlashPathFolder = '';
+
+/**
+ * This type includes the empty relative folder path possibility.
+ */
+export type InferredSlashPathFolder = SlashPathFolder | EmptyRelativeSlashPathFolder;
+
+/**
  * A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')
  */
 export type SlashPathUntypedFile = string;
@@ -189,6 +199,110 @@ export const ALL_SLASH_PATH_FILE_TYPE_SEPARATORS_REGEX = /\.+/g;
 export function toRelativeSlashPathStartType(input: SlashPath): SlashPath {
   // remove all leading slashes
   return input.replace(LEADING_SLASHES_REGEX, '');
+}
+
+/**
+ * Factory function that creates a SlashPathFolder from a string.
+ */
+export type SlashPathFolderFactory = (input: string) => InferredSlashPathFolder;
+
+export interface SlashPathFolderFactoryConfig {
+  /**
+   * Optional start type for the slash path. Defaults to 'any'.
+   */
+  readonly startType?: SlashPathStartType;
+  /**
+   * Whether to treat untyped files as folders.
+   *
+   * Defaults to false.
+   */
+  readonly treatUntypedFilesAsFolders?: boolean;
+  /**
+   * Optional validation configuration.
+   */
+  readonly validationConfig?: SlashPathValidationFactoryConfig;
+  /**
+   * The path value to return if the input is considered invalid after the validation step.
+   *
+   * You can also configure the `throwError` option in `validationConfig` to throw an error, in which case this option will be ignored.
+   *
+   * Defaults to ''.
+   */
+  readonly invalidPathValue?: Maybe<InferredSlashPathFolder>;
+}
+
+/**
+ * Creates a SlashPathFolderFactory.
+ *
+ * @param config Configuration options for the factory.
+ * @returns A SlashPathFolderFactory.
+ */
+export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}): SlashPathFolderFactory {
+  const { startType, validationConfig, invalidPathValue: inputInvalidPathValue, treatUntypedFilesAsFolders } = config;
+
+  const invalidPathValue = inputInvalidPathValue ?? '';
+  const startTypeFactory = slashPathStartTypeFactory(startType ?? 'any');
+  const slashPathValidation = slashPathValidationFactory({
+    replaceIllegalCharacters: true,
+    replaceIllegalDots: true,
+    throwError: false,
+    ...validationConfig
+  });
+
+  return (input) => {
+    const initialPath = slashPathValidation(input);
+    const pathType = slashPathType(initialPath);
+
+    let path: Maybe<InferredSlashPathFolder>;
+
+    function pathFromFilePath(filePath: SlashPathFile) {
+      const details = slashPathDetails(filePath);
+      return details.folderPath;
+    }
+
+    switch (pathType) {
+      case 'file':
+        if (treatUntypedFilesAsFolders) {
+          path = initialPath as InferredSlashPathFolder;
+        } else {
+          path = pathFromFilePath(initialPath);
+        }
+        break;
+      case 'typedfile':
+        path = pathFromFilePath(initialPath);
+        break;
+      case 'folder':
+        path = initialPath as InferredSlashPathFolder;
+        break;
+      case 'invalid':
+        path = undefined;
+        break;
+    }
+
+    if (path != null) {
+      path = startTypeFactory(path) as InferredSlashPathFolder;
+    } else {
+      path = invalidPathValue;
+    }
+
+    // must end with a slash to be a proper folder
+    if (path && !path.endsWith(SLASH_PATH_SEPARATOR)) {
+      path += SLASH_PATH_SEPARATOR;
+    }
+
+    return path as InferredSlashPathFolder;
+  };
+}
+
+/**
+ * Converts the input string to a valid slash path folder based on the configuration.
+ *
+ * If the input is a file, the folder of the file is returned instead.
+ *
+ * @param input
+ */
+export function slashPathFolder(input: string, config?: SlashPathFolderFactoryConfig): InferredSlashPathFolder {
+  return slashPathFolderFactory({ ...config })(input);
 }
 
 /**
@@ -465,9 +579,9 @@ export interface SlashPathDetails {
   /**
    * Contains all parts of the path, minus the file part.
    *
-   * If there is only one path part and the path is a relative path, this will be undefined.
+   * If there is only one path part and the path is a relative path, this will be an empty string.
    */
-  readonly folderPath: Maybe<SlashPathFolder>;
+  readonly folderPath: InferredSlashPathFolder;
   /**
    * The start type of the path.
    */
@@ -490,12 +604,12 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
   const fileIndex = parts.length - 1;
   const file = parts[fileIndex];
 
-  let folderPath: Maybe<SlashPathFolder>;
+  let folderPath: InferredSlashPathFolder;
   let fileFolder: Maybe<SlashPathPart>;
   const pathStartsWithSlash = path.startsWith(SLASH_PATH_SEPARATOR);
 
   if (fileIndex === 0) {
-    folderPath = pathStartsWithSlash ? SLASH_PATH_SEPARATOR : undefined;
+    folderPath = pathStartsWithSlash ? SLASH_PATH_SEPARATOR : '';
     fileFolder = undefined;
   } else {
     const folderPathParts = parts.slice(0, fileIndex);
@@ -517,5 +631,106 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
     fileFolder,
     folderPath,
     parts
+  };
+}
+
+// MARK: Sub Path Matcher
+export interface SlashPathSubPathMatcherConfig {
+  /**
+   * The base path to match against.
+   */
+  readonly basePath: SlashPath;
+}
+
+export type SlashPathSubPathMatcherResult = SlashPathSubPathMatcherNonMatchResult | SlashPathSubPathMatcherMatchResult;
+
+export interface SlashPathSubPathMatcherBaseResult {
+  /**
+   * The input path that was matched.
+   */
+  readonly inputPath: SlashPath;
+  /**
+   * True if the input path has the same configured base path.
+   */
+  readonly matchesBasePath: boolean;
+  /**
+   * All parts of the input path.
+   */
+  readonly inputPathParts: SlashPathPart[];
+  /**
+   * Result of the comparison between the parts of the input path against the base path.
+   */
+  readonly nonMatchingParts: (SlashPathPart | null)[];
+  /**
+   * All parts of the sub path, relative to the base path.
+   *
+   * Only non-null if matchesBasePath is true.
+   */
+  readonly subPathParts: SlashPathPart[] | null;
+}
+
+export interface SlashPathSubPathMatcherMatchResult extends SlashPathSubPathMatcherBaseResult {
+  readonly matchesBasePath: true;
+  /**
+   * All parts of the sub path, relative to the base path.
+   */
+  readonly subPathParts: SlashPathPart[];
+}
+
+export interface SlashPathSubPathMatcherNonMatchResult extends SlashPathSubPathMatcherBaseResult {
+  readonly matchesBasePath: false;
+  /**
+   * Unset when the input path does not match the base path.
+   */
+  readonly subPathParts: null;
+}
+
+/**
+ * Used to match sub paths of a specific configured path.
+ */
+export type SlashPathSubPathMatcher = (path: SlashPath) => SlashPathSubPathMatcherResult;
+
+/**
+ * Creates a SlashPathSubPathMatcher.
+ *
+ * @param config The configuration for the matcher.
+ * @returns The matcher.
+ */
+export function slashPathSubPathMatcher(config: SlashPathSubPathMatcherConfig): SlashPathSubPathMatcher {
+  const basePathParts = slashPathParts(config.basePath);
+
+  return (inputPath: SlashPath) => {
+    const inputPathParts = slashPathParts(inputPath);
+
+    let nonMatchingPartsCount = 0;
+
+    const nonMatchingParts = basePathParts.map((part, index) => {
+      let result: SlashPathPart | null;
+
+      if (part !== inputPathParts[index]) {
+        result = part;
+        nonMatchingPartsCount += 1;
+      } else {
+        result = null;
+      }
+
+      return result;
+    });
+
+    const matchesBasePath = inputPathParts.length >= basePathParts.length && nonMatchingPartsCount === 0;
+
+    let subPathParts: SlashPathPart[] | null = null;
+
+    if (matchesBasePath) {
+      subPathParts = inputPathParts.slice(basePathParts.length);
+    }
+
+    return {
+      inputPath,
+      matchesBasePath,
+      inputPathParts,
+      subPathParts,
+      nonMatchingParts
+    } as SlashPathSubPathMatcherResult;
   };
 }

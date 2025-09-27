@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, type SlashPathFolder, slashPathType, type SlashPathTypedFile, type SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes, slashPathDetails, slashPathSubPathMatcher, slashPathFolderFactory } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {
@@ -37,6 +37,116 @@ describe('slashPathType', () => {
     const folderPath: SlashPathFolder = 'wMNzlhSlp6Gb93V8u4Rs/';
     const type = slashPathType(folderPath);
     expect(type).toBe('folder');
+  });
+});
+
+describe('slashPathFolderFactory()', () => {
+  describe('instance', () => {
+    const factory = slashPathFolderFactory();
+
+    it('should return the empty relative folder for the input typed file', () => {
+      const file = `d.txt`;
+
+      const result = factory(file);
+      expect(result).toBe('');
+    });
+
+    it('should return the root folder for the input typed file', () => {
+      const file = `/d.txt`;
+
+      const result = factory(file);
+      expect(result).toBe('/');
+    });
+
+    it('should return the folder for the input typed file', () => {
+      const folder = `a/b/c/`;
+      const file = `${folder}d.txt`;
+
+      const result = factory(file);
+      expect(result).toBe(folder);
+    });
+
+    it('should return the absolute path folder for the input typed file', () => {
+      const folder = `/a/b/c/`;
+      const file = `${folder}d.txt`;
+
+      const result = factory(file);
+      expect(result).toBe(folder);
+    });
+
+    it('should return the folder for the input untyped file', () => {
+      const folder = `a/b/c/`;
+      const untypedFile = `${folder}d`;
+
+      const result = factory(untypedFile);
+      expect(result).toBe(folder);
+    });
+
+    it('should return the folder for the input folder', () => {
+      const folderBasePath = `a/b/c/`;
+      const folderPath = `${folderBasePath}d/`; // ends with slash, is a folder
+
+      const result = factory(folderPath);
+      expect(result).toBe(folderPath);
+    });
+
+    it('should return the folder for the input folder without trailing slash', () => {
+      const folderBasePath = `a/b/c/`;
+      const folderPath = `${folderBasePath}d`; // is considered an untyped file
+
+      const result = factory(folderPath);
+      expect(result).toBe(folderBasePath);
+    });
+
+    it('should return the folder for the input file with multiple dots', () => {
+      const folder = `a/b/c/`;
+      const untypedFile = `${folder}d.test.tests.test`;
+
+      const result = factory(untypedFile);
+      expect(result).toBe(folder);
+    });
+
+    it('should return the fixed folder for the input folder with illegal characters', () => {
+      const folder = `a.a.a.a/b.b.b/.c.c.c/`;
+      const untypedFile = `${folder}d.txt`;
+
+      const result = factory(untypedFile);
+      const expected = `${folder.replaceAll('.', '_')}`;
+
+      expect(result).toBe(expected);
+    });
+
+    describe('treatUntypedFilesAsFolders=true', () => {
+      const factory = slashPathFolderFactory({ treatUntypedFilesAsFolders: true });
+
+      it('should treat the untyped file as a folder', () => {
+        const folder = `a/b/c/`;
+        const untypedFilePath = `${folder}d`;
+
+        const result = factory(untypedFilePath);
+        expect(result).toBe(`${untypedFilePath}/`);
+      });
+
+      describe('startType=absolute', () => {
+        const factory = slashPathFolderFactory({ startType: 'absolute', treatUntypedFilesAsFolders: true });
+
+        it('should return a valid absolute folder path', () => {
+          const folder = 'wMNzlhSlp6Gb93V8u4Rs';
+          const result = factory(folder);
+          expect(result).toBe(`/${folder}/`);
+        });
+      });
+
+      describe('startType=relative', () => {
+        const factory = slashPathFolderFactory({ startType: 'relative', treatUntypedFilesAsFolders: true });
+
+        it('should return a valid relative folder path', () => {
+          const folder = 'wMNzlhSlp6Gb93V8u4Rs';
+          const result = factory(`/${folder}`);
+          expect(result).toBe(`${folder}/`);
+        });
+      });
+    });
   });
 });
 
@@ -293,6 +403,44 @@ describe('slashPathDetails()', () => {
       expect(details.file).toBe(file);
       expect(details.typedFile).toBe(file);
       expect(details.fileFolder).toBeUndefined();
+    });
+  });
+});
+
+describe('slashPathSubPathMatcher()', () => {
+  describe('instance', () => {
+    const basePath = 'a/b/c';
+    const matcher = slashPathSubPathMatcher({ basePath });
+
+    it('should match a sub path folder', () => {
+      const result = matcher(`${basePath}/d`);
+      expect(result.matchesBasePath).toBe(true);
+      expect(result.subPathParts).toBeDefined();
+      expect(result.subPathParts).toEqual(['d']);
+      expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(0);
+    });
+
+    it('should match a sub path file', () => {
+      const result = matcher(`${basePath}/d.e`);
+      expect(result.matchesBasePath).toBe(true);
+      expect(result.subPathParts).toBeDefined();
+      expect(result.subPathParts).toEqual(['d.e']);
+      expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(0);
+    });
+
+    it('should match a sub path nested file', () => {
+      const result = matcher(`${basePath}/d/e.f`);
+      expect(result.matchesBasePath).toBe(true);
+      expect(result.subPathParts).toBeDefined();
+      expect(result.subPathParts).toEqual(['d', 'e.f']);
+      expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(0);
+    });
+
+    it('should not match a non-sub path', () => {
+      const result = matcher('a/b/d');
+      expect(result.matchesBasePath).toBe(false);
+      expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(1);
+      expect(result.nonMatchingParts[2]).toBe('d');
     });
   });
 });

@@ -105,6 +105,11 @@ export interface IterateFetchPagesByItemsConfig<I, O, T, R> extends Omit<Iterate
   readonly iteratePageItems: IterateFetchPagesByItemsFunction<I, O, T, R>;
 }
 
+export interface IterateFetchPagesByItemsResult<I, O, T, R> extends IterateFetchPagesResult {
+  readonly totalItemsLoaded: number;
+  readonly totalItemsVisited: number;
+}
+
 /**
  * Iterates through the pages of a created FetchPage instance.
  *
@@ -137,7 +142,13 @@ export async function iterateFetchPagesByItems<I, O, T, R>(config: IterateFetchP
     endEarly: () => hasReachedFinalItem
   } as IterateFetchPagesConfig<I, O, R[]>;
 
-  return iterateFetchPages<I, O, R[]>(fetchPagesConfig);
+  const iterateFetchPagesResult = await iterateFetchPages<I, O, R[]>(fetchPagesConfig);
+
+  return {
+    ...iterateFetchPagesResult,
+    totalItemsLoaded,
+    totalItemsVisited
+  };
 }
 
 // MARK: IterateFetchPages

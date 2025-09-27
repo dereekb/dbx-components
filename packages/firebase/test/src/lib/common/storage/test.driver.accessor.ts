@@ -1,7 +1,7 @@
 import { type MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { readableStreamToBuffer, type SlashPathFolder, useCallback } from '@dereekb/util';
-import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder } from '@dereekb/firebase';
+import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
+import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFilesResult, StorageListFileResult } from '@dereekb/firebase';
 import { Readable } from 'stream';
 
 /**
@@ -416,7 +416,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
       });
 
-      describe('exists', () => {
+      describe('exists()', () => {
         it('should return false if there are no items in the folder.', async () => {
           const exists = await doesNotExistFolder.exists();
           expect(exists).toBe(false);
@@ -428,7 +428,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
       });
 
-      describe('list', () => {
+      describe('list()', () => {
         const existsBFileName = 'a.txt';
         const existsBFilePath = existsFolderPath + existsBFileName;
 
@@ -442,6 +442,108 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           await f.storageContext.file(existsBFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
           await f.storageContext.file(existsCFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
           await f.storageContext.file(otherFolderFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+        });
+
+        describe('options', () => {
+          describe('listAll', () => {
+            describe('=false/unset', () => {
+              it('should list all the direct files and folders that exist on the test path.', async () => {
+                const result = await existsFolder.list();
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(2);
+
+                const fileNames = new Set(files.map((x) => x.name));
+                expect(fileNames).toContain(existsFileName);
+                expect(fileNames).toContain(existsBFileName);
+
+                const folders = result.folders();
+                expect(folders.length).toBe(1);
+
+                const folderNames = new Set(folders.map((x) => x.name));
+                expect(folderNames).toContain('c');
+              });
+
+              it('should list all the direct folders that exist at the root.', async () => {
+                const rootFolder = await f.storageContext.folder('/');
+
+                const result = await rootFolder.list();
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(0); // files are under /test/ and /other/
+
+                const folders = result.folders();
+                expect(folders.length).toBe(2);
+
+                const names = new Set(folders.map((x) => x.name));
+
+                expect(names).toContain('test');
+                expect(names).toContain('other');
+              });
+            });
+
+            describe('=true', () => {
+              it('should list all files and folders that exist on the test path.', async () => {
+                const result = await existsFolder.list({ includeNestedResults: true });
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(3);
+
+                const filePaths = new Set(files.map((x) => `${SLASH_PATH_SEPARATOR}${x.storagePath.pathString}`));
+
+                expect(filePaths).toContain(existsFilePath);
+                expect(filePaths).toContain(existsBFilePath);
+                expect(filePaths).toContain(existsCFilePath);
+                expect(filePaths).not.toContain(otherFolderFilePath);
+
+                // folders are not counted/returned
+                const folders = result.folders();
+                expect(folders.length).toBe(0);
+              });
+
+              it('should list all the folders that exist at the root.', async () => {
+                const rootFolder = await f.storageContext.folder('/');
+
+                const result = await rootFolder.list({ includeNestedResults: true });
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(4); // all created files
+
+                const folders = result.folders();
+                expect(folders.length).toBe(0);
+              });
+
+              describe('maxResults', () => {
+                it('should limit the number of results returned.', async () => {
+                  const rootFolder = await f.storageContext.folder('/');
+                  const limit = 2;
+
+                  const result = await rootFolder.list({ includeNestedResults: true, maxResults: limit });
+                  expect(result).toBeDefined();
+
+                  if (f.storageContext.drivers.storageAccessorDriver.type === 'server') {
+                    // Currently only the server can properly limit the number of results returned.
+                    // The client-side will limit the results somewhat, but if folders are returned then it will return the results of those folders as well.
+
+                    const files = result.files();
+                    expect(files.length).toBe(limit);
+
+                    const nextPage = await result.next();
+                    const nextPageFiles = nextPage.files();
+
+                    expect(nextPageFiles.length).toBe(limit);
+                  }
+
+                  const folders = result.folders();
+                  expect(folders.length).toBe(0);
+                });
+              });
+            });
+          });
         });
 
         describe('file()', () => {
@@ -507,42 +609,6 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           });
         });
 
-        it('should list all the direct files and folders that exist on the test path.', async () => {
-          const result = await existsFolder.list();
-          expect(result).toBeDefined();
-
-          const files = result.files();
-          expect(files.length).toBe(2);
-
-          const fileNames = new Set(files.map((x) => x.name));
-          expect(fileNames).toContain(existsFileName);
-          expect(fileNames).toContain(existsBFileName);
-
-          const folders = result.folders();
-          expect(folders.length).toBe(1);
-
-          const folderNames = new Set(folders.map((x) => x.name));
-          expect(folderNames).toContain('c');
-        });
-
-        it('should list all the direct folders that exist at the root.', async () => {
-          const rootFolder = await f.storageContext.folder('/');
-
-          const result = await rootFolder.list();
-          expect(result).toBeDefined();
-
-          const files = result.files();
-          expect(files.length).toBe(0); // files are under /test/ and /other/
-
-          const folders = result.folders();
-          expect(folders.length).toBe(2);
-
-          const names = new Set(folders.map((x) => x.name));
-
-          expect(names).toContain('test');
-          expect(names).toContain('other');
-        });
-
         describe('maxResults', () => {
           it('should respect the max results.', async () => {
             const maxResults = 1;
@@ -578,6 +644,57 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
             expect(names).toContain('test');
             expect(names).toContain('other');
+          });
+        });
+
+        describe('utilities', () => {
+          describe('iterateStorageListFilesByEachFile()', () => {
+            it('should iterate through all the files in the current folder one at a time', async () => {
+              let visitedFiles: StorageListFileResult[] = [];
+
+              const result = await iterateStorageListFilesByEachFile({
+                folder: existsFolder,
+                readItemsFromPageResult: (x) => x.result.files(),
+                iterateEachPageItem: async (file: StorageListFileResult) => {
+                  visitedFiles.push(file);
+                }
+              });
+
+              const visitedFilePathStrings = visitedFiles.map((x) => `${SLASH_PATH_SEPARATOR}${x.storagePath.pathString}`);
+              expect(visitedFilePathStrings).toContain(existsFilePath);
+              expect(visitedFilePathStrings).toContain(existsBFilePath);
+              expect(visitedFilePathStrings).not.toContain(existsCFilePath);
+              expect(visitedFilePathStrings).not.toContain(otherFolderFilePath);
+
+              expect(result).toBeDefined();
+              expect(result.totalItemsLoaded).toBe(2);
+              expect(result.totalItemsVisited).toBe(visitedFiles.length);
+            });
+
+            describe('includeNestedResults=true', () => {
+              it('should iterate through all the files and nested files under the current folder one at a time', async () => {
+                let visitedFiles: StorageListFileResult[] = [];
+
+                const result = await iterateStorageListFilesByEachFile({
+                  folder: existsFolder,
+                  includeNestedResults: true,
+                  readItemsFromPageResult: (x) => x.result.files(),
+                  iterateEachPageItem: async (file: StorageListFileResult) => {
+                    visitedFiles.push(file);
+                  }
+                });
+
+                const visitedFilePathStrings = visitedFiles.map((x) => `${SLASH_PATH_SEPARATOR}${x.storagePath.pathString}`);
+
+                expect(result).toBeDefined();
+                expect(result.totalItemsLoaded).toBe(3);
+                expect(result.totalItemsVisited).toBe(visitedFiles.length);
+                expect(visitedFilePathStrings).toContain(existsFilePath);
+                expect(visitedFilePathStrings).toContain(existsBFilePath);
+                expect(visitedFilePathStrings).toContain(existsCFilePath);
+                expect(visitedFilePathStrings).not.toContain(otherFolderFilePath);
+              });
+            });
           });
         });
       });

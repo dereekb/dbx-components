@@ -1,5 +1,6 @@
-import { ArrayOrValue, asArray, FactoryWithRequiredInput, Maybe, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathFile, SlashPathPart, sortByNumberFunction, unique } from '@dereekb/util';
-import { UploadedFileTypeIdentifier, UploadedFileDetailsAccessor } from './storagefile.upload';
+import { ArrayOrValue, asArray, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathDetails, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathSubPathMatcher, sortByNumberFunction, unique } from '@dereekb/util';
+import { UploadedFileTypeIdentifier, UploadedFileDetailsAccessor, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME } from './storagefile.upload';
+import { FirebaseAuthUserId } from '../../common';
 
 /**
  * The level of confidence in the determined upload type.
@@ -52,6 +53,12 @@ export interface UploadedFileTypeDeterminerResult {
    * The level of confidence in the determined type.
    */
   readonly level: UploadedFileTypeDeterminationLevel;
+  /**
+   * The user this file appears to be associated with.
+   *
+   * Unset if no user determination could be made.
+   */
+  readonly user?: Maybe<FirebaseAuthUserId>;
 }
 
 /**
@@ -171,6 +178,91 @@ export function determineByFolderName(config: DetermineByFolderNameConfig): Uplo
       return result;
     },
     getPossibleFileTypes: () => [fileType]
+  };
+}
+
+export interface DetermineUserByFolderConfig {
+  /**
+   * The determiner to wrap.
+   */
+  readonly determiner: UploadedFileTypeDeterminer;
+  /**
+   * Requires the detection of a user.
+   *
+   * If no user can be detected, the determination will return null, even if the wrapped determiner would have otherwise returned a result.
+   *
+   * Defaults to false.
+   */
+  readonly requireUser?: boolean;
+  /**
+   * The root folder/path to filter on.
+   *
+   * Defaults to the value of UPLOADS_FOLDER_PATH.
+   */
+  readonly rootFolder?: Maybe<SlashPathPart>;
+  /**
+   * Specific user folder/path to filter on. This path must match the path that comes after the rootFolder exactly.
+   *
+   * For example, if the rootFolder is "uploads" and the userFolderPrefix is "u", then the user at the path "uploads/u/123/avatar.png" would be "123".
+   *
+   * Defaults to the value of ALL_USER_UPLOADS_FOLDER_NAME.
+   */
+  readonly userFolderPrefix?: Maybe<SlashPathPart | SlashPathFolder>;
+  /**
+   * Whether to allow sub-paths after the user folder.
+   *
+   * Defaults to false.
+   */
+  readonly allowSubPaths?: boolean;
+}
+
+/**
+ * Wraps a separate UploadedFileTypeDeterminer and adds user determination based on folder path structure.
+ *
+ * @param determiner
+ */
+export function determineUserByFolder(config: DetermineUserByFolderConfig): UploadedFileTypeDeterminer {
+  const { determiner, rootFolder = UPLOADS_FOLDER_PATH, userFolderPrefix = ALL_USER_UPLOADS_FOLDER_NAME, requireUser = false, allowSubPaths = false } = config;
+  const fullUserPath = mergeSlashPaths([rootFolder, userFolderPrefix]);
+  const pathMatcher = slashPathSubPathMatcher({ basePath: fullUserPath });
+
+  return {
+    determine: async (input) => {
+      const determinerResult = await determiner.determine(input);
+      let result: Maybe<UploadedFileTypeDeterminerResult>;
+
+      if (determinerResult) {
+        if (determinerResult.user) {
+          result = determinerResult;
+        } else {
+          const pathDetails = input.getPathDetails();
+          const pathRootFolder = pathDetails.parts[0];
+
+          if (pathRootFolder === rootFolder) {
+            // root folder matches, continue
+            const { matchesBasePath, subPathParts } = pathMatcher(pathDetails.path);
+
+            if (matchesBasePath && (allowSubPaths ? subPathParts.length >= 2 : subPathParts.length === 2)) {
+              // must have two parts: the user folder and the file
+              const user = subPathParts[0];
+
+              result = {
+                ...determinerResult,
+                user
+              };
+            }
+          }
+        }
+
+        // If requireUser is true and no user was detected, return null.
+        if (requireUser && !result?.user) {
+          result = null;
+        }
+      }
+
+      return result;
+    },
+    getPossibleFileTypes: () => determiner.getPossibleFileTypes()
   };
 }
 

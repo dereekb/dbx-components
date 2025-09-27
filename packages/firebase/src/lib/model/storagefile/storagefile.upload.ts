@@ -1,6 +1,43 @@
-import { cachedGetter, Factory, FactoryWithRequiredInput, Maybe, slashPathDetails, SlashPathDetails } from '@dereekb/util';
+import { cachedGetter, Factory, FactoryWithRequiredInput, Maybe, mergeSlashPaths, SlashPath, slashPathDetails, SlashPathDetails, toAbsoluteSlashPathStartType } from '@dereekb/util';
 import { StoragePath } from '../../common/storage/storage';
-import { FirebaseStorageAccessorFile, StorageCustomMetadata } from '../../common';
+import { FirebaseAuthUserId, FirebaseStorageAccessorFile, StorageCustomMetadata } from '../../common';
+
+/**
+ * The base path for all uploaded files.
+ */
+export const UPLOADS_FOLDER_PATH = 'uploads';
+
+/**
+ * All users uploads folder name is "u".
+ */
+export const ALL_USER_UPLOADS_FOLDER_NAME = `u`;
+
+/**
+ * All users uploads folder path.
+ */
+export const ALL_USER_UPLOADS_FOLDER_PATH = `${UPLOADS_FOLDER_PATH}/${ALL_USER_UPLOADS_FOLDER_NAME}`;
+
+/**
+ * Creates a SlashPath for the input user's uploads folder.
+ */
+export type UserUploadsFolderSlashPathFactory = FactoryWithRequiredInput<SlashPath, FirebaseAuthUserId>;
+
+export function userUploadsFolderSlashPathFactory(inputBasePath?: Maybe<string>): UserUploadsFolderSlashPathFactory {
+  const basePath = toAbsoluteSlashPathStartType(inputBasePath ?? ALL_USER_UPLOADS_FOLDER_PATH);
+  return (userId) => `${basePath}/${userId}`;
+}
+
+export type UserUploadsFolderStoragePathFactory = FactoryWithRequiredInput<StoragePath, FirebaseAuthUserId>;
+
+export interface UserUploadsFolderStoragePathFactoryConfig {
+  readonly bucketId: string;
+  readonly basePath?: Maybe<string>;
+}
+
+export function userUploadsFolderStoragePathFactory({ bucketId, basePath: inputBasePath }: UserUploadsFolderStoragePathFactoryConfig): UserUploadsFolderStoragePathFactory {
+  const userUploadsFolderSlashPath = userUploadsFolderSlashPathFactory(inputBasePath);
+  return (userId) => ({ pathString: userUploadsFolderSlashPath(userId), bucketId });
+}
 
 /**
  * StorageFile uploaded-file type identifier.
@@ -97,8 +134,8 @@ export function uploadedFileDetailsAccessorFactory(): UploadedFileDetailsAccesso
  *
  * success: The file was used/processed successfully.
  * no_determiner_match: Could not determine the proper processor for this file.
- * no_processor_configured: There was no processor configured for this file.
- * processor_error: There was an error thrown during processing.
+ * no_initializer_configured: There was no processor configured for this file.
+ * initializer_error: There was an error thrown during processing.
  *
  */
-export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determiner_match' | 'no_processor_configured' | 'processor_error';
+export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determiner_match' | 'no_initializer_configured' | 'initializer_error';

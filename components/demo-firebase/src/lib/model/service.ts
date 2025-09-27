@@ -48,7 +48,14 @@ import {
   NotificationSummary,
   NotificationSummaryDocument,
   NotificationSummaryRoles,
-  NotificationTypes
+  NotificationTypes,
+  StorageFileFirestoreCollections,
+  StorageFileFirestoreCollection,
+  storageFileFirestoreCollection,
+  StorageFile,
+  StorageFileDocument,
+  StorageFileRoles,
+  StorageFileTypes
 } from '@dereekb/firebase';
 import { fullAccessRoleMap, grantedRoleKeysMapFromArray, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
@@ -56,7 +63,7 @@ import { GuestbookTypes, GuestbookFirestoreCollections, Guestbook, GuestbookDocu
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
 import { demoSystemStateStoredDataConverterMap, ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections {
+export abstract class DemoFirestoreCollections implements FirestoreContextReference, ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections {
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -72,6 +79,7 @@ export abstract class DemoFirestoreCollections implements FirestoreContextRefere
   abstract readonly notificationCollectionGroup: NotificationFirestoreCollectionGroup;
   abstract readonly notificationWeekCollectionFactory: NotificationWeekFirestoreCollectionFactory;
   abstract readonly notificationWeekCollectionGroup: NotificationWeekFirestoreCollectionGroup;
+  abstract readonly storageFileCollection: StorageFileFirestoreCollection;
 }
 
 export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext): DemoFirestoreCollections {
@@ -90,7 +98,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     notificationCollectionFactory: notificationFirestoreCollectionFactory(firestoreContext),
     notificationCollectionGroup: notificationFirestoreCollectionGroup(firestoreContext),
     notificationWeekCollectionFactory: notificationWeekFirestoreCollectionFactory(firestoreContext),
-    notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext)
+    notificationWeekCollectionGroup: notificationWeekFirestoreCollectionGroup(firestoreContext),
+    storageFileCollection: storageFileFirestoreCollection(firestoreContext)
   };
 }
 
@@ -185,8 +194,15 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.notificationWeekCollectionGroup
 });
 
+export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: DemoFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
+    return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
+  },
+  getFirestoreCollection: (c) => c.app.storageFileCollection
+});
+
 // MARK: Services
-export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes | NotificationTypes | StorageFileTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
@@ -202,7 +218,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationSummary: notificationSummaryFirebaseModelServiceFactory,
   notificationBox: notificationBoxFirebaseModelServiceFactory,
   notification: notificationFirebaseModelServiceFactory,
-  notificationWeek: notificationWeekFirebaseModelServiceFactory
+  notificationWeek: notificationWeekFirebaseModelServiceFactory,
+  storageFile: storageFileFirebaseModelServiceFactory
 };
 
 export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;

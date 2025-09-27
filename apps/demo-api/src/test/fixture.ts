@@ -47,11 +47,16 @@ import {
   NotificationUserFirestoreCollection,
   CreateNotificationTemplate,
   createNotificationDocument,
-  UpdateNotificationUserParams
+  UpdateNotificationUserParams,
+  StorageFile,
+  StorageFileDocument,
+  StoragePath,
+  DocumentReference,
+  StorageFileFirestoreCollection
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
-import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter } from '@dereekb/util';
-import { NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService } from '@dereekb/firebase-server/model';
+import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter, Factory, AsyncFactory } from '@dereekb/util';
+import { NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 
@@ -80,6 +85,7 @@ export interface DemoApiContext {
   get notificationInitServerActions(): NotificationInitServerActions;
   get notificationSendService(): NotificationSendService;
   get notificationTaskService(): NotificationTaskService;
+  get storageFileActions(): StorageFileServerActions;
 }
 
 // MARK: Admin
@@ -118,6 +124,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
 
   get notificationTaskService() {
     return this.instance.notificationTaskService;
+  }
+
+  get storageFileActions() {
+    return this.instance.storageFileActions;
   }
 
   get profileServerActions() {
@@ -168,6 +178,10 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
   get notificationTaskService() {
     return this.get(NotificationTaskService);
+  }
+
+  get storageFileActions() {
+    return this.get(StorageFileServerActions);
   }
 
   get profileServerActions() {
@@ -229,6 +243,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
     return this.instance.notificationInitServerActions;
   }
 
+  get storageFileActions() {
+    return this.instance.storageFileActions;
+  }
+
   get profileServerActions() {
     return this.instance.profileServerActions;
   }
@@ -277,6 +295,10 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 
   get notificationTaskService() {
     return this.get(NotificationTaskService);
+  }
+
+  get storageFileActions() {
+    return this.get(StorageFileServerActions);
   }
 
   get profileServerActions() {
@@ -836,3 +858,46 @@ export const demoNotificationWeekContextFactory = () =>
   });
 
 export const demoNotificationWeekContext = demoNotificationWeekContextFactory();
+
+// MARK: StorageFile
+export interface DemoApiStorageFileTestContextParams {
+  /**
+   * Creates an uploaded file and returns the path.
+   */
+  readonly createUploadedFile?: Maybe<AsyncFactory<StoragePath>>;
+  /**
+   * If true, will run processStorageFile() on the StorageFile.
+   */
+  readonly processStorageFile?: Maybe<boolean>;
+}
+
+export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileTestContextInstance<F>> {}
+
+export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+
+export const demoStorageFileContextFactory = () =>
+  modelTestContextFactory<StorageFile, StorageFileDocument, DemoApiStorageFileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileFirestoreCollection>({
+    makeFixture: (f) => new DemoApiStorageFileTestContextFixture(f),
+    getCollection: (fi) => fi.demoFirestoreCollections.storageFileCollection,
+    makeInstance: (delegate, ref, testInstance) => new DemoApiStorageFileTestContextInstance(delegate, ref, testInstance),
+    makeRef: async (collection, params, p) => {
+      let ref: StorageFileDocument;
+
+      if (params.createUploadedFile) {
+        const { bucketId, pathString } = await getValueFromGetter(params.createUploadedFile);
+        const initializeInstance = await p.storageFileActions.initializeStorageFileFromUpload({ bucketId, pathString });
+        ref = await initializeInstance();
+      } else {
+        throw new Error('Must use createUploadedFile() to initialize a StorageFile, or use the "doc" parameter.');
+      }
+
+      return ref.documentRef;
+    },
+    initDocument: async (instance, params) => {
+      const p = instance.testContext;
+
+      // TODO: Process document?
+    }
+  });
+
+export const demoStorageFileContext = demoStorageFileContextFactory();

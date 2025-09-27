@@ -15,7 +15,8 @@ import {
   type StorageBucketId,
   type StorageCustomMetadata,
   StorageSlashPath,
-  StorageMoveOptions
+  StorageMoveOptions,
+  StorageListFilesPageToken
 } from '@dereekb/firebase';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
@@ -216,8 +217,11 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
   hasNext: (result: GoogleCloudListResult) => {
     return result.nextQuery != null;
   },
-  next(storage: GoogleCloudStorage, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
-    return folder.list(result.nextQuery);
+  nextPageTokenFromResult(result: GoogleCloudListResult): Maybe<StorageListFilesPageToken> {
+    return result.nextQuery?.pageToken;
+  },
+  next(storage: GoogleCloudStorage, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
+    return folder.list({ ...options, ...result.nextQuery });
   },
   file(storage: GoogleCloudStorage, fileResult: StorageListItemResult): FirebaseStorageAccessorFile {
     return googleCloudStorageAccessorFile(storage, fileResult.storagePath);
@@ -244,29 +248,37 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
     storagePath,
     exists: async () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
     list: (options?: StorageListFilesOptions) => {
-      return bucket
-        .getFiles({
-          ...options,
-          delimiter: SLASH_PATH_SEPARATOR,
-          autoPaginate: false,
-          versions: false,
-          maxResults: options?.maxResults,
-          // includeTrailingDelimiter: true,
-          prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
-        })
-        .then((x: GetFilesResponse) => {
-          const files = x[0];
-          const nextQuery = x[1];
-          const apiResponse = x[2];
+      const { maxResults, pageToken, includeNestedResults: listAll } = options ?? {};
 
-          const result: GoogleCloudListResult = {
-            files: files as GoogleCloudFile[],
-            nextQuery,
-            apiResponse: apiResponse as object
-          };
+      const listOptions: GetFilesOptions = {
+        maxResults,
+        pageToken,
+        autoPaginate: false,
+        versions: false,
+        ...(listAll
+          ? {
+              prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/'))
+            }
+          : {
+              // includeTrailingDelimiter: true,
+              delimiter: SLASH_PATH_SEPARATOR,
+              prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
+            })
+      };
 
-          return googleCloudStorageListFilesResultFactory(storage, folder, options, result);
-        });
+      return bucket.getFiles(listOptions).then((x: GetFilesResponse) => {
+        const files = x[0];
+        const nextQuery = x[1];
+        const apiResponse = x[2];
+
+        const result: GoogleCloudListResult = {
+          files: files as GoogleCloudFile[],
+          nextQuery,
+          apiResponse: apiResponse as object
+        };
+
+        return googleCloudStorageListFilesResultFactory(storage, folder, options, result);
+      });
     }
   };
 
@@ -275,6 +287,7 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
 
 export function googleCloudStorageFirebaseStorageAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
+    type: 'server',
     file: (storage: FirebaseStorage, path: StoragePath) => googleCloudStorageAccessorFile(storage as GoogleCloudStorage, path),
     folder: (storage: FirebaseStorage, path: StoragePath) => googleCloudStorageAccessorFolder(storage as GoogleCloudStorage, path)
   };

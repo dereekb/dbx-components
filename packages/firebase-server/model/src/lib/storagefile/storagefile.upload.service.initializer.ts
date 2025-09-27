@@ -68,30 +68,30 @@ export interface StorageFileInitializeFromUploadServiceConfig {
   /**
    * List of handlers for NotificationTaskTypes.
    */
-  readonly processors: StorageFileInitializeFromUploadServiceInitializer[];
+  readonly initializer: StorageFileInitializeFromUploadServiceInitializer[];
 }
 
 /**
  * A basic StorageFileInitializeFromUploadService implementation.
  */
 export function storageFileInitializeFromUploadService(config: StorageFileInitializeFromUploadServiceConfig): StorageFileInitializeFromUploadService {
-  const { processors: inputProcessors, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized } = config;
+  const { initializer: inputInitializers, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized } = config;
 
   const allDeterminers: UploadedFileTypeDeterminer[] = [];
-  const processors: Record<UploadedFileTypeIdentifier, StorageFileInitializeFromUploadServiceInitializer> = {};
+  const initializers: Record<UploadedFileTypeIdentifier, StorageFileInitializeFromUploadServiceInitializer> = {};
   const detailsAccessorFactory = uploadedFileDetailsAccessorFactory();
 
   if (inputDeterminers) {
     pushItemOrArrayItemsIntoArray(allDeterminers, inputDeterminers);
   }
 
-  // iterate processors
-  inputProcessors.forEach((processor) => {
-    const { type: inputTypes, determiner: inputDeterminer } = processor;
+  // iterate initializers
+  inputInitializers.forEach((initializer) => {
+    const { type: inputTypes, determiner: inputDeterminer } = initializer;
     const types = asArray(inputTypes);
 
     types.forEach((type) => {
-      processors[type] = processor;
+      initializers[type] = initializer;
     });
 
     if (inputDeterminer) {
@@ -108,15 +108,15 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
     }
   });
 
-  // validate processors
+  // validate initializers
   if (validate) {
-    const allProcessorTypes = Object.keys(processors);
+    const allInitializerTypes = Object.keys(initializers);
     const allDeterminerTypes = new Set(determiner.getPossibleFileTypes());
 
-    // all processor types should have a corresponding determiner
-    allProcessorTypes.forEach((type) => {
+    // all initializer types should have a corresponding determiner
+    allInitializerTypes.forEach((type) => {
       if (!allDeterminerTypes.has(type)) {
-        throw new Error(`Processor type ${type} does not have a corresponding determiner.`);
+        throw new Error(`Initializer type ${type} does not have a corresponding determiner.`);
       }
     });
   }
@@ -135,18 +135,18 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
       if (determinerResult) {
         resultType = 'success';
 
-        const processor = processors[determinerResult.type];
+        const initializer = initializers[determinerResult.type];
 
-        if (processor) {
+        if (initializer) {
           try {
-            const processorResult = await processor.initialize({ determinerResult, fileDetailsAccessor });
-            storageFileDocument = processorResult.storageFileDocument;
+            const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });
+            storageFileDocument = initializerResult.storageFileDocument;
           } catch (e) {
-            resultType = 'processor_error';
+            resultType = 'initializer_error';
             processorError = e;
           }
         } else {
-          resultType = 'no_processor_configured';
+          resultType = 'no_initializer_configured';
         }
       } else {
         resultType = 'no_determiner_match';

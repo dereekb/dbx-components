@@ -15,6 +15,11 @@ export type Getter<T> = () => T;
 export type Factory<T> = Getter<T>;
 
 /**
+ * Getter that returns a promise.
+ */
+export type AsyncFactory<T> = Factory<Promise<T>>;
+
+/**
  * Function that returns a value with an optional single argument.
  */
 export type FactoryWithInput<O, I> = (args?: I) => O;

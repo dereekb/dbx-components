@@ -1,7 +1,7 @@
-import { type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
+import { StorageListFilesPageToken, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
 import { type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
-import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
+import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, listAll } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
 import { type ErrorInput, errorMessageContainsString, type Maybe } from '@dereekb/util';
 
@@ -88,8 +88,12 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
   hasNext: (result: FirebaseStorageClientListResult) => {
     return result.listResult.nextPageToken != null;
   },
-  next(storage: ClientFirebaseStorage, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
+  nextPageTokenFromResult(result: FirebaseStorageClientListResult): Maybe<StorageListFilesPageToken> {
+    return result.listResult.nextPageToken;
+  },
+  next(storage: ClientFirebaseStorage, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
     return folder.list({
+      ...options,
       ...result.options,
       pageToken: result.listResult.nextPageToken
     });
@@ -115,7 +119,35 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
     reference: ref,
     storagePath,
     exists: () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
-    list: (options?: StorageListFilesOptions) => list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory(storage, folder, options, { options, listResult }))
+    list: async (options?: StorageListFilesOptions) => {
+      const rootResults = await list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory(storage, folder, options, { options, listResult }));
+      let result: StorageListFilesResult;
+
+      if (options?.includeNestedResults) {
+        const allImmediateFiles = rootResults.files();
+        const allImmediateFolders = rootResults.folders();
+        const allNestedFolderFileResults = await Promise.all(
+          allImmediateFolders.map((x) =>
+            x
+              .folder()
+              .list({ includeNestedResults: true })
+              .then((x) => x.files())
+          )
+        );
+        const allNestedFiles = allNestedFolderFileResults.flat();
+        const allFiles = [...allImmediateFiles, ...allNestedFiles];
+
+        result = {
+          ...rootResults,
+          files: () => allFiles,
+          folders: () => [] // no folders
+        };
+      } else {
+        result = rootResults;
+      }
+
+      return result;
+    }
   };
 
   return folder;
@@ -123,7 +155,8 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
 
 export function firebaseStorageClientAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
-    defaultBucket: (storage: FirebaseStorage) => (storage as ClientFirebaseStorage).app.options.storageBucket ?? '',
+    type: 'client',
+    getDefaultBucket: (storage: FirebaseStorage) => (storage as ClientFirebaseStorage).app.options.storageBucket ?? '',
     file: (storage: FirebaseStorage, path: StoragePath) => firebaseStorageClientAccessorFile(storage as ClientFirebaseStorage, path),
     folder: (storage: FirebaseStorage, path: StoragePath) => firebaseStorageClientAccessorFolder(storage as ClientFirebaseStorage, path)
   };

@@ -24,7 +24,7 @@ import {
 } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
-import { NotificationInitServerActions, NotificationServerActions } from '@dereekb/firebase-server/model';
+import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
 import { SECONDS_IN_MINUTE } from '@dereekb/util';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
@@ -54,6 +54,10 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
 
   get guestbookActions(): GuestbookServerActions {
     return this.nest.get(GuestbookServerActions);
+  }
+
+  get storageFileActions(): StorageFileServerActions {
+    return this.nest.get(StorageFileServerActions);
   }
 
   get firebaseModelsService() {

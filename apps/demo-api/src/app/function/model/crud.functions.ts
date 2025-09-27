@@ -1,5 +1,5 @@
 import { systemStateExampleRead } from './../system/systemstate.read';
-import { createGuestbook } from './../guestbook/guestbook.crud';
+import { createGuestbook } from '../guestbook/guestbook.create';
 import { updateProfile, updateProfileCreateTestNotification, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
 import { insertGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, OnCallModelMap } from '@dereekb/firebase-server';
