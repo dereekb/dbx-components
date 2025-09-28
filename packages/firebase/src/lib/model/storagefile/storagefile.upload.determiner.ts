@@ -1,6 +1,6 @@
-import { ArrayOrValue, asArray, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathDetails, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathSubPathMatcher, sortByNumberFunction, unique } from '@dereekb/util';
+import { ArrayOrValue, asArray, decisionFunction, DecisionFunction, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathDetails, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathPathMatcher, SlashPathPathMatcherConfig, SlashPathPathMatcherConfigInput, SlashPathPathMatcherPath, slashPathSubPathMatcher, SlashPathSubPathMatcherConfig, sortByNumberFunction, unique } from '@dereekb/util';
 import { UploadedFileTypeIdentifier, UploadedFileDetailsAccessor, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME } from './storagefile.upload';
-import { FirebaseAuthUserId } from '../../common';
+import { FirebaseAuthUserId, StorageBucketId } from '../../common';
 
 /**
  * The level of confidence in the determined upload type.
@@ -150,7 +150,7 @@ export interface DetermineByFolderNameConfig {
    */
   readonly fileType: UploadedFileTypeIdentifier;
   /**
-   * The case-sensitive folder name to match on
+   * The case-sensitive folder name to match on.
    */
   readonly match: SlashPathPart;
 }
@@ -181,11 +181,68 @@ export function determineByFolderName(config: DetermineByFolderNameConfig): Uplo
   };
 }
 
-export interface DetermineUserByFolderConfig {
+export interface DetermineByFilePathConfig {
   /**
-   * The determiner to wrap.
+   * The file type identifier to return.
    */
-  readonly determiner: UploadedFileTypeDeterminer;
+  readonly fileType: UploadedFileTypeIdentifier;
+  /**
+   * Optional decision function to filter/match the bucket.
+   */
+  readonly matchBucket?: Maybe<DecisionFunction<StorageBucketId>>;
+  /**
+   * Match path configuration to use.
+   */
+  readonly match: SlashPathPathMatcherConfigInput;
+  /**
+   * Optional decision function to further filter/match the input.
+   */
+  readonly matchFileDetails?: Maybe<DecisionFunction<UploadedFileDetailsAccessor>>;
+  /**
+   * The determination level to use if the file name matches the match value.
+   *
+   * Defaults to HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL.
+   */
+  readonly matchDeterminationLevel?: Maybe<UploadedFileTypeDeterminationLevel>;
+}
+
+/**
+ * Creates an UploadedFileTypeDeterminer that determines the upload type based on the file name.
+ *
+ * @param config The configuration for the determiner.
+ * @returns The determiner.
+ */
+export function determineByFilePath(config: DetermineByFilePathConfig): UploadedFileTypeDeterminer {
+  const { fileType, match, matchDeterminationLevel: inputMatchDeterminationLevel, matchBucket: inputMatchBucket, matchFileDetails: inputMatchFile } = config;
+
+  const pathMatcher = slashPathPathMatcher(match);
+  const matchBucket = typeof inputMatchBucket === 'function' ? inputMatchBucket : decisionFunction(true);
+  const matchFileDetails = typeof inputMatchFile === 'function' ? inputMatchFile : decisionFunction(true);
+  const matchDeterminationLevel = inputMatchDeterminationLevel ?? HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL;
+
+  return {
+    determine: (input) => {
+      let result: Maybe<UploadedFileTypeDeterminerResult>;
+      const { bucketId, pathString } = input.details;
+
+      if (matchBucket(bucketId)) {
+        const { matchesTargetPath } = pathMatcher(pathString);
+
+        if (matchesTargetPath && matchFileDetails(input)) {
+          result = {
+            type: fileType,
+            level: matchDeterminationLevel
+          };
+        }
+      }
+
+      return result;
+    },
+    getPossibleFileTypes: () => [fileType]
+  };
+}
+
+export interface DetermineUserByFolderWrapperFunctionConfig {
   /**
    * Requires the detection of a user.
    *
@@ -209,6 +266,12 @@ export interface DetermineUserByFolderConfig {
    */
   readonly userFolderPrefix?: Maybe<SlashPathPart | SlashPathFolder>;
   /**
+   * Sub path matcher configuration.
+   *
+   * If provided, the rootFolder and userFolderPrefix are ignored.
+   */
+  readonly matchSubPath?: Maybe<SlashPathSubPathMatcherConfig>;
+  /**
    * Whether to allow sub-paths after the user folder.
    *
    * Defaults to false.
@@ -217,53 +280,79 @@ export interface DetermineUserByFolderConfig {
 }
 
 /**
+ * Wraps the input determiner with determineUserByFolder.
+ */
+export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: UploadedFileTypeDeterminer) => UploadedFileTypeDeterminer;
+
+/**
  * Wraps a separate UploadedFileTypeDeterminer and adds user determination based on folder path structure.
  *
- * @param determiner
+ * @param config Configuration.
  */
-export function determineUserByFolder(config: DetermineUserByFolderConfig): UploadedFileTypeDeterminer {
-  const { determiner, rootFolder = UPLOADS_FOLDER_PATH, userFolderPrefix = ALL_USER_UPLOADS_FOLDER_NAME, requireUser = false, allowSubPaths = false } = config;
-  const fullUserPath = mergeSlashPaths([rootFolder, userFolderPrefix]);
-  const pathMatcher = slashPathSubPathMatcher({ basePath: fullUserPath });
+export function determineUserByFolderWrapperFunction(config: DetermineUserByFolderWrapperFunctionConfig): DetermineUserByFolderDeterminerWrapperFunction {
+  const { rootFolder = UPLOADS_FOLDER_PATH, userFolderPrefix = ALL_USER_UPLOADS_FOLDER_NAME, requireUser = false, allowSubPaths = false } = config;
+  const pathMatcher = slashPathSubPathMatcher(config.matchSubPath ?? { basePath: mergeSlashPaths([rootFolder, userFolderPrefix]) });
 
-  return {
-    determine: async (input) => {
-      const determinerResult = await determiner.determine(input);
-      let result: Maybe<UploadedFileTypeDeterminerResult>;
+  return (determiner: UploadedFileTypeDeterminer) => {
+    return {
+      determine: async (input) => {
+        const determinerResult = await determiner.determine(input);
+        let result: Maybe<UploadedFileTypeDeterminerResult>;
 
-      if (determinerResult) {
-        if (determinerResult.user) {
-          result = determinerResult;
-        } else {
-          const pathDetails = input.getPathDetails();
-          const pathRootFolder = pathDetails.parts[0];
+        if (determinerResult) {
+          if (determinerResult.user) {
+            result = determinerResult;
+          } else {
+            const pathDetails = input.getPathDetails();
+            const pathRootFolder = pathDetails.parts[0];
 
-          if (pathRootFolder === rootFolder) {
-            // root folder matches, continue
-            const { matchesBasePath, subPathParts } = pathMatcher(pathDetails.path);
+            if (pathRootFolder === rootFolder) {
+              // root folder matches, continue
+              const { matchesBasePath, subPathParts } = pathMatcher(pathDetails.path);
 
-            if (matchesBasePath && (allowSubPaths ? subPathParts.length >= 2 : subPathParts.length === 2)) {
-              // must have two parts: the user folder and the file
-              const user = subPathParts[0];
+              if (matchesBasePath && (allowSubPaths ? subPathParts.length >= 2 : subPathParts.length === 2)) {
+                // must have two parts: the user folder and the file
+                const user = subPathParts[0];
 
-              result = {
-                ...determinerResult,
-                user
-              };
+                result = {
+                  ...determinerResult,
+                  user
+                };
+              }
             }
+          }
+
+          // If requireUser is true and no user was detected, return null.
+          if (requireUser && !result?.user) {
+            result = null;
           }
         }
 
-        // If requireUser is true and no user was detected, return null.
-        if (requireUser && !result?.user) {
-          result = null;
-        }
-      }
-
-      return result;
-    },
-    getPossibleFileTypes: () => determiner.getPossibleFileTypes()
+        return result;
+      },
+      getPossibleFileTypes: () => determiner.getPossibleFileTypes()
+    };
   };
+}
+
+/**
+ * Configuration for determineUserByFolder().
+ */
+export interface DetermineUserByFolderFunctionConfig extends DetermineUserByFolderWrapperFunctionConfig {
+  /**
+   * The determiner to wrap.
+   */
+  readonly determiner: UploadedFileTypeDeterminer;
+}
+
+/**
+ * Convenience function for using determineUserByFolderWrapperFunction directly on a pre-set determiner.
+ *
+ * @param config Configuration.
+ * @returns The wrapped UploadedFileTypeDeterminer.
+ */
+export function determineUserByFolder(config: DetermineUserByFolderFunctionConfig): UploadedFileTypeDeterminer {
+  return determineUserByFolderWrapperFunction(config)(config.determiner);
 }
 
 /**

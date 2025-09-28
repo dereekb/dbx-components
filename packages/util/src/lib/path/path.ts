@@ -1,10 +1,13 @@
-import { chainMapSameFunctions, type MapSameFunction } from '../value/map';
+import { chainMapFunction, chainMapSameFunctions, mapIdentityFunction, type MapSameFunction } from '../value/map';
+import { decisionFunction, DecisionFunction } from '../value/decision';
 import { asArray, type ArrayOrValue, pushItemOrArrayItemsIntoArray, lastValue } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from '../string/char';
-import { chainMapFunction, indexRange, type IndexRangeInput, mapIdentityFunction, type Maybe } from '../value';
 import { type FactoryWithRequiredInput } from '../getter/getter';
 import { sliceIndexRangeFunction } from '../array/array.index';
 import { replaceStringsFunction } from '../string/replace';
+import { type PrimativeValue } from '../type';
+import { Maybe } from '../value/maybe.type';
+import { indexRange, IndexRangeInput } from '../value/indexed';
 
 export const SLASH_PATH_SEPARATOR = '/';
 export const SLASH_PATH_FILE_TYPE_SEPARATOR = '.';
@@ -634,12 +637,257 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
   };
 }
 
+// MARK: Path Matcher
+/**
+ * Numbers that are translated into pre-configured function codes.
+ */
+export enum SlashPathPathMatcherPartCode {
+  /**
+   * Treat as a wildcard
+   */
+  WILDCARD = 0
+}
+
+export type SlashPathPathMatcherFunction = DecisionFunction<SlashPathPart>;
+
+/**
+ * A part of a path to match against.
+ *
+ * SlashPathFolders are expanded into multiple SlashPathPart values automatically.
+ * SlashPathPathMatcherPartCode values are translated into pre-configured functions.
+ * A boolean value will be translated into a decision function. NOTE: Putting false will cause all matches to fail.
+ * Finally, any function that is provided will be used as-is when matching against a path part.
+ */
+export type SlashPathPathMatcherPart = SlashPathPart | SlashPathFolder | SlashPathPathMatcherPartCode | SlashPathPathMatcherFunction | boolean;
+
+/**
+ * Matcher path composed of parts to match against.
+ */
+export type SlashPathPathMatcherPath = ArrayOrValue<SlashPathPathMatcherPart>;
+
+/**
+ * Expands the input matcher path into decision functions.
+ *
+ * @param path The path to expand.
+ * @returns An array of decision functions.
+ */
+export function expandSlashPathPathMatcherPartToDecisionFunctions(path: SlashPathPathMatcherPath): SlashPathPathMatcherFunction[] {
+  const targetPathPartsInput = asArray(path);
+  let indexMatchingDecisionFunctions: SlashPathPathMatcherFunction[] = [];
+
+  targetPathPartsInput.forEach((part, index) => {
+    switch (typeof part) {
+      case 'number':
+        let matchPartFunction: SlashPathPathMatcherFunction;
+
+        switch (part) {
+          case SlashPathPathMatcherPartCode.WILDCARD:
+            matchPartFunction = decisionFunction(true);
+            break;
+          default:
+            // all other unknown numbers are treated as invalid and should never match
+            matchPartFunction = decisionFunction(false);
+            break;
+        }
+
+        indexMatchingDecisionFunctions.push(matchPartFunction);
+        break;
+      case 'string':
+        // break parts of the path into parts
+        const parts = slashPathParts(part);
+
+        parts.forEach((part, partIndex) => {
+          const matchPartFunction = (inputPart: SlashPathPart) => inputPart === part;
+          indexMatchingDecisionFunctions.push(matchPartFunction);
+        });
+        break;
+      case 'function':
+        indexMatchingDecisionFunctions.push(part);
+        break;
+      case 'boolean':
+        indexMatchingDecisionFunctions.push(decisionFunction(part));
+        break;
+      default:
+        // ignored/invalid
+        break;
+    }
+  });
+
+  return indexMatchingDecisionFunctions;
+}
+
+/**
+ * The default value to use when filling non-matching parts.
+ */
+export const DEFAULT_SLASH_PATH_PATH_MATCHER_NON_MATCHING_FILL_VALUE = false;
+
+export interface SlashPathPathMatcherConfig<N extends PrimativeValue = typeof DEFAULT_SLASH_PATH_PATH_MATCHER_NON_MATCHING_FILL_VALUE> {
+  /**
+   * The base path or parts to match against.
+   */
+  readonly targetPath: SlashPathPathMatcherPath;
+  /**
+   * A decision function to use when matching against the remaining parts of the input path that go past the target path.
+   *
+   * Defaults to a decision function that returns false.
+   */
+  readonly matchRemaining?: boolean | DecisionFunction<SlashPathPart>;
+  /**
+   * The maximum number of parts to compare/match.
+   */
+  readonly maxPartsToCompare?: number;
+  /**
+   * A value to use when filling non-matching parts.
+   *
+   * Defaults to false.
+   */
+  readonly nonMatchingFillValue?: N;
+}
+
+export type SlashPathPathMatcher<N extends PrimativeValue = typeof DEFAULT_SLASH_PATH_PATH_MATCHER_NON_MATCHING_FILL_VALUE> = (inputPath: SlashPath) => SlashPathPathMatcherResult<N>;
+
+export interface SlashPathPathMatcherResult<N extends PrimativeValue = typeof DEFAULT_SLASH_PATH_PATH_MATCHER_NON_MATCHING_FILL_VALUE> {
+  /**
+   * The input path that was matched.
+   */
+  readonly inputPath: SlashPath;
+  /**
+   * True if the input path has the same configured base path.
+   */
+  readonly matchesTargetPath: boolean;
+  /**
+   * All parts of the input path.
+   */
+  readonly inputPathParts: SlashPathPart[];
+  /**
+   * Result of the comparison between the parts of the input path against the base path.
+   *
+   * The array element is null on parts that do not match.
+   */
+  readonly matchingParts: (SlashPathPart | null)[];
+  /**
+   * The value to use when filling non-matching parts.
+   */
+  readonly nonMatchingFillValue: N;
+  /**
+   * Result of the comparison between the parts of the input path against the base path.
+   *
+   * The array element is null on parts that match.
+   *
+   * If the input path is shorter than the target path, the remaining parts will be filled with the nonMatchingFillValue.
+   */
+  readonly nonMatchingParts: (SlashPathPart | null | N)[];
+  /**
+   * The total number of parts that did not match.
+   */
+  readonly nonMatchingPartsCount: number;
+}
+
+export type SlashPathPathMatcherConfigInput<N extends PrimativeValue = PrimativeValue> = SlashPathPathMatcherConfig<N> | SlashPathPathMatcherConfig<N>['targetPath'];
+
+/**
+ * Creates a SlashPathPathMatcherConfig from the input.
+ *
+ * @param input The configuration input.
+ * @returns The configuration.
+ */
+export function slashPathPathMatcherConfig<N extends PrimativeValue = PrimativeValue>(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcherConfig<N> {
+  let pathMatcherConfig: SlashPathPathMatcherConfig<N>;
+
+  if (Array.isArray(input)) {
+    pathMatcherConfig = { targetPath: input };
+  } else {
+    switch (typeof input) {
+      case 'string':
+        pathMatcherConfig = { targetPath: [input] };
+        break;
+      case 'object':
+        pathMatcherConfig = input;
+        break;
+      default:
+        throw new Error(`Invalid match configuration.`);
+    }
+  }
+
+  return pathMatcherConfig;
+}
+
+/**
+ * Creates a SlashPathPathMatcher.
+ *
+ * @param config The configuration for the matcher.
+ * @returns The matcher.
+ */
+export function slashPathPathMatcher<N extends PrimativeValue = PrimativeValue>(input: SlashPathPathMatcherConfigInput<N>): SlashPathPathMatcher<N> {
+  const config = slashPathPathMatcherConfig(input);
+  const targetPathPartsInput = asArray(config.targetPath);
+  const endComparisonAtIndex = config.maxPartsToCompare != null ? config.maxPartsToCompare - 1 : Number.MAX_SAFE_INTEGER;
+  const matchRemaining = typeof config.matchRemaining === 'boolean' ? decisionFunction(config.matchRemaining) : (config.matchRemaining ?? decisionFunction(false));
+  const nonMatchingFillValue = (config.nonMatchingFillValue ?? false) as N;
+
+  const targetPathIndexMatchingDecisionFunctions = expandSlashPathPathMatcherPartToDecisionFunctions(targetPathPartsInput);
+  const targetPathPartsCount = targetPathIndexMatchingDecisionFunctions.length;
+
+  return (inputPath: SlashPath) => {
+    const inputPathParts = slashPathParts(inputPath);
+
+    let nonMatchingPartsCount = 0;
+
+    const matchingParts: (SlashPathPart | null)[] = [];
+    const nonMatchingParts: (SlashPathPart | null | N)[] = [];
+
+    inputPathParts.find((inputPart, index) => {
+      const matchPartFunction = targetPathIndexMatchingDecisionFunctions[index] ?? matchRemaining;
+
+      const matches = matchPartFunction(inputPart);
+
+      if (matches) {
+        matchingParts.push(inputPart);
+        nonMatchingParts.push(null);
+      } else {
+        nonMatchingPartsCount += 1;
+        matchingParts.push(null);
+        nonMatchingParts.push(inputPart);
+      }
+
+      return index >= endComparisonAtIndex;
+    });
+
+    const inputShorterThanTargetPath = inputPathParts.length < targetPathPartsCount;
+
+    if (inputShorterThanTargetPath) {
+      const remainingNonMatches = targetPathPartsCount - inputPathParts.length;
+      nonMatchingPartsCount += remainingNonMatches;
+
+      const matchingPartsFiller = Array(remainingNonMatches).fill(null);
+      pushItemOrArrayItemsIntoArray(matchingParts, matchingPartsFiller);
+
+      const nonMatchingPartsFiller = Array(remainingNonMatches).fill(nonMatchingFillValue);
+      pushItemOrArrayItemsIntoArray(nonMatchingParts, nonMatchingPartsFiller);
+    }
+
+    const matchesTargetPath = nonMatchingPartsCount === 0 && !inputShorterThanTargetPath;
+
+    const result: SlashPathPathMatcherResult<N> = {
+      inputPath,
+      matchesTargetPath,
+      inputPathParts,
+      matchingParts,
+      nonMatchingParts,
+      nonMatchingPartsCount,
+      nonMatchingFillValue
+    };
+
+    return result;
+  };
+}
+
 // MARK: Sub Path Matcher
 export interface SlashPathSubPathMatcherConfig {
   /**
-   * The base path to match against.
+   * The base path or parts to match against.
    */
-  readonly basePath: SlashPath;
+  readonly basePath: SlashPathPathMatcherPath;
 }
 
 export type SlashPathSubPathMatcherResult = SlashPathSubPathMatcherNonMatchResult | SlashPathSubPathMatcherMatchResult;
@@ -659,10 +907,12 @@ export interface SlashPathSubPathMatcherBaseResult {
   readonly inputPathParts: SlashPathPart[];
   /**
    * Result of the comparison between the parts of the input path against the base path.
+   *
+   * The array element is null on parts that match.
    */
   readonly nonMatchingParts: (SlashPathPart | null)[];
   /**
-   * All parts of the sub path, relative to the base path.
+   * All remaining parts of the path, relative to the base path.
    *
    * Only non-null if matchesBasePath is true.
    */
@@ -697,32 +947,20 @@ export type SlashPathSubPathMatcher = (path: SlashPath) => SlashPathSubPathMatch
  * @returns The matcher.
  */
 export function slashPathSubPathMatcher(config: SlashPathSubPathMatcherConfig): SlashPathSubPathMatcher {
-  const basePathParts = slashPathParts(config.basePath);
+  const targetPathIndexMatchingDecisionFunctions = expandSlashPathPathMatcherPartToDecisionFunctions(config.basePath);
+
+  const basePathPartsCount = targetPathIndexMatchingDecisionFunctions.length;
+  const pathMatcher = slashPathPathMatcher({ targetPath: config.basePath, maxPartsToCompare: basePathPartsCount });
 
   return (inputPath: SlashPath) => {
-    const inputPathParts = slashPathParts(inputPath);
+    const { inputPathParts, nonMatchingParts, nonMatchingPartsCount } = pathMatcher(inputPath);
 
-    let nonMatchingPartsCount = 0;
-
-    const nonMatchingParts = basePathParts.map((part, index) => {
-      let result: SlashPathPart | null;
-
-      if (part !== inputPathParts[index]) {
-        result = part;
-        nonMatchingPartsCount += 1;
-      } else {
-        result = null;
-      }
-
-      return result;
-    });
-
-    const matchesBasePath = inputPathParts.length >= basePathParts.length && nonMatchingPartsCount === 0;
+    const matchesBasePath = inputPathParts.length >= basePathPartsCount && nonMatchingPartsCount === 0;
 
     let subPathParts: SlashPathPart[] | null = null;
 
     if (matchesBasePath) {
-      subPathParts = inputPathParts.slice(basePathParts.length);
+      subPathParts = inputPathParts.slice(basePathPartsCount);
     }
 
     return {
