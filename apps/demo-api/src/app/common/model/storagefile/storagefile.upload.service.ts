@@ -1,6 +1,6 @@
 import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUploadServiceConfig, StorageFileInitializeFromUploadServiceInitializer, StorageFileInitializeFromUploadServiceInitializerInput, StorageFileInitializeFromUploadServiceInitializerResult, storageFileInitializeFromUploadService } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER } from 'demo-firebase';
+import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, determineByFilePath, determineUserByFolderWrapperFunction } from '@dereekb/firebase';
 import { SlashPathPathMatcherPath } from '@dereekb/util';
 
@@ -13,7 +13,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
     determineByFilePath({
       fileType: USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER,
       match: {
-        targetPath: [...matchUserUploadsFolderMatcherPath, 'test.txt'] // test.txt
+        targetPath: [...matchUserUploadsFolderMatcherPath, USER_TEST_FILE_UPLOADS_FOLDER_NAME, true] // matches to /uploads/u/{userId}/test/{filename}
       }
     })
   );
@@ -21,7 +21,9 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   const userTestFileInitializer: StorageFileInitializeFromUploadServiceInitializer = {
     type: USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER,
     initialize: function (input: StorageFileInitializeFromUploadServiceInitializerInput): Promise<StorageFileInitializeFromUploadServiceInitializerResult> {
-      // TODO: Perform initialization...
+      const details = input.fileDetailsAccessor.details;
+
+      // move the file to /test/u/{userId}/{filename}
 
       return null as any;
     },
@@ -32,7 +34,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
     determineByFilePath({
       fileType: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,
       match: {
-        targetPath: [...matchUserUploadsFolderMatcherPath, 'avatar'] // avatar.png
+        targetPath: [...matchUserUploadsFolderMatcherPath, USER_AVATAR_UPLOADS_FILE_NAME] // matches to /uploads/u/{userId}/avatar.img
       }
     })
   );
@@ -49,11 +51,16 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
 
   const userFileInitializers = [userTestFileInitializer, userTestAvatarInitializer];
 
+  // MARK: System Upload Files
+
+  // TODO: ...
+
+  const systemFileInitializers: StorageFileInitializeFromUploadServiceInitializer[] = [];
+
   // MARK: Configuration
   const storageFileUploadServiceConfig: StorageFileInitializeFromUploadServiceConfig = {
     validate: true,
-    determiner: [],
-    initializer: [...userFileInitializers]
+    initializer: [...userFileInitializers, ...systemFileInitializers]
   };
 
   return storageFileInitializeFromUploadService(storageFileUploadServiceConfig);

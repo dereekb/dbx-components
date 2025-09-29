@@ -1,4 +1,4 @@
-import { FirebaseStorageAccessorFile, StorageFileDocument, StorageFileInitializeFromUploadResultType } from '@dereekb/firebase';
+import { FirebaseStorageAccessorFile, StorageFileDocument, StorageFileInitializeFromUploadResultType, UploadedFileTypeDeterminerResult } from '@dereekb/firebase';
 import { Maybe, PromiseOrValue } from '@dereekb/util';
 
 /**
@@ -42,6 +42,10 @@ export abstract class StorageFileInitializeFromUploadService {
    * @param file
    */
   abstract checkFileIsAllowedToBeInitialized(file: FirebaseStorageAccessorFile): PromiseOrValue<boolean>;
+  /**
+   * Used to determine the type of the input file.
+   */
+  abstract determineUploadFileType(input: StorageFileInitializeFromUploadInput): Promise<Maybe<UploadedFileTypeDeterminerResult>>;
   /**
    * Initializes a StorageFileDocument value from an uploaded file.
    *

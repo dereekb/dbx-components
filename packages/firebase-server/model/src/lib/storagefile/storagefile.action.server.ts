@@ -191,10 +191,11 @@ export function _initializeStorageFileFromUploadFileFactory(context: StorageFile
           httpsError = uploadedFileInitializationFailedError({
             resultType: initializationResult.resultType
           });
+          console.error(`initializeStorageFileFromUpload(): Unknown file type (${initializationResult.resultType}) encountered for storage file "${bucketId}/${pathString}".`);
           break;
       }
     } catch (e) {
-      console.error(`initializeStorageFileFromUpload(): Error initializing storage file (${bucketId}/${pathString}) from upload`, e);
+      console.error(`initializeStorageFileFromUpload(): Error while initializing storage file (${bucketId}/${pathString}) from upload`, e);
       httpsError = uploadedFileInitializationFailedError({ resultType: 'initializer_error' });
     }
 
@@ -216,7 +217,7 @@ export function initializeStorageFileFromUploadFactory(context: StorageFileServe
     const { bucketId, pathString } = params;
 
     return async () => {
-      const file = storageService.file({ bucketId, pathString });
+      const file = storageService.file(bucketId == null ? pathString : { bucketId, pathString });
       return _initializeStorageFileFromUploadFile({ file });
     };
   });

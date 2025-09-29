@@ -288,9 +288,9 @@ export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}
       path = invalidPathValue;
     }
 
-    // must end with a slash to be a proper folder
-    if (path && !path.endsWith(SLASH_PATH_SEPARATOR)) {
-      path += SLASH_PATH_SEPARATOR;
+    // must end with a slash to be a proper folder, unless it is a relative folder path ("", empty string)
+    if (path) {
+      path = addTrailingSlash(path);
     }
 
     return path as InferredSlashPathFolder;
@@ -332,6 +332,16 @@ export function removeTrailingSlashes(input: SlashPath): SlashPath {
 
 export function removeTrailingFileTypeSeparators(input: SlashPath): SlashPath {
   return input.replace(TRAILING_FILE_TYPE_SEPARATORS_REGEX, '');
+}
+
+/**
+ * Adds a trailing slash to the input if it does not already have one.
+ *
+ * @param input A slash path.
+ * @returns A slash path folder.
+ */
+export function addTrailingSlash(input: SlashPath): SlashPathFolder {
+  return input.endsWith(SLASH_PATH_SEPARATOR) ? (input as SlashPathFolder) : `${input}${SLASH_PATH_SEPARATOR}`;
 }
 
 /**
@@ -616,7 +626,7 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
     fileFolder = undefined;
   } else {
     const folderPathParts = parts.slice(0, fileIndex);
-    folderPath = folderPathParts.join(SLASH_PATH_SEPARATOR) as SlashPathFolder;
+    folderPath = addTrailingSlash(folderPathParts.join(SLASH_PATH_SEPARATOR));
 
     if (pathStartsWithSlash) {
       folderPath = (SLASH_PATH_SEPARATOR + folderPath) as SlashPathFolder;

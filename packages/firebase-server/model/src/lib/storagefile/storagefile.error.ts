@@ -17,7 +17,7 @@ export function uploadedFileIsNotAllowedToBeInitializedError() {
 
 export function uploadedFileInitializationFailedError(data: UploadedFileInitializationFailedErrorData) {
   return internalServerError({
-    message: `The target uploaded file initialization failed with result type.`,
+    message: `The target uploaded file initialization failed with result type "${data.resultType}".`,
     code: UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE,
     data: {
       resultType: data.resultType

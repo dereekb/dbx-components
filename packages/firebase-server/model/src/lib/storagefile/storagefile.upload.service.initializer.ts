@@ -53,7 +53,7 @@ export interface StorageFileInitializeFromUploadServiceConfig {
    *
    * They will be combined together with determiners from the processors.
    */
-  readonly determiner: ArrayOrValue<UploadedFileTypeDeterminer>;
+  readonly determiner?: Maybe<ArrayOrValue<UploadedFileTypeDeterminer>>;
   /**
    * Configuration for combining the determiners.
    *
@@ -121,18 +121,25 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
     });
   }
 
+  async function determineUploadFileType(input: StorageFileInitializeFromUploadInput): Promise<Maybe<UploadedFileTypeDeterminerResult>> {
+    const { file } = input;
+    const fileDetailsAccessor = detailsAccessorFactory(file);
+    return determiner.determine(fileDetailsAccessor);
+  }
+
   return {
     checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized ?? asDecisionFunction(true),
+    determineUploadFileType,
     initializeFromUpload: async (input: StorageFileInitializeFromUploadInput) => {
-      const { file } = input;
-      const fileDetailsAccessor = detailsAccessorFactory(file);
-      const determinerResult = await determiner.determine(fileDetailsAccessor);
+      const determinerResult = await determineUploadFileType(input);
 
       let resultType: StorageFileInitializeFromUploadResultType;
       let storageFileDocument: Maybe<StorageFileDocument>;
       let processorError: Maybe<unknown>;
 
       if (determinerResult) {
+        const { input: fileDetailsAccessor } = determinerResult;
+
         resultType = 'success';
 
         const initializer = initializers[determinerResult.type];

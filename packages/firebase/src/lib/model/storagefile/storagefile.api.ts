@@ -49,10 +49,16 @@ export interface InitializeAllStorageFilesFromUploadsResult extends OnCallCreate
 /**
  * Initializes a StorageFile from the document at the given path.
  */
-export class InitializeStorageFileFromUploadParams implements StoragePath {
+export class InitializeStorageFileFromUploadParams implements Pick<StoragePath, 'pathString'> {
+  /**
+   * Specific bucketId to use.
+   *
+   * If not defined, the default bucket will be used.
+   */
   @Expose()
+  @IsOptional()
   @IsString()
-  bucketId!: StorageBucketId;
+  bucketId?: Maybe<StorageBucketId>;
 
   @Expose()
   @IsString()

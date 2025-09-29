@@ -46,6 +46,10 @@ export const EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL = 10;
  */
 export interface UploadedFileTypeDeterminerResult {
   /**
+   * The input file details accessor.
+   */
+  readonly input: UploadedFileDetailsAccessor;
+  /**
    * The determined type identifier.
    */
   readonly type: UploadedFileTypeIdentifier;
@@ -133,6 +137,7 @@ export function determineByFileName(config: DetermineByFileNameConfig): Uploaded
 
       if (matchLevel != null) {
         result = {
+          input,
           type: fileType,
           level: matchLevel
         };
@@ -172,7 +177,11 @@ export function determineByFolderName(config: DetermineByFolderNameConfig): Uplo
       let result: Maybe<UploadedFileTypeDeterminerResult>;
 
       if (folderPath === match) {
-        result = { type: fileType, level: EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL };
+        result = {
+          input,
+          type: fileType,
+          level: EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL
+        };
       }
 
       return result;
@@ -230,6 +239,7 @@ export function determineByFilePath(config: DetermineByFilePathConfig): Uploaded
 
         if (matchesTargetPath && matchFileDetails(input)) {
           result = {
+            input,
             type: fileType,
             level: matchDeterminationLevel
           };

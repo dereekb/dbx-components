@@ -4,16 +4,20 @@ import { FirebaseAuthUserId, FirebaseStorageAccessorFile, StorageCustomMetadata 
 
 /**
  * The base path for all uploaded files.
+ *
+ * The uploads folder is a transient folder that is cleared/processed often of files that are uploaded to it.
  */
 export const UPLOADS_FOLDER_PATH = 'uploads';
 
 /**
- * All users uploads folder name is "u".
+ * The folder name that contains the uploads for each user "u".
  */
 export const ALL_USER_UPLOADS_FOLDER_NAME = `u`;
 
 /**
  * All users uploads folder path.
+ *
+ * For example, user 12345 will upload their files to folder "uploads/u/12345/".
  */
 export const ALL_USER_UPLOADS_FOLDER_PATH = `${UPLOADS_FOLDER_PATH}/${ALL_USER_UPLOADS_FOLDER_NAME}`;
 

@@ -126,6 +126,10 @@ export class DemoApiContextFixture<F extends FirebaseAdminTestContextInstance = 
     return this.instance.notificationTaskService;
   }
 
+  get storageContext() {
+    return this.instance.storageContext;
+  }
+
   get storageFileActions() {
     return this.instance.storageFileActions;
   }
@@ -241,6 +245,10 @@ export class DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestCo
 
   get notificationInitServerActions() {
     return this.instance.notificationInitServerActions;
+  }
+
+  get storageContext() {
+    return this.instance.storageContext;
   }
 
   get storageFileActions() {

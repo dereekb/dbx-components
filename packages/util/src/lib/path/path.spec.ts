@@ -319,9 +319,9 @@ describe('isolateSlashPathFunction', () => {
 
 describe('slashPathDetails()', () => {
   it('should return the details of the path', () => {
-    const folder = '/a/b/c'; // absolute path
+    const folder = '/a/b/c/'; // absolute path
     const file = 'd.e';
-    const path = `${folder}/${file}`;
+    const path = `${folder}${file}`;
     const details = slashPathDetails(path);
 
     expect(details.type).toBe('typedfile');
@@ -334,9 +334,9 @@ describe('slashPathDetails()', () => {
   });
 
   it('should return the details of a relative path', () => {
-    const folder = 'a/b/c'; // relative path
+    const folder = 'a/b/c/'; // relative path
     const file = 'd.e';
-    const path = `${folder}/${file}`;
+    const path = `${folder}${file}`;
     const details = slashPathDetails(path);
 
     expect(details.type).toBe('typedfile');
@@ -357,7 +357,7 @@ describe('slashPathDetails()', () => {
       expect(details.type).toBe('file');
       expect(details.startType).toBe('relative');
       expect(details.path).toBe(path);
-      expect(details.folderPath).toBe(undefined);
+      expect(details.folderPath).toBe('');
       expect(details.file).toBe(file);
       expect(details.typedFile).toBeUndefined();
       expect(details.fileFolder).toBeUndefined();
@@ -385,7 +385,7 @@ describe('slashPathDetails()', () => {
       expect(details.type).toBe('typedfile');
       expect(details.startType).toBe('relative');
       expect(details.path).toBe(path);
-      expect(details.folderPath).toBe(undefined);
+      expect(details.folderPath).toBe('');
       expect(details.file).toBe(file);
       expect(details.typedFile).toBe(file);
       expect(details.fileFolder).toBeUndefined();
