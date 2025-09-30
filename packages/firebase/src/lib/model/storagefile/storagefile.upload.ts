@@ -101,7 +101,7 @@ export interface UploadedFileDetailsAccessor {
   /**
    * Copies this file to the specified destination.
    */
-  readonly copy?: FirebaseStorageAccessorFile['copy'];
+  readonly copy: FirebaseStorageAccessorFile['copy'];
 }
 
 /**
@@ -125,7 +125,8 @@ export function uploadedFileDetailsAccessorFactory(): UploadedFileDetailsAccesso
       loadFileBytes: file.getBytes, // do not cache the file data accessors
       loadFileStream: file.getStream,
       loadFileMetadata,
-      loadCustomMetadata
+      loadCustomMetadata,
+      copy: file.copy
     };
 
     return accessor;

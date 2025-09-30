@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
-import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, FirebaseAuthUserId, FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate } from '../../common';
+import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, FirebaseAuthUserId, FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
 import { StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
 import { NotificationKey } from '../notification';
 
@@ -12,6 +12,24 @@ export type StorageFileTypes = typeof storageFileIdentity;
 
 // MARK: StorageFile
 export const storageFileIdentity = firestoreModelIdentity('storageFile', 'sf');
+
+/**
+ * The current file state.
+ */
+export enum StorageFileCreationType {
+  /**
+   * No info about how this file was created.
+   */
+  NONE = 0,
+  /**
+   * The StorageFile was directly created.
+   */
+  DIRECTLY_CREATED = 1,
+  /**
+   * The StorageFile was initialized from an uploaded file.
+   */
+  INIT_FROM_UPLOAD = 2
+}
 
 /**
  * The current file state.
@@ -42,11 +60,11 @@ export enum StorageFileState {
  */
 export enum StorageFileProcessingState {
   /**
-   * The StorageFile has no state, or is just being initialized.
+   * The StorageFile has no processing state or is just being initialized.
    */
-  INIT = 0,
+  INIT_OR_NONE = 0,
   /**
-   * The StorageFile has been queued for processing.
+   * The StorageFile is flagged for processing, which will create a NotificationTask for it.
    */
   QUEUED = 1,
   /**
@@ -60,7 +78,11 @@ export enum StorageFileProcessingState {
   /**
    * The StorageFile has been processed or required no processing and is done.
    */
-  SUCCESS = 4
+  SUCCESS = 4,
+  /**
+   * The StorageFile shouldn't be processed.
+   */
+  NO_PROCESSING = 5
 }
 
 /**
@@ -73,6 +95,10 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    * Created at date
    */
   cat: Date;
+  /**
+   * Type of creation.
+   */
+  ct?: Maybe<StorageFileCreationType>;
   /**
    * State of the storage file.
    */
@@ -96,6 +122,10 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    */
   pat?: Maybe<Date>;
   /**
+   * User this file is associated with, if applicable.
+   */
+  u?: Maybe<FirebaseAuthUserId>;
+  /**
    * User who uploaded this file, if applicable.
    */
   uby?: Maybe<FirebaseAuthUserId>;
@@ -108,9 +138,9 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    */
   p?: Maybe<StorageFilePurpose>;
   /**
-   * Arbitrary metadata attached to the storage file.
+   * Arbitrary metadata attached to the StorageFile.
    */
-  d?: M;
+  d?: Maybe<M>;
   /**
    * Scheduled delete at date.
    *
@@ -132,10 +162,12 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
     bucketId: firestoreString(),
     pathString: firestoreString(),
     cat: firestoreDate(),
+    ct: optionalFirestoreEnum<StorageFileCreationType>({ defaultReadValue: StorageFileCreationType.NONE, dontStoreDefaultReadValue: true }),
     fs: firestoreEnum<StorageFileState>({ default: StorageFileState.INIT }),
-    ps: firestoreEnum<StorageFileProcessingState>({ default: StorageFileProcessingState.INIT }),
+    ps: firestoreEnum<StorageFileProcessingState>({ default: StorageFileProcessingState.INIT_OR_NONE }),
     pn: optionalFirestoreString(),
     pat: optionalFirestoreDate(),
+    u: optionalFirestoreString(),
     uby: optionalFirestoreString(),
     o: optionalFirestoreString(),
     p: optionalFirestoreString(),

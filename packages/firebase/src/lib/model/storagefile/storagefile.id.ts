@@ -4,7 +4,11 @@ export type StorageFileId = FirestoreModelId;
 export type StorageFileKey = FirestoreModelKey;
 
 /**
- * Arbitrary string that can be used to describe the file's purpose. Can be used for querying.
+ * Arbitrary string that can be used to describe the file's purpose.
+ *
+ * The purpose is generally used while querying for StorageFiles that require processing.
+ *
+ * Can be used for querying.
  */
 export type StorageFilePurpose = string;
 

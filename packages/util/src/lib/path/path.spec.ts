@@ -328,9 +328,12 @@ describe('slashPathDetails()', () => {
     expect(details.startType).toBe('absolute');
     expect(details.path).toBe(path);
     expect(details.folderPath).toBe(folder);
+    expect(details.end).toBe(file);
     expect(details.file).toBe(file);
     expect(details.typedFile).toBe(file);
     expect(details.fileFolder).toBe('c');
+    expect(details.fileName).toBe('d');
+    expect(details.typedFileExtension).toBe('e');
   });
 
   it('should return the details of a relative path', () => {
@@ -346,6 +349,23 @@ describe('slashPathDetails()', () => {
     expect(details.file).toBe(file);
     expect(details.typedFile).toBe(file);
     expect(details.fileFolder).toBe('c');
+    expect(details.fileName).toBe('d');
+    expect(details.typedFileExtension).toBe('e');
+  });
+
+  describe('folder', () => {
+    it('should return the details of the folder', () => {
+      const folder = '/a/b/c/'; // absolute path
+      const details = slashPathDetails(folder);
+
+      expect(details.type).toBe('folder');
+      expect(details.startType).toBe('absolute');
+      expect(details.path).toBe(folder);
+      expect(details.folderPath).toBe(folder);
+      expect(details.file).toBeUndefined();
+      expect(details.typedFile).toBeUndefined();
+      expect(details.fileFolder).toBeUndefined();
+    });
   });
 
   describe('file', () => {
@@ -485,7 +505,66 @@ describe('slashPathPathMatcher()', () => {
     });
 
     describe('complex paths configuration', () => {
-      // TODO: ...
+      describe('mix of string and decision function matchers', () => {
+        const matcher = slashPathPathMatcher(['data', (part: string) => part.startsWith('test-'), 'files']);
+
+        it('should match a path with middle segment starting with test-', () => {
+          const input = 'data/test-profile/files';
+          const result = matcher(input);
+
+          expect(result.matchesTargetPath).toBe(true);
+          expect(result.matchingParts).toEqual(['data', 'test-profile', 'files']);
+          expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(0);
+        });
+
+        it('should not match when the middle segment does not start with test-', () => {
+          const input = 'data/profile/files';
+          const result = matcher(input);
+
+          expect(result.matchesTargetPath).toBe(false);
+          expect(result.matchingParts).toEqual(['data', null, 'files']);
+          expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(1);
+          expect(result.nonMatchingParts[1]).toBe('profile');
+        });
+
+        it('should not match when the path is shorter than expected', () => {
+          const input = 'data/test-something';
+          const result = matcher(input);
+
+          expect(result.matchesTargetPath).toBe(false);
+          expect(result.nonMatchingPartsCount).toBe(1);
+          expect(result.nonMatchingParts).toEqual([null, null, result.nonMatchingFillValue]);
+        });
+      });
+
+      describe('custom non-matching fill value and partial matching', () => {
+        const matcher = slashPathPathMatcher({
+          targetPath: ['logs', (part: string) => part.startsWith('test-'), 'entries'],
+          nonMatchingFillValue: 'missing',
+          maxPartsToCompare: 3
+        });
+
+        it('should respect the custom non matching fill value when path is too short', () => {
+          const result = matcher('logs/test-abc');
+
+          expect(result.matchesTargetPath).toBe(false);
+          expect(result.nonMatchingPartsCount).toBe(1);
+          expect(result.nonMatchingParts).toEqual([null, null, 'missing']);
+        });
+
+        it('should match when the path contains extra segments but matchRemaining allows', () => {
+          const fullMatcher = slashPathPathMatcher({
+            targetPath: ['logs', (part: string) => part.startsWith('test-'), 'entries'],
+            matchRemaining: true
+          });
+
+          const result = fullMatcher('logs/test-abc/entries/extra');
+
+          expect(result.matchesTargetPath).toBe(true);
+          expect(result.matchingParts).toEqual(['logs', 'test-abc', 'entries', 'extra']);
+          expect(result.nonMatchingParts.filter(Boolean)).toHaveLength(0);
+        });
+      });
     });
   });
 });

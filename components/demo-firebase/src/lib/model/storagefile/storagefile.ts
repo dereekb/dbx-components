@@ -1,4 +1,4 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFilePurpose, UploadedFileTypeIdentifier } from '@dereekb/firebase';
 import { SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from '@dereekb/util';
 
 // MARK: User File Types
@@ -9,14 +9,22 @@ import { SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from 
  */
 export const USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_test_file';
 
-export const USER_TEST_FILE_UPLOADS_FOLDER_NAME: SlashPathFolder = 'test/';
+export const USER_TEST_FILE_UPLOADS_FOLDER_NAME: string = 'test';
 
 export function userTestFileUploadsFolderPath(userId: FirebaseAuthUserId): SlashPathFolder {
-  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_TEST_FILE_UPLOADS_FOLDER_NAME}`;
+  return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_TEST_FILE_UPLOADS_FOLDER_NAME}/`;
 }
 
 export function userTestFileUploadsFilePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
   return `${userTestFileUploadsFolderPath(userId)}${name}`;
+}
+
+export const USER_TEST_FILE_PURPOSE: StorageFilePurpose = 'test';
+
+export const USER_TEST_FILE_ROOT_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/u/';
+
+export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
+  return `${USER_TEST_FILE_ROOT_STORAGE_FOLDER_PATH}${userId}/${name}`;
 }
 
 /**

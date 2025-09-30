@@ -8,6 +8,7 @@ import { replaceStringsFunction } from '../string/replace';
 import { type PrimativeValue } from '../type';
 import { Maybe } from '../value/maybe.type';
 import { indexRange, IndexRangeInput } from '../value/indexed';
+import { splitJoinRemainder } from '../string';
 
 export const SLASH_PATH_SEPARATOR = '/';
 export const SLASH_PATH_FILE_TYPE_SEPARATOR = '.';
@@ -46,6 +47,13 @@ export type EmptyRelativeSlashPathFolder = '';
  * This type includes the empty relative folder path possibility.
  */
 export type InferredSlashPathFolder = SlashPathFolder | EmptyRelativeSlashPathFolder;
+
+/**
+ * The file extension of a SlashPathTypedFile.
+ *
+ * e.g. 'png' in 'image.png'
+ */
+export type SlashPathTypeFileExtension = string;
 
 /**
  * A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')
@@ -578,19 +586,43 @@ export interface SlashPathDetails {
    */
   readonly type: SlashPathType;
   /**
-   * The last part of the path
+   * The last part of the path.
+   *
+   * If the input path ended with a slash, indicating it is a file, then this will include the slash.
    */
-  readonly file: SlashPathFile | SlashPathTypedFile;
+  readonly end: SlashPathPart;
   /**
-   * The last part of the path if it is a typed file
+   * Returns true if the input is a typed or untyped file.
+   */
+  readonly isFile: boolean;
+  /**
+   * The last part of the path, if the path is not a folder.
+   *
+   * If it is a folder, this is undefined.
+   */
+  readonly file?: Maybe<SlashPathFile | SlashPathTypedFile>;
+  /**
+   * The file name, if file is defined.
+   */
+  readonly fileName?: Maybe<string>;
+  /**
+   * The typed file part, if the file is a typed file.
    */
   readonly typedFile: Maybe<SlashPathTypedFile>;
   /**
+   * The file extension of the typed file, if the file is a typed file.
+   */
+  readonly typedFileExtension?: Maybe<SlashPathTypeFileExtension>;
+  /**
    * Contains the name of the folder the file is in, if applicable.
+   *
+   * Unset if there is no file.
    */
   readonly fileFolder: Maybe<SlashPathPart>;
   /**
    * Contains all parts of the path, minus the file part.
+   *
+   * If a folder is input, this is the entire folder path.
    *
    * If there is only one path part and the path is a relative path, this will be an empty string.
    */
@@ -614,18 +646,33 @@ export interface SlashPathDetails {
 export function slashPathDetails(path: SlashPath): SlashPathDetails {
   const type = slashPathType(path);
   const parts = slashPathParts(path);
-  const fileIndex = parts.length - 1;
-  const file = parts[fileIndex];
+  const endIndex = parts.length - 1;
+  const end = parts[endIndex];
 
   let folderPath: InferredSlashPathFolder;
   let fileFolder: Maybe<SlashPathPart>;
+
+  let file: Maybe<SlashPathFile | SlashPathTypedFile>;
+  let fileName: Maybe<string>;
+  let typedFile: Maybe<SlashPathTypedFile>;
+  let typedFileExtension: Maybe<SlashPathTypeFileExtension>;
+
+  const isFile = type === 'file' || type === 'typedfile';
   const pathStartsWithSlash = path.startsWith(SLASH_PATH_SEPARATOR);
 
-  if (fileIndex === 0) {
-    folderPath = pathStartsWithSlash ? SLASH_PATH_SEPARATOR : '';
-    fileFolder = undefined;
-  } else {
-    const folderPathParts = parts.slice(0, fileIndex);
+  if (endIndex === 0) {
+    if (isFile) {
+      // e.g.: file, or file.txt
+      file = end;
+      folderPath = pathStartsWithSlash ? SLASH_PATH_SEPARATOR : '';
+    } else {
+      // e.g.: folder/
+      folderPath = path as SlashPathFolder;
+    }
+  } else if (isFile) {
+    file = end;
+
+    const folderPathParts = parts.slice(0, endIndex);
     folderPath = addTrailingSlash(folderPathParts.join(SLASH_PATH_SEPARATOR));
 
     if (pathStartsWithSlash) {
@@ -633,14 +680,32 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
     }
 
     fileFolder = folderPathParts[folderPathParts.length - 1];
+  } else {
+    folderPath = path as SlashPathFolder;
+    fileFolder = undefined;
+  }
+
+  // build the file details
+  if (file != null) {
+    const fileParts = splitJoinRemainder(file, SLASH_PATH_FILE_TYPE_SEPARATOR, 2);
+    fileName = fileParts[0];
+
+    if (fileParts.length === 2) {
+      typedFile = file as SlashPathTypedFile;
+      typedFileExtension = fileParts[1] as SlashPathTypeFileExtension;
+    }
   }
 
   return {
     path,
     type,
+    end,
+    isFile,
     file,
+    fileName,
     startType: pathStartsWithSlash ? 'absolute' : 'relative',
-    typedFile: type === 'typedfile' ? (file as SlashPathTypedFile) : undefined,
+    typedFile,
+    typedFileExtension,
     fileFolder,
     folderPath,
     parts

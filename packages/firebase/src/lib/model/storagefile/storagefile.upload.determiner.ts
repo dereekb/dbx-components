@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray, decisionFunction, DecisionFunction, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathDetails, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathPathMatcher, SlashPathPathMatcherConfig, SlashPathPathMatcherConfigInput, SlashPathPathMatcherPath, slashPathSubPathMatcher, SlashPathSubPathMatcherConfig, sortByNumberFunction, unique } from '@dereekb/util';
-import { UploadedFileTypeIdentifier, UploadedFileDetailsAccessor, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME } from './storagefile.upload';
+import { UploadedFileTypeIdentifier, UploadedFileDetailsAccessor, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME, ALL_USER_UPLOADS_FOLDER_PATH } from './storagefile.upload';
 import { FirebaseAuthUserId, StorageBucketId } from '../../common';
 
 /**
@@ -133,14 +133,17 @@ export function determineByFileName(config: DetermineByFileNameConfig): Uploaded
       let result: Maybe<UploadedFileTypeDeterminerResult>;
 
       const pathDetails = input.getPathDetails();
-      let matchLevel = testFileName(pathDetails.file);
 
-      if (matchLevel != null) {
-        result = {
-          input,
-          type: fileType,
-          level: matchLevel
-        };
+      if (pathDetails.file) {
+        let matchLevel = testFileName(pathDetails.file);
+
+        if (matchLevel != null) {
+          result = {
+            input,
+            type: fileType,
+            level: matchLevel
+          };
+        }
       }
 
       return result;
@@ -266,15 +269,13 @@ export interface DetermineUserByFolderWrapperFunctionConfig {
    *
    * Defaults to the value of UPLOADS_FOLDER_PATH.
    */
-  readonly rootFolder?: Maybe<SlashPathPart>;
+  readonly rootFolder: SlashPathPart;
   /**
    * Specific user folder/path to filter on. This path must match the path that comes after the rootFolder exactly.
    *
    * For example, if the rootFolder is "uploads" and the userFolderPrefix is "u", then the user at the path "uploads/u/123/avatar.png" would be "123".
-   *
-   * Defaults to the value of ALL_USER_UPLOADS_FOLDER_NAME.
    */
-  readonly userFolderPrefix?: Maybe<SlashPathPart | SlashPathFolder>;
+  readonly userFolderPrefix: SlashPathPart | SlashPathFolder;
   /**
    * Sub path matcher configuration.
    *
@@ -284,7 +285,7 @@ export interface DetermineUserByFolderWrapperFunctionConfig {
   /**
    * Whether to allow sub-paths after the user folder.
    *
-   * Defaults to false.
+   * Defaults to true.
    */
   readonly allowSubPaths?: boolean;
 }
@@ -300,8 +301,10 @@ export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: Upload
  * @param config Configuration.
  */
 export function determineUserByFolderWrapperFunction(config: DetermineUserByFolderWrapperFunctionConfig): DetermineUserByFolderDeterminerWrapperFunction {
-  const { rootFolder = UPLOADS_FOLDER_PATH, userFolderPrefix = ALL_USER_UPLOADS_FOLDER_NAME, requireUser = false, allowSubPaths = false } = config;
-  const pathMatcher = slashPathSubPathMatcher(config.matchSubPath ?? { basePath: mergeSlashPaths([rootFolder, userFolderPrefix]) });
+  const { rootFolder, userFolderPrefix, requireUser = false, allowSubPaths: inputAllowSubPaths = true } = config;
+  const allowSubPaths = inputAllowSubPaths ?? true;
+  const subPathMatcherConfig = config.matchSubPath ?? { basePath: mergeSlashPaths([rootFolder, userFolderPrefix]) };
+  const pathMatcher = slashPathSubPathMatcher(subPathMatcherConfig);
 
   return (determiner: UploadedFileTypeDeterminer) => {
     return {
@@ -343,6 +346,14 @@ export function determineUserByFolderWrapperFunction(config: DetermineUserByFold
       getPossibleFileTypes: () => determiner.getPossibleFileTypes()
     };
   };
+}
+
+export function determineUserByUserUploadsFolderWrapperFunction(config?: Omit<DetermineUserByFolderWrapperFunctionConfig, 'rootFolder' | 'userFolderPrefix'>): DetermineUserByFolderDeterminerWrapperFunction {
+  return determineUserByFolderWrapperFunction({
+    ...config,
+    rootFolder: UPLOADS_FOLDER_PATH,
+    userFolderPrefix: ALL_USER_UPLOADS_FOLDER_NAME
+  });
 }
 
 /**

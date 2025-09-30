@@ -1,6 +1,7 @@
 export * from './storagefile.action';
 export * from './storagefile.api.error';
 export * from './storagefile.api';
+export * from './storagefile.create';
 export * from './storagefile.id';
 export * from './storagefile';
 export * from './storagefile.util';
