@@ -20,7 +20,8 @@ import {
   StorageFileProcessingState,
   StorageFileState,
   createNotificationDocumentPair,
-  storageFileProcessingNotificationTaskTemplate
+  storageFileProcessingNotificationTaskTemplate,
+  createNotificationDocument
 } from '@dereekb/firebase';
 import { assertSnapshotData, FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -30,7 +31,6 @@ import { StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadS
 import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError } from './storagefile.error';
 import { Maybe, mergeSlashPaths } from '@dereekb/util';
 import { HttpsError } from 'firebase-functions/https';
-import { storage } from 'firebase-admin';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -267,7 +267,7 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
             throw storageFileProcessingNotAllowedForInvalidStateError();
           }
 
-          const createNotificationTaskResult = await createNotificationDocumentPair({
+          const createNotificationTaskResult = await createNotificationDocument({
             context,
             transaction,
             template: storageFileProcessingNotificationTaskTemplate({
@@ -278,7 +278,8 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
 
           await storageFileDocumentInTransaction.update({
             ps: StorageFileProcessingState.PROCESSING,
-            pat: new Date(),
+            pat: new Date(), // set new processing start date
+            pcat: null, // clear processing completion date
             pn: createNotificationTaskResult.notificationDocument.key
           });
 

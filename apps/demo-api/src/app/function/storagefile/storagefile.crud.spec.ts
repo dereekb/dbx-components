@@ -1,7 +1,7 @@
 import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoStorageFileContext } from '../../../test/fixture';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationContext, demoStorageFileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_TEST_FILE_PURPOSE, userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
+import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, UserTestFileProcessingSubtask, UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
 import {
   combineUploadFileTypeDeterminers,
   determineByFileName,
@@ -11,8 +11,8 @@ import {
   HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL,
   StoragePath,
   StorageRawDataString,
-  UploadedFileDetailsAccessor,
-  uploadedFileDetailsAccessorFactory,
+  StoredFileReader,
+  storedFileReaderFactory,
   UploadedFileTypeDeterminer,
   determineUserByFolderWrapperFunction,
   ALL_USER_UPLOADS_FOLDER_PATH,
@@ -25,7 +25,9 @@ import {
   onCallUpdateModelParams,
   storageFileIdentity,
   StorageFileProcessingState,
-  STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE
+  STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
+  StorageFileProcessingSubtaskMetadata,
+  StorageFileProcessingNotificationTaskData
 } from '@dereekb/firebase';
 import { slashPathDetails, SlashPathFolder, SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
@@ -36,7 +38,7 @@ demoApiFunctionContextFactory((f) => {
     describe('StorageFile', () => {
       demoAuthorizedUserAdminContext({ f }, (au) => {
         describe('determiners', () => {
-          const detailsAccessorFactory = uploadedFileDetailsAccessorFactory();
+          const detailsAccessorFactory = storedFileReaderFactory();
 
           const fileName = 'test.txt';
           const rootFolder: SlashPathFolder = 'testing/';
@@ -45,7 +47,7 @@ demoApiFunctionContextFactory((f) => {
           const fullFolderPath = `${rootFolder}${fileFolder}`;
           const fullFilePath = `${fullFolderPath}${fileName}`;
 
-          let detailsAccessor: UploadedFileDetailsAccessor;
+          let detailsAccessor: StoredFileReader;
 
           const uploadFile = async (path: string, data: StorageRawDataString = 'test', contentType = 'text/plain') => {
             const file = await f.storageContext.file(path);
@@ -284,7 +286,7 @@ demoApiFunctionContextFactory((f) => {
 
           describe('combineUploadFileTypeDeterminer()', () => {
             const secondFileName = 'alternate.txt';
-            let secondDetailsAccessor: UploadedFileDetailsAccessor;
+            let secondDetailsAccessor: StoredFileReader;
 
             beforeEach(async () => {
               const secondFilePath = `${fullFolderPath}${secondFileName}`;
@@ -535,8 +537,69 @@ demoApiFunctionContextFactory((f) => {
                 expect(updatedStorageFile.pat).toBeDefined();
               });
 
-              describe('storage file does not exist', () => {
-                // TODO...
+              describe('runImmediately=true', () => {
+                it('should create the processing task for the file and run the first step', async () => {
+                  const storageFile = await assertSnapshotData(sf.document);
+                  expect(storageFile.p).toBeDefined();
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED);
+                  expect(storageFile.pn).not.toBeDefined();
+                  expect(storageFile.pat).not.toBeDefined();
+
+                  const processStorageFileParams: ProcessStorageFileParams = {
+                    key: sf.documentKey,
+                    runImmediately: true
+                  };
+
+                  await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                  const updatedStorageFile = await assertSnapshotData(sf.document);
+                  expect(updatedStorageFile.p).toBeDefined();
+                  expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                  expect(updatedStorageFile.pn).toBeDefined();
+                  expect(updatedStorageFile.pat).toBeDefined();
+
+                  const notificationTaskKey = updatedStorageFile.pn;
+
+                  const notificationDocument = f.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey as string);
+                  const notification = await assertSnapshotData(notificationDocument);
+
+                  expect(notification).toBeDefined();
+                  expect(notification.tpr).toEqual([]); // has two steps, so should not have finished processing yet
+
+                  const metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+                  expect(metadata).toBeDefined();
+                  expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]); // should have finished subtask A
+                  expect(metadata.storageFile).toBe(sf.documentId);
+                  expect(metadata.storagePath?.bucketId).toBe(storageFile.bucketId);
+                  expect(metadata.storagePath?.pathString).toBe(storageFile.pathString);
+                  expect(metadata.p).toBe(storageFile.p);
+
+                  const subtaskMetadata = metadata.sd;
+                  expect(subtaskMetadata?.numberValue).toBeDefined();
+                  expect(subtaskMetadata?.stringValue).toBeDefined();
+                });
+              });
+
+              describe('the related stored file does not exist', () => {
+                it('should create the processing task for the file', async () => {
+                  const storageFile = await assertSnapshotData(sf.document);
+                  expect(storageFile.p).toBeDefined();
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED);
+                  expect(storageFile.pn).not.toBeDefined();
+                  expect(storageFile.pat).not.toBeDefined();
+
+                  const processStorageFileParams: ProcessStorageFileParams = {
+                    key: sf.documentKey
+                  };
+
+                  await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                  const updatedStorageFile = await assertSnapshotData(sf.document);
+                  expect(updatedStorageFile.p).toBeDefined();
+                  expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                  expect(updatedStorageFile.pn).toBeDefined();
+                  expect(updatedStorageFile.pat).toBeDefined();
+                });
               });
 
               describe('file processing task already created', () => {
@@ -565,6 +628,58 @@ demoApiFunctionContextFactory((f) => {
 
                 describe('file processing is stuck', () => {
                   // TODO: Test processing might be stuck
+                });
+
+                describe('processing task', () => {
+                  demoNotificationContext({ f, doc: () => sf.loadProcessingTaskDocument() }, (nc) => {
+                    it('should run the entire task and run cleanup successfully.', async () => {
+                      let storageFile = await assertSnapshotData(sf.document);
+                      expect(storageFile.p).toBeDefined();
+                      expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                      expect(storageFile.pn).toBeDefined();
+                      expect(storageFile.pat).toBeDefined();
+
+                      // run subtask A
+                      const runSubtaskA = await nc.sendNotification();
+                      expect(runSubtaskA).toBeDefined();
+                      expect(runSubtaskA.throttled).toBe(false);
+                      expect(runSubtaskA.isNotificationTask).toBe(true);
+                      expect(runSubtaskA.success).toBe(true);
+
+                      let notification = await assertSnapshotData(nc.document);
+                      let metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+
+                      expect(metadata).toBeDefined();
+                      expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK]);
+
+                      // run subtask B
+                      const runSubtaskB = await nc.sendNotification();
+                      expect(runSubtaskB).toBeDefined();
+                      expect(runSubtaskB.throttled).toBe(false);
+                      expect(runSubtaskB.isNotificationTask).toBe(true);
+                      expect(runSubtaskB.success).toBe(true);
+
+                      notification = await assertSnapshotData(nc.document);
+                      metadata = notification.n.d as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>;
+
+                      expect(metadata).toBeDefined();
+                      expect(metadata.sfps).toEqual([USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK]);
+
+                      // run cleanup
+                      const runCleanup = await nc.sendNotification();
+                      expect(runCleanup).toBeDefined();
+                      expect(runCleanup.throttled).toBe(false);
+                      expect(runCleanup.isNotificationTask).toBe(true);
+                      expect(runCleanup.success).toBe(true);
+
+                      storageFile = await assertSnapshotData(sf.document);
+                      expect(storageFile.p).toBe(storageFile.p);
+                      expect(storageFile.ps).toBe(StorageFileProcessingState.SUCCESS);
+                      expect(storageFile.pn).toBeUndefined(); // notification task reference is removed
+                      expect(storageFile.pat).toBeDefined(); // does not change
+                      expect(storageFile.pcat).toBeDefined();
+                    });
+                  });
                 });
               });
             });

@@ -1,4 +1,4 @@
-import { CombineUploadFileTypeDeterminerConfig, combineUploadFileTypeDeterminers, FirebaseStorageAccessorFile, limitUploadFileTypeDeterminer, StorageFileDocument, StorageFileInitializeFromUploadResultType, UploadedFileDetailsAccessor, uploadedFileDetailsAccessorFactory, UploadedFileTypeDeterminer, UploadedFileTypeDeterminerResult, UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { CombineUploadFileTypeDeterminerConfig, combineUploadFileTypeDeterminers, FirebaseStorageAccessorFile, limitUploadFileTypeDeterminer, StorageFileDocument, StorageFileInitializeFromUploadResultType, StoredFileReader, storedFileReaderFactory, UploadedFileTypeDeterminer, UploadedFileTypeDeterminerResult, UploadedFileTypeIdentifier } from '@dereekb/firebase';
 import { ArrayOrValue, asArray, asDecisionFunction, AsyncDecisionFunction, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { StorageFileInitializeFromUploadInput, StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadService } from './storagefile.upload.service';
 
@@ -10,7 +10,7 @@ export interface StorageFileInitializeFromUploadServiceInitializerInput {
   /**
    * The uploaded file.
    */
-  readonly fileDetailsAccessor: UploadedFileDetailsAccessor;
+  readonly fileDetailsAccessor: StoredFileReader;
 }
 
 export interface StorageFileInitializeFromUploadServiceInitializerResult {
@@ -79,7 +79,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
 
   const allDeterminers: UploadedFileTypeDeterminer[] = [];
   const initializers: Record<UploadedFileTypeIdentifier, StorageFileInitializeFromUploadServiceInitializer> = {};
-  const detailsAccessorFactory = uploadedFileDetailsAccessorFactory();
+  const detailsAccessorFactory = storedFileReaderFactory();
 
   if (inputDeterminers) {
     pushItemOrArrayItemsIntoArray(allDeterminers, inputDeterminers);

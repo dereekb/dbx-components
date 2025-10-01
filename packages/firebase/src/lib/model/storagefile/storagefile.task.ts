@@ -42,6 +42,9 @@ export const DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS = 4;
 export const DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY = MS_IN_HOUR;
 
 export interface StorageFileProcessingNotificationTaskData<M extends StorageFileProcessingSubtaskMetadata = StorageFileProcessingSubtaskMetadata, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask> {
+  /**
+   * The StorageFileDocument id.
+   */
   readonly storageFile: StorageFileId;
   /**
    * The storage path of the file.
@@ -75,9 +78,6 @@ export function storageFileProcessingNotificationTaskTemplate(input: StorageFile
 
   return createNotificationTaskTemplate({
     type: STORAGE_FILE_PROCESSING_NOTIFICATION_TASK_TYPE,
-    /**
-     * The target model is the used to populate the "m" value of a Notification.
-     */
     targetModel: storageFileDocument,
     data: {
       storageFile: storageFileDocument.id,

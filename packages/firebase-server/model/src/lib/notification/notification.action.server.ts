@@ -87,7 +87,7 @@ import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseSer
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
-import { addHours, addMinutes, hoursToMilliseconds, isPast } from 'date-fns';
+import { addHours, addMinutes, hoursToMilliseconds, isFuture, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
 import { notificationBoxDoesNotExist, notificationBoxExclusionTargetInvalidError, notificationBoxRecipientDoesNotExistsError, notificationUserInvalidUidForCreateError } from './notification.error';
 import { type NotificationSendMessagesInstance } from './notification.send';
@@ -907,7 +907,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
   return firebaseServerActionTransformFunctionFactory(SendNotificationParams, async (params) => {
     const { ignoreSendAtThrottle } = params;
 
-    return async (notificationDocument: NotificationDocument) => {
+    return async (inputNotificationDocument: NotificationDocument) => {
+      // Load the notification document outside of any potential context (transaction, etc.)
+      const notificationDocument = notificationCollectionGroup.documentAccessor().loadDocumentFrom(inputNotificationDocument);
+
       const { throttled, tryRun, isNotificationTask, notificationTaskHandler, notification, createdBox, notificationBoxNeedsInitialization, notificationBox, notificationBoxModelKey, deletedNotification, templateInstance, isConfiguredTemplateType, isKnownTemplateType, onlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients } = await firestoreContext.runTransaction(async (transaction) => {
         const notificationBoxDocument = notificationBoxCollection.documentAccessorForTransaction(transaction).loadDocument(notificationDocument.parent);
         const notificationDocumentInTransaction = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentFrom(notificationDocument);
@@ -924,10 +927,13 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         if (!notification) {
           tryRun = false;
         } else if (!ignoreSendAtThrottle) {
-          tryRun = isPast(notification.sat);
+          tryRun = !isFuture(notification.sat);
 
           if (tryRun) {
-            nextSat = addMinutes(new Date(), 10); // try again in 10 minutes if not successful
+            if (!isNotificationTask) {
+              // update the next send type of non-tasks to try being sent again in 10 minutes, if they fail
+              nextSat = addMinutes(new Date(), 10);
+            }
           } else {
             throttled = true;
           }

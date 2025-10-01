@@ -888,6 +888,10 @@ export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctio
   async process(params?: Omit<ProcessStorageFileParams, 'key'>) {
     return this.instance.process(params);
   }
+
+  async loadProcessingTaskDocument(): Promise<NotificationDocument> {
+    return this.instance.loadProcessingTaskDocument();
+  }
 }
 
 export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {
@@ -899,6 +903,18 @@ export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFuncti
 
     const process = await this.testContext.storageFileActions.processStorageFile(processStorageFileParams);
     return process(this.document);
+  }
+
+  async loadProcessingTaskDocument(): Promise<NotificationDocument> {
+    const storageFile = await this.document.snapshotData();
+
+    if (!storageFile?.pn) {
+      throw new Error('StorageFile not found or does not have a processing task key associated.');
+    }
+
+    const notificationTaskKey = storageFile.pn;
+    const notificationTaskDocument = this.testContext.demoFirestoreCollections.notificationCollectionGroup.documentAccessor().loadDocumentForKey(notificationTaskKey);
+    return notificationTaskDocument;
   }
 }
 

@@ -21,10 +21,11 @@ import {
   DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY,
   FirestoreDocumentAccessorRef,
   StorageFileFirestoreCollections,
-  UploadedFileDetailsAccessor,
-  uploadedFileDetailsAccessorFactory,
+  StoredFileReader,
+  storedFileReaderFactory,
   StoragePath,
-  FirebaseStorageAccessor
+  FirebaseStorageAccessor,
+  copyStoragePath
 } from '@dereekb/firebase';
 import { NotificationTaskServiceTaskHandlerFlowEntry, NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
 import { asArray, cachedGetter, dateFromDateOrTimeNumber, Maybe, Milliseconds, PromiseOrValue, separateValues, unique } from '@dereekb/util';
@@ -62,7 +63,7 @@ export interface StorageFileProcessingPurposeSubtaskInput<M extends StorageFileP
   /**
    * The accessor for the uploaded file details.
    */
-  readonly fileDetailsAccessor: UploadedFileDetailsAccessor;
+  readonly fileDetailsAccessor: StoredFileReader;
   /**
    * The current metadata for the subtask.
    */
@@ -194,7 +195,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
   const storageFileDocumentAccessor = storageFileFirestoreCollections.storageFileCollection.documentAccessor();
   const maxCleanupRetryAttempts = inputMaxCleanupRetryAttempts ?? DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS;
   const cleanupRetryDelay = inputCleanupRetryDelay ?? DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY;
-  const makeFileDetailsAccessor = uploadedFileDetailsAccessorFactory();
+  const makeFileDetailsAccessor = storedFileReaderFactory();
 
   const processors: Record<StorageFilePurpose, StorageFileProcessingPurposeSubtaskProcessor> = {};
 
@@ -234,7 +235,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
       throw new Error('storageFileProcessingNotificationTaskHandler(): StorageFileProcessingPurposeSubtaskProcessorConfig must not have more than one non-subtask flow.');
     }
 
-    const allKnownSubtasks = new Set(inputFlows.map((x) => x.subtask));
+    const allKnownSubtasks = unique(inputFlows.map((x) => x.subtask));
 
     return {
       process: async (input: StorageFileProcessingPurposeSubtaskInput<M, S>) => {
@@ -286,7 +287,9 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
                 ...asArray(subtaskCompletion)
               ]);
 
-              const incompleteSubtasks = sfps.filter((x) => !allKnownSubtasks.has(x));
+              const completedSubtasksSet = new Set(sfps);
+              const incompleteSubtasks = allKnownSubtasks.filter((x) => !completedSubtasksSet.has(x));
+
               allSubtasksDone = incompleteSubtasks.length === 0;
               break;
           }
@@ -296,7 +299,9 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
            */
           const updateMetadata: StorageFileProcessingNotificationTaskData<M, S> = {
             ...(notificationTask.data as StorageFileProcessingNotificationTaskData<M, S>),
+            // always re-copy the purpose/storagePath for the next run so StorageFile does not have to be reloaded
             p: purpose,
+            storagePath: copyStoragePath(input.fileDetailsAccessor.input),
             sfps,
             sd: {
               ...subtaskData,
@@ -456,11 +461,13 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
                 cleanupOutput = defaultCleanupOutput();
               }
 
-              if (cleanupOutput.cleanupSuccess === false && notificationTask.currentCheckpointSendAttempts < maxCleanupRetryAttempts) {
+              if (cleanupOutput.cleanupSuccess === false && notificationTask.currentCheckpointSendAttempts <= maxCleanupRetryAttempts) {
                 result = notificationTaskDelayRetry(cleanupOutput.delayRetryUntil ?? cleanupRetryDelay);
               } else {
                 let updateTemplate: Partial<StorageFile> = {
-                  ps: cleanupOutput.nextProcessingState ?? StorageFileProcessingState.SUCCESS
+                  ps: cleanupOutput.nextProcessingState ?? StorageFileProcessingState.SUCCESS,
+                  pcat: new Date(), // set new cleanup/completion date
+                  pn: null // clear reference
                 };
 
                 if (cleanupOutput.queueForDelete != null && cleanupOutput.queueForDelete !== false) {

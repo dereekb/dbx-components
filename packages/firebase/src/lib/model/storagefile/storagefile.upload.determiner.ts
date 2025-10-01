@@ -1,6 +1,7 @@
 import { ArrayOrValue, asArray, decisionFunction, DecisionFunction, FactoryWithRequiredInput, Maybe, mergeSlashPaths, PromiseOrValue, SLASH_PATH_FILE_TYPE_SEPARATOR, SlashPathDetails, SlashPathFile, SlashPathFolder, SlashPathPart, slashPathPathMatcher, SlashPathPathMatcherConfig, SlashPathPathMatcherConfigInput, SlashPathPathMatcherPath, slashPathSubPathMatcher, SlashPathSubPathMatcherConfig, sortByNumberFunction, unique } from '@dereekb/util';
-import { UploadedFileTypeIdentifier, UploadedFileDetailsAccessor, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME, ALL_USER_UPLOADS_FOLDER_PATH } from './storagefile.upload';
+import { UploadedFileTypeIdentifier, UPLOADS_FOLDER_PATH, ALL_USER_UPLOADS_FOLDER_NAME, ALL_USER_UPLOADS_FOLDER_PATH } from './storagefile.upload';
 import { FirebaseAuthUserId, StorageBucketId } from '../../common';
+import { StoredFileReader } from './storagefile.file';
 
 /**
  * The level of confidence in the determined upload type.
@@ -48,7 +49,7 @@ export interface UploadedFileTypeDeterminerResult {
   /**
    * The input file details accessor.
    */
-  readonly input: UploadedFileDetailsAccessor;
+  readonly input: StoredFileReader;
   /**
    * The determined type identifier.
    */
@@ -70,7 +71,7 @@ export interface UploadedFileTypeDeterminerResult {
  *
  * Returns a determination result or undefined if the function cannot determine the upload type.
  */
-export type UploadedFileTypeDeterminationFunction = (input: UploadedFileDetailsAccessor) => PromiseOrValue<Maybe<UploadedFileTypeDeterminerResult>>;
+export type UploadedFileTypeDeterminationFunction = (input: StoredFileReader) => PromiseOrValue<Maybe<UploadedFileTypeDeterminerResult>>;
 
 /**
  * Determines the upload type of a StorageFile.
@@ -209,7 +210,7 @@ export interface DetermineByFilePathConfig {
   /**
    * Optional decision function to further filter/match the input.
    */
-  readonly matchFileDetails?: Maybe<DecisionFunction<UploadedFileDetailsAccessor>>;
+  readonly matchFileDetails?: Maybe<DecisionFunction<StoredFileReader>>;
   /**
    * The determination level to use if the file name matches the match value.
    *
@@ -235,7 +236,7 @@ export function determineByFilePath(config: DetermineByFilePathConfig): Uploaded
   return {
     determine: (input) => {
       let result: Maybe<UploadedFileTypeDeterminerResult>;
-      const { bucketId, pathString } = input.details;
+      const { bucketId, pathString } = input.input;
 
       if (matchBucket(bucketId)) {
         const { matchesTargetPath } = pathMatcher(pathString);

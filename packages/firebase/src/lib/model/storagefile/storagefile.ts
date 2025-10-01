@@ -128,6 +128,10 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    */
   pat?: Maybe<Date>;
   /**
+   * The date that the cleanup step of the processing task was run, and the notification ended.
+   */
+  pcat?: Maybe<Date>;
+  /**
    * User this file is associated with, if applicable.
    */
   u?: Maybe<FirebaseAuthUserId>;
@@ -173,6 +177,7 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
     ps: firestoreEnum<StorageFileProcessingState>({ default: StorageFileProcessingState.INIT_OR_NONE }),
     pn: optionalFirestoreString(),
     pat: optionalFirestoreDate(),
+    pcat: optionalFirestoreDate(),
     u: optionalFirestoreString(),
     uby: optionalFirestoreString(),
     o: optionalFirestoreString(),
