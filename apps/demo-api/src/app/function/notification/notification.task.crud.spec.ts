@@ -75,7 +75,7 @@ demoApiFunctionContextFactory((f) => {
                         // check notification changes
                         const notification = await assertSnapshotData(nbn.document);
 
-                        expect(notification.a).toBe(1); // send attempt count increases by one
+                        expect(notification.a).toBe(0); // no error, attempts count does not increase
                         expect(isFuture(notification.sat)).toBe(true);
                       });
 
@@ -219,7 +219,7 @@ demoApiFunctionContextFactory((f) => {
                               // check notification changes
                               const notification = await assertSnapshotData(nbn.document);
                               expect(notification.sat).toBeSameSecondAs(delayUntil);
-                              expect(notification.a).toBe(1); // send attempt should still be 1
+                              expect(notification.a).toBe(0); // no error, attempts count does not increase
                             });
                           });
                         });

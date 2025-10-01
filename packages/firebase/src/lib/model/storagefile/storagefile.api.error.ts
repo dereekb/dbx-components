@@ -45,3 +45,13 @@ export const STORAGE_FILE_PROCESSING_NOT_ALLOWED_FOR_INVALID_STATE_ERROR_CODE = 
  * Thrown if the target StorageFileDocument already finished processing.
  */
 export const STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE = 'STORAGE_FILE_ALREADY_PROCESSED';
+
+/**
+ * Thrown if the target StorageFileDocument is not flagged for deletion but attempts to be deleted.
+ */
+export const STORAGE_FILE_NOT_FLAGGED_FOR_DELETION_ERROR_CODE = 'STORAGE_FILE_NOT_FLAGGED_FOR_DELETION';
+
+/**
+ * Thrown if the target StorageFileDocument is flagged for deletion, but has not reached the time to be deleted yet.
+ */
+export const STORAGE_FILE_CANNOT_BE_DELETED_YET_ERROR_CODE = 'STORAGE_FILE_CANNOT_BE_DELETED_YET';

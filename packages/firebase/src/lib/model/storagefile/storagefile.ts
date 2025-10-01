@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreDate, firestoreModelIdentity, snapshotConverterFunctions, FirebaseAuthUserId, FirebaseAuthOwnershipKey, optionalFirestoreString, firestorePassThroughField, StoragePath, firestoreString, firestoreEnum, optionalFirestoreDate, optionalFirestoreEnum } from '../../common';
 import { StorageFileMetadata, StorageFilePurpose } from './storagefile.id';
@@ -68,7 +68,7 @@ export enum StorageFileProcessingState {
   /**
    * The StorageFile is flagged for processing, which will create a NotificationTask for it.
    */
-  QUEUED = 1,
+  QUEUED_FOR_PROCESSING = 1,
   /**
    * The StorageFile has an associated NotificationTask for it.
    */
@@ -88,8 +88,13 @@ export enum StorageFileProcessingState {
   /**
    * The StorageFile shouldn't be processed.
    */
-  SHOULD_NOT_PROCESS = 6
+  DO_NOT_PROCESS = 6
 }
+
+/**
+ * After 3 hours of being in the PROCESSING state, we can check for retring processing.
+ */
+export const STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS = MS_IN_HOUR * 3;
 
 /**
  * A global storage file in the system.
@@ -152,9 +157,9 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
    */
   d?: Maybe<M>;
   /**
-   * Scheduled delete at date.
+   * Scheduled delete at date. The StorageFile cannot be deleted before this set time.
    *
-   * If set, then the status should be QUEUED_FOR_DELETE.
+   * Is the main trigger for determining a StorageFile should be deleted.
    */
   sdat?: Maybe<Date>;
 }

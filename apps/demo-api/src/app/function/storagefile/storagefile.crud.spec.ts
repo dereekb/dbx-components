@@ -27,11 +27,13 @@ import {
   StorageFileProcessingState,
   STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE,
   StorageFileProcessingSubtaskMetadata,
-  StorageFileProcessingNotificationTaskData
+  StorageFileProcessingNotificationTaskData,
+  STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS
 } from '@dereekb/firebase';
-import { slashPathDetails, SlashPathFolder, SlashPathPart } from '@dereekb/util';
+import { addMilliseconds, slashPathDetails, SlashPathFolder, SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
+import { addHours } from 'date-fns';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -504,7 +506,7 @@ demoApiFunctionContextFactory((f) => {
             demoStorageFileContext({ f, createUploadedFile: createUploadedFile('non-processable') }, (sf) => {
               itShouldFail('to process the file if it is not marked for processing.', async () => {
                 const storageFile = await assertSnapshotData(sf.document);
-                expect(storageFile.ps).toBe(StorageFileProcessingState.SHOULD_NOT_PROCESS);
+                expect(storageFile.ps).toBe(StorageFileProcessingState.DO_NOT_PROCESS);
 
                 const processStorageFileParams: ProcessStorageFileParams = {
                   key: sf.documentKey
@@ -520,7 +522,7 @@ demoApiFunctionContextFactory((f) => {
               it('should create the processing task for the file', async () => {
                 const storageFile = await assertSnapshotData(sf.document);
                 expect(storageFile.p).toBeDefined();
-                expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED);
+                expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
                 expect(storageFile.pn).not.toBeDefined();
                 expect(storageFile.pat).not.toBeDefined();
 
@@ -541,7 +543,7 @@ demoApiFunctionContextFactory((f) => {
                 it('should create the processing task for the file and run the first step', async () => {
                   const storageFile = await assertSnapshotData(sf.document);
                   expect(storageFile.p).toBeDefined();
-                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED);
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
                   expect(storageFile.pn).not.toBeDefined();
                   expect(storageFile.pat).not.toBeDefined();
 
@@ -584,7 +586,7 @@ demoApiFunctionContextFactory((f) => {
                 it('should create the processing task for the file', async () => {
                   const storageFile = await assertSnapshotData(sf.document);
                   expect(storageFile.p).toBeDefined();
-                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED);
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED_FOR_PROCESSING);
                   expect(storageFile.pn).not.toBeDefined();
                   expect(storageFile.pat).not.toBeDefined();
 
@@ -626,8 +628,74 @@ demoApiFunctionContextFactory((f) => {
                   expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
                 });
 
-                describe('file processing is stuck', () => {
-                  // TODO: Test processing might be stuck
+                describe('inconsistent state', () => {
+                  describe('processing state is set but no notification task is set', () => {
+                    beforeEach(async () => {
+                      await sf.document.update({
+                        ps: StorageFileProcessingState.PROCESSING,
+                        pat: new Date(),
+                        pn: null
+                      });
+                    });
+
+                    it('should create a new processing task', async () => {
+                      const storageFile = await assertSnapshotData(sf.document);
+                      expect(storageFile.p).toBeDefined();
+                      expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                      expect(storageFile.pn).toBeUndefined(); // inconsistent state where the pn is not set
+                      expect(storageFile.pat).toBeDefined();
+
+                      const processStorageFileParams: ProcessStorageFileParams = {
+                        key: sf.documentKey
+                      };
+
+                      await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                      const updatedStorageFile = await assertSnapshotData(sf.document);
+                      expect(updatedStorageFile.p).toBe(storageFile.p);
+                      expect(updatedStorageFile.pn).toBeDefined();
+                      expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                      expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
+                    });
+                  });
+                });
+
+                describe('file processing started hours ago', () => {
+                  beforeEach(async () => {
+                    await sf.document.update({
+                      pat: addMilliseconds(new Date(), -(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS * 2))
+                    });
+                  });
+
+                  describe('notification task does not exist', () => {
+                    demoNotificationContext({ f, doc: () => sf.loadProcessingTaskDocument() }, (nc) => {
+                      it('should create a new processing task', async () => {
+                        const storageFile = await assertSnapshotData(sf.document);
+                        expect(storageFile.p).toBeDefined();
+                        expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                        expect(storageFile.pn).toBeDefined();
+                        expect(storageFile.pat).toBeDefined();
+
+                        // delete the notification task
+                        await nc.document.accessor.delete();
+
+                        const notificationExists = await nc.document.exists();
+                        expect(notificationExists).toBe(false);
+
+                        const processStorageFileParams: ProcessStorageFileParams = {
+                          key: sf.documentKey
+                        };
+
+                        await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                        const updatedStorageFile = await assertSnapshotData(sf.document);
+                        expect(updatedStorageFile.p).toBe(storageFile.p);
+                        expect(updatedStorageFile.pn).toBeDefined();
+                        expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                        expect(updatedStorageFile.pat).not.toBeSameSecondAs(storageFile.pat as Date); // new processing start time
+                      });
+                    });
+                  });
                 });
 
                 describe('processing task', () => {

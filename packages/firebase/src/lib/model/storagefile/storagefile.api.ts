@@ -1,7 +1,7 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { TargetModelParams, OnCallCreateModelResult } from '../../common';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, ModelFirebaseCreateFunction } from '../../client';
-import { IsString, IsBoolean, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsNumber, IsDate } from 'class-validator';
 import { StorageFileTypes } from './storagefile';
 import { StorageBucketId, StoragePath, StorageSlashPath } from '../../common/storage';
 import { Maybe } from '@dereekb/util';
@@ -75,19 +75,86 @@ export class ProcessStorageFileParams extends TargetModelParams {
   runImmediately?: Maybe<boolean>;
 
   /**
-   * If set, will retry processing if the StorageFile is in a failed processing state.
+   * If set, will check and retry processing if the StorageFile is in a failed processing state.
    */
   @Expose()
   @IsBoolean()
   @IsOptional()
-  retryProcessing?: Maybe<boolean>;
+  checkRetryProcessing?: Maybe<boolean>;
+
+  /**
+   * Used with retryProcessing.
+   *
+   * If set, will forcibly create a new processing task even if the existing processing task appears to be ok.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  forceRestartProcessing?: Maybe<boolean>;
 }
 
 export interface ProcessStorageFileResult {}
 
-export class UpdateStorageFileParams extends TargetModelParams {}
+/**
+ * Processes all StorageFiles that are queued for processing.
+ */
+export class ProcessAllQueuedStorageFilesParams {}
 
-export class DeleteStorageFileParams extends TargetModelParams {}
+export interface ProcessAllQueuedStorageFilesResult {
+  /**
+   * The total number of StorageFiles visited.
+   */
+  readonly storageFilesVisited: number;
+  /**
+   * The total number of StorageFiles that started processing.
+   */
+  readonly storageFilesProcessStarted: number;
+  /**
+   * The total number of StorageFiles that failed to start processing.
+   */
+  readonly storageFilesFailedStarting: number;
+}
+
+export class UpdateStorageFileParams extends TargetModelParams {
+  /**
+   * Sets the delete at time for the given StorageFileDocument, and queues the file for deletion.
+   */
+  @Expose()
+  @IsDate()
+  @IsOptional()
+  @Type(() => Date)
+  sdat?: Maybe<Date>;
+}
+
+export class DeleteStorageFileParams extends TargetModelParams {
+  /**
+   * If true, will force the deletion of the StorageFile even if it is not queued for deletion.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  force?: Maybe<boolean>;
+}
+
+/**
+ * Processes all StorageFiles that are queued for processing.
+ */
+export class DeleteAllQueuedStorageFilesParams {}
+
+export interface DeleteAllQueuedStorageFilesResult {
+  /**
+   * The total number of StorageFiles visited.
+   */
+  readonly storageFilesVisited: number;
+  /**
+   * The total number of StorageFiles that were deleted.
+   */
+  readonly storageFilesDeleted: number;
+  /**
+   * The total number of StorageFiles that failed to delete.
+   */
+  readonly storageFilesFailedDeleting: number;
+}
 
 // MARK: Functions
 export type StorageFileFunctionTypeMap = {};

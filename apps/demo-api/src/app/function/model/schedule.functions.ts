@@ -1,5 +1,7 @@
 import { exampleUsageOfSchedule, hourlySchedule } from '../example/example.schedule';
 import { onScheduleWithDemoNestContext } from '../function';
+import { notificationHourlyUpdateSchedule } from '../notification/notification.schedule';
+import { storageFileHourlyUpdateSchedule } from '../storagefile/storagefile.schedule';
 
 // MARK: Example
 export const demoExampleUsageOfSchedule = onScheduleWithDemoNestContext(
@@ -10,5 +12,7 @@ export const demoExampleUsageOfSchedule = onScheduleWithDemoNestContext(
   async (x) => {
     await exampleUsageOfSchedule(x);
     await hourlySchedule(x);
+    await storageFileHourlyUpdateSchedule(x);
+    await notificationHourlyUpdateSchedule(x);
   }
 );

@@ -21,16 +21,27 @@ import {
   StorageFileState,
   createNotificationDocumentPair,
   storageFileProcessingNotificationTaskTemplate,
-  createNotificationDocument
+  createNotificationDocument,
+  ProcessAllQueuedStorageFilesParams,
+  ProcessAllQueuedStorageFilesResult,
+  iterateFirestoreDocumentSnapshotPairs,
+  DeleteAllQueuedStorageFilesParams,
+  DeleteAllQueuedStorageFilesResult,
+  DeleteStorageFileParams,
+  storageFilesQueuedForProcessingQuery,
+  AsyncStorageFileDeleteAction,
+  StorageFile,
+  STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS
 } from '@dereekb/firebase';
 import { assertSnapshotData, FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { NotificationExpediteServiceRef } from '../notification';
 import { StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
-import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError } from './storagefile.error';
-import { Maybe, mergeSlashPaths } from '@dereekb/util';
+import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError, storageFileNotFlaggedForDeletionError, storageFileCannotBeDeletedYetError } from './storagefile.error';
+import { isPast, isThrottled, Maybe, mergeSlashPaths, MS_IN_HOUR } from '@dereekb/util';
 import { HttpsError } from 'firebase-functions/https';
+import { storage } from 'firebase-admin';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -50,7 +61,10 @@ export abstract class StorageFileServerActions {
   abstract initializeAllStorageFilesFromUploads(params: InitializeAllStorageFilesFromUploadsParams): Promise<TransformAndValidateFunctionResult<InitializeAllStorageFilesFromUploadsParams, () => Promise<InitializeAllStorageFilesFromUploadsResult>>>;
   abstract initializeStorageFileFromUpload(params: InitializeStorageFileFromUploadParams): AsyncStorageFileCreateAction<InitializeStorageFileFromUploadParams>;
   abstract updateStorageFile(params: UpdateStorageFileParams): AsyncStorageFileUpdateAction<UpdateStorageFileParams>;
+  abstract processAllQueuedStorageFiles(params: ProcessAllQueuedStorageFilesParams): Promise<TransformAndValidateFunctionResult<ProcessAllQueuedStorageFilesParams, () => Promise<ProcessAllQueuedStorageFilesResult>>>;
   abstract processStorageFile(params: ProcessStorageFileParams): Promise<TransformAndValidateFunctionResult<ProcessStorageFileParams, (storageFileDocument: StorageFileDocument) => Promise<ProcessStorageFileResult>>>;
+  abstract deleteAllQueuedStorageFiles(params: DeleteAllQueuedStorageFilesParams): Promise<TransformAndValidateFunctionResult<DeleteAllQueuedStorageFilesParams, () => Promise<DeleteAllQueuedStorageFilesResult>>>;
+  abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
 }
 
 export function storageFileServerActions(context: StorageFileServerActionsContext): StorageFileServerActions {
@@ -59,7 +73,10 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
     initializeAllStorageFilesFromUploads: initializeAllStorageFilesFromUploadsFactory(context),
     initializeStorageFileFromUpload: initializeStorageFileFromUploadFactory(context),
     updateStorageFile: updateStorageFileFactory(context),
-    processStorageFile: processStorageFileFactory(context)
+    processAllQueuedStorageFiles: processAllQueuedStorageFilesFactory(context),
+    processStorageFile: processStorageFileFactory(context),
+    deleteAllQueuedStorageFiles: deleteAllQueuedStorageFilesFactory(context),
+    deleteStorageFile: deleteStorageFileFactory(context)
   };
 }
 
@@ -232,21 +249,67 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
   const { storageFileCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(UpdateStorageFileParams, async (params) => {
-    const {} = params;
+    const { sdat } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
-      // todo: ...
+      let updateTemplate: Partial<StorageFile> = {
+        sdat
+      };
+
+      await storageFileDocument.update(updateTemplate);
 
       return storageFileDocument;
     };
   });
 }
 
+export function processAllQueuedStorageFilesFactory(context: StorageFileServerActionsContext) {
+  const { storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const processStorageFile = processStorageFileFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(ProcessAllQueuedStorageFilesParams, async (params) => {
+    return async () => {
+      let storageFilesVisited = 0;
+      let storageFilesProcessStarted = 0;
+      let storageFilesFailedStarting = 0;
+
+      await iterateFirestoreDocumentSnapshotPairs({
+        documentAccessor: storageFileCollection.documentAccessor(),
+        iterateSnapshotPair: async (snapshotPair) => {
+          storageFilesVisited++;
+
+          const processStorageFileResult = await processStorageFile(snapshotPair.document).catch(() => null);
+
+          if (processStorageFileResult) {
+            storageFilesProcessStarted++;
+          } else {
+            storageFilesFailedStarting++;
+          }
+        },
+        constraintsFactory: () => storageFilesQueuedForProcessingQuery(),
+        queryFactory: storageFileCollection,
+        batchSize: undefined,
+        performTasksConfig: {
+          maxParallelTasks: 10
+        }
+      });
+
+      const result: ProcessAllQueuedStorageFilesResult = {
+        storageFilesVisited,
+        storageFilesProcessStarted,
+        storageFilesFailedStarting
+      };
+
+      return result;
+    };
+  });
+}
+
 export function processStorageFileFactory(context: StorageFileServerActionsContext) {
-  const { storageFileCollection, firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
+  const { storageFileCollection, notificationCollectionGroup, firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(ProcessStorageFileParams, async (params) => {
-    const { runImmediately, retryProcessing } = params;
+    const { runImmediately, checkRetryProcessing, forceRestartProcessing } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
       const result: ProcessStorageFileResult = {};
@@ -259,7 +322,7 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
         const storageFileDocumentInTransaction = await storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
         const storageFile = await assertSnapshotData(storageFileDocumentInTransaction);
 
-        async function beginProcessing() {
+        async function beginProcessing(overrideExistingTask: boolean) {
           const state = storageFile.fs;
 
           // check the storageFile is in the OK state
@@ -272,7 +335,7 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
             transaction,
             template: storageFileProcessingNotificationTaskTemplate({
               storageFileDocument,
-              overrideExistingTask: retryProcessing // only override if retrying is flagged true
+              overrideExistingTask
             })
           });
 
@@ -292,20 +355,38 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
             if (!storageFile.p) {
               throw storageFileProcessingNotAvailableForTypeError();
             } else {
-              await beginProcessing();
+              await beginProcessing(false);
             }
             break;
-          case StorageFileProcessingState.QUEUED:
+          case StorageFileProcessingState.QUEUED_FOR_PROCESSING:
             // begin processing
-            await beginProcessing();
+            await beginProcessing(false);
             break;
           case StorageFileProcessingState.PROCESSING:
-            // do nothing...
+            // check if the processing task is still running
+            const shouldCheckProcessing = !isThrottled(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS, storageFile.pat);
 
-            // TODO: Check if processing started a while ago. If it did, check the NotificationTask. If the task is missing, requeue it.
+            if (!storageFile.pn) {
+              await beginProcessing(true); // if no processing task is set, restart processing to recover from the broken state
+            } else if (checkRetryProcessing || shouldCheckProcessing) {
+              const { pn } = storageFile;
+              const notificationDocument = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentForKey(pn);
+              const notification = await notificationDocument.snapshotData();
 
+              if (!notification) {
+                // the notification document is missing. Re-begin processing
+                await beginProcessing(true);
+              } else if (notification.d || forceRestartProcessing) {
+                // if the notification is somehow in the done state but the StorageFile never got notified in the same transaction, requeue.
+                await beginProcessing(true);
+              }
+
+              // NOTE: We could look at the state of the notification task more, but at this point the task is probably still valid and still running,
+              // so we can only wait on it. In general if the task still exists and is not yet done, then we should wait on it as the
+              // task running system should complete eventually by design.
+            }
             break;
-          case StorageFileProcessingState.SHOULD_NOT_PROCESS:
+          case StorageFileProcessingState.DO_NOT_PROCESS:
             throw storageFileProcessingNotQueuedForProcessingError();
           case StorageFileProcessingState.SUCCESS:
             throw storageFileAlreadySuccessfullyProcessedError();
@@ -318,6 +399,76 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
       }
 
       return result;
+    };
+  });
+}
+
+export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerActionsContext) {
+  const { storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+  const deleteStorageFile = deleteStorageFileFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(DeleteAllQueuedStorageFilesParams, async (params) => {
+    return async () => {
+      let storageFilesVisited = 0;
+      let storageFilesDeleted = 0;
+      let storageFilesFailedDeleting = 0;
+
+      await iterateFirestoreDocumentSnapshotPairs({
+        documentAccessor: storageFileCollection.documentAccessor(),
+        iterateSnapshotPair: async (snapshotPair) => {
+          storageFilesVisited++;
+
+          const deleteStorageFileResult = await deleteStorageFile(snapshotPair.document).catch(() => null);
+
+          if (deleteStorageFileResult) {
+            storageFilesDeleted++;
+          } else {
+            storageFilesFailedDeleting++;
+          }
+        },
+        constraintsFactory: () => storageFilesQueuedForProcessingQuery(),
+        queryFactory: storageFileCollection,
+        batchSize: undefined,
+        performTasksConfig: {
+          maxParallelTasks: 10
+        }
+      });
+
+      const result: DeleteAllQueuedStorageFilesResult = {
+        storageFilesDeleted,
+        storageFilesFailedDeleting,
+        storageFilesVisited
+      };
+
+      return result;
+    };
+  });
+}
+
+export function deleteStorageFileFactory(context: StorageFileServerActionsContext) {
+  const { storageService, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
+
+  return firebaseServerActionTransformFunctionFactory(DeleteStorageFileParams, async (params) => {
+    const { force } = params;
+    return async (inputStorageFileDocument: StorageFileDocument) => {
+      const storageFileDocument = await storageFileCollection.documentAccessor().loadDocumentFrom(inputStorageFileDocument);
+
+      const storageFile = await assertSnapshotData(storageFileDocument);
+      const fileAccessor = storageService.file(storageFile);
+
+      if (!force) {
+        if (!storageFile.sdat) {
+          throw storageFileNotFlaggedForDeletionError();
+        } else if (!isPast(storageFile.sdat)) {
+          throw storageFileCannotBeDeletedYetError();
+        }
+      }
+
+      // delete the file
+      await fileAccessor.delete().catch(() => null);
+
+      // delete the document
+      await storageFileDocument.accessor.delete();
     };
   });
 }

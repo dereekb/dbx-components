@@ -154,7 +154,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
       p: purpose ?? inputTemplate?.p,
       d: metadata ?? inputTemplate?.d,
       fs: inputTemplate?.fs ?? StorageFileState.OK,
-      ps: (shouldBeProcessed ?? defaultShouldBeProcessed) ? StorageFileProcessingState.QUEUED : StorageFileProcessingState.SHOULD_NOT_PROCESS,
+      ps: (shouldBeProcessed ?? defaultShouldBeProcessed) ? StorageFileProcessingState.QUEUED_FOR_PROCESSING : StorageFileProcessingState.DO_NOT_PROCESS,
       ct: inputTemplate?.ct ?? defaultCreationType,
       bucketId: storagePath.bucketId,
       pathString: storagePath.pathString
