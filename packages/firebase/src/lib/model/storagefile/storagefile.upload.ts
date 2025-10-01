@@ -56,6 +56,8 @@ export function userUploadsFolderStoragePathFactory({ bucketId, basePath: inputB
  */
 export type UploadedFileTypeIdentifier = string;
 
+// TODO: Move UploadedFileDetails to storagefile.file.ts and rename to FileDetailsReader.
+
 /**
  * Details from the input.
  */
@@ -101,7 +103,7 @@ export interface UploadedFileDetailsAccessor {
   /**
    * Copies this file to the specified destination.
    */
-  readonly copy: FirebaseStorageAccessorFile['copy'];
+  readonly copy: Required<FirebaseStorageAccessorFile>['copy'];
 }
 
 /**
@@ -126,7 +128,7 @@ export function uploadedFileDetailsAccessorFactory(): UploadedFileDetailsAccesso
       loadFileStream: file.getStream,
       loadFileMetadata,
       loadCustomMetadata,
-      copy: file.copy
+      copy: file.copy! // copy is available on the server-side always
     };
 
     return accessor;

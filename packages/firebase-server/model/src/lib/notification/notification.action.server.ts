@@ -94,6 +94,7 @@ import { type NotificationSendMessagesInstance } from './notification.send';
 import { type NotificationSendServiceRef } from './notification.send.service';
 import { expandNotificationRecipients, makeNewNotificationSummaryTemplate, updateNotificationUserNotificationBoxRecipientConfig } from './notification.util';
 import { NotificationTaskServiceRef, NotificationTaskServiceTaskHandler } from './notification.task.service';
+import { removeFromCompletionsArrayWithTaskResult } from './notification.task.service.util';
 
 /**
  * Injection token for the BaseNotificationServerActionsContext
@@ -1122,23 +1123,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
             notificationTaskCompletionType = completion;
             success = true;
 
-            function removeFromCompletionsWithTaskResult(inputCompletions: NotificationTaskCheckpointString[], handleTaskResult: NotificationTaskServiceHandleNotificationTaskResult) {
-              const { removeAllCompletedCheckpoints, removeFromCompletedCheckpoints } = handleTaskResult;
-
-              let result: NotificationTaskCheckpointString[];
-
-              if (removeAllCompletedCheckpoints) {
-                result = [];
-              } else if (removeFromCompletedCheckpoints != null) {
-                const removeFromCompletionsSet = new Set(asArray(removeFromCompletedCheckpoints));
-                result = inputCompletions.filter((x) => !removeFromCompletionsSet.has(x));
-              } else {
-                result = inputCompletions;
-              }
-
-              return result;
-            }
-
             switch (completion) {
               case true:
                 notificationTemplate.d = true; // mark as done
@@ -1149,7 +1133,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                 notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempts count
 
                 // remove any completions, if applicable
-                notificationTemplate.tpr = removeFromCompletionsWithTaskResult(notification.tpr, handleTaskResult);
+                notificationTemplate.tpr = removeFromCompletionsArrayWithTaskResult(notification.tpr, handleTaskResult);
                 success = false;
                 break;
               default:
@@ -1164,7 +1148,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
 
                 // add the checkpoint to the notification
                 notificationTemplate.tpr = [
-                  ...removeFromCompletionsWithTaskResult(notification.tpr, handleTaskResult), // remove any completions, if applicable
+                  ...removeFromCompletionsArrayWithTaskResult(notification.tpr, handleTaskResult), // remove any completions, if applicable
                   ...asArray(completion)
                 ];
 

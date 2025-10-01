@@ -67,12 +67,20 @@ export class InitializeStorageFileFromUploadParams implements Pick<StoragePath, 
 
 export class ProcessStorageFileParams extends TargetModelParams {
   /**
-   * If set, will run the processing immediately instead of waiting for the next scheduled run.
+   * If set, will start/run the processing immediately instead of waiting for the next scheduled run.
    */
   @Expose()
   @IsBoolean()
   @IsOptional()
   runImmediately?: Maybe<boolean>;
+
+  /**
+   * If set, will retry processing if the StorageFile is in a failed processing state.
+   */
+  @Expose()
+  @IsBoolean()
+  @IsOptional()
+  retryProcessing?: Maybe<boolean>;
 }
 
 export interface ProcessStorageFileResult {}

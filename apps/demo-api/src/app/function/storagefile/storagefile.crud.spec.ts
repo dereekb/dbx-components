@@ -1,15 +1,40 @@
-import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
-import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext } from '../../../test/fixture';
+import { describeCallableRequestTest, jestExpectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
+import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoStorageFileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_TEST_FILE_PURPOSE, userTestFileUploadsFilePath } from 'demo-firebase';
-import { combineUploadFileTypeDeterminers, determineByFileName, determineByFolderName, determineByFilePath, EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL, HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL, StoragePath, StorageRawDataString, UploadedFileDetailsAccessor, uploadedFileDetailsAccessorFactory, UploadedFileTypeDeterminer, determineUserByFolderWrapperFunction, ALL_USER_UPLOADS_FOLDER_PATH, FirebaseStorageAccessor, FirebaseStorageAccessorFile, StorageFileState } from '@dereekb/firebase';
+import { USER_TEST_FILE_PURPOSE, userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
+import {
+  combineUploadFileTypeDeterminers,
+  determineByFileName,
+  determineByFolderName,
+  determineByFilePath,
+  EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL,
+  HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL,
+  StoragePath,
+  StorageRawDataString,
+  UploadedFileDetailsAccessor,
+  uploadedFileDetailsAccessorFactory,
+  UploadedFileTypeDeterminer,
+  determineUserByFolderWrapperFunction,
+  ALL_USER_UPLOADS_FOLDER_PATH,
+  FirebaseStorageAccessor,
+  FirebaseStorageAccessorFile,
+  StorageFileState,
+  UPLOADED_FILE_DOES_NOT_EXIST_ERROR_CODE,
+  UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE,
+  ProcessStorageFileParams,
+  onCallUpdateModelParams,
+  storageFileIdentity,
+  StorageFileProcessingState,
+  STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE
+} from '@dereekb/firebase';
 import { slashPathDetails, SlashPathFolder, SlashPathPart } from '@dereekb/util';
-import { assertSnapshotData } from '@dereekb/firebase-server';
+import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     describe('StorageFile', () => {
-      demoAuthorizedUserAdminContext({ f }, (u) => {
+      demoAuthorizedUserAdminContext({ f }, (au) => {
         describe('determiners', () => {
           const detailsAccessorFactory = uploadedFileDetailsAccessorFactory();
 
@@ -339,6 +364,42 @@ demoApiFunctionContextFactory((f) => {
           // tests for files that are sent to /uploads
           describe('files in uploads folder', () => {
             describe('user', () => {
+              describe('non-existant file', () => {
+                itShouldFail('to initialize', async () => {
+                  const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                    pathString: 'non-existant.txt'
+                  });
+
+                  await expectFail(() => instance(), jestExpectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_DOES_NOT_EXIST_ERROR_CODE));
+                });
+              });
+
+              describe('unknown file', () => {
+                let unknownFileStoragePath: StoragePath;
+                let unknownFile: FirebaseStorageAccessorFile;
+
+                const testFileContent = 'This is a test file.';
+
+                beforeEach(async () => {
+                  const uid = au.uid;
+
+                  const testFilePath = 'uploads/unknown/unknown.txt';
+                  unknownFile = await f.storageContext.file(testFilePath);
+                  unknownFileStoragePath = unknownFile.storagePath;
+
+                  const contentType = 'text/plain';
+                  await unknownFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+                });
+
+                itShouldFail('to initialize', async () => {
+                  const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                    pathString: unknownFileStoragePath.pathString
+                  });
+
+                  await expectFail(() => instance(), jestExpectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE));
+                });
+              });
+
               describe('test file', () => {
                 let testFileStoragePath: StoragePath;
                 let testFile: FirebaseStorageAccessorFile;
@@ -346,7 +407,7 @@ demoApiFunctionContextFactory((f) => {
                 const testFileContent = 'This is a test file.';
 
                 beforeEach(async () => {
-                  const uid = u.uid;
+                  const uid = au.uid;
 
                   const testFilePath = userTestFileUploadsFilePath(uid, 'test.txt');
                   testFile = await f.storageContext.file(testFilePath);
@@ -382,6 +443,128 @@ demoApiFunctionContextFactory((f) => {
 
                   const newFileExists = await newFile.exists();
                   expect(newFileExists).toBe(true);
+                });
+              });
+            });
+          });
+        });
+
+        describe('processStorageFile()', () => {
+          const testFileContent = 'This is a test file.';
+
+          function createUploadedFile(type: 'processable' | 'non-processable') {
+            return async () => {
+              const uid = au.uid;
+
+              const filePath = type === 'processable' ? userTestFileUploadsFilePath(uid, 'test.any') : userAvatarUploadsFilePath(uid);
+              const testFile = await f.storageContext.file(filePath);
+              const testFileStoragePath = testFile.storagePath;
+
+              const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
+              await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+
+              const result: StoragePath = {
+                bucketId: testFileStoragePath.bucketId,
+                pathString: testFileStoragePath.pathString
+              };
+
+              return result;
+            };
+          }
+
+          describe('non-existent StorageFileDocument', () => {
+            itShouldFail('to process the non-existent StorageFileDocument', async () => {
+              const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
+
+              const processStorageFileParams: ProcessStorageFileParams = {
+                key: storageFile.key
+              };
+
+              await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
+            });
+          });
+
+          describe('non-existent file associated with StorageFileDocument', () => {
+            itShouldFail('to process the non-existent StorageFileDocument', async () => {
+              const storageFile = await f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForId('12345');
+
+              const processStorageFileParams: ProcessStorageFileParams = {
+                key: storageFile.key
+              };
+
+              await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(MODEL_NOT_AVAILABLE_ERROR_CODE));
+            });
+          });
+
+          describe('non-processable file', () => {
+            // files that are not processable, but might be flagged for processing accidentally
+
+            demoStorageFileContext({ f, createUploadedFile: createUploadedFile('non-processable') }, (sf) => {
+              itShouldFail('to process the file if it is not marked for processing.', async () => {
+                const storageFile = await assertSnapshotData(sf.document);
+                expect(storageFile.ps).toBe(StorageFileProcessingState.SHOULD_NOT_PROCESS);
+
+                const processStorageFileParams: ProcessStorageFileParams = {
+                  key: sf.documentKey
+                };
+
+                await expectFail(() => au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process')), jestExpectFailAssertHttpErrorServerErrorCode(STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE));
+              });
+            });
+          });
+
+          describe('processable file', () => {
+            demoStorageFileContext({ f, createUploadedFile: createUploadedFile('processable') }, (sf) => {
+              it('should create the processing task for the file', async () => {
+                const storageFile = await assertSnapshotData(sf.document);
+                expect(storageFile.p).toBeDefined();
+                expect(storageFile.ps).toBe(StorageFileProcessingState.QUEUED);
+                expect(storageFile.pn).not.toBeDefined();
+                expect(storageFile.pat).not.toBeDefined();
+
+                const processStorageFileParams: ProcessStorageFileParams = {
+                  key: sf.documentKey
+                };
+
+                await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                const updatedStorageFile = await assertSnapshotData(sf.document);
+                expect(updatedStorageFile.p).toBeDefined();
+                expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                expect(updatedStorageFile.pn).toBeDefined();
+                expect(updatedStorageFile.pat).toBeDefined();
+              });
+
+              describe('storage file does not exist', () => {
+                // TODO...
+              });
+
+              describe('file processing task already created', () => {
+                beforeEach(async () => {
+                  await sf.process();
+                });
+
+                it('should do nothing', async () => {
+                  const storageFile = await assertSnapshotData(sf.document);
+                  expect(storageFile.p).toBeDefined();
+                  expect(storageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                  expect(storageFile.pn).toBeDefined();
+                  expect(storageFile.pat).toBeDefined();
+
+                  const processStorageFileParams: ProcessStorageFileParams = {
+                    key: sf.documentKey
+                  };
+
+                  await au.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(storageFileIdentity, processStorageFileParams, 'process'));
+
+                  const updatedStorageFile = await assertSnapshotData(sf.document);
+                  expect(updatedStorageFile.p).toBe(storageFile.p);
+                  expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
+                  expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
+                });
+
+                describe('file processing is stuck', () => {
+                  // TODO: Test processing might be stuck
                 });
               });
             });

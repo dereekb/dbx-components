@@ -1,5 +1,5 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFilePurpose, UploadedFileTypeIdentifier } from '@dereekb/firebase';
-import { SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from '@dereekb/util';
+import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata, StorageFilePurpose, UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { Maybe, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from '@dereekb/util';
 
 // MARK: User File Types
 /**
@@ -21,6 +21,16 @@ export function userTestFileUploadsFilePath(userId: FirebaseAuthUserId, name: Sl
 
 export const USER_TEST_FILE_PURPOSE: StorageFilePurpose = 'test';
 
+export const USER_TEST_FILE_PURPOSE_PART_A_SUBTASK: StorageFileProcessingSubtask = 'part_a';
+export const USER_TEST_FILE_PURPOSE_PART_B_SUBTASK: StorageFileProcessingSubtask = 'part_b';
+
+export type UserTestFileProcessingSubtask = typeof USER_TEST_FILE_PURPOSE_PART_A_SUBTASK | typeof USER_TEST_FILE_PURPOSE_PART_B_SUBTASK;
+
+export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProcessingSubtaskMetadata {
+  numberValue?: Maybe<number>;
+  stringValue?: Maybe<string>;
+}
+
 export const USER_TEST_FILE_ROOT_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/u/';
 
 export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
@@ -29,6 +39,8 @@ export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashP
 
 /**
  * A test file that is uploaded by a user into their own uploads folder.
+ *
+ * It does not have any processing.
  */
 export const USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER: UploadedFileTypeIdentifier = 'user_avatar';
 
@@ -46,6 +58,12 @@ export const USER_AVATAR_UPLOADS_FILE_NAME: SlashPathUntypedFile = 'avatar.img';
 
 export function userAvatarUploadsFilePath(userId: FirebaseAuthUserId): SlashPathUntypedFile {
   return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_AVATAR_UPLOADS_FILE_NAME}`;
+}
+
+export const USER_AVATAR_STORAGE_FOLDER_PATH: SlashPathFolder = 'avatar/u/';
+
+export function userAvatarFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
+  return `${USER_AVATAR_STORAGE_FOLDER_PATH}${userId}`;
 }
 
 // MARK: System File Types

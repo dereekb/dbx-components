@@ -21,7 +21,7 @@ export interface NotificationTaskServiceTaskHandlerConfig<D extends Notification
   /**
    * The order/flow of checkpoints and handler functions.
    *
-   * When handling a notification task, if the checkpoint has already been completed then entry will be skipped.
+   * When handling a notification task, if the checkpoint has already been completed then the entry will be skipped.
    */
   readonly flow: NotificationTaskServiceTaskHandlerFlowEntry<D, S>[];
 }

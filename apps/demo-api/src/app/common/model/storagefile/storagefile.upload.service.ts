@@ -1,6 +1,6 @@
 import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUploadServiceConfig, StorageFileInitializeFromUploadServiceInitializer, StorageFileInitializeFromUploadServiceInitializerInput, StorageFileInitializeFromUploadServiceInitializerResult, createStorageFileFactory, storageFileInitializeFromUploadService } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userTestFileStoragePath } from 'demo-firebase';
+import { USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileStoragePath, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPair, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByFolderWrapperFunction, determineUserByUserUploadsFolderWrapperFunction, FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { SlashPathPathMatcherPath } from '@dereekb/util';
 
@@ -34,7 +34,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
 
       // move the file to /test/u/{userId}/{filename}
       const newPath = userTestFileStoragePath(userId, file as string);
-      const movedFile = await input.fileDetailsAccessor.copy!(newPath);
+      const movedFile = await input.fileDetailsAccessor.copy(newPath);
 
       // create the StorageFileDocument and reference the new file
       const { storageFileDocument } = await createStorageFileDocumentPair({
@@ -62,10 +62,25 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
 
   const userTestAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = {
     type: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,
-    initialize: function (input: StorageFileInitializeFromUploadServiceInitializerInput): Promise<StorageFileInitializeFromUploadServiceInitializerResult> {
-      // TODO: Perform initialization...
+    initialize: async function (input: StorageFileInitializeFromUploadServiceInitializerInput): Promise<StorageFileInitializeFromUploadServiceInitializerResult> {
+      const { file } = input.fileDetailsAccessor.getPathDetails();
 
-      return null as any;
+      const userId = input.determinerResult.user as FirebaseAuthUserId;
+
+      // move the file to /avatar/u/{userId}/avatar
+      const newPath = userAvatarFileStoragePath(userId);
+      const movedFile = await input.fileDetailsAccessor.copy(newPath);
+
+      // create the StorageFileDocument and reference the new file
+      const { storageFileDocument } = await createStorageFileDocumentPair({
+        accessor: storageFileDocumentAccessor,
+        file: movedFile,
+        storagePathRef: movedFile,
+        user: userId,
+        shouldBeProcessed: false // no processing
+      });
+
+      return { storageFileDocument };
     },
     determiner: userTestAvatarDeterminer
   };

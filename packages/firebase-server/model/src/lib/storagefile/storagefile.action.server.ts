@@ -16,16 +16,21 @@ import {
   FirebaseStorageAccessorFile,
   InitializeAllStorageFilesFromUploadsResult,
   InitializeAllStorageFilesFromUploadsParams,
-  StorageFileKey
+  StorageFileKey,
+  StorageFileProcessingState,
+  StorageFileState,
+  createNotificationDocumentPair,
+  storageFileProcessingNotificationTaskTemplate
 } from '@dereekb/firebase';
-import { FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
+import { assertSnapshotData, FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { NotificationExpediteServiceRef } from '../notification';
 import { StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadServiceRef } from './storagefile.upload.service';
-import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError } from './storagefile.error';
+import { uploadedFileIsNotAllowedToBeInitializedError, uploadedFileDoesNotExistError, uploadedFileInitializationFailedError, uploadedFileInitializationDiscardedError, storageFileProcessingNotAvailableForTypeError, storageFileAlreadySuccessfullyProcessedError, storageFileProcessingNotAllowedForInvalidStateError, storageFileProcessingNotQueuedForProcessingError } from './storagefile.error';
 import { Maybe, mergeSlashPaths } from '@dereekb/util';
 import { HttpsError } from 'firebase-functions/https';
+import { storage } from 'firebase-admin';
 
 /**
  * Injection token for the BaseStorageFileServerActionsContext
@@ -238,15 +243,78 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
 }
 
 export function processStorageFileFactory(context: StorageFileServerActionsContext) {
-  const { storageFileCollection, firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
+  const { storageFileCollection, firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
 
   return firebaseServerActionTransformFunctionFactory(ProcessStorageFileParams, async (params) => {
-    const {} = params;
+    const { runImmediately, retryProcessing } = params;
 
     return async (storageFileDocument: StorageFileDocument) => {
-      // todo: ...
-
       const result: ProcessStorageFileResult = {};
+
+      const expediteInstance = notificationExpediteService.expediteInstance();
+
+      await firestoreContext.runTransaction(async (transaction) => {
+        expediteInstance.initialize();
+
+        const storageFileDocumentInTransaction = await storageFileCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(storageFileDocument);
+        const storageFile = await assertSnapshotData(storageFileDocumentInTransaction);
+
+        async function beginProcessing() {
+          const state = storageFile.fs;
+
+          // check the storageFile is in the OK state
+          if (state !== StorageFileState.OK) {
+            throw storageFileProcessingNotAllowedForInvalidStateError();
+          }
+
+          const createNotificationTaskResult = await createNotificationDocumentPair({
+            context,
+            transaction,
+            template: storageFileProcessingNotificationTaskTemplate({
+              storageFileDocument,
+              overrideExistingTask: retryProcessing // only override if retrying is flagged true
+            })
+          });
+
+          await storageFileDocumentInTransaction.update({
+            ps: StorageFileProcessingState.PROCESSING,
+            pat: new Date(),
+            pn: createNotificationTaskResult.notificationDocument.key
+          });
+
+          expediteInstance.enqueueCreateResult(createNotificationTaskResult);
+        }
+
+        switch (storageFile.ps) {
+          case StorageFileProcessingState.INIT_OR_NONE:
+            // queue up for processing, unless it has no purpose
+            if (!storageFile.p) {
+              throw storageFileProcessingNotAvailableForTypeError();
+            } else {
+              await beginProcessing();
+            }
+            break;
+          case StorageFileProcessingState.QUEUED:
+            // begin processing
+            await beginProcessing();
+            break;
+          case StorageFileProcessingState.PROCESSING:
+            // do nothing...
+
+            // TODO: Check if processing started a while ago. If it did, check the NotificationTask. If the task is missing, requeue it.
+
+            break;
+          case StorageFileProcessingState.SHOULD_NOT_PROCESS:
+            throw storageFileProcessingNotQueuedForProcessingError();
+          case StorageFileProcessingState.SUCCESS:
+            throw storageFileAlreadySuccessfullyProcessedError();
+        }
+      });
+
+      // expedite the task if requested
+      if (runImmediately) {
+        await expediteInstance.send();
+      }
 
       return result;
     };

@@ -52,7 +52,8 @@ import {
   StorageFileDocument,
   StoragePath,
   DocumentReference,
-  StorageFileFirestoreCollection
+  StorageFileFirestoreCollection,
+  ProcessStorageFileParams
 } from '@dereekb/firebase';
 import { YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, AsyncGetterOrValue, getValueFromGetter, Factory, AsyncFactory } from '@dereekb/util';
@@ -871,17 +872,35 @@ export const demoNotificationWeekContext = demoNotificationWeekContextFactory();
 export interface DemoApiStorageFileTestContextParams {
   /**
    * Creates an uploaded file and returns the path.
+   *
+   * This should go into the uploaded folder, or the folder where the system is expecting it to be for initializing a StorageFile from an uploaded file.
    */
   readonly createUploadedFile?: Maybe<AsyncFactory<StoragePath>>;
   /**
    * If true, will run processStorageFile() on the StorageFile.
+   *
+   * Defaults to false.
    */
   readonly processStorageFile?: Maybe<boolean>;
 }
 
-export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileTestContextInstance<F>> {}
+export class DemoApiStorageFileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileTestContextInstance<F>> {
+  async process(params?: Omit<ProcessStorageFileParams, 'key'>) {
+    return this.instance.process(params);
+  }
+}
 
-export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {}
+export class DemoApiStorageFileTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<StorageFile, StorageFileDocument, DemoApiFunctionContextFixtureInstance<F>> {
+  async process(params?: Omit<ProcessStorageFileParams, 'key'>) {
+    const processStorageFileParams: ProcessStorageFileParams = {
+      key: this.documentKey,
+      ...params
+    };
+
+    const process = await this.testContext.storageFileActions.processStorageFile(processStorageFileParams);
+    return process(this.document);
+  }
+}
 
 export const demoStorageFileContextFactory = () =>
   modelTestContextFactory<StorageFile, StorageFileDocument, DemoApiStorageFileTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiStorageFileTestContextFixture<FirebaseAdminFunctionTestContextInstance>, StorageFileFirestoreCollection>({

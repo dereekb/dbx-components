@@ -10,6 +10,8 @@ import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update
 import { createProfile } from '../profile/profile.create';
 import { createNotification } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
+import { storageFileUpdate, storageFileProcess } from '../storagefile/storagefile.update';
+import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
 
 // MARK: Create
 export const demoCreateModelMap: DemoOnCallCreateModelMap = {
@@ -20,6 +22,11 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
   profile: createProfile,
   notification: onCallSpecifierHandler({
     _: createNotification
+  }),
+  storageFile: onCallSpecifierHandler({
+    _: storageFileCreate,
+    fromUpload: storageFileInitializeFromUpload,
+    allFromUpload: storageFileInitializeAllFromUploads
   })
 };
 
@@ -52,6 +59,10 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   }),
   notification: onCallSpecifierHandler({
     send: notificationSend
+  }),
+  storageFile: onCallSpecifierHandler({
+    _: storageFileUpdate,
+    process: storageFileProcess
   })
 };
 

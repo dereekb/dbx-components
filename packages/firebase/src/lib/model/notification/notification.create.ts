@@ -37,7 +37,7 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
    *
    * Only used for Notification Tasks.
    */
-  readonly unique?: boolean | NotificationTaskUniqueId;
+  readonly unique?: Maybe<boolean | NotificationTaskUniqueId>;
   /**
    * Whether or not to override an existing task with the same unique key when creating.
    *
@@ -45,7 +45,7 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
    *
    * Only used for Notification Tasks.
    */
-  readonly overrideExistingTask?: boolean;
+  readonly overrideExistingTask?: Maybe<boolean>;
 }
 
 export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNotificationTemplate, 'notificationModel'>>, Partial<Omit<CreateNotificationTemplateItem, 't' | 'cat'>> {

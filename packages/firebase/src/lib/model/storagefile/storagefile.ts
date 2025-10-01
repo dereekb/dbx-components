@@ -40,9 +40,11 @@ export enum StorageFileState {
    */
   INIT = 0,
   /**
-   * The StorageFile failed to initialize properly, and is considered invalid.
+   * The StorageFile failed to initialize properly and is considered invalid.
    *
    * StorageFiles that are marked invalid are deleted after a period of time.
+   *
+   * Files that are invalid cannot be processed.
    */
   INVALID = 1,
   /**
@@ -80,9 +82,13 @@ export enum StorageFileProcessingState {
    */
   SUCCESS = 4,
   /**
+   * The StorageFile has been archived. It should not be processed.
+   */
+  ARCHIVED = 5,
+  /**
    * The StorageFile shouldn't be processed.
    */
-  NO_PROCESSING = 5
+  SHOULD_NOT_PROCESS = 6
 }
 
 /**
@@ -149,7 +155,7 @@ export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata
   sdat?: Maybe<Date>;
 }
 
-export type StorageFileRoles = GrantedUpdateRole | GrantedReadRole;
+export type StorageFileRoles = 'process' | GrantedUpdateRole | GrantedReadRole;
 
 export class StorageFileDocument extends AbstractFirestoreDocument<StorageFile, StorageFileDocument, typeof storageFileIdentity> {
   get modelIdentity() {

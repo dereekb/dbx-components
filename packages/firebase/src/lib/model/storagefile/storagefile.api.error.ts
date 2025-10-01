@@ -23,3 +23,25 @@ export interface UploadedFileInitializationFailedErrorData {
  * Thrown if the target uploaded file initialization was successful, but produced no new StorageFileDocument.
  */
 export const UPLOADED_FILE_INITIALIZATION_DISCARDED_ERROR_CODE = 'UPLOADED_FILE_INITIALIZATION_DISCARDED';
+
+/**
+ * Thrown if the target StorageFileDocument is not queued for processing and is called to be processed.
+ */
+export const STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING_ERROR_CODE = 'STORAGE_FILE_PROCESSING_NOT_QUEUED_FOR_PROCESSING';
+
+/**
+ * Thrown if:
+ * - the target StorageFileDocument was marked as queued for processing but isn't actually a processable-type.
+ * - the target StorageFileDocument is marked as init but has no purpose set, meaning it can't be processed.
+ */
+export const STORAGE_FILE_PROCESSING_NOT_AVAILABLE_FOR_TYPE_ERROR_CODE = 'STORAGE_FILE_PROCESSING_NOT_AVAILABLE_FOR_TYPE';
+
+/**
+ * Thrown if the StorageFile is not in an OK state.
+ */
+export const STORAGE_FILE_PROCESSING_NOT_ALLOWED_FOR_INVALID_STATE_ERROR_CODE = 'STORAGE_FILE_PROCESSING_NOT_ALLOWED_FOR_INVALID_STATE';
+
+/**
+ * Thrown if the target StorageFileDocument already finished processing.
+ */
+export const STORAGE_FILE_ALREADY_PROCESSED_ERROR_CODE = 'STORAGE_FILE_ALREADY_PROCESSED';

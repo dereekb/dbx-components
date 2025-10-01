@@ -12,6 +12,13 @@ export interface FirebaseStorageAccessor {
 }
 
 /**
+ * Contains a reference to a FirebaseStorageAccessor.
+ */
+export interface FirebaseStorageAccessorRef {
+  readonly storageAccessor: FirebaseStorageAccessor;
+}
+
+/**
  * Generic interface for accessing data from a file at the given path.
  */
 export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef {

@@ -6,7 +6,10 @@ export type StorageFileKey = FirestoreModelKey;
 /**
  * Arbitrary string that can be used to describe the file's purpose.
  *
- * The purpose is generally used while querying for StorageFiles that require processing.
+ * It should be unique between different file types.
+ *
+ * The purpose is generally used while querying for StorageFiles that require processing, but can also be
+ * set on files that do not get processed.
  *
  * Can be used for querying.
  */
