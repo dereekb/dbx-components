@@ -1,13 +1,29 @@
 import { AUTH_USER_ROLE, type Maybe, objectHasKey } from '@dereekb/util';
 import { containsAllValues, hasDifferentValues } from '../set';
 import { type AuthRoleSet, AUTH_ADMIN_ROLE } from './auth.role';
-import { type AuthClaimsObject, type AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from './auth.role.claims';
+import { type AuthClaimsObject, type AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE, AuthRoleClaimsFactoryConfigEntrySimpleOptions } from './auth.role.claims';
+import { value } from 'extra-set';
 
 type TestClaims = {
   test: string;
   u: number;
   m: string;
   ignoredValue: boolean;
+};
+
+type TestInverseClaims = {
+  /**
+   * Inverse "any" restrictions test.
+   */
+  any?: 1;
+  /**
+   * Inverse "all" restrictions test.
+   */
+  all?: 1;
+  /**
+   * Inverse "all"/true restrictions test.
+   */
+  true?: 1;
 };
 
 type TestComplexClaims = {
@@ -84,6 +100,57 @@ describe('authRoleClaimsFactory()', () => {
 
         expect(Object.keys(result).length).toBe(3);
         expect(result.m).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
+      });
+    });
+
+    describe('inverse claims', () => {
+      const roles = ['a', 'b', 'c'];
+
+      const claimsConfig = {
+        any: {
+          roles,
+          inverse: 'any'
+        } as AuthRoleClaimsFactoryConfigEntrySimpleOptions<1>,
+        all: {
+          roles,
+          inverse: 'all'
+        } as AuthRoleClaimsFactoryConfigEntrySimpleOptions<1>,
+        true: {
+          roles,
+          inverse: true
+        } as AuthRoleClaimsFactoryConfigEntrySimpleOptions<1>
+      };
+
+      const service = authRoleClaimsService<TestInverseClaims>(claimsConfig);
+
+      it('should not add the inverse claim when the roles are present.', () => {
+        const rolesSet = new Set(roles);
+        const result = service.toClaims(rolesSet);
+
+        expect(Object.keys(result).length).toBe(3); // all 3 returned
+        expect(result.any).toBe(null);
+        expect(result.all).toBe(null);
+        expect(result.true).toBe(null);
+      });
+
+      it('should add the inverse claim to all, but not any, if some of the roles are not present.', () => {
+        const rolesSet = new Set(['a']);
+        const result = service.toClaims(rolesSet);
+
+        expect(Object.keys(result).length).toBe(3); // all 3 returned
+        expect(result.all).toBe(1);
+        expect(result.any).toBe(null);
+        expect(result.true).toBe(null);
+      });
+
+      it('should add the inverse claim when all of the roles are not present.', () => {
+        const rolesSet = new Set([]);
+        const result = service.toClaims(rolesSet);
+
+        expect(Object.keys(result).length).toBe(3); // all 3 returned
+        expect(result.any).toBe(1);
+        expect(result.all).toBe(1);
+        expect(result.true).toBe(1);
       });
     });
 

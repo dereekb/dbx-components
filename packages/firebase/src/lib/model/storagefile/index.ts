@@ -9,4 +9,5 @@ export * from './storagefile';
 export * from './storagefile.file';
 export * from './storagefile.util';
 export * from './storagefile.upload';
+export * from './storagefile.upload.claims';
 export * from './storagefile.upload.determiner';

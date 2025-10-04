@@ -75,7 +75,7 @@ demoApiFunctionContextFactory((f) => {
                         // check notification changes
                         const notification = await assertSnapshotData(nbn.document);
 
-                        expect(notification.a).toBe(0); // no error, attempts count does not increase
+                        expect(notification.a).toBe(1); // unknown task type, attempts increased by 1
                         expect(isFuture(notification.sat)).toBe(true);
                       });
 
