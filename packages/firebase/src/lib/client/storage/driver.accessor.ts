@@ -1,9 +1,9 @@
 import { StorageListFilesPageToken, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
-import { type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
-import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, listAll } from 'firebase/storage';
+import { ConfigurableStorageMetadata, StorageCustomMetadata, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
+import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, updateMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, listAll, SettableMetadata } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
-import { type ErrorInput, errorMessageContainsString, type Maybe } from '@dereekb/util';
+import { type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
 
 export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
   return errorMessageContainsString(input, 'storage/object-not-found');
@@ -25,21 +25,43 @@ export type FirebaseStorageClientAccessorFile = FirebaseStorageAccessorFile<Stor
 export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage, storagePath: StoragePath): FirebaseStorageClientAccessorFile {
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
 
-  function asUploadMetadata(options?: StorageUploadOptions): UploadMetadata | undefined {
+  interface ConfigureMetadataOptions {
+    readonly metadata?: ConfigurableStorageMetadata;
+    readonly customMetadata?: StorageCustomMetadata;
+  }
+
+  function _configureMetadata(options: ConfigureMetadataOptions): UploadMetadata {
+    return filterUndefinedValues({
+      cacheControl: options.metadata?.cacheControl,
+      contentDisposition: options.metadata?.contentDisposition,
+      contentEncoding: options.metadata?.contentEncoding,
+      contentLanguage: options.metadata?.contentLanguage,
+      contentType: options.metadata?.contentType,
+      customMetadata: filterUndefinedValues({
+        ...options.metadata?.customMetadata,
+        ...options?.customMetadata
+      }) as { [key: string]: string }
+    });
+  }
+
+  function uploadMetadataFromStorageUploadOptions(options?: StorageUploadOptions): UploadMetadata | undefined {
     let result: UploadMetadata | undefined;
 
     if (options != null) {
-      const { contentType, metadata } = options;
-
-      if (options.contentType || options.metadata) {
-        result = {
-          ...(contentType ? { contentType } : undefined),
-          ...metadata
-        };
-      }
+      result = _configureMetadata({
+        metadata: {
+          ...options.metadata,
+          contentType: options.contentType ?? options.metadata?.contentType
+        },
+        customMetadata: options.customMetadata
+      });
     }
 
     return result;
+  }
+
+  function asSettableMetadata(metadata: ConfigurableStorageMetadata): SettableMetadata {
+    return _configureMetadata({ metadata });
   }
 
   return {
@@ -48,9 +70,10 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     exists: () => firebaseStorageFileExists(ref),
     getDownloadUrl: () => getDownloadURL(ref),
     getMetadata: () => getMetadata(ref),
+    setMetadata: (metadata) => updateMetadata(ref, asSettableMetadata(metadata)),
     upload: (input, options) => {
       const inputType = typeof input === 'string';
-      const metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
+      const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
 
       if (inputType) {
         const stringFormat = assertStorageUploadOptionsStringFormat(options);
@@ -62,7 +85,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes),
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
-      const metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
+      const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
       return uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
     },
     delete: (options: StorageDeleteFileOptions) =>

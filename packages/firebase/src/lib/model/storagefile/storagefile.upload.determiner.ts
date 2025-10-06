@@ -127,7 +127,9 @@ export function determineByFileName(config: DetermineByFileNameConfig): Uploaded
   const exactMatchDeterminationLevel = inputExactMatchDeterminationLevel ?? EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL;
   const nameMatchDeterminationLevel = inputNameMatchDeterminationLevel ?? HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL;
 
-  const testFileName: FactoryWithRequiredInput<Maybe<UploadedFileTypeDeterminationLevel>, SlashPathPart> = mustMatchExactly ? (fileName) => (fileName === match ? exactMatchDeterminationLevel : undefined) : (fileName) => (fileName.startsWith(match) ? nameMatchDeterminationLevel : undefined);
+  const testFileName: FactoryWithRequiredInput<Maybe<UploadedFileTypeDeterminationLevel>, SlashPathPart> = mustMatchExactly
+    ? (fileName) => (fileName === match ? exactMatchDeterminationLevel : undefined) // exact match
+    : (fileName) => (fileName.startsWith(match) ? nameMatchDeterminationLevel : undefined); // name match
 
   return {
     determine: (input) => {

@@ -3,8 +3,8 @@ import { addMinutes, addMonths, isFuture } from 'date-fns';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoNotificationBoxContext, demoNotificationContext, demoProfileContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { NotificationDocument, NotificationSendState, NotificationSendType, createNotificationDocument, CreateNotificationTemplate, delayCompletion } from '@dereekb/firebase';
-import { EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, exampleNotificationTaskTemplate, exampleNotificationTaskWithNoModelTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
+import { NotificationDocument, NotificationSendState, NotificationSendType, createNotificationDocument, CreateNotificationTemplate, delayCompletion, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
+import { EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE, EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE, ExampleNotificationTaskData, exampleNotificationTaskTemplate, exampleNotificationTaskWithNoModelTemplate, exampleUniqueNotificationTaskTemplate } from 'demo-firebase';
 import { NOTIFICATION_TASK_TYPE_MAX_SEND_ATTEMPTS, UNKNOWN_NOTIFICATION_TASK_TYPE_DELETE_AFTER_RETRY_ATTEMPTS } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 
@@ -132,10 +132,128 @@ demoApiFunctionContextFactory((f) => {
                             expect(result.isNotificationTask).toBe(true);
                             expect(result.boxExists).toBe(false);
                             expect(result.deletedNotification).toBe(false);
+                            expect(result.notificationTaskPartsRunCount).toBe(1);
+                            expect(result.notificationTaskLoopingProtectionTriggered).toBe(false);
                             expect(result.notificationTaskCompletionType).toBe('part_b'); // part_b should be completed now
 
                             notification = await assertSnapshotData(nbn.document);
                             expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+                          });
+
+                          describe('multi-part task', () => {
+                            beforeEach(async () => {
+                              const notification = await assertSnapshotData(nbn.document);
+
+                              await nbn.document.update({
+                                n: {
+                                  ...notification.n,
+                                  d: {
+                                    mergeResultWithDefaultResult: true,
+                                    result: {
+                                      canRunNextCheckpoint: true
+                                    }
+                                  } as ExampleNotificationTaskData
+                                }
+                              });
+                            });
+
+                            it('should have handled all parts of the task in a single call to sendNotification()', async () => {
+                              let notification = await assertSnapshotData(nbn.document);
+                              expect((notification.n.d as any)?.value).not.toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+
+                              const result = await nbn.sendNotification();
+
+                              expect(result.tryRun).toBe(true);
+                              expect(result.success).toBe(true);
+                              expect(result.isNotificationTask).toBe(true);
+                              expect(result.boxExists).toBe(false);
+                              expect(result.deletedNotification).toBe(false);
+                              expect(result.notificationTaskPartsRunCount).toBe(2);
+                              expect(result.notificationTaskLoopingProtectionTriggered).toBe(false);
+                              expect(result.notificationTaskCompletionType).toBe(true); // should have run all parts
+
+                              notification = await assertSnapshotData(nbn.document);
+                              expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+                            });
+
+                            describe('delayUntil is set', () => {
+                              beforeEach(async () => {
+                                const notification = await assertSnapshotData(nbn.document);
+
+                                await nbn.document.update({
+                                  n: {
+                                    ...notification.n,
+                                    d: {
+                                      mergeResultWithDefaultResult: true,
+                                      result: {
+                                        canRunNextCheckpoint: true,
+                                        delayUntil: 1 // 1 ms delay, or any delay is fine
+                                      } as NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>
+                                    } as ExampleNotificationTaskData
+                                  }
+                                });
+                              });
+
+                              it('should have handled the first part of the notification task only', async () => {
+                                let notification = await assertSnapshotData(nbn.document);
+                                expect((notification.n.d as any)?.value).not.toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+
+                                const result = await nbn.sendNotification();
+
+                                expect(result.tryRun).toBe(true);
+                                expect(result.success).toBe(true);
+                                expect(result.isNotificationTask).toBe(true);
+                                expect(result.boxExists).toBe(false);
+                                expect(result.deletedNotification).toBe(false);
+                                expect(result.notificationTaskLoopingProtectionTriggered).toBe(false);
+                                expect(result.notificationTaskPartsRunCount).toBe(1);
+                                expect(result.notificationTaskCompletionType).toBe('part_b'); // part_b should be completed now, not all parts
+
+                                notification = await assertSnapshotData(nbn.document);
+                                expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE);
+                              });
+                            });
+
+                            describe('task result looping protection', () => {
+                              beforeEach(async () => {
+                                const notification = await assertSnapshotData(nbn.document);
+
+                                await nbn.document.update({
+                                  n: {
+                                    ...notification.n,
+                                    d: {
+                                      mergeResultWithDefaultResult: false, // do not merge the results, so the task will always return the configured result
+                                      result: {
+                                        completion: 'part_a',
+                                        updateMetadata: {
+                                          value: EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE
+                                        },
+                                        canRunNextCheckpoint: true
+                                      }
+                                    } as ExampleNotificationTaskData
+                                  }
+                                });
+                              });
+
+                              it('should have returned without getting stuck in an infinite loop', async () => {
+                                let notification = await assertSnapshotData(nbn.document);
+                                expect((notification.n.d as any)?.value).not.toBe(EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE);
+
+                                const result = await nbn.sendNotification();
+
+                                expect(result.tryRun).toBe(true);
+                                expect(result.success).toBe(true);
+                                expect(result.isNotificationTask).toBe(true);
+                                expect(result.boxExists).toBe(false);
+                                expect(result.deletedNotification).toBe(false);
+                                expect(result.notificationTaskLoopingProtectionTriggered).toBe(true);
+                                expect(result.notificationTaskPartsRunCount).toBe(2);
+                                expect(result.notificationTaskCompletionType).toEqual('part_a'); // should have returned the part_a completion
+
+                                notification = await assertSnapshotData(nbn.document);
+                                expect((notification.n.d as any)?.value).toBe(EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE);
+                              });
+                            });
                           });
 
                           describe('task fails', () => {

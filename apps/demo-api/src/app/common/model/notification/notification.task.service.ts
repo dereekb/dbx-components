@@ -16,7 +16,7 @@ import {
   UserTestFileProcessingSubtask,
   UserTestFileProcessingSubtaskMetadata
 } from 'demo-firebase';
-import { Maybe } from '@dereekb/util';
+import { filterUndefinedValues, Maybe } from '@dereekb/util';
 import { toJsDate } from '@dereekb/date';
 import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 
@@ -27,14 +27,30 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
    * @param result
    * @returns
    */
-  function parseResult(result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>) {
+  function _parseResult(result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>) {
     return result != null
-      ? {
+      ? filterUndefinedValues({
           completion: result?.completion,
           updateMetadata: result?.updateMetadata,
-          delayUntil: result?.delayUntil ? toJsDate(result?.delayUntil) : undefined
-        }
+          delayUntil: result?.delayUntil ? toJsDate(result?.delayUntil) : undefined,
+          canRunNextCheckpoint: result?.canRunNextCheckpoint
+        })
       : undefined;
+  }
+
+  function buildResult(taskData: Maybe<ExampleNotificationTaskData>, defaultResult: NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>): NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData> {
+    let result: NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>;
+
+    if (taskData?.mergeResultWithDefaultResult) {
+      result = {
+        ...defaultResult,
+        ..._parseResult(taskData?.result)
+      };
+    } else {
+      result = _parseResult(taskData?.result) ?? defaultResult;
+    }
+
+    return result;
   }
 
   const exampleNotificationTaskHandler: NotificationTaskServiceTaskHandlerConfig<ExampleNotificationTaskData, ExampleNotificationTaskCheckpoint> = {
@@ -45,14 +61,12 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
         fn: async (notificationTask) => {
           // Do something...
 
-          return (
-            parseResult(notificationTask.data?.result) ?? {
-              completion: 'part_a',
-              updateMetadata: {
-                value: EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE
-              }
+          return buildResult(notificationTask.data, {
+            completion: 'part_a',
+            updateMetadata: {
+              value: EXAMPLE_NOTIFICATION_TASK_PART_A_COMPLETE_VALUE
             }
-          );
+          });
         }
       },
       {
@@ -60,14 +74,12 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
         fn: async (notificationTask) => {
           // Do something else...
 
-          return (
-            parseResult(notificationTask.data?.result) ?? {
-              completion: 'part_b',
-              updateMetadata: {
-                value: EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE
-              }
+          return buildResult(notificationTask.data, {
+            completion: 'part_b',
+            updateMetadata: {
+              value: EXAMPLE_NOTIFICATION_TASK_PART_B_COMPLETE_VALUE
             }
-          );
+          });
         }
       },
       {
@@ -75,11 +87,9 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
         fn: async (notificationTask) => {
           // Do final step...
 
-          return (
-            parseResult(notificationTask.data?.result) ?? {
-              completion: true
-            }
-          );
+          return buildResult(notificationTask.data, {
+            completion: true
+          });
         }
       }
     ]

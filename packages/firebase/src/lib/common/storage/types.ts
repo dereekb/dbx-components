@@ -1,4 +1,4 @@
-import { type ISO8601DateString } from '@dereekb/util';
+import { MimeTypeWithoutParameters, PrimativeValue, type ISO8601DateString } from '@dereekb/util';
 
 // MARK: Storage
 // These types are provided to avoid us from using the "any".
@@ -149,6 +149,11 @@ export interface StorageMoveOptions {
 }
 
 export interface StorageUploadOptions {
+  /**
+   * If true, the upload will be resumable.
+   *
+   * Defaults to false.
+   */
   readonly resumable?: boolean;
   /**
    * String format to handle the upload as. Required if the input is a string.
@@ -156,12 +161,48 @@ export interface StorageUploadOptions {
   readonly stringFormat?: StorageDataStringType;
   /**
    * ContentType for the upload.
+   *
+   * Content types are not automatically detected, so setting the correct type is important, otherwise a default type may be used.
    */
-  readonly contentType?: string;
+  readonly contentType?: MimeTypeWithoutParameters;
   /**
-   * other metadata to attach to the file.
+   * Custom metadata to attach to the file.
    */
-  readonly metadata?: StorageMetadata;
+  readonly customMetadata?: StorageCustomMetadata;
+  /**
+   * Configurable metadata options to attach to the file.
+   */
+  readonly metadata?: ConfigurableStorageMetadata;
+}
+
+/**
+ * Metadata options that can be configured when uploading a file.
+ */
+export interface ConfigurableStorageMetadata {
+  /**
+   * Served as the 'Cache-Control' header on object download.
+   */
+  readonly cacheControl?: string | undefined;
+  /**
+   * Served as the 'Content-Disposition' header on object download.
+   */
+  readonly contentDisposition?: string | undefined;
+  /**
+   * Served as the 'Content-Encoding' header on object download.
+   */
+  readonly contentEncoding?: string | undefined;
+  /**
+   * Served as the 'Content-Language' header on object download.
+   */
+  readonly contentLanguage?: string | undefined;
+  /**
+   * Served as the 'Content-Type' header on object download.
+   */
+  readonly contentType?: string | undefined;
+  /**
+   * Any user-specified custom metdata.
+   */
+  readonly customMetadata?: StorageCustomMetadata | undefined;
 }
 
 /**
@@ -169,7 +210,7 @@ export interface StorageUploadOptions {
  *
  * This interface follows the Firebase Cloud Storage pattern more than the @google-cloud/storage pattern.
  */
-export interface StorageMetadata {
+export interface StorageMetadata extends ConfigurableStorageMetadata {
   /**
    * The bucket this object is contained in.
    */
@@ -211,37 +252,13 @@ export interface StorageMetadata {
    * A Base64-encoded MD5 hash of the object being uploaded.
    */
   readonly md5Hash?: string | undefined;
-  /**
-   * Served as the 'Cache-Control' header on object download.
-   */
-  readonly cacheControl?: string | undefined;
-  /**
-   * Served as the 'Content-Disposition' header on object download.
-   */
-  readonly contentDisposition?: string | undefined;
-  /**
-   * Served as the 'Content-Encoding' header on object download.
-   */
-  readonly contentEncoding?: string | undefined;
-  /**
-   * Served as the 'Content-Language' header on object download.
-   */
-  readonly contentLanguage?: string | undefined;
-  /**
-   * Served as the 'Content-Type' header on object download.
-   */
-  readonly contentType?: string | undefined;
-  /**
-   * Any user-specified custom metdata.
-   */
-  readonly customMetadata?: StorageCustomMetadata | undefined;
 }
 
 /**
  * Additional user-defined custom metadata.
  */
 export type StorageCustomMetadata = {
-  readonly [key: string]: string;
+  readonly [key: string]: string | null;
 };
 
 export interface StorageDeleteFileOptions {

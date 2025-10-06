@@ -7,6 +7,8 @@ export type StorageFileUploadUserRestriction = typeof AUTH_ROLE_CLAIMS_DEFAULT_C
 
 /**
  * Claims value for disabling uploads for a user.
+ *
+ * Can be used in conjuction with the Storage security roles to prevent users from uploading files.
  */
 export type StorageFileUploadUserClaims = {
   /**

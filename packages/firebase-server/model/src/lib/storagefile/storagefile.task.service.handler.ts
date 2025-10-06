@@ -10,16 +10,13 @@ import {
   StorageFileProcessingSubtask,
   notificationTaskComplete,
   StorageFileDocument,
-  FirestoreDocumentAccessor,
   StorageFile,
   notificationTaskPartiallyComplete,
-  NotificationTaskCheckpointString,
   delayCompletion,
   StorageFileState,
   StorageFileProcessingState,
   DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS,
   DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY,
-  FirestoreDocumentAccessorRef,
   StorageFileFirestoreCollections,
   StoredFileReader,
   storedFileReaderFactory,
@@ -27,7 +24,7 @@ import {
   FirebaseStorageAccessor,
   copyStoragePath
 } from '@dereekb/firebase';
-import { NotificationTaskServiceTaskHandlerFlowEntry, NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
+import { NotificationTaskServiceTaskHandlerConfig } from '../notification/notification.task.service.handler';
 import { asArray, cachedGetter, dateFromDateOrTimeNumber, Maybe, Milliseconds, PromiseOrValue, separateValues, unique } from '@dereekb/util';
 import { BaseError } from 'make-error';
 import { removeFromCompletionsArrayWithTaskResult } from '../notification/notification.task.service.util';
@@ -154,6 +151,10 @@ export interface StorageFileProcessingPurposeSubtaskProcessorConfig<M extends St
    * - Flag the StorageFile for deletion
    */
   readonly cleanup?: StorageFileProcessingPurposeSubtaskCleanupFunction<M, S>;
+  /**
+   * If true, then results returned by this processor will set "canRunNextCheckpoint" to true if it is undefined.
+   */
+  readonly allowRunMultipleParts?: Maybe<boolean>;
 }
 
 export interface StorageFileProcessingNotificationTaskHandlerConfig {
@@ -185,13 +186,17 @@ export interface StorageFileProcessingNotificationTaskHandlerConfig {
    * Defaults to DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY.
    */
   readonly cleanupRetryDelay?: Maybe<Milliseconds>;
+  /**
+   * The default value to use for allowRunMultipleParts if it is not specified, for each processor.
+   */
+  readonly defaultAllowRunMultipleParts?: Maybe<boolean>;
 }
 
 /**
  * Creates a NotificationTaskServiceTaskHandlerConfig that handles the StorageFileProcessingNotificationTask.
  */
 export function storageFileProcessingNotificationTaskHandler(config: StorageFileProcessingNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData, StorageFileProcessingNotificationTaskCheckpoint> {
-  const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, maxCleanupRetryAttempts: inputMaxCleanupRetryAttempts, cleanupRetryDelay: inputCleanupRetryDelay } = config;
+  const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, maxCleanupRetryAttempts: inputMaxCleanupRetryAttempts, cleanupRetryDelay: inputCleanupRetryDelay, defaultAllowRunMultipleParts } = config;
   const storageFileDocumentAccessor = storageFileFirestoreCollections.storageFileCollection.documentAccessor();
   const maxCleanupRetryAttempts = inputMaxCleanupRetryAttempts ?? DEFAULT_MAX_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_ATTEMPTS;
   const cleanupRetryDelay = inputCleanupRetryDelay ?? DEFAULT_STORAGE_FILE_PROCESSING_CLEANUP_RETRY_DELAY;
@@ -226,8 +231,9 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
    * Structure is similar to notificationTaskService(), but contained to handle the subtasks.
    */
   function processorFunctionForConfig<M extends StorageFileProcessingSubtaskMetadata = any, S extends StorageFileProcessingSubtask = StorageFileProcessingSubtask>(processorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<M, S>): StorageFileProcessingPurposeSubtaskProcessor<M, S> {
-    const { flow: inputFlows, cleanup } = processorConfig;
+    const { flow: inputFlows, cleanup, allowRunMultipleParts: processorAllowRunMultipleParts } = processorConfig;
     const { included: subtaskFlows, excluded: nonSubtaskFlows } = separateValues(inputFlows, (x) => x.subtask != null);
+    const allowRunMultipleParts = processorAllowRunMultipleParts ?? defaultAllowRunMultipleParts;
 
     if (inputFlows.length === 0) {
       throw new Error('storageFileProcessingNotificationTaskHandler(): StorageFileProcessingPurposeSubtaskProcessorConfig must have at least one flow entry.');
@@ -267,7 +273,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
            */
 
           const subtaskResult: NotificationTaskServiceHandleNotificationTaskResult<M, S> = await fn(input);
-          const { completion: subtaskCompletion, updateMetadata: subtaskUpdateMetadata, delayUntil } = subtaskResult;
+          const { completion: subtaskCompletion, updateMetadata: subtaskUpdateMetadata, delayUntil, canRunNextCheckpoint } = subtaskResult;
 
           let allSubtasksDone = false;
           let sfps: S[] = completedSubtasks;
@@ -312,6 +318,7 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
           result = {
             completion: allSubtasksDone ? ['processing'] : delayCompletion(), // return processing until all subtasks are complete.
             updateMetadata,
+            canRunNextCheckpoint: canRunNextCheckpoint ?? allowRunMultipleParts,
             delayUntil // delay is passed through
           };
         } else {

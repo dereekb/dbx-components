@@ -16,9 +16,10 @@ import {
   type StorageCustomMetadata,
   StorageSlashPath,
   StorageMoveOptions,
-  StorageListFilesPageToken
+  StorageListFilesPageToken,
+  ConfigurableStorageMetadata
 } from '@dereekb/firebase';
-import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
+import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasKey, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
@@ -37,6 +38,7 @@ export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, 
   const generation = String(metadata.generation ?? file.generation);
   const metageneration = String(metadata.metageneration);
   const size = Number(metadata.size);
+  const customMetadata = metadata.metadata as StorageCustomMetadata | undefined;
 
   return {
     bucket: file.bucket.name,
@@ -53,7 +55,7 @@ export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, 
     contentEncoding: metadata.contentEncoding,
     contentLanguage: metadata.contentLanguage,
     contentType: metadata.contentType,
-    customMetadata: metadata.customMetadata as StorageCustomMetadata | undefined
+    customMetadata
   };
 }
 
@@ -71,21 +73,50 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     };
   }
 
+  interface ConfigureMetadataOptions {
+    readonly metadata?: ConfigurableStorageMetadata;
+    readonly customMetadata?: StorageCustomMetadata;
+  }
+
+  function _configureMetadata(options: ConfigureMetadataOptions): FileMetadata {
+    const customMetadata = filterUndefinedValues({
+      ...options.metadata?.customMetadata,
+      ...options?.customMetadata
+    }) as { [key: string]: string };
+
+    return filterUndefinedValues({
+      cacheControl: options.metadata?.cacheControl,
+      contentDisposition: options.metadata?.contentDisposition,
+      contentEncoding: options.metadata?.contentEncoding,
+      contentLanguage: options.metadata?.contentLanguage,
+      contentType: options.metadata?.contentType,
+      metadata: !objectHasNoKeys(customMetadata) ? customMetadata : undefined
+    });
+  }
+
   function makeUploadOptions(options?: StorageUploadOptions): SaveOptions | CreateWriteStreamOptions {
     let metadata: object | undefined;
 
-    if (options?.contentType) {
-      metadata = {
-        contentType: options?.contentType
-      };
+    if (options != null) {
+      metadata = _configureMetadata({
+        metadata: {
+          ...options.metadata,
+          contentType: options.contentType ?? options.metadata?.contentType
+        },
+        customMetadata: options.customMetadata
+      });
     }
 
     return {
       // non-resumable
       resumable: false,
-      // add content type
+      // add content type and other custom metadata
       ...(metadata ? { metadata } : undefined)
     };
+  }
+
+  function asFileMetadata(metadata: ConfigurableStorageMetadata): FileMetadata {
+    return _configureMetadata({ metadata });
   }
 
   function makeStoragePathForPath(newPath: StorageSlashPath | StoragePath): StoragePath {
@@ -124,6 +155,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     exists: async () => file.exists().then((x) => x[0]),
     getDownloadUrl: async () => file.getMetadata().then((x) => file.publicUrl()),
     getMetadata: () => file.getMetadata().then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
+    setMetadata: (metadata) => file.setMetadata(asFileMetadata(metadata)).then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
     getBytes: (maxDownloadSizeBytes) => file.download(makeDownloadOptions(maxDownloadSizeBytes)).then((x) => x[0]),
     getStream: (maxDownloadSizeBytes) => file.createReadStream(makeDownloadOptions(maxDownloadSizeBytes)),
     upload: async (input, options) => {

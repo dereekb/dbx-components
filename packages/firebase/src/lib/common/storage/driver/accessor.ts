@@ -1,5 +1,5 @@
 import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, StorageSlashPath } from '../storage';
-import { StorageMoveOptions, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
+import { ConfigurableStorageMetadata, StorageMoveOptions, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -38,6 +38,12 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    * Returns the metadata from the input objects.
    */
   getMetadata(): Promise<StorageMetadata>;
+  /**
+   * Sets the metadata for the file.
+   *
+   * @param metadata
+   */
+  setMetadata(metadata: ConfigurableStorageMetadata): Promise<StorageMetadata>;
   /**
    * Downloads the data as an ArrayBuffer.
    */

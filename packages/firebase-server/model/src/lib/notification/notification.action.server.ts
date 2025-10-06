@@ -85,7 +85,7 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, separateValues, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, hoursToMilliseconds, isFuture, isPast } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -1090,6 +1090,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
       let buildMessageFailure: boolean = false;
       let notificationMarkedDone: boolean = false;
       let notificationTaskCompletionType: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
+      let notificationTaskPartsRunCount: number = 0;
+      let notificationTaskLoopingProtectionTriggered: Maybe<boolean>;
       let onSendAttemptedResult: Maybe<SendNotificationResultOnSendCompleteResult>;
       let onSendSuccessResult: Maybe<SendNotificationResultOnSendCompleteResult>;
 
@@ -1101,102 +1103,182 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         await handleNormalNotification();
       }
 
-      async function handleNotificationTask() {
-        if (tryRun && notification != null && notificationTaskHandler) {
-          const { n: item, cat, ut } = notification;
+      interface RunNotificationTaskNextPartResult {
+        /**
+         * Set if the result comes back as a partial completion, with canRunNextCheckpoint as true, and there is no delay.
+         */
+        readonly tryRunNextPart: boolean;
+        readonly partNotificationTaskCompletionType: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
+        readonly partNotificationMarkedDone: boolean;
+        /**
+         * Set if the tpr did not change or has reversed, meaning the task went back to a prior step.
+         *
+         * This is used as a check to prevent infinite loops.
+         */
+        readonly partTprReversal: boolean;
+        readonly partSuccess: boolean;
+      }
 
-          const unique = ut ?? false;
-          const notificationTask: NotificationTask = {
-            notificationDocument,
-            totalSendAttempts: notification.a,
-            currentCheckpointSendAttempts: notification.at ?? 0,
-            taskType: item.t,
-            item,
-            data: item.d,
-            checkpoints: notification.tpr,
-            createdAt: cat,
-            unique
-          };
+      async function _runNotificationTaskNextPart(notification: DocumentDataWithIdAndKey<Notification>, notificationTaskHandler: NotificationTaskServiceTaskHandler): Promise<RunNotificationTaskNextPartResult> {
+        const { n: item, cat, ut } = notification;
 
-          // calculate results
-          const notificationTemplate: Partial<Notification> = {};
+        let tryRunNextPart = false;
+        let partNotificationTaskCompletionType: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
+        let partNotificationMarkedDone = false;
+        let partTprReversal = false;
+        let partSuccess = false;
 
-          // perform the task
-          try {
-            const handleTaskResult = await notificationTaskHandler.handleNotificationTask(notificationTask);
-            const { completion, updateMetadata, delayUntil } = handleTaskResult;
+        const unique = ut ?? false;
+        const notificationTask: NotificationTask = {
+          notificationDocument,
+          totalSendAttempts: notification.a,
+          currentCheckpointSendAttempts: notification.at ?? 0,
+          taskType: item.t,
+          item,
+          data: item.d,
+          checkpoints: notification.tpr,
+          createdAt: cat,
+          unique
+        };
 
-            notificationTaskCompletionType = completion;
-            success = true;
+        // calculate results
+        const notificationTemplate: Partial<Notification> = {};
 
-            switch (completion) {
-              case true:
-                notificationTemplate.d = true; // mark as done
-                break;
-              case false:
-                // failed
-                notificationTemplate.a = notification.a + 1; // increase attempts count
-                notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempts count
+        // perform the task
+        try {
+          const handleTaskResult = await notificationTaskHandler.handleNotificationTask(notificationTask);
+          const { completion, updateMetadata, delayUntil, canRunNextCheckpoint } = handleTaskResult;
 
-                // remove any completions, if applicable
-                notificationTemplate.tpr = removeFromCompletionsArrayWithTaskResult(notification.tpr, handleTaskResult);
-                success = false;
-                break;
-              default:
-                // default case called if not true or false, which implies either a delay or partial completion
+          partNotificationTaskCompletionType = completion;
+          partSuccess = true;
 
-                // update the checkpoint attempts count
-                if (Array.isArray(completion) && completion.length === 0) {
-                  notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempt/delays count
-                } else {
-                  notificationTemplate.at = 0; // reset checkpoint attempt/delay count
+          switch (completion) {
+            case true:
+              notificationTemplate.d = true; // mark as done
+              break;
+            case false:
+              // failed
+              notificationTemplate.a = notification.a + 1; // increase attempts count
+              notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempts count
+
+              // remove any completions, if applicable
+              notificationTemplate.tpr = removeFromCompletionsArrayWithTaskResult(notification.tpr, handleTaskResult);
+              partSuccess = false;
+              break;
+            default:
+              // default case called if not true or false, which implies either a delay or partial completion
+
+              // update the checkpoint attempts count
+              if (Array.isArray(completion) && completion.length === 0) {
+                notificationTemplate.at = (notification.at ?? 0) + 1; // increase checkpoint attempt/delays count
+              } else {
+                tryRunNextPart = canRunNextCheckpoint === true && delayUntil == null; // can try the next part if there is no delayUntil and canRunNextCheckpoint is true
+                notificationTemplate.at = 0; // reset checkpoint attempt/delay count
+              }
+
+              // add the checkpoint to the notification
+              notificationTemplate.tpr = [
+                ...removeFromCompletionsArrayWithTaskResult(notification.tpr, handleTaskResult), // remove any completions, if applicable
+                ...asArray(completion)
+              ];
+
+              // calculate the updated notification item
+              notificationTemplate.n = {
+                ...notification.n,
+                d: {
+                  ...notification.n.d,
+                  ...(updateMetadata ? filterOnlyUndefinedValues(updateMetadata) : undefined) // ignore any undefined values
                 }
+              };
 
-                // add the checkpoint to the notification
-                notificationTemplate.tpr = [
-                  ...removeFromCompletionsArrayWithTaskResult(notification.tpr, handleTaskResult), // remove any completions, if applicable
-                  ...asArray(completion)
-                ];
+              // can only run the next part if the tpr has changed, and the number of checkpoints completed has increased
+              // if the tpr has not changed, then it is also considered a reversal
+              if (tryRunNextPart) {
+                const tprChanged = !iterablesAreSetEquivalent(notification.tpr, notificationTemplate.tpr);
+                partTprReversal = !tprChanged || (tprChanged && notificationTemplate.tpr.length <= notification.tpr.length);
+              }
 
-                // calculate the updated notification item
-                notificationTemplate.n = {
-                  ...notification.n,
-                  d: {
-                    ...notification.n.d,
-                    ...(updateMetadata ? filterOnlyUndefinedValues(updateMetadata) : undefined) // ignore any undefined values
-                  }
-                };
-                break;
-            }
-
-            // do not update sat if the task is complete
-            if (completion !== true && delayUntil != null) {
-              notificationTemplate.sat = dateOrMillisecondsToDate(delayUntil);
-            }
-
-            notificationMarkedDone = notificationTemplate.d === true;
-          } catch (e) {
-            console.error(`Failed handling task for notification "${notification.key}" with type "${notificationTask.taskType}": `, e);
-            notificationTemplate.a = notification.a + 1; // increase attempts count
-            notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS);
-            success = false;
+              break;
           }
 
-          // notification tasks are read
-          let saveTaskResult = true;
-
-          if (unique) {
-            isUniqueNotificationTask = true;
-            const latestNotification = await notificationDocument.snapshotData();
-
-            if (!latestNotification || !isSameDate(latestNotification.cat, notification.cat)) {
-              saveTaskResult = false;
-              uniqueNotificationTaskConflict = true;
-            }
+          // do not update sat if the task is complete
+          if (completion !== true && delayUntil != null) {
+            notificationTemplate.sat = dateOrMillisecondsToDate(delayUntil);
           }
 
-          if (saveTaskResult) {
-            await notificationDocument.update(notificationTemplate);
+          partNotificationMarkedDone = notificationTemplate.d === true;
+        } catch (e) {
+          console.error(`Failed handling task for notification "${notification.key}" with type "${notificationTask.taskType}": `, e);
+          notificationTemplate.a = notification.a + 1; // increase attempts count
+          notificationTemplate.sat = dateOrMillisecondsToDate(NOTIFICATION_TASK_TYPE_FAILURE_DELAY_MS);
+          partSuccess = false;
+        }
+
+        // notification tasks are read
+        let saveTaskResult = true;
+
+        if (unique) {
+          isUniqueNotificationTask = true;
+          const latestNotification = await notificationDocument.snapshotData();
+
+          if (!latestNotification || !isSameDate(latestNotification.cat, notification.cat)) {
+            saveTaskResult = false;
+            uniqueNotificationTaskConflict = true;
+          }
+        }
+
+        if (saveTaskResult) {
+          await notificationDocument.update(notificationTemplate);
+        }
+
+        return {
+          tryRunNextPart,
+          partNotificationMarkedDone,
+          partNotificationTaskCompletionType,
+          partTprReversal,
+          partSuccess
+        };
+      }
+
+      /**
+       * Notification task handling.
+       *
+       * Notification takss can have multiple async but sequential parts.
+       *
+       * Some of these parts may be able to be run immediately one after the other, instead of waiting for
+       * another sendNotification() to complete on it.
+       */
+      async function handleNotificationTask() {
+        const MAX_NOTIFICATION_TASK_PARTS_RUN_ALLOWED = 5;
+
+        if (tryRun && notification != null && notificationTaskHandler) {
+          let currentNotification = notification;
+          notificationTaskLoopingProtectionTriggered = false;
+
+          notificationTaskPartsRunCount = 0;
+
+          while (notificationTaskPartsRunCount < MAX_NOTIFICATION_TASK_PARTS_RUN_ALLOWED) {
+            notificationTaskPartsRunCount += 1;
+
+            const result = await _runNotificationTaskNextPart(currentNotification, notificationTaskHandler);
+
+            notificationTaskCompletionType = result.partNotificationTaskCompletionType;
+            success = result.partSuccess;
+
+            const tryRunNextPart = result.partSuccess && result.tryRunNextPart && !notificationTaskLoopingProtectionTriggered;
+            notificationTaskLoopingProtectionTriggered = notificationTaskLoopingProtectionTriggered || result.partTprReversal; // update the flag if the TPR has been reversed
+
+            if (tryRunNextPart) {
+              const updatedNotificationData = await notificationDocument.snapshotData();
+
+              if (updatedNotificationData) {
+                currentNotification = setIdAndKeyFromKeyIdRefOnDocumentData(updatedNotificationData, notificationDocument);
+              } else {
+                break; // notification is unavailable now
+              }
+            } else {
+              break; // escape the loop
+            }
           }
         }
       }
@@ -1504,6 +1586,8 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
         throttled,
         exists: notification != null,
         boxExists: notificationBox != null,
+        notificationTaskPartsRunCount,
+        notificationTaskLoopingProtectionTriggered,
         notificationBoxNeedsInitialization,
         notificationTaskCompletionType,
         createdBox,

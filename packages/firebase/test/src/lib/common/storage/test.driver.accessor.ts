@@ -1,8 +1,9 @@
 import { type MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
-import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFilesResult, StorageListFileResult } from '@dereekb/firebase';
+import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFilesResult, StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
 import { Readable } from 'stream';
+import { createReadStream } from 'fs';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -27,7 +28,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       beforeEach(async () => {
         doesNotExistFile = f.storageContext.file(doesNotExistFilePath);
         existsFile = f.storageContext.file(existsFilePath);
-        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType });
+        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType }); // re-upload for each test
 
         // delete the does not exist file and second bucket target if it exists
         await doesNotExistFile.delete().catch(() => null);
@@ -141,6 +142,63 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           });
 
           // TODO(TEST): Test uploading other types.
+
+          describe('custom metadata', () => {
+            it('should upload custom metadata via customMetadata', async () => {
+              const customMetadataKey = 'x-amz-meta-custom-key';
+              const customMetadataValue = 'custom-value';
+
+              const customMetadata = {
+                [customMetadataKey]: customMetadataValue
+              };
+
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType, customMetadata });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.customMetadata).toEqual(customMetadata);
+            });
+
+            it('should upload custom metadata via metadata', async () => {
+              const customMetadataKey = 'x-amz-meta-custom-key';
+              const customMetadataValue = 'custom-value';
+
+              const customMetadata = {
+                [customMetadataKey]: customMetadataValue
+              };
+
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType, metadata: { customMetadata } });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.customMetadata).toEqual(customMetadata);
+            });
+
+            it('should upload the merged custom metadatas', async () => {
+              const customMetadataAKey = 'x-amz-meta-custom-key';
+              const customMetadataAValue = '1';
+
+              const customMetadataBKey = 'x-axx-meta-custom-key';
+              const customMetadataBValue = 'true';
+
+              const customMetadataA = {
+                [customMetadataAKey]: customMetadataAValue
+              };
+
+              const customMetadataB = {
+                [customMetadataBKey]: customMetadataBValue
+              };
+
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType, customMetadata: customMetadataA, metadata: { customMetadata: customMetadataB } });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.customMetadata).toEqual({ ...customMetadataA, ...customMetadataB });
+            });
+          });
         });
 
         describe('uploadStream()', () => {
@@ -173,14 +231,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
               // Create a readable stream from the string
               const readableStream = Readable.from(myText, { encoding: 'utf-8' });
-
-              const stream = uploadFile.uploadStream();
-              readableStream.pipe(stream, { end: true });
-
-              await new Promise((resolve, reject) => {
-                stream.on('finish', resolve);
-                stream.on('error', reject);
-              });
+              await uploadFileWithStream(uploadFile, readableStream);
 
               const exists = await uploadFile.exists();
               expect(exists).toBe(true);
@@ -193,6 +244,25 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
               const decoded = Buffer.from(result).toString('utf-8');
               expect(decoded).toBe(myText);
+            }
+          });
+
+          it('should upload a png using a stream using a WritableStream', async () => {
+            if (uploadFile.uploadStream != null) {
+              const testFilePath = `${__dirname}/assets/testpng.png`;
+              const contentType = 'image/png';
+
+              const testFileStream = createReadStream(testFilePath, {});
+              await uploadFileWithStream(uploadFile, testFileStream, { contentType });
+
+              const exists = await uploadFile.exists();
+              expect(exists).toBe(true);
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
             }
           });
         });
@@ -321,6 +391,65 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           expect(result.contentType).toBe(existsFileContentType);
 
           expect(result).toBeDefined();
+        });
+      });
+
+      describe('setMetadata()', () => {
+        itShouldFail('if the file does not exist.', async () => {
+          await expectFail(() => doesNotExistFile.setMetadata({}));
+        });
+
+        it('should replace the content type field.', async () => {
+          const currentMetadata = await existsFile.getMetadata();
+          expect(currentMetadata.contentType).toBe(existsFileContentType);
+
+          const nextContentType = 'application/json';
+
+          const result = await existsFile.setMetadata({
+            contentType: nextContentType
+          });
+
+          expect(result.contentType).toBe(nextContentType);
+
+          const updatedMetadata = await existsFile.getMetadata();
+          expect(updatedMetadata.contentType).toBe(nextContentType);
+        });
+
+        it('should replace the metadata for only the provided fields.', async () => {
+          const currentMetadata = await existsFile.getMetadata();
+          expect(currentMetadata.contentType).toBe(existsFileContentType);
+
+          const customMetadataA = {
+            foo: 'bar'
+          };
+
+          const result = await existsFile.setMetadata({
+            contentType: undefined, // should not change
+            customMetadata: customMetadataA
+          });
+
+          expect(result.contentType).toBe(existsFileContentType);
+          expect(result.customMetadata).toEqual(customMetadataA);
+
+          const updatedMetadata = await existsFile.getMetadata();
+          expect(updatedMetadata.contentType).toBe(existsFileContentType);
+          expect(updatedMetadata.customMetadata).toEqual(customMetadataA);
+
+          // update again. All custom metadata is replaced
+          const customMetadataB = {
+            foo: 'baz'
+          };
+
+          const result2 = await existsFile.setMetadata({
+            customMetadata: customMetadataB
+          });
+
+          expect(result2.contentType).toBe(existsFileContentType);
+          expect(result2.customMetadata).toEqual(customMetadataB);
+
+          const updatedMetadata2 = await existsFile.getMetadata();
+          expect(updatedMetadata2.contentType).toBe(existsFileContentType);
+          expect(updatedMetadata2.customMetadata).toEqual(customMetadataB);
         });
       });
 

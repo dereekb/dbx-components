@@ -109,6 +109,24 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}>(
 }
 
 /**
+ * Wraps an existing NotificationTaskServiceHandleNotificationTaskResult<D> and sets canRunNextCheckpoint to true if it is undefined.
+ *
+ * @param result The result to use as a template.
+ * @param force If true, then canRunNextCheckpoint will be set to true even if it is already defined.
+ * @returns A new result.
+ */
+export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}>(result: NotificationTaskServiceHandleNotificationTaskResult<D>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+  if (force || result.canRunNextCheckpoint == null) {
+    result = {
+      ...result,
+      canRunNextCheckpoint: true
+    };
+  }
+
+  return result;
+}
+
+/**
  * One or more NotificationTaskCheckpointString values that are considered complete.
  */
 export type NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> = ArrayOrValue<S>;
@@ -155,4 +173,10 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
    * Delays the next run of the task by the specified amount of time or until the given date.
    */
   readonly delayUntil?: Maybe<Date | Milliseconds>;
+  /**
+   * If true, can run the next part of the task immediately.
+   *
+   * Ignored if delayUntil is set or if the completion is true/false/empty array.
+   */
+  readonly canRunNextCheckpoint?: Maybe<boolean>;
 }

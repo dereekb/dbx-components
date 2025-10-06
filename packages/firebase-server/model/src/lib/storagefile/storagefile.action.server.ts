@@ -109,12 +109,14 @@ export function initializeAllStorageFilesFromUploadsFactory(context: StorageFile
       const folder = storageService.folder(fullPath);
 
       let modelKeys: StorageFileKey[] = [];
+
       let filesVisited = 0;
       let initializationsSuccessCount = 0;
       let initializationsFailureCount = 0;
 
       await iterateStorageListFilesByEachFile({
         folder,
+        includeNestedResults: true,
         readItemsFromPageResult: (results) => results.result.files(),
         iterateEachPageItem: async (file) => {
           const fileInstance = file.file();

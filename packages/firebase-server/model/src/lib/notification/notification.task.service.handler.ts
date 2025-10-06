@@ -1,6 +1,6 @@
 import { NotificationTaskType, NotificationTask, NotificationTaskCheckpointString, NotificationItemMetadata, NotificationTaskServiceHandleNotificationTaskResult } from '@dereekb/firebase';
 import { NotificationTaskService, NotificationTaskServiceTaskHandler, NotificationTaskServiceTaskHandlerFunction } from './notification.task.service';
-import { separateValues } from '@dereekb/util';
+import { Configurable, separateValues } from '@dereekb/util';
 
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.
@@ -24,6 +24,10 @@ export interface NotificationTaskServiceTaskHandlerConfig<D extends Notification
    * When handling a notification task, if the checkpoint has already been completed then the entry will be skipped.
    */
   readonly flow: NotificationTaskServiceTaskHandlerFlowEntry<D, S>[];
+  /**
+   * If true, then flow results will be updated to set "canRunNextCheckpoint" to true if it is undefined.
+   */
+  readonly allowRunMultipleParts?: boolean;
 }
 
 export interface NotificationTaskServiceConfig {
@@ -51,7 +55,7 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
   });
 
   function handlerForConfig(handlerConfig: NotificationTaskServiceTaskHandlerConfig<any, any>): NotificationTaskServiceTaskHandler {
-    const { flow: inputFlows } = handlerConfig;
+    const { flow: inputFlows, allowRunMultipleParts } = handlerConfig;
     const { included: checkpointFlows, excluded: nonCheckpointFlows } = separateValues(inputFlows, (x) => x.checkpoint != null);
 
     if (inputFlows.length === 0) {
@@ -83,6 +87,11 @@ export function notificationTaskService(config: NotificationTaskServiceConfig): 
 
         if (fn) {
           result = await fn(notificationTask);
+
+          // if allowRunMultipleParts is true, and the result doesn't have a canRunNextCheckpoint value, then set it to true.
+          if (allowRunMultipleParts && result.canRunNextCheckpoint == null) {
+            (result as Configurable<typeof result>).canRunNextCheckpoint = true;
+          }
         } else {
           result = {
             completion: true // if there are no functions remaining, then the task is complete
