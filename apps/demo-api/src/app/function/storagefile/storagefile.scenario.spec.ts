@@ -1,11 +1,12 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoStorageFileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
+import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
 import { StorageFileProcessingState, StoragePath } from '@dereekb/firebase';
 import { MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
+import * as sharp from 'sharp';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -79,14 +80,13 @@ demoApiFunctionContextFactory((f) => {
             }
 
             it('should initialize an uploaded avatar for a user', async () => {
-              // uploaded
               const uploadedFilePath = await uploadAvatarTestFileForUser('avatar.png', 'image/png')();
 
               expect(uploadedFilePath.bucketId).toBeDefined();
               expect(uploadedFilePath.pathString).toBeDefined();
 
               const uploadedFile = f.storageContext.file(uploadedFilePath);
-              const uploadedFileExists = await uploadedFile.exists();
+              let uploadedFileExists = await uploadedFile.exists();
 
               expect(uploadedFileExists).toBe(true);
 
@@ -96,6 +96,28 @@ demoApiFunctionContextFactory((f) => {
               expect(result.initializationsSuccessCount).toBe(1);
               expect(result.filesVisited).toBe(1);
               expect(result.modelKeys).toHaveLength(1);
+
+              // check the avatar to see that it was resized and saved as a jpeg
+              const storageFile = await assertSnapshotData(f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForKey(result.modelKeys[0]));
+              expect(storageFile.ps).toBe(StorageFileProcessingState.DO_NOT_PROCESS);
+
+              const file = f.storageContext.file(storageFile);
+              const fileMetadata = await file.getMetadata();
+
+              expect(fileMetadata.contentType).toBe('image/jpeg');
+
+              const fileData = await file.getBytes();
+              expect(fileData).toBeDefined();
+
+              const sharpInstance = sharp(fileData);
+              const sharpMetadata = await sharpInstance.metadata();
+
+              expect(sharpMetadata.width).toBe(USER_AVATAR_IMAGE_WIDTH);
+              expect(sharpMetadata.height).toBe(USER_AVATAR_IMAGE_HEIGHT);
+              expect(sharpMetadata.format).toBe('jpeg');
+
+              uploadedFileExists = await uploadedFile.exists();
+              expect(uploadedFileExists).toBe(false);
             });
 
             describe('initialized', () => {

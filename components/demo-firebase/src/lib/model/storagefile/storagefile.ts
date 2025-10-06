@@ -66,4 +66,7 @@ export function userAvatarFileStoragePath(userId: FirebaseAuthUserId): SlashPath
   return `${USER_AVATAR_STORAGE_FOLDER_PATH}${userId}`;
 }
 
+export const USER_AVATAR_IMAGE_WIDTH = 512;
+export const USER_AVATAR_IMAGE_HEIGHT = USER_AVATAR_IMAGE_WIDTH;
+
 // MARK: System File Types
