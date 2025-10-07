@@ -1,5 +1,5 @@
 import { type Unsubscribable } from 'rxjs';
-import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, convertToArray, type Destroyable, type Maybe, unique } from '@dereekb/util';
 
 /**
  * Destroyable object that wraps an Unsubscribable.
@@ -63,6 +63,18 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
   public setSubs(subs: ArrayOrValue<T>) {
     this.unsub();
     this._subscriptions = convertToArray(subs);
+  }
+
+  public addSubs(subs: ArrayOrValue<T>) {
+    const nextSubscriptions = [...(this._subscriptions ?? [])];
+
+    convertToArray(subs).forEach((sub) => {
+      if (!nextSubscriptions.includes(sub)) {
+        nextSubscriptions.push(sub);
+      }
+    });
+
+    this._subscriptions = nextSubscriptions;
   }
 
   public unsub() {

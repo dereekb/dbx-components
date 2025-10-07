@@ -1,4 +1,5 @@
-import { MimeTypeWithoutParameters, PrimativeValue, type ISO8601DateString } from '@dereekb/util';
+import { type ArrayOrValue, type DateOrUnixDateTimeNumber, type FileSize, type Milliseconds, type MimeTypeWithoutParameters, type ISO8601DateString } from '@dereekb/util';
+import { type Observable } from 'rxjs';
 
 // MARK: Storage
 // These types are provided to avoid us from using the "any".
@@ -25,7 +26,55 @@ export type GoogleCloudLikeStorage = {
 export type FirebaseStorage = FirebaseStorageLikeStorage | GoogleCloudLikeStorage;
 
 // MARK: Types
+/**
+ * The public storage url link.
+ */
 export type StorageDownloadUrl = string;
+
+/**
+ * A signed download link.
+ */
+export type StorageSignedDownloadUrl = string;
+
+/**
+ * Configuration for a signed download url.
+ *
+ * Type is based on the @google-cloud/storage signerGetSignedUrlConfig type.
+ */
+export interface StorageSignedDownloadUrlConfig {
+  /**
+   * Signed url action.
+   *
+   * Defaults to read.
+   */
+  readonly action?: 'read' | 'write' | 'delete' | 'resumable';
+  /**
+   * The time in milliseconds from now the url will expire.
+   *
+   * Ignored if expiresAt is specified.
+   */
+  readonly expiresIn?: Milliseconds;
+  /**
+   * The expiration time.
+   *
+   * Defaults to one hour if not specified.
+   */
+  readonly expiresAt?: string | DateOrUnixDateTimeNumber;
+  /**
+   * The time the url will become accessible.
+   */
+  readonly accessibleAt?: string | DateOrUnixDateTimeNumber;
+  readonly version?: 'v2' | 'v4';
+  readonly virtualHostedStyle?: boolean;
+  readonly cname?: string;
+  readonly contentMd5?: string;
+  readonly contentType?: string;
+  readonly extensionHeaders?: Record<string, ArrayOrValue<string>>;
+  readonly promptSaveAs?: string;
+  readonly responseDisposition?: string;
+  readonly responseType?: string;
+  readonly queryParams?: Record<string, string>;
+}
 
 /**
  * Example:
@@ -115,7 +164,11 @@ export type StorageServerUploadInput = StorageServerUploadBytesInput | StorageDa
 
 export type StorageUploadInput = StorageClientUploadInput | StorageServerUploadInput;
 
-export type StorageUploadTask = {
+export interface StorageUploadTask<R = unknown> {
+  /**
+   * Exposes the internal reference type.
+   */
+  readonly taskRef: R;
   /**
    * Cancels a running task. Has no effect on a complete or failed task.
    * @returns True if the cancel had an effect.
@@ -131,7 +184,41 @@ export type StorageUploadTask = {
    * @returns True if the operation took effect, false if ignored.
    */
   resume(): boolean;
-};
+  /**
+   * Returns the current task snapshot.
+   */
+  getSnapshot(): StorageUploadTaskSnapshot<R>;
+  /**
+   * Creates a new observable that streams the snapshot events.
+   */
+  streamSnapshotEvents(): Observable<StorageUploadTaskSnapshot>;
+}
+
+export type StorageUploadTaskState = 'running' | 'paused' | 'success' | 'canceled' | 'error';
+
+export interface StorageUploadTaskSnapshot<R = unknown> {
+  /**
+   * The number of bytes that have been successfully uploaded so far.
+   */
+  readonly bytesTransferred: FileSize;
+  /**
+   * The total number of bytes to be uploaded.
+   */
+  readonly totalBytes: FileSize;
+  /**
+   * Before the upload completes, contains the metadata sent to the server.
+   * After the upload completes, contains the metadata sent back from the server.
+   */
+  readonly metadata: StorageMetadata;
+  /**
+   * The current state of the task.
+   */
+  readonly state: StorageUploadTaskState;
+  /**
+   * The upload task this snapshot is associated with
+   */
+  readonly uploadTask: StorageUploadTask<R>;
+}
 
 export type StorageClientUploadResult = unknown;
 export type StorageUploadResult = StorageClientUploadResult | unknown;

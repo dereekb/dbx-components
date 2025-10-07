@@ -505,6 +505,16 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
       });
 
+      describe('getSignedUrl()', () => {
+        it('should return the signed read url.', async () => {
+          if (existsFile.getSignedUrl) {
+            const result = await existsFile.getSignedUrl();
+            expect(result).toBeDefined();
+            expect(typeof result).toBe('string');
+          }
+        });
+      });
+
       describe('delete()', () => {
         itShouldFail('if the file does not exist.', async () => {
           await expectFail(() => doesNotExistFile.delete());

@@ -21,6 +21,7 @@ import {
 } from '@dereekb/firebase';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasKey, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
+import { addHours, addMilliseconds } from 'date-fns';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
@@ -154,6 +155,19 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     storagePath,
     exists: async () => file.exists().then((x) => x[0]),
     getDownloadUrl: async () => file.getMetadata().then((x) => file.publicUrl()),
+    getSignedUrl: async (input) => {
+      const expires = input?.expiresAt ?? (input?.expiresIn != null ? addMilliseconds(new Date(), input.expiresIn) : addHours(new Date(), 1));
+
+      const config = {
+        ...input,
+        action: input?.action ?? 'read',
+        expiresIn: undefined,
+        expiresAt: undefined,
+        expires
+      };
+
+      return file.getSignedUrl(config).then((x) => x[0]);
+    },
     getMetadata: () => file.getMetadata().then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
     setMetadata: (metadata) => file.setMetadata(asFileMetadata(metadata)).then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
     getBytes: (maxDownloadSizeBytes) => file.download(makeDownloadOptions(maxDownloadSizeBytes)).then((x) => x[0]),

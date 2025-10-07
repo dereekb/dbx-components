@@ -1,5 +1,5 @@
 import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, StorageSlashPath } from '../storage';
-import { ConfigurableStorageMetadata, StorageMoveOptions, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
+import { ConfigurableStorageMetadata, StorageMoveOptions, StorageSignedDownloadUrl, StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -35,6 +35,10 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    */
   getDownloadUrl(): Promise<StorageDownloadUrl>;
   /**
+   * Returns a signed/temporary url
+   */
+  getSignedUrl?(options?: StorageSignedDownloadUrlConfig): Promise<StorageSignedDownloadUrl>;
+  /**
    * Returns the metadata from the input objects.
    */
   getMetadata(): Promise<StorageMetadata>;
@@ -67,11 +71,15 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
   /**
    * Uploads data to the file's path using a resumable.
    *
+   * Generally a client-only implementation.
+   *
    * Optional implementation.
    */
   uploadResumable?(data: StorageClientUploadBytesInput, options?: StorageUploadOptions): StorageUploadTask;
   /**
    * Returns a WritableStream that can be written to.
+   *
+   * Generally a server-only implementation.
    *
    * Optional implementation.
    */

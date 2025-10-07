@@ -1,9 +1,10 @@
 import { StorageListFilesPageToken, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
-import { ConfigurableStorageMetadata, StorageCustomMetadata, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
-import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, updateMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, listAll, SettableMetadata } from 'firebase/storage';
+import { ConfigurableStorageMetadata, StorageCustomMetadata, StorageUploadTask, StorageUploadTaskSnapshot, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
+import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, updateMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, listAll, SettableMetadata, UploadTask, UploadTaskSnapshot } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
-import { type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
+import { cachedGetter, type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
+import { map, Observable, shareReplay } from 'rxjs';
 
 export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
   return errorMessageContainsString(input, 'storage/object-not-found');
@@ -64,7 +65,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     return _configureMetadata({ metadata });
   }
 
-  return {
+  const clientFile: FirebaseStorageClientAccessorFile = {
     reference: ref,
     storagePath,
     exists: () => firebaseStorageFileExists(ref),
@@ -86,7 +87,42 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
       const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
-      return uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
+      const uploadBytesTask = uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
+
+      function wrapSnapshot(currentSnapshot: UploadTaskSnapshot): StorageUploadTaskSnapshot<UploadTask> {
+        const snapshot: StorageUploadTaskSnapshot<UploadTask> = {
+          bytesTransferred: currentSnapshot.bytesTransferred,
+          totalBytes: currentSnapshot.totalBytes,
+          metadata: currentSnapshot.metadata,
+          state: currentSnapshot.state,
+          uploadTask
+        };
+
+        return snapshot;
+      }
+
+      uploadBytesTask.on('state_changed');
+
+      const uploadTask: StorageUploadTask<UploadTask> = {
+        taskRef: uploadBytesTask,
+        cancel: () => uploadBytesTask.cancel(),
+        pause: () => uploadBytesTask.pause(),
+        resume: () => uploadBytesTask.resume(),
+        getSnapshot: () => wrapSnapshot(uploadBytesTask.snapshot),
+        streamSnapshotEvents: cachedGetter(() => {
+          const obs = uploadBytesTask.on('state_changed');
+
+          const internalSnapshotObs = new Observable<UploadTaskSnapshot>((x) => obs(x));
+          const snapshotEvents: Observable<StorageUploadTaskSnapshot> = internalSnapshotObs.pipe(
+            map((x) => wrapSnapshot(x)),
+            shareReplay(1)
+          );
+
+          return snapshotEvents;
+        })
+      };
+
+      return uploadTask;
     },
     delete: (options: StorageDeleteFileOptions) =>
       deleteObject(ref).catch((x) => {
@@ -95,6 +131,8 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
         }
       })
   };
+
+  return clientFile;
 }
 
 export type FirebaseStorageClientAccessorFolder = FirebaseStorageAccessorFolder<StorageReference>;

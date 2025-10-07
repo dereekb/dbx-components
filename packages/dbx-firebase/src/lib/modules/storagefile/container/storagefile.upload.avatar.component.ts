@@ -27,25 +27,7 @@ export class DbxFirebaseStorageFileUploadAvatarComponent {
   readonly multiUploadSignal = toSignal(this.uploadStore.isMultiUploadAllowed$, { initialValue: false });
   readonly acceptSignal = toSignal<Maybe<string>>(this.uploadStore.fileTypesAcceptString$);
 
-  /*
-  onFileInputChange(event: Event): void {
-    const input = event.target as HTMLInputElement | null;
-
-    if (!input) {
-      return;
-    }
-
-    const files = input.files ? Array.from(input.files) : [];
-
-    if (!this.multiUploadSignal() && files.length > 1) {
-      files.splice(1);
-    }
-
-    this.uploadStore.setFiles(files.length > 0 ? files : undefined);
-
-    if (input.value) {
-      input.value = '';
-    }
+  onPickAvatarFile(fileList: FileList) {
+    this.uploadStore.setFileList(fileList);
   }
-  */
 }
