@@ -7,6 +7,7 @@ import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DocExtensionTableComponent } from './container/table.component';
 import { DocExtensionStructureComponent } from './container/structure.component';
 import { DocExtensionDownloadComponent } from './container/download.component';
+import { DocExtensionStorageFileComponent } from './container/storagefile.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -57,6 +58,12 @@ export const docExtensionDownloadState: Ng2StateDeclaration = {
   component: DocExtensionDownloadComponent
 };
 
+export const docExtensionStorageFileState: Ng2StateDeclaration = {
+  url: '/storagefile',
+  name: 'doc.extension.storagefile',
+  component: DocExtensionStorageFileComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
@@ -66,5 +73,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docExtensionMapboxState,
   docExtensionTableState,
   docExtensionStructureState,
-  docExtensionDownloadState
+  docExtensionDownloadState,
+  docExtensionStorageFileState
 ];

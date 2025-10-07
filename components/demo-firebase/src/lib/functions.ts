@@ -1,4 +1,4 @@
-import { FirebaseFunctionGetter, FirebaseFunctionsConfigMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, lazyFirebaseFunctionsFactory, notificationFunctionMap, NotificationFunctions, NotificationFunctionTypeMap } from '@dereekb/firebase';
+import { FirebaseFunctionGetter, FirebaseFunctionsConfigMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, lazyFirebaseFunctionsFactory, notificationFunctionMap, NotificationFunctions, NotificationFunctionTypeMap, storageFileFunctionMap, StorageFileFunctions, StorageFileFunctionTypeMap } from '@dereekb/firebase';
 import { Functions } from 'firebase/functions';
 import { demoDevelopmentFunctionMap, DemoDevelopmentFunctions, DemoDevelopmentFunctionTypeMap } from './development';
 import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions, SystemStateFunctions, systemStateFunctionMap, SystemStateFunctionTypeMap } from './model';
@@ -10,6 +10,7 @@ export type DemoFirebaseFunctionsMap = {
   guestbookFunctions: GuestbookFunctionTypeMap;
   profileFunctions: ProfileFunctionTypeMap;
   notificationFunctions: NotificationFunctionTypeMap;
+  storageFileFunctions: StorageFileFunctionTypeMap;
   systemStateFunctions: SystemStateFunctionTypeMap;
   [FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY]: DemoDevelopmentFunctionTypeMap;
 };
@@ -26,6 +27,7 @@ export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFire
   profileFunctions: [ProfileFunctions, profileFunctionMap],
   developmentFunctions: [DemoDevelopmentFunctions, demoDevelopmentFunctionMap],
   notificationFunctions: [NotificationFunctions, notificationFunctionMap],
+  storageFileFunctions: [StorageFileFunctions, storageFileFunctionMap],
   systemStateFunctions: [SystemStateFunctions, systemStateFunctionMap]
 };
 
@@ -39,6 +41,7 @@ export abstract class DemoFirebaseFunctionsGetter {
   abstract readonly profileFunctions: FirebaseFunctionGetter<ProfileFunctions>;
   abstract readonly developmentFunctions: FirebaseFunctionGetter<DemoDevelopmentFunctions>;
   abstract readonly notificationFunctions: FirebaseFunctionGetter<NotificationFunctions>;
+  abstract readonly storageFileFunctions: FirebaseFunctionGetter<StorageFileFunctions>;
   abstract readonly systemStateFunctions: FirebaseFunctionGetter<SystemStateFunctions>;
 }
 

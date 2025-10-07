@@ -1,4 +1,4 @@
-import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUploadServiceConfig, StorageFileInitializeFromUploadServiceInitializer, StorageFileInitializeFromUploadServiceInitializerInput, StorageFileInitializeFromUploadServiceInitializerResult, createStorageFileFactory, storageFileInitializeFromUploadService } from '@dereekb/firebase-server/model';
+import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUploadServiceConfig, StorageFileInitializeFromUploadServiceInitializer, StorageFileInitializeFromUploadServiceInitializerInput, StorageFileInitializeFromUploadServiceInitializerResult, createStorageFileFactory, storageFileInitializeFromUploadService, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileStoragePath, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPair, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByFolderWrapperFunction, determineUserByUserUploadsFolderWrapperFunction, FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
@@ -64,28 +64,32 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   const userTestAvatarInitializer: StorageFileInitializeFromUploadServiceInitializer = {
     type: USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER,
     initialize: async function (input: StorageFileInitializeFromUploadServiceInitializerInput): Promise<StorageFileInitializeFromUploadServiceInitializerResult> {
-      const { file } = input.fileDetailsAccessor.getPathDetails();
-
       const userId = input.determinerResult.user as FirebaseAuthUserId;
 
       // download the file
       const fileBytes = await input.fileDetailsAccessor.loadFileBytes();
 
-      // create a new Sharp instance
-      const sharpInstance = sharp(fileBytes);
+      let newImageBytes: Buffer;
 
-      const { data: resizedFileBytes, info: resizedFileMetadata } = await sharpInstance
-        .resize({
-          width: USER_AVATAR_IMAGE_WIDTH,
-          height: USER_AVATAR_IMAGE_HEIGHT,
-          fit: 'cover'
-        })
-        .jpeg({
-          quality: 80
-        })
-        .toBuffer({
-          resolveWithObject: true
-        });
+      try {
+        // create a new Sharp instance
+        const sharpInstance = sharp(fileBytes);
+
+        // resize the image and get the new bytes
+        newImageBytes = await sharpInstance
+          .resize({
+            width: USER_AVATAR_IMAGE_WIDTH,
+            height: USER_AVATAR_IMAGE_HEIGHT,
+            fit: 'cover'
+          })
+          .jpeg({
+            quality: 80
+          })
+          .toBuffer();
+      } catch (e) {
+        // if sharp fails to initialize, then the uploaded file is probably unsupported.
+        return storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e);
+      }
 
       const fileMimeType = mimetypeForImageType('jpeg');
 
@@ -93,7 +97,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       const newPath = userAvatarFileStoragePath(userId);
       const newFile = storageService.file(newPath);
 
-      await newFile.upload(resizedFileBytes, { contentType: fileMimeType });
+      await newFile.upload(newImageBytes, { contentType: fileMimeType });
 
       // create the StorageFileDocument and reference the new file
       const { storageFileDocument } = await createStorageFileDocumentPair({

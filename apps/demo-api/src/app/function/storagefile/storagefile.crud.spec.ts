@@ -34,6 +34,7 @@ import { addMilliseconds, slashPathDetails, SlashPathFolder, SlashPathPart } fro
 import { assertSnapshotData, MODEL_NOT_AVAILABLE_ERROR_CODE } from '@dereekb/firebase-server';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { addHours } from 'date-fns';
+import { readFile } from 'fs/promises';
 
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('storagefile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -385,8 +386,6 @@ demoApiFunctionContextFactory((f) => {
                 const testFileContent = 'This is a test file.';
 
                 beforeEach(async () => {
-                  const uid = au.uid;
-
                   const testFilePath = 'uploads/unknown/unknown.txt';
                   unknownFile = await f.storageContext.file(testFilePath);
                   unknownFileStoragePath = unknownFile.storagePath;
@@ -449,6 +448,41 @@ demoApiFunctionContextFactory((f) => {
                   expect(newFileExists).toBe(true);
                 });
               });
+
+              describe('avatar', () => {
+                describe('invalid image', () => {
+                  let testFileStoragePath: StoragePath;
+                  let testFile: FirebaseStorageAccessorFile;
+
+                  const testFileContent = 'This is not an image.';
+
+                  beforeEach(async () => {
+                    const uid = au.uid;
+
+                    const testFilePath = userAvatarUploadsFilePath(uid);
+                    testFile = await f.storageContext.file(testFilePath);
+                    testFileStoragePath = testFile.storagePath;
+
+                    const contentType = 'text/plain';
+                    await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+                  });
+
+                  itShouldFail('to initialize and delete the uploaded file immediately', async () => {
+                    let fileExists = await testFile.exists();
+                    expect(fileExists).toBe(true);
+
+                    const instance = await f.storageFileActions.initializeStorageFileFromUpload({
+                      pathString: testFileStoragePath.pathString // only provide the path string for the default bucket
+                    });
+
+                    await expectFail(() => instance(), jestExpectFailAssertHttpErrorServerErrorCode(UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE));
+
+                    // gets deleted
+                    fileExists = await testFile.exists();
+                    expect(fileExists).toBe(false);
+                  });
+                });
+              });
             });
           });
         });
@@ -457,23 +491,46 @@ demoApiFunctionContextFactory((f) => {
           const testFileContent = 'This is a test file.';
 
           function createUploadedFile(type: 'processable' | 'non-processable') {
-            return async () => {
-              const uid = au.uid;
+            switch (type) {
+              case 'processable':
+                return async () => {
+                  const uid = au.uid;
 
-              const filePath = type === 'processable' ? userTestFileUploadsFilePath(uid, 'test.any') : userAvatarUploadsFilePath(uid);
-              const testFile = await f.storageContext.file(filePath);
-              const testFileStoragePath = testFile.storagePath;
+                  const filePath = userTestFileUploadsFilePath(uid, 'test.any');
+                  const testFile = await f.storageContext.file(filePath);
+                  const testFileStoragePath = testFile.storagePath;
 
-              const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
-              await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
+                  const contentType = 'text/plain'; // uploaded for the avatar as well for now. Avatar is non-processable so it won't get to processing.
+                  await testFile.upload(testFileContent, { contentType, stringFormat: 'raw' });
 
-              const result: StoragePath = {
-                bucketId: testFileStoragePath.bucketId,
-                pathString: testFileStoragePath.pathString
-              };
+                  const result: StoragePath = {
+                    bucketId: testFileStoragePath.bucketId,
+                    pathString: testFileStoragePath.pathString
+                  };
 
-              return result;
-            };
+                  return result;
+                };
+              case 'non-processable':
+                return async () => {
+                  const uid = au.uid;
+
+                  const filePath = userAvatarUploadsFilePath(uid);
+                  const testFile = await f.storageContext.file(filePath);
+                  const testFileStoragePath = testFile.storagePath;
+
+                  const testAssetsFolderPath = `${__dirname}/../../../test/assets/`;
+                  const localAvatarFileBuffer = await readFile(`${testAssetsFolderPath}/avatar.png`);
+
+                  await testFile.upload(localAvatarFileBuffer, { contentType: 'image/png' });
+
+                  const result: StoragePath = {
+                    bucketId: testFileStoragePath.bucketId,
+                    pathString: testFileStoragePath.pathString
+                  };
+
+                  return result;
+                };
+            }
           }
 
           describe('non-existent StorageFileDocument', () => {
@@ -502,7 +559,6 @@ demoApiFunctionContextFactory((f) => {
 
           describe('non-processable file', () => {
             // files that are not processable, but might be flagged for processing accidentally
-
             demoStorageFileContext({ f, createUploadedFile: createUploadedFile('non-processable') }, (sf) => {
               itShouldFail('to process the file if it is not marked for processing.', async () => {
                 const storageFile = await assertSnapshotData(sf.document);

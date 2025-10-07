@@ -64,6 +64,6 @@ export type UploadedFileTypeIdentifier = string;
  * no_determiner_match: Could not determine the proper processor for this file.
  * no_initializer_configured: There was no processor configured for this file.
  * initializer_error: There was an error thrown during processing.
- *
+ * permanent_initializer_failure: The initializer failed permanently and the file should be deleted.
  */
-export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determiner_match' | 'no_initializer_configured' | 'initializer_error';
+export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determiner_match' | 'no_initializer_configured' | 'initializer_error' | 'permanent_initializer_failure';

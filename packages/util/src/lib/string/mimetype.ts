@@ -25,10 +25,10 @@ export const JPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpeg';
 export const PNG_MIME_TYPE: MimeTypeWithoutParameters = 'image/png';
 export const WEBP_MIME_TYPE: MimeTypeWithoutParameters = 'image/webp';
 export const GIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/gif';
-export const SVG_MIME_TYPE: MimeTypeWithoutParameters = 'image/svg+xml';
-export const RAW_MIME_TYPE: MimeTypeWithoutParameters = 'image/raw';
 export const HEIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/heif';
 export const TIFF_MIME_TYPE: MimeTypeWithoutParameters = 'image/tiff';
+export const SVG_MIME_TYPE: MimeTypeWithoutParameters = 'image/svg+xml';
+export const RAW_MIME_TYPE: MimeTypeWithoutParameters = 'image/raw';
 
 /**
  * Returns the mimetype for the given image type, or undefined if the type is not known.

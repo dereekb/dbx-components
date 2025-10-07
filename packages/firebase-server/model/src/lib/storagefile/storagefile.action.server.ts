@@ -188,15 +188,19 @@ export function _initializeStorageFileFromUploadFileFactory(context: StorageFile
         file
       });
 
+      async function deleteFile() {
+        try {
+          // can now delete the uploaded file
+          await file.delete();
+        } catch (e) {
+          // log errors here, but do nothing.
+          console.error(`initializeStorageFileFromUpload(): Error deleting uploaded file (${bucketId}/${pathString})`, e);
+        }
+      }
+
       switch (initializationResult.resultType) {
         case 'success':
-          try {
-            // can now delete the uploaded file
-            await file.delete();
-          } catch (e) {
-            // log errors here, but do nothing.
-            console.error(`initializeStorageFileFromUpload(): Error deleting successfully processed uploaded file (${bucketId}/${pathString})`, e);
-          }
+          await deleteFile();
 
           if (initializationResult.storageFileDocument) {
             storageFileDocument = initializationResult.storageFileDocument;
@@ -209,12 +213,28 @@ export function _initializeStorageFileFromUploadFileFactory(context: StorageFile
             throw initializationResult.initializationError; // re-throw the encountered error
           }
           break;
+        case 'permanent_initializer_failure':
+          // log the error
+          if (initializationResult.initializationError) {
+            console.warn(`initializeStorageFileFromUpload(): Permanent initializer failure for file (${bucketId}/${pathString})`, initializationResult.initializationError);
+          }
+
+          // delete the file
+          await deleteFile();
+
+          // return the error
+          httpsError = uploadedFileInitializationFailedError({
+            resultType: initializationResult.resultType,
+            fileDeleted: true
+          });
+          break;
         case 'no_determiner_match':
         case 'no_initializer_configured':
         default:
           httpsError = uploadedFileInitializationFailedError({
             resultType: initializationResult.resultType
           });
+
           console.error(`initializeStorageFileFromUpload(): Unknown file type (${initializationResult.resultType}) encountered for storage file "${bucketId}/${pathString}".`);
           break;
       }

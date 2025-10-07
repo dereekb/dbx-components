@@ -2,7 +2,7 @@ import { Directive, OnDestroy, inject } from '@angular/core';
 import { FilterMap } from '@dereekb/rxjs';
 
 /**
- * Direction that provides an FilterMap.
+ * Direction that provides a FilterMap.
  */
 @Directive({
   selector: '[dbxFilterMap]',

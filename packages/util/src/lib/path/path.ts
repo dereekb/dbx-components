@@ -53,7 +53,14 @@ export type InferredSlashPathFolder = SlashPathFolder | EmptyRelativeSlashPathFo
  *
  * e.g. 'png' in 'image.png'
  */
-export type SlashPathTypeFileExtension = string;
+export type SlashPathTypedFileExtension = string;
+
+/**
+ * The suffix of a typed file.
+ *
+ * e.g. '.png' in 'image.png'
+ */
+export type SlashPathTypedFileSuffix = `${SlashFileTypeSeparatorString}${SlashPathTypedFileExtension}`;
 
 /**
  * A SlashPath file name without a file type identifier (e.g. 'image', and not 'image.png')
@@ -612,7 +619,7 @@ export interface SlashPathDetails {
   /**
    * The file extension of the typed file, if the file is a typed file.
    */
-  readonly typedFileExtension?: Maybe<SlashPathTypeFileExtension>;
+  readonly typedFileExtension?: Maybe<SlashPathTypedFileExtension>;
   /**
    * Contains the name of the folder the file is in, if applicable.
    *
@@ -655,7 +662,7 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
   let file: Maybe<SlashPathFile | SlashPathTypedFile>;
   let fileName: Maybe<string>;
   let typedFile: Maybe<SlashPathTypedFile>;
-  let typedFileExtension: Maybe<SlashPathTypeFileExtension>;
+  let typedFileExtension: Maybe<SlashPathTypedFileExtension>;
 
   const isFile = type === 'file' || type === 'typedfile';
   const pathStartsWithSlash = path.startsWith(SLASH_PATH_SEPARATOR);
@@ -692,7 +699,7 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
 
     if (fileParts.length === 2) {
       typedFile = file as SlashPathTypedFile;
-      typedFileExtension = fileParts[1] as SlashPathTypeFileExtension;
+      typedFileExtension = fileParts[1] as SlashPathTypedFileExtension;
     }
   }
 

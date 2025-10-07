@@ -18,6 +18,21 @@ export interface StorageFileInitializeFromUploadServiceInitializerResult {
    * The StorageFileDocument, if it was initialized.
    */
   readonly storageFileDocument?: Maybe<StorageFileDocument>;
+  /**
+   * The error thrown initializing.
+   */
+  readonly error?: Maybe<unknown>;
+  /**
+   * If true, the initializer failed permanently and the file should be deleted.
+   */
+  readonly permanentFailure?: Maybe<boolean>;
+}
+
+export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown): StorageFileInitializeFromUploadServiceInitializerResult {
+  return {
+    error,
+    permanentFailure: true
+  };
 }
 
 /**
@@ -147,7 +162,18 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
         if (initializer) {
           try {
             const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });
-            storageFileDocument = initializerResult.storageFileDocument;
+
+            if (initializerResult.error) {
+              processorError = initializerResult.error;
+
+              if (initializerResult.permanentFailure) {
+                resultType = 'permanent_initializer_failure';
+              } else {
+                resultType = 'initializer_error';
+              }
+            } else {
+              storageFileDocument = initializerResult.storageFileDocument;
+            }
           } catch (e) {
             resultType = 'initializer_error';
             processorError = e;

@@ -1,3 +1,4 @@
+import { Maybe } from '@dereekb/util';
 import { StorageFileInitializeFromUploadResultType } from './storagefile.upload';
 
 /**
@@ -17,6 +18,10 @@ export const UPLOADED_FILE_INITIALIZATION_FAILED_ERROR_CODE = 'UPLOADED_FILE_INI
 
 export interface UploadedFileInitializationFailedErrorData {
   readonly resultType: StorageFileInitializeFromUploadResultType;
+  /**
+   * True if the file was deleted.
+   */
+  readonly fileDeleted?: Maybe<boolean>;
 }
 
 /**
