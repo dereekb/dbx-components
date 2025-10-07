@@ -1,4 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { FirebaseStorageAccessorFile, StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues } from '@dereekb/rxjs';
 import { ArrayOrValue, asArray, Maybe, MimeTypeWithoutParameters, SlashPathTypedFileSuffix } from '@dereekb/util';
@@ -21,7 +22,7 @@ export type DbxFirebaseStorageFileUploadStoreUploadStage = 'configuration' | 'fi
  *
  * If unset, then all file types are accepted.
  */
-export type DbxFirebaseStorageFileUploadStoreAllowedTypes = (MimeTypeWithoutParameters | SlashPathTypedFileSuffix)[];
+export type DbxFirebaseStorageFileUploadStoreAllowedTypes = FileAcceptFilterTypeString[];
 
 /**
  * The progress of a file being uploaded.
