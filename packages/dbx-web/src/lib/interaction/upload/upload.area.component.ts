@@ -3,10 +3,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { Maybe } from '@dereekb/util';
 import { FileArrayAcceptMatchConfig, fileArrayAcceptMatchFunction, FileArrayAcceptMatchResult } from './upload.accept';
 
-export type DbxFileUploadAreaShape = 'rounded' | 'square';
-
 export interface DbxFileUploadAreaFilesChangedEvent {
-  readonly allFiles: FileList;
+  readonly allFiles: File[];
   readonly matchResult: FileArrayAcceptMatchResult;
 }
 
@@ -26,10 +24,13 @@ export interface DbxFileUploadAreaFilesChangedEvent {
         <ng-content></ng-content>
       </div>
     </div>
+    @if (hintSignal()) {
+      <div class="dbx-file-upload-area-content-hint dbx-hint dbx-small">{{ hintSignal() }}</div>
+    }
   `,
   host: {
     class: 'dbx-file-upload-area dbx-block',
-    '[class]': '"dbx-file-upload-area-" + uploadAreaShape()',
+    '[class.dbx-file-upload-area-with-hint]': 'hintSignal()',
     '[class.dbx-file-upload-area-drag-over]': 'dragOverStateSignal()'
   },
   imports: [MatIconModule],
@@ -39,21 +40,34 @@ export interface DbxFileUploadAreaFilesChangedEvent {
 export class DbxFileUploadAreaComponent {
   readonly icon = input<Maybe<string>>();
   readonly text = input<Maybe<string>>();
+  readonly hint = input<Maybe<string | boolean>>();
 
-  readonly uploadAreaShape = input<DbxFileUploadAreaShape>('rounded');
-  readonly filesAccepted = input<FileArrayAcceptMatchConfig['accept']>([]);
+  readonly hintSignal = computed(() => {
+    const hint = this.hint();
+    return typeof hint === 'string' ? hint : hint === true ? 'Drag to upload' : null;
+  });
 
+  readonly multiple = input<boolean, Maybe<boolean | ''>>(false, { transform: (x) => x === '' || Boolean(x) });
+  readonly accept = input<FileArrayAcceptMatchConfig['accept']>([]);
   readonly filesChanged = output<DbxFileUploadAreaFilesChangedEvent>();
+  readonly areaClicked = output<void>();
+  readonly areaDragActiveChanged = output<boolean>();
 
   readonly dragOverStateSignal = signal<boolean>(false);
+  readonly filesAcceptedFunctionSignal = computed(() => fileArrayAcceptMatchFunction({ multiple: this.multiple(), accept: this.accept() }));
 
-  readonly filesAcceptedFunctionSignal = computed(() => fileArrayAcceptMatchFunction({ accept: this.filesAccepted() }));
+  @HostListener('click', ['$event'])
+  onClick(evt: MouseEvent) {
+    evt.stopPropagation();
+    this.areaClicked.emit();
+  }
 
   @HostListener('dragover', ['$event'])
   onDragOver(evt: DragEvent) {
     evt.preventDefault();
     evt.stopPropagation();
     this.dragOverStateSignal.set(true);
+    this.areaDragActiveChanged.emit(true);
   }
 
   @HostListener('dragleave', ['$event'])
@@ -61,6 +75,7 @@ export class DbxFileUploadAreaComponent {
     evt.preventDefault();
     evt.stopPropagation();
     this.dragOverStateSignal.set(false);
+    this.areaDragActiveChanged.emit(false);
   }
 
   @HostListener('drop', ['$event'])
@@ -72,8 +87,8 @@ export class DbxFileUploadAreaComponent {
     const allFiles = evt.dataTransfer?.files;
 
     if (allFiles) {
-      const acceptedFiles = this.filesAcceptedFunctionSignal()(Array.from(allFiles));
-      this.filesChanged.emit({ allFiles, matchResult: acceptedFiles });
+      const matchResult = this.filesAcceptedFunctionSignal()(Array.from(allFiles));
+      this.filesChanged.emit({ allFiles: matchResult.input, matchResult });
     }
   }
 }

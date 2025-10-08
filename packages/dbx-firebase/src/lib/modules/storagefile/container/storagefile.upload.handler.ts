@@ -128,7 +128,7 @@ export function dbxFirebaseStorageFileUploadStoreUploadHandler(config: DbxFireba
     init() {
       startUploadSubscriptionObject.subscription = combineLatest([
         uploadStore.startUpload$,
-        uploadStore.fileList$.pipe(
+        uploadStore.files$.pipe(
           filterMaybe(),
           filter((x) => (x?.length ?? 0) > 0)
         )

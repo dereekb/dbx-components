@@ -1,30 +1,3 @@
 <div class="dbx-firebase-storagefile-upload-avatar">
-  <div class="dbx-firebase-storagefile-upload-avatar-area" [class.dbx-firebase-storagefile-upload-avatar-area-dragover]="isDragOverSignal()" (dragenter)="onDragEnter($event)" (dragleave)="onDragLeave($event)" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
-    <div class="dbx-firebase-storagefile-upload-avatar-preview">
-      @if (previewUrlSignal()) {
-        <img [src]="previewUrlSignal()" alt="Avatar preview" />
-      } @else {
-        <mat-icon fontIcon="person"></mat-icon>
-      }
-    </div>
-
-    <div class="dbx-firebase-storagefile-upload-avatar-actions">
-      <button mat-stroked-button type="button" (click)="triggerFileInput(fileInput)">
-        <mat-icon fontIcon="upload"></mat-icon>
-        Select Image
-      </button>
-
-      <div class="dbx-firebase-storagefile-upload-avatar-drop-hint">or drag and drop an image here</div>
-
-      <input #fileInput hidden type="file" [attr.accept]="acceptSignal() ?? null" (change)="onFileInputChange(fileInput)" />
-    </div>
-
-    @if (selectedFileNameSignal()) {
-      <mat-chip-set class="dbx-firebase-storagefile-upload-avatar-chip-set">
-        <mat-chip>
-          {{ selectedFileNameSignal() }}
-        </mat-chip>
-      </mat-chip-set>
-    }
-  </div>
+  <dbx-file-upload icon="person" accept="image/*" (filesChanged)="avatarFilesChanged($event)"></dbx-file-upload>
 </div>

@@ -110,7 +110,7 @@ export interface DbxFirebaseStorageFileUploadStoreState {
   /**
    * The current file(s) to upload.
    */
-  readonly fileList?: Maybe<FileList>;
+  readonly files?: Maybe<File[]>;
 
   // Upload Step
   /**
@@ -156,7 +156,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly isMultiUploadAllowed$ = this.select((state) => state.isComponentMultiUploadAllowed !== false && state.isMultiUploadAllowed).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly uploadPath$ = this.select((state) => state.uploadPath).pipe(distinctUntilChanged(), shareReplay(1));
-  readonly fileList$ = this.select((state) => state.fileList).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly files$ = this.select((state) => state.files).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly currentStartUpload$ = this.select((state) => state.startUpload).pipe(distinctUntilChanged(), shareReplay(1));
 
@@ -178,7 +178,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
    *
    * If the upload handler is working, the file list cannot be changed.
    */
-  readonly setFileList = this.updater((state, fileList: Maybe<FileList>) => ({ ...state, fileList: state.isUploadHandlerWorking ? state.fileList : fileList }));
+  readonly setFiles = this.updater((state, files: Maybe<File[]>) => ({ ...state, files: state.isUploadHandlerWorking ? state.files : files }));
   readonly setIsMultiUploadAllowed = this.updater((state, isMultiUploadAllowed: Maybe<boolean>) => ({ ...state, isMultiUploadAllowed }));
 
   /**

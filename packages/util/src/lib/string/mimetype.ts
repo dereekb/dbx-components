@@ -8,11 +8,16 @@ import { Maybe } from '../value/maybe.type';
 export type MimeTypeWithoutParameters = string;
 
 /**
- * A mime type wildcard. Has a star as the subtype.
+ * The mimetype wildcard.
+ */
+export type MimeTypeWildcard = '*';
+
+/**
+ * A mime type with a wildcard subtype. Has a star as the subtype.
  *
  * I.E. "application/*"
  */
-export type MimeTypeWildcardWithoutParameters = string;
+export type MimeTypeWithSubtypeWildcardWithoutParameters = string;
 
 /**
  * A mime type string that may contain additional parameters.

@@ -1,5 +1,5 @@
 import { mergeArraysIntoArray, range, flattenArray, type Maybe } from '@dereekb/util';
-import { removeValuesAtIndexesFromArrayCopy, takeLast } from './array';
+import { removeValuesAtIndexesFromArrayCopy, splitFront, takeLast } from './array';
 
 describe('flattenArray', () => {
   it('should return all non-null/undefined values from first dimension, and all values from the second dimension.', () => {
@@ -14,7 +14,23 @@ describe('flattenArray', () => {
   });
 });
 
-describe('takeLast', () => {
+describe('splitFront()', () => {
+  const testFront = [1, 2, 3];
+  const testRemaining = [4, 5, 6];
+  const testArray = [...testFront, ...testRemaining];
+
+  it('should split the array into two arrays', () => {
+    const result = splitFront(testArray, testFront.length);
+
+    expect(result.front.length).toBe(testFront.length);
+    expect(result.remaining.length).toBe(testRemaining.length);
+
+    expect(result.front[0]).toEqual(testFront[0]);
+    expect(result.remaining[0]).toEqual(testRemaining[0]);
+  });
+});
+
+describe('takeLast()', () => {
   const testArray = [1, 2, 3];
   const testLongerArray = [1, 2, 3, 4, 5];
 

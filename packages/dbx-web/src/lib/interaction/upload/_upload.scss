@@ -13,6 +13,7 @@
     padding: 16px;
     border: 2px;
     border-style: dashed;
+    // border-radius: 8px;
   }
 
   .dbx-file-upload-area-content-text {
@@ -26,6 +27,19 @@
 
   .dbx-file-upload-area-square {
     border-radius: 12px;
+  }
+
+  .dbx-file-upload-area-with-hint .dbx-file-upload-area-content {
+    padding: 32px 16px;
+  }
+
+  .dbx-file-upload-area-content-hint {
+    position: relative;
+    top: -24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    user-select: none;
   }
 }
 
@@ -45,7 +59,7 @@
 
   $cdk-highlight-background-color: color.adjust(
     $color: $cdk-text-color,
-    $alpha: -0.85
+    $alpha: -0.7
   );
 
   $primary-color: theming.m2-get-color-from-palette($primary, 500);
@@ -55,8 +69,14 @@
   }
 
   .dbx-file-upload-area-drag-over .dbx-file-upload-area-content {
-    border-color: $primary-color;
-    background-color: $cdk-highlight-background-color;
+    animation: dbx-file-upload-area-fade 200ms ease-in forwards;
+
+    @keyframes dbx-file-upload-area-fade {
+      to {
+        border-color: $primary-color;
+        background-color: $cdk-highlight-background-color;
+      }
+    }
   }
 }
 

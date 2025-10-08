@@ -1,12 +1,78 @@
 <dbx-content-container>
-  <doc-feature-layout header="Upload" hint="">
+  <doc-feature-layout header="Upload" hint="Components used for capturing files with the intention of being uploaded.">
     <!-- Examples -->
+    <doc-feature-example header="dbx-file-upload" hint="Acts as an all-in-one that contains both a dbx-file-upload-area and a dbx-file-upload-button.">
+      <dbx-content-border>
+        <p>The dbx-file-upload component makes it easy to add file upload functionlity to a component.</p>
+        <p>
+          It supports drag/drop to upload, is pre-styled, and has several configurations, including
+          <code>multiple</code>
+          and
+          <code>accept</code>
+          .
+        </p>
+        <div class="dbx-pb3">
+          <dbx-file-upload icon="file_copy" hint="Drag one file here." text="Drop Any Type of File" accept="*" (filesChanged)="filesUploaded = $event" [clickAreaToUpload]="true"></dbx-file-upload>
+        </div>
+        <dbx-content-pit>
+          <div class="dbx-json">{{ filesChangeResult(filesUploaded) | json }}</div>
+        </dbx-content-pit>
+      </dbx-content-border>
+      <dbx-content-border>
+        <ng-container *ngTemplateOutlet="acceptTemplate"></ng-container>
+        <div class="dbx-pb3">
+          <dbx-file-upload [hint]="true" icon="upload" text="Upload Only Images" accept="image/*" (filesChanged)="imagesUploaded = $event"></dbx-file-upload>
+        </div>
+        <dbx-content-pit>
+          <div class="dbx-json">{{ filesChangeResult(imagesUploaded) | json }}</div>
+        </dbx-content-pit>
+      </dbx-content-border>
+    </doc-feature-example>
+
     <doc-feature-example header="dbx-file-upload-area" hint="Used to render an area that a user can drag-and-drop a file into. Shows text and an icon.">
       <dbx-content-border>
         <dbx-file-upload-area icon="upload" text="Custom Text">
-          <div>This is other custom content inside.</div>
+          <div>This custom content inside the area.</div>
         </dbx-file-upload-area>
+      </dbx-content-border>
+      <dbx-content-border>
+        <ng-container *ngTemplateOutlet="acceptTemplate"></ng-container>
+        <div class="dbx-pb3">
+          <dbx-file-upload-area icon="upload" text="Upload Only Images" accept="image/*" (filesChanged)="areaImagesUploaded = $event"></dbx-file-upload-area>
+        </div>
+        <dbx-content-pit>
+          <div class="dbx-json">{{ filesChangeResult(areaImagesUploaded) | json }}</div>
+        </dbx-content-pit>
+      </dbx-content-border>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-file-upload-button" hint="Used to render a dbx-button that opens a file picker when clicked.">
+      <dbx-content-border>
+        <dbx-file-upload-button icon="upload">
+          <div style="width: 200px">
+            <p>This custom content inside the button.</p>
+            <p>Line Two</p>
+          </div>
+        </dbx-file-upload-button>
+      </dbx-content-border>
+      <p>
+        It can be configured like a usual input field, with both the
+        <code>multiple</code>
+        and
+        <code>accept</code>
+        attributes.
+      </p>
+      <ng-container *ngTemplateOutlet="acceptTemplate"></ng-container>
+      <dbx-content-border>
+        <dbx-file-upload-button icon="upload" text="Upload Images" multiple accept="image/*"></dbx-file-upload-button>
       </dbx-content-border>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
+
+<!-- accept attribute template -->
+<ng-template #acceptTemplate>
+  <h4><code>accept</code></h4>
+  <p>The accept attribute can be the traditional string you would typically pass to the accept attribute on an input, an array of strings which will get concatinated together, or a FileAcceptFunction function.</p>
+  <p>The values will be pre-separated in the returned event.</p>
+</ng-template>

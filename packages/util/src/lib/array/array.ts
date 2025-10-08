@@ -186,6 +186,39 @@ export function takeFront<T>(values: T[], maxToTake: number): T[] {
 }
 
 /**
+ * splitFront() result
+ */
+export interface SplitFrontResult<T> {
+  /**
+   * The input max to take value.
+   */
+  readonly maxToTake: number;
+  /**
+   * The front of the array up to the maxToTake.
+   */
+  readonly front: T[];
+  /**
+   * The remaining values after the front.
+   */
+  readonly remaining: T[];
+}
+
+/**
+ * Splits the array into two arrays, the first being the front of the array up to the maxToTake, and the second being the remaining values.
+ *
+ * @param values The array to split.
+ * @param maxToTake The maximum number of values to take from the front of the array.
+ * @returns The front and remaining values.
+ */
+export function splitFront<T>(values: T[], maxToTake: number): SplitFrontResult<T> {
+  return {
+    maxToTake,
+    front: takeFront(values, maxToTake),
+    remaining: values.slice(maxToTake)
+  };
+}
+
+/**
  * Copies/takes as many elements as possible from the end.
  *
  * @param values Values to take from.

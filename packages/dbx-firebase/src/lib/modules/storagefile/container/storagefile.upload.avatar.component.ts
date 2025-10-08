@@ -8,11 +8,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseStorageFileUploadStore } from '../store/storagefile.upload.store';
+import { DbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from '@dereekb/dbx-web';
 
 @Component({
   selector: 'dbx-firebase-storagefile-upload-avatar',
   templateUrl: './storagefile.upload.avatar.component.html',
-  imports: [CommonModule, MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [CommonModule, MatButtonModule, MatChipsModule, MatFormFieldModule, MatIconModule, MatInputModule, DbxFileUploadComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -39,11 +40,16 @@ export class DbxFirebaseStorageFileUploadAvatarComponent {
 
   readonly multiUploadSignal = toSignal(this._uploadStore.isMultiUploadAllowed$, { initialValue: false });
   readonly acceptSignal = toSignal<Maybe<string>>(this._uploadStore.fileTypesAcceptString$);
-  readonly fileListSignal = toSignal<Maybe<FileList>>(this._uploadStore.fileList$);
+  readonly fileListSignal = toSignal<Maybe<File[]>>(this._uploadStore.files$);
 
-  readonly selectedFileSignal = computed(() => this.fileListSignal()?.item(0) ?? undefined);
+  readonly selectedFileSignal = computed(() => this.fileListSignal()?.[0] ?? undefined);
   readonly selectedFileNameSignal = computed(() => this.selectedFileSignal()?.name ?? undefined);
 
+  avatarFilesChanged(event: DbxFileUploadFilesChangedEvent) {
+    this._uploadStore.setFiles(event.matchResult.accepted);
+  }
+
+  /*
   private readonly _previewUrlSignal = signal<Maybe<string>>(undefined);
   readonly previewUrlSignal = this._previewUrlSignal.asReadonly();
 
@@ -122,4 +128,5 @@ export class DbxFirebaseStorageFileUploadAvatarComponent {
     dataTransfer.items.add(files[0]);
     return dataTransfer.files;
   }
+    */
 }
