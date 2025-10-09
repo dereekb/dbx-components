@@ -40,7 +40,7 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
     distance: 6
   };
 
-  readonly increaseSubscription = new SubscriptionObject();
+  readonly increaseSub = new SubscriptionObject();
   readonly exampleTableData: ExampleTableData[] = range(0, numberOfTestItems).map((x) => ({ name: `Example ${x}`, key: String(x), columnValues: randomValueArray(daysInWeek).map((x) => x + increase) }));
   readonly exampleTableDataItems = new BehaviorSubject<ExampleTableData[]>(this.exampleTableData);
 
@@ -195,7 +195,7 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
   }
 
   ngOnInit(): void {
-    this.increaseSubscription.subscription = this.isLoading$
+    this.increaseSub.subscription = this.isLoading$
       .pipe(
         filter((x) => !x),
         first(),
@@ -211,6 +211,6 @@ export class DocExtensionTableComponent implements OnDestroy, OnInit {
 
   ngOnDestroy(): void {
     this.exampleTableDataItems.complete();
-    this.increaseSubscription.destroy();
+    this.increaseSub.destroy();
   }
 }

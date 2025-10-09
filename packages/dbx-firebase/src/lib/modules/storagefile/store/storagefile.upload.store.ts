@@ -114,23 +114,16 @@ export interface DbxFirebaseStorageFileUploadStoreState {
 
   // Upload Step
   /**
-   * If true, then the upload is allowed to begin.
-   *
-   * This value is typically watched by the upload handler.
-   */
-  readonly startUpload?: Maybe<boolean>;
-
-  /**
-   * If true, the upload handler is working.
-   */
-  readonly isUploadHandlerWorking?: Maybe<boolean>;
-
-  /**
    * The progress of the upload for each file.
    *
    * Only set while one or more files are being uploaded.
    */
   readonly uploadProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress[]>;
+
+  /**
+   * If true, the upload handler is working.
+   */
+  readonly isUploadHandlerWorking?: Maybe<boolean>;
 }
 
 /**
@@ -158,12 +151,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly uploadPath$ = this.select((state) => state.uploadPath).pipe(distinctUntilChanged(), shareReplay(1));
   readonly files$ = this.select((state) => state.files).pipe(distinctUntilChanged(), shareReplay(1));
 
-  readonly currentStartUpload$ = this.select((state) => state.startUpload).pipe(distinctUntilChanged(), shareReplay(1));
-
-  /**
-   * Only emits when startUpload emits true.
-   */
-  readonly startUpload$ = this.currentStartUpload$.pipe(filter(Boolean), shareReplay(1));
+  readonly isUploadHandlerWorking$ = this.select((state) => state.isUploadHandlerWorking).pipe(distinctUntilChanged(), shareReplay(1));
   readonly uploadProgress$ = this.select((state) => state.uploadProgress).pipe(distinctUntilChanged(), shareReplay(1));
 
   // MARK: State Changes
@@ -180,13 +168,6 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
    */
   readonly setFiles = this.updater((state, files: Maybe<File[]>) => ({ ...state, files: state.isUploadHandlerWorking ? state.files : files }));
   readonly setIsMultiUploadAllowed = this.updater((state, isMultiUploadAllowed: Maybe<boolean>) => ({ ...state, isMultiUploadAllowed }));
-
-  /**
-   * Flags the uploading to begin.
-   *
-   * Once the upload handler is flagged, it cannot be unset until the upload handler has finished.
-   */
-  readonly setStartUpload = this.updater((state, startUpload: boolean) => ({ ...state, startUpload: state.startUpload || startUpload }));
 
   /**
    * Flags the upload handler to begin working.
@@ -207,7 +188,7 @@ export function updateUploadStorageFileStoreStateWithUploadProgress(state: DbxFi
   const newUploadProgress = asArray(uploadProgress);
   const newUploadProgressMap = new Map(newUploadProgress.map((progress) => [progress.file, progress]));
 
-  // todo: create a
+  // todo: update the progress of the files being updated
 
   return state;
 }

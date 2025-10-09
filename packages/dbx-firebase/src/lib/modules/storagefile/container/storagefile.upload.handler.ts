@@ -1,14 +1,23 @@
-import { catchError, combineLatest, filter, map, Observable, of } from 'rxjs';
-import { DbxFirebaseStorageFileUploadStore, DbxFirebaseStorageFileUploadStoreFileProgress } from '../store';
+import { catchError, map, Observable, of, shareReplay } from 'rxjs';
+import { DbxFirebaseStorageFileUploadStoreFileProgress } from '../store';
 import { DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
-import { Destroyable, Initialized, runAsyncTasksForValues } from '@dereekb/util';
-import { filterMaybe, MultiSubscriptionObject, SubscriptionObject } from '@dereekb/rxjs';
-import { StoragePathInput } from '@dereekb/firebase';
+import { IndexNumber, Maybe, PercentNumber, runAsyncTasksForValues, separateValues } from '@dereekb/util';
+import { MultiSubscriptionObject } from '@dereekb/rxjs';
+import { FirebaseStorageAccessorFile, StoragePathInput, StorageUploadTask } from '@dereekb/firebase';
 
 /**
  * Creates a new observable for uploading a file.
  */
-export type StorageFileUploadHandlerFunction = (file: File) => Observable<DbxFirebaseStorageFileUploadStoreFileProgress>;
+export type StorageFileUploadHandlerFunction = (file: File) => StorageFileUploadHandlerInstance;
+
+export interface StorageFileUploadHandlerInstance extends Pick<StorageUploadTask<FirebaseStorageAccessorFile>, 'taskRef' | 'pause' | 'resume' | 'cancel'> {
+  /**
+   * The upload observable.
+   *
+   * Must be subscribed to in order for the upload to begin.
+   */
+  readonly upload: Observable<DbxFirebaseStorageFileUploadStoreFileProgress>;
+}
 
 /**
  * Handles uploading files.
@@ -41,14 +50,16 @@ export interface StorageFileUploadHandlerConfig {
 export function storageFileUploadHandler(config: StorageFileUploadHandlerConfig): StorageFileUploadHandler {
   const { storageService, storagePathFactory } = config;
 
+  let resumable: Maybe<StorageUploadTask>;
+
   return {
     uploadFile: (file) => {
       const storagePath = storagePathFactory(file);
       const storageAccessorFile = storageService.file(storagePath);
 
-      return new Observable((x) => {
+      const upload = new Observable<DbxFirebaseStorageFileUploadStoreFileProgress>((x) => {
         if (storageAccessorFile.uploadResumable) {
-          const resumable = storageAccessorFile.uploadResumable(file);
+          resumable = storageAccessorFile.uploadResumable(file);
 
           // subscribe to the event by piping this observable to it
           resumable
@@ -87,15 +98,28 @@ export function storageFileUploadHandler(config: StorageFileUploadHandlerConfig)
         } else {
           throw new Error('uploadResumable() function was unavailable.');
         }
-      });
+      }).pipe(shareReplay(1));
+
+      const instance: StorageFileUploadHandlerInstance = {
+        upload,
+        taskRef: storageAccessorFile,
+        pause: () => resumable?.pause() ?? false,
+        resume: () => resumable?.resume() ?? false,
+        cancel: () => resumable?.cancel() ?? false
+      };
+
+      return instance;
     }
   };
 }
 
-// MARK:  DbxFirebaseStorageFileUploadStoreUploadHandler
-export interface DbxFirebaseStorageFileUploadStoreUploadHandlerConfig {
+// MARK: Upload Files
+export interface StorageFileUploadFilesInput {
   readonly uploadHandler: StorageFileUploadHandler;
-  readonly uploadStore: DbxFirebaseStorageFileUploadStore;
+  /**
+   * Files to upload
+   */
+  readonly files: File[];
   /**
    * The number of max parallel uploads to perform at a time.
    *
@@ -104,91 +128,375 @@ export interface DbxFirebaseStorageFileUploadStoreUploadHandlerConfig {
   readonly maxParallelUploads?: number;
 }
 
-export interface DbxFirebaseStorageFileUploadStoreUploadHandler extends Initialized, Destroyable {
+export interface StorageFileUploadFilesInstance {
   /**
-   * The internal upload handler.
+   * Cancels the upload of the remaining files.
    */
-  readonly uploadHandler: StorageFileUploadHandler;
+  cancel(): void;
   /**
-   * The upload store.
+   * The upload observable.
+   *
+   * Must be subscribed to in order for the upload to begin.
    */
-  readonly uploadStore: DbxFirebaseStorageFileUploadStore;
+  readonly upload: Observable<StorageFileUploadFilesEvent>;
 }
 
-export function dbxFirebaseStorageFileUploadStoreUploadHandler(config: DbxFirebaseStorageFileUploadStoreUploadHandlerConfig): DbxFirebaseStorageFileUploadStoreUploadHandler {
-  const { uploadHandler, uploadStore, maxParallelUploads: inputMaxParallelUploads } = config;
-  const startUploadSubscriptionObject = new SubscriptionObject();
-  const multiUploadsSubscriptionObject = new MultiSubscriptionObject();
+export interface StorageFileUploadFilesEvent {
+  /**
+   * All files being uploaded
+   */
+  readonly allFiles: File[];
+  /**
+   * Returns true if all files have been uploaded.
+   *
+   * The result value should be available.
+   */
+  readonly isComplete: boolean;
+  /**
+   * Returns true if the upload was canceled.
+   */
+  readonly isCanceled?: Maybe<boolean>;
+  /**
+   * The overall progress of all files being uploaded.
+   */
+  readonly overallProgress: PercentNumber;
+  /**
+   * The upload progress that triggered this event.
+   */
+  readonly uploadProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>;
+  /**
+   * The final result.
+   *
+   * Set when the final file has been uploaded or failed.
+   */
+  readonly result?: StorageFileUploadFilesFinalResult;
+  /**
+   * The number of files that are still uploading or queued for upload.
+   */
+  readonly incompleteFileCount: number;
+  /**
+   * The number of files that are active.
+   */
+  readonly activeFileCount: number;
+  /**
+   * The number of files that are done.
+   */
+  readonly doneFileCount: number;
+}
 
+export interface StorageFileUploadFilesFinalResult {
+  readonly startTime: Date;
+  readonly endTime: Date;
+  readonly fileResults: StorageFileUploadFilesFinalFileResult[];
+  readonly successFileResults: StorageFileUploadFilesFinalFileResult[];
+  readonly errorFileResults: StorageFileUploadFilesFinalFileResult[];
+}
+
+export interface StorageFileUploadFilesFinalFileResult {
+  /**
+   * The start time of the file upload.
+   */
+  readonly startTime: Date;
+  /**
+   * The end time of the file upload, or when it failed or was canceled.
+   */
+  readonly endTime: Date;
+  /**
+   * The file that was uploaded.
+   */
+  readonly file: File;
+  /**
+   * The accessor file for the file, if available.
+   *
+   * Is generally available if success is true.
+   */
+  readonly fileRef?: Maybe<FirebaseStorageAccessorFile>;
+  /**
+   * True if the file was uploaded successfully.
+   */
+  readonly success: boolean;
+  /**
+   * Error if the file failed to upload.
+   */
+  readonly error?: Maybe<unknown>;
+  /**
+   * True if the file upload was cancelled.
+   */
+  readonly canceled?: Maybe<boolean>;
+}
+
+/**
+ * Uploads files using the provided upload handler and files.
+ *
+ * An observable is returned that emits the latest file events from any file that is being uploaded.
+ *
+ * @param input
+ * @returns
+ */
+export function storageFileUploadFiles(input: StorageFileUploadFilesInput): StorageFileUploadFilesInstance {
+  const { uploadHandler, files, maxParallelUploads: inputMaxParallelUploads } = input;
   const maxParallelTasks = inputMaxParallelUploads ?? 3;
 
-  return {
-    uploadHandler,
-    uploadStore,
-    init() {
-      startUploadSubscriptionObject.subscription = combineLatest([
-        uploadStore.startUpload$,
-        uploadStore.files$.pipe(
-          filterMaybe(),
-          filter((x) => (x?.length ?? 0) > 0)
-        )
-      ]).subscribe(([startUpload, fileList]) => {
-        // begin the upload for each file
-        const allFiles = Array.from(fileList);
+  const multiUploadsSubscriptionObject = new MultiSubscriptionObject();
 
-        // set working has started
-        uploadStore.setIsUploadHandlerWorking(true);
+  // begin the upload for each file
+  const allFiles = Array.from(files);
 
-        // unsubscribe from all previous uploads
-        multiUploadsSubscriptionObject.unsub();
+  // unsubscribe from all previous uploads
+  multiUploadsSubscriptionObject.unsub();
 
-        runAsyncTasksForValues(
-          allFiles,
-          async (file) => {
-            return new Promise<void>((resolve, reject) => {
-              // upload the file, subscribe to the progress
-              try {
-                const uploadSubscription = uploadHandler.uploadFile(file).subscribe({
-                  next: (progress) => {
-                    uploadStore.updateUploadProgress(progress);
-                  },
-                  error: (error) => {
-                    uploadStore.updateUploadProgress({
-                      file,
-                      error
-                    });
-                  },
-                  complete: () => resolve()
-                });
+  interface UpdateUploadProgressInput {
+    /**
+     * The file index number.
+     */
+    readonly index: IndexNumber;
+    /**
+     * The next progress event, if applicable.
+     */
+    readonly nextProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>;
+    /**
+     * An error that occured, if applicable.
+     */
+    readonly error?: Maybe<unknown>;
+    /**
+     * Passed as true when the upload task is done.
+     *
+     * Does not specify whether or not success was achieved or not.
+     */
+    readonly fileUploadTaskDone?: boolean;
+    /**
+     * True if the upload was canceled.
+     */
+    readonly canceled?: boolean;
+  }
 
-                multiUploadsSubscriptionObject.addSubs(uploadSubscription);
-              } catch (error) {
-                // error occurred, update the progress
-                uploadStore.updateUploadProgress({
-                  file,
-                  error
-                });
+  interface FileUploadDetails {
+    readonly file: File;
+    /**
+     * The current upload instance for the file.
+     *
+     * Set if the file is currently uploading.
+     */
+    uploadInstance?: StorageFileUploadHandlerInstance;
+    fileRef?: Maybe<FirebaseStorageAccessorFile>;
+    startTime?: Date;
+    endTime?: Date;
+    success?: boolean;
+    canceled?: Maybe<boolean>;
+    error?: Maybe<unknown>;
+  }
 
-                reject(error);
-              }
-            });
-          },
-          {
-            maxParallelTasks,
-            retriesAllowed: 0 // no retries allowed
-          }
-        ).then(() => {
-          // set working has finished
-          uploadStore.setIsUploadHandlerWorking(false);
-        });
-      });
-    },
-    destroy() {
-      // destroy the start upload subscription
-      startUploadSubscriptionObject.destroy();
+  const allFilesAndLatestProgress: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>[] = new Array(allFiles.length);
+  const allFilesAndDetails: FileUploadDetails[] = allFiles.map((file) => ({ file }));
+  const overallProgressPerCompletedFile: PercentNumber = 100 / allFilesAndLatestProgress.length;
 
-      // destroy the uploads subscriptions
-      multiUploadsSubscriptionObject.destroy();
-    }
+  /**
+   * Once set, any new file upload task that hits this will return an cancel failure.
+   */
+  let flaggedCancel = false;
+
+  const cancel = () => {
+    flaggedCancel = true;
   };
+
+  const upload = new Observable<StorageFileUploadFilesEvent>((subscriber) => {
+    const overallStartTime = new Date();
+
+    let incompleteFileFileIndexes = new Set<IndexNumber>(allFiles.map((_, index) => index));
+    let activeFileIndexes = new Set<IndexNumber>();
+    let doneFileIndexes = new Set<IndexNumber>();
+    let latestOverallProgress = 0;
+
+    function onStartFileUpload(index: IndexNumber, uploadInstance: StorageFileUploadHandlerInstance) {
+      activeFileIndexes.add(index);
+      allFilesAndDetails[index].startTime = new Date();
+      allFilesAndDetails[index].uploadInstance = uploadInstance;
+      allFilesAndDetails[index].fileRef = uploadInstance.taskRef;
+    }
+
+    function onStartFileUploadFlaggedCancelled(index: IndexNumber) {
+      allFilesAndDetails[index].startTime = new Date();
+
+      // immediately mark it done
+      _markFileUploadDone(index, true);
+
+      // emit new progress event
+      _emitEvent();
+    }
+
+    function _markFileUploadDone(fileIndex: IndexNumber, error?: Maybe<unknown>) {
+      doneFileIndexes.add(fileIndex); // add to done file indexes
+      activeFileIndexes.delete(fileIndex); // remove from active file indexes if it exists
+      incompleteFileFileIndexes.delete(fileIndex); // remove from incomplete file indexes
+
+      // update details
+      allFilesAndDetails[fileIndex].endTime = new Date();
+      allFilesAndDetails[fileIndex].success = !error;
+    }
+
+    function updateUploadProgress(input: UpdateUploadProgressInput) {
+      const { index: fileIndex, nextProgress, fileUploadTaskDone, error } = input;
+
+      let overallProgress = latestOverallProgress;
+      let nextProgressPercent = fileUploadTaskDone ? 100 : nextProgress?.progress;
+
+      // update the overall progress percentage
+      if (nextProgressPercent) {
+        // update the overall percentage
+        if (nextProgressPercent) {
+          const previousProgress = allFilesAndLatestProgress[fileIndex];
+          const progressPercentChange = nextProgressPercent - (previousProgress?.progress ?? 0);
+
+          // increase overall progress by the change
+          overallProgress += progressPercentChange * overallProgressPerCompletedFile;
+        }
+      }
+
+      // update the file progress
+      if (nextProgress) {
+        // update the latest FileProgress
+        allFilesAndLatestProgress[fileIndex] = nextProgress;
+
+        // only set fileRef once
+        if (!allFilesAndDetails[fileIndex].fileRef) {
+          allFilesAndDetails[fileIndex].fileRef = nextProgress.fileRef;
+        }
+      } else if (error) {
+        allFilesAndDetails[fileIndex].error = error;
+      }
+
+      // if complete, update the indexes and details
+      if (fileUploadTaskDone) {
+      }
+
+      // update the overall progress
+      latestOverallProgress = overallProgress;
+
+      // emit the event to send it
+      _emitEvent(nextProgress);
+    }
+
+    function _emitEvent(nextProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>) {
+      const isComplete = incompleteFileFileIndexes.size === 0;
+
+      let overallProgress = latestOverallProgress;
+      let result: Maybe<StorageFileUploadFilesFinalResult> = undefined;
+
+      if (isComplete) {
+        overallProgress = 100; // set to 100%
+        const overallEndTime = new Date();
+
+        const fileResults = allFiles.map((file, index) => {
+          const result: StorageFileUploadFilesFinalFileResult = {
+            startTime: allFilesAndDetails[index].startTime as Date,
+            endTime: allFilesAndDetails[index].endTime as Date,
+            file,
+            fileRef: allFilesAndDetails[index].fileRef,
+            success: !allFilesAndDetails[index].error,
+            error: allFilesAndDetails[index].error
+          };
+
+          return result;
+        });
+
+        const { included: successFileResults, excluded: errorFileResults } = separateValues(fileResults, (x) => x.success);
+
+        // all are done, set the result on the next event
+        result = {
+          startTime: overallStartTime,
+          endTime: overallEndTime,
+          successFileResults,
+          errorFileResults,
+          fileResults
+        };
+      }
+
+      const nextEvent: StorageFileUploadFilesEvent = {
+        allFiles,
+        isComplete,
+        overallProgress,
+        uploadProgress: nextProgress,
+        incompleteFileCount: incompleteFileFileIndexes.size,
+        activeFileCount: activeFileIndexes.size,
+        doneFileCount: doneFileIndexes.size,
+        result
+      };
+
+      subscriber.next(nextEvent);
+    }
+
+    async function runUploadTaskForFile([file, index]: readonly [File, IndexNumber]) {
+      if (flaggedCancel) {
+        onStartFileUploadFlaggedCancelled(index);
+        return Promise.resolve();
+      }
+
+      return new Promise<void>((resolve) => {
+        const updateFileUploadProgress = (nextProgress: DbxFirebaseStorageFileUploadStoreFileProgress) => {
+          // update the progress
+          updateUploadProgress({
+            index,
+            nextProgress
+          });
+        };
+
+        const updateFileUploadProgressWithUncaughtError = (error: unknown) => {
+          // error occurred, update the progress with the error
+          updateUploadProgress({
+            index,
+            error,
+            fileUploadTaskDone: true
+          });
+
+          // always resolve, never reject
+          resolve();
+        };
+
+        const completeFileUploadProgress = () => {
+          updateUploadProgress({
+            index,
+            fileUploadTaskDone: true
+          });
+
+          resolve();
+        };
+
+        // upload the file, subscribe to the progress
+        try {
+          const uploadInstance = uploadHandler.uploadFile(file);
+
+          // add to active file indexes
+          onStartFileUpload(index, uploadInstance);
+
+          const uploadSubscription = uploadInstance.upload.subscribe({
+            next: updateFileUploadProgress,
+            error: updateFileUploadProgressWithUncaughtError,
+            complete: completeFileUploadProgress
+          });
+
+          multiUploadsSubscriptionObject.addSubs(uploadSubscription);
+        } catch (error) {
+          updateFileUploadProgressWithUncaughtError(error);
+        }
+      });
+    }
+
+    // run upload task for each file
+    const fileTuples = allFiles.map((file, index) => [file, index] as const);
+
+    runAsyncTasksForValues(fileTuples, runUploadTaskForFile, {
+      maxParallelTasks,
+      retriesAllowed: 0 // no retries allowed
+    }).then(() => {
+      // all tasks are finished. Complete the subscriber.
+      subscriber.complete();
+    });
+  }).pipe(shareReplay(1));
+
+  const instance: StorageFileUploadFilesInstance = {
+    cancel,
+    upload
+  };
+
+  return instance;
 }

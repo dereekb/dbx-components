@@ -16,6 +16,7 @@ function mapFileToString(file: File) {
 })
 export class DocInteractionUploadComponent {
   filesUploaded: Maybe<DbxFileUploadFilesChangedEvent>;
+  buttonModeFilesUploaded: Maybe<DbxFileUploadFilesChangedEvent>;
   imagesUploaded: Maybe<DbxFileUploadAreaFilesChangedEvent>;
   areaImagesUploaded: Maybe<DbxFileUploadAreaFilesChangedEvent>;
 

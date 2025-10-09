@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
-import { FileArrayAcceptMatchConfig, FileArrayAcceptMatchResult } from './upload.accept';
+import { FileArrayAcceptMatchConfig } from './upload.accept';
 import { DbxButtonStyle } from '../../button/button.component';
 import { Maybe } from '@dereekb/util';
 import { DbxFileUploadButtonComponent, DbxFileUploadButtonFilesChangedEvent } from './upload.button.component';
 import { DbxFileUploadAreaComponent, DbxFileUploadAreaFilesChangedEvent } from './upload.area.component';
+import { NgTemplateOutlet } from '@angular/common';
+import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent, provideDbxFileUploadActionCompatable as provideDbxFileUploadActionCompatable } from './abstract.upload.component';
 
-export interface DbxFileUploadFilesChangedEvent {
-  readonly allFiles: File[];
-  readonly matchResult: FileArrayAcceptMatchResult;
-}
+export type DbxFileUploadMode = 'area' | 'button' | 'default';
 
 export interface DbxFileUploadComponentConfig {
+  readonly mode?: DbxFileUploadMode;
   readonly accept?: Maybe<FileArrayAcceptMatchConfig['accept']>;
   readonly multiple?: Maybe<boolean>;
 
@@ -38,27 +38,48 @@ export interface DbxFileUploadComponentConfig {
 @Component({
   selector: 'dbx-file-upload',
   template: `
-    <dbx-file-upload-area #area [hint]="areaHintSignal()" [text]="areaTextSignal()" [icon]="areaIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="areaFilesChanged($event)" (areaClicked)="areaClicked()">
+    <dbx-file-upload-area #area [show]="showAreaSignal()" [hint]="areaHintSignal()" [text]="areaTextSignal()" [icon]="areaIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="areaFilesChanged($event)" (areaClicked)="areaClicked()" [disabled]="disabledSignal()" [working]="workingSignal()">
       <ng-content></ng-content>
-      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="buttonFilesChanged($event)"></dbx-file-upload-button>
+      @if (showButtonSignal()) {
+        <ng-template [ngTemplateOutlet]="buttonTemplate"></ng-template>
+      }
     </dbx-file-upload-area>
+    <!-- Button Template -->
+    <ng-template #buttonTemplate>
+      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="buttonFilesChanged($event)" [disabled]="disabledSignal()" [working]="workingSignal()"></dbx-file-upload-button>
+    </ng-template>
   `,
-  imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent],
+  providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),
+  imports: [DbxFileUploadAreaComponent, DbxFileUploadButtonComponent, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxFileUploadComponent {
+export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
   readonly config = input<Maybe<DbxFileUploadComponentConfig>>();
 
   readonly area = viewChild.required<string, DbxFileUploadAreaComponent>('area', { read: DbxFileUploadAreaComponent });
   readonly button = viewChild.required<string, DbxFileUploadButtonComponent>('button', { read: DbxFileUploadButtonComponent });
 
+  readonly mode = input<Maybe<DbxFileUploadMode>>();
   readonly text = input<Maybe<string>>(); // button text
   readonly icon = input<Maybe<string>>(); // button icon
   readonly hint = input<Maybe<string | boolean>>(); // area hint
 
-  readonly multiple = input<Maybe<boolean | ''>>();
-  readonly accept = input<FileArrayAcceptMatchConfig['accept']>([]);
+  readonly modeSignal = computed(() => {
+    const config = this.config();
+    const mode = this.mode();
+    return config?.mode ?? mode ?? 'default';
+  });
+
+  readonly showButtonSignal = computed(() => {
+    const mode = this.modeSignal();
+    return mode === 'button' || mode === 'default';
+  });
+
+  readonly showAreaSignal = computed(() => {
+    const mode = this.modeSignal();
+    return mode === 'area' || mode === 'default';
+  });
 
   readonly clickAreaToUpload = input<Maybe<boolean>>();
   readonly clickAreaToUploadSignal = computed(() => {
@@ -87,16 +108,16 @@ export class DbxFileUploadComponent {
     return config?.area?.hint ?? hint;
   });
 
-  readonly multipleSignal = computed(() => {
+  readonly uploadMultipleSignal = computed(() => {
     const config = this.config();
-    const multiple = this.multiple();
-    return config?.multiple ?? multiple;
+    const multiple = this.multipleSignal();
+    return multiple ?? config?.multiple;
   });
 
-  readonly acceptSignal = computed(() => {
+  readonly uploadAcceptSignal = computed(() => {
     const config = this.config();
-    const accept = this.accept();
-    return config?.accept ?? accept;
+    const accept = this.acceptSignal();
+    return accept ?? config?.accept;
   });
 
   readonly filesChanged = output<DbxFileUploadFilesChangedEvent>();

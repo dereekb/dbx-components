@@ -17,14 +17,14 @@
         <dbx-content-pit>
           <div class="dbx-json">{{ filesChangeResult(filesUploaded) | json }}</div>
         </dbx-content-pit>
-      </dbx-content-border>
-      <dbx-content-border>
-        <ng-container *ngTemplateOutlet="acceptTemplate"></ng-container>
+        <h4>Mode</h4>
+        <p>You can customize the "mode" to toggle visibility of the view, so it shows only the button or the area.</p>
+        <p>Button mode also supports drag/drop, unlike using the button only.</p>
         <div class="dbx-pb3">
-          <dbx-file-upload [hint]="true" icon="upload" text="Upload Only Images" accept="image/*" (filesChanged)="imagesUploaded = $event"></dbx-file-upload>
+          <dbx-file-upload mode="button" icon="file_copy" hint="Drag one file here." text="Drop Any Type of File" accept="*" (filesChanged)="buttonModeFilesUploaded = $event" [clickAreaToUpload]="true"></dbx-file-upload>
         </div>
         <dbx-content-pit>
-          <div class="dbx-json">{{ filesChangeResult(imagesUploaded) | json }}</div>
+          <div class="dbx-json">{{ filesChangeResult(buttonModeFilesUploaded) | json }}</div>
         </dbx-content-pit>
       </dbx-content-border>
     </doc-feature-example>
