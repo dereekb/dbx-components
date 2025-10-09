@@ -8,7 +8,7 @@
 import { groupValues, type Building, build, calculateExpirationDate } from '@dereekb/util';
 import { map, type Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { type DocumentChange, type QuerySnapshot } from '../types';
-import { type FirestoreItemPageIterationInstance, type FirestoreItemPageQueryResult } from './iterator';
+import { FirestoreItemPageIteration, type FirestoreItemPageIterationInstance, type FirestoreItemPageQueryResult } from './iterator';
 import { type ItemPageIteratorResult } from '@dereekb/rxjs';
 
 /**
@@ -30,7 +30,7 @@ export interface IterationQueryDocChangeWatcherConfig<T = unknown> {
    * This instance provides access to the underlying Firestore query and its results,
    * which the watcher will monitor for document changes.
    */
-  readonly instance: FirestoreItemPageIterationInstance<T>;
+  readonly instance: FirestoreItemPageIteration<T>;
 
   /**
    * Optional delay in milliseconds before the watcher begins processing events.

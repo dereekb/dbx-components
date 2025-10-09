@@ -6,7 +6,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';
 
 /**
- * Direction that provides a DbxFirebaseStorageFileUploadStore, and sync's the inputs to the store.
+ * Directive that provides a DbxFirebaseStorageFileUploadStore, and sync's the inputs to the store.
  */
 @Directive({
   selector: '[dbxFirebaseStorageFileUploadStore]',
@@ -14,7 +14,7 @@ import { shareReplay } from 'rxjs';
   providers: [DbxFirebaseStorageFileUploadStore],
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadStoreDirective {
+export class DbxFirebaseStorageFileUploadStoreDirective implements OnDestroy {
   private readonly _allowedSub = new SubscriptionObject();
   private readonly _multiSub = new SubscriptionObject();
 
@@ -29,5 +29,10 @@ export class DbxFirebaseStorageFileUploadStoreDirective {
   constructor() {
     this._allowedSub.subscription = this.fileTypesAccepted$.subscribe((x) => this.uploadStore.setFileTypesAccepted(x));
     this._multiSub.subscription = this.isMultiUploadAllowed$.subscribe((x) => this.uploadStore.setIsMultiUploadAllowed(x));
+  }
+
+  ngOnDestroy(): void {
+    this._allowedSub.destroy();
+    this._multiSub.destroy();
   }
 }

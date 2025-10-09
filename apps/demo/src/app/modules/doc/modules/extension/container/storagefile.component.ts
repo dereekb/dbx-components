@@ -1,8 +1,8 @@
-import { DbxContentContainerDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxFileUploadComponent } from '@dereekb/dbx-web';
 import { Component, inject } from '@angular/core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DbxFirebaseStorageFileUploadAvatarComponent, DbxFirebaseStorageFileUploadDirective, DbxFirebaseStorageFileUploadFilesComponent, DbxFirebaseStorageService, storageFileUploadHandler } from '@dereekb/dbx-firebase';
+import { DbxFirebaseStorageFileUploadActionDirective, DbxFirebaseStorageService, storageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
 import { DbxAuthService } from '@dereekb/dbx-core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -10,7 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './storagefile.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFirebaseStorageFileUploadDirective, DbxFirebaseStorageFileUploadAvatarComponent, DbxFirebaseStorageFileUploadFilesComponent]
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxFileUploadComponent, DbxFirebaseStorageFileUploadActionDirective]
 })
 export class DocExtensionStorageFileComponent {
   readonly storageService = inject(DbxFirebaseStorageService);

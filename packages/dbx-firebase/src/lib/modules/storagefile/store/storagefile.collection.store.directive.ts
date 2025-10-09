@@ -11,5 +11,6 @@ import { StorageFile, StorageFileDocument } from '@dereekb/firebase';
 export class DbxFirebaseStorageFileCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<StorageFile, StorageFileDocument, StorageFileCollectionStore> {
   constructor(store: StorageFileCollectionStore) {
     super(store);
+    this.setConstraints([]);
   }
 }

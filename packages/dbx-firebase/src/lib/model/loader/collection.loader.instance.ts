@@ -1,11 +1,39 @@
-import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, ItemAccumulatorNextPageUntilResultsCountFunction, itemAccumulatorNextPageUntilResultsCount, iteratorNextPageUntilPage, iteratorNextPageUntilMaxPageLoadLimit, pageItemAccumulatorCurrentPage, ItemAccumulatorNextPageUntilResultsCountResult, iterationHasNextAndCanLoadMore } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
-import { DocumentDataWithIdAndKey, DocumentReference, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction, FirebaseQuerySnapshotAccumulator, firebaseQuerySnapshotAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, ItemAccumulatorNextPageUntilResultsCountFunction, itemAccumulatorNextPageUntilResultsCount, iteratorNextPageUntilPage, iteratorNextPageUntilMaxPageLoadLimit, pageItemAccumulatorCurrentPage, ItemAccumulatorNextPageUntilResultsCountResult, iterationHasNextAndCanLoadMore, ObservableOrValue, distinctUntilKeysChange } from '@dereekb/rxjs';
+import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER, share, of } from 'rxjs';
+import {
+  DocumentDataWithIdAndKey,
+  DocumentReference,
+  FirebaseQueryItemAccumulator,
+  firebaseQueryItemAccumulator,
+  FirebaseQueryItemAccumulatorNextPageUntilResultsCountFunction,
+  FirebaseQuerySnapshotAccumulator,
+  firebaseQuerySnapshotAccumulator,
+  FirestoreCollectionLike,
+  FirestoreDocument,
+  FirestoreItemPageIterationInstance,
+  FirestoreItemPageIteratorFilter,
+  FirestoreModelKey,
+  FirestoreQueryConstraint,
+  IterationQueryDocChangeWatcher,
+  iterationQueryDocChangeWatcher,
+  loadDocumentsForDocumentReferences
+} from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, GetterOrValue, Initialized, Maybe, PageNumber, countAllInNestedArray } from '@dereekb/util';
 import { DbxFirebaseCollectionLoaderAccessor, DbxFirebaseCollectionLoaderWithAccumulator } from './collection.loader';
 
+/**
+ * The store mode.
+ *
+ * - query: The store will load documents from a query, using the given collection.
+ * - references: The store will load documents from the input references (keys, refs, etc.).
+ */
+export type DbxFirebaseCollectionMode = 'query' | 'references';
+
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly collection?: Maybe<FirestoreCollectionLike<T, D>>;
+  readonly collectionMode?: DbxFirebaseCollectionMode;
+  readonly collectionKeys?: Maybe<FirestoreModelKey[]>;
+  readonly collectionRefs?: Maybe<DocumentReference<T>[]>;
   readonly maxPages?: Maybe<number>;
   readonly itemsPerPage?: Maybe<number>;
   readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
@@ -27,6 +55,8 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
 
   protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollectionLike<T, D>>>(undefined);
 
+  protected readonly _collectionMode = new BehaviorSubject<DbxFirebaseCollectionMode>('query');
+  protected readonly _collectionRefs = new BehaviorSubject<Maybe<DocumentReference<T>[]>>(undefined);
   protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(undefined);
   protected readonly _itemsPerPage = new BehaviorSubject<Maybe<number>>(undefined);
   protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(undefined);
@@ -34,6 +64,19 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   protected readonly _restart = new Subject<void>();
 
   readonly collection$ = this._collection.pipe(distinctUntilChanged());
+
+  readonly collectionMode$ = this._collectionMode.pipe(distinctUntilChanged(), shareReplay(1));
+  readonly currentCollectionRefs$ = this._collectionRefs.pipe(distinctUntilChanged(), shareReplay(1));
+  readonly collectionRefs$ = this.currentCollectionRefs$.pipe(
+    filterMaybe(),
+    distinctUntilKeysChange((x) => x.path),
+    shareReplay(1)
+  );
+  readonly collectionKeys$ = this.collectionRefs$.pipe(
+    map((x) => x.map((y) => y.path)),
+    shareReplay(1)
+  );
+
   readonly currentConstraints$ = this._constraints.pipe(distinctUntilChanged());
 
   readonly constraints$ = this._waitForNonNullConstraints.pipe(
@@ -58,9 +101,15 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.collection$.pipe(
     switchMap((collection) => {
       if (collection) {
-        return combineLatest([this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
+        return combineLatest([this.collectionMode$, this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
           throttleTime(100, undefined, { trailing: true }), // prevent rapid changes and executing filters too quickly.
-          map(([iteratorFilter]) => collection.firestoreIteration(iteratorFilter)),
+          switchMap(([mode, filter]) => {
+            if (mode === 'query') {
+              return of(collection.firestoreIteration(filter));
+            } else {
+              return this.collectionRefs$.pipe(map((refs) => collection.firestoreFixedIteration(refs, filter)));
+            }
+          }),
           cleanupDestroyable(), // cleanup the iteration
           shareReplay(1)
         );
@@ -167,6 +216,14 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   );
 
   constructor(initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) {
+    this._collectionMode.next(initConfig?.collectionMode ?? 'query');
+
+    if (initConfig?.collectionKeys) {
+      this.collectionKeys = initConfig?.collectionKeys;
+    } else if (initConfig?.collectionRefs) {
+      this.collectionRefs = initConfig?.collectionRefs;
+    }
+
     this._collection.next(initConfig?.collection);
     this._maxPages.next(initConfig?.maxPages);
     this._itemsPerPage.next(initConfig?.itemsPerPage);
@@ -191,6 +248,8 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   }
 
   destroy(): void {
+    this._collectionMode.complete();
+    this._collectionRefs.complete();
     this._maxPages.complete();
     this._collection.complete();
     this._constraints.complete();
@@ -200,6 +259,41 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   }
 
   // MARK: Inputs
+  get collectionMode(): DbxFirebaseCollectionMode {
+    return this._collectionMode.value;
+  }
+
+  set collectionMode(mode: DbxFirebaseCollectionMode) {
+    if (this.collectionMode != mode) {
+      this._collectionMode.next(mode);
+    }
+  }
+
+  get collectionKeys(): Maybe<FirestoreModelKey[]> {
+    const refs = this.collectionRefs;
+    return refs?.map((x) => x.path);
+  }
+
+  set collectionKeys(keys: Maybe<FirestoreModelKey[]>) {
+    let refs: Maybe<DocumentReference<T>[]> = undefined;
+    const { collection } = this;
+
+    if (keys && collection) {
+      const accessor = collection.documentAccessor();
+      refs = keys.map((x) => accessor.documentRefForKey(x));
+    }
+
+    this.collectionRefs = refs;
+  }
+
+  get collectionRefs(): Maybe<DocumentReference<T>[]> {
+    return this._collectionRefs.value;
+  }
+
+  set collectionRefs(refs: Maybe<DocumentReference<T>[]>) {
+    this._collectionRefs.next(refs);
+  }
+
   get maxPages(): Maybe<number> {
     return this._maxPages.value;
   }
@@ -253,6 +347,20 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     this._restart.next();
   }
 
+  setCollectionMode(mode: DbxFirebaseCollectionMode) {
+    this.collectionMode = mode;
+  }
+
+  // References Mode
+  setCollectionKeys(keys: Maybe<FirestoreModelKey[]>): void {
+    this.collectionKeys = keys;
+  }
+
+  setCollectionRefs(refs: Maybe<DocumentReference<T>[]>): void {
+    this.collectionRefs = refs;
+  }
+
+  // Query Mode
   setMaxPages(maxPages: Maybe<number>) {
     this.maxPages = maxPages;
   }

@@ -68,7 +68,7 @@ export interface ItemPageIteratorDelegate<V, F, C extends ItemPageIterationConfi
    *
    * If the input goes out of bounds, the result should be an empty array.
    */
-  loadItemsForPage: (request: ItemPageIteratorRequest<V, F, C>) => Observable<ItemPageIteratorResult<V>>;
+  loadItemsForPage(request: ItemPageIteratorRequest<V, F, C>): Observable<ItemPageIteratorResult<V>>;
 }
 
 interface InternalItemPageIteratorNext extends ItemIteratorNextRequest {

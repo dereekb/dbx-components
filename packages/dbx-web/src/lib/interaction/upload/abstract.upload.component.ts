@@ -15,7 +15,7 @@ export abstract class AbstractDbxFileUploadComponent implements DbxUploadActionC
   /**
    * Whether or not multiple files can be uploaded.
    */
-  readonly multiple = input<Maybe<boolean>, Maybe<boolean | ''>>(false, { transform: (x) => x === '' || x });
+  readonly multiple = input<Maybe<boolean>, Maybe<boolean | ''>>(undefined, { transform: (x) => x === '' || x });
 
   /**
    * Accepted file types filter.
@@ -25,7 +25,12 @@ export abstract class AbstractDbxFileUploadComponent implements DbxUploadActionC
   /**
    * This disabled is input-only
    */
-  readonly disabled = input<boolean>(false);
+  readonly disabled = input<Maybe<boolean>>();
+
+  /**
+   * This working is input-only
+   */
+  readonly working = input<Maybe<boolean>>();
 
   /**
    * This signal is set by setMultiple
@@ -68,7 +73,11 @@ export abstract class AbstractDbxFileUploadComponent implements DbxUploadActionC
     return disabledInput || disabledSignal || workingSignal;
   });
 
-  readonly workingSignal = computed(() => this._workingSignal());
+  readonly workingSignal = computed(() => {
+    const workingInput = this.working();
+    const workingSignal = this._workingSignal();
+    return workingSignal ?? workingInput;
+  });
 
   // MARK: DbxUploadActionCompatable
   setDisabled(disabled?: Maybe<boolean>): void {

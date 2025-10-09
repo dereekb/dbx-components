@@ -1,18 +1,14 @@
-import { Directive, inject, input, OnDestroy } from '@angular/core';
-import { skipAllInitialMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { DbxFirebaseStorageFileUploadStore, DbxFirebaseStorageFileUploadStoreAllowedTypes } from '../store';
-import { Maybe } from '@dereekb/util';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { shareReplay } from 'rxjs';
+import { Directive, inject, OnDestroy } from '@angular/core';
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { DbxFirebaseStorageFileUploadStore } from '../store';
 import { DbxFileUploadComponent } from '@dereekb/dbx-web';
 
 /**
- * Direction that syncs a DbxFirebaseStorageFileUploadStore's configuration to a DbxFileUploadComponent.
+ * Directive that syncs a DbxFirebaseStorageFileUploadStore's configuration to a DbxFileUploadComponent.
  */
 @Directive({
   selector: '[dbxFirebaseStorageFileUploadSync]',
   exportAs: 'dbxFirebaseStorageFileUploadSync',
-  providers: [DbxFirebaseStorageFileUploadStore],
   standalone: true
 })
 export class DbxFirebaseStorageFileUploadSyncDirective implements OnDestroy {
