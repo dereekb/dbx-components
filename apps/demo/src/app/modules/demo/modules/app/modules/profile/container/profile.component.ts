@@ -1,4 +1,4 @@
-import { OnInit, Component, inject } from '@angular/core';
+import { OnInit, Component, inject, signal } from '@angular/core';
 import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
@@ -6,6 +6,7 @@ import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameForm
 import { DbxActionErrorDirective, DbxActionModule, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';
+import { Maybe } from '@dereekb/util';
 
 @Component({
   templateUrl: './profile.component.html',
@@ -20,7 +21,10 @@ export class DemoProfileViewComponent implements OnInit {
   readonly storage = inject(DbxFirebaseStorageService);
 
   readonly profileData$ = this.profileDocumentStore.data$;
+  readonly avatarUrl$ = this.profileData$.pipe(map((x) => x.avatar));
   readonly username$ = this.profileData$.pipe(map((x) => x.username));
+
+  readonly avatarUrlSignal = signal<Maybe<string>>(undefined);
 
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 

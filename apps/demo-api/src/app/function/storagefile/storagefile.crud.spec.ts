@@ -711,7 +711,7 @@ demoApiFunctionContextFactory((f) => {
                       expect(updatedStorageFile.p).toBe(storageFile.p);
                       expect(updatedStorageFile.pn).toBeDefined();
                       expect(updatedStorageFile.ps).toBe(StorageFileProcessingState.PROCESSING);
-                      expect(updatedStorageFile.pat).toBeSameSecondAs(storageFile.pat as Date);
+                      expect(updatedStorageFile.pat).toBeAfter(storageFile.pat as Date);
                     });
                   });
                 });

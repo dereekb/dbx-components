@@ -1,5 +1,5 @@
 import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata, StorageFilePurpose, UploadedFileTypeIdentifier } from '@dereekb/firebase';
-import { Maybe, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from '@dereekb/util';
+import { Maybe, mergeSlashPaths, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from '@dereekb/util';
 
 // MARK: User File Types
 /**
@@ -31,10 +31,16 @@ export interface UserTestFileProcessingSubtaskMetadata extends StorageFileProces
   stringValue?: Maybe<string>;
 }
 
-export const USER_TEST_FILE_ROOT_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/u/';
+export const USERS_ROOT_FOLDER_PATH: SlashPathFolder = '/u/';
+
+export function userStorageFolderPath(userId: FirebaseAuthUserId, ...subPath: Maybe<SlashPath>[]): SlashPathFolder {
+  return mergeSlashPaths([USERS_ROOT_FOLDER_PATH, userId, '/', ...subPath]) as SlashPathFolder;
+}
+
+export const USER_STORAGE_FOLDER_PATH: SlashPathFolder = 'test/';
 
 export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashPathFile): SlashPath {
-  return `${USER_TEST_FILE_ROOT_STORAGE_FOLDER_PATH}${userId}/${name}`;
+  return userStorageFolderPath(userId, USER_STORAGE_FOLDER_PATH, name);
 }
 
 /**
@@ -60,10 +66,10 @@ export function userAvatarUploadsFilePath(userId: FirebaseAuthUserId): SlashPath
   return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_AVATAR_UPLOADS_FILE_NAME}`;
 }
 
-export const USER_AVATAR_STORAGE_FOLDER_PATH: SlashPathFolder = 'avatar/u/';
+export const USER_AVATAR_STORAGE_FILE_NAME: SlashPathFile = 'avatar.img';
 
 export function userAvatarFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
-  return `${USER_AVATAR_STORAGE_FOLDER_PATH}${userId}`;
+  return userStorageFolderPath(userId, USER_AVATAR_STORAGE_FILE_NAME);
 }
 
 export const USER_AVATAR_IMAGE_WIDTH = 512;

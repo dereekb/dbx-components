@@ -6,7 +6,7 @@ import { mimetypeForImageType, SlashPathPathMatcherPath } from '@dereekb/util';
 import * as sharp from 'sharp';
 
 export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): StorageFileInitializeFromUploadService {
-  const { storageService, storageFileCollection } = demoFirebaseServerActionsContext;
+  const { storageService, profileCollection, storageFileCollection } = demoFirebaseServerActionsContext;
   const storageFileDocumentAccessor = storageFileCollection.documentAccessor();
 
   const createStorageFileDocumentPair = createStorageFileDocumentPairFactory({
@@ -107,6 +107,17 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
         user: userId,
         shouldBeProcessed: false // no processing
       });
+
+      const profileDocument = profileCollection.documentAccessor().loadDocumentForId(userId);
+      const profileExists = await profileDocument.exists();
+
+      if (profileExists) {
+        const avatarDownloadUrl = await newFile.getDownloadUrl();
+
+        await profileDocument.update({
+          avatar: avatarDownloadUrl
+        });
+      }
 
       return { storageFileDocument };
     },

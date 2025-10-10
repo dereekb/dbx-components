@@ -1,8 +1,58 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // MARK: Utilities
+    function userClaimsIsSysAdmin() {
+      return request.auth.token.keys().hasAll(["a"]) && request.auth.token.a == 1;
+    }
+
+    // MARK: Uploads under User
+    match /uploads/u/{uid} {
+      allow read: if isUploadUser() || userClaimsIsSysAdmin();
+
+      // MARK: Test File
+      match /test {
+        allow write: if isUploadUser() || userClaimsIsSysAdmin();
+      }
+
+      // MARK: Avatar
+      match /avatar {
+        allow write: if isUploadUser() || userClaimsIsSysAdmin() && isAllowedAvatarSize();
+      }
+
+      function isUploadUser() {
+        return request.auth.uid == uid;
+      }
+
+      function isAllowedAvatarSize() {
+        // max 4mb image
+        return request.resource.size < 4 * 1024 * 1024 && request.resource.contentType.matches('image/.*')
+      }
+    }
+
+    // MARK: User Files
+    match /u/{uid} {
+      allow read: if isUser() || userClaimsIsSysAdmin();  // anyone can read anyone else's files
+
+      match /test {
+        allow read: if false;  // can only be read by the user
+      }
+
+      match /avatar {
+        allow read: if true;  // anyone can read anyone else's avatar
+      }
+
+      function isUser() {
+        return request.auth.uid == uid;
+      }
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
+      allow list: if false; // not allowed to list anywhere
     }
+
   }
+
 }

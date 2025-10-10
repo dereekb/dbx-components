@@ -1,6 +1,6 @@
 import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
-import { type Maybe } from '@dereekb/util';
+import { WebsiteUrl, type Maybe } from '@dereekb/util';
 
 export interface ProfileFirestoreCollections {
   profileCollection: ProfileFirestoreCollection;
@@ -14,6 +14,10 @@ export type ProfileTypes = typeof profileIdentity | typeof profilePrivateDataIde
 export const profileIdentity = firestoreModelIdentity('profile', 'pr');
 
 export interface Profile extends UserRelated, UserRelatedById {
+  /**
+   * Avatar URL
+   */
+  avatar?: Maybe<WebsiteUrl>;
   /**
    * Unique username.
    */
@@ -39,6 +43,7 @@ export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileD
 export const profileConverter = snapshotConverterFunctions<Profile>({
   fields: {
     uid: firestoreUID(),
+    avatar: optionalFirestoreString(),
     username: firestoreString({ default: '', defaultBeforeSave: null }),
     bio: optionalFirestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })

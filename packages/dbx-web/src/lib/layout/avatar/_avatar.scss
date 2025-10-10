@@ -1,0 +1,35 @@
+@use 'sass:map';
+@use 'sass:color';
+@use '../../style/theming';
+
+// MARK: Variables
+
+// MARK: Mixin
+@mixin core() {
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.m2-get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
+}
+
+@mixin typography($theme-config-or-typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-bar') {
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($theme-config);
+    }
+  }
+}
