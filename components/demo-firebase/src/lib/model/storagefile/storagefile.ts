@@ -1,5 +1,5 @@
 import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata, StorageFilePurpose, UploadedFileTypeIdentifier } from '@dereekb/firebase';
-import { Maybe, mergeSlashPaths, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile } from '@dereekb/util';
+import { Maybe, mergeSlashPaths, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 
 // MARK: User File Types
 /**
@@ -66,10 +66,16 @@ export function userAvatarUploadsFilePath(userId: FirebaseAuthUserId): SlashPath
   return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_AVATAR_UPLOADS_FILE_NAME}`;
 }
 
-export const USER_AVATAR_STORAGE_FILE_NAME: SlashPathFile = 'avatar.img';
+export const USER_AVATAR_STORAGE_FILE_NAME_PREFIX: SlashPathFile = 'avatar';
 
-export function userAvatarFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
-  return userStorageFolderPath(userId, USER_AVATAR_STORAGE_FILE_NAME);
+/**
+ * The user's storage path is not always the same, since the avatar is subject to changing, and the url can change.
+ *
+ * This function creates a new storage path for the avatar, based on the user's id and the current time.
+ */
+export function makeUserAvatarFileStoragePath(userId: FirebaseAuthUserId): SlashPath {
+  const timestamp = stringFromTimeFactory(7)();
+  return userStorageFolderPath(userId, USER_AVATAR_STORAGE_FILE_NAME_PREFIX, `${timestamp}.jpg`);
 }
 
 export const USER_AVATAR_IMAGE_WIDTH = 512;

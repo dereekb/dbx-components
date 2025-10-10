@@ -1,4 +1,4 @@
-import { stringTrimFunction, stringToUppercaseFunction, stringToLowercaseFunction, transformStringFunctionConfig, transformStringFunction, addPrefix, addPrefixFunction, addSuffix, addSuffixFunction, padStartFunction, type TransformStringFunctionConfig, type TransformStringFunction } from './transform';
+import { stringTrimFunction, stringToUppercaseFunction, stringToLowercaseFunction, transformStringFunctionConfig, transformStringFunction, addPrefix, addPrefixFunction, addSuffix, addSuffixFunction, padStartFunction, sliceStringFunction, type TransformStringFunctionConfig, type TransformStringFunction } from './transform';
 
 describe('stringTrimFunction', () => {
   it('should trim whitespace from both ends of the string.', () => {
@@ -100,6 +100,51 @@ describe('transformStringFunction', () => {
     const transformFn = transformStringFunction({ trim: false, toLowercase: false, toUppercase: false });
     expect(transformFn(testString)).toBe(testString);
   });
+
+  it('should slice the string if slice config is provided.', () => {
+    const transformFn = transformStringFunction({ slice: { fromStart: 2, fromEnd: 2 } });
+    expect(transformFn(testString)).toBe('    ');
+  });
+
+  it('should trim and then slice.', () => {
+    const transformFn = transformStringFunction({ trim: true, slice: { fromStart: 2 } });
+    expect(transformFn(testString)).toBe('He');
+  });
+
+  it('should trim, slice, and then convert to lowercase.', () => {
+    const transformFn = transformStringFunction({ trim: true, slice: { fromStart: 5, fromEnd: 5 }, toLowercase: true });
+    expect(transformFn(testString)).toBe('helloworld');
+  });
+
+  it('should trim, slice, and then convert to uppercase.', () => {
+    const transformFn = transformStringFunction({ trim: true, slice: { fromStart: 6 }, toUppercase: true });
+    expect(transformFn(testString)).toBe('HELLO ');
+  });
+
+  it('should trim, slice, and then apply custom transform.', () => {
+    const transformFn = transformStringFunction({ trim: true, slice: { fromStart: 5, fromEnd: 5 }, transform: customTransform });
+    expect(transformFn(testString)).toBe(customTransform('HelloWorld'));
+  });
+
+  it('should slice and then convert to lowercase without trimming.', () => {
+    const transformFn = transformStringFunction({ slice: { fromStart: 2, fromEnd: 2 }, toLowercase: true });
+    expect(transformFn(testString)).toBe('    ');
+  });
+
+  it('should slice from start only and convert to uppercase.', () => {
+    const transformFn = transformStringFunction({ slice: { fromStart: 8 }, toUppercase: true });
+    expect(transformFn(testString)).toBe('  HELLO ');
+  });
+
+  it('should slice from end only and convert to lowercase.', () => {
+    const transformFn = transformStringFunction({ slice: { fromEnd: 8 }, toLowercase: true });
+    expect(transformFn(testString)).toBe(' world  ');
+  });
+
+  it('should apply slice with custom transform without trimming.', () => {
+    const transformFn = transformStringFunction({ slice: { fromStart: 2, fromEnd: 2 }, transform: customTransform });
+    expect(transformFn(testString)).toBe(customTransform('    '));
+  });
 });
 
 describe('addPrefix', () => {
@@ -167,5 +212,94 @@ describe('padStartFunction', () => {
   it('should handle minLength of 0.', () => {
     const pad0: TransformStringFunction = padStartFunction(0, '0');
     expect(pad0('abc')).toBe('abc');
+  });
+});
+
+describe('sliceStringFunction', () => {
+  const testString = 'Hello World';
+
+  it('should return identity function if config is empty.', () => {
+    const sliceFn = sliceStringFunction({});
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should return identity function if fromStart and fromEnd are both 0.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 0, fromEnd: 0 });
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should take first N characters when fromStart is specified.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 5 });
+    expect(sliceFn(testString)).toBe('Hello');
+  });
+
+  it('should take last N characters when fromEnd is specified.', () => {
+    const sliceFn = sliceStringFunction({ fromEnd: 5 });
+    expect(sliceFn(testString)).toBe('World');
+  });
+
+  it('should concatenate first N and last M characters when both are specified.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 3, fromEnd: 5 });
+    expect(sliceFn(testString)).toBe('HelWorld');
+  });
+
+  it('should return entire string when fromStart + fromEnd equals string length.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 6, fromEnd: 5 });
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should return entire string when fromStart + fromEnd exceeds string length.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 7, fromEnd: 6 });
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should handle the example case: abcde with fromStart:3 and fromEnd:5.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 3, fromEnd: 5 });
+    expect(sliceFn('abcde')).toBe('abcde');
+  });
+
+  it('should handle negative fromStart by using absolute value.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: -5 });
+    expect(sliceFn(testString)).toBe('Hello');
+  });
+
+  it('should handle negative fromEnd by using absolute value.', () => {
+    const sliceFn = sliceStringFunction({ fromEnd: -5 });
+    expect(sliceFn(testString)).toBe('World');
+  });
+
+  it('should handle fromStart larger than string length.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 20 });
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should handle fromEnd larger than string length.', () => {
+    const sliceFn = sliceStringFunction({ fromEnd: 20 });
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should handle fromStart equal to string length.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 11 });
+    expect(sliceFn(testString)).toBe(testString);
+  });
+
+  it('should handle empty string input.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 2, fromEnd: 3 });
+    expect(sliceFn('')).toBe('');
+  });
+
+  it('should take first 2 and last 3 characters.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 2, fromEnd: 3 });
+    expect(sliceFn(testString)).toBe('Herld');
+  });
+
+  it('should take first 1 character when fromStart is 1.', () => {
+    const sliceFn = sliceStringFunction({ fromStart: 1 });
+    expect(sliceFn(testString)).toBe('H');
+  });
+
+  it('should take last 1 character when fromEnd is 1.', () => {
+    const sliceFn = sliceStringFunction({ fromEnd: 1 });
+    expect(sliceFn(testString)).toBe('d');
   });
 });

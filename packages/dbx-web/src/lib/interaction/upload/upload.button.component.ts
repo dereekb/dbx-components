@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, input, model,
 import { fileAcceptString, FileArrayAcceptMatchConfig, fileArrayAcceptMatchFunction, FileArrayAcceptMatchResult } from './upload.accept';
 import { DbxButtonComponent, DbxButtonStyle } from '../../button/button.component';
 import { Maybe } from '@dereekb/util';
-import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent, provideDbxFileUploadActionCompatable } from './abstract.upload.component';
+import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
+import { provideDbxFileUploadActionCompatable } from './upload.action';
 
 export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEvent;
 

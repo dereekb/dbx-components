@@ -20,7 +20,7 @@ export type DbxAvatarStyle = 'circle' | 'square';
 /**
  * The avatar size.
  */
-export type DbxAvatarSize = 'small' | 'normal' | 'big';
+export type DbxAvatarSize = 'small' | 'normal' | 'large';
 
 /**
  * Provides contextual information for displaying an avatar.

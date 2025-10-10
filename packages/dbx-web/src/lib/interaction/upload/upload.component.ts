@@ -5,7 +5,8 @@ import { Maybe } from '@dereekb/util';
 import { DbxFileUploadButtonComponent, DbxFileUploadButtonFilesChangedEvent } from './upload.button.component';
 import { DbxFileUploadAreaComponent, DbxFileUploadAreaFilesChangedEvent } from './upload.area.component';
 import { NgTemplateOutlet } from '@angular/common';
-import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent, provideDbxFileUploadActionCompatable as provideDbxFileUploadActionCompatable } from './abstract.upload.component';
+import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
+import { provideDbxFileUploadActionCompatable } from './upload.action';
 
 export type DbxFileUploadMode = 'area' | 'button' | 'default';
 

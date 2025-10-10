@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AbstractAppNotificationModule, BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, NotificationTaskService, StorageFileInitializeFromUploadService, appNotificationModuleMetadata, appStoragefileModuleMetadata } from '@dereekb/firebase-server/model';
+import { AbstractAppNotificationModule, BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, NotificationTaskService, StorageFileInitializeFromUploadService, appNotificationModuleMetadata, appStorageFileModuleMetadata } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { DemoApiActionModule } from '../../firebase/action.module';
 import { demoStorageFileUploadServiceFactory } from './storagefile.upload.service';
@@ -28,7 +28,7 @@ export class StorageFileDependencyModule {}
  * StorageFile model module
  */
 @Module(
-  appStoragefileModuleMetadata({
+  appStorageFileModuleMetadata({
     dependencyModule: StorageFileDependencyModule
   })
 )

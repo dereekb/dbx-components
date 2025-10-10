@@ -15,7 +15,7 @@ import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
   imports: [DbxInjectionComponent],
   host: {
     '[class.dbx-avatar-small]': `avatarSize() === 'small'`,
-    '[class.dbx-avatar-big]': `avatarSize() === 'big'`
+    '[class.dbx-avatar-large]': `avatarSize() === 'large'`
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true

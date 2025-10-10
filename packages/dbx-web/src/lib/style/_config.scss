@@ -111,7 +111,7 @@ $default-notice-color: #f28600;
     'notice-color': $default-notice-color,
     // avatar
     'dbx-avatar-size': 64px,
-    'dbx-avatar-big-size': 128px,
+    'dbx-avatar-large-size': 128px,
     'dbx-avatar-small-size': 32px
   );
 
@@ -178,8 +178,8 @@ $default-notice-color: #f28600;
   @return get-dbx-layout-config-var($theme-config, 'dbx-avatar-size');
 }
 
-@function get-dbx-avatar-big-size($theme-config) {
-  @return get-dbx-layout-config-var($theme-config, 'dbx-avatar-big-size');
+@function get-dbx-avatar-large-size($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'dbx-avatar-large-size');
 }
 
 @function get-dbx-avatar-small-size($theme-config) {

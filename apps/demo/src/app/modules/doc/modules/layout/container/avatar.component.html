@@ -4,7 +4,7 @@
     <doc-feature-example header="dbx-avatar" hint="Avatar component that displays an avatar based on the input context.">
       <h3>Default avatar</h3>
       <p>This avatar has no url or other contextual info set, so it shows just the icon.</p>
-      <p>Sizes can be set using the avatarSize input, or adding the "dbx-avatar-big" or "dbx-avatar-small" classes.</p>
+      <p>Sizes can be set using the avatarSize input, or adding the "dbx-avatar-large" or "dbx-avatar-small" classes.</p>
       <div class="avatar-example-row">
         <dbx-avatar avatarSize="small"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
@@ -14,9 +14,9 @@
         <span class="dbx-button-spacer"></span>
         <dbx-avatar avatarStyle="square"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
-        <dbx-avatar avatarSize="big"></dbx-avatar>
+        <dbx-avatar avatarSize="large"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
-        <dbx-avatar avatarSize="big" avatarStyle="square"></dbx-avatar>
+        <dbx-avatar avatarSize="large" avatarStyle="square"></dbx-avatar>
       </div>
       <h3>Avatar with url</h3>
       <p>This avatar has a url set, and shows the image from the url.</p>
@@ -29,9 +29,9 @@
         <span class="dbx-button-spacer"></span>
         <dbx-avatar [avatarUrl]="demoAvatarUrl" avatarStyle="square"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
-        <dbx-avatar [avatarUrl]="demoAvatarUrl" avatarSize="big"></dbx-avatar>
+        <dbx-avatar [avatarUrl]="demoAvatarUrl" avatarSize="large"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
-        <dbx-avatar [avatarUrl]="demoAvatarUrl" avatarSize="big" avatarStyle="square"></dbx-avatar>
+        <dbx-avatar [avatarUrl]="demoAvatarUrl" avatarSize="large" avatarStyle="square"></dbx-avatar>
       </div>
       <h3>Custom icon</h3>
       <p>This avatar has no url/context set, but does have a custom icon set.</p>
@@ -44,9 +44,9 @@
         <span class="dbx-button-spacer"></span>
         <dbx-avatar avatarIcon="admin_panel_settings" avatarStyle="square"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
-        <dbx-avatar avatarIcon="admin_panel_settings" avatarSize="big"></dbx-avatar>
+        <dbx-avatar avatarIcon="admin_panel_settings" avatarSize="large"></dbx-avatar>
         <span class="dbx-button-spacer"></span>
-        <dbx-avatar avatarIcon="admin_panel_settings" avatarSize="big" avatarStyle="square"></dbx-avatar>
+        <dbx-avatar avatarIcon="admin_panel_settings" avatarSize="large" avatarStyle="square"></dbx-avatar>
       </div>
       <h3>Avatar with broken url</h3>
       <p>This avatar has a broken url set. The error will be detected and the fallback icon will be displayed.</p>

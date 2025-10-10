@@ -51,6 +51,10 @@ export type TransformStringFunctionConfig<S extends string = string> = {
    */
   readonly toUppercase?: boolean;
   /**
+   * Slices the string based on the configuration.
+   */
+  readonly slice?: SliceStringFunctionConfig;
+  /**
    * An optional custom function to transform the string.
    * If provided, `toLowercase` and `toUppercase` are ignored. Trimming (if `trim` is true) occurs before this custom transform.
    */
@@ -99,6 +103,7 @@ export function transformStringFunctionConfig<S extends string = string>(config?
  * Creates a string transformation function based on the provided configuration.
  * The resulting function will apply transformations in a specific order:
  * 1. Trimming (if `config.trim` is true).
+ * 2. Slicing (if `config.slice` is provided).
  * 2. Custom `config.transform` function (if provided).
  * 3. Uppercase conversion (if `config.toUppercase` is true and no `config.transform`).
  * 4. Lowercase conversion (if `config.toLowercase` is true and no `config.transform` or `config.toUppercase`).
@@ -117,6 +122,17 @@ export function transformStringFunction<S extends string = string>(config: Trans
     baseTransform = stringToUppercaseFunction;
   } else if (config.toLowercase) {
     baseTransform = stringToLowercaseFunction;
+  }
+
+  if (config.slice) {
+    const sliceTransform = sliceStringFunction(config.slice);
+
+    if (baseTransform != null) {
+      const initialBaseTransform = baseTransform;
+      baseTransform = (x) => (initialBaseTransform as TransformStringFunction)(sliceTransform(x));
+    } else {
+      baseTransform = sliceTransform;
+    }
   }
 
   let transform: Maybe<TransformStringFunction> = baseTransform;
@@ -192,4 +208,68 @@ export type PadStartFunction = TransformStringFunction;
  */
 export function padStartFunction(minLength: number, padCharacter: string): PadStartFunction {
   return (input: string) => input.padStart(minLength, padCharacter);
+}
+
+/**
+ * Function that slices and concats parts of a string based on the configuration.
+ */
+export type SliceStringFunction = TransformStringFunction;
+
+/**
+ * Configuration for sliceStringFunction()
+ */
+export interface SliceStringFunctionConfig {
+  /**
+   * The number of characters to take from the start of the string.
+   *
+   * When both fromStart and fromEnd are specified, the first N characters are concatenated with the last M characters.
+   * If the total (fromStart + fromEnd) is greater than or equal to the string length, the entire string is returned.
+   *
+   * If undefined or 0, only takes from the end of the string. The absolute value of this number is used.
+   */
+  readonly fromStart?: number;
+  /**
+   * The number of characters to take from the end of the string.
+   *
+   * When both fromStart and fromEnd are specified, the first N characters are concatenated with the last M characters.
+   * If the total (fromStart + fromEnd) is greater than or equal to the string length, the entire string is returned.
+   *
+   * If undefined or 0, only takes from the start of the string. The absolute value of this number is used.
+   */
+  readonly fromEnd?: number;
+}
+
+/**
+ * Creates a function that slices and concats parts of a string based on the configuration.
+ *
+ * @param config The configuration for the slice function.
+ * @returns A SliceStringFunction.
+ */
+export function sliceStringFunction(config: SliceStringFunctionConfig): SliceStringFunction {
+  const { fromStart, fromEnd } = config;
+  const takeFromStart = Math.abs(fromStart ?? 0);
+  const takeFromEnd = Math.abs(fromEnd ?? 0);
+
+  if (fromStart && fromEnd) {
+    return (input: string) => {
+      const totalTake = takeFromStart + takeFromEnd;
+      let result: string;
+
+      if (totalTake >= input.length) {
+        result = input;
+      } else {
+        const startPart = input.slice(0, takeFromStart);
+        const endPart = input.slice(-takeFromEnd);
+        result = startPart + endPart;
+      }
+
+      return result;
+    };
+  } else if (fromStart) {
+    return (input: string) => input.slice(0, takeFromStart);
+  } else if (fromEnd) {
+    return (input: string) => input.slice(-takeFromEnd);
+  } else {
+    return MAP_IDENTITY as SliceStringFunction;
+  }
 }

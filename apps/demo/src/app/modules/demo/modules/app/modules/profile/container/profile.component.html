@@ -2,17 +2,20 @@
   <dbx-loading [linear]="true" [context]="context">
     <dbx-content-box [wide]="true">
       <dbx-section header="Avatar">
-        <!--
-        <div class="">
-          <div>
-            <img [src]="avatarUrlSignal()" />
-          </div>
-          <span class="dbx-spacer"></span>
-          <div dbxFirebaseStorageFileDocument>
-            <dbx-file-upload mode="button" icon="file_copy" hint="Drag one file here." text="Drop Any Type of File" accept="*" (filesChanged)="buttonModeFilesUploaded = $event" [clickAreaToUpload]="true"></dbx-file-upload>
-          </div>
+        <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="image/*">
+          <ng-content>
+            <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument>
+              <dbx-loading dbxActionLoadingContext>
+                <dbx-avatar avatarSize="large" [avatarUrl]="avatarUrlSignal()"></dbx-avatar>
+              </dbx-loading>
+            </div>
+            <span class="dbx-spacer"></span>
+            <!-- Action Space -->
+            <div dbxAction dbxActionLogger dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="avatarUploadHandler" [triggerOnFiles]="true">
+              <dbx-file-upload dbxFileUploadActionSync mode="button" icon="upload" text="Upload Photo" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
+            </div>
+          </ng-content>
         </div>
-        -->
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">

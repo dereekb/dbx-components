@@ -14,7 +14,7 @@ export function storageFileServerActionsFactory(context: StorageFileServerAction
 }
 
 // MARK: App StorageFile Model Module
-export interface ProvideAppStoragefileMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
+export interface ProvideAppStorageFileMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
    * The AppStorageFileModule requires the following dependencies in order to initialze properly:
    * - StorageFileInitializeFromUploadService
@@ -38,7 +38,7 @@ export interface ProvideAppStoragefileMetadataConfig extends Pick<ModuleMetadata
  * @param useFactory
  * @returns
  */
-export function appStoragefileModuleMetadata(config: ProvideAppStoragefileMetadataConfig): ModuleMetadata {
+export function appStorageFileModuleMetadata(config: ProvideAppStorageFileMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 

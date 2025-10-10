@@ -1,6 +1,6 @@
 import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUploadServiceConfig, StorageFileInitializeFromUploadServiceInitializer, StorageFileInitializeFromUploadServiceInitializerInput, StorageFileInitializeFromUploadServiceInitializerResult, createStorageFileFactory, storageFileInitializeFromUploadService, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userAvatarFileStoragePath, userTestFileStoragePath } from 'demo-firebase';
+import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPair, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByFolderWrapperFunction, determineUserByUserUploadsFolderWrapperFunction, FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimetypeForImageType, SlashPathPathMatcherPath } from '@dereekb/util';
 import * as sharp from 'sharp';
@@ -94,7 +94,7 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       const fileMimeType = mimetypeForImageType('jpeg');
 
       // create the new file at /avatar/u/{userId}/avatar
-      const newPath = userAvatarFileStoragePath(userId);
+      const newPath = makeUserAvatarFileStoragePath(userId);
       const newFile = storageService.file(newPath);
 
       await newFile.upload(newImageBytes, { contentType: fileMimeType });

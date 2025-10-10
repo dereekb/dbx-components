@@ -14,6 +14,7 @@ import { DbxFileUploadComponent } from '@dereekb/dbx-web';
 export class DbxFirebaseStorageFileUploadSyncDirective implements OnDestroy {
   private readonly _allowedSub = new SubscriptionObject();
   private readonly _multiSub = new SubscriptionObject();
+  private readonly _filesSub = new SubscriptionObject();
 
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
   readonly uploadComponent = inject(DbxFileUploadComponent);
@@ -21,10 +22,12 @@ export class DbxFirebaseStorageFileUploadSyncDirective implements OnDestroy {
   constructor() {
     this._allowedSub.subscription = this.uploadStore.fileTypesAllowed$.subscribe((x) => this.uploadComponent.setAccept(x));
     this._multiSub.subscription = this.uploadStore.isMultiUploadAllowed$.subscribe((x) => this.uploadComponent.setMultiple(x));
+    this._filesSub.subscription = this.uploadComponent.filesChanged.subscribe((files) => this.uploadStore.setFiles(files.matchResult.accepted));
   }
 
   ngOnDestroy(): void {
     this._allowedSub.destroy();
     this._multiSub.destroy();
+    this._filesSub.destroy();
   }
 }

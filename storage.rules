@@ -17,7 +17,7 @@ service firebase.storage {
       }
 
       // MARK: Avatar
-      match /avatar {
+      match /avatar.img {
         allow write: if isUploadUser() || userClaimsIsSysAdmin() && isAllowedAvatarSize();
       }
 

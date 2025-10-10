@@ -3,7 +3,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { Maybe } from '@dereekb/util';
 import { FileArrayAcceptMatchConfig, fileArrayAcceptMatchFunction } from './upload.accept';
 import { NgTemplateOutlet } from '@angular/common';
-import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent, provideDbxFileUploadActionCompatable } from './abstract.upload.component';
+import { AbstractDbxFileUploadComponent, DbxFileUploadFilesChangedEvent } from './abstract.upload.component';
+import { provideDbxFileUploadActionCompatable } from './upload.action';
 
 export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
 

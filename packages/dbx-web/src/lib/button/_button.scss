@@ -10,7 +10,8 @@ $big-button-height: 46px; // 33% bigger
 // MARK: Mixin
 @mixin core() {
   // increases the height of the mat-mdc-button
-  .dbx-button-big {
+  .dbx-button-big,
+  .dbx-button-large {
     .mdc-button.mat-mdc-button {
       height: $big-button-height;
     }

@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { FirebaseStorageAccessorFile, StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { ArrayOrValue, asArray, Maybe, MimeTypeWithoutParameters, SlashPathTypedFileSuffix } from '@dereekb/util';
+import { ArrayOrValue, asArray, Maybe, MimeTypeWithoutParameters, PercentDecimal, PercentNumber, SlashPathTypedFileSuffix } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { distinctUntilChanged, filter, map, shareReplay } from 'rxjs';
 import { StorageFileUploadFilesFinalResult } from '../container';
@@ -56,7 +56,7 @@ export interface DbxFirebaseStorageFileUploadStoreFileProgress<T = unknown> {
    *
    * If unset, then the file has not started uploading.
    */
-  readonly progress?: Maybe<number>;
+  readonly progress?: Maybe<PercentDecimal>;
   /**
    * If true, the upload has failed for this file.
    */
@@ -158,7 +158,8 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly isMultiUploadAllowed$ = this.select((state) => state.isComponentMultiUploadAllowed !== false && state.isMultiUploadAllowed).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly uploadPath$ = this.select((state) => state.uploadPath).pipe(distinctUntilChanged(), shareReplay(1));
-  readonly files$ = this.select((state) => state.files).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly currentFiles$ = this.select((state) => state.files).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly files$ = this.currentFiles$.pipe(filterMaybe());
 
   readonly isUploadHandlerWorking$ = this.select((state) => state.isUploadHandlerWorking).pipe(distinctUntilChanged(), shareReplay(1));
   readonly uploadProgress$ = this.select((state) => state.uploadProgress).pipe(distinctUntilChanged(), shareReplay(1));
@@ -170,7 +171,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly setIsComponentMultiUploadAllowed = this.updater((state, isComponentMultiUploadAllowed: Maybe<boolean>) => ({ ...state, isComponentMultiUploadAllowed }));
 
   readonly setUploadPath = this.updater((state, uploadPath: Maybe<StoragePathInput>) => ({ ...state, uploadPath }));
-  readonly setFileTypesAccepted = this.updater((state, fileTypesAccepted: Maybe<DbxFirebaseStorageFileUploadStoreAllowedTypes>) => ({ ...state, fileTypesAccepted }));
+  readonly setFileTypesAccepted = this.updater((state, fileTypesAccepted: Maybe<ArrayOrValue<FileAcceptFilterTypeString>>) => ({ ...state, fileTypesAccepted: fileTypesAccepted ? asArray(fileTypesAccepted) : undefined }));
 
   /**
    * Sets the file list to upload.
@@ -195,7 +196,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   /**
    * Sets the upload result.
    */
-  readonly setUploadResult = this.updater((state, uploadResult: Maybe<StorageFileUploadFilesFinalResult>) => ({ ...state, uploadResult }));
+  readonly setUploadResult = this.updater((state, uploadResult: Maybe<StorageFileUploadFilesFinalResult>) => ({ ...state, isUploadHandlerWorking: false, uploadProgress: undefined, uploadResult }));
 }
 
 export function updateUploadStorageFileStoreStateWithUploadProgress(state: DbxFirebaseStorageFileUploadStoreState, uploadProgress: ArrayOrValue<DbxFirebaseStorageFileUploadStoreFileProgress>): DbxFirebaseStorageFileUploadStoreState {

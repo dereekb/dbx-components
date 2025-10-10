@@ -3,26 +3,35 @@ import { Maybe } from '@dereekb/util';
 import { DbxFirebaseStorageFileUploadStore } from '../store/storagefile.upload.store';
 import { storageFileUploadFiles, StorageFileUploadFilesFinalResult, StorageFileUploadHandler } from './storagefile.upload.handler';
 import { DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
-import { errorResult, filterMaybe, LoadingState, startWithBeginLoading, SubscriptionObject, successResult, WorkUsingContext } from '@dereekb/rxjs';
+import { errorResult, LoadingState, startWithBeginLoading, SubscriptionObject, successResult, WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, switchMap, tap } from 'rxjs';
+import { filter, map, of, switchMap, tap } from 'rxjs';
 import { StorageFileUploadFilesError } from './storagefile.upload.error';
 
 /**
- * Connects a DbxFirebaseStorageFileUploadStore to a DbxActionContext.
+ * Connects a DbxFirebaseStorageFileUploadStore to a DbxActionContext, and handles the upload action.
  */
 @Directive({
-  selector: '[dbxFirebaseStoragefileUploadAction]',
+  selector: '[dbxFirebaseStorageFileUploadActionHandler]',
   standalone: true
 })
-export class DbxFirebaseStorageFileUploadActionDirective implements OnInit {
+export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnInit {
   private readonly _triggerSub = new SubscriptionObject();
+  private readonly _readySub = new SubscriptionObject();
   private readonly _isWorkingSub = new SubscriptionObject();
 
   readonly source = inject(DbxActionContextStoreSourceInstance<File[], StorageFileUploadFilesFinalResult>);
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
 
   readonly _dbxActionHandlerInstance = new DbxActionHandlerInstance<File[], StorageFileUploadFilesFinalResult>(this.source);
+
+  /**
+   * If true, the action will be triggered when files are set.
+   *
+   * Defaults to false.
+   */
+  readonly triggerOnFiles = input<boolean>(false);
+  readonly triggerOnFiles$ = toObservable(this.triggerOnFiles);
 
   /**
    * Uploading of all/any files should be cancelled if any file fails to upload.
@@ -40,7 +49,7 @@ export class DbxFirebaseStorageFileUploadActionDirective implements OnInit {
    */
   readonly actionFailureOnUploadError = input<boolean>(false);
 
-  readonly uploadHandler = input<Maybe<StorageFileUploadHandler>>(undefined, { alias: 'dbxFirebaseStoragefileUploadAction' });
+  readonly uploadHandler = input.required<Maybe<StorageFileUploadHandler>>({ alias: 'dbxFirebaseStorageFileUploadActionHandler' });
 
   protected readonly _uploadHandlerEffect = effect(() => {
     const uploadHandler = this.uploadHandler();
@@ -62,6 +71,9 @@ export class DbxFirebaseStorageFileUploadActionDirective implements OnInit {
             }
           }),
           filter((x) => x.isComplete),
+          tap((x) => {
+            this.uploadStore.setUploadResult(x.result as StorageFileUploadFilesFinalResult);
+          }),
           map((x) => {
             const result = x.result as StorageFileUploadFilesFinalResult;
             const { successFileResults, errorFileResults } = result;
@@ -96,15 +108,27 @@ export class DbxFirebaseStorageFileUploadActionDirective implements OnInit {
   ngOnInit(): void {
     this._dbxActionHandlerInstance.init();
 
-    // ready the source with files after trigger is called and files are available
-    this._triggerSub.subscription = this.files$
+    // trigger the action if files are available
+    this._triggerSub.subscription = this.triggerOnFiles$
       .pipe(
-        filterMaybe(),
-        switchMap((files) => this.source.triggered$.pipe(map(() => files)))
+        switchMap((triggerOnFiles) => {
+          if (triggerOnFiles) {
+            return this.files$.pipe(map((x) => x?.length));
+          } else {
+            return of(false);
+          }
+        })
       )
-      .subscribe((files) => {
-        this.source.readyValue(files);
+      .subscribe((canTrigger) => {
+        if (canTrigger) {
+          this.source.trigger();
+        }
       });
+
+    // ready the source with files after trigger is called and files are available
+    this._readySub.subscription = this.files$.pipe(switchMap((files) => this.source.triggered$.pipe(map(() => files)))).subscribe((files) => {
+      this.source.readyValue(files);
+    });
 
     // sync isWorking
     this._isWorkingSub.subscription = this.uploadStore.setIsUploadHandlerWorking(this.source.isWorking$);

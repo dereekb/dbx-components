@@ -101,8 +101,6 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
         return snapshot;
       }
 
-      uploadBytesTask.on('state_changed');
-
       const uploadTask: StorageUploadTask<UploadTask> = {
         taskRef: uploadBytesTask,
         cancel: () => uploadBytesTask.cancel(),
@@ -110,9 +108,14 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
         resume: () => uploadBytesTask.resume(),
         getSnapshot: () => wrapSnapshot(uploadBytesTask.snapshot),
         streamSnapshotEvents: cachedGetter(() => {
-          const obs = uploadBytesTask.on('state_changed');
+          const internalSnapshotObs = new Observable<UploadTaskSnapshot>((x) =>
+            uploadBytesTask.on('state_changed', {
+              next: (y) => x.next(y),
+              error: (e) => x.error(e),
+              complete: () => x.complete()
+            })
+          );
 
-          const internalSnapshotObs = new Observable<UploadTaskSnapshot>((x) => obs(x));
           const snapshotEvents: Observable<StorageUploadTaskSnapshot> = internalSnapshotObs.pipe(
             map((x) => wrapSnapshot(x)),
             shareReplay(1)

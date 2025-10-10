@@ -1,8 +1,9 @@
-import { computed, Directive, forwardRef, input, Provider, signal, Type } from '@angular/core';
-import { DbxUploadActionCompatable } from './upload.action.directive';
+import { computed, Directive, input, signal, Type } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { FileArrayAcceptMatchConfig, FileArrayAcceptMatchResult } from './upload.accept';
+import { DbxFileUploadActionCompatable } from './upload.action';
 
+// MARK: Abstract
 export interface DbxFileUploadFilesChangedEvent {
   readonly allFiles: File[];
   readonly matchResult: FileArrayAcceptMatchResult;
@@ -11,7 +12,7 @@ export interface DbxFileUploadFilesChangedEvent {
 @Directive({
   standalone: true
 })
-export abstract class AbstractDbxFileUploadComponent implements DbxUploadActionCompatable {
+export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadActionCompatable {
   /**
    * Whether or not multiple files can be uploaded.
    */
@@ -95,13 +96,4 @@ export abstract class AbstractDbxFileUploadComponent implements DbxUploadActionC
   setAccept(accept?: Maybe<FileArrayAcceptMatchConfig['accept']>): void {
     this._acceptSignal.set(accept);
   }
-}
-
-export function provideDbxFileUploadActionCompatable<S extends DbxUploadActionCompatable>(sourceType: Type<S>): Provider[] {
-  return [
-    {
-      provide: DbxUploadActionCompatable,
-      useExisting: forwardRef(() => sourceType)
-    }
-  ];
 }

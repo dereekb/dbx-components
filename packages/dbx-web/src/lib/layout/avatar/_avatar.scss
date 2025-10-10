@@ -34,14 +34,14 @@ $icon-to-avatar-size-ratio: 0.65;
     }
   }
 
-  .dbx-avatar-big .dbx-avatar-view {
-    width: var(#{theming.$dbx-avatar-big-size-var}, 128px);
-    height: var(#{theming.$dbx-avatar-big-size-var}, 128px);
+  .dbx-avatar-large .dbx-avatar-view {
+    width: var(#{theming.$dbx-avatar-large-size-var}, 128px);
+    height: var(#{theming.$dbx-avatar-large-size-var}, 128px);
 
     .mat-icon {
-      font-size: calc(var(#{theming.$dbx-avatar-big-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
-      width: calc(var(#{theming.$dbx-avatar-big-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
-      height: calc(var(#{theming.$dbx-avatar-big-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
+      font-size: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
+      width: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
+      height: calc(var(#{theming.$dbx-avatar-large-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
     }
   }
 

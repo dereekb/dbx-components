@@ -15,6 +15,13 @@ export type NumberString = string;
 export type PercentNumber = number;
 
 /**
+ * A percent decimal value.
+ *
+ * e.g. PercentDecimal of 0.05 = 5%
+ */
+export type PercentDecimal = number;
+
+/**
  * Converts the percent number to a decimal value.
  *
  * @param input

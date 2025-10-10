@@ -3,7 +3,7 @@ import { DbxContentLayoutModule, DbxSectionPageComponent, DbxSectionComponent, D
 import { DbxFirebaseAuthService, DbxFirebaseStorageFileDocumentStoreDirective, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { userAvatarFileStoragePath } from 'demo-firebase';
+import { makeUserAvatarFileStoragePath } from 'demo-firebase';
 import { map, switchMap } from 'rxjs';
 
 @Component({
@@ -18,7 +18,7 @@ export class DemoAppSettingsComponent {
 
   readonly uidSignal = toSignal(this.dbxFirebaseAuthService.userIdentifier$);
 
-  readonly file$ = this.dbxFirebaseAuthService.userIdentifier$.pipe(map((uid) => this.storageService.file(userAvatarFileStoragePath(uid))));
+  readonly file$ = this.dbxFirebaseAuthService.userIdentifier$.pipe(map((uid) => this.storageService.file(makeUserAvatarFileStoragePath(uid))));
   readonly avatarUrlSignal$ = this.file$.pipe(switchMap((file) => file?.getDownloadUrl()));
 
   readonly avatarUrlSignal = toSignal(this.avatarUrlSignal$);

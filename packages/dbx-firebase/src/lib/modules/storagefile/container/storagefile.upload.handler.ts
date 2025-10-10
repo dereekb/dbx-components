@@ -1,14 +1,14 @@
 import { catchError, map, Observable, of, shareReplay } from 'rxjs';
 import { DbxFirebaseStorageFileUploadStoreFileProgress } from '../store';
 import { DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
-import { IndexNumber, Maybe, PercentNumber, runAsyncTasksForValues, separateValues } from '@dereekb/util';
+import { IndexNumber, Maybe, PercentNumber, PromiseOrValue, runAsyncTasksForValues, separateValues } from '@dereekb/util';
 import { MultiSubscriptionObject } from '@dereekb/rxjs';
-import { FirebaseStorageAccessorFile, StoragePathInput, StorageUploadTask } from '@dereekb/firebase';
+import { FirebaseStorageAccessorFile, StorageCustomMetadata, StoragePathInput, StorageUploadOptions, StorageUploadTask } from '@dereekb/firebase';
 
 /**
  * Creates a new observable for uploading a file.
  */
-export type StorageFileUploadHandlerFunction = (file: File) => StorageFileUploadHandlerInstance;
+export type StorageFileUploadHandlerFunction = (file: File) => Promise<StorageFileUploadHandlerInstance>;
 
 export interface StorageFileUploadHandlerInstance extends Pick<StorageUploadTask<FirebaseStorageAccessorFile>, 'taskRef' | 'pause' | 'resume' | 'cancel'> {
   /**
@@ -30,31 +30,60 @@ export interface StorageFileUploadHandler {
 }
 
 /**
+ * Configuration for a single file upload.
+ */
+export interface StorageFileUploadConfig {
+  /**
+   * Path for where to upload the file to
+   */
+  readonly storagePath: StoragePathInput;
+  /**
+   * Upload options for the file.
+   *
+   * Resumable is not supported.
+   */
+  readonly uploadOptions?: StorageFileUploadConfigOptions;
+  /**
+   * Custom metadata for the file.
+   *
+   * Is merged with uploadOptions's metadata.
+   */
+  readonly customMetadata?: StorageCustomMetadata;
+}
+
+/**
+ * StorageFileUploadConfig upload options.
+ */
+export type StorageFileUploadConfigOptions = Omit<StorageUploadOptions, 'resumable'>;
+
+/**
  * Function used to generate file names for the uploaded files.
  *
  * If not set, the file name will be used as is.
  */
-export type StorageFileUploadStoragePathFactory = (file: File) => StoragePathInput;
+export type StorageFileUploadConfigFactory = (file: File) => PromiseOrValue<StorageFileUploadConfig>;
 
 /**
  * Configuration for StorageFileUploadHandler().
  */
 export interface StorageFileUploadHandlerConfig {
   readonly storageService: DbxFirebaseStorageService;
-  readonly storagePathFactory: StorageFileUploadStoragePathFactory;
+  readonly storageFileUploadConfigFactory: StorageFileUploadConfigFactory;
 }
 
 /**
  * Default implementation of StorageFileUploadHandler.
  */
 export function storageFileUploadHandler(config: StorageFileUploadHandlerConfig): StorageFileUploadHandler {
-  const { storageService, storagePathFactory } = config;
+  const { storageService, storageFileUploadConfigFactory } = config;
 
   let resumable: Maybe<StorageUploadTask>;
 
   return {
-    uploadFile: (file) => {
-      const storagePath = storagePathFactory(file);
+    uploadFile: async (file) => {
+      const storageFileUploadConfig = await storageFileUploadConfigFactory(file);
+
+      const { storagePath } = storageFileUploadConfig;
       const storageAccessorFile = storageService.file(storagePath);
 
       const upload = new Observable<DbxFirebaseStorageFileUploadStoreFileProgress>((x) => {
@@ -332,13 +361,14 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       // update details
       allFilesAndDetails[fileIndex].endTime = new Date();
       allFilesAndDetails[fileIndex].success = !error;
+      allFilesAndDetails[fileIndex].error = error;
     }
 
     function updateUploadProgress(input: UpdateUploadProgressInput) {
       const { index: fileIndex, nextProgress, fileUploadTaskDone, error } = input;
 
-      let overallProgress = latestOverallProgress;
-      let nextProgressPercent = fileUploadTaskDone ? 100 : nextProgress?.progress;
+      let nextOverallProgress = latestOverallProgress;
+      let nextProgressPercent = fileUploadTaskDone ? 100 : (nextProgress?.progress ?? 0) * 100;
 
       // update the overall progress percentage
       if (nextProgressPercent) {
@@ -348,7 +378,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
           const progressPercentChange = nextProgressPercent - (previousProgress?.progress ?? 0);
 
           // increase overall progress by the change
-          overallProgress += progressPercentChange * overallProgressPerCompletedFile;
+          nextOverallProgress += progressPercentChange * overallProgressPerCompletedFile;
         }
       }
 
@@ -361,16 +391,21 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
         if (!allFilesAndDetails[fileIndex].fileRef) {
           allFilesAndDetails[fileIndex].fileRef = nextProgress.fileRef;
         }
-      } else if (error) {
-        allFilesAndDetails[fileIndex].error = error;
       }
 
       // if complete, update the indexes and details
       if (fileUploadTaskDone) {
+        _markFileUploadDone(fileIndex, error);
       }
 
+      console.log({
+        latestOverallProgress,
+        nextOverallProgress,
+        nextProgressPercent
+      });
+
       // update the overall progress
-      latestOverallProgress = overallProgress;
+      latestOverallProgress = nextOverallProgress;
 
       // emit the event to send it
       _emitEvent(nextProgress);
@@ -463,18 +498,21 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
 
         // upload the file, subscribe to the progress
         try {
-          const uploadInstance = uploadHandler.uploadFile(file);
+          uploadHandler
+            .uploadFile(file)
+            .then((uploadInstance) => {
+              // add to active file indexes
+              onStartFileUpload(index, uploadInstance);
 
-          // add to active file indexes
-          onStartFileUpload(index, uploadInstance);
+              const uploadSubscription = uploadInstance.upload.subscribe({
+                next: updateFileUploadProgress,
+                error: updateFileUploadProgressWithUncaughtError,
+                complete: completeFileUploadProgress
+              });
 
-          const uploadSubscription = uploadInstance.upload.subscribe({
-            next: updateFileUploadProgress,
-            error: updateFileUploadProgressWithUncaughtError,
-            complete: completeFileUploadProgress
-          });
-
-          multiUploadsSubscriptionObject.addSubs(uploadSubscription);
+              multiUploadsSubscriptionObject.addSubs(uploadSubscription);
+            })
+            .catch(updateFileUploadProgressWithUncaughtError);
         } catch (error) {
           updateFileUploadProgressWithUncaughtError(error);
         }
@@ -489,6 +527,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       retriesAllowed: 0 // no retries allowed
     }).then(() => {
       // all tasks are finished. Complete the subscriber.
+      console.log('complete');
       subscriber.complete();
     });
   }).pipe(shareReplay(1));
