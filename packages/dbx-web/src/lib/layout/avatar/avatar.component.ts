@@ -1,6 +1,6 @@
-import { Component, computed, inject, InjectionToken, Injector, input } from '@angular/core';
-import { DBX_AVATAR_CONTEXT_DATA_TOKEN, DbxAvatarContext, DbxAvatarKey, DbxAvatarSelector } from './avatar';
-import { DbxAvatarService } from './avatar.service';
+import { ChangeDetectionStrategy, Component, computed, inject, InjectionToken, Injector, input } from '@angular/core';
+import { DBX_AVATAR_CONTEXT_DATA_TOKEN, DbxAvatarContext, DbxAvatarKey, DbxAvatarSelector, DbxAvatarSize, DbxAvatarStyle } from './avatar';
+import { DbxAvatarViewService } from './avatar.service';
 import { AuthUserIdentifier, DbxInjectionComponent, DbxInjectionComponentConfig, mergeStaticProviders } from '@dereekb/dbx-core';
 import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
 
@@ -13,11 +13,16 @@ import { Maybe, WebsiteUrlWithPrefix } from '@dereekb/util';
     <dbx-injection [config]="configSignal()"></dbx-injection>
   `,
   imports: [DbxInjectionComponent],
+  host: {
+    '[class.dbx-avatar-small]': `avatarSize() === 'small'`,
+    '[class.dbx-avatar-big]': `avatarSize() === 'big'`
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxAvatarComponent {
   readonly injector = inject(Injector);
-  readonly avatarService = inject(DbxAvatarService);
+  readonly avatarService = inject(DbxAvatarViewService);
 
   readonly context = input<DbxAvatarContext>();
 
@@ -25,6 +30,9 @@ export class DbxAvatarComponent {
   readonly avatarUid = input<Maybe<AuthUserIdentifier>>();
   readonly avatarUrl = input<Maybe<WebsiteUrlWithPrefix>>();
   readonly avatarKey = input<Maybe<DbxAvatarKey>>();
+  readonly avatarIcon = input<Maybe<string>>();
+  readonly avatarStyle = input<Maybe<DbxAvatarStyle>>();
+  readonly avatarSize = input<Maybe<DbxAvatarSize>>(undefined);
 
   readonly contextSignal = computed(() => {
     const inputContext = this.context();
@@ -33,12 +41,16 @@ export class DbxAvatarComponent {
     const uid = this.avatarUid() ?? inputContext?.uid;
     const url = this.avatarUrl() ?? inputContext?.url;
     const key = this.avatarKey() ?? inputContext?.key;
+    const icon = this.avatarIcon() ?? inputContext?.icon;
+    const style = this.avatarStyle() ?? inputContext?.style;
 
     const context = {
       selector,
       uid,
       url,
-      key
+      key,
+      icon,
+      style
     };
 
     return context;

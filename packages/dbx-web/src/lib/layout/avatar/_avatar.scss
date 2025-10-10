@@ -3,9 +3,70 @@
 @use '../../style/theming';
 
 // MARK: Variables
+$icon-to-avatar-size-ratio: 0.65;
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-avatar-view {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: var(#{theming.$dbx-avatar-size-var}, 64px);
+    height: var(#{theming.$dbx-avatar-size-var}, 64px);
+
+    .mat-icon {
+      font-size: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$icon-to-avatar-size-ratio});
+      width: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$icon-to-avatar-size-ratio});
+      height: calc(var(#{theming.$dbx-avatar-size-var}, 64px) * #{$icon-to-avatar-size-ratio});
+    }
+  }
+
+  .dbx-avatar-small .dbx-avatar-view {
+    width: var(#{theming.$dbx-avatar-small-size-var}, 32px);
+    height: var(#{theming.$dbx-avatar-small-size-var}, 32px);
+
+    .mat-icon {
+      font-size: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$icon-to-avatar-size-ratio});
+      width: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$icon-to-avatar-size-ratio});
+      height: calc(var(#{theming.$dbx-avatar-small-size-var}, 32px) * #{$icon-to-avatar-size-ratio});
+    }
+  }
+
+  .dbx-avatar-big .dbx-avatar-view {
+    width: var(#{theming.$dbx-avatar-big-size-var}, 128px);
+    height: var(#{theming.$dbx-avatar-big-size-var}, 128px);
+
+    .mat-icon {
+      font-size: calc(var(#{theming.$dbx-avatar-big-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
+      width: calc(var(#{theming.$dbx-avatar-big-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
+      height: calc(var(#{theming.$dbx-avatar-big-size-var}, 128px) * #{$icon-to-avatar-size-ratio});
+    }
+  }
+
+  .dbx-avatar-view-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .dbx-avatar-view-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dbx-avatar-view-circle {
+    border-radius: 50%;
+  }
+
+  .dbx-avatar-view-square {
+    border-radius: 12px;
+  }
 }
 
 @mixin color($theme-config) {
@@ -13,13 +74,19 @@
   $background: map.get($color-config, 'background');
   $primary: map.get($color-config, 'primary');
   $accent: map.get($color-config, 'accent');
+
+  $background-color: theming.m2-get-color-from-palette($background, 'hover');
+
+  .dbx-avatar-view {
+    background-color: $background-color;
+  }
 }
 
 @mixin typography($theme-config-or-typography-config) {
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-bar') {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-avatar') {
     $color: theming.m2-get-color-config($theme-config);
     $density: theming.m2-get-density-config($theme-config);
     $typography: theming.m2-get-typography-config($theme-config);

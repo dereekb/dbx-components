@@ -11,6 +11,7 @@ import { DocLayoutSectionPageComponent } from './container/section.page.componen
 import { DocLayoutSectionPageTwoComponent } from './container/section.page.two.component';
 import { DocLayoutTwoColumnsChildComponent } from './container/two.child.component';
 import { DocLayoutTwoColumnsComponent } from './container/two.component';
+import { DocLayoutAvatarComponent } from './container/avatar.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/layout',
@@ -23,6 +24,12 @@ export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.layout.home',
   component: DocLayoutHomeComponent
+};
+
+export const avatarState: Ng2StateDeclaration = {
+  url: '/avatar',
+  name: 'doc.layout.avatar',
+  component: DocLayoutAvatarComponent
 };
 
 export const docLayoutBarState: Ng2StateDeclaration = {
@@ -89,6 +96,7 @@ export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
   homeState,
+  avatarState,
   docLayoutBarState,
   docLayoutContentState,
   docLayoutFlexState,

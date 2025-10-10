@@ -13,6 +13,16 @@ export type DbxAvatarSelector = string;
 export type DbxAvatarKey = string;
 
 /**
+ * The avatar style.
+ */
+export type DbxAvatarStyle = 'circle' | 'square';
+
+/**
+ * The avatar size.
+ */
+export type DbxAvatarSize = 'small' | 'normal' | 'big';
+
+/**
  * Provides contextual information for displaying an avatar.
  */
 export interface DbxAvatarContext {
@@ -34,6 +44,14 @@ export interface DbxAvatarContext {
    * Arbitrary key that is used to configure an avatar.
    */
   readonly key?: Maybe<DbxAvatarKey>;
+  /**
+   * The avatar style.
+   */
+  readonly style?: DbxAvatarStyle;
+  /**
+   * Icon name to use for the fallback avatar when no image is provided.
+   */
+  readonly icon?: Maybe<string>;
 }
 
 // MARK: Injection Token

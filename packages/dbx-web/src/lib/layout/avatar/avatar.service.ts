@@ -23,13 +23,21 @@ export type DbxAvatarInjectionComponentConfig = Omit<DbxInjectionComponentConfig
 export type DbxAvatarComponentForContextFunction = (context: DbxAvatarContext) => Maybe<DbxAvatarInjectionComponentConfig>;
 
 /**
- * Configuration for a DbxAvatarService.
+ * Configuration for a DbxAvatarViewService.
  */
-export abstract class DbxAvatarServiceConfig {
+export abstract class DbxAvatarViewServiceConfig {
   /**
    * The default avatar URL to use in DbxAvatarViewComponent if no other url is available
    */
   readonly defaultAvatarUrl?: Maybe<WebsitePath | WebsiteUrlWithPrefix>;
+  /**
+   * The default fallback icon to use when no avatar image is provided.
+   */
+  readonly defaultAvatarIcon?: Maybe<string>;
+  /**
+   * The default fallback icon to use when an avatar image is provided but fails to load.
+   */
+  readonly defaultAvatarErrorIcon?: Maybe<string>;
   /**
    * Overrides the default avatar component.
    */
@@ -46,10 +54,12 @@ export abstract class DbxAvatarServiceConfig {
 @Injectable({
   providedIn: 'root'
 })
-export class DbxAvatarService {
-  private readonly _serviceConfig = inject(DbxAvatarServiceConfig, { optional: true });
+export class DbxAvatarViewService {
+  private readonly _serviceConfig = inject(DbxAvatarViewServiceConfig, { optional: true });
 
   private _defaultAvatarUrl: Maybe<WebsitePath | WebsiteUrlWithPrefix> = this._serviceConfig?.defaultAvatarUrl;
+  private _defaultAvatarIcon: Maybe<string> = this._serviceConfig?.defaultAvatarIcon ?? 'person';
+  private _defaultAvatarErrorIcon: Maybe<string>;
 
   private _defaultAvatarComponentConfig: DbxAvatarInjectionComponentConfig = this._serviceConfig?.defaultAvatarComponentConfig ?? {
     componentClass: DbxAvatarViewComponent
@@ -71,8 +81,24 @@ export class DbxAvatarService {
     return this._defaultAvatarUrl;
   }
 
+  get defaultAvatarIcon() {
+    return this._defaultAvatarIcon;
+  }
+
+  get defaultAvatarErrorIcon() {
+    return this._defaultAvatarErrorIcon;
+  }
+
   setDefaultAvatarUrl(url: Maybe<WebsitePath | WebsiteUrlWithPrefix>) {
     this._defaultAvatarUrl = url;
+  }
+
+  setDefaultAvatarIcon(icon: Maybe<string>) {
+    this._defaultAvatarIcon = icon;
+  }
+
+  setDefaultAvatarErrorIcon(icon: Maybe<string>) {
+    this._defaultAvatarErrorIcon = icon;
   }
 
   setDefaultAvatarComponentConfig(config: DbxAvatarInjectionComponentConfig) {

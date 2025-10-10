@@ -32,6 +32,10 @@
     #{theming.$dbx-page-height-additional-offset-var}: 0px;
     #{theming.$dbx-content-height-additional-offset-var}: 0px;
 
+    #{theming.$dbx-avatar-size-var}: theming.get-dbx-avatar-size($theme-config);
+    #{theming.$dbx-avatar-big-size-var}: theming.get-dbx-avatar-big-size($theme-config);
+    #{theming.$dbx-avatar-small-size-var}: theming.get-dbx-avatar-small-size($theme-config);
+
     // root height
     &.dbx-style-root {
       display: block;

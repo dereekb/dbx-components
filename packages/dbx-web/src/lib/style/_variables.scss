@@ -55,6 +55,10 @@ $dbx-content-height-base-var: --dbx-content-height-base;
 $dbx-content-height-var: --dbx-content-height;
 $dbx-nested-content-height-var: --dbx-nested-content-height;
 
+$dbx-avatar-size-var: --dbx-avatar-size;
+$dbx-avatar-big-size-var: --dbx-avatar-big-size;
+$dbx-avatar-small-size-var: --dbx-avatar-small-size;
+
 // vars
 $vh100: var($vh100-var);
 
@@ -123,6 +127,10 @@ $dbx-ok-color-contrast: var($dbx-ok-color-contrast-var);
 $dbx-grey-color-contrast: var($dbx-grey-color-contrast-var);
 $dbx-disabled-color-contrast: var($dbx-disabled-color-contrast-var);
 $dbx-bg-color-contrast: var($dbx-bg-color-contrast-var);
+
+$dbx-avatar-size: var($dbx-avatar-size-var);
+$dbx-avatar-big-size: var($dbx-avatar-big-size-var);
+$dbx-avatar-small-size: var($dbx-avatar-small-size-var);
 
 $dbx-theme-colors-main: (
   'primary': (
