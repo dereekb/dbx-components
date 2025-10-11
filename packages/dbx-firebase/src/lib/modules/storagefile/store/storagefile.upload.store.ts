@@ -5,7 +5,7 @@ import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
 import { ArrayOrValue, asArray, Maybe, MimeTypeWithoutParameters, PercentDecimal, PercentNumber, SlashPathTypedFileSuffix } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { distinctUntilChanged, filter, map, shareReplay } from 'rxjs';
-import { StorageFileUploadFilesFinalResult } from '../container';
+import { StorageFileUploadFilesEvent, StorageFileUploadFilesFinalResult } from '../container';
 
 /**
  * The stage of the upload process.
@@ -119,7 +119,7 @@ export interface DbxFirebaseStorageFileUploadStoreState {
    *
    * Only set while one or more files are being uploaded.
    */
-  readonly uploadProgress?: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress[]>;
+  readonly latestProgressEvent?: Maybe<StorageFileUploadFilesEvent>;
 
   /**
    * If true, the upload handler is working.
@@ -162,7 +162,7 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly files$ = this.currentFiles$.pipe(filterMaybe());
 
   readonly isUploadHandlerWorking$ = this.select((state) => state.isUploadHandlerWorking).pipe(distinctUntilChanged(), shareReplay(1));
-  readonly uploadProgress$ = this.select((state) => state.uploadProgress).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly latestProgressEvent$ = this.select((state) => state.latestProgressEvent).pipe(distinctUntilChanged(), shareReplay(1));
   readonly currentUploadResult$ = this.select((state) => state.uploadResult).pipe(distinctUntilChanged(), shareReplay(1));
   readonly uploadResult$ = this.currentUploadResult$.pipe(filterMaybe());
 
@@ -189,9 +189,14 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly setIsUploadHandlerWorking = this.updater((state, isUploadHandlerWorking: boolean) => ({ ...state, isUploadHandlerWorking }));
 
   /**
+   * Sets the latest progress event.
+   */
+  readonly setLatestProgressEvent = this.updater((state, latestProgressEvent: Maybe<StorageFileUploadFilesEvent>) => ({ ...state, latestProgressEvent }));
+
+  /**
    * Updates the upload progress for one or more files.
    */
-  readonly updateUploadProgress = this.updater((state, uploadProgress: ArrayOrValue<DbxFirebaseStorageFileUploadStoreFileProgress>) => updateUploadStorageFileStoreStateWithUploadProgress(state, uploadProgress));
+  // readonly updateUploadProgress = this.updater((state, uploadProgress: ArrayOrValue<DbxFirebaseStorageFileUploadStoreFileProgress>) => updateUploadStorageFileStoreStateWithUploadProgress(state, uploadProgress));
 
   /**
    * Sets the upload result.
@@ -199,6 +204,8 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly setUploadResult = this.updater((state, uploadResult: Maybe<StorageFileUploadFilesFinalResult>) => ({ ...state, isUploadHandlerWorking: false, uploadProgress: undefined, uploadResult }));
 }
 
+// TODO: Consider moving this back, but might not be needed...
+/*
 export function updateUploadStorageFileStoreStateWithUploadProgress(state: DbxFirebaseStorageFileUploadStoreState, uploadProgress: ArrayOrValue<DbxFirebaseStorageFileUploadStoreFileProgress>): DbxFirebaseStorageFileUploadStoreState {
   const { uploadProgress: currentUploadProgress } = state;
 
@@ -212,3 +219,4 @@ export function updateUploadStorageFileStoreStateWithUploadProgress(state: DbxFi
 
   return { ...state, uploadProgress: updatedUploadProgress };
 }
+*/

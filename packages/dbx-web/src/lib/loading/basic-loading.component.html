@@ -19,7 +19,7 @@
 
 <ng-template #loadingTemplate>
   @if (hasNoCustomLoadingSignal()) {
-    <dbx-loading-progress [mode]="mode()" [color]="color()" [text]="text()" [linear]="linear()" [diameter]="diameter()"></dbx-loading-progress>
+    <dbx-loading-progress [mode]="modeSignal()" [value]="loadingProgressSignal()" [color]="color()" [text]="text()" [linear]="linear()" [diameter]="diameter()"></dbx-loading-progress>
   }
   <div #customLoading>
     <ng-content select="[loading]"></ng-content>

@@ -7,12 +7,13 @@ import { ErrorInput, type Maybe } from '@dereekb/util';
 import { type DbxThemeColor } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
+import { DbxLoadingIsLoadingOrProgress } from './loading';
 
 /**
  * State of a DbxLoadingComponent.
  */
 export interface DbxLoadingComponentState {
-  readonly loading: boolean;
+  readonly loading: DbxLoadingIsLoadingOrProgress;
   readonly error: Maybe<ErrorInput>;
 }
 
@@ -45,11 +46,11 @@ export class DbxLoadingComponent {
   readonly padding = input<Maybe<boolean>>(false);
   readonly show = input<Maybe<boolean>>();
   readonly text = input<Maybe<string>>();
-  readonly mode = input<ProgressBarMode>('indeterminate');
+  readonly mode = input<Maybe<ProgressBarMode>>();
   readonly color = input<ThemePalette | DbxThemeColor>('primary');
   readonly diameter = input<Maybe<number>>();
   readonly linear = input<Maybe<boolean>>();
-  readonly loading = input<Maybe<boolean>>();
+  readonly loading = input<Maybe<DbxLoadingIsLoadingOrProgress>>();
   readonly error = input<Maybe<ErrorInput>>();
 
   readonly context = input<MaybeObservableOrValue<LoadingContext>>();
@@ -62,9 +63,16 @@ export class DbxLoadingComponent {
   readonly stateSignal = computed<DbxLoadingComponentState>(() => {
     const loading = this.loading();
     const error = this.error();
-    let loadingState = this.contextStreamSignal() as DbxLoadingComponentState;
+    const contextStreamEvent = this.contextStreamSignal();
 
-    if (loadingState == null) {
+    let loadingState: DbxLoadingComponentState;
+
+    if (contextStreamEvent) {
+      loadingState = {
+        loading: contextStreamEvent.loading === true ? (contextStreamEvent.loadingProgress ?? true) : false,
+        error: contextStreamEvent.error
+      };
+    } else {
       loadingState = {
         loading: loading ?? false,
         error: error

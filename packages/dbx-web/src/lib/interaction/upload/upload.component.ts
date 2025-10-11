@@ -47,7 +47,7 @@ export interface DbxFileUploadComponentConfig {
     </dbx-file-upload-area>
     <!-- Button Template -->
     <ng-template #buttonTemplate>
-      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="buttonFilesChanged($event)" [disabled]="disabledSignal()" [working]="workingSignal()"></dbx-file-upload-button>
+      <dbx-file-upload-button #button [text]="buttonTextSignal()" [icon]="buttonIconSignal()" [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="buttonFilesChanged($event)" [disabled]="disabledSignal()" [working]="workingSignal()" [buttonStyle]="buttonStyle()"></dbx-file-upload-button>
     </ng-template>
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadComponent),
@@ -60,6 +60,7 @@ export class DbxFileUploadComponent extends AbstractDbxFileUploadComponent {
 
   readonly area = viewChild.required<string, DbxFileUploadAreaComponent>('area', { read: DbxFileUploadAreaComponent });
   readonly button = viewChild.required<string, DbxFileUploadButtonComponent>('button', { read: DbxFileUploadButtonComponent });
+  readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
   readonly mode = input<Maybe<DbxFileUploadMode>>();
   readonly text = input<Maybe<string>>(); // button text

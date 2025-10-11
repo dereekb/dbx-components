@@ -16,6 +16,7 @@ export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
  */
 export interface DbxButtonStyle {
   readonly type?: DbxButtonType;
+  readonly mode?: ProgressSpinnerMode;
   readonly color?: ThemePalette | DbxThemeColor;
   readonly spinnerColor?: ThemePalette | DbxThemeColor;
   readonly customButtonColor?: string;
@@ -107,46 +108,50 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       [key: string]: string;
     };
 
-    const style = this.buttonStyle();
-    const customButtonColorValue = this.customButtonColor() ?? style?.customButtonColor;
+    const buttonStyle = this.buttonStyle();
+    const customButtonColorValue = this.customButtonColor() ?? buttonStyle?.customButtonColor;
 
     if (customButtonColorValue) {
       customStyle['background'] = customButtonColorValue;
     }
 
-    const customTextColorValue = this.customTextColor() ?? style?.customTextColor;
+    const customTextColorValue = this.customTextColor() ?? buttonStyle?.customTextColor;
 
     if (customTextColorValue) {
       customStyle['color'] = customTextColorValue;
     }
 
-    const customSpinnerColorValue = this.customSpinnerColor() ?? style?.customSpinnerColor;
+    const customSpinnerColorValue = this.customSpinnerColor() ?? buttonStyle?.customSpinnerColor;
     const customSpinnerColor: Maybe<string> = customSpinnerColorValue ?? customTextColorValue;
 
-    const buttonColor = this.color() ?? style?.color;
-    const spinnerColor = this.spinnerColor() ?? style?.spinnerColor ?? buttonColor;
+    const buttonColor = this.color() ?? buttonStyle?.color;
+    const spinnerColor = this.spinnerColor() ?? buttonStyle?.spinnerColor ?? buttonColor;
 
     const disabledSignalValue = this.disabledSignal();
-    const disabled = !this.workingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.
+    const disabled = !this.isWorkingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.
 
     const iconValue = this.iconSignal();
     const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
 
     const textValue = this.textSignal();
     const isIconOnlyButton = buttonIcon && !textValue;
-    const fab = this.fab() || style?.fab;
+    const fab = this.fab() || buttonStyle?.fab;
+
+    const mode = this.mode() ?? buttonStyle?.mode;
+    const working = this.workingSignal();
+    const buttonType = this.typeSignal();
 
     const config: Configurable<DbxProgressButtonConfig> = {
       fab,
-      working: this.workingSignal(),
+      working,
       buttonIcon,
       customStyle,
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
       text: textValue ?? '',
-      buttonType: this.typeSignal(),
+      buttonType,
       buttonColor,
       barColor: 'accent',
-      mode: this.mode(),
+      mode,
       spinnerColor,
       customSpinnerColor,
       disabled

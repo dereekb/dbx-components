@@ -18,7 +18,7 @@ export class DbxFileUploadActionSyncDirective implements OnInit, OnDestroy {
   private readonly _disabledSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    this._workingSub.subscription = this.source.isWorking$.subscribe((working) => {
+    this._workingSub.subscription = this.source.isWorkingOrWorkProgress$.subscribe((working) => {
       this.uploadCompatable.setWorking(working);
     });
 

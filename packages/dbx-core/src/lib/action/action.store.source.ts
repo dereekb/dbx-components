@@ -1,5 +1,5 @@
 import { first, switchMap, Observable, Subscription } from 'rxjs';
-import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
+import { LockSet, filterMaybe, LoadingState, LoadingStateType, MaybeObservableOrValue } from '@dereekb/rxjs';
 import { Destroyable, Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
 import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkOrWorkProgress, DbxActionWorkProgress } from './action';
@@ -149,8 +149,8 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
     return this.pipeStore((x) => x.isWorking$);
   }
 
-  get workingOrWorkProgress$(): Observable<DbxActionWorkOrWorkProgress> {
-    return this.pipeStore((x) => x.workOrWorkProgress$);
+  get isWorkingOrWorkProgress$(): Observable<DbxActionWorkOrWorkProgress> {
+    return this.pipeStore((x) => x.isWorkingOrWorkProgress$);
   }
 
   get isSuccess$(): Observable<boolean> {
@@ -183,6 +183,10 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
 
   public setIsModified(isModified?: boolean | Observable<boolean> | Observable<void>): void {
     this.useStore((x) => x.setIsModified(isModified));
+  }
+
+  public setWorkProgress(workProgress: MaybeObservableOrValue<DbxActionWorkProgress>): void {
+    this.useStore((x) => x.setWorkProgress(workProgress));
   }
 
   public trigger(): void {

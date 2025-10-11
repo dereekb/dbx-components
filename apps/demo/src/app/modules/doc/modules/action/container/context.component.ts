@@ -1,11 +1,12 @@
 import { DbxActionDirective, DbxActionDirective as DbxActionDirective_1 } from '@dereekb/dbx-core';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { DbxContentContainerDirective, DbxButtonSpacerDirective, DbxContentBorderDirective, DbxLoadingComponent, DbxActionLoadingContextDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButton } from '@angular/material/button';
 import { NgIf, NgTemplateOutlet, AsyncPipe, JsonPipe } from '@angular/common';
 import { DocActionExampleToolsComponent } from '../component/action.example.tool.component';
+import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 @Component({
   templateUrl: './context.component.html',
@@ -15,6 +16,7 @@ import { DocActionExampleToolsComponent } from '../component/action.example.tool
 export class DocActionContextComponent {
   beginWorking(action: DbxActionDirective) {
     action.sourceInstance.startWorking();
+    action.sourceInstance.setWorkProgress(DEMO_WORKING_INCREASE_OBSERVABLE);
   }
 
   stopWorking(action: DbxActionDirective, success: boolean) {

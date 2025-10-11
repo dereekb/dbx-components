@@ -1,5 +1,5 @@
 import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
+import { isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, DbxButtonWorking, provideDbxButton } from './button';
@@ -28,6 +28,11 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   readonly disabledSignal = computed(() => this._disabledSignal() ?? this.disabled());
   readonly workingSignal = computed(() => this._workingSignal() ?? this.working());
+
+  readonly isWorkingSignal = computed(() => {
+    const working = this.workingSignal();
+    return isDefinedAndNotFalse(working);
+  });
 
   readonly icon = input<Maybe<string>>();
   readonly text = input<Maybe<string>>();

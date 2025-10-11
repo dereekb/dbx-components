@@ -1,9 +1,9 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
-import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs';
+import { Observable, distinctUntilChanged, filter, map, shareReplay, switchMap, startWith, of } from 'rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtility, Maybe, ReadableError } from '@dereekb/util';
-import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
-import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
+import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading, tapLog } from '@dereekb/rxjs';
+import { DbxActionDisabledKey, DbxActionRejectedPair, DbxActionState, DbxActionSuccessPair, DbxActionWorkOrWorkProgress, DbxActionWorkProgress, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtility.isFalse(state.disabled);
@@ -57,7 +57,7 @@ export function loadingStateForActionContextState<O = unknown>(state: ActionCont
       loadingState = idleLoadingState();
       break;
     default:
-      loadingState = beginLoading();
+      loadingState = beginLoading(state.workProgress != null ? { loadingProgress: state.workProgress } : undefined);
       break;
   }
 
@@ -197,13 +197,21 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Pipes the current work or work progress.
    */
-  readonly workOrWorkProgress$ = this.isWorking$.pipe(
-    switchMap((x) =>
-      this.workProgress$.pipe(
-        filter((x) => x != null),
-        startWith(x)
-      )
-    ),
+  readonly isWorkingOrWorkProgress$ = this.isWorking$.pipe(
+    switchMap((x) => {
+      let obs: Observable<DbxActionWorkOrWorkProgress>;
+
+      if (x) {
+        obs = this.workProgress$.pipe(
+          filter((x) => x != null),
+          startWith(x)
+        );
+      } else {
+        obs = of(x);
+      }
+
+      return obs;
+    }),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -236,7 +244,22 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    * Returns a loading state based on the current state.
    */
   readonly loadingState$ = this.afterDistinctLoadingStateTypeChange().pipe(
-    map((x) => loadingStateForActionContextState<O>(x)),
+    switchMap((x) => {
+      const base = loadingStateForActionContextState<O>(x);
+      let obs: Observable<LoadingState<O>>;
+
+      if (base.loading === true) {
+        obs = this.workProgress$.pipe(
+          filter((x) => x != null),
+          map((loadingProgress) => ({ ...base, loadingProgress })),
+          startWith(base)
+        );
+      } else {
+        obs = of(base);
+      }
+
+      return obs;
+    }),
     shareReplay(1)
   );
 
@@ -331,7 +354,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Updates the working progress.
    */
-  readonly setWorkProgress = this.updater((state, workProgress: DbxActionWorkProgress) => ({ ...state, workProgress }));
+  readonly setWorkProgress = this.updater((state, workProgress: Maybe<DbxActionWorkProgress>) => ({ ...state, workProgress }));
 
   /**
    * Triggers rejection of the action. The value is cleared.

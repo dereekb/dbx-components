@@ -7,3 +7,4 @@ export * from './loading.context.value';
 export * from './loading.state.list';
 export * from './loading.state';
 export * from './loading.state.rxjs';
+export * from './loading';

@@ -276,7 +276,7 @@ export function cachedDbxTableReader<C, T, O>(config: CachedDbxTableReaderConfig
           observables.push(observable);
         });
 
-        return combineLatest(observables).pipe(tapLog('combined latest'), filterMaybeArray(), startWith([]));
+        return combineLatest(observables).pipe(filterMaybeArray(), startWith([]));
       }),
       tap((cellData) => {
         if (column.columnName === '2025-06-23') {

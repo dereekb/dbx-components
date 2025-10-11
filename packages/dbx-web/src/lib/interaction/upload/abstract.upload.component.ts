@@ -1,7 +1,8 @@
 import { computed, Directive, input, signal, Type } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
 import { FileArrayAcceptMatchConfig, FileArrayAcceptMatchResult } from './upload.accept';
 import { DbxFileUploadActionCompatable } from './upload.action';
+import { DbxActionWorkOrWorkProgress, DbxButtonWorking } from '@dereekb/dbx-core';
 
 // MARK: Abstract
 export interface DbxFileUploadFilesChangedEvent {
@@ -31,7 +32,7 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
   /**
    * This working is input-only
    */
-  readonly working = input<Maybe<boolean>>();
+  readonly working = input<Maybe<DbxButtonWorking>>();
 
   /**
    * This signal is set by setMultiple
@@ -51,7 +52,7 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
   /**
    * This signal is set by setWorking
    */
-  private readonly _workingSignal = signal<Maybe<boolean>>(undefined);
+  private readonly _workingSignal = signal<Maybe<DbxButtonWorking>>(undefined);
 
   readonly multipleSignal = computed(() => {
     const multipleInput = this.multiple();
@@ -68,7 +69,7 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
   readonly disabledSignal = computed(() => {
     const disabledInput = this.disabled();
     const disabledSignal = this._disabledSignal();
-    const workingSignal = this._workingSignal();
+    const workingSignal = this.isWorkingSignal();
 
     // disabled if any are true
     return disabledInput || disabledSignal || workingSignal;
@@ -80,12 +81,17 @@ export abstract class AbstractDbxFileUploadComponent implements DbxFileUploadAct
     return workingSignal ?? workingInput;
   });
 
+  readonly isWorkingSignal = computed(() => {
+    const working = this.workingSignal();
+    return isDefinedAndNotFalse(working);
+  });
+
   // MARK: DbxUploadActionCompatable
   setDisabled(disabled?: Maybe<boolean>): void {
     this._disabledSignal.set(disabled);
   }
 
-  setWorking(working?: Maybe<boolean>): void {
+  setWorking(working?: Maybe<DbxButtonWorking>): void {
     this._workingSignal.set(working);
   }
 

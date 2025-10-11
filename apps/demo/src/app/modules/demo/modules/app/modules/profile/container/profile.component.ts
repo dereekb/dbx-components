@@ -3,7 +3,7 @@ import { WorkUsingContext, IsModifiedFunction, loadingStateContext } from '@dere
 import { DbxFirebaseAuthService, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, StorageFileUploadConfig, storageFileUploadHandler, StorageFileUploadHandler } from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, DemoProfileFormValue, DemoProfileUsernameFormComponent, DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
-import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { AsyncPipe } from '@angular/common';
 import { userAvatarUploadsFilePath } from 'demo-firebase';
@@ -12,7 +12,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 @Component({
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],
-  imports: [DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, AsyncPipe, DbxLoadingComponent, DbxContentBoxDirective, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxFirebaseStorageFileUploadModule, DbxAvatarComponent, DbxLoadingProgressComponent],
+  imports: [DbxLoadingProgressComponent, DemoProfileUsernameFormComponent, DemoProfileFormComponent, DbxSectionLayoutModule, DbxActionFormDirective, DbxFormSourceDirective, AsyncPipe, DbxLoadingComponent, DbxContentBoxDirective, DbxSectionComponent, DemoProfileUsernameFormComponent, DbxButtonModule, DbxActionModule, DbxErrorComponent, DbxActionErrorDirective, DbxFirebaseStorageFileUploadModule, DbxLabelBlockComponent, DbxAvatarComponent, DbxLoadingProgressComponent],
   standalone: true
 })
 export class DemoProfileViewComponent implements OnInit {

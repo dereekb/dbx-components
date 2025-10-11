@@ -5,7 +5,7 @@ import { storageFileUploadFiles, StorageFileUploadFilesFinalResult, StorageFileU
 import { DbxActionContextStoreSourceInstance, DbxActionHandlerInstance } from '@dereekb/dbx-core';
 import { errorResult, LoadingState, startWithBeginLoading, SubscriptionObject, successResult, WorkUsingContext } from '@dereekb/rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, of, switchMap, tap } from 'rxjs';
+import { distinctUntilChanged, filter, map, of, switchMap, tap, throttleTime } from 'rxjs';
 import { StorageFileUploadFilesError } from './storagefile.upload.error';
 
 /**
@@ -19,6 +19,7 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnIni
   private readonly _triggerSub = new SubscriptionObject();
   private readonly _readySub = new SubscriptionObject();
   private readonly _isWorkingSub = new SubscriptionObject();
+  private readonly _progressSub = new SubscriptionObject();
 
   readonly source = inject(DbxActionContextStoreSourceInstance<File[], StorageFileUploadFilesFinalResult>);
   readonly uploadStore = inject(DbxFirebaseStorageFileUploadStore);
@@ -64,11 +65,7 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnIni
 
         const loadingStateObs = upload.pipe(
           tap((x) => {
-            const progress = x.uploadProgress;
-
-            if (progress) {
-              this.uploadStore.updateUploadProgress(progress);
-            }
+            this.uploadStore.setLatestProgressEvent(x);
           }),
           filter((x) => x.isComplete),
           tap((x) => {
@@ -132,6 +129,15 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective implements OnIni
 
     // sync isWorking
     this._isWorkingSub.subscription = this.uploadStore.setIsUploadHandlerWorking(this.source.isWorking$);
+
+    // sync progress amount
+    this._progressSub.subscription = this.source.setWorkProgress(
+      this.uploadStore.latestProgressEvent$.pipe(
+        throttleTime(100, undefined, { leading: true, trailing: true }),
+        map((x) => x?.overallProgress),
+        distinctUntilChanged()
+      )
+    );
   }
 
   ngOnDestroy(): void {

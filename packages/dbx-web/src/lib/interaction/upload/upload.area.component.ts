@@ -41,7 +41,7 @@ export type DbxFileUploadAreaFilesChangedEvent = DbxFileUploadFilesChangedEvent;
     class: 'dbx-file-upload-area dbx-block',
     '[class.dbx-file-upload-area-with-hint]': 'hintSignal()',
     '[class.dbx-file-upload-area-disabled]': 'disabledSignal()',
-    '[class.dbx-file-upload-area-working]': 'workingSignal()',
+    '[class.dbx-file-upload-area-working]': 'isWorkingSignal()',
     '[class.dbx-file-upload-area-drag-over]': '!disabledSignal() && dragOverStateSignal()'
   },
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadAreaComponent),

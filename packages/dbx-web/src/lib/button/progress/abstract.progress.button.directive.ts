@@ -1,6 +1,6 @@
 import { OnDestroy, Directive, HostListener, inject, computed, input, Signal, output } from '@angular/core';
-import { AbstractSubscriptionDirective, type DbxActionWorkProgress, type DbxButtonWorking } from '@dereekb/dbx-core';
-import { Configurable, CssClass, type Maybe } from '@dereekb/util';
+import { AbstractSubscriptionDirective, dbxActionWorkProgress, type DbxActionWorkProgress, type DbxButtonWorking } from '@dereekb/dbx-core';
+import { Configurable, CssClass, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonConfig, DbxProgressButtonTargetedConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { DbxButtonType } from '../button.component';
@@ -97,30 +97,14 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     const config = this.configSignal();
     const configWorking = config?.working;
 
-    const workingValue = working ?? configWorking;
-    const isWorking = workingValue != null && workingValue !== false;
-    const configValue = config?.value;
-
-    let workingProgress: DbxButtonWorking;
-
-    if (isWorking) {
-      if (typeof workingValue === 'number') {
-        workingProgress = workingValue;
-      } else {
-        workingProgress = configValue ?? true;
-      }
-    } else {
-      workingProgress = false;
-    }
-
+    const workingProgress = dbxActionWorkProgress([working, configWorking], config?.value);
     return workingProgress;
   });
 
-  readonly isWorkingSignal = computed(() => this.workingProgressSignal() !== false);
+  readonly isWorkingSignal = computed(() => isDefinedAndNotFalse(this.workingProgressSignal()));
 
   readonly workingValueSignal: Signal<Maybe<DbxActionWorkProgress>> = computed(() => {
     const working = this.workingProgressSignal();
-
     let result: Maybe<DbxActionWorkProgress>;
 
     if (typeof working === 'number') {
@@ -132,13 +116,13 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
 
   readonly modeSignal: Signal<ProgressSpinnerMode> = computed(() => {
     const config = this.configSignal();
-    const workingValueSignal = this.workingValueSignal();
+    const workingValue = this.workingValueSignal();
 
     const mode = config?.mode;
     let result: ProgressSpinnerMode;
 
     if (!mode) {
-      if (workingValueSignal != null) {
+      if (workingValue != null) {
         result = 'determinate';
       } else {
         result = 'indeterminate';

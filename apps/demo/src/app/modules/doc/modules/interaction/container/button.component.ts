@@ -7,8 +7,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MatIcon } from '@angular/material/icon';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatButtonModule } from '@angular/material/button';
-import { interval, map } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
+import { DEMO_WORKING_INCREASE_OBSERVABLE } from '../../shared/progress';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
@@ -19,20 +19,6 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 })
 export class DocInteractionButtonComponent {
   private readonly _workingIncreaseSub = new SubscriptionObject();
-
-  readonly workingIncreaseObs = interval(100).pipe(
-    map((x) => {
-      const parts = 30;
-      const halfParts = parts / 2;
-      const pieceValue = 100 / parts;
-
-      const xLoop = x % parts;
-      const xVal = (x % halfParts) * pieceValue;
-      const value = xLoop < halfParts ? xVal : 100 - xVal;
-
-      return value;
-    })
-  );
 
   readonly workingPercentSignal = signal(0);
 
@@ -275,6 +261,6 @@ export class DocInteractionButtonComponent {
   clickBar5 = this.activateAndDeactivate('barButtonConfig4');
 
   constructor() {
-    this._workingIncreaseSub.subscription = this.workingIncreaseObs.subscribe((x) => this.workingPercentSignal.set(x));
+    this._workingIncreaseSub.subscription = DEMO_WORKING_INCREASE_OBSERVABLE.subscribe((x) => this.workingPercentSignal.set(x));
   }
 }

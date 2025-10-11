@@ -10,7 +10,7 @@ export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEven
 @Component({
   selector: 'dbx-file-upload-button',
   template: `
-    <dbx-button [style]="buttonStyle()" [text]="text()" [icon]="icon()" (buttonClick)="openInput()" [disabled]="disabledSignal()" [working]="workingSignal()">
+    <dbx-button [buttonStyle]="buttonStyle()" [text]="text()" [icon]="icon()" (buttonClick)="openInput()" [disabled]="disabledSignal()" [working]="workingSignal()">
       <ng-content></ng-content>
     </dbx-button>
     <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleAttributeSignal() ? '' : null" (change)="fileInputChanged()" />
@@ -25,7 +25,7 @@ export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent
 
   readonly text = input<Maybe<string>>();
   readonly icon = input<Maybe<string>>();
-  readonly buttonStyle = input<DbxButtonStyle>();
+  readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
   readonly filesChanged = output<DbxFileUploadButtonFilesChangedEvent>();
 
