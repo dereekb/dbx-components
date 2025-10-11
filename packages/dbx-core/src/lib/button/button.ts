@@ -1,6 +1,16 @@
 import { Type, Provider, forwardRef } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
+import { type DbxActionWorkOrWorkProgress } from '../action/action';
+
+/**
+ * Working state for a button.
+ *
+ * Can be a boolean or a number.
+ *
+ * True is treated as an indeterminate progress.
+ */
+export type DbxButtonWorking = DbxActionWorkOrWorkProgress;
 
 /**
  * Used for intercepting button click events.
@@ -36,7 +46,7 @@ export abstract class DbxButton {
   /**
    * Observable of the working state of the button.
    */
-  abstract readonly working$: Observable<boolean>;
+  abstract readonly working$: Observable<DbxButtonWorking>;
   /**
    * Observable of the clicked event of the button.
    */
@@ -52,11 +62,15 @@ export abstract class DbxButton {
    */
   abstract setDisabled(disabled?: Maybe<boolean>): void;
   /**
-   * Sets the working state of the button. IF null/undefined the button will be marked as working.
+   * Sets the working state of the button.
    *
-   * @param working
+   * If a number is passed, then it is treated as a progress percentage.
+   *
+   * If true is passed, then it is treated as an indeterminate progress.
+   *
+   * If null/undefined is passed, then the button will not be working.
    */
-  abstract setWorking(working?: Maybe<boolean>): void;
+  abstract setWorking(working?: Maybe<DbxButtonWorking>): void;
   /**
    * Sets the display content of the button.
    *

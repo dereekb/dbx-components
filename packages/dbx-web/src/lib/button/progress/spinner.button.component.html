@@ -19,6 +19,6 @@
     </ng-container>
   }
   @if (showProgressSignal()) {
-    <mat-spinner class="spinner" [diameter]="spinnerSizeSignal()" [color]="configSignal()?.spinnerColor!" [mode]="configSignal()?.mode!" [value]="configSignal()?.value!" [ngStyle]="customSpinnerStyleSignal()" [ngClass]="customSpinnerStyleClassSignal()" [class.working]="showProgressSignal()"></mat-spinner>
+    <mat-spinner class="spinner" [diameter]="spinnerSizeSignal()" [color]="configSignal()?.spinnerColor!" [mode]="modeSignal()" [value]="workingValueSignal()" [ngStyle]="customSpinnerStyleSignal()" [ngClass]="customSpinnerStyleClassSignal()" [class.working]="showProgressSignal()"></mat-spinner>
   }
 </button>

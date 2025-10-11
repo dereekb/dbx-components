@@ -1,7 +1,7 @@
 import { catchError, map, Observable, of, shareReplay } from 'rxjs';
 import { DbxFirebaseStorageFileUploadStoreFileProgress } from '../store';
 import { DbxFirebaseStorageService } from '../../../storage/firebase.storage.service';
-import { IndexNumber, Maybe, PercentNumber, PromiseOrValue, runAsyncTasksForValues, separateValues } from '@dereekb/util';
+import { IndexNumber, Maybe, PercentDecimal, PercentNumber, PromiseOrValue, runAsyncTasksForValues, separateValues } from '@dereekb/util';
 import { MultiSubscriptionObject } from '@dereekb/rxjs';
 import { FirebaseStorageAccessorFile, StorageCustomMetadata, StoragePathInput, StorageUploadOptions, StorageUploadTask } from '@dereekb/firebase';
 
@@ -317,7 +317,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
 
   const allFilesAndLatestProgress: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>[] = new Array(allFiles.length);
   const allFilesAndDetails: FileUploadDetails[] = allFiles.map((file) => ({ file }));
-  const overallProgressPerCompletedFile: PercentNumber = 100 / allFilesAndLatestProgress.length;
+  const overallProgressPerCompletedFile: PercentDecimal = (1 / allFilesAndLatestProgress.length) as PercentDecimal;
 
   /**
    * Once set, any new file upload task that hits this will return an cancel failure.
@@ -334,7 +334,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
     let incompleteFileFileIndexes = new Set<IndexNumber>(allFiles.map((_, index) => index));
     let activeFileIndexes = new Set<IndexNumber>();
     let doneFileIndexes = new Set<IndexNumber>();
-    let latestOverallProgress = 0;
+    let latestOverallProgress: PercentNumber = 0;
 
     function onStartFileUpload(index: IndexNumber, uploadInstance: StorageFileUploadHandlerInstance) {
       activeFileIndexes.add(index);
@@ -373,13 +373,12 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       // update the overall progress percentage
       if (nextProgressPercent) {
         // update the overall percentage
-        if (nextProgressPercent) {
-          const previousProgress = allFilesAndLatestProgress[fileIndex];
-          const progressPercentChange = nextProgressPercent - (previousProgress?.progress ?? 0);
+        const previousProgress = allFilesAndLatestProgress[fileIndex];
+        const previousProgressPercent = previousProgress?.progress != null ? previousProgress.progress * 100 : 0;
+        const progressPercentChange = nextProgressPercent - previousProgressPercent;
 
-          // increase overall progress by the change
-          nextOverallProgress += progressPercentChange * overallProgressPerCompletedFile;
-        }
+        // increase overall progress by the change
+        nextOverallProgress += progressPercentChange * overallProgressPerCompletedFile;
       }
 
       // update the file progress
@@ -397,12 +396,6 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
       if (fileUploadTaskDone) {
         _markFileUploadDone(fileIndex, error);
       }
-
-      console.log({
-        latestOverallProgress,
-        nextOverallProgress,
-        nextProgressPercent
-      });
 
       // update the overall progress
       latestOverallProgress = nextOverallProgress;

@@ -13,7 +13,7 @@ export type DbxFileUploadButtonFilesChangedEvent = DbxFileUploadFilesChangedEven
     <dbx-button [style]="buttonStyle()" [text]="text()" [icon]="icon()" (buttonClick)="openInput()" [disabled]="disabledSignal()" [working]="workingSignal()">
       <ng-content></ng-content>
     </dbx-button>
-    <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleSignal()" (change)="fileInputChanged()" />
+    <input #fileInput hidden type="file" [attr.accept]="buttonAcceptSignal() ?? null" [attr.multiple]="multipleAttributeSignal() ? '' : null" (change)="fileInputChanged()" />
   `,
   providers: provideDbxFileUploadActionCompatable(DbxFileUploadButtonComponent),
   imports: [DbxButtonComponent],
@@ -41,6 +41,11 @@ export class DbxFileUploadButtonComponent extends AbstractDbxFileUploadComponent
     const multiple = this.buttonMultipleSignal();
     return typeof accept === 'function' ? fileArrayAcceptMatchFunction({ multiple, accept }) : undefined;
   });
+
+  /**
+   * The HTML attribute should not be added if it is false, so we return null.
+   */
+  readonly multipleAttributeSignal = computed(() => (this.buttonMultipleSignal() ? '' : null));
 
   openInput() {
     const inputRef = this.fileInput();

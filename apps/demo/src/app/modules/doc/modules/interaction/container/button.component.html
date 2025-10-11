@@ -6,7 +6,15 @@
       <dbx-button text="Test Button" (buttonClick)="onTestClick()"></dbx-button>
 
       <h4>Working</h4>
-      <dbx-button [working]="true" text="Test Button"></dbx-button>
+      <div>
+        <dbx-button [working]="true" text="Test Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" text="Test Bar Button" [bar]="true" [raised]="true"></dbx-button>
+      </div>
+      <p>(Determinate)</p>
+      <dbx-button [working]="workingPercentSignal()" text="Test Determinate Button"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button [working]="workingPercentSignal()" text="Test Determinate Bar Button" [bar]="true" [raised]="true"></dbx-button>
 
       <h4>Disabled</h4>
       <dbx-button [disabled]="true" text="Test Button"></dbx-button>

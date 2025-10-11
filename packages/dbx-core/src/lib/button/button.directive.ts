@@ -2,7 +2,7 @@ import { Directive, OnDestroy, OnInit, Signal, computed, input, output, signal }
 import { type Maybe } from '@dereekb/util';
 import { of, Subject, filter, first, switchMap, BehaviorSubject } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, provideDbxButton } from './button';
+import { DbxButton, DbxButtonDisplay, DbxButtonDisplayType, dbxButtonDisplayType, DbxButtonInterceptor, DbxButtonWorking, provideDbxButton } from './button';
 import { outputToObservable, toObservable } from '@angular/core/rxjs-interop';
 
 /**
@@ -19,11 +19,11 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   readonly buttonClick = output();
 
   readonly disabled = input<boolean, Maybe<boolean>>(false, { transform: Boolean });
-  readonly working = input<boolean, Maybe<boolean>>(false, { transform: Boolean });
+  readonly working = input<DbxButtonWorking, Maybe<DbxButtonWorking>>(false, { transform: (x) => (x == null ? false : x) });
   readonly buttonDisplay = input<Maybe<DbxButtonDisplay>>(undefined);
 
   private readonly _disabledSignal = signal<Maybe<boolean>>(undefined);
-  private readonly _workingSignal = signal<Maybe<boolean>>(undefined);
+  private readonly _workingSignal = signal<Maybe<DbxButtonWorking>>(undefined);
   private readonly _buttonDisplayContentSignal = signal<Maybe<DbxButtonDisplay>>(undefined);
 
   readonly disabledSignal = computed(() => this._disabledSignal() ?? this.disabled());
@@ -84,7 +84,7 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
     this._disabledSignal.set(disabled);
   }
 
-  setWorking(working?: Maybe<boolean>): void {
+  setWorking(working?: Maybe<DbxButtonWorking>): void {
     this._workingSignal.set(working);
   }
 

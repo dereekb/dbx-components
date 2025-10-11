@@ -5,6 +5,9 @@ import { Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonConfig } from './progress/button.progress.config';
 import { type DbxThemeColor } from '../layout/style/style';
 import { DbxProgressSpinnerButtonComponent } from './progress';
+import { DbxProgressBarButtonComponent } from './progress';
+import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { NgTemplateOutlet } from '@angular/common';
 
 export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
 
@@ -37,16 +40,28 @@ export enum DbxButtonDisplayType {
 @Component({
   selector: 'dbx-button',
   template: `
-    <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()">
+    @if (bar()) {
+      <dbx-progress-bar-button (btnClick)="clickButton()" [config]="configSignal()">
+        <ng-template [ngTemplateOutlet]="content"></ng-template>
+      </dbx-progress-bar-button>
+    } @else {
+      <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()">
+        <ng-template [ngTemplateOutlet]="content"></ng-template>
+      </dbx-progress-spinner-button>
+    }
+    <!-- Content -->
+    <ng-template #content>
       <ng-content></ng-content>
-    </dbx-progress-spinner-button>
+    </ng-template>
   `,
   providers: provideDbxButton(DbxButtonComponent),
-  imports: [DbxProgressSpinnerButtonComponent],
+  imports: [DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
+  readonly bar = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+
   readonly type = input<Maybe<DbxButtonType>>();
   readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
@@ -62,6 +77,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+
+  readonly mode = input<Maybe<ProgressSpinnerMode>>();
 
   readonly typeSignal = computed(() => {
     const style = this.buttonStyle();
@@ -129,7 +146,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       buttonType: this.typeSignal(),
       buttonColor,
       barColor: 'accent',
-      mode: 'indeterminate',
+      mode: this.mode(),
       spinnerColor,
       customSpinnerColor,
       disabled

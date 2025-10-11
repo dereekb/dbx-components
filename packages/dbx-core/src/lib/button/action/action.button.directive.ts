@@ -16,7 +16,7 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective im
   override ngOnInit(): void {
     super.ngOnInit();
 
-    this._workingSub.subscription = this.source.isWorking$.subscribe((working) => {
+    this._workingSub.subscription = this.source.workingOrWorkProgress$.subscribe((working) => {
       this.dbxButton.setWorking(working);
     });
 

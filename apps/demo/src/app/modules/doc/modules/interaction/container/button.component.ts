@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { DbxButtonDisplay } from '@dereekb/dbx-core';
 import { DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxIconButtonComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective } from '@dereekb/dbx-web';
 import { Milliseconds } from '@dereekb/util';
@@ -7,6 +7,8 @@ import { DocFeatureExampleComponent } from '../../shared/component/feature.examp
 import { MatIcon } from '@angular/material/icon';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { MatButtonModule } from '@angular/material/button';
+import { interval, map } from 'rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 const DEMO_SPINNER_TIME: Milliseconds = 3350;
 
@@ -16,6 +18,24 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
   imports: [DbxContentContainerDirective, MatButtonModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DbxIconButtonComponent, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxColorDirective]
 })
 export class DocInteractionButtonComponent {
+  private readonly _workingIncreaseSub = new SubscriptionObject();
+
+  readonly workingIncreaseObs = interval(100).pipe(
+    map((x) => {
+      const parts = 30;
+      const halfParts = parts / 2;
+      const pieceValue = 100 / parts;
+
+      const xLoop = x % parts;
+      const xVal = (x % halfParts) * pieceValue;
+      const value = xLoop < halfParts ? xVal : 100 - xVal;
+
+      return value;
+    })
+  );
+
+  readonly workingPercentSignal = signal(0);
+
   testClicked = '';
 
   onTestClick() {
@@ -253,4 +273,8 @@ export class DocInteractionButtonComponent {
   clickBar3 = this.activateAndDeactivate('barButtonConfig2');
   clickBar4 = this.activateAndDeactivate('barButtonConfig3');
   clickBar5 = this.activateAndDeactivate('barButtonConfig4');
+
+  constructor() {
+    this._workingIncreaseSub.subscription = this.workingIncreaseObs.subscribe((x) => this.workingPercentSignal.set(x));
+  }
 }
