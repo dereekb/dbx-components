@@ -1,6 +1,32 @@
 <dbx-section-page header="Profile">
   <dbx-loading [linear]="true" [context]="context">
     <dbx-content-box [wide]="true">
+      <dbx-section header="Avatar">
+        <div class="dbx-flex-bar" dbxFirebaseStorageFileUploadStore [multipleUpload]="false" fileTypesAccepted="image/*">
+          <ng-content>
+            <div dbxAction dbxFirebaseStorageFileDocument dbxFirebaseStorageFileUploadInitializeDocument>
+              <div class="dbx-flex-bar">
+                <dbx-loading dbxActionLoadingContext>
+                  <dbx-avatar avatarSize="large" [avatarUrl]="avatarUrlSignal()"></dbx-avatar>
+                </dbx-loading>
+                <span class="dbx-button-spacer"></span>
+                <div>
+                  <dbx-label-block header="Profile Picture">
+                    <div class="dbx-hint">A clear, professional headshot is recommended.</div>
+                  </dbx-label-block>
+                </div>
+              </div>
+            </div>
+            <span class="dbx-spacer"></span>
+            <!-- Action Space -->
+            <div dbxAction dbxActionLogger dbxActionSnackbarError [dbxFirebaseStorageFileUploadActionHandler]="avatarUploadHandler" [triggerOnFiles]="true">
+              <dbx-file-upload [buttonStyle]="{ type: 'raised' }" dbxFileUploadActionSync mode="button" icon="upload" text="Upload Photo" dbxFirebaseStorageFileUploadSync></dbx-file-upload>
+            </div>
+          </ng-content>
+        </div>
+      </dbx-section>
+    </dbx-content-box>
+    <dbx-content-box [wide]="true">
       <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ username$ | async }})" hint="Change your profile username.">
         <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormIsModified]="isUsernameModified"></demo-profile-username-form>
         <dbx-button dbxActionButton text="Change Username"></dbx-button>

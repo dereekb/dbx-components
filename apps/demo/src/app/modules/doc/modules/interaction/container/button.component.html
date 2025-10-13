@@ -6,7 +6,15 @@
       <dbx-button text="Test Button" (buttonClick)="onTestClick()"></dbx-button>
 
       <h4>Working</h4>
-      <dbx-button [working]="true" text="Test Button"></dbx-button>
+      <div>
+        <dbx-button [working]="true" text="Test Button"></dbx-button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <dbx-button [working]="true" text="Test Bar Button" [bar]="true" [raised]="true"></dbx-button>
+      </div>
+      <p>(Determinate)</p>
+      <dbx-button [working]="workingPercentSignal()" text="Test Determinate Button"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button [working]="workingPercentSignal()" text="Test Determinate Bar Button" [bar]="true" [raised]="true"></dbx-button>
 
       <h4>Disabled</h4>
       <dbx-button [disabled]="true" text="Test Button"></dbx-button>
@@ -389,13 +397,13 @@
         <dbx-button color="accent" [raised]="true" text="Test Button"></dbx-button>
       </dbx-content-pit>
 
-      <h3>.dbx-button-big</h3>
+      <h3>.</h3>
       <p>Makes the button taller.</p>
 
       <dbx-content-pit>
-        <dbx-button class="dbx-button-big" color="primary" [raised]="true" text="Test Button"></dbx-button>
+        <dbx-button class="" color="primary" [raised]="true" text="Test Button"></dbx-button>
         <dbx-button-spacer></dbx-button-spacer>
-        <dbx-button class="dbx-button-big" color="accent" [raised]="true" text="Test Button"></dbx-button>
+        <dbx-button class="" color="accent" [raised]="true" text="Test Button"></dbx-button>
       </dbx-content-pit>
 
       <h3>.dbx-button-text-option-button</h3>

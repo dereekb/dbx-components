@@ -1,5 +1,11 @@
 export const DOC_LAYOUT_ROUTES = [
   {
+    icon: 'account_circle',
+    title: 'Avatar',
+    detail: 'dbx-avatar',
+    ref: 'doc.layout.avatar'
+  },
+  {
     icon: 'view_module',
     title: 'Bar',
     detail: 'dbx-bar',

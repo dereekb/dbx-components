@@ -39,7 +39,7 @@ export interface FirebaseStorageContextFactoryConfig {
 export function firebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage>(drivers: FirebaseStorageDrivers): FirebaseStorageContextFactory<F> {
   return (firebaseStorage: F, config?: FirebaseStorageContextFactoryConfig) => {
     const { defaultBucketId: inputDefaultBucketId, forceBucket = false } = config ?? {};
-    const defaultBucketId: StorageBucketId = inputDefaultBucketId || drivers.storageAccessorDriver.defaultBucket?.(firebaseStorage) || '';
+    const defaultBucketId: StorageBucketId = inputDefaultBucketId || drivers.storageAccessorDriver.getDefaultBucket?.(firebaseStorage) || '';
 
     if (!defaultBucketId) {
       throw new Error('Could not resolve a default bucket id for the firebaseStorageContextFactory(). Supply a defaultBucketId.');

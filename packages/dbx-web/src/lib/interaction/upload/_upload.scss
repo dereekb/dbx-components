@@ -1,0 +1,100 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
+@use '../../style/theming';
+
+// Sections
+@mixin core() {
+  .dbx-file-upload-area-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border: 2px;
+    border-style: dashed;
+    // border-radius: 8px;
+  }
+
+  .dbx-file-upload-area-content-text {
+    display: flex;
+    align-items: center;
+  }
+
+  .dbx-file-upload-area-rounded {
+    border-radius: 50%;
+  }
+
+  .dbx-file-upload-area-square {
+    border-radius: 12px;
+  }
+
+  .dbx-file-upload-area-with-hint .dbx-file-upload-area-content {
+    padding: 32px 16px;
+  }
+
+  .dbx-file-upload-area-content-hint {
+    position: relative;
+    top: -24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    user-select: none;
+  }
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.m2-get-color-config($theme-config);
+
+  $primary: map.get($color-config, 'primary');
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+  $cdk-background-color: theming.m2-get-color-from-palette($background, 'background');
+  $cdk-text-color: theming.m2-get-color-from-palette($foreground, 'text');
+
+  $cdk-border-color: color.adjust(
+    $color: $cdk-text-color,
+    $alpha: -0.5
+  );
+
+  $cdk-highlight-background-color: color.adjust(
+    $color: $cdk-text-color,
+    $alpha: -0.7
+  );
+
+  $primary-color: theming.m2-get-color-from-palette($primary, 500);
+
+  .dbx-file-upload-area-content {
+    border-color: $cdk-border-color;
+  }
+
+  .dbx-file-upload-area-drag-over .dbx-file-upload-area-content {
+    animation: dbx-file-upload-area-fade 200ms ease-in forwards;
+
+    @keyframes dbx-file-upload-area-fade {
+      to {
+        border-color: $primary-color;
+        background-color: $cdk-highlight-background-color;
+      }
+    }
+  }
+}
+
+@mixin typography($theme-config-or-typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-upload') {
+    $color: theming.m2-get-color-config($theme-config);
+    $density: theming.m2-get-density-config($theme-config);
+    $typography: theming.m2-get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($theme-config);
+    }
+  }
+}

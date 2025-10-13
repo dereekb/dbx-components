@@ -52,6 +52,12 @@ export const DOC_INTERACTION_ROUTES = [
     title: 'Iframe',
     detail: 'dbx-iframe',
     ref: 'doc.interaction.iframe'
+  },
+  {
+    icon: 'upload',
+    title: 'Upload',
+    detail: 'dbx-upload-area',
+    ref: 'doc.interaction.upload'
   }
 ];
 

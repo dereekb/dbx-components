@@ -8,5 +8,6 @@ export * from './promise.loop';
 export * from './promise.ref';
 export * from './promise.factory';
 export * from './promise.type';
+export * from './promise.task';
 export * from './wait';
 export * from './use';

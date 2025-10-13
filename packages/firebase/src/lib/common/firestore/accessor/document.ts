@@ -473,11 +473,12 @@ export interface FirestoreSingleDocumentAccessorConfig<T, D extends FirestoreDoc
 
 export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreSingleDocumentAccessorConfig<T, D>): FirestoreSingleDocumentAccessor<T, D> {
   const { singleItemIdentifier, accessors } = config;
+  const defaultAccessor = accessors.documentAccessor();
 
   return {
     singleItemIdentifier,
     loadDocument(): D {
-      return accessors.documentAccessor().loadDocumentForId(singleItemIdentifier);
+      return defaultAccessor.loadDocumentForId(singleItemIdentifier);
     },
     loadDocumentForTransaction(transaction: Maybe<Transaction>): D {
       return accessors.documentAccessorForTransaction(transaction).loadDocumentForId(singleItemIdentifier);
@@ -486,7 +487,7 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
       return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(singleItemIdentifier);
     },
     documentRef(): DocumentReference<T> {
-      return accessors.documentAccessor().documentRefForId(singleItemIdentifier);
+      return defaultAccessor.documentRefForId(singleItemIdentifier);
     }
   };
 }

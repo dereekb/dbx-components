@@ -4,7 +4,9 @@ import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core'
 import { Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { DbxProgressButtonConfig } from './progress/button.progress.config';
 import { type DbxThemeColor } from '../layout/style/style';
-import { DbxProgressSpinnerButtonComponent } from './progress';
+import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
+import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { NgTemplateOutlet } from '@angular/common';
 
 export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
 
@@ -13,6 +15,7 @@ export type DbxButtonType = 'basic' | 'raised' | 'stroked' | 'flat' | 'icon';
  */
 export interface DbxButtonStyle {
   readonly type?: DbxButtonType;
+  readonly mode?: ProgressSpinnerMode;
   readonly color?: ThemePalette | DbxThemeColor;
   readonly spinnerColor?: ThemePalette | DbxThemeColor;
   readonly customButtonColor?: string;
@@ -37,16 +40,28 @@ export enum DbxButtonDisplayType {
 @Component({
   selector: 'dbx-button',
   template: `
-    <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()">
+    @if (bar()) {
+      <dbx-progress-bar-button (btnClick)="clickButton()" [config]="configSignal()">
+        <ng-template [ngTemplateOutlet]="content"></ng-template>
+      </dbx-progress-bar-button>
+    } @else {
+      <dbx-progress-spinner-button (btnClick)="clickButton()" [config]="configSignal()">
+        <ng-template [ngTemplateOutlet]="content"></ng-template>
+      </dbx-progress-spinner-button>
+    }
+    <!-- Content -->
+    <ng-template #content>
       <ng-content></ng-content>
-    </dbx-progress-spinner-button>
+    </ng-template>
   `,
   providers: provideDbxButton(DbxButtonComponent),
-  imports: [DbxProgressSpinnerButtonComponent],
+  imports: [DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
+  readonly bar = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+
   readonly type = input<Maybe<DbxButtonType>>();
   readonly buttonStyle = input<Maybe<DbxButtonStyle>>();
 
@@ -62,6 +77,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly flat = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly iconOnly = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
   readonly fab = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
+
+  readonly mode = input<Maybe<ProgressSpinnerMode>>();
 
   readonly typeSignal = computed(() => {
     const style = this.buttonStyle();
@@ -90,46 +107,50 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       [key: string]: string;
     };
 
-    const style = this.buttonStyle();
-    const customButtonColorValue = this.customButtonColor() ?? style?.customButtonColor;
+    const buttonStyle = this.buttonStyle();
+    const customButtonColorValue = this.customButtonColor() ?? buttonStyle?.customButtonColor;
 
     if (customButtonColorValue) {
       customStyle['background'] = customButtonColorValue;
     }
 
-    const customTextColorValue = this.customTextColor() ?? style?.customTextColor;
+    const customTextColorValue = this.customTextColor() ?? buttonStyle?.customTextColor;
 
     if (customTextColorValue) {
       customStyle['color'] = customTextColorValue;
     }
 
-    const customSpinnerColorValue = this.customSpinnerColor() ?? style?.customSpinnerColor;
+    const customSpinnerColorValue = this.customSpinnerColor() ?? buttonStyle?.customSpinnerColor;
     const customSpinnerColor: Maybe<string> = customSpinnerColorValue ?? customTextColorValue;
 
-    const buttonColor = this.color() ?? style?.color;
-    const spinnerColor = this.spinnerColor() ?? style?.spinnerColor ?? buttonColor;
+    const buttonColor = this.color() ?? buttonStyle?.color;
+    const spinnerColor = this.spinnerColor() ?? buttonStyle?.spinnerColor ?? buttonColor;
 
     const disabledSignalValue = this.disabledSignal();
-    const disabled = !this.workingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.
+    const disabled = !this.isWorkingSignal() && disabledSignalValue; // Only disabled if we're not working, in order to show the animation.
 
     const iconValue = this.iconSignal();
     const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
 
     const textValue = this.textSignal();
     const isIconOnlyButton = buttonIcon && !textValue;
-    const fab = this.fab() || style?.fab;
+    const fab = this.fab() || buttonStyle?.fab;
+
+    const mode = this.mode() ?? buttonStyle?.mode;
+    const working = this.workingSignal();
+    const buttonType = this.typeSignal();
 
     const config: Configurable<DbxProgressButtonConfig> = {
       fab,
-      working: this.workingSignal(),
+      working,
       buttonIcon,
       customStyle,
       customClass: 'dbx-button ' + (isIconOnlyButton ? 'dbx-button-no-text' : ''),
       text: textValue ?? '',
-      buttonType: this.typeSignal(),
+      buttonType,
       buttonColor,
       barColor: 'accent',
-      mode: 'indeterminate',
+      mode,
       spinnerColor,
       customSpinnerColor,
       disabled

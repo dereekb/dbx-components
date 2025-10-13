@@ -42,8 +42,11 @@ export function unixTimeNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeNum
  * Converts a Date object or unix timestamp number to a Date object.
  *
  * @param input - Date object or unix timestamp number to convert
- * @returns Date object if input is valid, null/undefined if input is null/undefined
+ * @returns Date object if input is valid. Returns null/undefined if input is null/undefined
  */
+export function dateFromDateOrTimeNumber(input: DateOrUnixDateTimeNumber): Date;
+export function dateFromDateOrTimeNumber(input: MaybeNot): MaybeNot;
+export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<Date>;
 export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<Date> {
   if (input == null) {
     return input as null | undefined;

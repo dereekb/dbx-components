@@ -1,5 +1,5 @@
 import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
-import { clientFirebaseFirestoreContextFactory, FirestoreContext, NotificationFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
+import { clientFirebaseFirestoreContextFactory, FirestoreContext, NotificationFirestoreCollections, StorageFileFirestoreCollections, SystemStateFirestoreCollections } from '@dereekb/firebase';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { Firestore } from '@angular/fire/firestore';
 import { ClassLikeType } from '@dereekb/util';
@@ -33,6 +33,20 @@ export function provideNotificationFirestoreCollections(appCollection: Notificat
 }
 
 /**
+ * Provider factory for the StorageFileFirestoreCollections.
+ *
+ * @param appCollection The app collection class to use.
+ * @returns Provider factory for the StorageFileFirestoreCollections.
+ */
+export function provideStorageFileFirestoreCollections(appCollection: StorageFileFirestoreCollections): StorageFileFirestoreCollections {
+  if (!appCollection.storageFileCollection) {
+    throw new Error(`StorageFileFirestoreCollections could not be provided using the app's app collection. Set provideStorageFileFirestoreCollections to false in DbxFirebaseFirestoreCollectionModuleConfig to prevent auto-initialization, or update your app's collection class to implement StorageFileFirestoreCollections.`);
+  }
+
+  return appCollection;
+}
+
+/**
  * Configuration for provideDbxFirestoreCollection().
  */
 export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
@@ -56,6 +70,12 @@ export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
    * False by default.
    */
   readonly provideNotificationFirestoreCollections?: boolean;
+  /**
+   * Whether or not to provide the StorageFileFirestoreCollections.
+   *
+   * False by default.
+   */
+  readonly provideStorageFileFirestoreCollections?: boolean;
 }
 
 /**
@@ -93,6 +113,14 @@ export function provideDbxFirestoreCollection<T>(config: ProvideDbxFirebaseFires
     providers.push({
       provide: NotificationFirestoreCollections,
       useFactory: provideNotificationFirestoreCollections,
+      deps: [config.appCollectionClass]
+    });
+  }
+
+  if (config.provideStorageFileFirestoreCollections) {
+    providers.push({
+      provide: StorageFileFirestoreCollections,
+      useFactory: provideStorageFileFirestoreCollections,
       deps: [config.appCollectionClass]
     });
   }

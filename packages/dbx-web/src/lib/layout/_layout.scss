@@ -1,3 +1,4 @@
+@use './avatar/avatar';
 @use './bar/bar';
 @use './block/block';
 @use './card/card';
@@ -13,6 +14,7 @@
 @use './text/text';
 
 @mixin all-layout-core() {
+  @include avatar.core();
   @include bar.core();
   @include block.core();
   @include card.core();
@@ -29,6 +31,7 @@
 }
 
 @mixin all-layout-typography($theme-config) {
+  @include avatar.typography($theme-config);
   @include bar.typography($theme-config);
   @include block.typography($theme-config);
   @include card.typography($theme-config);
@@ -45,6 +48,7 @@
 }
 
 @mixin all-layout-theme($theme-config) {
+  @include avatar.theme($theme-config);
   @include bar.theme($theme-config);
   @include block.theme($theme-config);
   @include card.theme($theme-config);

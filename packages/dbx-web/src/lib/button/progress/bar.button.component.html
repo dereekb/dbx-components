@@ -9,6 +9,6 @@
     <ng-content></ng-content>
   </span>
   @if (showProgressSignal()) {
-    <mat-progress-bar class="bar" [color]="configSignal()?.barColor!" [mode]="configSignal()?.mode!" [value]="configSignal()?.value!"></mat-progress-bar>
+    <mat-progress-bar class="bar" [color]="configSignal()?.barColor!" [mode]="modeSignal()" [value]="workingValueSignal()"></mat-progress-bar>
   }
 </button>

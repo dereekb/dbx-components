@@ -535,6 +535,16 @@ export interface SendNotificationResult {
    */
   readonly notificationTaskCompletionType?: Maybe<NotificationTaskServiceTaskHandlerCompletionType>;
   /**
+   * Number of parts of the notification task that were run.
+   *
+   * Set only if the notification was a task.
+   */
+  readonly notificationTaskPartsRunCount?: Maybe<number>;
+  /**
+   * Whether or not the notification task was triggered by the looping protection.
+   */
+  readonly notificationTaskLoopingProtectionTriggered?: Maybe<boolean>;
+  /**
    * Whether or not the notification was marked as done.
    *
    * May occur in cases where success is false, but the notification reached the max number of send attempts.

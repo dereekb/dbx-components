@@ -52,6 +52,8 @@ export interface NotificationItem<D extends NotificationItemMetadata = {}> {
   g?: Maybe<string>;
   /**
    * Arbitrary metadata attached to the notification item.
+   *
+   * This is stored directly into Firestore, so be cautious about what is stored.
    */
   d?: Maybe<D>;
   /**

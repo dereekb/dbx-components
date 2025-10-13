@@ -5,6 +5,7 @@
 @use './popup/popup';
 @use './prompt/prompt';
 @use './style/style';
+@use './upload/upload';
 
 @mixin all-interaction-core() {
   @include dialog.core();
@@ -14,6 +15,7 @@
   @include popup.core();
   @include prompt.core();
   @include style.core();
+  @include upload.core();
 }
 
 @mixin all-interaction-typography($theme-config) {
@@ -24,6 +26,7 @@
   @include popup.typography($theme-config);
   @include prompt.typography($theme-config);
   @include style.typography($theme-config);
+  @include upload.typography($theme-config);
 }
 
 @mixin all-interaction-theme($theme-config) {
@@ -34,4 +37,5 @@
   @include popup.theme($theme-config);
   @include prompt.theme($theme-config);
   @include style.theme($theme-config);
+  @include upload.theme($theme-config);
 }

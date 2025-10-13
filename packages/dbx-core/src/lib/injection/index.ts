@@ -9,4 +9,5 @@ export * from './injection.instance';
 export * from './injection.rxjs';
 export * from './injection.directive';
 export * from './injection';
+export * from './injection.util';
 export * from './injector';

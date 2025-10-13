@@ -33,5 +33,5 @@ export interface NotificationTaskServiceTaskHandler {
    *
    * Can throw an error if the task cannot be handled due to a configuration error.
    */
-  handleNotificationTask: NotificationTaskServiceTaskHandlerFunction;
+  readonly handleNotificationTask: NotificationTaskServiceTaskHandlerFunction;
 }

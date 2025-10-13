@@ -1,23 +1,45 @@
-import { type StorageUploadOptions, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type FirebaseStorage, type StoragePath, assertStorageUploadOptionsStringFormat, type StorageDeleteFileOptions, type StorageListFilesOptions, storageListFilesResultFactory, type StorageListItemResult, type StorageListFilesResult, type StorageMetadata, type StorageBucketId, type StorageCustomMetadata } from '@dereekb/firebase';
-import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
-import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata } from '@google-cloud/storage';
+import {
+  type StorageUploadOptions,
+  type FirebaseStorageAccessorDriver,
+  type FirebaseStorageAccessorFile,
+  type FirebaseStorageAccessorFolder,
+  type FirebaseStorage,
+  type StoragePath,
+  assertStorageUploadOptionsStringFormat,
+  type StorageDeleteFileOptions,
+  type StorageListFilesOptions,
+  storageListFilesResultFactory,
+  type StorageListItemResult,
+  type StorageListFilesResult,
+  type StorageMetadata,
+  type StorageBucketId,
+  type StorageCustomMetadata,
+  StorageSlashPath,
+  StorageMoveOptions,
+  StorageListFilesPageToken,
+  ConfigurableStorageMetadata
+} from '@dereekb/firebase';
+import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
+import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, Bucket, MoveFileAtomicOptions, CopyOptions, ApiError } from '@google-cloud/storage';
+import { addHours, addMilliseconds } from 'date-fns';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
-export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
+export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
   return storage.bucket(path.bucketId);
 }
 
-export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
+export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): GoogleCloudFile {
   return googleCloudStorageBucketForStorageFilePath(storage, path).file(path.pathString);
 }
 
-export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile>;
+export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile> & Required<Pick<FirebaseStorageAccessorFile<GoogleCloudFile>, 'uploadStream' | 'getStream'>>;
 
 export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, metadata: FileMetadata): StorageMetadata {
   const fullPath = file.name;
   const generation = String(metadata.generation ?? file.generation);
   const metageneration = String(metadata.metageneration);
   const size = Number(metadata.size);
+  const customMetadata = metadata.metadata as StorageCustomMetadata | undefined;
 
   return {
     bucket: file.bucket.name,
@@ -34,7 +56,7 @@ export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, 
     contentEncoding: metadata.contentEncoding,
     contentLanguage: metadata.contentLanguage,
     contentType: metadata.contentType,
-    customMetadata: metadata.customMetadata as StorageCustomMetadata | undefined
+    customMetadata
   };
 }
 
@@ -52,29 +74,102 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     };
   }
 
+  interface ConfigureMetadataOptions {
+    readonly metadata?: ConfigurableStorageMetadata;
+    readonly customMetadata?: StorageCustomMetadata;
+  }
+
+  function _configureMetadata(options: ConfigureMetadataOptions): FileMetadata {
+    const customMetadata = filterUndefinedValues({
+      ...options.metadata?.customMetadata,
+      ...options?.customMetadata
+    }) as { [key: string]: string };
+
+    return filterUndefinedValues({
+      cacheControl: options.metadata?.cacheControl,
+      contentDisposition: options.metadata?.contentDisposition,
+      contentEncoding: options.metadata?.contentEncoding,
+      contentLanguage: options.metadata?.contentLanguage,
+      contentType: options.metadata?.contentType,
+      metadata: !objectHasNoKeys(customMetadata) ? customMetadata : undefined
+    });
+  }
+
   function makeUploadOptions(options?: StorageUploadOptions): SaveOptions | CreateWriteStreamOptions {
     let metadata: object | undefined;
 
-    if (options?.contentType) {
-      metadata = {
-        contentType: options?.contentType
-      };
+    if (options != null) {
+      metadata = _configureMetadata({
+        metadata: {
+          ...options.metadata,
+          contentType: options.contentType ?? options.metadata?.contentType
+        },
+        customMetadata: options.customMetadata
+      });
     }
 
     return {
       // non-resumable
       resumable: false,
-      // add content type
+      // add content type and other custom metadata
       ...(metadata ? { metadata } : undefined)
     };
   }
 
-  return {
+  function asFileMetadata(metadata: ConfigurableStorageMetadata): FileMetadata {
+    return _configureMetadata({ metadata });
+  }
+
+  function makeStoragePathForPath(newPath: StorageSlashPath | StoragePath): StoragePath {
+    let path: StoragePath;
+
+    if (typeof newPath === 'string') {
+      path = {
+        bucketId: file.bucket.name,
+        pathString: newPath
+      };
+    } else {
+      path = newPath;
+    }
+
+    return path;
+  }
+
+  async function copy(newPath: StorageSlashPath | StoragePath, options?: MoveFileAtomicOptions) {
+    const newStoragePath = makeStoragePathForPath(newPath);
+    const newFile: GoogleCloudStorageAccessorFile = googleCloudStorageAccessorFile(storage, newStoragePath);
+    return _copyWithFile(newFile, options);
+  }
+
+  async function _copyWithFile(newFile: GoogleCloudStorageAccessorFile, options?: MoveFileAtomicOptions) {
+    const copyOptions: CopyOptions = {
+      ...options
+    };
+
+    await file.copy(newFile.reference, copyOptions);
+    return newFile;
+  }
+
+  const accessorFile: GoogleCloudStorageAccessorFile = {
     reference: file,
     storagePath,
     exists: async () => file.exists().then((x) => x[0]),
     getDownloadUrl: async () => file.getMetadata().then((x) => file.publicUrl()),
+    getSignedUrl: async (input) => {
+      const expires = input?.expiresAt ?? (input?.expiresIn != null ? addMilliseconds(new Date(), input.expiresIn) : addHours(new Date(), 1));
+
+      const config = {
+        ...input,
+        action: input?.action ?? 'read',
+        expiresIn: undefined,
+        expiresAt: undefined,
+        expires
+      };
+
+      return file.getSignedUrl(config).then((x) => x[0]);
+    },
     getMetadata: () => file.getMetadata().then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
+    setMetadata: (metadata) => file.setMetadata(asFileMetadata(metadata)).then((x) => googleCloudFileMetadataToStorageMetadata(file, x[0])),
     getBytes: (maxDownloadSizeBytes) => file.download(makeDownloadOptions(maxDownloadSizeBytes)).then((x) => x[0]),
     getStream: (maxDownloadSizeBytes) => file.createReadStream(makeDownloadOptions(maxDownloadSizeBytes)),
     upload: async (input, options) => {
@@ -109,8 +204,34 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
       return file.save(data, makeUploadOptions(options));
     },
     uploadStream: (options) => file.createWriteStream(makeUploadOptions(options)),
+    move: async (newPath: StorageSlashPath | StoragePath, options: StorageMoveOptions) => {
+      const newStoragePath = makeStoragePathForPath(newPath);
+      const newFile: GoogleCloudStorageAccessorFile = googleCloudStorageAccessorFile(storage, newStoragePath);
+
+      const moveOptions: MoveFileAtomicOptions = {
+        ...options
+      };
+
+      await file.moveFileAtomic(newFile.reference, moveOptions).catch(async (e) => {
+        if (e instanceof ApiError && e.response?.statusMessage === 'Not Implemented') {
+          // NOTE: This is not implemented in storage emulator, so it will fail with this error in testing.
+          // https://github.com/firebase/firebase-tools/issues/3751
+
+          // we can perform the same task using copy and then deleting this file.
+          await copy(newPath, moveOptions);
+          await accessorFile.delete();
+        } else {
+          throw e;
+        }
+      });
+
+      return newFile;
+    },
+    copy,
     delete: (options: StorageDeleteFileOptions) => file.delete(options).then((x) => undefined)
   };
+
+  return accessorFile;
 }
 
 export type GoogleCloudStorageAccessorFolder = FirebaseStorageAccessorFolder<GoogleCloudFile>;
@@ -142,8 +263,11 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
   hasNext: (result: GoogleCloudListResult) => {
     return result.nextQuery != null;
   },
-  next(storage: GoogleCloudStorage, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
-    return folder.list(result.nextQuery);
+  nextPageTokenFromResult(result: GoogleCloudListResult): Maybe<StorageListFilesPageToken> {
+    return result.nextQuery?.pageToken;
+  },
+  next(storage: GoogleCloudStorage, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
+    return folder.list({ ...options, ...result.nextQuery });
   },
   file(storage: GoogleCloudStorage, fileResult: StorageListItemResult): FirebaseStorageAccessorFile {
     return googleCloudStorageAccessorFile(storage, fileResult.storagePath);
@@ -170,29 +294,37 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
     storagePath,
     exists: async () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
     list: (options?: StorageListFilesOptions) => {
-      return bucket
-        .getFiles({
-          ...options,
-          delimiter: SLASH_PATH_SEPARATOR,
-          autoPaginate: false,
-          versions: false,
-          maxResults: options?.maxResults,
-          // includeTrailingDelimiter: true,
-          prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
-        })
-        .then((x: GetFilesResponse) => {
-          const files = x[0];
-          const nextQuery = x[1];
-          const apiResponse = x[2];
+      const { maxResults, pageToken, includeNestedResults: listAll } = options ?? {};
 
-          const result: GoogleCloudListResult = {
-            files: files as GoogleCloudFile[],
-            nextQuery,
-            apiResponse: apiResponse as object
-          };
+      const listOptions: GetFilesOptions = {
+        maxResults,
+        pageToken,
+        autoPaginate: false,
+        versions: false,
+        ...(listAll
+          ? {
+              prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/'))
+            }
+          : {
+              // includeTrailingDelimiter: true,
+              delimiter: SLASH_PATH_SEPARATOR,
+              prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
+            })
+      };
 
-          return googleCloudStorageListFilesResultFactory(storage, folder, options, result);
-        });
+      return bucket.getFiles(listOptions).then((x: GetFilesResponse) => {
+        const files = x[0];
+        const nextQuery = x[1];
+        const apiResponse = x[2];
+
+        const result: GoogleCloudListResult = {
+          files: files as GoogleCloudFile[],
+          nextQuery,
+          apiResponse: apiResponse as object
+        };
+
+        return googleCloudStorageListFilesResultFactory(storage, folder, options, result);
+      });
     }
   };
 
@@ -201,6 +333,7 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
 
 export function googleCloudStorageFirebaseStorageAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
+    type: 'server',
     file: (storage: FirebaseStorage, path: StoragePath) => googleCloudStorageAccessorFile(storage as GoogleCloudStorage, path),
     folder: (storage: FirebaseStorage, path: StoragePath) => googleCloudStorageAccessorFolder(storage as GoogleCloudStorage, path)
   };

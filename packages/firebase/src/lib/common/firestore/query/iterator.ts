@@ -1,10 +1,12 @@
 import { type PageLoadingState, ItemPageIterator, type ItemPageIterationInstance, type ItemPageIterationConfig, type ItemPageIteratorDelegate, type ItemPageIteratorRequest, type ItemPageIteratorResult, type MappedPageItemIterationInstance, type ItemPageLimit, mappedPageItemIteration } from '@dereekb/rxjs';
-import { type QueryDocumentSnapshotArray, type QuerySnapshot, type SnapshotListenOptions } from '../types';
-import { asArray, type Maybe, lastValue, mergeArraysIntoArray, type ArrayOrValue } from '@dereekb/util';
+import { DocumentReference, Query, QueryDocumentSnapshot, type QueryDocumentSnapshotArray, type QuerySnapshot, type SnapshotListenOptions } from '../types';
+import { asArray, type Maybe, lastValue, mergeArraysIntoArray, type ArrayOrValue, IndexNumber } from '@dereekb/util';
 import { from, type Observable, of, exhaustMap } from 'rxjs';
 import { type FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, type FirestoreQueryConstraint, limit, startAfter } from './constraint';
 import { type QueryLikeReferenceRef } from '../reference';
+import { LimitedFirestoreDocumentAccessor } from '../accessor/document';
+import { getDocumentSnapshots, loadDocumentsForDocumentReferences } from '../accessor/document.utility';
 
 /**
  * Filter configuration for Firestore query pagination.
@@ -226,6 +228,17 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
   };
 }
 
+export interface FirestoreItemPageIteration<T> extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
+  /**
+   * The underlying iteration instance that works with raw query snapshots.
+   *
+   * This provides access to the snapshot-level pagination when needed, which is useful
+   * for accessing metadata or other snapshot-specific features not available in the
+   * mapped document arrays.
+   */
+  readonly snapshotIteration: InternalFirestoreItemPageIterationInstance<T>;
+}
+
 /**
  * Instance for paginated iteration over Firestore documents.
  *
@@ -235,14 +248,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
  *
  * @template T - The document data type in the query results
  */
-export interface FirestoreItemPageIterationInstance<T> extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
-  /**
-   * The underlying iteration instance that works with raw query snapshots.
-   *
-   * This provides access to the snapshot-level pagination when needed, which is useful
-   * for accessing metadata or other snapshot-specific features not available in the
-   * mapped document arrays.
-   */
+export interface FirestoreItemPageIterationInstance<T> extends FirestoreItemPageIteration<T> {
   readonly snapshotIteration: InternalFirestoreItemPageIterationInstance<T>;
 }
 
@@ -263,6 +269,10 @@ export interface FirestoreItemPageIterationFactory<T> {
    * the same base configuration but can have different filters applied.
    */
   readonly firestoreIteration: FirestoreItemPageIterationFactoryFunction<T>;
+  /**
+   * Function that creates fixed pagination instances with consistent base configuration.
+   */
+  readonly firestoreFixedIteration: FirestoreFixedItemPageIterationFactoryFunction<T>;
 }
 
 /**
@@ -367,7 +377,10 @@ export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPa
  */
 export function firestoreItemPageIteration<T>(config: FirestoreItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
   const snapshotIteration: InternalFirestoreItemPageIterationInstance<T> = FIRESTORE_ITEM_PAGE_ITERATOR.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
+  return _firestoreItemPageIterationWithSnapshotIteration(snapshotIteration);
+}
 
+function _firestoreItemPageIterationWithSnapshotIteration<T>(snapshotIteration: InternalFirestoreItemPageIterationInstance<T>): FirestoreItemPageIterationInstance<T> {
   const mappedIteration = mappedPageItemIteration(snapshotIteration, {
     forwardDestroy: true,
     mapValue: (x: FirestoreItemPageQueryResult<T>) => x.docs
@@ -379,6 +392,156 @@ export function firestoreItemPageIteration<T>(config: FirestoreItemPageIteration
   };
 
   return result;
+}
+
+// MARK: FixedItemPageIteration
+/**
+ * Function that creates a Firestore pagination instance using the input items and optional filter.
+ *
+ * This type represents a factory function that creates pagination instances with
+ * predefined base configuration. The only parameter needed is the filter that specifies
+ * what constraints to apply and how many items to load per page.
+ *
+ * @template T - The document data type in the query results
+ */
+export type FirestoreFixedItemPageIterationFactoryFunction<T> = (items: DocumentReference<T>[], filter?: FirestoreItemPageIteratorFilter) => FirestoreItemPageIterationInstance<T>;
+
+/**
+ * Creates a FirestoreFixedItemPageIterationFactoryFunction.
+ */
+export function firestoreFixedItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationConfig<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T>): FirestoreFixedItemPageIterationFactoryFunction<T> {
+  return (items: DocumentReference<T>[], filter?: FirestoreItemPageIteratorFilter) => {
+    const result: FirestoreItemPageIterationInstance<T> = firestoreFixedItemPageIteration<T>({
+      items,
+      documentAccessor,
+      queryLike: baseConfig.queryLike,
+      itemsPerPage: baseConfig.itemsPerPage,
+      firestoreQueryDriver: baseConfig.firestoreQueryDriver,
+      maxPageLoadLimit: filter?.maxPageLoadLimit ?? baseConfig.maxPageLoadLimit,
+      filter
+    });
+
+    return result;
+  };
+}
+
+export interface FirestoreFixedItemPageIterationConfig<T> extends FirestoreItemPageIterationConfig<T> {
+  readonly items: DocumentReference<T>[];
+  readonly documentAccessor: LimitedFirestoreDocumentAccessor<T>;
+}
+
+/**
+ * Creates a FirestoreItemPageIterationInstance that iterates over the fixed
+ */
+export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
+  const { items, documentAccessor } = config;
+  const idLookupMap = new Map<string, IndexNumber>();
+
+  // used to cache the index for ids that are looked up
+  const indexForId = (id: string) => {
+    let index = idLookupMap.get(id);
+
+    if (index === undefined) {
+      index = items.findIndex((x) => x.id === id);
+      idLookupMap.set(id, index);
+    }
+
+    return index;
+  };
+
+  const delegate: FirestoreItemPageIteratorDelegate<T> = {
+    loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
+      const { page, iteratorConfig } = request;
+      const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = page > 0 ? request.lastItem$ : of(undefined);
+
+      const { itemsPerPage = DEFAULT_FIRESTORE_ITEM_PAGE_ITERATOR_ITEMS_PER_PAGE, filter } = iteratorConfig;
+      const { limit: filterLimit } = filter ?? {};
+
+      return prevQueryResult$.pipe(
+        exhaustMap((prevResult) => {
+          if (prevResult?.snapshot.empty === true) {
+            // TODO(REMOVE): Shouldn't happen. Remove this later.
+            return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
+          } else {
+            const cursorDocument = prevResult ? lastValue(prevResult.docs) : undefined;
+
+            const startAtIndex = cursorDocument ? indexForId(cursorDocument.id) + 1 : 0;
+            const limitCount = filterLimit ?? itemsPerPage;
+
+            const time = new Date();
+            const itemsForThisPage: DocumentReference<T>[] = items.slice(startAtIndex, startAtIndex + limitCount);
+
+            const lastItemForThisPage = lastValue(itemsForThisPage);
+            let end = false;
+
+            if (lastItemForThisPage) {
+              const lastItemForThisPageItemIndex = startAtIndex + (itemsForThisPage.length - 1);
+              idLookupMap.set(lastItemForThisPage.id, lastItemForThisPageItemIndex);
+              end = lastItemForThisPageItemIndex === items.length - 1;
+            } else {
+              end = true;
+            }
+
+            const documents = loadDocumentsForDocumentReferences(documentAccessor, itemsForThisPage);
+
+            const _loadFakeQuerySnapshot = () => {
+              return getDocumentSnapshots(documents).then((documentSnapshots) => {
+                const documentSnapshotsWithData = documentSnapshots.filter((x) => x.data() != null) as QueryDocumentSnapshotArray<T>;
+                const docs: QueryDocumentSnapshotArray<T> = documentSnapshotsWithData;
+
+                const query: Query<T> = {
+                  withConverter: () => {
+                    throw new Error('firestoreFixedItemPageIteration(): Not a real query');
+                  }
+                } as unknown as Query<T>; // TODO: No great way to implement this. Not a great way to
+
+                const snapshot: QuerySnapshot<T> = {
+                  query,
+                  docs,
+                  size: docs.length,
+                  empty: docs.length === 0,
+                  docChanges: () => {
+                    return []; // no changes to return in this fake snapshot
+                  },
+                  forEach: (result: (result: QueryDocumentSnapshot<T>) => void) => {
+                    docs.forEach(result);
+                  }
+                };
+
+                return snapshot;
+              });
+            };
+
+            const resultPromise = _loadFakeQuerySnapshot().then((snapshot: QuerySnapshot<T>) => {
+              const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
+                value: {
+                  time,
+                  docs: snapshot.docs,
+                  snapshot,
+                  reload() {
+                    return _loadFakeQuerySnapshot();
+                  },
+                  stream(options?: FirestoreItemPageQueryResultStreamOptions) {
+                    // TODO: Count potentially stream to fully implement, but might not be used anyways.
+                    return of(snapshot);
+                  }
+                },
+                end
+              };
+
+              return result;
+            });
+
+            return resultPromise;
+          }
+        })
+      );
+    }
+  };
+
+  const factory = new ItemPageIterator<FirestoreItemPageQueryResult<unknown>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<unknown>>(delegate);
+  const snapshotIteration: InternalFirestoreItemPageIterationInstance<T> = factory.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
+  return _firestoreItemPageIterationWithSnapshotIteration(snapshotIteration);
 }
 
 // MARK: Compat

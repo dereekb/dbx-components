@@ -1,9 +1,10 @@
-import { type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
+import { StorageListFilesPageToken, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
-import { type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
-import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
+import { ConfigurableStorageMetadata, StorageCustomMetadata, StorageUploadTask, StorageUploadTaskSnapshot, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
+import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, updateMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, SettableMetadata, UploadTask, UploadTaskSnapshot } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
-import { type ErrorInput, errorMessageContainsString, type Maybe } from '@dereekb/util';
+import { cachedGetter, type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
+import { map, Observable, shareReplay } from 'rxjs';
 
 export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
   return errorMessageContainsString(input, 'storage/object-not-found');
@@ -25,32 +26,55 @@ export type FirebaseStorageClientAccessorFile = FirebaseStorageAccessorFile<Stor
 export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage, storagePath: StoragePath): FirebaseStorageClientAccessorFile {
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
 
-  function asUploadMetadata(options?: StorageUploadOptions): UploadMetadata | undefined {
+  interface ConfigureMetadataOptions {
+    readonly metadata?: ConfigurableStorageMetadata;
+    readonly customMetadata?: StorageCustomMetadata;
+  }
+
+  function _configureMetadata(options: ConfigureMetadataOptions): UploadMetadata {
+    return filterUndefinedValues({
+      cacheControl: options.metadata?.cacheControl,
+      contentDisposition: options.metadata?.contentDisposition,
+      contentEncoding: options.metadata?.contentEncoding,
+      contentLanguage: options.metadata?.contentLanguage,
+      contentType: options.metadata?.contentType,
+      customMetadata: filterUndefinedValues({
+        ...options.metadata?.customMetadata,
+        ...options?.customMetadata
+      }) as { [key: string]: string }
+    });
+  }
+
+  function uploadMetadataFromStorageUploadOptions(options?: StorageUploadOptions): UploadMetadata | undefined {
     let result: UploadMetadata | undefined;
 
     if (options != null) {
-      const { contentType, metadata } = options;
-
-      if (options.contentType || options.metadata) {
-        result = {
-          ...(contentType ? { contentType } : undefined),
-          ...metadata
-        };
-      }
+      result = _configureMetadata({
+        metadata: {
+          ...options.metadata,
+          contentType: options.contentType ?? options.metadata?.contentType
+        },
+        customMetadata: options.customMetadata
+      });
     }
 
     return result;
   }
 
-  return {
+  function asSettableMetadata(metadata: ConfigurableStorageMetadata): SettableMetadata {
+    return _configureMetadata({ metadata });
+  }
+
+  const clientFile: FirebaseStorageClientAccessorFile = {
     reference: ref,
     storagePath,
     exists: () => firebaseStorageFileExists(ref),
     getDownloadUrl: () => getDownloadURL(ref),
     getMetadata: () => getMetadata(ref),
+    setMetadata: (metadata) => updateMetadata(ref, asSettableMetadata(metadata)),
     upload: (input, options) => {
       const inputType = typeof input === 'string';
-      const metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
+      const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
 
       if (inputType) {
         const stringFormat = assertStorageUploadOptionsStringFormat(options);
@@ -62,8 +86,46 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes),
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
-      const metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
-      return uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
+      const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
+      const uploadBytesTask = uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
+
+      function wrapSnapshot(currentSnapshot: UploadTaskSnapshot): StorageUploadTaskSnapshot<UploadTask> {
+        const snapshot: StorageUploadTaskSnapshot<UploadTask> = {
+          bytesTransferred: currentSnapshot.bytesTransferred,
+          totalBytes: currentSnapshot.totalBytes,
+          metadata: currentSnapshot.metadata,
+          state: currentSnapshot.state,
+          uploadTask
+        };
+
+        return snapshot;
+      }
+
+      const uploadTask: StorageUploadTask<UploadTask> = {
+        taskRef: uploadBytesTask,
+        cancel: () => uploadBytesTask.cancel(),
+        pause: () => uploadBytesTask.pause(),
+        resume: () => uploadBytesTask.resume(),
+        getSnapshot: () => wrapSnapshot(uploadBytesTask.snapshot),
+        streamSnapshotEvents: cachedGetter(() => {
+          const internalSnapshotObs = new Observable<UploadTaskSnapshot>((x) =>
+            uploadBytesTask.on('state_changed', {
+              next: (y) => x.next(y),
+              error: (e) => x.error(e),
+              complete: () => x.complete()
+            })
+          );
+
+          const snapshotEvents: Observable<StorageUploadTaskSnapshot> = internalSnapshotObs.pipe(
+            map((x) => wrapSnapshot(x)),
+            shareReplay(1)
+          );
+
+          return snapshotEvents;
+        })
+      };
+
+      return uploadTask;
     },
     delete: (options: StorageDeleteFileOptions) =>
       deleteObject(ref).catch((x) => {
@@ -72,6 +134,8 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
         }
       })
   };
+
+  return clientFile;
 }
 
 export type FirebaseStorageClientAccessorFolder = FirebaseStorageAccessorFolder<StorageReference>;
@@ -88,8 +152,12 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
   hasNext: (result: FirebaseStorageClientListResult) => {
     return result.listResult.nextPageToken != null;
   },
-  next(storage: ClientFirebaseStorage, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
+  nextPageTokenFromResult(result: FirebaseStorageClientListResult): Maybe<StorageListFilesPageToken> {
+    return result.listResult.nextPageToken;
+  },
+  next(storage: ClientFirebaseStorage, options: StorageListFilesOptions | undefined, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
     return folder.list({
+      ...options,
       ...result.options,
       pageToken: result.listResult.nextPageToken
     });
@@ -115,7 +183,35 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
     reference: ref,
     storagePath,
     exists: () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
-    list: (options?: StorageListFilesOptions) => list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory(storage, folder, options, { options, listResult }))
+    list: async (options?: StorageListFilesOptions) => {
+      const rootResults = await list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory(storage, folder, options, { options, listResult }));
+      let result: StorageListFilesResult;
+
+      if (options?.includeNestedResults) {
+        const allImmediateFiles = rootResults.files();
+        const allImmediateFolders = rootResults.folders();
+        const allNestedFolderFileResults = await Promise.all(
+          allImmediateFolders.map((x) =>
+            x
+              .folder()
+              .list({ includeNestedResults: true })
+              .then((x) => x.files())
+          )
+        );
+        const allNestedFiles = allNestedFolderFileResults.flat();
+        const allFiles = [...allImmediateFiles, ...allNestedFiles];
+
+        result = {
+          ...rootResults,
+          files: () => allFiles,
+          folders: () => [] // no folders
+        };
+      } else {
+        result = rootResults;
+      }
+
+      return result;
+    }
   };
 
   return folder;
@@ -123,7 +219,8 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
 
 export function firebaseStorageClientAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
-    defaultBucket: (storage: FirebaseStorage) => (storage as ClientFirebaseStorage).app.options.storageBucket ?? '',
+    type: 'client',
+    getDefaultBucket: (storage: FirebaseStorage) => (storage as ClientFirebaseStorage).app.options.storageBucket ?? '',
     file: (storage: FirebaseStorage, path: StoragePath) => firebaseStorageClientAccessorFile(storage as ClientFirebaseStorage, path),
     folder: (storage: FirebaseStorage, path: StoragePath) => firebaseStorageClientAccessorFolder(storage as ClientFirebaseStorage, path)
   };

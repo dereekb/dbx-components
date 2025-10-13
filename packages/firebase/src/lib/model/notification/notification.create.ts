@@ -37,7 +37,7 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
    *
    * Only used for Notification Tasks.
    */
-  readonly unique?: boolean | NotificationTaskUniqueId;
+  readonly unique?: Maybe<boolean | NotificationTaskUniqueId>;
   /**
    * Whether or not to override an existing task with the same unique key when creating.
    *
@@ -45,7 +45,7 @@ export interface CreateNotificationTemplate extends Partial<Omit<Notification, '
    *
    * Only used for Notification Tasks.
    */
-  readonly overrideExistingTask?: boolean;
+  readonly overrideExistingTask?: Maybe<boolean>;
 }
 
 export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNotificationTemplate, 'notificationModel'>>, Partial<Omit<CreateNotificationTemplateItem, 't' | 'cat'>> {
@@ -278,14 +278,24 @@ export function createNotificationDocumentPair(input: CreateNotificationDocument
   if (isNotificationTask && inputUnique) {
     let uniqueId: NotificationTaskUniqueId;
 
+    /**
+     * Defaults to the notification box id if no target model is provided.
+     */
+    const targetModelId = n.m;
+
     if (typeof inputUnique === 'string') {
       uniqueId = inputUnique;
 
       if (!isFirestoreModelId(uniqueId)) {
         throw new Error('Input "unique" notification task id is not a valid firestore model id.');
       }
+    } else if (targetModelId) {
+      uniqueId = notificationTaskUniqueId(targetModelId, n.t);
     } else {
-      uniqueId = notificationTaskUniqueId(notificationModel, n.t);
+      // Without a target model, the generated id ends up being a type-global unique notification task id, or if
+      // the notification task global default model type is used, being unique across the whole system, which is
+      // generally unintended behavor. When it is desired, the inputUnique can be a string.
+      throw new Error('Must provide a target model when using unique=true for a notification task. The default result otherwise would be an unintended type-global unique notification task id.');
     }
 
     notificationDocument = accessor.loadDocumentForId(uniqueId);

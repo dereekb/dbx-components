@@ -137,7 +137,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     shareReplay(1)
   );
 
-  private readonly _singleValueSyncSubscription = new SubscriptionObject();
+  private readonly _singleValueSyncSub = new SubscriptionObject();
 
   readonly searchContext = loadingStateContext({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
   readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(
@@ -339,7 +339,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     }
 
     if (this.allowSyncValueToInput && this.multiSelect === false) {
-      this._singleValueSyncSubscription.subscription = this.displayValues$.subscribe((x) => {
+      this._singleValueSyncSub.subscription = this.displayValues$.subscribe((x) => {
         if (x[0]) {
           this._syncSingleValue(x[0]);
         }
@@ -351,7 +351,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     super.ngOnDestroy();
     this._clearDisplayHashMapSub.destroy();
     this._displayHashMap.complete();
-    this._singleValueSyncSubscription.destroy();
+    this._singleValueSyncSub.destroy();
     this._formControlObs.complete();
     this.searchContext.destroy();
   }

@@ -24,9 +24,11 @@ export interface CreateNotificationTaskTemplateInput extends Omit<CreateNotifica
  * @returns
  */
 export function createNotificationTaskTemplate(input: CreateNotificationTaskTemplateInput): CreateNotificationTaskTemplate {
-  return createNotificationTemplate({
+  const notificationModel = input.notificationModel ?? DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY;
+
+  const result = createNotificationTemplate({
     ...input,
-    notificationModel: input.notificationModel ?? DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY,
+    notificationModel,
     tpr: input.completedCheckpoints ?? input.tpr,
     sendType: NotificationSendType.TASK_NOTIFICATION,
     st: undefined,
@@ -34,4 +36,10 @@ export function createNotificationTaskTemplate(input: CreateNotificationTaskTemp
     recipients: undefined,
     r: undefined
   });
+
+  if (!input.notificationModel && !result.n.m && input.unique === true) {
+    throw new Error('Must provide a target model when using unique=true for a notification task template. The default result otherwise would be an unintended type-global unique notification task id.');
+  }
+
+  return result;
 }

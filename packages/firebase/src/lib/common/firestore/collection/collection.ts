@@ -14,7 +14,7 @@ import {
   type LimitedFirestoreDocumentAccessor,
   type FirestoreDocumentAccessor
 } from '../accessor/document';
-import { type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
+import { firestoreFixedItemPageIterationFactory, FirestoreFixedItemPageIterationFactoryFunction, type FirestoreItemPageIterationBaseConfig, type FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, type FirestoreItemPageIterationFactoryFunction } from '../query/iterator';
 import { firestoreQueryFactory, type FirestoreQueryFactory } from '../query/query';
 import { type FirestoreDrivers } from '../driver/driver';
 import { type FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
@@ -856,11 +856,14 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
   const { modelIdentity, collection, firestoreContext, firestoreAccessorDriver } = config;
   (config as unknown as Building<QueryLikeReferenceRef<T>>).queryLike = collection;
 
-  const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
   const documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(config);
+  const documentAccessorExtension = firestoreDocumentAccessorContextExtension({ documentAccessor, firestoreAccessorDriver });
+
+  const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
+  const firestoreFixedIteration: FirestoreFixedItemPageIterationFactoryFunction<T> = firestoreFixedItemPageIterationFactory(config, documentAccessorExtension.documentAccessor());
+
   const queryFactory: FirestoreQueryFactory<T> = firestoreQueryFactory(config);
 
-  const documentAccessorExtension = firestoreDocumentAccessorContextExtension({ documentAccessor, firestoreAccessorDriver });
   const { queryDocument } = firestoreCollectionQueryFactory(queryFactory, documentAccessorExtension);
   const { query } = queryFactory;
 
@@ -872,6 +875,7 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
     firestoreContext,
     ...documentAccessorExtension,
     firestoreIteration,
+    firestoreFixedIteration,
     query,
     queryDocument
   };

@@ -60,7 +60,7 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
 /**
  * Returns an empty array, which is used to signal that the task did not fail but has not complete the current checkpoint.
  */
-export function delayCompletion(): NotificationTaskServiceTaskHandlerCompletionType {
+export function delayCompletion<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(): NotificationTaskServiceTaskHandlerCompletionType<S> {
   return [];
 }
 
@@ -80,7 +80,7 @@ export function notificationTaskDelayRetry<D extends NotificationItemMetadata = 
 /**
  * Convenience function for returning a NotificationTaskServiceHandleNotificationTaskResult that says the task was partially completed, and to process the next part in the future.
  */
-export function notificationTaskPartiallyComplete<D extends NotificationItemMetadata = {}>(completedParts: ArrayOrValue<NotificationTaskCheckpointString>, updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+export function notificationTaskPartiallyComplete<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(completedParts: ArrayOrValue<S>, updateMetadata?: Maybe<Partial<D>>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   return {
     completion: completedParts,
     updateMetadata
@@ -109,28 +109,46 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}>(
 }
 
 /**
- * One or more NotificationTaskCheckpointString values that are considered complete.
+ * Wraps an existing NotificationTaskServiceHandleNotificationTaskResult<D> and sets canRunNextCheckpoint to true if it is undefined.
+ *
+ * @param result The result to use as a template.
+ * @param force If true, then canRunNextCheckpoint will be set to true even if it is already defined.
+ * @returns A new result.
  */
-export type NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint = ArrayOrValue<NotificationTaskCheckpointString>;
+export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}>(result: NotificationTaskServiceHandleNotificationTaskResult<D>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D> {
+  if (force || result.canRunNextCheckpoint == null) {
+    result = {
+      ...result,
+      canRunNextCheckpoint: true
+    };
+  }
+
+  return result;
+}
 
 /**
- * Result of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
+ * One or more NotificationTaskCheckpointString values that are considered complete.
+ */
+export type NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> = ArrayOrValue<S>;
+
+/**
+ * Result type of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
  *
  * true: The task was completed successfully and can now be discarded.
  * false: The task was not completed successfully and should be retried again in the future. Note there are a maximum number of retry attempts before the task is deleted. Use delayCompletion() to avoid increasing the attempt count.
  * NotificationTaskCheckpointString(s): The task has successfully completed this/these particular checkpoint(s) but is not complete and should be continued again in the future. Return an empty array to signal that the task did not fail but has not reached the next checkpoint.
  */
-export type NotificationTaskServiceTaskHandlerCompletionType = true | false | NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint;
+export type NotificationTaskServiceTaskHandlerCompletionType<S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> = true | false | NotificationTaskServiceTaskHandlerCompletionTypeCheckpoint<S>;
 
 // MARK: Server
 /**
  * Result of a NotificationTaskServiceTaskHandler.handleNotificationTask() call.
  */
-export interface NotificationTaskServiceHandleNotificationTaskResult<D extends NotificationItemMetadata = {}> {
+export interface NotificationTaskServiceHandleNotificationTaskResult<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**
    * Completion type for the task result.
    */
-  readonly completion: NotificationTaskServiceTaskHandlerCompletionType;
+  readonly completion: NotificationTaskServiceTaskHandlerCompletionType<S>;
   /**
    * If true, clears all completed checkpoints.
    */
@@ -144,7 +162,7 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
    *
    * Ignored if removeAllCompletedCheckpoints is true.
    */
-  readonly removeFromCompletedCheckpoints?: Maybe<ArrayOrValue<NotificationTaskCheckpointString>>;
+  readonly removeFromCompletedCheckpoints?: Maybe<ArrayOrValue<S>>;
   /**
    * Updates the metadata for the notification item if the task is successful but not yet marked done.
    *
@@ -155,4 +173,10 @@ export interface NotificationTaskServiceHandleNotificationTaskResult<D extends N
    * Delays the next run of the task by the specified amount of time or until the given date.
    */
   readonly delayUntil?: Maybe<Date | Milliseconds>;
+  /**
+   * If true, can run the next part of the task immediately.
+   *
+   * Ignored if delayUntil is set or if the completion is true/false/empty array.
+   */
+  readonly canRunNextCheckpoint?: Maybe<boolean>;
 }

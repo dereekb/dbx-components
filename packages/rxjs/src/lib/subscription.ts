@@ -65,6 +65,18 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
     this._subscriptions = convertToArray(subs);
   }
 
+  public addSubs(subs: ArrayOrValue<T>) {
+    const nextSubscriptions = [...(this._subscriptions ?? [])];
+
+    convertToArray(subs).forEach((sub) => {
+      if (!nextSubscriptions.includes(sub)) {
+        nextSubscriptions.push(sub);
+      }
+    });
+
+    this._subscriptions = nextSubscriptions;
+  }
+
   public unsub() {
     if (this._subscriptions) {
       this._subscriptions.forEach((x) => x.unsubscribe());

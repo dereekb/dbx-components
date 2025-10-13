@@ -108,7 +108,11 @@ $default-notice-color: #f28600;
     // colors - NOTE: other colors come from Angular Material
     'success-color': $default-success-color,
     'ok-color': $default-ok-color,
-    'notice-color': $default-notice-color
+    'notice-color': $default-notice-color,
+    // avatar
+    'dbx-avatar-size': 64px,
+    'dbx-avatar-large-size': 128px,
+    'dbx-avatar-small-size': 32px
   );
 
   @if ($input-dbx-theme-layout-config != null) {
@@ -168,6 +172,18 @@ $default-notice-color: #f28600;
 
 @function get-dbx-notice-color($theme-config) {
   @return get-dbx-layout-config-var($theme-config, 'notice-color');
+}
+
+@function get-dbx-avatar-size($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'dbx-avatar-size');
+}
+
+@function get-dbx-avatar-large-size($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'dbx-avatar-large-size');
+}
+
+@function get-dbx-avatar-small-size($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'dbx-avatar-small-size');
 }
 
 // extension

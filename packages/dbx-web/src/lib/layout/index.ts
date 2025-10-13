@@ -1,3 +1,4 @@
+export * from './avatar';
 export * from './bar';
 export * from './block';
 export * from './card';

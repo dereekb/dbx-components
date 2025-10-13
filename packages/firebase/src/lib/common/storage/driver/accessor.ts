@@ -1,5 +1,5 @@
-import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef } from '../storage';
-import { type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
+import { type StorageBucketId, type StoragePathInput, type StoragePath, type StoragePathRef, StorageSlashPath } from '../storage';
+import { ConfigurableStorageMetadata, StorageMoveOptions, StorageSignedDownloadUrl, StorageSignedDownloadUrlConfig, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDeleteFileOptions, type StorageDownloadUrl, type StorageMetadata, type StorageUploadInput, type StorageUploadOptions, type StorageUploadResult, type StorageUploadTask } from '../types';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -9,6 +9,13 @@ export interface FirebaseStorageAccessor {
   defaultBucket: () => StorageBucketId;
   file(path: StoragePathInput): FirebaseStorageAccessorFile;
   folder(path: StoragePathInput): FirebaseStorageAccessorFolder;
+}
+
+/**
+ * Contains a reference to a FirebaseStorageAccessor.
+ */
+export interface FirebaseStorageAccessorRef {
+  readonly storageAccessor: FirebaseStorageAccessor;
 }
 
 /**
@@ -24,13 +31,23 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
    */
   exists(): Promise<boolean>;
   /**
-   *
+   * Returns the download URL for the file.
    */
   getDownloadUrl(): Promise<StorageDownloadUrl>;
+  /**
+   * Returns a signed/temporary url
+   */
+  getSignedUrl?(options?: StorageSignedDownloadUrlConfig): Promise<StorageSignedDownloadUrl>;
   /**
    * Returns the metadata from the input objects.
    */
   getMetadata(): Promise<StorageMetadata>;
+  /**
+   * Sets the metadata for the file.
+   *
+   * @param metadata
+   */
+  setMetadata(metadata: ConfigurableStorageMetadata): Promise<StorageMetadata>;
   /**
    * Downloads the data as an ArrayBuffer.
    */
@@ -54,15 +71,31 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
   /**
    * Uploads data to the file's path using a resumable.
    *
+   * Generally a client-only implementation.
+   *
    * Optional implementation.
    */
   uploadResumable?(data: StorageClientUploadBytesInput, options?: StorageUploadOptions): StorageUploadTask;
   /**
    * Returns a WritableStream that can be written to.
    *
+   * Generally a server-only implementation.
+   *
    * Optional implementation.
    */
   uploadStream?(options?: StorageUploadOptions): NodeJS.WritableStream;
+  /**
+   * Moves the file to a new location.
+   *
+   * Optional implementation.
+   */
+  move?(newPath: StorageSlashPath | StoragePath, options?: StorageMoveOptions): Promise<FirebaseStorageAccessorFile<R>>;
+  /**
+   * Copies the file to a new location.
+   *
+   * Optional implementation.
+   */
+  copy?(newPath: StorageSlashPath | StoragePath, options?: StorageMoveOptions): Promise<FirebaseStorageAccessorFile<R>>;
   /**
    * Deletes the file.
    *
@@ -71,7 +104,22 @@ export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef
   delete(options?: StorageDeleteFileOptions): Promise<void>;
 }
 
+/**
+ * String used as a cursor for iterating pages of file results.
+ */
+export type StorageListFilesPageToken = string;
+
 export interface StorageListFilesOptions {
+  /**
+   * If true, returns all files, both within this folder and all nested folders, under this folder.
+   *
+   * Defaults to false.
+   *
+   * NOTE: Behavior may differ between clients and servers.
+   *
+   * The client may behave less efficiently. Use caution when using this option on the client-side on root-level folders.
+   */
+  readonly includeNestedResults?: boolean;
   /**
    * If set, limits the total number of `prefixes` and `items` to return.
    * The default and maximum maxResults is 1000.
@@ -81,7 +129,7 @@ export interface StorageListFilesOptions {
    * The `nextPageToken` from a previous call to `list()`. If provided,
    * listing is resumed from the previous position.
    */
-  readonly pageToken?: string;
+  readonly pageToken?: StorageListFilesPageToken;
 }
 
 export interface StorageListItemResult extends StoragePathRef {
@@ -108,6 +156,8 @@ export interface StorageListFileResult extends StorageListItemResult {
    */
   file(): FirebaseStorageAccessorFile;
 }
+
+export type StorageListFileResultNextPageToken = string;
 
 export interface StorageListFilesResult<R = unknown> {
   /**
@@ -138,6 +188,10 @@ export interface StorageListFilesResult<R = unknown> {
    * Returns the next set of results, if available.
    */
   next(): Promise<StorageListFilesResult>;
+  /**
+   * Returns the StorageListFilesPageToken for the next page, if available.
+   */
+  nextPageToken(): Maybe<StorageListFilesPageToken>;
 }
 
 /**
@@ -150,7 +204,8 @@ export interface FirebaseStorageAccessorFolder<R = unknown> extends StoragePathR
    */
   exists(): Promise<boolean>;
   /**
-   * Performs a search for items
+   * Lists all items in the immediate folder.
+   *
    * @param options
    */
   list(options?: StorageListFilesOptions): Promise<StorageListFilesResult>;
@@ -165,9 +220,13 @@ export type FirebaseStorageAccessorDriverFolderFunction<R = unknown> = (storage:
  */
 export interface FirebaseStorageAccessorDriver {
   /**
+   * Whether or not this driver is for a client or server.
+   */
+  readonly type: 'client' | 'server';
+  /**
    * Returns the default bucketId for the input storage.
    */
-  readonly defaultBucket?: FirebaseStorageAccessorDriverDefaultBucketFunction;
+  readonly getDefaultBucket?: FirebaseStorageAccessorDriverDefaultBucketFunction;
   readonly file: FirebaseStorageAccessorDriverFileFunction;
   readonly folder: FirebaseStorageAccessorDriverFolderFunction;
 }

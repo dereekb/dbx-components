@@ -80,7 +80,7 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
 }
 
 /**
- * Combines the status of all loading states. Only emits when the LoadingStateType of the result changes.
+ * Combines the status of all loading states. Only emits when the LoadingStateType of the result changes, or the loading state progress.
  *
  * @param sources
  * @returns
@@ -105,7 +105,7 @@ export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[
 
       return result;
     }),
-    distinctUntilChanged((x, y) => loadingStateType(x) === loadingStateType(y)),
+    distinctUntilChanged((x, y) => loadingStateType(x) === loadingStateType(y) && x.loadingProgress === y.loadingProgress),
     shareReplay(1)
   );
 }

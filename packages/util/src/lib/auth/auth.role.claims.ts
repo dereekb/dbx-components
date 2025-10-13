@@ -3,7 +3,7 @@ import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { type ArrayOrValue, asArray } from '../array/array';
-import { addToSet, setContainsAllValues } from '../set';
+import { addToSet, setContainsAllValues, setIncludesFunction, SetIncludesMode } from '../set';
 import { type Maybe } from '../value/maybe.type';
 
 /**
@@ -64,7 +64,20 @@ export interface AuthRoleClaimsFactoryConfigEntrySimpleOptions<V extends SimpleA
    * The roles to add when this claims is encountered.
    */
   roles: ArrayOrValue<AuthRole>;
-
+  /**
+   * Describes when to add the value when encoding the roles.
+   *
+   * During encoding back to roles, the value will be set in the claims if ["any"/"all"] roles are not present.
+   *
+   * For "all", set the inverse if "all of the roles are present"/"any of the roles are NOT present"
+   * For "any", set the inverse if "any of the roles are present"/"all of the roles are NOT present"
+   *
+   * True defaults to "any".
+   *
+   * For example, if there is a role that disables/disallowed the "uploads" role, and "uploads" is present during encoding,
+   * then the value will not be set on the inverse claim.
+   */
+  inverse?: true | SetIncludesMode;
   /**
    * (Optional) claim value. Overrides the default claim value.
    */
@@ -156,6 +169,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
       if (isSimpleOptions(inputEntry)) {
         const expectedValue = inputEntry.value ?? defaultClaimValue;
         const claimRoles = asArray(inputEntry.roles);
+        const inverse = inputEntry.inverse ?? false;
 
         // since checking uses equivalence, the objects will never match equivalence via the === properly.
         // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases unknownways, but this will help avoid unexpected errors.
@@ -163,25 +177,52 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
           throw new Error(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
         }
 
-        entry = {
-          encodeValueFromRoles: (roles: AuthRoleSet) => {
-            let claimsValue;
+        if (inverse) {
+          const inverseMode = inverse === true ? 'any' : inverse;
 
-            // only set the claims value if all values are present in the claims.
-            if (setContainsAllValues(roles, claimRoles)) {
-              claimsValue = inputEntry.value ?? defaultClaimValue;
-            }
+          entry = {
+            encodeValueFromRoles: (roles: AuthRoleSet) => {
+              let claimsValue;
+              const claimsCheck = setIncludesFunction(roles, inverseMode)(claimRoles);
 
-            return claimsValue;
-          },
-          decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
-            if (value === expectedValue) {
-              return claimRoles;
-            } else {
-              return [];
+              // only set the claims value if:
+              // - "all": all roles are not present
+              // - "any": any role is not present
+              if (!claimsCheck) {
+                claimsValue = inputEntry.value ?? defaultClaimValue;
+              }
+
+              return claimsValue;
+            },
+            decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
+              if (value === expectedValue) {
+                return [];
+              } else {
+                return claimRoles;
+              }
             }
-          }
-        };
+          };
+        } else {
+          entry = {
+            encodeValueFromRoles: (roles: AuthRoleSet) => {
+              let claimsValue;
+
+              // only set the claims value if all values are present in the claims.
+              if (setContainsAllValues(roles, claimRoles)) {
+                claimsValue = inputEntry.value ?? defaultClaimValue;
+              }
+
+              return claimsValue;
+            },
+            decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
+              if (value === expectedValue) {
+                return claimRoles;
+              } else {
+                return [];
+              }
+            }
+          };
+        }
       } else {
         entry = inputEntry as AuthRoleClaimsFactoryConfigEntryEncodeOptions;
       }

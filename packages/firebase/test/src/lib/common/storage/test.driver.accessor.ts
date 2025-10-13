@@ -1,7 +1,9 @@
 import { type MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { readableStreamToBuffer, type SlashPathFolder, useCallback } from '@dereekb/util';
-import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder } from '@dereekb/firebase';
+import { readableStreamToBuffer, SLASH_PATH_SEPARATOR, type SlashPathFolder, useCallback } from '@dereekb/util';
+import { type FirebaseStorageAccessorFile, type StorageRawDataString, type StorageBase64DataString, type FirebaseStorageAccessorFolder, iterateStorageListFilesByEachFile, StorageListFileResult, uploadFileWithStream } from '@dereekb/firebase';
+import { Readable } from 'stream';
+import { createReadStream } from 'fs';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -11,6 +13,8 @@ import { type FirebaseStorageAccessorFile, type StorageRawDataString, type Stora
 export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFixture) {
   describe('FirebaseStorageAccessor', () => {
     describe('file()', () => {
+      const secondBucket = 'second-bucket';
+
       const doesNotExistFilePath = 'test.png';
       let doesNotExistFile: FirebaseStorageAccessorFile;
 
@@ -19,10 +23,18 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       const existsFileContentType = 'text/plain';
       let existsFile: FirebaseStorageAccessorFile;
 
+      let secondBucketTarget: FirebaseStorageAccessorFile;
+
       beforeEach(async () => {
         doesNotExistFile = f.storageContext.file(doesNotExistFilePath);
         existsFile = f.storageContext.file(existsFilePath);
-        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType });
+        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: existsFileContentType }); // re-upload for each test
+
+        // delete the does not exist file and second bucket target if it exists
+        await doesNotExistFile.delete().catch(() => null);
+
+        secondBucketTarget = f.storageContext.file({ bucketId: secondBucket, pathString: doesNotExistFilePath });
+        await secondBucketTarget.delete().catch(() => null);
       });
 
       describe('uploading', () => {
@@ -130,6 +142,63 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           });
 
           // TODO(TEST): Test uploading other types.
+
+          describe('custom metadata', () => {
+            it('should upload custom metadata via customMetadata', async () => {
+              const customMetadataKey = 'x-amz-meta-custom-key';
+              const customMetadataValue = 'custom-value';
+
+              const customMetadata = {
+                [customMetadataKey]: customMetadataValue
+              };
+
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType, customMetadata });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.customMetadata).toEqual(customMetadata);
+            });
+
+            it('should upload custom metadata via metadata', async () => {
+              const customMetadataKey = 'x-amz-meta-custom-key';
+              const customMetadataValue = 'custom-value';
+
+              const customMetadata = {
+                [customMetadataKey]: customMetadataValue
+              };
+
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType, metadata: { customMetadata } });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.customMetadata).toEqual(customMetadata);
+            });
+
+            it('should upload the merged custom metadatas', async () => {
+              const customMetadataAKey = 'x-amz-meta-custom-key';
+              const customMetadataAValue = '1';
+
+              const customMetadataBKey = 'x-axx-meta-custom-key';
+              const customMetadataBValue = 'true';
+
+              const customMetadataA = {
+                [customMetadataAKey]: customMetadataAValue
+              };
+
+              const customMetadataB = {
+                [customMetadataBKey]: customMetadataBValue
+              };
+
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType, customMetadata: customMetadataA, metadata: { customMetadata: customMetadataB } });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.customMetadata).toEqual({ ...customMetadataA, ...customMetadataB });
+            });
+          });
         });
 
         describe('uploadStream()', () => {
@@ -156,7 +225,142 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
             }
           });
 
-          // TODO(TEST): Upload using a nodejs stream
+          it('should upload a string using a stream using a WritableStream', async () => {
+            if (uploadFile.uploadStream != null) {
+              const myText = 'This is a test string.';
+
+              // Create a readable stream from the string
+              const readableStream = Readable.from(myText, { encoding: 'utf-8' });
+              await uploadFileWithStream(uploadFile, readableStream);
+
+              const exists = await uploadFile.exists();
+              expect(exists).toBe(true);
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe('text/plain');
+
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
+
+              const decoded = Buffer.from(result).toString('utf-8');
+              expect(decoded).toBe(myText);
+            }
+          });
+
+          it('should upload a png using a stream using a WritableStream', async () => {
+            if (uploadFile.uploadStream != null) {
+              const testFilePath = `${__dirname}/assets/testpng.png`;
+              const contentType = 'image/png';
+
+              const testFileStream = createReadStream(testFilePath, {});
+              await uploadFileWithStream(uploadFile, testFileStream, { contentType });
+
+              const exists = await uploadFile.exists();
+              expect(exists).toBe(true);
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
+            }
+          });
+        });
+      });
+
+      describe('copy()', () => {
+        it('should copy the file to a new location in the same bucket.', async () => {
+          if (existsFile.copy != null) {
+            const exists = await doesNotExistFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = doesNotExistFile.storagePath;
+
+            const result = await existsFile.copy(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const doesNotExistFileExists = await doesNotExistFile.exists();
+            expect(doesNotExistFileExists).toBe(true);
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(true); // original still exists
+          }
+        });
+
+        it('should copy the file to a new location to a different bucket.', async () => {
+          if (existsFile.copy != null) {
+            const secondBucket = {
+              bucketId: 'second-bucket',
+              pathString: secondBucketTarget.storagePath.pathString
+            };
+
+            const targetFile = f.storageContext.file(secondBucket);
+
+            const exists = await targetFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = targetFile.storagePath;
+
+            const result = await existsFile.copy(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const targetFileExists = await targetFile.exists();
+            expect(targetFileExists).toBe(true);
+
+            const doesNotExistExists = await doesNotExistFile.exists();
+            expect(doesNotExistExists).toBe(false); // on a different bucket
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(true); // original still exists
+          }
+        });
+      });
+
+      describe('move()', () => {
+        it('should move the file to a new location in the same bucket.', async () => {
+          if (existsFile.move != null) {
+            const exists = await doesNotExistFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = doesNotExistFile.storagePath;
+
+            const result = await existsFile.move(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const doesNotExistExists = await doesNotExistFile.exists();
+            expect(doesNotExistExists).toBe(true);
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(false); // check was moved
+          }
+        });
+
+        it('should move the file to a new location to a different bucket.', async () => {
+          if (existsFile.move != null) {
+            const secondBucket = {
+              bucketId: 'second-bucket',
+              pathString: doesNotExistFile.storagePath.pathString
+            };
+
+            const targetFile = f.storageContext.file(secondBucket);
+
+            const exists = await targetFile.exists();
+            expect(exists).toBe(false);
+
+            const targetPath = targetFile.storagePath;
+
+            const result = await existsFile.move(targetPath);
+            expect(result.storagePath.pathString).toBe(targetPath.pathString);
+
+            const targetFileExists = await targetFile.exists();
+            expect(targetFileExists).toBe(true);
+
+            const doesNotExistStillDoesNotExists = await doesNotExistFile.exists();
+            expect(doesNotExistStillDoesNotExists).toBe(false);
+
+            const existsStillExists = await existsFile.exists();
+            expect(existsStillExists).toBe(false); // check was moved
+          }
         });
       });
 
@@ -187,6 +391,65 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           expect(result.contentType).toBe(existsFileContentType);
 
           expect(result).toBeDefined();
+        });
+      });
+
+      describe('setMetadata()', () => {
+        itShouldFail('if the file does not exist.', async () => {
+          await expectFail(() => doesNotExistFile.setMetadata({}));
+        });
+
+        it('should replace the content type field.', async () => {
+          const currentMetadata = await existsFile.getMetadata();
+          expect(currentMetadata.contentType).toBe(existsFileContentType);
+
+          const nextContentType = 'application/json';
+
+          const result = await existsFile.setMetadata({
+            contentType: nextContentType
+          });
+
+          expect(result.contentType).toBe(nextContentType);
+
+          const updatedMetadata = await existsFile.getMetadata();
+          expect(updatedMetadata.contentType).toBe(nextContentType);
+        });
+
+        it('should replace the metadata for only the provided fields.', async () => {
+          const currentMetadata = await existsFile.getMetadata();
+          expect(currentMetadata.contentType).toBe(existsFileContentType);
+
+          const customMetadataA = {
+            foo: 'bar'
+          };
+
+          const result = await existsFile.setMetadata({
+            contentType: undefined, // should not change
+            customMetadata: customMetadataA
+          });
+
+          expect(result.contentType).toBe(existsFileContentType);
+          expect(result.customMetadata).toEqual(customMetadataA);
+
+          const updatedMetadata = await existsFile.getMetadata();
+          expect(updatedMetadata.contentType).toBe(existsFileContentType);
+          expect(updatedMetadata.customMetadata).toEqual(customMetadataA);
+
+          // update again. All custom metadata is replaced
+          const customMetadataB = {
+            foo: 'baz'
+          };
+
+          const result2 = await existsFile.setMetadata({
+            customMetadata: customMetadataB
+          });
+
+          expect(result2.contentType).toBe(existsFileContentType);
+          expect(result2.customMetadata).toEqual(customMetadataB);
+
+          const updatedMetadata2 = await existsFile.getMetadata();
+          expect(updatedMetadata2.contentType).toBe(existsFileContentType);
+          expect(updatedMetadata2.customMetadata).toEqual(customMetadataB);
         });
       });
 
@@ -242,6 +505,21 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
       });
 
+      // Cannot be tested, will throw "Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information."
+      /*
+      describe('getSignedUrl()', () => {
+        it('should return the signed read url.', async () => {
+          if (existsFile.getSignedUrl) {
+            const result = await existsFile.getSignedUrl({
+              
+            });
+            expect(result).toBeDefined();
+            expect(typeof result).toBe('string');
+          }
+        });
+      });
+      */
+
       describe('delete()', () => {
         itShouldFail('if the file does not exist.', async () => {
           await expectFail(() => doesNotExistFile.delete());
@@ -282,7 +560,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
       });
 
-      describe('exists', () => {
+      describe('exists()', () => {
         it('should return false if there are no items in the folder.', async () => {
           const exists = await doesNotExistFolder.exists();
           expect(exists).toBe(false);
@@ -294,7 +572,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
       });
 
-      describe('list', () => {
+      describe('list()', () => {
         const existsBFileName = 'a.txt';
         const existsBFilePath = existsFolderPath + existsBFileName;
 
@@ -308,6 +586,108 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           await f.storageContext.file(existsBFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
           await f.storageContext.file(existsCFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
           await f.storageContext.file(otherFolderFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+        });
+
+        describe('options', () => {
+          describe('listAll', () => {
+            describe('=false/unset', () => {
+              it('should list all the direct files and folders that exist on the test path.', async () => {
+                const result = await existsFolder.list();
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(2);
+
+                const fileNames = new Set(files.map((x) => x.name));
+                expect(fileNames).toContain(existsFileName);
+                expect(fileNames).toContain(existsBFileName);
+
+                const folders = result.folders();
+                expect(folders.length).toBe(1);
+
+                const folderNames = new Set(folders.map((x) => x.name));
+                expect(folderNames).toContain('c');
+              });
+
+              it('should list all the direct folders that exist at the root.', async () => {
+                const rootFolder = await f.storageContext.folder('/');
+
+                const result = await rootFolder.list();
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(0); // files are under /test/ and /other/
+
+                const folders = result.folders();
+                expect(folders.length).toBe(2);
+
+                const names = new Set(folders.map((x) => x.name));
+
+                expect(names).toContain('test');
+                expect(names).toContain('other');
+              });
+            });
+
+            describe('=true', () => {
+              it('should list all files and folders that exist on the test path.', async () => {
+                const result = await existsFolder.list({ includeNestedResults: true });
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(3);
+
+                const filePaths = new Set(files.map((x) => `${SLASH_PATH_SEPARATOR}${x.storagePath.pathString}`));
+
+                expect(filePaths).toContain(existsFilePath);
+                expect(filePaths).toContain(existsBFilePath);
+                expect(filePaths).toContain(existsCFilePath);
+                expect(filePaths).not.toContain(otherFolderFilePath);
+
+                // folders are not counted/returned
+                const folders = result.folders();
+                expect(folders.length).toBe(0);
+              });
+
+              it('should list all the folders that exist at the root.', async () => {
+                const rootFolder = await f.storageContext.folder('/');
+
+                const result = await rootFolder.list({ includeNestedResults: true });
+                expect(result).toBeDefined();
+
+                const files = result.files();
+                expect(files.length).toBe(4); // all created files
+
+                const folders = result.folders();
+                expect(folders.length).toBe(0);
+              });
+
+              describe('maxResults', () => {
+                it('should limit the number of results returned.', async () => {
+                  const rootFolder = await f.storageContext.folder('/');
+                  const limit = 2;
+
+                  const result = await rootFolder.list({ includeNestedResults: true, maxResults: limit });
+                  expect(result).toBeDefined();
+
+                  if (f.storageContext.drivers.storageAccessorDriver.type === 'server') {
+                    // Currently only the server can properly limit the number of results returned.
+                    // The client-side will limit the results somewhat, but if folders are returned then it will return the results of those folders as well.
+
+                    const files = result.files();
+                    expect(files.length).toBe(limit);
+
+                    const nextPage = await result.next();
+                    const nextPageFiles = nextPage.files();
+
+                    expect(nextPageFiles.length).toBe(limit);
+                  }
+
+                  const folders = result.folders();
+                  expect(folders.length).toBe(0);
+                });
+              });
+            });
+          });
         });
 
         describe('file()', () => {
@@ -373,42 +753,6 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
           });
         });
 
-        it('should list all the direct files and folders that exist on the test path.', async () => {
-          const result = await existsFolder.list();
-          expect(result).toBeDefined();
-
-          const files = result.files();
-          expect(files.length).toBe(2);
-
-          const fileNames = new Set(files.map((x) => x.name));
-          expect(fileNames).toContain(existsFileName);
-          expect(fileNames).toContain(existsBFileName);
-
-          const folders = result.folders();
-          expect(folders.length).toBe(1);
-
-          const folderNames = new Set(folders.map((x) => x.name));
-          expect(folderNames).toContain('c');
-        });
-
-        it('should list all the direct folders that exist at the root.', async () => {
-          const rootFolder = await f.storageContext.folder('/');
-
-          const result = await rootFolder.list();
-          expect(result).toBeDefined();
-
-          const files = result.files();
-          expect(files.length).toBe(0); // files are under /test/ and /other/
-
-          const folders = result.folders();
-          expect(folders.length).toBe(2);
-
-          const names = new Set(folders.map((x) => x.name));
-
-          expect(names).toContain('test');
-          expect(names).toContain('other');
-        });
-
         describe('maxResults', () => {
           it('should respect the max results.', async () => {
             const maxResults = 1;
@@ -444,6 +788,57 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
             expect(names).toContain('test');
             expect(names).toContain('other');
+          });
+        });
+
+        describe('utilities', () => {
+          describe('iterateStorageListFilesByEachFile()', () => {
+            it('should iterate through all the files in the current folder one at a time', async () => {
+              const visitedFiles: StorageListFileResult[] = [];
+
+              const result = await iterateStorageListFilesByEachFile({
+                folder: existsFolder,
+                readItemsFromPageResult: (x) => x.result.files(),
+                iterateEachPageItem: async (file: StorageListFileResult) => {
+                  visitedFiles.push(file);
+                }
+              });
+
+              const visitedFilePathStrings = visitedFiles.map((x) => `${SLASH_PATH_SEPARATOR}${x.storagePath.pathString}`);
+              expect(visitedFilePathStrings).toContain(existsFilePath);
+              expect(visitedFilePathStrings).toContain(existsBFilePath);
+              expect(visitedFilePathStrings).not.toContain(existsCFilePath);
+              expect(visitedFilePathStrings).not.toContain(otherFolderFilePath);
+
+              expect(result).toBeDefined();
+              expect(result.totalItemsLoaded).toBe(2);
+              expect(result.totalItemsVisited).toBe(visitedFiles.length);
+            });
+
+            describe('includeNestedResults=true', () => {
+              it('should iterate through all the files and nested files under the current folder one at a time', async () => {
+                const visitedFiles: StorageListFileResult[] = [];
+
+                const result = await iterateStorageListFilesByEachFile({
+                  folder: existsFolder,
+                  includeNestedResults: true,
+                  readItemsFromPageResult: (x) => x.result.files(),
+                  iterateEachPageItem: async (file: StorageListFileResult) => {
+                    visitedFiles.push(file);
+                  }
+                });
+
+                const visitedFilePathStrings = visitedFiles.map((x) => `${SLASH_PATH_SEPARATOR}${x.storagePath.pathString}`);
+
+                expect(result).toBeDefined();
+                expect(result.totalItemsLoaded).toBe(3);
+                expect(result.totalItemsVisited).toBe(visitedFiles.length);
+                expect(visitedFilePathStrings).toContain(existsFilePath);
+                expect(visitedFilePathStrings).toContain(existsBFilePath);
+                expect(visitedFilePathStrings).toContain(existsCFilePath);
+                expect(visitedFilePathStrings).not.toContain(otherFolderFilePath);
+              });
+            });
           });
         });
       });
