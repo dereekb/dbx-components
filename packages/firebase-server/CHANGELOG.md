@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [12.5.0](https://github.com/dereekb/dbx-components/compare/v12.4.5-dev...v12.5.0) (2025-10-13)
+
+
+### Features
+
+* added StorageFile ([#30](https://github.com/dereekb/dbx-components/issues/30)) ([1c00f02](https://github.com/dereekb/dbx-components/commit/1c00f0242fa40548ced24799c277acfe5c9ee3bb))
+
+
+
 ## [12.4.5](https://github.com/dereekb/dbx-components/compare/v12.4.4-dev...v12.4.5) (2025-09-14)
 
 
