@@ -2,6 +2,8 @@ import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessing
 import { Maybe, mergeSlashPaths, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 
 // MARK: User File Types
+
+// === User Test File ===
 /**
  * A test file that is uploaded by a user into their own uploads folder.
  *
@@ -43,6 +45,7 @@ export function userTestFileStoragePath(userId: FirebaseAuthUserId, name: SlashP
   return userStorageFolderPath(userId, USER_STORAGE_FOLDER_PATH, name);
 }
 
+// === User Avatar ===
 /**
  * A test file that is uploaded by a user into their own uploads folder.
  *
@@ -65,6 +68,8 @@ export const USER_AVATAR_UPLOADS_FILE_NAME: SlashPathUntypedFile = 'avatar.img';
 export function userAvatarUploadsFilePath(userId: FirebaseAuthUserId): SlashPathUntypedFile {
   return `${ALL_USER_UPLOADS_FOLDER_PATH}/${userId}/${USER_AVATAR_UPLOADS_FILE_NAME}`;
 }
+
+export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'avatar';
 
 export const USER_AVATAR_STORAGE_FILE_NAME_PREFIX: SlashPathFile = 'avatar';
 

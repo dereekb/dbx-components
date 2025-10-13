@@ -1,6 +1,6 @@
 import { StorageFileInitializeFromUploadService, StorageFileInitializeFromUploadServiceConfig, StorageFileInitializeFromUploadServiceInitializer, StorageFileInitializeFromUploadServiceInitializerInput, StorageFileInitializeFromUploadServiceInitializerResult, createStorageFileFactory, storageFileInitializeFromUploadService, storageFileInitializeFromUploadServiceInitializerResultPermanentFailure } from '@dereekb/firebase-server/model';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
-import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userTestFileStoragePath } from 'demo-firebase';
+import { makeUserAvatarFileStoragePath, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, USER_AVATAR_PURPOSE, USER_AVATAR_UPLOADED_FILE_TYPE_IDENTIFIER, USER_AVATAR_UPLOADS_FILE_NAME, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_UPLOADED_FILE_TYPE_IDENTIFIER, USER_TEST_FILE_UPLOADS_FOLDER_NAME, userTestFileStoragePath } from 'demo-firebase';
 import { ALL_USER_UPLOADS_FOLDER_PATH, createStorageFileDocumentPair, createStorageFileDocumentPairFactory, determineByFilePath, determineUserByFolderWrapperFunction, determineUserByUserUploadsFolderWrapperFunction, FirebaseAuthUserId, StorageFileCreationType } from '@dereekb/firebase';
 import { mimetypeForImageType, SlashPathPathMatcherPath } from '@dereekb/util';
 import * as sharp from 'sharp';
@@ -100,11 +100,12 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       await newFile.upload(newImageBytes, { contentType: fileMimeType });
 
       // create the StorageFileDocument and reference the new file
-      const { storageFileDocument } = await createStorageFileDocumentPair({
+      const createStorageFileResult = await createStorageFileDocumentPair({
         accessor: storageFileDocumentAccessor,
         file: newFile,
         storagePathRef: newFile,
         user: userId,
+        purpose: USER_AVATAR_PURPOSE,
         shouldBeProcessed: false // no processing
       });
 
@@ -119,7 +120,10 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
         });
       }
 
-      return { storageFileDocument };
+      return {
+        createStorageFileResult,
+        flagPreviousForDelete: true
+      };
     },
     determiner: userTestAvatarDeterminer
   };
@@ -135,7 +139,8 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
   // MARK: Configuration
   const storageFileUploadServiceConfig: StorageFileInitializeFromUploadServiceConfig = {
     validate: true,
-    initializer: [...userFileInitializers, ...systemFileInitializers]
+    initializer: [...userFileInitializers, ...systemFileInitializers],
+    storageFileCollection
   };
 
   return storageFileInitializeFromUploadService(storageFileUploadServiceConfig);

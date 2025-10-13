@@ -30,6 +30,12 @@ export interface StorageFileInitializeFromUploadResult {
    * Any error that occurred during processing.
    */
   readonly initializationError?: Maybe<unknown>;
+  /**
+   * Number of StorageFiles that were flagged for deletion.
+   *
+   * Only set if flagPreviousForDelete was provided.
+   */
+  readonly previousStorageFilesFlaggedForDeletion?: Maybe<number>;
 }
 
 /**

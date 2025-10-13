@@ -1,6 +1,23 @@
-import { CombineUploadFileTypeDeterminerConfig, combineUploadFileTypeDeterminers, FirebaseStorageAccessorFile, limitUploadFileTypeDeterminer, StorageFileDocument, StorageFileInitializeFromUploadResultType, StoredFileReader, storedFileReaderFactory, UploadedFileTypeDeterminer, UploadedFileTypeDeterminerResult, UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import {
+  CombineUploadFileTypeDeterminerConfig,
+  combineUploadFileTypeDeterminers,
+  CreateStorageFileDocumentPairResult,
+  FirebaseStorageAccessorFile,
+  limitUploadFileTypeDeterminer,
+  StorageFileDocument,
+  StorageFileFirestoreCollection,
+  StorageFileInitializeFromUploadResultType,
+  storageFilePurposeAndUserQuery,
+  StorageFilePurposeAndUserQueryInput,
+  StoredFileReader,
+  storedFileReaderFactory,
+  UploadedFileTypeDeterminer,
+  UploadedFileTypeDeterminerResult,
+  UploadedFileTypeIdentifier
+} from '@dereekb/firebase';
 import { ArrayOrValue, asArray, asDecisionFunction, AsyncDecisionFunction, Maybe, pushItemOrArrayItemsIntoArray } from '@dereekb/util';
 import { StorageFileInitializeFromUploadInput, StorageFileInitializeFromUploadResult, StorageFileInitializeFromUploadService } from './storagefile.upload.service';
+import { queryAndFlagStorageFilesForDelete } from './storagefile.util';
 
 export interface StorageFileInitializeFromUploadServiceInitializerInput {
   /**
@@ -13,19 +30,43 @@ export interface StorageFileInitializeFromUploadServiceInitializerInput {
   readonly fileDetailsAccessor: StoredFileReader;
 }
 
-export interface StorageFileInitializeFromUploadServiceInitializerResult {
-  /**
-   * The StorageFileDocument, if it was initialized.
-   */
-  readonly storageFileDocument?: Maybe<StorageFileDocument>;
+export type StorageFileInitializeFromUploadServiceInitializerResult = StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult | StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult | StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult;
+
+export interface StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult {
   /**
    * The error thrown initializing.
    */
-  readonly error?: Maybe<unknown>;
+  readonly error: unknown;
   /**
    * If true, the initializer failed permanently and the file should be deleted.
    */
-  readonly permanentFailure?: Maybe<boolean>;
+  readonly permanentFailure?: boolean;
+}
+
+export interface StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult {
+  /**
+   * The result of the createStorageFileDocumentPair function, if a StorageFileDocument was created.
+   */
+  readonly createStorageFileResult: CreateStorageFileDocumentPairResult;
+  /**
+   * If set, the initializer will query existing StorageFiles for the user and purpose and flag them for deletion.
+   *
+   * If true, createStorageFileResult will be used.
+   */
+  readonly flagPreviousForDelete?: Maybe<boolean | StorageFilePurposeAndUserQueryInput>;
+}
+
+export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult {
+  /**
+   * The StorageFileDocument, if it was initialized.
+   */
+  readonly storageFileDocument: StorageFileDocument;
+  /**
+   * If set, the initializer will query existing StorageFiles for the user and purpose and flag them for deletion.
+   *
+   * If true, createStorageFileResult will be used.
+   */
+  readonly flagPreviousForDelete?: Maybe<StorageFilePurposeAndUserQueryInput>;
 }
 
 export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown): StorageFileInitializeFromUploadServiceInitializerResult {
@@ -70,6 +111,10 @@ export interface StorageFileInitializeFromUploadServiceConfig {
    */
   readonly determiner?: Maybe<ArrayOrValue<UploadedFileTypeDeterminer>>;
   /**
+   * StorageFilleFirestoreCollection used for retrieving existing StorageFiles for marking them as deleted.
+   */
+  readonly storageFileCollection: StorageFileFirestoreCollection;
+  /**
    * Configuration for combining the determiners.
    *
    * Defaults to:
@@ -90,7 +135,7 @@ export interface StorageFileInitializeFromUploadServiceConfig {
  * A basic StorageFileInitializeFromUploadService implementation.
  */
 export function storageFileInitializeFromUploadService(config: StorageFileInitializeFromUploadServiceConfig): StorageFileInitializeFromUploadService {
-  const { initializer: inputInitializers, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized } = config;
+  const { storageFileCollection, initializer: inputInitializers, determiner: inputDeterminers, validate, checkFileIsAllowedToBeInitialized: inputCheckFileIsAllowedToBeInitialized } = config;
 
   const allDeterminers: UploadedFileTypeDeterminer[] = [];
   const initializers: Record<UploadedFileTypeIdentifier, StorageFileInitializeFromUploadServiceInitializer> = {};
@@ -151,6 +196,7 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
       let resultType: StorageFileInitializeFromUploadResultType;
       let storageFileDocument: Maybe<StorageFileDocument>;
       let processorError: Maybe<unknown>;
+      let previousStorageFilesFlaggedForDeletion: Maybe<number>;
 
       if (determinerResult) {
         const { input: fileDetailsAccessor } = determinerResult;
@@ -163,16 +209,52 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
           try {
             const initializerResult = await initializer.initialize({ determinerResult, fileDetailsAccessor });
 
-            if (initializerResult.error) {
-              processorError = initializerResult.error;
+            if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult).error) {
+              processorError = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult).error;
 
-              if (initializerResult.permanentFailure) {
+              if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileErrorResult).permanentFailure) {
                 resultType = 'permanent_initializer_failure';
               } else {
                 resultType = 'initializer_error';
               }
             } else {
-              storageFileDocument = initializerResult.storageFileDocument;
+              let flagPreviousForDelete: Maybe<StorageFilePurposeAndUserQueryInput>;
+
+              if ((initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult).createStorageFileResult) {
+                const { createStorageFileResult, flagPreviousForDelete: flagPreviousForDeleteResult } = initializerResult as StorageFileInitializeFromUploadServiceInitializerCreateStorageFileResult;
+                storageFileDocument = createStorageFileResult.storageFileDocument;
+
+                if (flagPreviousForDeleteResult) {
+                  if (typeof flagPreviousForDeleteResult === 'object') {
+                    flagPreviousForDelete = flagPreviousForDeleteResult;
+                  } else {
+                    const { p, u } = createStorageFileResult.storageFile;
+
+                    if (!p || !u) {
+                      throw new Error('initializeFromUpload(): flagPreviousForDelete=true requires that the created StorageFile have a purpose (p) and user (u).');
+                    }
+
+                    flagPreviousForDelete = {
+                      purpose: p,
+                      user: u
+                    };
+                  }
+                }
+              } else {
+                storageFileDocument = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult).storageFileDocument;
+                flagPreviousForDelete = (initializerResult as StorageFileInitializeFromUploadServiceInitializerStorageFileDocumentResult).flagPreviousForDelete;
+              }
+
+              // if flagPreviousForDelete is set, flag the previous storage files for deletion
+              if (flagPreviousForDelete) {
+                const flagForDeleteResult = await queryAndFlagStorageFilesForDelete({
+                  storageFileCollection,
+                  constraints: storageFilePurposeAndUserQuery(flagPreviousForDelete),
+                  skipDeleteForKeys: [storageFileDocument.key]
+                });
+
+                previousStorageFilesFlaggedForDeletion = flagForDeleteResult.queuedForDeleteCount;
+              }
             }
           } catch (e) {
             resultType = 'initializer_error';
@@ -188,7 +270,8 @@ export function storageFileInitializeFromUploadService(config: StorageFileInitia
       const result: StorageFileInitializeFromUploadResult = {
         resultType,
         storageFileDocument,
-        initializationError: processorError
+        initializationError: processorError,
+        previousStorageFilesFlaggedForDeletion
       };
 
       return result;

@@ -28,6 +28,7 @@ import { NotificationTaskServiceTaskHandlerConfig } from '../notification/notifi
 import { asArray, cachedGetter, dateFromDateOrTimeNumber, Maybe, Milliseconds, PromiseOrValue, separateValues, unique } from '@dereekb/util';
 import { BaseError } from 'make-error';
 import { removeFromCompletionsArrayWithTaskResult } from '../notification/notification.task.service.util';
+import { markStorageFileForDeleteTemplate, StorageFileQueueForDeleteTime } from './storagefile.util';
 
 /**
  * Input for a StorageFileProcessingPurposeSubtask.
@@ -120,7 +121,7 @@ export interface StorageFileProcessingPurposeSubtaskCleanupOutput {
    *
    * Ignored if cleanupSuccess is false.
    */
-  readonly queueForDelete?: Maybe<boolean | Milliseconds | Date>;
+  readonly queueForDelete?: Maybe<false | StorageFileQueueForDeleteTime>;
 }
 
 /**
@@ -478,8 +479,10 @@ export function storageFileProcessingNotificationTaskHandler(config: StorageFile
                 };
 
                 if (cleanupOutput.queueForDelete != null && cleanupOutput.queueForDelete !== false) {
-                  updateTemplate.sdat = cleanupOutput.queueForDelete === true ? new Date() : dateFromDateOrTimeNumber(cleanupOutput.queueForDelete);
-                  updateTemplate.fs = StorageFileState.QUEUED_FOR_DELETE;
+                  updateTemplate = {
+                    ...updateTemplate,
+                    ...markStorageFileForDeleteTemplate(cleanupOutput.queueForDelete)
+                  };
                 }
 
                 await storageFileDocument.update(updateTemplate);

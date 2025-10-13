@@ -2,7 +2,7 @@ import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext, demoStorageFileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 import { USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userTestFileUploadsFilePath } from 'demo-firebase';
-import { StorageFileProcessingState, StoragePath } from '@dereekb/firebase';
+import { InitializeStorageFileFromUploadParams, onCallCreateModelParams, OnCallCreateModelResult, storageFileIdentity, StorageFileProcessingState, StorageFileState, StoragePath } from '@dereekb/firebase';
 import { MimeTypeWithoutParameters } from '@dereekb/util';
 import { readFile } from 'fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -59,7 +59,7 @@ demoApiFunctionContextFactory((f) => {
             demoProfileContext({ f, u: au }, (p) => {
               const testAssetsFolderPath = `${__dirname}/../../../test/assets/`;
 
-              function uploadAvatarTestFileForUser(testFileName: string, testFileType: MimeTypeWithoutParameters) {
+              function uploadAvatarForUser(testFileName: string, testFileType: MimeTypeWithoutParameters) {
                 return async () => {
                   const uid = au.uid;
                   const localAvatarFilePath = `${testAssetsFolderPath}${testFileName}`;
@@ -84,7 +84,7 @@ demoApiFunctionContextFactory((f) => {
                 let profile = await assertSnapshotData(p.document);
                 expect(profile.avatar).not.toBeDefined(); // no avatar
 
-                const uploadedFilePath = await uploadAvatarTestFileForUser('avatar.png', 'image/png')();
+                const uploadedFilePath = await uploadAvatarForUser('avatar.png', 'image/png')();
 
                 expect(uploadedFilePath.bucketId).toBeDefined();
                 expect(uploadedFilePath.pathString).toBeDefined();
@@ -128,10 +128,55 @@ demoApiFunctionContextFactory((f) => {
               });
 
               describe('initialized', () => {
-                demoStorageFileContext({ f, createUploadedFile: uploadAvatarTestFileForUser('avatar.png', 'image/png'), processStorageFile: false }, (sf) => {
+                demoStorageFileContext({ f, createUploadedFile: uploadAvatarForUser('avatar.png', 'image/png'), processStorageFile: false }, (sf) => {
                   it('should not be flagged for processing', async () => {
                     const storageFile = await assertSnapshotData(sf.document);
                     expect(storageFile.ps).toBe(StorageFileProcessingState.DO_NOT_PROCESS);
+                  });
+
+                  it('should replace and mark the previous avatar for deletion when a new one is uploaded', async () => {
+                    let profile = await assertSnapshotData(p.document);
+                    expect(profile.avatar).toBeDefined(); // avatar should exist
+
+                    const initialAvatarPath = profile.avatar;
+
+                    const uploadedFilePath = await uploadAvatarForUser('avatar.png', 'image/png')();
+
+                    const uploadedFile = f.storageContext.file(uploadedFilePath);
+                    let uploadedFileExists = await uploadedFile.exists();
+
+                    expect(uploadedFileExists).toBe(true);
+
+                    const initializeStorageFileParams: InitializeStorageFileFromUploadParams = {
+                      pathString: uploadedFilePath.pathString
+                    };
+
+                    const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(storageFileIdentity, initializeStorageFileParams, 'fromUpload'))) as OnCallCreateModelResult;
+                    expect(result.modelKeys).toHaveLength(1);
+
+                    profile = await assertSnapshotData(p.document);
+                    expect(profile.avatar).toBeDefined();
+                    expect(profile.avatar).not.toBe(initialAvatarPath); // avatar changed
+
+                    const previousStorageFile = await assertSnapshotData(sf.document);
+                    expect(previousStorageFile.fs).toBe(StorageFileState.QUEUED_FOR_DELETE);
+                    expect(previousStorageFile.sdat).toBeDefined();
+                    expect(previousStorageFile.sdat).toBeBefore(new Date());
+
+                    const newStorageFileDocument = f.demoFirestoreCollections.storageFileCollection.documentAccessor().loadDocumentForKey(result.modelKeys[0]);
+                    const newStorageFile = await assertSnapshotData(newStorageFileDocument);
+                    expect(newStorageFile.fs).toBe(StorageFileState.OK);
+                    expect(newStorageFile.sdat).not.toBeDefined(); // should not have been queued for delete
+
+                    // process deleting the queued storage files
+                    const deleteInstance = await f.storageFileActions.deleteAllQueuedStorageFiles({});
+                    const deleteResult = await deleteInstance();
+
+                    expect(deleteResult.storageFilesVisited).toBeGreaterThanOrEqual(1);
+                    expect(deleteResult.storageFilesDeleted).toBeGreaterThanOrEqual(1);
+
+                    const previousStorageFileDeleted = await sf.document.exists();
+                    expect(previousStorageFileDeleted).toBe(false);
                   });
                 });
               });

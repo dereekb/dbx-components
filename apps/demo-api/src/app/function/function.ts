@@ -25,7 +25,7 @@ import {
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
-import { SECONDS_IN_MINUTE } from '@dereekb/util';
+import { runNamedAsyncTasksFunction, SECONDS_IN_MINUTE } from '@dereekb/util';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get actionContext(): DemoFirebaseServerActionsContext {
@@ -104,6 +104,20 @@ export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, 
 
 // MARK: Schedule Functions
 export type DemoScheduleFunction = OnScheduleWithNestContext<DemoApiNestContext>;
+
+export const runDemoScheduledTasks = runNamedAsyncTasksFunction<object>({
+  onTaskSuccess: (task, value) => {
+    if (value) {
+      console.log(value);
+    }
+  },
+  onTaskFailure: (task, error) => {
+    console.error(`Task ${task.name} failed with error:`, error);
+  },
+  defaultOptions: {
+    sequential: true // tasks should be run sequentially
+  }
+});
 
 // MARK: Development Functions
 export type DemoDevelopmentFunction<I = unknown, O = void> = OnCallDevelopmentFunction<DemoApiNestContext, I, O>;

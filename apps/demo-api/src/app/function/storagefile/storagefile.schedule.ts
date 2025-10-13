@@ -1,21 +1,25 @@
-import { DemoScheduleFunction } from '../function';
+import { DemoScheduleFunction, runDemoScheduledTasks } from '../function';
 
 export const storageFileHourlyUpdateSchedule: DemoScheduleFunction = async (request) => {
-  // init all storage files from uploads
-  const initializeAllStorageFilesFromUploads = await request.nest.storageFileActions.initializeAllStorageFilesFromUploads({});
-  const initializeAllStorageFilesFromUploadsResult = await initializeAllStorageFilesFromUploads();
+  console.log('storageFileHourlyUpdateSchedule - running');
 
-  console.log({ initializeAllStorageFilesFromUploadsResult });
+  await runDemoScheduledTasks({
+    initializeAllStorageFilesFromUploads: async () => {
+      const initializeAllStorageFilesFromUploads = await request.nest.storageFileActions.initializeAllStorageFilesFromUploads({});
+      const initializeAllStorageFilesFromUploadsResult = await initializeAllStorageFilesFromUploads();
+      return { initializeAllStorageFilesFromUploadsResult };
+    },
+    processAllQueuedStorageFiles: async () => {
+      const processAllQueuedStorageFiles = await request.nest.storageFileActions.processAllQueuedStorageFiles({});
+      const processAllQueuedStorageFilesResult = await processAllQueuedStorageFiles();
+      return { processAllQueuedStorageFilesResult };
+    },
+    deleteAllQueuedStorageFiles: async () => {
+      const deleteAllQueuedStorageFiles = await request.nest.storageFileActions.deleteAllQueuedStorageFiles({});
+      const deleteAllQueuedStorageFilesResult = await deleteAllQueuedStorageFiles();
+      return { deleteAllQueuedStorageFilesResult };
+    }
+  });
 
-  // process all storage files that are queued for processing
-  const processAllQueuedStorageFiles = await request.nest.storageFileActions.processAllQueuedStorageFiles({});
-  const processAllQueuedStorageFilesResult = await processAllQueuedStorageFiles();
-
-  console.log({ processAllQueuedStorageFilesResult });
-
-  // delete all storage files that are queued for deletion
-  const deleteAllQueuedStorageFiles = await request.nest.storageFileActions.deleteAllQueuedStorageFiles({});
-  const deleteAllQueuedStorageFilesResult = await deleteAllQueuedStorageFiles();
-
-  console.log({ deleteAllQueuedStorageFilesResult });
+  console.log('storageFileHourlyUpdateSchedule - done');
 };

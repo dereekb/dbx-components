@@ -31,7 +31,9 @@ import {
   storageFilesQueuedForProcessingQuery,
   AsyncStorageFileDeleteAction,
   StorageFile,
-  STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS
+  STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
+  storageFilesQueuedForDeleteQuery,
+  firestoreDummyKey
 } from '@dereekb/firebase';
 import { assertSnapshotData, FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
@@ -435,12 +437,19 @@ export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerAct
       let storageFilesDeleted = 0;
       let storageFilesFailedDeleting = 0;
 
+      const deleteStorageFileInstance = await deleteStorageFile({
+        key: firestoreDummyKey()
+      });
+
       await iterateFirestoreDocumentSnapshotPairs({
         documentAccessor: storageFileCollection.documentAccessor(),
         iterateSnapshotPair: async (snapshotPair) => {
+          const { document: storageFileDocument } = snapshotPair;
           storageFilesVisited++;
 
-          const deleteStorageFileResult = await deleteStorageFile(snapshotPair.document).catch(() => null);
+          const deleteStorageFileResult = await deleteStorageFileInstance(storageFileDocument)
+            .then(() => true)
+            .catch(() => false);
 
           if (deleteStorageFileResult) {
             storageFilesDeleted++;
@@ -448,7 +457,7 @@ export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerAct
             storageFilesFailedDeleting++;
           }
         },
-        constraintsFactory: () => storageFilesQueuedForProcessingQuery(),
+        constraintsFactory: () => storageFilesQueuedForDeleteQuery(),
         queryFactory: storageFileCollection,
         batchSize: undefined,
         performTasksConfig: {

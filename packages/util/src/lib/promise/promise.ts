@@ -37,7 +37,7 @@ export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?:
  * @param config
  * @returns
  */
-export async function runAsyncTasksForValues<T, K = unknown>(input: T[], taskFn: PromiseAsyncTaskFn<T, K>, config?: RunAsyncTasksForValuesConfig<T>): Promise<K[]> {
+export async function runAsyncTasksForValues<T, K = unknown>(input: T[], taskFn: PerformAsyncTaskFn<T, K>, config?: RunAsyncTasksForValuesConfig<T>): Promise<K[]> {
   const results = await performAsyncTasks(input, taskFn, {
     ...config,
     throwError: true
@@ -47,7 +47,7 @@ export async function runAsyncTasksForValues<T, K = unknown>(input: T[], taskFn:
 }
 
 // MARK: Perform
-export type PromiseAsyncTaskFn<T, K = unknown> = (value: T, tryNumber?: number) => Promise<K>;
+export type PerformAsyncTaskFn<T, K = unknown> = (value: T, tryNumber?: number) => Promise<K>;
 
 export interface PerformAsyncTaskResult<O> {
   readonly value: Maybe<O>;
@@ -89,7 +89,7 @@ export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = P
  *
  * This is useful for retrying sections that may experience optimistic concurrency collisions.
  */
-export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I, K> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
+export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I, K> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
   const { sequential, maxParallelTasks, waitBetweenTasks, nonConcurrentTaskKeyFactory } = config;
   const taskResults: [I, O, boolean][] = [];
 
@@ -134,7 +134,7 @@ export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: Per
   return { value, success };
 }
 
-async function _performAsyncTask<I, O>(value: I, taskFn: PromiseAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<[I, O, boolean]> {
+async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTaskConfig<I> = {}): Promise<[I, O, boolean]> {
   const { throwError: inputThrowError, retriesAllowed: inputRetriesAllowed, retryWait = 200, beforeRetry } = config;
   const throwError = inputThrowError ?? true; // throw errors by default
   const retriesAllowed = inputRetriesAllowed ? inputRetriesAllowed : 0;
@@ -524,3 +524,6 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
   return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
 }
+
+// MARK: Compat
+export type PromiseAsyncTaskFn<T, K = unknown> = PerformAsyncTaskFn<T, K>;
